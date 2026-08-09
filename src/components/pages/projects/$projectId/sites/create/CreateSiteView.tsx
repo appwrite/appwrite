@@ -35,6 +35,9 @@ import {
   useNamespacesForInstallations,
 } from '@/lib/react-query/hooks'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
+import { VcsInstallationErrorState } from '@/components/global/shared/VcsInstallationError'
+import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
@@ -264,6 +267,7 @@ export function CreateSiteView() {
     data: repositoriesData,
     isLoading: reposLoading,
     isFetching: reposFetching,
+    error: reposError,
     refetch: refetchRepos,
   } = useRepositories(
     projectId,
@@ -282,6 +286,28 @@ export function CreateSiteView() {
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
 
   const hasInstallations = installations.length > 0
+
+  // An installation that can no longer authenticate returns nothing, which is
+  // indistinguishable here from an organization that genuinely has no repos.
+  // Read the error so the list stops reporting the failure as a valid result.
+  const reposErrorKind = getVcsInstallationErrorKind(reposError)
+
+  // Reconnecting is a full-page redirect and the wizard keeps its state in
+  // memory, so come back to this step with the installation still selected
+  // rather than to whatever deep URL the browser happens to be on.
+  const reconnectReturnUrl = useMemo(() => {
+    if (typeof window === 'undefined' || !projectId) return undefined
+    const base = `${window.location.origin}/projects/${projectId}/sites/create`
+    return selectedInstallationId
+      ? `${base}?installation=${selectedInstallationId}`
+      : base
+  }, [projectId, selectedInstallationId])
+
+  const { reconnectUrl } = useVcsInstallationReconnect(
+    projectId,
+    selectedInstallationId || null,
+    reconnectReturnUrl,
+  )
 
   const handleSelectRepository = (repo: unknown) => {
     const installationId = selectedInstallationId!
@@ -356,6 +382,12 @@ export function CreateSiteView() {
                   <a href={getVcsAuthUrl('gitlab')}>
                     <VcsIcon type="gitlab" className="me-1.5 h-3.5 w-3.5" />
                     {t('Connect GitLab')}
+                  </a>
+                </Button>
+                <Button size="sm" variant="secondary" asChild>
+                  <a href={getVcsAuthUrl('bitbucket')}>
+                    <VcsIcon type="bitbucket" className="me-1.5 h-3.5 w-3.5" />
+                    {t('Connect Bitbucket')}
                   </a>
                 </Button>
               </div>
@@ -511,6 +543,18 @@ export function CreateSiteView() {
                       </div>
                     ))}
                   </div>
+                ) : reposErrorKind ? (
+                  <div className="py-8 px-4">
+                    <VcsInstallationErrorState
+                      kind={reposErrorKind}
+                      provider={selectedInstallation?.provider}
+                      organization={selectedInstallation?.organization}
+                      reconnectUrl={reconnectUrl}
+                      onRetry={() => refetchRepos()}
+                      isRetrying={reposFetching}
+                      className="py-0"
+                    />
+                  </div>
                 ) : (
                   <div className="py-8 text-center">
                     <p className="text-[12px] text-muted-foreground">
@@ -532,6 +576,9 @@ export function CreateSiteView() {
 
               {/* Help note for missing repos */}
               {(() => {
+                // A broken installation is not a scope problem; this note would
+                // send the user to widen permissions that already cover the repos.
+                if (reposErrorKind) return null
                 const knownProvider = getKnownVcsProvider(
                   selectedInstallation?.provider,
                 )

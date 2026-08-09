@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/context-menu'
 import { Copy, FileJson, Trash2 } from 'lucide-react'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import type { PostgresTableIndexRow } from '@/lib/postgres-sql'
 import { useT } from '@/lib/i18n/translate'
@@ -57,7 +58,11 @@ export function PostgresIndexContextMenu({
         {canWrite ? (
           <>
             <ContextMenuSeparator />
-            <ContextMenuItem onSelect={() => onDelete(index.index_name)}>
+            <ContextMenuItem
+              onSelect={() =>
+                openDialogAfterOverlayCloses(() => onDelete(index.index_name))
+              }
+            >
               <ContextMenuIcon icon={Trash2} />
               {t('Delete')}
             </ContextMenuItem>

@@ -6,8 +6,8 @@
  * and on success the completion content (preview + next steps) appears inline.
  */
 
-import { useState, useEffect, useMemo } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
@@ -26,12 +26,17 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
+import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import {
   SITE_SCREENSHOTS_BUCKET_ID,
   SITE_SCREENSHOT_LARGE_WIDTH,
   SITE_SCREENSHOT_LARGE_HEIGHT,
 } from '@/lib/sites/screenshot-preview-sizes'
+import {
+  deploymentHasScreenshot,
+  refetchSitePreviewCaches,
+} from '@/lib/sites/deployment-screenshots'
 import { useAvifSupport } from '@/lib/avif-support'
 import { ImageFormat } from '@appwrite.io/console'
 import {
@@ -62,12 +67,8 @@ function formatDuration(seconds: number): string {
   return `${minutes}m ${secs}s`
 }
 
-function formatSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1000
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
+function formatSize(bytes: number | bigint): string {
+  return formatDecimalBytes(bytes)
 }
 
 interface DeployingViewProps {
@@ -79,11 +80,14 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { theme, resolvedTheme } = useTheme()
   const { formData, frameworks, resetFormData } = useWizard()
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
   const [previewImageLoaded, setPreviewImageLoaded] = useState(false)
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
+  const [isNavigatingToDashboard, setIsNavigatingToDashboard] = useState(false)
+  const didRefetchPreviewCachesRef = useRef(false)
 
   // Use provided IDs or fall back to form data
   const actualSiteId = siteId || formData.createdSiteId
@@ -98,6 +102,26 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     actualSiteId,
     actualDeploymentId,
   )
+
+  // When screenshots arrive via realtime, refresh site/list caches so the
+  // dashboard does not keep the pre-screenshot snapshot from create time.
+  useEffect(() => {
+    if (
+      !projectId ||
+      !actualSiteId ||
+      !deploymentHasScreenshot(deployment) ||
+      didRefetchPreviewCachesRef.current
+    ) {
+      return
+    }
+    didRefetchPreviewCachesRef.current = true
+    void refetchSitePreviewCaches(
+      queryClient,
+      projectId,
+      actualSiteId,
+      actualDeploymentId,
+    )
+  }, [projectId, actualSiteId, actualDeploymentId, deployment, queryClient])
 
   // Fetch installation to resolve the connected VCS provider (GitHub/GitLab/...)
   const { data: installation } = useInstallation(
@@ -156,14 +180,33 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
 
   const handleCancelDeployment = () => setCancelBuildDialogOpen(true)
 
-  const handleGoToDashboard = () => {
+  const handleGoToDashboard = async () => {
+    if (isNavigatingToDashboard) return
+    setIsNavigatingToDashboard(true)
+
+    const siteIdToOpen = actualSiteId
+    const deploymentIdToRefresh = actualDeploymentId
+
+    try {
+      if (projectId && siteIdToOpen) {
+        await refetchSitePreviewCaches(
+          queryClient,
+          projectId,
+          siteIdToOpen,
+          deploymentIdToRefresh,
+        )
+      }
+    } catch {
+      // Navigation should still proceed; hard reload remains a fallback.
+    }
+
     if (status === 'ready') {
       resetFormData()
     }
-    if (actualSiteId) {
+    if (siteIdToOpen) {
       navigate({
         to: '/projects/$projectId/sites/$siteId',
-        params: { projectId: projectId!, siteId: actualSiteId },
+        params: { projectId: projectId!, siteId: siteIdToOpen },
       })
     } else {
       navigate({
@@ -400,6 +443,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
             <Button
               variant={status === 'ready' ? 'default' : 'outline'}
               onClick={handleGoToDashboard}
+              disabled={isNavigatingToDashboard}
             >
               {t('Go to dashboard')}
             </Button>

@@ -8,6 +8,7 @@ import {
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
@@ -48,7 +49,7 @@ function Shell({
       onClose={onSkip}
       footer={<SkipFooter onSkip={onSkip} />}
     >
-      <div className="space-y-6" data-analytics-track="manual">
+      <div className="space-y-3" data-analytics-track="manual">
         <h2 className="text-[17px] font-semibold tracking-tight text-foreground">
           {t('A note from the team')}
         </h2>
@@ -61,7 +62,7 @@ function Shell({
 function TeamNote() {
   const t = useT()
   return (
-    <div className="space-y-3 text-[14px] leading-relaxed text-foreground/90">
+    <div className="space-y-4 border-b border-border pb-8 text-[14px] leading-relaxed text-foreground/90">
       <p>{t('Hey,')}</p>
       <p>
         {t(
@@ -131,9 +132,12 @@ export function CommunitySupportWizardContent({
   onSkip,
   onAction,
 }: CommunitySupportWizardContentProps) {
+  const { features } = useConsoleProfile()
+  const showAffiliates = features.affiliates
+
   return (
     <Shell onSkip={onSkip}>
-      <div className="space-y-6">
+      <div className="space-y-8">
         <TeamNote />
         <div className="grid gap-3 md:grid-cols-3 md:grid-rows-2">
           <ShareOnXCard
@@ -144,10 +148,13 @@ export function CommunitySupportWizardContent({
           <ActionCard actionId="community" onAction={onAction} />
           <ActionCard actionId="contribute" onAction={onAction} />
           <ActionCard actionId="content" onAction={onAction} />
+          {showAffiliates ? (
+            <ActionCard actionId="affiliates" onAction={onAction} />
+          ) : null}
           <ActionCard
             actionId="integrations"
             onAction={onAction}
-            className="md:col-span-2"
+            className={showAffiliates ? undefined : 'md:col-span-2'}
           />
         </div>
       </div>

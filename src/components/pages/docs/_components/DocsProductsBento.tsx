@@ -1,4 +1,7 @@
+import { useMemo } from 'react'
 import type { LucideIcon } from 'lucide-react'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isAgentDocsHref } from '@/lib/docs/agent-docs-feature'
 import { docsGridFourCol } from '@/lib/docs/docs-container'
 import { DOCS_HOME_PRODUCTS } from '@/lib/docs/home-content'
 import { cn } from '@/lib/utils'
@@ -57,10 +60,19 @@ function ProductTileIcon({ icon: Icon }: { icon: LucideIcon }) {
 }
 
 export function DocsProductsBento() {
+  const { features } = useConsoleProfile()
+  const products = useMemo(
+    () =>
+      DOCS_HOME_PRODUCTS.filter(
+        (product) => features.agent || !isAgentDocsHref(product.href),
+      ),
+    [features.agent],
+  )
+
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card/45">
       <div className={cn('grid', docsGridFourCol)}>
-        {DOCS_HOME_PRODUCTS.map((product, index) => {
+        {products.map((product, index) => {
           const Icon = product.icon
 
           return (
@@ -69,7 +81,7 @@ export function DocsProductsBento() {
               href={product.href}
               className={cn(
                 'group relative isolate flex flex-col p-5 transition-colors hover:bg-accent/10',
-                productTileBorderClass(index, DOCS_HOME_PRODUCTS.length),
+                productTileBorderClass(index, products.length),
               )}
             >
               <DocsProductTileHoverLight variant={index} />

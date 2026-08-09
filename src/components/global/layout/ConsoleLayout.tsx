@@ -7,7 +7,6 @@ import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleIm
 import { NetworkOfflineCurtain } from '@/components/global/shared/NetworkOfflineCurtain'
 import { SkipToContent } from './SkipToContent'
 import { NativeAppBar } from './NativeAppBar'
-import { DevConstructionStripe } from './DevConstructionStripe'
 import { cn } from '@/lib/utils'
 import {
   loadDebugOverrides,
@@ -148,7 +147,6 @@ export function ConsoleLayout({
         showAppHeader ||
         headerBanner) && (
         <div className="sticky top-0 z-[110] flex shrink-0 flex-col overflow-visible bg-background">
-          <DevConstructionStripe />
           {showNativeAppBar && <NativeAppBar />}
           <CloudStatusBanner />
           <ConsoleImpersonationBanner />
@@ -199,7 +197,10 @@ export function ConsoleLayout({
           id="main-content"
           tabIndex={-1}
           className={cn(
-            'flex min-h-0 min-w-0 flex-1 flex-col bg-background outline-none',
+            // Content-width container for resource grids / toolbars. Nearest
+            // `@container` for main descendants so queries ignore sidebar width
+            // (unlike the layout-row `@container` on the flex parent above).
+            '@container flex min-h-0 min-w-0 flex-1 flex-col bg-background outline-none',
             usesSplitMain ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto',
           )}
         >

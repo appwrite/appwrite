@@ -1,0 +1,105 @@
+---
+layout: article
+title: Agent
+description: Chat with the Appwrite Agent in the Console to inspect your project, explain issues, suggest next steps, and run approved actions.
+---
+
+Appwrite **Agent** is the AI assistant built into the Appwrite Cloud Console. It sits next to the work you are already doing: the organization and project you have open, the page you are on, and the resources you are configuring. You ask in natural language; the Agent answers with Appwrite-aware guidance, asks clarifying questions when a request is ambiguous, and (when authorized) takes actions through [Appwrite MCP](/docs/tooling/ai/mcp-servers/api).
+
+You can keep the Agent as a right-hand panel while you stay on a Console page, or move to the fullscreen experience at `/agent` for longer sessions. Conversations, models, memory, MCP authorization, and automations are stored on your Console account, not on a single project.
+
+{% info title="Appwrite Cloud" %}
+Agent is available on Appwrite Cloud. Self-hosted deployments do not include Appwrite Agent.
+{% /info %}
+
+# How it works {% #how-it-works %}
+
+Each turn is more than a single chat reply. The Console and backend combine several layers so answers stay grounded in where you are and what you allow the Agent to do.
+
+1. **Console context**: Every message can carry the current organization, project, page path, page title, and URL. Stay on the project or screen you mean before you ask, or pick a project in the Agent composer when you start a new thread. New conversations need a resolvable project so the Agent has a default scope.
+2. **Conversation state**: You chat in natural language, attach files, use voice input where the browser supports it, stop or retry a run, edit and resend earlier messages, and leave feedback on replies. While a turn is running, further messages wait in a short queue so you can keep typing without losing intent.
+3. **Clarification**: When a request is ambiguous or risky, the Agent can pause and ask structured questions (choice, confirm, or free text). Your answers continue the same turn instead of starting a new one.
+4. **Tools via MCP**: With [MCP](/docs/products/agent/mcp) connected and enabled, the Agent can list tools and call Appwrite APIs with the scopes you grant as **Appwrite Agent**. Without MCP, it still explains concepts and walks you through the Console; it cannot mutate project data through tools.
+5. **Console actions**: Beyond tool results, the Agent can navigate routes, open create flows and system dialogs, refresh lists after changes, and render resource cards or usage charts inline in the chat.
+
+The empty-state suggestions reflect that split. Before MCP is ready, chips lean toward how-to questions. After an enabled MCP connection can run tools, they switch to action-oriented prompts such as listing databases or creating a table.
+
+# When to use the panel vs fullscreen {% #panel-vs-fullscreen %}
+
+Use the **panel** when you want help while staying on a specific page: a settings form, a TablesDB spreadsheet, a failed deployment. Context follows the route you leave open.
+
+Use **fullscreen** (`/agent`) when the conversation is the main task: long troubleshooting, reviewing automation runs, managing settings for models, memory, and MCP, or jumping between several threads. The same conversations appear in both places.
+
+# Getting started {% #getting-started %}
+
+Open the Agent, send a first prompt with your current project in scope, then connect Appwrite MCP if you want the Agent to list or change resources for you.
+
+{% arrow_link href="/docs/products/agent/quick-start" %}
+Quick start
+{% /arrow_link %}
+
+# Concepts {% #concepts %}
+
+Core ideas behind conversations, tools, models, and scheduled runs.
+
+{% cards %}
+{% cards_item href="/docs/products/agent/conversations" title="Conversations" %}
+Threads, context, attachments, voice, queueing, pinning, and archive.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/actions" title="Actions" %}
+Answers, clarification, MCP tools, and Console UI the Agent can drive.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/mcp" title="MCP connections" %}
+How Appwrite MCP authorization unlocks project tools for the Agent.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/models" title="Models" %}
+Appwrite default models and bring-your-own provider keys.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/memory" title="Memory" %}
+Preferences, instructions, and facts reused across chats.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/automations" title="Automations" %}
+Cron-scheduled prompts that create a new conversation on each run.
+{% /cards_item %}
+{% /cards %}
+
+# Guides {% #guides %}
+
+Step-by-step guides for common Agent tasks in the Console.
+
+{% cards %}
+{% cards_item href="/docs/products/agent/chat" title="Chat with the Agent" %}
+Open the panel or fullscreen Agent, send prompts, and manage a turn.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/connect-mcp" title="Connect Appwrite MCP" %}
+Authorize the hosted MCP server so the Agent can take project actions.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/add-model" title="Add a custom model" %}
+Register a provider API key and pick it for a conversation.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/add-memory" title="Add memory" %}
+Save a preference, instruction, or fact for future chats.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/create-automation" title="Create an automation" %}
+Schedule a recurring prompt with a cron schedule and optional model.
+{% /cards_item %}
+{% /cards %}
+
+# Related AI tooling {% #related-ai-tooling %}
+
+Appwrite Agent is the in-Console assistant. The same platform also ships MCP servers and skills for coding agents outside the Console. Use Agent when you are operating a project in the UI; use external MCP and skills when you are writing code in an IDE.
+
+{% cards %}
+{% cards_item href="/docs/tooling/ai/mcp-servers" title="MCP servers" %}
+Hosted API and docs MCP for external coding agents and tools.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/skills" title="Agent skills" %}
+Installable Appwrite knowledge packs for coding agents across SDKs.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/agents/cursor" title="IDE agents" %}
+Connect Cursor, Claude Code, Codex, and other IDEs to Appwrite MCP.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/arena" title="Appwrite Arena" %}
+Open-source benchmark of how well models understand Appwrite.
+{% /cards_item %}
+{% /cards %}

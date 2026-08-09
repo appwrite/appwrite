@@ -2,12 +2,12 @@
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
-export type ConsoleRightPaneContent = 'docs' | 'assistant'
+export type ConsoleRightPaneContent = 'docs' | 'agent'
 
 type ConsoleRightPaneContextValue = {
   activeContent: ConsoleRightPaneContent | null
   showDocs: () => void
-  showAssistant: () => void
+  showAgent: () => void
   hideRightPane: () => void
 }
 
@@ -18,7 +18,7 @@ const ConsoleRightPaneContext = createContext<ConsoleRightPaneContextValue | nul
 const noopConsoleRightPaneContext: ConsoleRightPaneContextValue = {
   activeContent: null,
   showDocs: () => {},
-  showAssistant: () => {},
+  showAgent: () => {},
   hideRightPane: () => {},
 }
 
@@ -31,25 +31,25 @@ export function ConsoleRightPaneProvider({ children }: { children: ReactNode }) 
     useState<ConsoleRightPaneContent | null>(null)
 
   const showDocs = useCallback(() => {
-    setActiveContent('docs')
+    setActiveContent((current) => (current === 'docs' ? current : 'docs'))
   }, [])
 
-  const showAssistant = useCallback(() => {
-    setActiveContent('assistant')
+  const showAgent = useCallback(() => {
+    setActiveContent((current) => (current === 'agent' ? current : 'agent'))
   }, [])
 
   const hideRightPane = useCallback(() => {
-    setActiveContent(null)
+    setActiveContent((current) => (current === null ? current : null))
   }, [])
 
   const value = useMemo(
     () => ({
       activeContent,
       showDocs,
-      showAssistant,
+      showAgent,
       hideRightPane,
     }),
-    [activeContent, hideRightPane, showAssistant, showDocs],
+    [activeContent, hideRightPane, showAgent, showDocs],
   )
 
   return (

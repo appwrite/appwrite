@@ -547,7 +547,6 @@ export const jaMarketingDictionary: Record<string, string> = {
   'More about the Appwrite Network': 'Appwrite Networkの詳細',
   'More customers': 'より多くの顧客',
   'More providers': 'より多くのプロバイダー',
-  'Most popular': '最も人気',
   'My functions': 'マイFunctions',
   'N/A': 'N/A',
   'Name': '名前',
@@ -1239,4 +1238,88 @@ export const jaMarketingDictionary: Record<string, string> = {
   'The barrier to entry is zero with Appwrite. And I think that’s really special.': 'Appwrite なら始めるための障壁はゼロです。それは本当に特別なことだと思います。',
   'The integrated user authentication and the ease of creating data structures have undoubtedly saved us several weeks’ worth of time.': '統合されたユーザー認証とデータ構造作成の容易さにより、間違いなく数週間分の時間を節約できました。',
   'infinite value that I’m still discovering today.': '今でも発見し続けている、無限の価値。',
+
+  // Affiliates program page
+  'Affiliates Program': 'アフィリエイトプログラム',
+  'Share Appwrite with other builders. When someone you invite upgrades to Pro, you earn organization credits to use on Appwrite Cloud.':
+    'Appwrite をほかのビルダーに共有しましょう。招待した人が Pro にアップグレードすると、Appwrite Cloud で使える組織クレジットを獲得できます。',
+  'Simple invite links': 'シンプルな招待リンク',
+  'Create shareable links for each campaign or channel and track clicks automatically.':
+    'キャンペーンやチャネルごとに共有リンクを作成し、クリックを自動で追跡できます。',
+  'Long attribution window': '長いアトリビューション期間',
+  'Signups stay attributed to you for 180 days after they join.':
+    '登録後 180 日間、サインアップはあなたに紐づけられます。',
+  'Credits you can spend': '使えるクレジット',
+  'Earn $15 in organization credits for each referred Pro upgrade.':
+    '紹介したユーザーが Pro にアップグレードするごとに、組織クレジット $15 を獲得できます。',
+  'Built into the console': 'コンソールに内蔵',
+  'Manage links, referrals, and rewards from your Appwrite account. No separate dashboard required.':
+    'リンク、紹介、報酬は Appwrite アカウントから管理できます。別ダッシュボードは不要です。',
+  'How it works': '仕組み',
+  'Rewards are simple, transparent, and paid as credits you can use on Appwrite Cloud.':
+    '報酬はシンプルで透明性があり、Appwrite Cloud で使えるクレジットとして支払われます。',
+  'Why join Affiliates': 'アフィリエイトに参加する理由',
+  'Recommend Appwrite, help developers ship, and earn credits along the way.':
+    'Appwrite をすすめ、開発者のリリースを助けながら、クレジットも獲得しましょう。',
+  'Help developers discover Appwrite': '開発者に Appwrite を届けよう',
+  'Recommend a backend you already trust and help more builders ship faster.':
+    'すでに信頼しているバックエンドをすすめ、より多くのビルダーの迅速なリリースを助けましょう。',
+  'Get rewarded for referrals': '紹介で報酬を得る',
+  'Turn community advocacy into credits that offset your own Appwrite usage.':
+    'コミュニティでの推奨を、自身の Appwrite 利用を相殺するクレジットに変えましょう。',
+  'Track what works': '成果を把握',
+  'See clicks, signups, and conversions so you know which channels perform best.':
+    'クリック、サインアップ、コンバージョンを確認し、成果の高いチャネルを把握できます。',
+  'What is the Appwrite Affiliates program?': 'Appwrite アフィリエイトプログラムとは?',
+  'The Affiliates program lets you create invite links and earn organization credits when people you refer join Appwrite Cloud and upgrade to Pro.':
+    'アフィリエイトプログラムでは招待リンクを作成でき、紹介した人が Appwrite Cloud に参加して Pro にアップグレードすると組織クレジットを獲得できます。',
+  'How do I join?': '参加方法は?',
+  'Sign in to Appwrite Cloud and open Affiliates in your account. From there you can create invite links and track referrals.':
+    'Appwrite Cloud にサインインし、アカウントのアフィリエイトを開いてください。そこから招待リンクの作成と紹介の追跡ができます。',
+  'Open Affiliates': 'アフィリエイトを開く',
+  'How much do I earn?': 'いくら獲得できますか?',
+  'You receive $15 in organization credits for each referred user who upgrades to Pro.':
+    '紹介したユーザーが Pro にアップグレードするごとに、組織クレジット $15 を受け取れます。',
+  'How does attribution work if someone clicks more than one invite link?':
+    '複数の招待リンクをクリックした場合、アトリビューションはどうなりますか?',
+  'We use last-click attribution. Credit goes to the last invite link clicked before signup. Earlier clicks still appear in analytics, but only the last affiliate earns the reward if that user upgrades to Pro.':
+    'ラストクリックアトリビューションを採用しています。クレジットはサインアップ前に最後にクリックされた招待リンクに付与されます。それ以前のクリックは分析に残りますが、そのユーザーが Pro にアップグレードした場合、報酬を得られるのは最後のアフィリエイトのみです。',
+  'How long does attribution last?': 'アトリビューションはどのくらい続きますか?',
+  'After someone signs up through an attributed invite link, Pro upgrades count for that affiliate for 180 days.':
+    'アトリビュートされた招待リンク経由で登録したあと、Pro へのアップグレードはそのアフィリエイトに対して 180 日間カウントされます。',
+  'When do I get rewarded?': 'いつ報酬を受け取れますか?',
+  'A reward is created when a referred user upgrades to Pro within the attribution window. Credits are added to your organization after the reward is claimed or applied.':
+    'アトリビューション期間内に紹介ユーザーが Pro にアップグレードすると報酬が作成されます。報酬の受け取りまたは適用後に組織へクレジットが追加されます。',
+  'Who can join the Affiliates program?': 'アフィリエイトプログラムには誰が参加できますか?',
+  'The Affiliates program is available on Appwrite Cloud. Create an account, then open Affiliates from your account settings to get started.':
+    'アフィリエイトプログラムは Appwrite Cloud で利用できます。アカウントを作成し、アカウント設定からアフィリエイトを開いて開始してください。',
+  'Can I create more than one invite link?': '招待リンクは複数作成できますか?',
+  'Yes. Create separate links for different campaigns, posts, or communities so you can compare performance.':
+    'はい。キャンペーン、投稿、コミュニティごとに別リンクを作成し、成果を比較できます。',
+  'Where can I use the credits?': 'クレジットはどこで使えますか?',
+  'Affiliate rewards are added as organization credits on Appwrite Cloud and can be used toward eligible Cloud charges.':
+    'アフィリエイト報酬は Appwrite Cloud の組織クレジットとして追加され、対象となる Cloud 料金に利用できます。',
+  'Start earning with the Affiliates program': 'アフィリエイトプログラムで獲得を始めよう',
+  'Create your first invite link, share Appwrite with developers, and earn credits when they upgrade to Pro.':
+    '最初の招待リンクを作成し、開発者に Appwrite を共有して、Pro へのアップグレード時にクレジットを獲得しましょう。',
+  'Join the program': 'プログラムに参加',
+  'Three steps from invite link to organization credits. No applications, no waiting list.':
+    '招待リンクから組織クレジットまで、3つのステップ。申し込みも待機リストもありません。',
+  'Per Pro upgrade': 'Pro アップグレードごと',
+  'Track everything from your dashboard': 'ダッシュボードですべてを追跡',
+  'See clicks, attributed signups, and Pro conversions for each invite link. Claim credits when rewards are ready, without leaving the Appwrite Console.':
+    '招待リンクごとのクリック、アトリビュートされたサインアップ、Pro コンバージョンを確認できます。報酬の準備ができたら、Appwrite Console から離れずにクレジットを受け取れます。',
+  'Track links, referrals, and rewards': 'リンク、紹介、報酬を追跡',
+  'Signup rate: 7.8%': 'サインアップ率: 7.8%',
+  'Conversion rate: 12.9%': 'コンバージョン率: 12.9%',
+  '3 pending rewards': '保留中の報酬 3 件',
+  'Invite links': '招待リンク',
+  'Create an Appwrite account': 'Appwrite アカウントを作成',
+  'Sign up for Appwrite Cloud, or sign in if you already have an account. Affiliates is available from your account.':
+    'Appwrite Cloud にサインアップするか、すでにアカウントがある場合はサインインしてください。アフィリエイトはアカウントから利用できます。',
+  'Go to Account, then Affiliates. From there you can create invite links and track referrals.':
+    'アカウントからアフィリエイトを開きます。そこから招待リンクの作成と紹介の追跡ができます。',
+  'Create and share your first link': '最初のリンクを作成して共有',
+  'Generate an invite link for each campaign or channel. Signups stay attributed for 180 days, and you earn $15 when a referral upgrades to Pro.':
+    'キャンペーンやチャネルごとに招待リンクを作成します。サインアップは 180 日間アトリビュートされ、紹介ユーザーが Pro にアップグレードすると $15 を獲得できます。',
 }

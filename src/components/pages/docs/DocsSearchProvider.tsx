@@ -4,12 +4,14 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
+import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 
 type DocsCommandCenterContextValue = {
   openDocsSearch: () => void
@@ -45,6 +47,13 @@ export function DocsSearchProvider({ children }: DocsSearchProviderProps) {
   const openShortcutsHelp = useCallback(() => {
     setInitialSubPage('shortcuts')
     setCommandCenterOpen(true)
+  }, [])
+
+  useEffect(() => {
+    return registerCommandCenterOpener((page) => {
+      setInitialSubPage(page)
+      setCommandCenterOpen(true)
+    })
   }, [])
 
   useGlobalCommandShortcuts({

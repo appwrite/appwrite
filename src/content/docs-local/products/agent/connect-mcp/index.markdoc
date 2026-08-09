@@ -1,0 +1,48 @@
+---
+layout: article
+title: Connect Appwrite MCP
+description: Authorize Appwrite MCP so Appwrite Agent can take approved actions in your projects.
+---
+
+Connecting **Appwrite MCP** lets the Agent call Appwrite tools with the authorization you grant as **Appwrite Agent**. Without this connection, the Agent can still answer questions and guide you through the Console. With it enabled, empty-state suggestions become action-oriented, and the conversation timeline can show live tool activity.
+
+On Appwrite Cloud, the Console often connects Appwrite MCP automatically when you open the Agent, using your existing session. Use this guide when the connection is missing, shows **Reconnect**, or you want to disable or disconnect deliberately.
+
+# Connect {% #connect %}
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Open the Agent panel, or go to `/agent/settings/mcp`.
+3. Find **Appwrite MCP**.
+4. Click **Connect**.
+5. If the Console can authorize silently, the badge moves to **Connected** without a consent screen. Otherwise complete the OAuth flow in the popup (or full-page redirect if the popup is blocked).
+6. Confirm the badge shows **Connected** and the connection is enabled.
+
+You can also start connect from Agent UI entry points that prompt you to connect MCP before running an action (for example an open-dialog Console action).
+
+# Reconnect {% #reconnect %}
+
+Reconnect when the connection shows **Reconnect**, after you revoke the Appwrite Agent authorization from account security, or when the stored MCP URL no longer matches the endpoint the Console expects.
+
+1. Open **Agent** > **Settings** > **MCP**.
+2. Choose **Reconnect** for Appwrite MCP.
+3. Complete authorization again if prompted.
+
+After a successful reconnect, try a simple read prompt such as listing databases in the current project to confirm tools work.
+
+# Disconnect or disable {% #disconnect-or-disable %}
+
+**Disable** the connection to stop tool use without removing the saved connection. Action suggestions and tool calls stay off until you enable it again.
+
+**Delete** or disconnect when you want to remove the MCP connection from your Agent settings entirely. You can connect again later with the steps above.
+
+# After connecting {% #after-connecting %}
+
+Empty-state suggestions switch toward actions you can take in the current project, for example listing databases and tables, reviewing recent Auth users, inspecting storage buckets, or creating a todos table with columns.
+
+Review tool activity in the conversation timeline. When the Agent asks a clarifying question before a write, answer it in the same turn. Successful mutations may refresh open Console lists so you see the change without reloading the page.
+
+For using the same MCP servers from IDEs and other clients, see [MCP servers](/docs/tooling/ai/mcp-servers). Authorizing Appwrite Agent does not configure those external clients; each client has its own OAuth setup.
+
+{% arrow_link href="/docs/products/agent/mcp" %}
+MCP connections
+{% /arrow_link %}

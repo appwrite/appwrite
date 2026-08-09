@@ -18,7 +18,7 @@ export const enCatalog = {
         openWebsiteNavigation: 'Open website navigation',
         create: 'Create',
         connect: 'Connect',
-        assistant: 'Assistant',
+        assistant: 'Agent',
         upgrade: 'Upgrade',
         signIn: 'Sign in',
         signUp: 'Sign up',
@@ -28,13 +28,16 @@ export const enCatalog = {
       createMenu: {
         newProject: 'New Project',
         newOrganization: 'New Organization',
+        newAgent: 'New Agent',
         buildSection: 'Build',
         deploySection: 'Deploy',
+        protectSection: 'Protect',
         newDatabase: 'New Database',
         newUser: 'New User',
         newBucket: 'New Bucket',
         newFunction: 'New Function',
         newMessage: 'New Message',
+        newFirewallRule: 'New Firewall Rule',
         newSite: 'New Site',
       },
       permissions: {
@@ -44,6 +47,8 @@ export const enCatalog = {
         createBuckets: "You don't have permission to create buckets.",
         createFunctions: "You don't have permission to create functions.",
         createTopics: "You don't have permission to create messaging topics.",
+        createFirewallRules:
+          "You don't have permission to create firewall rules.",
         createSites: "You don't have permission to create sites.",
       },
       accountMenu: {
@@ -62,6 +67,8 @@ export const enCatalog = {
         enabled: 'Enabled',
         disabled: 'Disabled',
         console: 'Console',
+        // Temporary: remove once the old console is retired
+        oldConsole: 'Old console',
         home: 'Home',
         docs: 'Docs',
         changelog: 'Changelog',
@@ -126,6 +133,7 @@ export const enCatalog = {
           functions: 'Functions',
           messaging: 'Messaging',
           realtime: 'Realtime',
+          agent: 'Agent',
           hosting: 'Hosting',
           domains: 'Domains',
           network: 'Network',
@@ -149,6 +157,7 @@ export const enCatalog = {
           education: 'Education',
           partners: 'Partners',
           enterprise: 'Enterprise',
+          affiliates: 'Affiliates',
         },
         about: {
           company: 'Company',
@@ -375,7 +384,6 @@ export const enCatalog = {
         triggerLabel: 'Products',
         desktopTitle: 'Platform products',
         desktopSubtitle: 'Build, deploy, and scale on one backend platform',
-        viewOverview: 'View platform overview',
         newLabel: 'New',
         categories: {
           build: 'Build',
@@ -391,6 +399,8 @@ export const enCatalog = {
           sitesTagline: 'Static, SSR, and CSR deploys from Git.',
           realtimeName: 'Realtime',
           realtimeTagline: 'Live events, channels, and presence.',
+          agentName: 'Agent',
+          agentTagline: 'Chat to inspect your project and take approved actions.',
           domainsName: 'Domains',
           domainsTagline: 'Search, buy, transfer, and manage domains.',
           firewallName: 'Firewall',

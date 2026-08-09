@@ -45,15 +45,14 @@ import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
   useProjectBandwidthBreakdowns,
   useProjectBandwidthChartOnly,
-  useCountries,
+  useCountryLookups,
   refetchProjectBandwidthUsageQueries,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
-import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { Skeleton } from '@/components/ui/skeleton'
-import { splitUsageBreakdownEntries, getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
+import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageResourceBreakdownCard } from './_components/UsageResourceBreakdownCard'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 import {
@@ -440,11 +439,7 @@ export function BandwidthSection({
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<BandwidthBreakdownDrawerState | null>(null)
   const showBreakdown = !disableUsageBreakdownQueries
-  const { data: countriesData } = useCountries()
-  const countryLookups = useMemo(
-    () => buildCountryLookups(countriesData?.countries),
-    [countriesData?.countries],
-  )
+  const { lookups: countryLookups } = useCountryLookups()
 
   const {
     data: chartOverview,
@@ -471,15 +466,16 @@ export function BandwidthSection({
     [breakdowns],
   )
 
-  const resourceBreakdownIds = useMemo(() => {
-    return getUsageBreakdownResourceIds(resourceEntry?.items ?? [])
-  }, [resourceEntry?.items])
+  const resourceBreakdownItems = useMemo(
+    () => resourceEntry?.items ?? [],
+    [resourceEntry?.items],
+  )
 
   const { computeLookup, databaseLookup, storageLookup, tableLookup } =
     useUsageResourceBreakdownLookups(
       projectId,
-      resourceBreakdownIds,
-      showBreakdown && resourceBreakdownIds.length > 0,
+      resourceBreakdownItems,
+      showBreakdown && resourceBreakdownItems.length > 0,
     )
 
   useEffect(() => {

@@ -207,18 +207,21 @@ export function ImpersonateConsoleUserPopover() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <Tooltip>
+        {/* Avoid nested asChild (Tooltip+Popover) - React 19 composeRefs can loop (#185). */}
         <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:flex"
-              aria-label={
-                isImpersonating ? t('Impersonating') : t('Impersonate')
-              }
-            >
-              <Eye className="h-4 w-4" />
-            </button>
-          </PopoverTrigger>
+          <span className="hidden h-9 w-9 shrink-0 @[900px]:inline-flex">
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label={
+                  isImpersonating ? t('Impersonating') : t('Impersonate')
+                }
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+            </PopoverTrigger>
+          </span>
         </TooltipTrigger>
         <TooltipContent side="bottom">
           <p>{isImpersonating ? t('Impersonating') : t('Impersonate')}</p>
@@ -277,7 +280,7 @@ export function ImpersonateConsoleUserPopover() {
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           </div>
-          <CommandList className="max-h-[280px]">
+          <CommandList className="min-h-[180px] max-h-[280px]">
             {showRecentSection && (
               <CommandGroup heading={t('Recent')}>
                 {recentImpersonationUsers.map((recent) => {

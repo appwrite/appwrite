@@ -10,7 +10,11 @@ import {
   useVerifyDomain,
   useDeleteDomain,
 } from '@/lib/react-query/hooks/project-domains'
-import { VerifyDomainContent } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+import {
+  VerifyDomainContent,
+  dnsPendingVerificationError,
+  type DomainVerificationError,
+} from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
@@ -39,9 +43,8 @@ export function VerifyDomain({
   const t = useT()
   const verifyMutation = useVerifyDomain(projectId, region)
   const deleteMutation = useDeleteDomain(projectId, region)
-  const [verificationError, setVerificationError] = useState<string | null>(
-    null,
-  )
+  const [verificationError, setVerificationError] =
+    useState<DomainVerificationError | null>(null)
 
   useEffect(() => {
     if (open) setVerificationError(null)
@@ -72,14 +75,14 @@ export function VerifyDomain({
         updated.status === 'created' ||
         updated.status === 'unverified'
       ) {
-        setVerificationError(t('Verification failed. Check DNS and retry.'))
+        setVerificationError(dnsPendingVerificationError(t))
       } else {
         toast.success(t('Verifying...'))
         onOpenChange(false)
         onVerifySuccess()
       }
     } catch {
-      setVerificationError(t('Failed to verify domain'))
+      setVerificationError(dnsPendingVerificationError(t))
     }
   }
 

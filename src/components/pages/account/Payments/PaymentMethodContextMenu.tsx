@@ -14,6 +14,7 @@ import { fetchPaymentMethod } from '@/lib/react-query/hooks'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 interface PaymentMethodContextMenuProps {
   paymentMethod: Models.PaymentMethod
@@ -33,7 +34,11 @@ export function PaymentMethodContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        <ContextMenuItem onSelect={() => onUpdate(paymentMethod)}>
+        <ContextMenuItem
+          onSelect={() =>
+            openDialogAfterOverlayCloses(() => onUpdate(paymentMethod))
+          }
+        >
           <ContextMenuIcon icon={Pencil} />
           {t('Update')}
         </ContextMenuItem>
@@ -71,7 +76,11 @@ export function PaymentMethodContextMenu({
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
-        <ContextMenuItem onSelect={() => onDelete(paymentMethod)}>
+        <ContextMenuItem
+          onSelect={() =>
+            openDialogAfterOverlayCloses(() => onDelete(paymentMethod))
+          }
+        >
           <ContextMenuIcon icon={Trash2} />
           {t('Delete')}
         </ContextMenuItem>

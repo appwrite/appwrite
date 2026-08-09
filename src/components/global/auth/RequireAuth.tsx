@@ -2,16 +2,24 @@ import { useLoaderData, useNavigate, useLocation } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { clearConsoleSessionLocally } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
-import { ReactNode, useEffect, useRef } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
-import { consoleAccountQueryOptions, performConsoleSignOut } from '@/lib/react-query/hooks/auth'
+import {
+  consoleAccountQueryOptions,
+  isConsoleSigningOut,
+  performConsoleSignOut,
+} from '@/lib/react-query/hooks/auth'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
+import {
+  applyScreenshotModeAccount,
+  subscribeScreenshotMode,
+} from '@/lib/screenshot-mode'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
@@ -30,7 +38,25 @@ function isAuthPage(pathname: string): boolean {
 /** Console routes that work without sign-in; account is optional. */
 export function isOptionalAuthPage(pathname: string): boolean {
   const features = getActiveProfileFeatures()
+  // Soft-launch password gate; guests land here before marketing/console.
+  if (pathname === '/access') return true
   if (pathname === '/init') return features.init
+  // Legacy `/agent` / `/assistant` still soft-auth while they redirect into org scope.
+  if (
+    pathname === '/agent' ||
+    pathname.startsWith('/agent/') ||
+    pathname === '/assistant' ||
+    pathname.startsWith('/assistant/')
+  ) {
+    // Keep MCP OAuth callback under normal auth handling.
+    if (
+      pathname.startsWith('/agent/mcp/') ||
+      pathname.startsWith('/assistant/mcp/')
+    ) {
+      return false
+    }
+    return features.agent
+  }
   // Debug demos must stay reachable without auth redirects (and without
   // signing the user out via linked auth routes).
   if (pathname.startsWith('/debug/')) return true
@@ -152,6 +178,8 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
     error.type === 'user_more_factors_required'
 
   useEffect(() => {
+    // Sign-out uses a hard redirect; SPA MFA navigation would flash under it.
+    if (isConsoleSigningOut()) return
     if (!needsMfa || location.pathname === '/mfa') return
     const redirectUrl = getRelativeRedirectUrl(location as unknown)
     const redirectKey = `mfa:${redirectUrl ?? ''}`
@@ -169,6 +197,9 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
       (error as { status?: number }).status === 401)
 
   useEffect(() => {
+    // Sign-out covers the viewport and hard-navigates to /sign-in. Do not SPA
+    // navigate here or the console will flash empty/guest states mid-logout.
+    if (isConsoleSigningOut()) return
     if (
       !is401 ||
       isAuthPage(location.pathname) ||
@@ -280,7 +311,7 @@ export function RequireAuth({
 
   // Client-side authentication check using Console SDK
   const {
-    data: account,
+    data: accountData,
     isLoading,
     isPending,
     isFetched,
@@ -289,13 +320,22 @@ export function RequireAuth({
     consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
   )
 
+  const [, setScreenshotModeEpoch] = useState(0)
+  useEffect(() => {
+    return subscribeScreenshotMode(() => {
+      setScreenshotModeEpoch((epoch) => epoch + 1)
+    })
+  }, [])
+
+  const account = applyScreenshotModeAccount(accountData)
+
   useAuthErrorNavigation(error, location)
 
   const accountAccessBlocked = !!error && isHttpForbiddenError(error)
   const isMfaRequired = isMfaRequiredError(error)
   const isAuthenticated = !!account && !error
   const needsEmailVerification =
-    isAuthenticated && requiresConsoleEmailVerification(account)
+    isAuthenticated && requiresConsoleEmailVerification(accountData)
 
   // Unverified console accounts cannot use org/project APIs. Keep them on
   // /verify-email (with a return path) instead of rendering a broken console.
@@ -400,9 +440,16 @@ export function useAuth(): AuthData {
   const location = useLocation()
   const queryClient = useQueryClient()
   const consoleImpersonationRevision = useConsoleImpersonationRevision()
+  const [, setScreenshotModeEpoch] = useState(0)
+
+  useEffect(() => {
+    return subscribeScreenshotMode(() => {
+      setScreenshotModeEpoch((epoch) => epoch + 1)
+    })
+  }, [])
 
   const {
-    data: account,
+    data: accountData,
     isLoading,
     isPending,
     isFetched,
@@ -414,6 +461,7 @@ export function useAuth(): AuthData {
   useAuthErrorNavigation(error, location)
 
   const accountAccessBlocked = !!error && isHttpForbiddenError(error)
+  const account = applyScreenshotModeAccount(accountData)
 
   return {
     currentUser,

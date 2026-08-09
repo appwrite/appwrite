@@ -1,12 +1,12 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { DocsPartnersHome } from '@/components/pages/docs/DocsPartnersHome'
-import { isPartnersDocsEnabled } from '@/lib/docs/partners-docs-feature'
+import { shouldBlockPartnersDocs } from '@/lib/docs/partners-docs-feature'
 import { getDocsMetaTags } from '@/lib/docs/route-meta'
 
 export const Route = createFileRoute('/docs/partners/')({
   ssr: true,
   beforeLoad: () => {
-    if (!isPartnersDocsEnabled()) {
+    if (shouldBlockPartnersDocs()) {
       throw redirect({ to: '/docs', replace: true })
     }
   },

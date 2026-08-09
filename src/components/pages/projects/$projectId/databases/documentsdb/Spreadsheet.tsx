@@ -18,6 +18,10 @@ import { isTextType } from '@/lib/utils/database-columns'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { copyToClipboard, openInNewWindow } from '@/lib/utils/context-menu'
 import {
+  closeDialogBeforeOverlayUnmount,
+  openDialogAfterOverlayCloses,
+} from '@/lib/utils/overlay-lock'
+import {
   Plus,
   Key,
   Table2,
@@ -2849,9 +2853,11 @@ export function RowsSpreadsheet({
     [displayedSearch, displayedFilterQueryString],
   )
   const hasInitedDisplayedRef = useRef(false)
-  const [displayedSortBy, setDisplayedSortBy] = useState<string>('$createdAt')
+  const [displayedSortBy, setDisplayedSortBy] = useState<string>(
+    urlDriven ? rowsSortBy : '$createdAt',
+  )
   const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
-    'desc',
+    urlDriven ? rowsSortOrder : 'desc',
   )
   const [pageSize, setPageSize] = useState(
     urlDriven ? rowsUrlLimit : ROWS_DEFAULT_PAGE_SIZE,
@@ -3046,28 +3052,37 @@ export function RowsSpreadsheet({
   useEffect(() => {
     setSelectedRows(new Set())
     setDeleteDialogOpen(false)
+    // Reset requested + displayed list state together so table switches do not
+    // keep the previous table's page/search/filters and fire a second listRows.
+    // Depend only on table identity (not page/search) so in-table pagination
+    // can still keep the previous page visible until the next page loads.
     if (!urlDriven) {
       setRequestedPage(1)
       setDisplayedPage(1)
+      setDisplayedSearch('')
+      setDisplayedFilterQueryString('')
       setDisplayedSortBy('$createdAt')
       setDisplayedSortOrder('desc')
       setSortBy('$createdAt')
       setSortOrder('desc')
+      setPageSize(ROWS_DEFAULT_PAGE_SIZE)
     } else {
+      const nextPage = rowsUrlPage ?? 1
+      const nextSearch = rowsUrlSearch ?? ''
+      const nextFilters = rowsFilterQueryString ?? ''
+      setRequestedPage(nextPage)
+      setDisplayedPage(nextPage)
+      setDisplayedSearch(nextSearch)
+      setDisplayedFilterQueryString(nextFilters)
       setDisplayedSortBy(rowsSortBy)
       setDisplayedSortOrder(rowsSortOrder)
       setSortBy(rowsSortBy)
       setSortOrder(rowsSortOrder)
+      if (rowsUrlLimit != null) setPageSize(rowsUrlLimit)
+      hasInitedDisplayedRef.current = true
     }
-  }, [
-    location.pathname,
-    projectId,
-    databaseId,
-    tableId,
-    urlDriven,
-    rowsSortBy,
-    rowsSortOrder,
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only on table/route identity change
+  }, [location.pathname, projectId, databaseId, tableId, urlDriven])
 
   const effectiveSearch = urlDriven ? (rowsUrlSearch ?? '') : ''
   const effectivePageSize = urlDriven ? rowsUrlLimit : pageSize
@@ -3693,7 +3708,6 @@ export function RowsSpreadsheet({
         }
       }
       setSelectedRows(new Set())
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(
@@ -3709,7 +3723,9 @@ export function RowsSpreadsheet({
 
   const confirmBulkDelete = () => {
     if (selectedRows.size === 0) return
-    bulkDeleteMutation.mutate(Array.from(selectedRows))
+    const rowIds = Array.from(selectedRows)
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    bulkDeleteMutation.mutate(rowIds)
   }
 
   const duplicateRowMutation = useMutation({
@@ -4302,7 +4318,12 @@ export function RowsSpreadsheet({
                   </div>
                 </th>
               ) : null}
-              <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
+              <th
+                className={cn(
+                  'w-[180px] min-w-[180px] max-w-[180px] px-3 py-2',
+                  headerCellBorderClass,
+                )}
+              >
                 <div className="flex items-center gap-2">
                   <IdHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <button
@@ -4609,12 +4630,18 @@ export function RowsSpreadsheet({
                   ) : null}
                   <td
                     className={cn(
-                      'w-[180px] px-3 py-1.5',
+                      'w-[180px] min-w-[180px] max-w-[180px] px-3 py-1.5',
                       bodyCellBorderClass,
                     )}
                     data-column="$id"
                   >
-                    <CopyableId id={row.$id} size="xs" />
+                    <div className="min-w-0 max-w-full overflow-hidden">
+                      <CopyableId
+                        id={row.$id}
+                        size="xs"
+                        constrainToContainer
+                      />
+                    </div>
                   </td>
                   {columns.map((col: string) => (
                     <td
@@ -4762,7 +4789,9 @@ export function RowsSpreadsheet({
                             onClick={(e) => {
                               e.stopPropagation()
                               setSelectedRows(new Set([row.$id]))
-                              setDeleteDialogOpen(true)
+                              openDialogAfterOverlayCloses(() =>
+                                setDeleteDialogOpen(true),
+                              )
                             }}
                           >
                             <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>

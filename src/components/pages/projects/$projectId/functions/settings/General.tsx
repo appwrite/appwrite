@@ -5,14 +5,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import {
   useProjectFunction,
   buildFunctionUpdateParams,
   useDeleteFunction,
@@ -30,6 +22,7 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -65,11 +58,12 @@ export function View() {
         buildFunctionUpdateParams(func, updates),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Function updated successfully'))
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
-      })
+      queryClient.setQueryData(
+        ['function', 'project', projectId, functionId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['functions', 'project', projectId],
       })
@@ -90,15 +84,16 @@ export function View() {
         buildFunctionUpdateParams(func, { enabled: nextEnabled }),
       )
     },
-    onSuccess: (_, nextEnabled) => {
+    onSuccess: (updated, nextEnabled) => {
       toast.success(
         nextEnabled
           ? t('Function has been enabled')
           : t('Function has been disabled'),
       )
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
-      })
+      queryClient.setQueryData(
+        ['function', 'project', projectId, functionId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['functions', 'project', projectId],
       })
@@ -336,47 +331,34 @@ export function View() {
           </div>
         </div>
         <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
-          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="destructive"
-                size="sm"
-                className="h-9 text-[13px]"
-                disabled={deleteFunctionMutation.isPending}
-              >
-                <Trash2 className="me-1.5 h-4 w-4" />
-                {t('Delete function')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 text-start">
-                <DialogTitle>{t('Delete function')}</DialogTitle>
-                <DialogDescription className="text-[13px] mt-2">
-                  {t('Are you sure you want to delete')}{' '}
-                  <span className="font-medium text-foreground">
-                    {func.name || t('this function')}
-                  </span>{' '}
-                  {t('and all its data? This action cannot be undone.')}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setDeleteDialogOpen(false)}
-                  disabled={deleteFunctionMutation.isPending}
-                >
-                  {t('Cancel')}
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteFunction}
-                  disabled={deleteFunctionMutation.isPending}
-                >
-                  {t('Delete')}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-9 text-[13px]"
+            disabled={deleteFunctionMutation.isPending}
+            onClick={() => setDeleteDialogOpen(true)}
+          >
+            <Trash2 className="me-1.5 h-4 w-4" />
+            {t('Delete function')}
+          </Button>
+          <ConfirmNameDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            title="Delete function"
+            description={
+              <>
+                {t('Are you sure you want to delete')}{' '}
+                <span className="font-medium text-foreground">
+                  {func.name || t('this function')}
+                </span>{' '}
+                {t('and all its data? This action cannot be undone.')}
+              </>
+            }
+            confirmValue={func.name?.trim() || func.$id}
+            confirmPlaceholder="Enter function name"
+            onConfirm={handleDeleteFunction}
+            isConfirming={deleteFunctionMutation.isPending}
+          />
         </div>
       </div>
       ),

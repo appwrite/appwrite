@@ -49,7 +49,7 @@ export const INTEGRATION_SLUG_ICON_MAP: Record<string, string> = {
 }
 
 const VENDOR_ICON_ALIASES: Record<string, string> = {
-  anthropic: 'claude.svg',
+  anthropic: 'anthropic.svg',
   aws: 'amazon.svg',
   firebase: 'firebase.svg',
   mongodb: 'mongo-db.svg',

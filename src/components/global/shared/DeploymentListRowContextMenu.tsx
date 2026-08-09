@@ -14,6 +14,10 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -188,17 +192,20 @@ export function DeploymentListRowContextMenu({
   }
 
   const handleConfirmDelete = async () => {
+    const deploymentId = deployment.$id
+    closeDialogBeforeOverlayUnmount(() => {
+      setDeleteDialogOpen(false)
+    })
     setDeletePending(true)
     try {
       if (variant === 'function') {
-        await deleteFunctionDeployment(projectId, resourceId, deployment.$id)
+        await deleteFunctionDeployment(projectId, resourceId, deploymentId)
         await invalidateAfterFunctionMutation()
       } else {
-        await deleteSiteDeployment(projectId, resourceId, deployment.$id)
+        await deleteSiteDeployment(projectId, resourceId, deploymentId)
         invalidateAfterSiteMutation()
       }
       toast.success(t('Deployment deleted successfully'))
-      setDeleteDialogOpen(false)
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -369,7 +376,10 @@ export function DeploymentListRowContextMenu({
           </ContextMenuItem>
           {inProgress && (
             <ContextMenuItem
-              onSelect={() => onRequestCancelBuild(deployment.$id)}
+              onSelect={() => {
+                const id = deployment.$id
+                openDialogAfterOverlayCloses(() => onRequestCancelBuild(id))
+              }}
             >
               <ContextMenuIcon icon={XCircle} />
               {t('Cancel')}
@@ -389,7 +399,7 @@ export function DeploymentListRowContextMenu({
             }
             onSelect={() => {
               if (!canDeleteFromMenu) return
-              setDeleteDialogOpen(true)
+              openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
             }}
           >
             <ContextMenuIcon icon={Trash2} />
@@ -408,7 +418,6 @@ export function DeploymentListRowContextMenu({
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="border-t border-border" />
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"

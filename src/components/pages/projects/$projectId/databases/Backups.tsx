@@ -79,6 +79,7 @@ import {
 } from '@/lib/databases/backup-policy-plan-limits'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
+import { toByteCount } from '@/lib/utils/byte-display-unit'
 
 type BackupStatusVariant = 'completed' | 'failed' | 'pending' | 'processing'
 
@@ -191,7 +192,10 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
   const policies: Models.BackupPolicy[] = policiesData?.policies || []
   const archives: Models.BackupArchive[] = archivesData?.archives || []
-  const archivesTotal = archivesData?.total || 0
+  const archivesTotal =
+    typeof archivesData?.total === 'bigint'
+      ? Number(archivesData.total)
+      : archivesData?.total || 0
   const isAtBackupPoliciesLimit = isBackupPoliciesAtPlanLimit(
     policies.length,
     backupPoliciesLimit,
@@ -459,12 +463,13 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     },
   })
 
-  // Format backup size
-  const formatSize = (bytes: number | undefined) => {
-    if (!bytes) return '-'
-    const mb = bytes / (1000 * 1000)
+  // Format backup size (API may return int64 size as bigint)
+  const formatSize = (bytes: number | bigint | undefined) => {
+    const n = toByteCount(bytes)
+    if (n <= 0) return '-'
+    const mb = n / (1000 * 1000)
     if (mb < 1) {
-      return `${(bytes / 1000).toFixed(2)} KB`
+      return `${(n / 1000).toFixed(2)} KB`
     }
     return `${mb.toFixed(2)} MB`
   }
@@ -615,14 +620,14 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               <h3 className="text-[15px] font-semibold text-foreground">
                 {t('Policies')}
               </h3>
-              {backupPoliciesLimit > 0 ? (
-                <Badge
-                  variant="secondary"
-                  className="text-[12px] font-normal"
-                >
-                  {policies.length}/{backupPoliciesLimit}
-                </Badge>
-              ) : null}
+              <Badge
+                variant="secondary"
+                className="text-[12px] font-normal"
+              >
+                {backupPoliciesLimit > 0
+                  ? `${policies.length}/${backupPoliciesLimit}`
+                  : t('Unlimited')}
+              </Badge>
             </div>
             {isAtBackupPoliciesLimit ? (
               <Tooltip>
@@ -1679,11 +1684,12 @@ function RestoreBackupDialog({
   const [newDatabaseId, setNewDatabaseId] = useState('')
   const [confirmSameDbRestore, setConfirmSameDbRestore] = useState(false)
 
-  const formatSize = (bytes: number | undefined) => {
-    if (!bytes) return '-'
-    const mb = bytes / (1000 * 1000)
+  const formatSize = (bytes: number | bigint | undefined) => {
+    const n = toByteCount(bytes)
+    if (n <= 0) return '-'
+    const mb = n / (1000 * 1000)
     if (mb < 1) {
-      return `${(bytes / 1000).toFixed(2)} KB`
+      return `${(n / 1000).toFixed(2)} KB`
     }
     return `${mb.toFixed(2)} MB`
   }

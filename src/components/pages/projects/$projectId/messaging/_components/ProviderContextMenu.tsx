@@ -42,6 +42,10 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 
 export type ProviderContextMenuProvider = {
   $id: string
@@ -75,7 +79,6 @@ export function ProviderContextMenu({
         queryKey: ['providers', 'project', projectId],
       })
       toast.success(t('Provider deleted'))
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || t('Failed to delete provider'))
@@ -105,7 +108,7 @@ export function ProviderContextMenu({
   )
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
   }
 
   const hasName = !!provider.name
@@ -213,7 +216,10 @@ export function ProviderContextMenu({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate()}
+              onClick={() => {
+                closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+                deleteMutation.mutate()
+              }}
               disabled={deleteMutation.isPending}
 >
               {t('Delete')}

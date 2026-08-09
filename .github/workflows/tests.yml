@@ -22,6 +22,9 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
+      - name: Check connect snippet line width
+        run: bun run lint:snippets
+
       - name: Build
         run: bun run build
         env:

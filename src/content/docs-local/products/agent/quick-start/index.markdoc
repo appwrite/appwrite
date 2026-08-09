@@ -1,0 +1,61 @@
+---
+layout: article
+title: Start with Agent
+description: Open the Appwrite Agent in the Console, ask your first question, and optionally connect MCP so it can take actions.
+difficulty: beginner
+readtime: 5
+---
+
+This quick start gets you from a signed-in Console session to a useful first reply, then optionally unlocks live project actions. You do not need MCP to ask how-to questions. You do need it if you want the Agent to list or change resources for you.
+
+# Open the Agent {% #open-the-agent %}
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Open any project you can access (or stay on an organization page and pick a project in the Agent composer).
+3. Click the **Agent** control in the Console header to open the right-hand panel.
+
+For longer sessions, go to `/agent` for the fullscreen Agent. Guests see a sign-in prompt before chat is available.
+
+{% info title="Feature availability" %}
+If you do not see Agent, confirm you are on Appwrite Cloud and that the AI agent feature is enabled for your Console profile.
+{% /info %}
+
+New conversations need a project in scope. If the Agent cannot resolve one from the route, the composer selector, or your accessible projects, it will ask you to pick one before the first message sends.
+
+# Ask a question {% #ask-a-question %}
+
+1. Click a suggestion chip, or type a question in the composer (for example `How do I create a new database?`).
+2. Send the message.
+3. Read the reply. The Agent uses your current organization, project, and page as context, so answers tend to match the screen you left open.
+
+A good first prompt is concrete: name the resource type, the outcome you want, and any error text you already have. Vague prompts still get a reply, but they produce more clarification turns.
+
+You can attach files, use voice input where supported, stop a run in progress, retry a failed turn, or edit and resend a previous message. See [Chat with the Agent](/docs/products/agent/chat) for the full turn lifecycle.
+
+# Connect Appwrite MCP (optional) {% #connect-mcp %}
+
+Connecting [Appwrite MCP](/docs/tooling/ai/mcp-servers/api) lets the Agent call Appwrite tools with scopes you grant as **Appwrite Agent**. On Appwrite Cloud, the Console often establishes this connection automatically when you open the Agent. If the connection is missing or shows **Reconnect**, connect manually:
+
+1. In the Agent panel or at **Agent** > **Settings** > **MCP**, find **Appwrite MCP**.
+2. Click **Connect** and complete authorization if the Console prompts you.
+3. Confirm the connection shows **Connected**.
+
+With MCP enabled, try an action prompt such as `List the databases and tables in this project` or `Create a todos table with title and done columns`. Review tool activity in the conversation timeline, and answer any clarifying prompts before changes apply.
+
+See [Connect Appwrite MCP](/docs/products/agent/connect-mcp) for reconnect, disable, and disconnect.
+
+# Next steps {% #next-steps %}
+
+Once the basic loop works, deepen the Agent for how you work day to day.
+
+{% cards %}
+{% cards_item href="/docs/products/agent/add-memory" title="Add memory" %}
+Save preferences and standing instructions so you do not repeat them every chat.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/add-model" title="Add a custom model" %}
+Use your own provider keys when you want a specific model for a thread.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent/create-automation" title="Create an automation" %}
+Schedule a recurring prompt and review each run as its own conversation.
+{% /cards_item %}
+{% /cards %}

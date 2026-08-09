@@ -3,10 +3,14 @@ import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
 import {
+  isAgentDocsEnabled,
+  isAgentDocsSlug,
+} from '@/lib/docs/agent-docs-feature'
+import {
   isFirewallDocsEnabled,
   isFirewallDocsSlug,
 } from '@/lib/docs/firewall-docs-feature'
-import { isPartnersDocsEnabled, isPartnersDocsSlug } from '@/lib/docs/partners-docs-feature'
+import { isPartnersDocsEnabled, isPartnersDocsSlug, shouldBlockPartnersDocs } from '@/lib/docs/partners-docs-feature'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
 import { generateDocsLlmsTxt } from '@/lib/seo/llms-content'
@@ -19,9 +23,16 @@ import {
 
 const DOCS_LLMS_TXT_SPLAT = 'llms.txt'
 
-function isFeatureGatedDocsSlugHidden(slug: string): boolean {
-  if (isPartnersDocsSlug(slug) && !isPartnersDocsEnabled()) return true
+function isFeatureGatedDocsSlugHidden(
+  slug: string,
+  options?: { deferPartnersOnServer?: boolean },
+): boolean {
+  if (isPartnersDocsSlug(slug)) {
+    if (options?.deferPartnersOnServer) return shouldBlockPartnersDocs()
+    return !isPartnersDocsEnabled()
+  }
   if (isFirewallDocsSlug(slug) && !isFirewallDocsEnabled()) return true
+  if (isAgentDocsSlug(slug) && !isAgentDocsEnabled()) return true
   return false
 }
 
@@ -71,7 +82,7 @@ export const Route = createFileRoute('/docs/$')({
     const splat = params._splat ?? ''
     if (splat === DOCS_LLMS_TXT_SPLAT || splat.endsWith('.md')) return
 
-    if (isFeatureGatedDocsSlugHidden(splat)) {
+    if (isFeatureGatedDocsSlugHidden(splat, { deferPartnersOnServer: true })) {
       throw redirect({ to: '/docs', replace: true })
     }
   },
@@ -86,7 +97,11 @@ export const Route = createFileRoute('/docs/$')({
       const targetSlug = redirectTarget.pathname
         .replace(/^\/docs\/?/, '')
         .replace(/\/+$/, '')
-      if (isFeatureGatedDocsSlugHidden(targetSlug)) {
+      if (
+        isFeatureGatedDocsSlugHidden(targetSlug, {
+          deferPartnersOnServer: true,
+        })
+      ) {
         throw redirect({ to: '/docs', replace: true })
       }
       throw redirect({

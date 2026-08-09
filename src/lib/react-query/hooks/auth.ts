@@ -77,8 +77,12 @@ import {
   hasBuildNotificationsOptedOutPref,
   hasCliShellHeightPref,
   hasStorageFilesTablePaneWidthPref,
+  mergeAIChatActiveConversationIdIntoPrefs,
+  mergeAIChatConversationsWidthPxIntoPrefs,
+  mergeAIChatExpandedIntoPrefs,
   mergeAIChatPanelOpenIntoPrefs,
   mergeAIChatPanelWidthPxIntoPrefs,
+  mergeAIChatPinnedConversationIdsIntoPrefs,
   mergeRightPaneWidthPxIntoPrefs,
   mergeAuthPasswordStrengthComplianceOpenIntoPrefs,
   mergeApiExplorerColumnsLayoutIntoPrefs,
@@ -93,6 +97,7 @@ import {
   mergeCliShellOpenIntoPrefs,
   mergeCliShellSessionsIntoPrefs,
   mergeCliShellSessionsSidebarWidthPxIntoPrefs,
+  mergeConnectProjectTabIntoPrefs,
   mergeSidebarCollapsedIntoPrefs,
   getCliShellSessionsKey,
   parseCliShellHistory,
@@ -100,8 +105,12 @@ import {
   serializeCliShellSessionsState,
   type PersistedCliShellSessionsState,
   mergeStorageFilesTablePaneWidthPxIntoPrefs,
+  parseAIChatActiveConversationId,
+  parseAIChatConversationsWidthPx,
+  parseAIChatExpanded,
   parseAIChatPanelOpen,
   parseAIChatPanelWidthPx,
+  parseAIChatPinnedConversationIds,
   parseRightPaneWidthPx,
   parseAuthPasswordStrengthComplianceOpen,
   parseApiExplorerColumnsLayout,
@@ -114,6 +123,7 @@ import {
   parseCliShellHeightPx,
   parseCliShellOpen,
   parseCliShellSessionsSidebarWidthPx,
+  parseConnectProjectTab,
   parseSidebarCollapsed,
   parseStorageFilesTablePaneWidthPx,
   readLegacyAIChatPanelOpenFromLocalStorage,
@@ -306,6 +316,37 @@ export function purgeConsoleAccountCaches(queryClient: QueryClient): void {
   queryClient.removeQueries({ queryKey: ['account', 'console'] })
 }
 
+const CONSOLE_SIGN_OUT_COVER_ID = 'console-sign-out-cover'
+
+/** True while sign-out is in progress (covers SPA auth redirects / UI thrash). */
+let consoleSigningOut = false
+
+export function isConsoleSigningOut(): boolean {
+  return consoleSigningOut
+}
+
+/**
+ * Opaque full-viewport cover so async session delete cannot flash logged-out
+ * chrome, empty RequireAuth fallbacks, or SPA /sign-in transitions.
+ */
+function showConsoleSignOutCover(): void {
+  if (typeof document === 'undefined') return
+  if (document.getElementById(CONSOLE_SIGN_OUT_COVER_ID)) return
+  const cover = document.createElement('div')
+  cover.id = CONSOLE_SIGN_OUT_COVER_ID
+  cover.setAttribute('aria-busy', 'true')
+  cover.setAttribute('aria-live', 'polite')
+  cover.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'z-index:2147483647',
+    // Match themed app background (avoids white/black flash across light/dark).
+    'background:var(--background)',
+    'pointer-events:auto',
+  ].join(';')
+  document.documentElement.appendChild(cover)
+}
+
 /** Hard navigation so protected routes (org overview) do not flash during SPA transitions. */
 export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
   if (typeof window === 'undefined') return
@@ -321,31 +362,59 @@ export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
   )
 }
 
-/** Clear client auth state, best-effort server session delete, then open sign-in. */
+/**
+ * Clear client auth state, best-effort server session delete, then open sign-in.
+ *
+ * Keep React Query account data until the hard redirect so the console does not
+ * briefly render as logged-out (RequireAuth fallback, header guest state, SPA
+ * /sign-in navigation) while deleteSession is in flight.
+ *
+ * Server revoke must succeed for other apps/domains sharing the same Appwrite
+ * session cookie to be logged out. Local cookie clearing only affects
+ * non-httpOnly cookies on this document host; the real session cookie is
+ * httpOnly on the API host and is cleared via Set-Cookie on deleteSession.
+ */
 export async function performConsoleSignOut(
   queryClient: QueryClient,
   options?: { redirect?: string },
 ): Promise<void> {
+  if (consoleSigningOut) return
+  consoleSigningOut = true
+  showConsoleSignOutCover()
+
+  // Drop impersonation headers only. Do not clear session credentials before
+  // the delete call or the API request may go out unauthenticated.
   clearConsoleImpersonateUser()
   clearConsoleImpersonationSession()
-  purgeConsoleAccountCaches(queryClient)
 
   try {
-    const sessionsResponse = await sdk.forConsole.account.listSessions()
-    const sessions = sessionsResponse.sessions || []
-    const currentSession = sessions.find((session) => session.current === true)
-
-    if (currentSession) {
-      await sdk.forConsole.account.deleteSession({
-        sessionId: currentSession.$id,
-      })
-    } else if (sessions.length > 0) {
-      await sdk.forConsole.account.deleteSessions()
-    }
+    // Preferred Appwrite logout: revoke the current server session by id
+    // alias. Avoid listSessions-first (can skip delete when the list is empty
+    // or `current` is missing) so cross-domain consoles sharing this session
+    // are actually invalidated.
+    await sdk.forConsole.account.deleteSession({ sessionId: 'current' })
   } catch (error) {
-    console.error('Error signing out:', error)
+    console.error('Error signing out (deleteSession current):', error)
+    // Fallback if `current` is rejected: resolve the active session id, then
+    // revoke it. Last resort: wipe all account sessions.
+    try {
+      const sessionsResponse = await sdk.forConsole.account.listSessions()
+      const sessions = sessionsResponse.sessions || []
+      const currentSession = sessions.find((session) => session.current === true)
+
+      if (currentSession) {
+        await sdk.forConsole.account.deleteSession({
+          sessionId: currentSession.$id,
+        })
+      } else if (sessions.length > 0) {
+        await sdk.forConsole.account.deleteSessions()
+      }
+    } catch (fallbackError) {
+      console.error('Error signing out (fallback):', fallbackError)
+    }
   } finally {
     clearConsoleSessionLocally()
+    purgeConsoleAccountCaches(queryClient)
     redirectToSignInAfterConsoleSignOut(options?.redirect)
   }
 }
@@ -1438,6 +1507,71 @@ export function useSidebarCollapsed(
   return { collapsed, setCollapsed }
 }
 
+/**
+ * Last selected tab in the Connect project dialog (`console.connect.tab`).
+ *
+ * Must be used within RequireAuth (or where account is available).
+ */
+export function useConnectProjectTab(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+  const accountPrefs = account?.prefs as UserPrefs | undefined
+  const tab = parseConnectProjectTab(accountPrefs)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: ReturnType<typeof parseConnectProjectTab>) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeConnectProjectTabIntoPrefs(
+          { ...(account.prefs ?? {}) },
+          value,
+        ),
+        'connect-project-tab',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeConnectProjectTabIntoPrefs(
+                  { ...(current.prefs ?? {}) },
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setTab = useCallback(
+    (
+      value:
+        | ReturnType<typeof parseConnectProjectTab>
+        | ((
+            prev: ReturnType<typeof parseConnectProjectTab>,
+          ) => ReturnType<typeof parseConnectProjectTab>),
+    ) => {
+      const nextValue = typeof value === 'function' ? value(tab) : value
+      if (nextValue === tab) return
+      updateMutation.mutate(nextValue)
+    },
+    [tab, updateMutation],
+  )
+
+  return { tab, setTab }
+}
+
 // ============================================================================
 // TABLE VIEW SIDEBAR WIDTH (DATABASES + STORAGE)
 // ============================================================================
@@ -2037,12 +2171,340 @@ export function useAIChatPanelOpen(
     (value: boolean | ((prev: boolean) => boolean)) => {
       const nextValue = typeof value === 'function' ? value(isOpen) : value
       if (!account) return
+      if (nextValue === isOpen) return
       updateMutation.mutate(nextValue)
     },
     [account, isOpen, updateMutation],
   )
 
   return { isOpen, setIsOpen }
+}
+
+/**
+ * AI assistant fullscreen/expanded state (`console.aiChat.expanded`).
+ */
+export function useAIChatExpanded(account: ConsoleAccountCache | undefined) {
+  const queryClient = useQueryClient()
+
+  const isExpanded = parseAIChatExpanded(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAIChatExpandedIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+        'ai-chat-expanded',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeAIChatExpandedIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setIsExpanded = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const nextValue = typeof value === 'function' ? value(isExpanded) : value
+      if (!account) return
+      if (nextValue === isExpanded) return
+      updateMutation.mutate(nextValue)
+    },
+    [account, isExpanded, updateMutation],
+  )
+
+  return { isExpanded, setIsExpanded }
+}
+
+/**
+ * Last viewed AI assistant conversation (`console.aiChat.activeConversationId`).
+ */
+export function useAIChatActiveConversationId(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const activeConversationId = parseAIChatActiveConversationId(
+    account?.prefs as UserPrefs | undefined,
+  )
+  const activeConversationIdRef = useRef(activeConversationId)
+  activeConversationIdRef.current = activeConversationId
+  const accountRef = useRef(account)
+  accountRef.current = account
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: string | null) => {
+      const currentAccount =
+        getConsoleAccountFromCache(queryClient) ?? accountRef.current
+      if (!currentAccount) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAIChatActiveConversationIdIntoPrefs(
+          (currentAccount.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+        'ai-chat-active-conversation',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeAIChatActiveConversationIdIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount, value) => {
+      // A newer selection may have already been applied optimistically while
+      // this request was in flight. Do not clobber it with a stale response.
+      const cachedId = parseAIChatActiveConversationId(
+        getConsoleAccountFromCache(queryClient)?.prefs as UserPrefs | undefined,
+      )
+      if (cachedId !== value) return
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const mutateActiveConversationId = updateMutation.mutate
+
+  const setActiveConversationId = useCallback(
+    (value: string | null | ((prev: string | null) => string | null)) => {
+      const previous = activeConversationIdRef.current
+      const nextValue = typeof value === 'function' ? value(previous) : value
+      const normalized =
+        typeof nextValue === 'string' && nextValue.trim()
+          ? nextValue.trim()
+          : null
+      if (normalized === previous) return
+      if (!accountRef.current) return
+      activeConversationIdRef.current = normalized
+      mutateActiveConversationId(normalized)
+    },
+    [mutateActiveConversationId],
+  )
+
+  return { activeConversationId, setActiveConversationId }
+}
+
+/**
+ * Pinned AI assistant conversation ids (`console.aiChat.pinnedConversationIds`).
+ * Array order is the pinned sort order.
+ */
+export function useAIChatPinnedConversationIds(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const pinnedConversationIds = parseAIChatPinnedConversationIds(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: string[]) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAIChatPinnedConversationIdsIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+        'ai-chat-pinned-conversations',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeAIChatPinnedConversationIdsIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setPinnedConversationIds = useCallback(
+    (value: string[] | ((prev: string[]) => string[])) => {
+      const nextValue =
+        typeof value === 'function' ? value(pinnedConversationIds) : value
+      if (!account) return
+      const normalized = nextValue
+        .map((id) => id.trim())
+        .filter((id, index, all) => !!id && all.indexOf(id) === index)
+      if (
+        normalized.length === pinnedConversationIds.length &&
+        normalized.every((id, index) => id === pinnedConversationIds[index])
+      ) {
+        return
+      }
+      updateMutation.mutate(normalized)
+    },
+    [account, pinnedConversationIds, updateMutation],
+  )
+
+  const pinConversation = useCallback(
+    (conversationId: string) => {
+      const id = conversationId.trim()
+      if (!id) return
+      setPinnedConversationIds((current) =>
+        current.includes(id) ? current : [id, ...current],
+      )
+    },
+    [setPinnedConversationIds],
+  )
+
+  const unpinConversation = useCallback(
+    (conversationId: string) => {
+      const id = conversationId.trim()
+      if (!id) return
+      setPinnedConversationIds((current) =>
+        current.filter((entry) => entry !== id),
+      )
+    },
+    [setPinnedConversationIds],
+  )
+
+  return {
+    pinnedConversationIds,
+    setPinnedConversationIds,
+    pinConversation,
+    unpinConversation,
+  }
+}
+
+const AI_CHAT_CONVERSATIONS_WIDTH_PERSIST_DEBOUNCE_MS = 250
+
+/**
+ * AI assistant conversations sidebar width
+ * (`console.aiChat.conversationsWidthPx`). Debounces writes while resizing.
+ */
+export function useAIChatConversationsWidth(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const widthPx = parseAIChatConversationsWidthPx(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAIChatConversationsWidthPxIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+        'ai-chat-conversations-width',
+      )
+    },
+    onMutate: async (value) => {
+      const patch = mergeAIChatConversationsWidthPxIntoPrefs(
+        (account?.prefs ?? {}) as UserPrefs,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const persistSidebarWidthPx = useCallback(
+    (value: number) => {
+      if (!account) return
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+      const patch = mergeAIChatConversationsWidthPxIntoPrefs(
+        (account.prefs ?? {}) as UserPrefs,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+      persistTimerRef.current = setTimeout(() => {
+        persistTimerRef.current = null
+        updateMutation.mutate(value)
+      }, AI_CHAT_CONVERSATIONS_WIDTH_PERSIST_DEBOUNCE_MS)
+    },
+    [account, queryClient, updateMutation],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+    }
+  }, [])
+
+  return { widthPx, persistSidebarWidthPx }
 }
 
 /**

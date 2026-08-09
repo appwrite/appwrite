@@ -27,6 +27,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { fetchApiKey } from '@/lib/react-query/hooks'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useDeleteApiKey } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -65,10 +69,10 @@ export function ApiKeyContextMenu({
   const hasKey = !!apiKey.key
 
   const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
     deleteMutation.mutate(apiKey.id, {
       onSuccess: () => {
         toast.success(t('API key deleted'))
-        setDeleteDialogOpen(false)
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete API key'))
@@ -83,7 +87,11 @@ export function ApiKeyContextMenu({
         <ContextMenuContent className="w-56">
           {onUpdate && (
             <>
-              <ContextMenuItem onSelect={() => onUpdate(apiKey.id)}>
+              <ContextMenuItem
+                onSelect={() =>
+                  openDialogAfterOverlayCloses(() => onUpdate(apiKey.id))
+                }
+              >
                 <ContextMenuIcon icon={Pencil} />
                 {t('Update')}
               </ContextMenuItem>
@@ -131,7 +139,11 @@ export function ApiKeyContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+          <ContextMenuItem
+            onSelect={() =>
+              openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+            }
+          >
             <ContextMenuIcon icon={Trash2} />
             {t('Delete')}
           </ContextMenuItem>

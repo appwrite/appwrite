@@ -12,6 +12,7 @@ import {
   type UsageBreakdownFilterEntry,
 } from '@/lib/usage/usage-resource-filters'
 import type { ComputeBreakdownResource } from '@/lib/usage/resolve-compute-breakdown-resources'
+import type { DatabaseBreakdownResource } from '@/lib/usage/resolve-database-breakdown-resources'
 import type { StorageBreakdownResource } from '@/lib/usage/resolve-storage-breakdown-resources'
 
 export type OverviewBreakdownMetric =
@@ -69,6 +70,7 @@ export function getOverviewResourceBreakdownFilters(
   resources: {
     computeResource?: ComputeBreakdownResource
     storageResource?: StorageBreakdownResource
+    databaseResource?: DatabaseBreakdownResource
   },
 ): UsageBreakdownFilterEntry[] {
   return getUsageResourceFilterEntries(resourceId, resources)

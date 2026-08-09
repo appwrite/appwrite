@@ -27,6 +27,9 @@ import { FolderOpen, Info, ChevronRight, Loader2 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
+import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
+import { VcsInstallationErrorState } from '@/components/global/shared/VcsInstallationError'
+import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
 
@@ -90,8 +93,17 @@ export function RootDirectoryPicker({
   const [directoryCache, setDirectoryCache] = useState<
     Map<string, { contents: Models.VcsContent[] }>
   >(new Map())
+  // Root listing failure only. A failed subdirectory preload still leaves a
+  // usable tree, so it stays a console warning rather than taking over the
+  // dialog.
+  const [rootError, setRootError] = useState<unknown>(null)
 
   const hasRepository = installationId && providerRepositoryId
+  const rootErrorKind = getVcsInstallationErrorKind(rootError)
+  const { provider, organization, reconnectUrl } = useVcsInstallationReconnect(
+    projectId,
+    installationId,
+  )
 
   // Load directory contents
   const loadDirectoryContents = useCallback(
@@ -203,8 +215,11 @@ export function RootDirectoryPicker({
 
           return newCache
         })
+
+        if (path === './') setRootError(null)
       } catch (error) {
         console.error('Failed to load directory contents:', error)
+        if (path === './') setRootError(error)
       }
     },
     [
@@ -327,6 +342,18 @@ export function RootDirectoryPicker({
                     directoryCache={directoryCache}
                     loadDirectoryContents={loadDirectoryContents}
                     level={0}
+                  />
+                ) : rootErrorKind ? (
+                  <VcsInstallationErrorState
+                    kind={rootErrorKind}
+                    provider={provider}
+                    organization={organization}
+                    reconnectUrl={reconnectUrl}
+                    onRetry={() => {
+                      setRootError(null)
+                      loadDirectoryContents('./')
+                    }}
+                    className="py-2"
                   />
                 ) : (
                   <div className="flex items-center justify-center py-8">

@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CookieConsentBanner } from '@/components/global/shared/CookieConsentBanner'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   canTrackAnalytics,
   setCookieConsentState,
@@ -54,16 +55,24 @@ function applyNonRegulatedRegion() {
 }
 
 export function CookieConsentProvider({ children }: { children: ReactNode }) {
+  const { features } = useConsoleProfile()
+  const cookieBannerEnabled = features.cookieBanner
+
   const {
     data: locale,
     isSuccess: localeReady,
     isError: localeError,
-  } = useQuery(localeQueryOptions())
-  const bannerRequired = localeReady
-    ? requiresCookieConsentBanner(locale)
-    : localeError
-      ? true
-      : false
+  } = useQuery({
+    ...localeQueryOptions(),
+    enabled: cookieBannerEnabled,
+  })
+  const bannerRequired = !cookieBannerEnabled
+    ? false
+    : localeReady
+      ? requiresCookieConsentBanner(locale)
+      : localeError
+        ? true
+        : false
 
   const [preferencesOpen, setPreferencesOpen] = useState(false)
   const [isReopening, setIsReopening] = useState(false)
@@ -72,6 +81,15 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
   const [draftAnalytics, setDraftAnalytics] = useState(false)
 
   useEffect(() => {
+    if (!cookieBannerEnabled) {
+      setShowBanner(false)
+      setPreferencesOpen(false)
+      setIsReopening(false)
+      setCustomizeOpen(false)
+      applyNonRegulatedRegion()
+      return
+    }
+
     if (!localeReady && !localeError) return
 
     if (!bannerRequired) {
@@ -99,7 +117,7 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
     })
     setShowBanner(true)
     setDraftAnalytics(false)
-  }, [bannerRequired, localeError, localeReady])
+  }, [bannerRequired, cookieBannerEnabled, localeError, localeReady])
 
   const persistPreferences = useCallback(
     (preferences: CookieConsentPreferences) => {
@@ -127,13 +145,14 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
   }, [draftAnalytics, persistPreferences])
 
   const openPreferences = useCallback(() => {
+    if (!cookieBannerEnabled) return
     const stored = readStoredCookieConsent()
     setDraftAnalytics(stored?.analytics ?? canTrackAnalytics())
     setCustomizeOpen(true)
     setPreferencesOpen(true)
     setIsReopening(true)
     setShowBanner(true)
-  }, [])
+  }, [cookieBannerEnabled])
 
   const closeBanner = useCallback(() => {
     if (isReopening && readStoredCookieConsent()) {
@@ -158,16 +177,26 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
   const contextValue = useMemo(
     () => ({
       openPreferences,
-      bannerRequired: localeReady || localeError ? bannerRequired : false,
+      bannerRequired:
+        cookieBannerEnabled && (localeReady || localeError)
+          ? bannerRequired
+          : false,
       preferencesOpen,
     }),
-    [bannerRequired, localeError, localeReady, openPreferences, preferencesOpen],
+    [
+      bannerRequired,
+      cookieBannerEnabled,
+      localeError,
+      localeReady,
+      openPreferences,
+      preferencesOpen,
+    ],
   )
 
   return (
     <CookieConsentContext.Provider value={contextValue}>
       {children}
-      {showBanner ? (
+      {cookieBannerEnabled && showBanner ? (
         <CookieConsentBanner
           customizeOpen={customizeOpen}
           draftAnalytics={draftAnalytics}

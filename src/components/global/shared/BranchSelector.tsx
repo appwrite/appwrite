@@ -33,7 +33,11 @@ import { ChevronDown, GitBranch, Info, Loader2 } from 'lucide-react'
 import {
   repositoryBranchesQueryOptions,
   sortRepositoryBranches,
+  useRepository,
 } from '@/lib/react-query/hooks'
+import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
+import { VcsInstallationErrorAlert } from '@/components/global/shared/VcsInstallationError'
+import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
@@ -48,6 +52,12 @@ interface BranchSelectorProps {
   labelTooltip?: string
   placeholder?: string
   disabled?: boolean
+  /**
+   * Set by a parent that already explains a broken installation, so the same
+   * failure is not reported twice in one card. The selector still falls back
+   * to free-text entry, just without repeating the alert.
+   */
+  suppressInstallationError?: boolean
   className?: string
 }
 
@@ -61,6 +71,7 @@ export function BranchSelector({
   labelTooltip,
   placeholder = 'Select branch',
   disabled = false,
+  suppressInstallationError = false,
   className,
 }: BranchSelectorProps) {
   const t = useT()
@@ -68,11 +79,7 @@ export function BranchSelector({
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
-  const hasRepository = !!(
-    projectId &&
-    installationId &&
-    providerRepositoryId
-  )
+  const hasRepository = !!(projectId && installationId && providerRepositoryId)
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300)
@@ -83,7 +90,19 @@ export function BranchSelector({
     if (!open) setSearch('')
   }, [open])
 
-  const { data: initialBranchesData, isLoading: initialLoading } = useQuery({
+  const { data: repository, isPending: repositoryPending } = useRepository(
+    projectId,
+    installationId,
+    providerRepositoryId,
+  )
+
+  const {
+    data: initialBranchesData,
+    isLoading: initialLoading,
+    isFetching: initialFetching,
+    error: initialBranchesError,
+    refetch: refetchBranches,
+  } = useQuery({
     ...repositoryBranchesQueryOptions(
       projectId,
       installationId,
@@ -120,14 +139,25 @@ export function BranchSelector({
   const isSearching = !!debouncedSearch && searchFetching
   const isLoadingList = debouncedSearch ? isSearching : initialLoading
 
+  // Without this the component falls back to a plain text input, which looks
+  // like "this repository has no branches" rather than "we could not ask".
+  const installationErrorKind =
+    getVcsInstallationErrorKind(initialBranchesError)
+  const { provider, organization, reconnectUrl } = useVcsInstallationReconnect(
+    projectId,
+    installationId,
+  )
+
+  // Same resolution as the old console's productionBranchFieldset, which waits
+  // on the repository lookup before falling back to 'main'.
+  const defaultBranch = repository?.defaultBranch
+
   useEffect(() => {
-    if (sortedInitialBranches.length > 0 && !value) {
-      const defaultBranch = sortedInitialBranches.find(
-        (b) => b.name === 'main' || b.name === 'master',
-      )
-      onChange(defaultBranch?.name || sortedInitialBranches[0].name)
-    }
-  }, [sortedInitialBranches, value, onChange])
+    if (value) return
+    if (hasRepository && repositoryPending) return
+
+    onChange(defaultBranch ?? 'main')
+  }, [defaultBranch, hasRepository, repositoryPending, value, onChange])
 
   const labelContent = (
     <>
@@ -175,7 +205,10 @@ export function BranchSelector({
     return (
       <div className={className}>
         {label && (
-          <Label htmlFor="branch-selector-loading" className="text-[13px] mb-2 block">
+          <Label
+            htmlFor="branch-selector-loading"
+            className="text-[13px] mb-2 block"
+          >
             {labelContent}
           </Label>
         )}
@@ -191,6 +224,41 @@ export function BranchSelector({
           />
           <span className="truncate">{t('Loading branches...')}</span>
         </div>
+      </div>
+    )
+  }
+
+  // Keep the free-text input so an in-flight form is still submittable, but say
+  // why the branch list is missing instead of leaving it unexplained.
+  if (installationErrorKind && !suppressInstallationError) {
+    return (
+      <div className={className}>
+        {label && (
+          <Label htmlFor="branch-input" className="text-[13px] mb-2 block">
+            {labelContent}
+          </Label>
+        )}
+        <Input
+          id="branch-input"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="main"
+          disabled={disabled}
+          className="h-9 font-mono text-[13px]"
+        />
+        <VcsInstallationErrorAlert
+          kind={installationErrorKind}
+          provider={provider}
+          organization={organization}
+          reconnectUrl={reconnectUrl}
+          onRetry={() => refetchBranches()}
+          isRetrying={initialFetching}
+          className="mt-2"
+        >
+          {t(
+            'Branches could not be loaded, so enter the branch name manually.',
+          )}
+        </VcsInstallationErrorAlert>
       </div>
     )
   }
@@ -265,17 +333,21 @@ export function BranchSelector({
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
             </div>
-            <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain">
-              {!isLoadingList && displayBranches.length === 0 && debouncedSearch && (
-                <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
-                  {t('No branches found')}
-                </CommandEmpty>
-              )}
-              {!isLoadingList && displayBranches.length === 0 && !debouncedSearch && (
-                <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
-                  {t('No branches available')}
-                </CommandEmpty>
-              )}
+            <CommandList className="min-h-[180px] max-h-[240px] overflow-y-auto overscroll-contain">
+              {!isLoadingList &&
+                displayBranches.length === 0 &&
+                debouncedSearch && (
+                  <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
+                    {t('No branches found')}
+                  </CommandEmpty>
+                )}
+              {!isLoadingList &&
+                displayBranches.length === 0 &&
+                !debouncedSearch && (
+                  <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
+                    {t('No branches available')}
+                  </CommandEmpty>
+                )}
               <CommandGroup>
                 {displayBranches.map((branch) => (
                   <CommandItem

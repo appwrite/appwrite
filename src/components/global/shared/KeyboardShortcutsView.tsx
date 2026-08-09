@@ -17,8 +17,10 @@ import {
   CLI_TERMINAL_INPUT_SHORTCUTS,
 } from '@/lib/cli-shell/cli-terminal-shortcuts'
 import { POSTGRES_SQL_EDITOR_SHORTCUTS } from '@/lib/postgres-sql-editor-shortcuts'
+import { AGENT_SHORTCUTS } from '@/lib/assistant/agent-shortcuts'
 import { AppwriterPromo } from '@/components/global/shared/AppwriterPromo'
 import { KeyboardLayoutVisualizer } from '@/components/global/shared/KeyboardLayoutVisualizer'
+import { ShortcutGlyph } from '@/components/global/shared/ShortcutGlyphs'
 
 interface ShortcutCommand {
   id: string
@@ -33,6 +35,7 @@ interface KeyboardShortcutsViewProps {
   isMobile: boolean
   showTerminalShortcuts?: boolean
   showSqlEditorShortcuts?: boolean
+  showAgentShortcuts?: boolean
   onBack: () => void
   onClose: () => void
   onKeyDown: (e: React.KeyboardEvent) => void
@@ -72,7 +75,7 @@ function ShortcutKeyBadges({
                 : 'border-border bg-muted/50 text-foreground/80 dark:bg-muted/40 dark:text-muted-foreground',
             )}
           >
-            {key}
+            <ShortcutGlyph keyLabel={key} />
           </kbd>
         </span>
       ))}
@@ -90,6 +93,7 @@ export function KeyboardShortcutsView({
   isMobile,
   showTerminalShortcuts = false,
   showSqlEditorShortcuts = false,
+  showAgentShortcuts = false,
   onBack,
   onClose,
   onKeyDown,
@@ -111,6 +115,12 @@ export function KeyboardShortcutsView({
 
     let merged = base
 
+    if (showAgentShortcuts) {
+      merged = mergeShortcutGroups(merged, [
+        buildShortcutRefGroup('Agent', AGENT_SHORTCUTS, isMac),
+      ])
+    }
+
     if (showSqlEditorShortcuts) {
       merged = mergeShortcutGroups(merged, [
         buildShortcutRefGroup('SQL editor', POSTGRES_SQL_EDITOR_SHORTCUTS, isMac),
@@ -131,7 +141,13 @@ export function KeyboardShortcutsView({
     }
 
     return dedupeShortcutGroups(merged)
-  }, [commands, isMac, showSqlEditorShortcuts, showTerminalShortcuts])
+  }, [
+    commands,
+    isMac,
+    showAgentShortcuts,
+    showSqlEditorShortcuts,
+    showTerminalShortcuts,
+  ])
 
   const allShortcuts = useMemo(
     () => groups.flatMap((group) => group.shortcuts),

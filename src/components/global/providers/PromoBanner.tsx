@@ -39,9 +39,9 @@ function PromoBannerComponent({
   const filteredBanners = useMemo(
     () =>
       banners.filter(
-        (b) => b.ctaUrl !== '/ai-assistant' || features.aiAssistant,
+        (b) => b.ctaUrl !== '/ai-assistant' || features.agent,
       ),
-    [banners, features.aiAssistant],
+    [banners, features.agent],
   )
 
   if (filteredBanners.length === 0) return null

@@ -10,14 +10,6 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import {
   Copy,
   Link2,
   FileJson,
@@ -54,7 +46,12 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
 import { useT } from '@/lib/i18n/translate'
 
 type DatabaseContextMenuDatabase = {
@@ -94,12 +91,20 @@ export function DatabaseContextMenu({
       invalidateDatabaseModelAndType(projectId, database.$id)
       await refetchProjectDatabaseLists(queryClient, projectId)
       toast.success(t('Database deleted successfully'))
-      setDeleteDialogOpen(false)
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, t('Failed to delete database')))
     },
   })
+
+  const handleDeleteClick = () => {
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+  }
+
+  const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    deleteMutation.mutate()
+  }
 
   const databaseHref = buildConsoleUrl(
     productDatabaseHomePath(projectId, database.$id, database.databaseType),
@@ -258,41 +263,29 @@ export function DatabaseContextMenu({
             {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Delete database')}</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              {t(
-                'Are you sure you want to delete this database? This action cannot be undone.',
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={deleteMutation.isPending}
-            >
-              {t('Cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-            >
-              {t('Delete')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmNameDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete database"
+        description={
+          <>
+            {t(
+              'Are you sure you want to delete this database? This action cannot be undone.',
+            )}
+          </>
+        }
+        confirmValue={database.name?.trim() || database.$id}
+        confirmPlaceholder="Enter database name"
+        onConfirm={handleDelete}
+        isConfirming={deleteMutation.isPending}
+      />
     </>
   )
 }

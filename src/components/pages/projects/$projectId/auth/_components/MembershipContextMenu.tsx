@@ -21,6 +21,10 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import {
   ContextMenu,
@@ -70,10 +74,10 @@ export function MembershipContextMenu({
   const hasTeamName = !!membership.teamName
 
   const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
     deleteMutation.mutate(membership.$id, {
       onSuccess: () => {
         toast.success(t('Membership removed'))
-        setDeleteDialogOpen(false)
         onDeleted?.()
       },
       onError: (error: Error) => {
@@ -175,7 +179,11 @@ export function MembershipContextMenu({
           </ContextMenuItem>
 
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+          <ContextMenuItem
+            onSelect={() =>
+              openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+            }
+          >
             <ContextMenuIcon icon={Trash2} />
             {t('Delete')}
           </ContextMenuItem>

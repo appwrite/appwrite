@@ -1,0 +1,287 @@
+name: Connect snippets QA (Android)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CODE_SNIPPET_QA_ENDPOINT: ${{ vars.CODE_SNIPPET_QA_ENDPOINT }}
+  CODE_SNIPPET_QA_PROJECT_ID: ${{ vars.CODE_SNIPPET_QA_PROJECT_ID }}
+  APP_ID: io.appwrite.connectqa
+
+defaults:
+  run:
+    working-directory: tests/connect-qa/android
+
+jobs:
+  qa:
+    name: ${{ matrix.id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: react-native
+            sdk: react-native
+            snippets: react-native
+            template: ''
+            config_file: .env
+            create: npx -y create-expo-app@latest "$APP_DIR" --template blank-typescript --no-install
+            configure: jq --arg id "$APP_ID" '.expo.android.package = $id' app.json > app.json.tmp && mv app.json.tmp app.json
+            install: npm install && npm install react-native-appwrite
+            build: npx expo prebuild --platform android --no-install && ./android/gradlew -p android assembleRelease --no-daemon
+            apk: android/app/build/outputs/apk/release/app-release.apk
+
+          - id: flutter
+            sdk: flutter
+            snippets: flutter
+            template: ''
+            config_file: env.json
+            copy_to: .
+            create: flutter create --org io.appwrite --project-name connectqa "$APP_DIR"
+            configure: 'true'
+            install: flutter pub add appwrite
+            build: flutter build apk --debug --dart-define-from-file=env.json
+            apk: build/app/outputs/flutter-apk/app-debug.apk
+
+          - id: android-kotlin
+            sdk: android
+            framework: kotlin
+            snippets: android/kotlin
+            template: android
+            config_file: gradle.properties
+            copy_to: app/src/main/java/io/appwrite/connectqa
+            create: mkdir -p "$APP_DIR"
+            configure: >-
+              rm -f app/src/main/java/io/appwrite/connectqa/build.gradle.kts &&
+              for f in app/src/main/java/io/appwrite/connectqa/*.kt; do
+              printf 'package io.appwrite.connectqa\n\n' | cat - "$f" > "$f.tmp" &&
+              mv "$f.tmp" "$f"; done
+            install: 'true'
+            # The AGP 9 opt-out flags keep the template on the external Kotlin
+            # plugin and classic DSL; they live here because write-env.mjs
+            # overwrites gradle.properties with the Appwrite variables.
+            build: >-
+              gradle assembleRelease --no-daemon -Pandroid.useAndroidX=true
+              -Pandroid.builtInKotlin=false -Pandroid.newDsl=false
+            apk: app/build/outputs/apk/release/app-release.apk
+
+          - id: android-java
+            sdk: android
+            framework: java
+            snippets: android/java
+            template: android-java
+            config_file: gradle.properties
+            copy_to: app/src/main/java/io/appwrite/connectqa
+            create: mkdir -p "$APP_DIR"
+            configure: >-
+              rm -f app/src/main/java/io/appwrite/connectqa/build.gradle.kts &&
+              for f in app/src/main/java/io/appwrite/connectqa/*.java; do
+              printf 'package io.appwrite.connectqa;\n\n' | cat - "$f" > "$f.tmp" &&
+              mv "$f.tmp" "$f"; done
+            install: 'true'
+            build: >-
+              gradle assembleRelease --no-daemon -Pandroid.useAndroidX=true
+              -Pandroid.builtInKotlin=false -Pandroid.newDsl=false
+            apk: app/build/outputs/apk/release/app-release.apk
+
+          - id: capacitor
+            sdk: web
+            framework: capacitor
+            using: vite
+            snippets: web/capacitor
+            template: ''
+            java: temurin-21
+            config_file: .env
+            copy_to: .
+            create: npx -y create-vite@latest "$APP_DIR" --template vanilla-ts
+            configure: 'true'
+            install: npm install && npm install appwrite @capacitor/core @capacitor/cli @capacitor/android
+            build: npm run build && npx cap add android && npx cap sync android && ./android/gradlew -p android assembleDebug
+            apk: android/app/build/outputs/apk/debug/app-debug.apk
+
+          - id: ionic
+            sdk: web
+            framework: ionic
+            using: vite
+            snippets: web/ionic
+            template: ionic
+            java: temurin-21
+            config_file: .env
+            copy_to: .
+            create: npx -y create-vite@latest "$APP_DIR" --template react-ts
+            configure: 'true'
+            install: npm install && npm install appwrite @ionic/react @capacitor/core @capacitor/cli @capacitor/android
+            build: npm run build && npx cap add android && npx cap sync android && ./android/gradlew -p android assembleDebug
+            apk: android/app/build/outputs/apk/debug/app-debug.apk
+
+          - id: tauri
+            sdk: web
+            framework: tauri
+            using: vite
+            snippets: web/tauri
+            template: tauri
+            config_file: .env
+            copy_to: .
+            create: npx -y create-tauri-app@latest "$APP_DIR" --template vanilla-ts --manager npm --yes
+            configure: 'true'
+            install: npm install && npm install appwrite
+            build: npm run tauri android init -- --ci && npm run tauri android build -- --apk --debug
+            apk: src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The default runner image leaves ~14 GB free, which the SDK caches,
+      # Gradle builds, and the emulator system image + AVD overflow (flutter
+      # and react-native died with ENOSPC mid-run). Drop the big preinstalled
+      # toolchains we never touch. Keep /usr/local/lib/android (the SDK) and
+      # /opt/hostedtoolcache (flutter-action installs there).
+      - name: Free up runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
+          sudo docker system prune -af > /dev/null 2>&1 || true
+          df -h /
+
+      - name: Check Appwrite variables
+        run: |
+          if [ -z "$CODE_SNIPPET_QA_ENDPOINT" ] || [ -z "$CODE_SNIPPET_QA_PROJECT_ID" ]; then
+            echo "::error::Set the CODE_SNIPPET_QA_ENDPOINT and CODE_SNIPPET_QA_PROJECT_ID repository variables."
+            exit 1
+          fi
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+        with:
+          install: false
+
+      - name: Install tooling via mise (node, maestro, java, gradle)
+        run: |
+          mise trust
+          # Capacitor's android library ships Java 21 bytecode; the shared
+          # default stays on 17 because React Native and Flutter test it.
+          # Export JAVA_HOME too: gradlew resolves it before consulting PATH,
+          # and the runner image pre-sets it to the system JDK 17.
+          if [ -n "${{ matrix.java }}" ]; then
+            mise use "java@${{ matrix.java }}"
+            echo "JAVA_HOME=$(mise where java)" >> "$GITHUB_ENV"
+          fi
+          mise install
+
+      - name: Install Flutter
+        if: matrix.id == 'flutter'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install Rust (Tauri only)
+        if: matrix.id == 'tauri'
+        run: rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+
+      - name: Scaffold starter app
+        run: |
+          APP_DIR="app-$(date +%s)-$RANDOM"
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+          ( ${{ matrix.create }} )
+          if [ ! -d "$APP_DIR" ]; then
+            echo "::error::Scaffold did not produce $APP_DIR"
+            exit 1
+          fi
+
+      - name: Paste Connect snippets over the starter
+        run: |
+          SRC="$GITHUB_WORKSPACE/src/components/pages/projects/\$projectId/shared/connect-snippets/${{ matrix.snippets }}"
+          DEST="$APP_DIR/${{ matrix.copy_to || '.' }}"
+          mkdir -p "$DEST"
+          cp -Rv "$SRC/." "$DEST/"
+
+      - name: Apply QA harness overlay and configure the app
+        run: |
+          TEMPLATE="${{ matrix.template }}"
+          if [ -n "$TEMPLATE" ] && [ -d "templates/$TEMPLATE" ]; then
+            cp -Rv "templates/$TEMPLATE/." "$APP_DIR/"
+          fi
+          cd "$APP_DIR"
+          ${{ matrix.configure }}
+
+      - name: Install dependencies + Appwrite SDK
+        run: |
+          cd "$APP_DIR"
+          ${{ matrix.install }}
+
+      - name: Write env file (derived from connect-snippets.ts)
+        run: |
+          node ../write-env.mjs "${{ matrix.sdk }}" "${{ matrix.framework || matrix.sdk }}" "${{ matrix.using || matrix.sdk }}" "$APP_DIR"
+          cat "$APP_DIR/${{ matrix.config_file }}"
+
+      - name: Build the APK
+        run: |
+          cd "$APP_DIR"
+          ${{ matrix.build }}
+          APK="$PWD/${{ matrix.apk }}"
+          if [ ! -f "$APK" ]; then
+            echo "::error::Build did not produce ${{ matrix.apk }}"
+            exit 1
+          fi
+          echo "APK_PATH=$APK" >> "$GITHUB_ENV"
+          ls -lh "$APK"
+
+      - name: Assert the endpoint is embedded in the APK
+        run: |
+          if ! unzip -p "$APK_PATH" | strings | grep -qF "$CODE_SNIPPET_QA_ENDPOINT"; then
+            echo "::error::$CODE_SNIPPET_QA_ENDPOINT is not present in the APK - the env vars never reached the bundle."
+            exit 1
+          fi
+          echo "Endpoint found in the bundled assets."
+
+      - name: Install and run the Maestro flow on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          ram-size: 4096M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
+          working-directory: tests/connect-qa/android
+          # android-emulator-runner executes each script line as a separate
+          # `sh -c`, so anything multi-line lives in run-maestro.sh instead.
+          script: |
+            adb install -r "$APK_PATH"
+            adb logcat -c
+            bash run-maestro.sh
+
+      - name: Collect logs and app source
+        if: always()
+        run: |
+          mkdir -p artifacts
+          if [ -d "$HOME/.maestro/tests" ]; then
+            cp -R "$HOME/.maestro/tests/." artifacts/maestro-default-output/ || true
+          fi
+          if [ -n "$APK_PATH" ] && [ -f "$APK_PATH" ]; then
+            cp "$APK_PATH" artifacts/ || true
+          fi
+          if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
+            zip -qr artifacts/app-source.zip "$APP_DIR" \
+              -x "*/node_modules/*" "*/.git/*" "*/build/*" "*/.gradle/*" \
+              "*/dist/*" "*/.expo/*" "*/Pods/*" || true
+          fi
+
+      - name: Upload Maestro logs and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connect-qa-android-${{ matrix.id }}
+          path: tests/connect-qa/android/artifacts/
+          if-no-files-found: warn

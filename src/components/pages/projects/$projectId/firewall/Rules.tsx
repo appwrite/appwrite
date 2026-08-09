@@ -73,6 +73,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs } from '@/lib/analytics-actions'
@@ -415,7 +416,9 @@ export function RulesList({
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
                     disabled={!canWrite}
-                    onClick={() => setEditingRule(rule)}
+                    onSelect={() =>
+                      openDialogAfterOverlayCloses(() => setEditingRule(rule))
+                    }
                   >
                     <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
                   </DropdownMenuItem>
@@ -493,7 +496,9 @@ export function RulesList({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     disabled={!canWrite}
-                    onClick={() => setDeletingRule(rule)}
+                    onSelect={() =>
+                      openDialogAfterOverlayCloses(() => setDeletingRule(rule))
+                    }
                   >
                     <MenuItemContent icon={Trash2}>
                       {t('Delete')}

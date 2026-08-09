@@ -49,6 +49,10 @@ import { Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { PostgresRoleDrawer } from './PostgresRoleDrawer'
 import { matchesPostgresLocalSearch } from './postgres-spreadsheet-chrome'
 import { useT } from '@/lib/i18n/translate'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 
 type PostgresRolesPanelProps = {
   databaseId: string
@@ -224,12 +228,15 @@ export function PostgresRolesPanel({
 
   const handleDelete = async () => {
     if (!roleToDelete) return
-
-    try {
-      await executeSql.mutateAsync(buildPostgresDropRoleSql(roleToDelete.role_name))
-      toast.success(t('Role deleted'))
+    const role = roleToDelete
+    closeDialogBeforeOverlayUnmount(() => {
       setDeleteDialogOpen(false)
       setRoleToDelete(null)
+    })
+
+    try {
+      await executeSql.mutateAsync(buildPostgresDropRoleSql(role.role_name))
+      toast.success(t('Role deleted'))
       await refetch()
     } catch (error) {
       toast.error(getErrorMessage(error) ?? t('Failed to delete role'))
@@ -393,9 +400,11 @@ export function PostgresRolesPanel({
                                 <DropdownMenuContent align="end">
                                   {canUpdate ? (
                                     <DropdownMenuItem
-                                      onClick={() => {
-                                        setSelectedRole(role)
-                                        setDrawerOpen(true)
+                                      onSelect={() => {
+                                        openDialogAfterOverlayCloses(() => {
+                                          setSelectedRole(role)
+                                          setDrawerOpen(true)
+                                        })
                                       }}
                                     >
                                       <MenuItemContent icon={Pencil}>
@@ -405,9 +414,11 @@ export function PostgresRolesPanel({
                                   ) : null}
                                   {canDelete ? (
                                     <DropdownMenuItem
-                                      onClick={() => {
-                                        setRoleToDelete(role)
-                                        setDeleteDialogOpen(true)
+                                      onSelect={() => {
+                                        openDialogAfterOverlayCloses(() => {
+                                          setRoleToDelete(role)
+                                          setDeleteDialogOpen(true)
+                                        })
                                       }}
                                     >
                                       <MenuItemContent icon={Trash2}>
@@ -467,7 +478,6 @@ export function PostgresRolesPanel({
               {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
-          <div className="border-t border-border" />
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"

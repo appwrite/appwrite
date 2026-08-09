@@ -40,7 +40,7 @@ What personal data we collect, why we collect it, and how it is used
 | Specific personal data we collect | - Full name<br>- Email address<br>- Phone number<br>- IP address<br>- Country<br>- User-agent (info about the browser)<br>- Phone number<br>- Usage details | - Full name<br>- Email address |
 | The purpose of data collection | - To be able to create an account<br>- To be able to log in<br>- To be able to enjoy features available to registered users<br>- To collect Informative reason for the administrator<br>- To identify reported problems during project development<br>- To be able to log in, using two factor authentication via text message<br>- To be able to monitor errors | - To send you marketing communications and product updates |
 | Legal basis (GDPR only, if applicable) | - Processing is necessary for the performance of a contract to which the data subject is party or in order to take steps at the request of the data subject prior to entering into a contract<br>- Legitimate interest (e.g. to allow you to create an account and log-in) | - Consent |
-| Third parties with whom we share your personal data | - Userlist<br>- MSG91 <br>- Activetrail (Israel only)<br>- SMS.to<br>- Sentry.io | - Userlist |
+| Third parties with whom we share your personal data | - Resend<br>- MSG91 <br>- Activetrail (Israel only)<br>- SMS.to<br>- Sentry.io | - SendGrid |
 | Consequences of not providing the Personal Data | - Cannot create an account<br>- Cannot log in <br>- Cannot enjoy features available to registered users<br>- Cannot identify reported problem during your project development process <br>- Cannot log in using two factor authentication based on phone number<br>- Cannot monitor and solve errors<br>- Cannot sign up using our website forms * |  |
 
 #### When you purchase products in our Swag Store
@@ -60,7 +60,7 @@ What personal data we collect, why we collect it, and how it is used
 | Specific personal data we collect | - Full name<br>- Email address |
 | The purpose of data collection | - To add you to our mailing list<br>- To send newsletters or other marketing communications<br>- To add you to our blog distribution list |
 | Legal basis (GDPR only, if applicable) | - Consent<br>- Legitimate interest (e.g. send you more information about Appwrite) |
-| Third parties with whom we share your personal data | 3rd party platforms such as:<br>- Userlist |
+| Third parties with whom we share your personal data | 3rd party platforms such as:<br>- SendGrid |
 | Consequences of not providing the personal data | - Cannot add you to our mailing list<br>- Cannot send you marketing communications<br>- Cannot add you to our blog distribution list |
 
 #### When we process your job application

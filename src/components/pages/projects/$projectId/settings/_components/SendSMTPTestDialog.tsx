@@ -160,9 +160,6 @@ export function SendSMTPTestDialog({
                 disabled={emails.length === 0 || isSending}
                 onClick={handleSend}
 >
-                {isSending ? (
-                  <Loader2 className="me-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
-                ) : null}
                 {t('Send')}
               </Button>
               <Button

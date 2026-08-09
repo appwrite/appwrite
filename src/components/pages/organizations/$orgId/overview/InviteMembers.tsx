@@ -478,9 +478,7 @@ export function InviteMembersDialog({
             onClick={handleInvite}
             disabled={!isValid || createMembershipMutation.isPending}
           >
-            {createMembershipMutation.isPending
-              ? t('Inviting...')
-              : `${t('Invite')} ${invites.filter((i) => i.email.trim() !== '').length} ${invites.filter((i) => i.email.trim() !== '').length !== 1 ? t('members') : t('member')}`}
+            {`${t('Invite')} ${invites.filter((i) => i.email.trim() !== '').length} ${invites.filter((i) => i.email.trim() !== '').length !== 1 ? t('members') : t('member')}`}
           </Button>
         </div>
       </DialogContent>

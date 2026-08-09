@@ -81,18 +81,27 @@ function OrganizationLayout() {
   )
 
   const isUpgradeWizardRoute = pathname === '/upgrade'
+  // Agent has its own ConsoleLayout (console header + fixed chat chrome).
+  const isAgentRoute = matches.some(
+    (match) =>
+      match.routeId.includes('/agent') ||
+      match.routeId === '/_public/organizations/$orgId/agent' ||
+      match.routeId.startsWith('/_public/organizations/$orgId/agent'),
+  )
   const renderOutletOnly =
     isDomainDetailRoute ||
     isMarketplaceAppDetailRoute ||
     isOrgAppDetailRoute ||
     isSupportRoute ||
     isOrgDomainsWizardRoute ||
-    isUpgradeWizardRoute
+    isUpgradeWizardRoute ||
+    isAgentRoute
 
   return (
     <RequireAuth>
       {renderOutletOnly ? (
-        // Domain detail, support, upgrade, and domain wizards: outlet only (fullscreen / own chrome)
+        // Domain detail, apps, marketplace detail, support, upgrade, domain
+        // wizards, and agent: outlet only (own ConsoleLayout / fullscreen chrome)
         <Outlet />
       ) : (
         // For other routes, render OrgOverview which provides header/tabs

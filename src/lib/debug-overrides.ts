@@ -6,12 +6,15 @@ import {
   type InitTicketTypeId,
   isInitTicketTypeId,
 } from '@/lib/init/ticket-types'
+import {
+  USER_OS_VALUES,
+  type UserOsOverride,
+} from '@/lib/user-os'
 
 const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 
 export const DEBUG_OVERRIDE_KEYS = {
   showNativeAppBar: 'debug:showNativeAppBar',
-  showAIAssistant: 'debug:showAIAssistant',
   showActivityChart: 'debug:showActivityChart',
   showSuccessTeamCard: 'debug:showSuccessTeamCard',
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
@@ -22,6 +25,9 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
   initLowPowerAnimations: 'debug:initLowPowerAnimations',
+  /** Overrides detected client OS for UI toggles and keyboard shortcuts. */
+  userOs: 'debug:userOs',
+  /** @deprecated Migrated to `userOs`; kept for one-time localStorage migration. */
   keyboardLayout: 'debug:keyboardLayout',
   disableUsageBreakdownQueries: 'debug:disableUsageBreakdownQueries',
   disableOverviewBandwidthChart: 'debug:disableOverviewBandwidthChart',
@@ -57,15 +63,14 @@ export type MockCloudStatusAlert =
 
 export type InitLowPowerAnimationsOverride = 'auto' | 'on' | 'off'
 
-export type KeyboardLayoutOverride = 'auto' | 'macos' | 'windows'
+/** @deprecated Use `UserOsOverride` from `@/lib/user-os`. */
+export type KeyboardLayoutOverride = UserOsOverride
 
 export type PageDirectionOverride = 'ltr' | 'rtl'
 export type DebugLanguageOverride = 'en' | 'he' | 'ja'
 
 export type DebugOverrides = {
   showNativeAppBar: boolean
-  /** When true, the AI assistant is shown regardless of profile (experimental). Default false. */
-  showAIAssistant: boolean
   /** When true, the activity log volume chart is shown above activity events. Default false. */
   showActivityChart: boolean
   /** When true, the success team card is shown on organization overview (custom plans). Default false. */
@@ -96,8 +101,11 @@ export type DebugOverrides = {
   previewInitReactionConfetti: boolean
   /** Controls Init animation optimizations for constrained devices. */
   initLowPowerAnimations: InitLowPowerAnimationsOverride
-  /** Command center keyboard visualizer and shortcut labels. */
-  keyboardLayout: KeyboardLayoutOverride
+  /**
+   * Overrides detected client OS for OS toggles, docs tabs, and keyboard
+   * shortcut labels / visualizer. `'auto'` uses device detection.
+   */
+  userOs: UserOsOverride
   /** When true, skip usage listEvents/listGauges calls that pass dimensions (overview breakdown panels). */
   disableUsageBreakdownQueries: boolean
   /** When true, hide the matching usage chart tab on the project overview. */
@@ -176,14 +184,41 @@ function readNullableInitTicketTypeFromStorage(key: string): InitTicketTypeId | 
   return isInitTicketTypeId(raw) ? raw : null
 }
 
+const USER_OS_OVERRIDE_VALUES = ['auto', ...USER_OS_VALUES] as const
+
+/**
+ * Read the user OS debug override. Migrates legacy `keyboardLayout` values
+ * (`auto` | `macos` | `windows`) into `userOs` once, then drops the old key.
+ */
+function readUserOsOverrideFromStorage(): UserOsOverride {
+  const storage = getStorage()
+  if (!storage) return 'auto'
+
+  const fromUserOs = storage.getItem(DEBUG_OVERRIDE_KEYS.userOs)
+  if (
+    fromUserOs !== null &&
+    USER_OS_OVERRIDE_VALUES.includes(fromUserOs as UserOsOverride)
+  ) {
+    return fromUserOs as UserOsOverride
+  }
+
+  const legacy = storage.getItem(DEBUG_OVERRIDE_KEYS.keyboardLayout)
+  if (
+    legacy !== null &&
+    (legacy === 'auto' || legacy === 'macos' || legacy === 'windows')
+  ) {
+    storage.setItem(DEBUG_OVERRIDE_KEYS.userOs, legacy)
+    storage.removeItem(DEBUG_OVERRIDE_KEYS.keyboardLayout)
+    return legacy
+  }
+
+  return 'auto'
+}
+
 export function loadDebugOverrides(): DebugOverrides {
   return {
     showNativeAppBar: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showNativeAppBar,
-    ),
-    showAIAssistant: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.showAIAssistant,
-      false,
     ),
     showActivityChart: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showActivityChart,
@@ -222,11 +257,7 @@ export function loadDebugOverrides(): DebugOverrides {
       ['auto', 'on', 'off'] as const,
       'auto',
     ),
-    keyboardLayout: readStringFromStorage(
-      DEBUG_OVERRIDE_KEYS.keyboardLayout,
-      ['auto', 'macos', 'windows'] as const,
-      'auto',
-    ),
+    userOs: readUserOsOverrideFromStorage(),
     disableUsageBreakdownQueries: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.disableUsageBreakdownQueries,
       false,
@@ -320,7 +351,6 @@ export function resetDebugOverrides() {
 
 /** Keys toggled from Debug → Settings → Feature flags (not other debug sections). */
 export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
-  'showAIAssistant',
   'showActivityChart',
   'showNativeAppBar',
   'showSuccessTeamCard',
@@ -345,7 +375,6 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   DebugOverrides,
   FeatureFlagsMenuDebugKey
 > = {
-  showAIAssistant: false,
   showActivityChart: false,
   showNativeAppBar: false,
   showSuccessTeamCard: false,
@@ -396,9 +425,44 @@ export function subscribeToDebugOverrides(
   }
 }
 
+/**
+ * Defaults used for SSR and the first client render (no localStorage).
+ * Keeps hydration markup identical; persisted overrides apply after mount.
+ */
+export function getDefaultDebugOverrides(): DebugOverrides {
+  return {
+    showNativeAppBar: false,
+    showActivityChart: false,
+    showSuccessTeamCard: false,
+    mockCloudStatusAlert: 'live',
+    showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
+    showFunctionsLocalEditor: false,
+    showConstruction: getShowConstructionDefault(),
+    mockInitCurrentDay: null,
+    mockInitTicketType: null,
+    previewInitReactionConfetti: false,
+    initLowPowerAnimations: 'auto',
+    userOs: 'auto',
+    disableUsageBreakdownQueries: false,
+    disableOverviewBandwidthChart: false,
+    disableOverviewRequestsChart: false,
+    disableOverviewStorageChart: false,
+    disableOverviewExecutionsChart: false,
+    disableOverviewComputeChart: false,
+    unlockOnboardingLocks: false,
+    previewOnboardingComplete: false,
+    previewCommunitySupportWizard: false,
+    pageDirection: 'ltr',
+    language: 'en',
+  }
+}
+
 export function useDebugOverrides(): DebugOverrides {
-  const [overrides, setOverrides] = useState(loadDebugOverrides)
+  // Do not read localStorage during useState init — that diverges from SSR and
+  // remounts the app shell (visible as a white flash).
+  const [overrides, setOverrides] = useState(getDefaultDebugOverrides)
   useEffect(() => {
+    setOverrides(loadDebugOverrides())
     return subscribeToDebugOverrides(setOverrides)
   }, [])
   return overrides

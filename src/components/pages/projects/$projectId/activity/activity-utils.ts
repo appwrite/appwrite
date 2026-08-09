@@ -3,7 +3,11 @@
  */
 
 import type { Models } from '@appwrite.io/console'
-import type { CountryLookups } from '@/lib/locale/country-lookups'
+import {
+  getCountryDisplayName,
+  normalizeCountryCode,
+  type CountryLookups,
+} from '@/lib/locale/country-lookups'
 
 /** Older audit rows may still expose split country fields. */
 type ActivityEventCountryFields = Models.ActivityEvent & {
@@ -20,16 +24,13 @@ export function formatActivityEventJson(event: Models.ActivityEvent): string {
 export function getActivityCountryCode(
   event: Models.ActivityEvent,
 ): string | null {
-  const legacyCode = (event as ActivityEventCountryFields).countryCode?.trim()
-  if (legacyCode && legacyCode !== '--') {
-    return legacyCode.toLowerCase()
-  }
+  const legacyCode = normalizeCountryCode(
+    (event as ActivityEventCountryFields).countryCode,
+  )
+  if (legacyCode) return legacyCode.toLowerCase()
 
-  const country = event.country?.trim()
-  if (!country || country === '--') return null
-  if (/^[a-z]{2}$/i.test(country)) return country.toLowerCase()
-
-  return null
+  const fromCountry = normalizeCountryCode(event.country)
+  return fromCountry ? fromCountry.toLowerCase() : null
 }
 
 /** Human-readable country label for table cells and the activity drawer. */
@@ -41,15 +42,14 @@ export function getActivityCountryDisplayName(
   if (legacyName) return legacyName
 
   const code = getActivityCountryCode(event)
-  if (code && lookups) {
-    const name = lookups.codeToName.get(code.toUpperCase())
-    if (name) return name
+  if (code) {
+    return getCountryDisplayName(code, lookups) ?? code.toUpperCase()
   }
 
   const country = event.country?.trim()
-  if (country && !/^[a-z]{2}$/i.test(country)) return country
-
-  if (code) return code.toUpperCase()
+  if (country) {
+    return getCountryDisplayName(country, lookups)
+  }
 
   return null
 }

@@ -12,6 +12,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Server Error': 'שגיאת שרת',
   'Connection Error': 'שגיאת חיבור',
   'Request Timeout': 'חריגת זמן בבקשה',
+  'Database timed out. Try adjusting your queries or adding an index.':
+    'מסד הנתונים חרג מזמן ההמתנה. נסו להתאים את השאילתות או להוסיף אינדקס.',
   'Something went wrong. Please try again.': 'משהו השתבש. נסו שוב.',
   'The requested resource could not be found. It may have been deleted or you may not have permission to access it.':
     'המשאב המבוקש לא נמצא. ייתכן שהוא נמחק או שאין לכם הרשאה לגשת אליו.',
@@ -297,6 +299,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Write content': 'כתיבת תוכן',
   'Publish blogs, videos, or tutorials that help developers discover Appwrite.':
     'פרסמו בלוגים, סרטונים או מדריכים שעוזרים למפתחים לגלות את Appwrite.',
+  'Join the Affiliates program': 'הצטרפות לתוכנית האפיליאייטס',
+  'Share invite links and earn credits when developers upgrade to Pro.':
+    'שתפו קישורי הזמנה והרוויחו קרדיטים כשמפתחים משדרגים ל-Pro.',
   'Build integrations': 'בניית אינטגרציות',
   'Connect Appwrite to the tools your stack already uses.':
     'חברו את Appwrite לכלים שכבר נמצאים בסטאק שלכם.',
@@ -472,8 +477,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Report bugs or request features': "דיווח על באגים או בקשת פיצ'רים",
   Repository: 'Repo',
   'Repository name': 'שם ה-repo',
-  'Required for sign-in, security, and remembering your preferences.':
-    'נדרשות להתחברות, לאבטחה ולשמירת ההעדפות שלכם.',
+  'Required for sign-in, site access, security, and remembering your preferences.':
+    'נדרשות להתחברות, לגישה לאתר, לאבטחה ולשמירת ההעדפות שלכם.',
   Reset: 'איפוס',
   Row: 'שורה',
   'Rows per page': 'שורות בעמוד',
@@ -650,8 +655,8 @@ export const heSharedUiDictionary: Record<string, string> = {
     'המתינו לסיום הבנייה או בטלו אותה קודם',
   'Waiting for build logs...': 'ממתין ללוגים של הבנייה...',
   // pragma: allowlist secret
-  'We use essential cookies to keep you signed in and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our':
-    'אנחנו משתמשים בעוגיות חיוניות כדי לשמור אתכם מחוברים ולזכור את ההעדפות שלכם. באישורכם, אנחנו משתמשים גם באנליטיקה כדי להבין איך Appwrite בשימוש ולשפר אותו. קראו את', // pragma: allowlist secret
+  'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our': // pragma: allowlist secret
+    'אנחנו משתמשים בעוגיות חיוניות כדי לשמור אתכם מחוברים, לנהל גישה לאתר ולזכור את ההעדפות שלכם. באישורכם, אנחנו משתמשים גם באנליטיקה כדי להבין איך Appwrite בשימוש ולשפר אותו. קראו את', // pragma: allowlist secret
   'We value your privacy': 'הפרטיות שלכם חשובה לנו',
   'You cannot impersonate your own operator account.':
     'לא ניתן להתחזות לחשבון המפעיל של עצמכם.',
@@ -1142,6 +1147,8 @@ export const heSharedUiDictionary: Record<string, string> = {
     'בנו ערוץ Realtime להרשמה. השתמשו בתווים כלליים (*) כדי להתאים למספר משאבים.',
   'Select events that will trigger your function or webhook.':
     'בחרו אירועים שיפעילו את הפונקציה או ה-webhook שלכם.',
+  'Select file': 'בחירת קובץ',
+  'Select tool': 'בחירת כלי',
   Service: 'שירות',
   'Bucket (optional)': 'באקט (אופציונלי)',
   'Function (optional)': 'פונקציה (אופציונלי)',

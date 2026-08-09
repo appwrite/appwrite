@@ -11,10 +11,28 @@ import { Switch } from '@/components/ui/switch'
 import { IdInput } from '@/components/ui/id-input'
 import { FunctionSelector } from '@/components/global/shared/FunctionSelector'
 import { SiteSelector } from '@/components/global/shared/SiteSelector'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { ConditionsBuilder } from '../_components/ConditionsBuilder'
 import { RuleImpactPreview } from '../_components/RuleImpactPreview'
 import { useCreateFirewallRule } from '@/lib/react-query/hooks'
-import { type FirewallCreatableAction } from '@/lib/firewall/actions'
+import {
+  type FirewallCreatableAction,
+  type FirewallRateLimitKey,
+  FIREWALL_RATE_LIMIT_KEYS,
+  FIREWALL_RATE_LIMIT_KEY_DEFAULT,
+  CHALLENGE_DIFFICULTY_MIN,
+  CHALLENGE_DIFFICULTY_MAX,
+  CHALLENGE_DIFFICULTY_DEFAULT,
+  CHALLENGE_TTL_MIN,
+  CHALLENGE_TTL_MAX,
+  CHALLENGE_TTL_DEFAULT,
+} from '@/lib/firewall/actions'
 import {
   FIREWALL_RESOURCE_TYPES,
   areFirewallConditionsComplete,
@@ -71,6 +89,9 @@ const DEFAULT_FORM = {
   enabled: true,
   limit: 100,
   interval: 60,
+  rateLimitKey: FIREWALL_RATE_LIMIT_KEY_DEFAULT as FirewallRateLimitKey,
+  difficulty: CHALLENGE_DIFFICULTY_DEFAULT,
+  ttl: CHALLENGE_TTL_DEFAULT,
   location: '/',
   statusCode: 302,
 }
@@ -105,6 +126,11 @@ export function View() {
     areFirewallConditionsComplete(conditions) &&
     (form.action !== WafRuleAction.RateLimit ||
       (form.limit > 0 && form.interval > 0)) &&
+    (form.action !== WafRuleAction.Challenge ||
+      (form.difficulty >= CHALLENGE_DIFFICULTY_MIN &&
+        form.difficulty <= CHALLENGE_DIFFICULTY_MAX &&
+        form.ttl >= CHALLENGE_TTL_MIN &&
+        form.ttl <= CHALLENGE_TTL_MAX)) &&
     (form.action !== WafRuleAction.Redirect ||
       (form.location.trim().length > 0 && form.statusCode > 0))
 
@@ -141,6 +167,9 @@ export function View() {
         conditions: serializeFirewallConditions(conditions),
         limit: form.limit,
         interval: form.interval,
+        key: form.rateLimitKey,
+        difficulty: form.difficulty,
+        ttl: form.ttl,
         location: form.location.trim(),
         statusCode: form.statusCode,
       })
@@ -192,6 +221,78 @@ export function View() {
               })
             }
           />
+        </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="firewall-key" className="text-[12px]">
+            {t('Limit by')}
+          </Label>
+          <Select
+            value={form.rateLimitKey}
+            onValueChange={(value) =>
+              setForm({ ...form, rateLimitKey: value as FirewallRateLimitKey })
+            }
+          >
+            <SelectTrigger id="firewall-key" className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FIREWALL_RATE_LIMIT_KEYS.map((k) => (
+                <SelectItem key={k.value} value={k.value}>
+                  {t(k.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[12px] text-muted-foreground">
+            {t(
+              'Track the request quota per client IP or per authenticated user.',
+            )}
+          </p>
+        </div>
+      </div>
+    ) : form.action === WafRuleAction.Challenge ? (
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="firewall-difficulty" className="text-[12px]">
+            {t('Difficulty')}
+          </Label>
+          <Input
+            id="firewall-difficulty"
+            type="number"
+            min={CHALLENGE_DIFFICULTY_MIN}
+            max={CHALLENGE_DIFFICULTY_MAX}
+            value={form.difficulty}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                difficulty: Number(e.target.value) || CHALLENGE_DIFFICULTY_MIN,
+              })
+            }
+          />
+          <p className="text-[12px] text-muted-foreground">
+            {t('1 (easiest) to 5 (hardest).')}
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="firewall-ttl" className="text-[12px]">
+            {t('TTL (seconds)')}
+          </Label>
+          <Input
+            id="firewall-ttl"
+            type="number"
+            min={CHALLENGE_TTL_MIN}
+            max={CHALLENGE_TTL_MAX}
+            value={form.ttl}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                ttl: Number(e.target.value) || CHALLENGE_TTL_MIN,
+              })
+            }
+          />
+          <p className="text-[12px] text-muted-foreground">
+            {t('How long a visitor stays cleared after passing.')}
+          </p>
         </div>
       </div>
     ) : form.action === WafRuleAction.Redirect ? (

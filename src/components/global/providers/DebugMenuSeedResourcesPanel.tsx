@@ -3,11 +3,14 @@ import type { ReactNode } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
+  Brain,
+  Cpu,
   Database,
   FolderKanban,
   Globe,
   HardDrive,
   Loader2,
+  Table2,
   Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -16,8 +19,17 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { createConsoleProject } from '@/lib/appwrite/console-projects'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useProject } from '@/lib/react-query/hooks'
-import { createProjectDatabase } from '@/lib/react-query/hooks/databases'
+import {
+  createProjectDatabase,
+  createProjectTable,
+} from '@/lib/react-query/hooks/databases'
 import { Dependencies } from '@/lib/react-query/hooks/dependencies'
+import {
+  isDatabaseRouteKind,
+  usesCollectionsPath,
+  type DatabaseRouteKind,
+} from '@/lib/database-routes'
+import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,8 +39,11 @@ type ResourceKind =
   | 'projects'
   | 'memberships'
   | 'databases'
+  | 'tables'
   | 'buckets'
   | 'domains'
+  | 'models'
+  | 'memories'
 
 type SeedProgress = {
   kind: ResourceKind
@@ -48,6 +63,14 @@ type SeedCard = {
 
 const DEFAULT_AMOUNT = 5
 const MAX_AMOUNT = 100
+const MEMORY_CATEGORIES = ['preference', 'instruction', 'fact'] as const
+const MOCK_MODEL_PROVIDERS = [
+  { provider: 'openai', model: 'gpt-4o' },
+  { provider: 'anthropic', model: 'claude-sonnet-4-5' },
+  { provider: 'google', model: 'gemini-2.5-flash' },
+  { provider: 'openrouter', model: 'openai/gpt-4o-mini' },
+  { provider: 'custom', model: 'mock-model' },
+] as const
 const RESOURCE_LABELS: Record<
   ResourceKind,
   { singular: string; plural: string }
@@ -55,8 +78,11 @@ const RESOURCE_LABELS: Record<
   projects: { singular: 'project', plural: 'projects' },
   memberships: { singular: 'membership', plural: 'memberships' },
   databases: { singular: 'database', plural: 'databases' },
+  tables: { singular: 'table', plural: 'tables' },
   buckets: { singular: 'bucket', plural: 'buckets' },
   domains: { singular: 'domain', plural: 'domains' },
+  models: { singular: 'model', plural: 'models' },
+  memories: { singular: 'memory', plural: 'memories' },
 }
 
 function buildSeedLabel(prefix: string) {
@@ -81,11 +107,23 @@ export function DebugMenuSeedResourcesPanel() {
   const params = useParams({ strict: false }) as {
     orgId?: string
     projectId?: string
+    databaseId?: string
+    dbKind?: string
   }
 
   const routeOrgId = typeof params.orgId === 'string' ? params.orgId : undefined
   const projectId =
     typeof params.projectId === 'string' ? params.projectId : undefined
+  const databaseId =
+    typeof params.databaseId === 'string' ? params.databaseId : undefined
+  const dbKind: DatabaseRouteKind =
+    typeof params.dbKind === 'string' && isDatabaseRouteKind(params.dbKind)
+      ? params.dbKind
+      : 'tablesdb'
+  const usesCollections = usesCollectionsPath(dbKind)
+  const tableLabels = usesCollections
+    ? { singular: 'collection', plural: 'collections' }
+    : { singular: 'table', plural: 'tables' }
   const { project } = useProject(projectId)
   const organizationId = routeOrgId || project?.teamId || null
   const [amount, setAmount] = useState(String(DEFAULT_AMOUNT))
@@ -99,24 +137,24 @@ export function DebugMenuSeedResourcesPanel() {
     : DEFAULT_AMOUNT
 
   const contextLabel = useMemo(() => {
-    if (projectId && organizationId) {
-      return `Project ${projectId}, organization ${organizationId}`
-    }
-    if (projectId) return `Project ${projectId}`
-    if (organizationId) return `Organization ${organizationId}`
-    return 'Open a project or organization route to seed resources.'
-  }, [organizationId, projectId])
+    const parts: string[] = []
+    if (projectId) parts.push(`Project ${projectId}`)
+    if (organizationId) parts.push(`organization ${organizationId}`)
+    if (databaseId) parts.push(`database ${databaseId}`)
+    if (parts.length > 0) return parts.join(', ')
+    return 'Agent models and memories work anywhere. Open a project or organization route for the rest.'
+  }, [databaseId, organizationId, projectId])
 
   const runSeed = async (
     kind: ResourceKind,
     createOne: (index: number, seed: string) => Promise<unknown>,
     invalidate: () => Promise<void>,
+    labels: { singular: string; plural: string } = RESOURCE_LABELS[kind],
   ) => {
     const total = safeAmount
     const seed = `${buildSeedLabel(prefix)}-${Date.now().toString(36)}`
     setBusyKind(kind)
     setProgress({ kind, created: 0, total, failed: 0 })
-    const label = RESOURCE_LABELS[kind]
 
     const results: PromiseSettledResult<unknown>[] = []
 
@@ -142,18 +180,18 @@ export function DebugMenuSeedResourcesPanel() {
       const failed = total - created
       if (created > 0) {
         toast.success(
-          `Created ${created} ${created === 1 ? label.singular : label.plural}`,
+          `Created ${created} ${created === 1 ? labels.singular : labels.plural}`,
         )
       }
       if (failed > 0) {
         toast.error(
           `Failed to create ${failed} ${
-            failed === 1 ? label.singular : label.plural
+            failed === 1 ? labels.singular : labels.plural
           }: ${getFailureMessage(results)}`,
         )
       }
     } catch (error) {
-      toast.error(getErrorMessage(error, `Failed to create ${label.plural}`))
+      toast.error(getErrorMessage(error, `Failed to create ${labels.plural}`))
     } finally {
       setBusyKind(null)
     }
@@ -217,6 +255,31 @@ export function DebugMenuSeedResourcesPanel() {
     )
   }
 
+  const seedTables = () => {
+    if (!projectId || !databaseId) return
+    try {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+    } catch (error) {
+      toast.error(
+        getErrorMessage(error, `Failed to create ${tableLabels.plural}`),
+      )
+      return
+    }
+    void runSeed(
+      'tables',
+      (index, seed) =>
+        createProjectTable(projectId, databaseId, dbKind, {
+          name: `${seed} ${tableLabels.singular} ${index}`,
+        }),
+      async () => {
+        await queryClient.refetchQueries({
+          queryKey: ['tables', 'project', projectId, databaseId],
+        })
+      },
+      tableLabels,
+    )
+  }
+
   const seedBuckets = () => {
     if (!projectId) return
     void runSeed(
@@ -250,7 +313,67 @@ export function DebugMenuSeedResourcesPanel() {
     )
   }
 
+  const seedModels = () => {
+    void runSeed(
+      'models',
+      (index, seed) => {
+        const provider =
+          MOCK_MODEL_PROVIDERS[(index - 1) % MOCK_MODEL_PROVIDERS.length]!
+        return sdk.forConsole.agent.createModel({
+          modelId: 'unique()',
+          name: `${seed} ${provider.provider} ${index}`,
+          provider: provider.provider,
+          model: provider.model,
+          apiKey: `sk-debug-${seed}-${index}`,
+          enabled: true,
+          status: 'ready',
+        })
+      },
+      async () => {
+        await queryClient.refetchQueries({ queryKey: ['agent', 'models'] })
+      },
+    )
+  }
+
+  const seedMemories = () => {
+    void runSeed(
+      'memories',
+      (index, seed) => {
+        const category =
+          MEMORY_CATEGORIES[(index - 1) % MEMORY_CATEGORIES.length]!
+        return sdk.forConsole.agent.createMemory({
+          memoryId: 'unique()',
+          scope: 'user',
+          key: `${seed}.${category}.${index}`,
+          content: `Debug ${category} #${index}: prefer concise answers and reuse this mock memory.`,
+          category,
+          priority: index,
+          status: 'active',
+          source: 'user',
+        })
+      },
+      async () => {
+        await queryClient.refetchQueries({ queryKey: ['agent', 'memories'] })
+      },
+    )
+  }
+
   const cards: SeedCard[] = [
+    {
+      kind: 'models',
+      title: 'Agent models',
+      description: 'Create mock LLM models with fake API keys for the agent.',
+      icon: <Cpu className="h-3.5 w-3.5" />,
+      disabled: false,
+    },
+    {
+      kind: 'memories',
+      title: 'Agent memories',
+      description:
+        'Create mock preferences, instructions, and facts for the agent.',
+      icon: <Brain className="h-3.5 w-3.5" />,
+      disabled: false,
+    },
     {
       kind: 'projects',
       title: 'Projects',
@@ -277,6 +400,16 @@ export function DebugMenuSeedResourcesPanel() {
       disabledReason: 'Open a project route first.',
     },
     {
+      kind: 'tables',
+      title: usesCollections ? 'Collections' : 'Tables',
+      description: usesCollections
+        ? 'Create empty collections in the current database.'
+        : 'Create empty tables in the current database.',
+      icon: <Table2 className="h-3.5 w-3.5" />,
+      disabled: !projectId || !databaseId,
+      disabledReason: 'Open a database route first.',
+    },
+    {
       kind: 'buckets',
       title: 'Empty buckets',
       description: 'Create empty storage buckets in the current project.',
@@ -298,8 +431,11 @@ export function DebugMenuSeedResourcesPanel() {
     projects: seedProjects,
     memberships: seedMemberships,
     databases: seedDatabases,
+    tables: seedTables,
     buckets: seedBuckets,
     domains: seedDomains,
+    models: seedModels,
+    memories: seedMemories,
   }
 
   return (

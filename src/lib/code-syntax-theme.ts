@@ -118,7 +118,10 @@ export function prismSyntaxHighlightStyles(
     { types: ['tag'], style: { color: colors.string } },
     { types: ['function'], style: { color: colors.function } },
     { types: ['class-name'], style: { color: colors.moduleKeyword } },
-    { types: ['attr-name', 'variable'], style: { color: colors.property } },
+    {
+      types: ['attr-name', 'variable', 'property'],
+      style: { color: colors.property },
+    },
     {
       types: [
         'deleted',
@@ -131,6 +134,10 @@ export function prismSyntaxHighlightStyles(
       style: { color: colors.string },
     },
     { types: ['number', 'inserted', 'constant'], style: { color: colors.string } },
+    {
+      types: ['boolean'],
+      style: { color: colors.keyword },
+    },
     { types: ['selector'], style: { color: colors.keyword } },
     { types: ['punctuation', 'operator'], style: neutral ?? {} },
   ]

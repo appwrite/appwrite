@@ -1,6 +1,11 @@
-import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  type ComponentType,
+  type ReactNode,
+} from 'react'
 import { Link } from '@tanstack/react-router'
-import type { LucideIcon } from 'lucide-react'
 import { Search, X } from 'lucide-react'
 import {
   matchesSettingsSearch,
@@ -23,13 +28,21 @@ import {
   DeferEmptyResultsProvider,
   useSettingsSearch,
 } from './SettingsSearchContext'
+import {
+  SETTINGS_LAYOUT_CONTAINER,
+  settingsLayoutContentClass,
+  settingsLayoutDesktopNavClass,
+  settingsLayoutMobileNavClass,
+  settingsLayoutRootClass,
+} from './settings-layout-container'
 
 export const SETTINGS_LAYOUT_NAV_WIDTH_CLASS = 'w-56'
 
 export type SettingsLayoutNavItem = {
   id: string
   label: string
-  icon: LucideIcon
+  /** Lucide icon or any icon component that accepts `className`. */
+  icon: ComponentType<{ className?: string }>
   keywords?: string[]
   /** Route `to` - typed loosely so org/project layouts can share this shell. */
   to: string
@@ -51,6 +64,12 @@ type SettingsLayoutShellProps = {
   searchQuery?: string
   onSearchQueryChange?: (value: string) => void
   navWidthClassName?: string
+  /**
+   * When true (default), desktop nav uses route `Link`s.
+   * When false, desktop nav uses buttons that call `onNavigateToSection`
+   * (for in-surface hosts like the agent right pane).
+   */
+  useRouteLinks?: boolean
 }
 
 function SettingsSearchInput({
@@ -99,6 +118,7 @@ function SettingsLayoutShellContent({
   mobileNavAriaLabel = 'Settings navigation',
   desktopNavAriaLabel = 'Settings navigation',
   navWidthClassName = SETTINGS_LAYOUT_NAV_WIDTH_CLASS,
+  useRouteLinks = true,
 }: Omit<SettingsLayoutShellProps, 'searchQuery' | 'onSearchQueryChange'>) {
   const t = useT()
   const { query, setQuery } = useSettingsSearch()
@@ -148,7 +168,7 @@ function SettingsLayoutShellContent({
 
   const navLinkClassName = (itemId: string, isActive: boolean) =>
     cn(
-      'flex items-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
+      'flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
       isActive
         ? 'bg-accent text-foreground'
         : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
@@ -158,75 +178,98 @@ function SettingsLayoutShellContent({
     )
 
   return (
-    <div className="flex w-full min-w-0 flex-col gap-4 lg:flex-row lg:gap-8">
-      <nav
-        data-testid="settings-navigation"
-        className="lg:hidden space-y-2"
-        aria-label={t(mobileNavAriaLabel)}
-      >
-        <SettingsSearchInput
-          value={query}
-          onChange={setQuery}
-          placeholder={searchPlaceholder}
-        />
-        <Select
-          value={activeSectionId}
-          onValueChange={onNavigateToSection}
+    // Container must wrap the flex root — queries cannot style the container node itself.
+    <div className={SETTINGS_LAYOUT_CONTAINER}>
+      <div className={settingsLayoutRootClass}>
+        <nav
+          data-testid="settings-navigation"
+          className={settingsLayoutMobileNavClass}
+          aria-label={t(mobileNavAriaLabel)}
         >
-          <SelectTrigger size="sm" className="h-9 w-full text-[13px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {navItems.map((item) => (
-              <SelectItem
-                key={item.id}
-                value={item.id}
-                className="text-[13px]"
-              >
-                <span className="flex items-center gap-2">
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {t(item.label)}
-                  {item.endAdornment}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </nav>
-
-      <nav
-        data-testid="settings-navigation"
-        className={cn(
-          'hidden lg:flex sticky top-4 shrink-0 flex-col gap-2 self-start',
-          navWidthClassName,
-        )}
-        aria-label={t(desktopNavAriaLabel)}
-      >
-        <SettingsSearchInput
-          value={query}
-          onChange={setQuery}
-          placeholder={searchPlaceholder}
-        />
-        {navItems.map((item) => {
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.id}
-              to={item.to as '/'}
-              params={item.params}
-              className={navLinkClassName(item.id, activeSectionId === item.id)}
+          <SettingsSearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder={searchPlaceholder}
+          />
+          <Select
+            value={activeSectionId}
+            onValueChange={onNavigateToSection}
+          >
+            <SelectTrigger
+              size="sm"
+              className="h-9 w-full cursor-pointer text-[13px]"
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="min-w-0 flex-1 truncate">{t(item.label)}</span>
-              {item.endAdornment}
-            </Link>
-          )
-        })}
-      </nav>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {navItems.map((item) => (
+                <SelectItem
+                  key={item.id}
+                  value={item.id}
+                  className="text-[13px]"
+                >
+                  <span className="flex items-center gap-2">
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {t(item.label)}
+                    {item.endAdornment}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </nav>
 
-      <DeferEmptyResultsProvider deferEmptyResults={deferEmptyResults}>
-        <div className="min-w-0 flex-1">{children}</div>
-      </DeferEmptyResultsProvider>
+        <nav
+          data-testid="settings-navigation"
+          className={cn(settingsLayoutDesktopNavClass, navWidthClassName)}
+          aria-label={t(desktopNavAriaLabel)}
+        >
+          <SettingsSearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder={searchPlaceholder}
+          />
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const className = navLinkClassName(
+              item.id,
+              activeSectionId === item.id,
+            )
+            if (!useRouteLinks) {
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={cn(className, 'w-full text-start')}
+                  onClick={() => onNavigateToSection(item.id)}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 flex-1 truncate">
+                    {t(item.label)}
+                  </span>
+                  {item.endAdornment}
+                </button>
+              )
+            }
+            return (
+              <Link
+                key={item.id}
+                to={item.to as '/'}
+                params={item.params}
+                className={className}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="min-w-0 flex-1 truncate">{t(item.label)}</span>
+                {item.endAdornment}
+              </Link>
+            )
+          })}
+        </nav>
+
+        <DeferEmptyResultsProvider deferEmptyResults={deferEmptyResults}>
+          <div className={settingsLayoutContentClass}>{children}</div>
+        </DeferEmptyResultsProvider>
+      </div>
     </div>
   )
 }

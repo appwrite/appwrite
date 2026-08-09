@@ -45,39 +45,90 @@ import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import {
   FIREWALL_TRAFFIC_SERIES,
-  sortFirewallTrafficSeriesByValueDesc,
+  sortFirewallTrafficSeriesByValueAsc,
   type FirewallTrafficSeriesKey,
 } from '@/lib/firewall/traffic-series'
+import { formatFirewallSolveTime } from '@/lib/firewall/usage'
 import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAlert'
 import { UsageChartBrushReferenceArea } from '../usage/_components/UsageChartBrushReferenceArea'
 import { useT } from '@/lib/i18n/translate'
+
+interface MetricSubStat {
+  /** Short unit/label shown inline after the value. */
+  label: string
+  /** Full name used for the hover title. */
+  title: string
+  value: string | number
+  change?: number
+  trend?: 'up' | 'down'
+}
 
 interface StatCardProps {
   label: string
   value: string | number
   change?: number
   trend?: 'up' | 'down'
+  subStats?: MetricSubStat[]
 }
 
-function MetricTile({ label, value, change, trend }: StatCardProps) {
+function MetricChange({
+  change,
+  trend,
+}: {
+  change?: number
+  trend?: 'up' | 'down'
+}) {
+  if (change === undefined) return null
+  return (
+    <span
+      className={cn(
+        'text-[12px] font-medium tabular-nums',
+        trend === 'up' && 'text-emerald-600 dark:text-emerald-400',
+        trend === 'down' && 'text-amber-600 dark:text-amber-400',
+        !trend && 'text-muted-foreground',
+      )}
+    >
+      {change > 0 ? '+' : ''}
+      {change}%
+    </span>
+  )
+}
+
+function MetricTile({ label, value, change, trend, subStats }: StatCardProps) {
   return (
     <div className="min-w-0">
       <p className="text-[12px] text-muted-foreground">{label}</p>
-      <div className="mt-0.5 flex items-baseline gap-x-2">
+      <div className="mt-0.5 flex min-w-0 items-baseline gap-x-2">
         <span className="text-[20px] font-semibold tabular-nums text-foreground">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </span>
-        {change !== undefined ? (
-          <span
-            className={cn(
-              'text-[12px] font-medium tabular-nums',
-              trend === 'up' && 'text-emerald-600 dark:text-emerald-400',
-              trend === 'down' && 'text-amber-600 dark:text-amber-400',
-              !trend && 'text-muted-foreground',
-            )}
-          >
-            {change > 0 ? '+' : ''}
-            {change}%
+        <MetricChange change={change} trend={trend} />
+        {subStats && subStats.length > 0 ? (
+          <span className="inline-flex min-w-0 items-baseline gap-x-1.5 truncate text-[12px] text-muted-foreground">
+            <span aria-hidden="true">·</span>
+            {subStats.map((sub, index) => {
+              const formattedValue =
+                typeof sub.value === 'number'
+                  ? sub.value.toLocaleString()
+                  : sub.value
+              const changeSuffix =
+                sub.change !== undefined
+                  ? ` (${sub.change > 0 ? '+' : ''}${sub.change}%)`
+                  : ''
+              return (
+                <span
+                  key={sub.title}
+                  className="inline-flex items-baseline gap-x-1"
+                  title={`${sub.title}: ${formattedValue}${changeSuffix}`}
+                >
+                  {index > 0 ? <span aria-hidden="true">·</span> : null}
+                  <span className="font-medium tabular-nums text-foreground">
+                    {formattedValue}
+                  </span>
+                  {sub.label ? <span>{sub.label}</span> : null}
+                </span>
+              )
+            })}
           </span>
         ) : null}
       </div>
@@ -183,12 +234,16 @@ export function TrafficOverview() {
   const totalChallenged = overview?.totalChallenged ?? 0
   const totalRateLimited = overview?.totalRateLimited ?? 0
   const totalRedirected = overview?.totalRedirected ?? 0
+  const totalChallengeSolved = overview?.totalChallengeSolved ?? 0
+  const avgSolveTimeMs = overview?.avgSolveTimeMs ?? 0
   const requestsChange = overview?.requestsChange ?? 0
   const passedChange = overview?.passedChange ?? 0
   const deniedChange = overview?.deniedChange ?? 0
   const challengedChange = overview?.challengedChange ?? 0
   const rateLimitedChange = overview?.rateLimitedChange ?? 0
   const redirectedChange = overview?.redirectedChange ?? 0
+  const challengeSolvedChange = overview?.challengeSolvedChange ?? 0
+  const avgSolveTimeChange = overview?.avgSolveTimeChange ?? 0
   const blockRateChange = overview?.blockRateChange ?? 0
 
   const chartPoints = useMemo(
@@ -254,14 +309,14 @@ export function TrafficOverview() {
     ],
   )
 
-  // Highest total first (legend / tooltip preference). Recharts stacks
-  // bottom-up, so areas render in reverse of this list.
-  const seriesByValueDesc = useMemo(
-    () => sortFirewallTrafficSeriesByValueDesc(seriesTotals),
+  // Lowest total first (legend / tooltip preference). Recharts stacks
+  // bottom-up, so render in this order for lowest at the bottom.
+  const seriesByValueAsc = useMemo(
+    () => sortFirewallTrafficSeriesByValueAsc(seriesTotals),
     [seriesTotals],
   )
 
-  const metrics = [
+  const metrics: StatCardProps[] = [
     {
       label: t('Passed'),
       value: totalPassed,
@@ -279,6 +334,22 @@ export function TrafficOverview() {
       value: totalChallenged,
       change: challengedChange,
       trend: changeTrend(challengedChange),
+      subStats: [
+        {
+          label: t('solved'),
+          title: t('Challenge solves'),
+          value: totalChallengeSolved,
+          change: challengeSolvedChange,
+          trend: changeTrend(challengeSolvedChange),
+        },
+        {
+          label: '',
+          title: t('Avg solve time'),
+          value: formatFirewallSolveTime(avgSolveTimeMs),
+          change: avgSolveTimeChange,
+          trend: changeTrend(avgSolveTimeChange),
+        },
+      ],
     },
     {
       label: t('Rate limited'),
@@ -337,6 +408,7 @@ export function TrafficOverview() {
           <DateRangePicker
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
+            presetId={dateRangePresetId}
             className="h-9 shrink-0"
           />
           <RefreshButton
@@ -357,7 +429,7 @@ export function TrafficOverview() {
 
       <div className="px-4 pb-4 pt-4 sm:px-6">
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-          {seriesByValueDesc.map((series) => (
+          {seriesByValueAsc.map((series) => (
             <div key={series.key} className="flex items-center gap-1.5">
               <span
                 className="h-2 w-2 rounded-full"
@@ -464,7 +536,7 @@ export function TrafficOverview() {
                     }
 
                     const sortedPayload = [...payload].sort(
-                      (a, b) => seriesValue(b) - seriesValue(a),
+                      (a, b) => seriesValue(a) - seriesValue(b),
                     )
 
                     return (
@@ -493,7 +565,7 @@ export function TrafficOverview() {
                 />
                 {/* Recharts stacks bottom-up: render lowest totals first so the
                     highest-value series sits on top (and owns the outer stroke). */}
-                {[...seriesByValueDesc].reverse().map((series) => (
+                {seriesByValueAsc.map((series) => (
                   <Area
                     key={series.key}
                     type="monotone"
@@ -549,6 +621,7 @@ export function TrafficOverview() {
                 value={metric.value}
                 change={metric.change}
                 trend={metric.trend}
+                subStats={metric.subStats}
               />
             </div>
           )

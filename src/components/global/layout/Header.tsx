@@ -14,7 +14,7 @@ import {
   Menu,
   Copy,
   Check,
-  Bot,
+  BotMessageSquare,
   Shield,
   Plus,
   Database,
@@ -35,11 +35,13 @@ import {
   LayoutDashboard,
   BookOpen,
   Clock,
+  ExternalLink,
 } from 'lucide-react'
 import {
   useAuth,
   isOptionalAuthPage,
 } from '@/components/global/auth/RequireAuth'
+import { applyScreenshotModeAccount } from '@/lib/screenshot-mode'
 import { getConsoleAccountUnauthenticatedError } from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
@@ -65,6 +67,7 @@ import {
   canCreateFunction,
   canCreateSite,
   canWriteTopics,
+  canWriteRules,
   canShowOrgDomainsTab,
 } from '@/lib/console-access-checks'
 import {
@@ -94,7 +97,8 @@ import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
 import { NotificationCenterPopover } from '@/components/global/shared/NotificationCenterPopover'
-import { useAIChat } from '@/components/global/providers/AIChat'
+import { useAgentChat } from '@/components/global/providers/AgentChat'
+import { isAgentPagePath } from '@/lib/assistant/agent-paths'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -108,6 +112,9 @@ import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
+import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import { ShortcutGlyphs } from '@/components/global/shared/ShortcutGlyphs'
+import { AGENT_TOGGLE_SHORTCUT_RAW } from '@/lib/assistant/agent-shortcuts'
 import { useChangelogNavBadge } from '@/hooks/use-changelog-nav-badge'
 import {
   getBlogPageUrl,
@@ -292,7 +299,7 @@ export function ConsoleHeader({
 }: ConsoleHeaderProps) {
   const { openCommandCenter: contextOpenCommandCenter } =
     useKeyboardShortcutsContext()
-  const { toggleChat } = useAIChat()
+  const { toggleChat, requestCreateAgent } = useAgentChat()
   const queryClient = useQueryClient()
   const {
     account,
@@ -300,10 +307,11 @@ export function ConsoleHeader({
     isAuthenticated,
     isFetched: isAuthFetched,
   } = useAuth()
-  const headerAccount =
+  const headerAccount = applyScreenshotModeAccount(
     (account as Models.User | undefined) ??
-    (getConsoleAccountFromCache(queryClient) as Models.User | undefined) ??
-    getConsoleAccountSync()
+      (getConsoleAccountFromCache(queryClient) as Models.User | undefined) ??
+      getConsoleAccountSync(),
+  )
   const operatorAccount = headerAccount as OperatorAccount | undefined
   const showAdminSection = isOperatorAccount(operatorAccount)
   const location = useLocation()
@@ -373,7 +381,7 @@ export function ConsoleHeader({
     return item
   })
   const showMarketingNav = marketingNavItems.length > 0
-  const showAIAssistant = overrides.showAIAssistant && !showMarketingNav
+  const showAgent = features.agent && !showMarketingNav
   const showConnectAndCreate = canShowConnectSection(access, features)
   const canCreateProjectFlag = canCreateProject(access, features)
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
@@ -382,6 +390,7 @@ export function ConsoleHeader({
   const canCreateFunctionFlag = canCreateFunction(access, features)
   const canCreateSiteFlag = canCreateSite(access, features)
   const canCreateTopicFlag = canWriteTopics(access, features)
+  const canCreateFirewallRuleFlag = canWriteRules(access, features)
 
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan, isFetched: isPlanFetched } =
@@ -423,6 +432,9 @@ export function ConsoleHeader({
 
   const hasSidebar = !isOrgOverview
   const isAccountScope = location.pathname.startsWith('/account')
+  const isAgentScope = isAgentPagePath(location.pathname)
+  const showBackToOrganization =
+    (isAccountScope || isAgentScope) && Boolean(orgId)
   const isInitScope = features.init && location.pathname === '/init'
   const initHeaderNavCta = isInitScope
     ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
@@ -457,7 +469,11 @@ export function ConsoleHeader({
   const marketingNavLinksExternal = isMarketingPageExternal(features.marketing)
   const showCenterSearch = centerSearch && !hideSearch
   const showRightSearch = !hideSearch && !centerSearch
-  const { modKey: searchModKey } = usePlatform()
+  const { modKey: searchModKey, isMac } = usePlatform()
+  const agentToggleShortcutKeys = formatDisplayKeys(
+    AGENT_TOGGLE_SHORTCUT_RAW,
+    isMac,
+  )
   const logoColumnWidth = showMarketingNav ? 158 : 60
 
   return (
@@ -627,8 +643,8 @@ export function ConsoleHeader({
             )
           })()}
 
-          {/* Account scope quick return */}
-          {isAccountScope && orgId && (
+          {/* Account / agent scope quick return */}
+          {showBackToOrganization && orgId ? (
             <Button
               asChild
               variant="ghost"
@@ -640,7 +656,7 @@ export function ConsoleHeader({
                 {headerCopy.actions.backToOrganization}
               </Link>
             </Button>
-          )}
+          ) : null}
 
           {/* Init scope exit / try CTA */}
           {initHeaderNavCta ? (
@@ -782,6 +798,18 @@ export function ConsoleHeader({
                           <span>{headerCopy.createMenu.newOrganization}</span>
                         </DropdownMenuItem>
                       )}
+                      {showAgent ? (
+                        <DropdownMenuItem
+                          {...analyticsAttrs('create-agent')}
+                          onClick={() => {
+                            requestCreateAgent()
+                          }}
+                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                        >
+                          <BotMessageSquare className="h-4 w-4" />
+                          <span>{headerCopy.createMenu.newAgent}</span>
+                        </DropdownMenuItem>
+                      ) : null}
 
                       {projectId && (
                         <>
@@ -978,7 +1006,6 @@ export function ConsoleHeader({
                           )}
 
                           <DropdownMenuSeparator />
-                          {/* Deploy Category */}
                           <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                             {headerCopy.createMenu.deploySection}
                           </DropdownMenuLabel>
@@ -1016,6 +1043,59 @@ export function ConsoleHeader({
                               <span>{headerCopy.createMenu.newSite}</span>
                             </DropdownMenuItem>
                           )}
+
+                          {features.firewall ? (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                                {headerCopy.createMenu.protectSection}
+                              </DropdownMenuLabel>
+                              {!canCreateFirewallRuleFlag ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="block">
+                                      <DropdownMenuItem
+                                        disabled
+                                        className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                                      >
+                                        <Shield className="h-4 w-4" />
+                                        <span>
+                                          {
+                                            headerCopy.createMenu
+                                              .newFirewallRule
+                                          }
+                                        </span>
+                                      </DropdownMenuItem>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      {
+                                        headerCopy.permissions
+                                          .createFirewallRules
+                                      }
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <DropdownMenuItem
+                                  {...analyticsAttrs('create-firewall-rule')}
+                                  onClick={() => {
+                                    navigate({
+                                      to: '/projects/$projectId/firewall/create',
+                                      params: { projectId },
+                                    })
+                                  }}
+                                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                                >
+                                  <Shield className="h-4 w-4" />
+                                  <span>
+                                    {headerCopy.createMenu.newFirewallRule}
+                                  </span>
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          ) : null}
                         </>
                       )}
                     </DropdownMenuContent>
@@ -1253,20 +1333,32 @@ export function ConsoleHeader({
               {/* Operator tools (render nothing when account is not an impersonator) */}
               <ImpersonateConsoleUserPopover />
 
-              {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}
-              {showAIAssistant && (
+              {/* Help/Agent - hidden on small containers; gated by the agent profile feature */}
+              {showAgent && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={toggleChat}
-                      {...analyticsAttrs('ai-assistant-open')}
+                      type="button"
+                      aria-label={headerCopy.actions.assistant}
+                      onClick={(event) => {
+                        // Safari can leave the trigger focused after a tooltip
+                        // open, which makes the next click feel like a no-op.
+                        event.currentTarget.blur()
+                        toggleChat()
+                      }}
+                      {...analyticsAttrs('ai-agent-open')}
                       className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
                     >
-                      <Bot className="h-4 w-4" />
+                      <BotMessageSquare className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{headerCopy.actions.assistant}</p>
+                    <p className="flex items-center gap-1.5">
+                      <span>{headerCopy.actions.assistant}</span>
+                      <kbd className="pointer-events-none inline-flex items-center rounded bg-background/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-background">
+                        <ShortcutGlyphs keys={agentToggleShortcutKeys} />
+                      </kbd>
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -1591,6 +1683,20 @@ export function ConsoleHeader({
                           <span>{headerCopy.accountMenu.changelog}</span>
                         </Link>
                       )}
+                    </DropdownMenuItem>
+
+                    {/* Temporary: remove once the old console is retired */}
+                    <DropdownMenuItem asChild>
+                      <a
+                        href="https://cloud.appwrite.io"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={ACCOUNT_MENU_ITEM_CLASS}
+                        {...analyticsAttrs('header-old-console')}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        <span>{headerCopy.accountMenu.oldConsole}</span>
+                      </a>
                     </DropdownMenuItem>
                   </>
 

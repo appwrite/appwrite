@@ -21,7 +21,7 @@ import {
 } from '@/components/pages/projects/$projectId/overview/chart-panel'
 import {
   getFirewallTrafficSeriesTotals,
-  sortFirewallTrafficSeriesByValueDesc,
+  sortFirewallTrafficSeriesByValueAsc,
   type FirewallTrafficSeriesKey,
 } from '@/lib/firewall/traffic-series'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
@@ -67,8 +67,8 @@ export function FirewallTrafficChart({
     () => getFirewallTrafficSeriesTotals(data),
     [data],
   )
-  const seriesByValueDesc = useMemo(
-    () => sortFirewallTrafficSeriesByValueDesc(seriesTotals),
+  const seriesByValueAsc = useMemo(
+    () => sortFirewallTrafficSeriesByValueAsc(seriesTotals),
     [seriesTotals],
   )
   const chartAxisMax = useMemo(
@@ -108,7 +108,7 @@ export function FirewallTrafficChart({
             >
               <AreaChart data={[...data]} margin={TRAFFIC_CHART_MARGIN}>
                 <defs>
-                  {seriesByValueDesc.map((series) => {
+                  {seriesByValueAsc.map((series) => {
                     const gradientId = `${series.gradientId}-${suffix}`
                     return (
                       <linearGradient
@@ -178,7 +178,7 @@ export function FirewallTrafficChart({
                     }
 
                     const sortedPayload = [...payload].sort(
-                      (a, b) => seriesValue(b) - seriesValue(a),
+                      (a, b) => seriesValue(a) - seriesValue(b),
                     )
 
                     return (
@@ -205,7 +205,7 @@ export function FirewallTrafficChart({
                     )
                   }}
                 />
-                {[...seriesByValueDesc].reverse().map((series) => {
+                {seriesByValueAsc.map((series) => {
                   const gradientId = `${series.gradientId}-${suffix}`
                   return (
                     <Area

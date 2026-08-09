@@ -30,6 +30,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 interface RuleContextMenuProps {
   projectId: string
@@ -61,7 +62,7 @@ export function RuleContextMenu({
       <ContextMenuContent className="w-56">
         <ContextMenuItem
           disabled={!canWrite}
-          onSelect={() => onUpdate(rule)}
+          onSelect={() => openDialogAfterOverlayCloses(() => onUpdate(rule))}
         >
           <ContextMenuIcon icon={Pencil} />
           {t('Update')}
@@ -123,7 +124,7 @@ export function RuleContextMenu({
         <ContextMenuSeparator />
         <ContextMenuItem
           disabled={!canWrite}
-          onSelect={() => onDelete(rule)}
+          onSelect={() => openDialogAfterOverlayCloses(() => onDelete(rule))}
         >
           <ContextMenuIcon icon={Trash2} />
           {t('Delete')}

@@ -6,7 +6,7 @@
  * @see https://github.com/modelcontextprotocol/experimental-ext-server-card
  */
 
-import { MCP_SERVER_NAME, MCP_SERVER_URL } from '@/lib/config/mcp'
+import { MCP_SERVER_NAME, MCP_SERVER_URL } from '../config/mcp.ts'
 
 /** SEP-1649 well-known Server Card location. */
 export const APPWRITE_MCP_SERVER_CARD_PATH =
@@ -25,7 +25,7 @@ export const APPWRITE_AGENT_SKILLS_DISCOVERY_PATH =
   '/.well-known/agent-skills/index.json'
 export const APPWRITE_MCP_DOCS_PATH = '/docs/tooling/ai/mcp-servers'
 
-/** Canonical skills repository (appwrite/agent-skills redirects here). */
+/** Canonical skills repository. */
 export const APPWRITE_AGENT_SKILLS_REPO = 'https://github.com/appwrite/skills'
 export const APPWRITE_AGENT_SKILLS_INSTALL = 'npx skills add appwrite/skills'
 

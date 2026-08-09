@@ -363,7 +363,11 @@ const PROJECT_RESOURCE_COPY: Record<string, ResourceCopy> = {
   },
   assistant: {
     name: 'AI Assistant',
-    desc: 'The AI Assistant that suggests answers and configuration.',
+    desc: 'Legacy AI Assistant scope. Prefer agent scopes for the console Agent.',
+  },
+  agent: {
+    name: 'Agent',
+    desc: 'The console Agent that suggests answers and configuration.',
   },
   migrations: {
     name: 'Migrations',

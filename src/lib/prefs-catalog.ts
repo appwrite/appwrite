@@ -17,8 +17,12 @@ import { INIT_TICKET_PREFS_KEY_PREFIX } from '@/lib/init/ticket-prefs'
 import { USER_PREFS_KEY_REALTIME_DEBUGGER_PREFIX } from '@/lib/realtime/debugger-prefs'
 import { TEAM_PREFS_KEY_PINNED_PROJECT_IDS } from '@/lib/team-prefs-keys'
 import {
+  USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID,
+  USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX,
+  USER_PREFS_KEY_AI_CHAT_EXPANDED,
   USER_PREFS_KEY_AI_CHAT_PANEL_OPEN,
   USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX,
+  USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS,
   USER_PREFS_KEY_API_EXPLORER_COLUMNS_LAYOUT,
   USER_PREFS_KEY_API_EXPLORER_EXPANDED_PRODUCT_GROUP,
   USER_PREFS_KEY_API_EXPLORER_RESPONSE_SPLIT_LAYOUT,
@@ -30,6 +34,7 @@ import {
   USER_PREFS_KEY_CLI_SHELL_SESSIONS_PREFIX,
   USER_PREFS_KEY_CLI_SHELL_SESSIONS_SIDEBAR_WIDTH_PX,
   USER_PREFS_KEY_COMMUNITY_SUPPORT,
+  USER_PREFS_KEY_CONNECT_PROJECT_TAB,
   USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT,
   USER_PREFS_KEY_COVER_GENERATOR_COLUMNS_LAYOUT,
   USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS,
@@ -115,6 +120,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     category: 'Layout',
   },
   {
+    id: 'connectProjectTab',
+    scope: 'account',
+    key: USER_PREFS_KEY_CONNECT_PROJECT_TAB,
+    description: 'Last selected tab in the Connect project dialog.',
+    category: 'Layout',
+  },
+  {
     id: 'sidebarCollapsedLegacy',
     scope: 'account',
     key: 'sidebarCollapsed',
@@ -134,6 +146,35 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     key: USER_PREFS_KEY_AI_CHAT_PANEL_OPEN,
     description: 'AI assistant panel open state.',
+    category: 'Layout',
+  },
+  {
+    id: 'aiChatExpanded',
+    scope: 'account',
+    key: USER_PREFS_KEY_AI_CHAT_EXPANDED,
+    description: 'AI assistant fullscreen (expanded) state.',
+    category: 'Layout',
+  },
+  {
+    id: 'aiChatActiveConversationId',
+    scope: 'account',
+    key: USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID,
+    description: 'Last viewed AI assistant conversation id.',
+    category: 'Layout',
+  },
+  {
+    id: 'aiChatPinnedConversationIds',
+    scope: 'account',
+    key: USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS,
+    description:
+      'Pinned AI assistant conversation ids (JSON array; order is sort order).',
+    category: 'Layout',
+  },
+  {
+    id: 'aiChatConversationsWidth',
+    scope: 'account',
+    key: USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX,
+    description: 'AI assistant conversations sidebar width in pixels.',
     category: 'Layout',
   },
   {

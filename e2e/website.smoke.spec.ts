@@ -16,6 +16,7 @@ const WEBSITE_PAGES: Array<{ name: string; path: string; url?: RegExp }> = [
   { name: 'enterprise', path: '/enterprise' },
   { name: 'education', path: '/education' },
   { name: 'startups', path: '/startups' },
+  { name: 'affiliates', path: '/affiliates' },
   { name: 'integrations', path: '/integrations' },
   { name: 'domains', path: '/domains' },
   { name: 'privacy', path: '/privacy' },

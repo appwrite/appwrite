@@ -46,7 +46,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   activityEventQueryOptions,
-  useCountries,
+  useCountryLookups,
   useProjectActivities,
   useProjectActivity,
   useProject,
@@ -84,7 +84,7 @@ import {
   hasHumanEmail,
   userTypeBadge,
 } from '@/components/pages/projects/$projectId/activity/activity-utils'
-import { buildCountryLookups } from '@/lib/locale/country-lookups'
+import type { CountryLookups } from '@/lib/locale/country-lookups'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
 
 const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
@@ -433,7 +433,7 @@ function resourceLabelFromEvent(activity: Models.ActivityEvent): string {
 
 function toDisplayActivity(
   event: Models.ActivityEvent,
-  countryLookups: ReturnType<typeof buildCountryLookups> | null,
+  countryLookups: CountryLookups | null,
 ): DisplayActivity {
   return {
     $id: event.$id,
@@ -473,11 +473,7 @@ export function View({ projectId }: ViewProps) {
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { showActivityChart } = useDebugOverrides()
-  const { data: countriesData } = useCountries()
-  const countryLookups = useMemo(
-    () => buildCountryLookups(countriesData?.countries),
-    [countriesData?.countries],
-  )
+  const { lookups: countryLookups, countries } = useCountryLookups()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] =
@@ -527,14 +523,14 @@ export function View({ projectId }: ViewProps) {
   )
 
   const activityFilterColumns = useMemo(() => {
-    const countryElements = (countriesData?.countries ?? [])
+    const countryElements = countries
       .map((country) => ({
         value: country.code.toLowerCase(),
         label: country.name,
       }))
       .sort((a, b) => a.label.localeCompare(b.label))
     return getActivitiesFilterColumns(countryElements)
-  }, [countriesData])
+  }, [countries])
 
   const { events, hasMore, isLoading, refetch } = useProjectActivities({
     projectId,

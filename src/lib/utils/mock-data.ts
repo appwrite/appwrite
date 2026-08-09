@@ -1141,7 +1141,7 @@ export const settingsNavItems = [
 ] as const
 
 // Helper functions
-export function formatBytes(bytes: number): string {
+export function formatBytes(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
 }
 

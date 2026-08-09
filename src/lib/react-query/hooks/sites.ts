@@ -1471,6 +1471,13 @@ export function useCreateSiteVariable(
       await queryClient.refetchQueries({
         queryKey: ['variables', 'site', projectId, siteId],
       })
+      // Env var changes set site.live=false; refresh parent so the redeploy alert shows
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['sites', 'project', projectId],
+      })
     },
   })
 }
@@ -1521,6 +1528,12 @@ export function useUpdateSiteVariable(
       await queryClient.refetchQueries({
         queryKey: ['variables', 'site', projectId, siteId],
       })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['sites', 'project', projectId],
+      })
     },
   })
 }
@@ -1549,6 +1562,12 @@ export function useDeleteSiteVariable(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['variables', 'site', projectId, siteId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['sites', 'project', projectId],
       })
     },
   })

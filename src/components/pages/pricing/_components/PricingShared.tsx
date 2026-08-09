@@ -94,8 +94,8 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
             {t(plan.name)}
           </h2>
           {plan.popular ? (
-            <span className="rounded-full bg-background/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-              {t('Most popular')}
+            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+              {t('Popular')}
             </span>
           ) : null}
         </div>

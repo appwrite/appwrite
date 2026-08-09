@@ -118,14 +118,8 @@ export function AddDomainDialog({
             <Button
               type="submit"
               disabled={isSubmitting || !domainName.trim()}
->
-              {isSubmitting ? (
-                <>
-                  <span className="me-2">{t('Adding...')}</span>
-                </>
-              ) : (
-                t('Add')
-              )}
+            >
+              {t('Add')}
             </Button>
           </div>
         </form>

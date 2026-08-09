@@ -11,7 +11,7 @@ import {
   queryOptions,
   type QueryClient,
 } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Query, ID, type Models } from '@appwrite.io/console'
 import {
   BillingPlanTier,
@@ -41,6 +41,10 @@ import {
   LONG_STALE_TIME,
   DEFAULT_PAGE_SIZE,
 } from './constants'
+import {
+  applyScreenshotModeOrganizationName,
+  subscribeScreenshotMode,
+} from '@/lib/screenshot-mode'
 
 type OrganizationListResponse = Models.TeamList
 type OrganizationRecord = Models.Organization
@@ -158,6 +162,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     screenshotsGenerated: Number.MAX_SAFE_INTEGER,
     members: Number.MAX_SAFE_INTEGER,
     webhooks: Number.MAX_SAFE_INTEGER,
+    wafRules: Number.MAX_SAFE_INTEGER,
     projects: Number.MAX_SAFE_INTEGER,
     platforms: Number.MAX_SAFE_INTEGER,
     users: Number.MAX_SAFE_INTEGER,
@@ -1578,6 +1583,13 @@ export function useOrganizations() {
     error,
     refetch,
   } = useQuery(organizationsQueryOptions())
+  const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
+
+  useEffect(() => {
+    return subscribeScreenshotMode(() => {
+      setScreenshotModeEpoch((epoch) => epoch + 1)
+    })
+  }, [])
 
   // Map the API response to our Organization type
   const organizations = useMemo(() => {
@@ -1592,13 +1604,14 @@ export function useOrganizations() {
         billingPlanDowngrade?: unknown
         status?: string
       }
+      const mocked = applyScreenshotModeOrganizationName(o)
       // Map billingPlan to plan name using the filter
       const plan = getPlanNameFromTier(o.billingPlan) as CanonicalPlanId
 
       return {
         $id: o.$id,
-        name: o.name,
-        slug: o.name.toLowerCase().replace(/\s+/g, '-'),
+        name: mocked.name,
+        slug: mocked.name.toLowerCase().replace(/\s+/g, '-'),
         avatar: undefined, // Organizations from SDK don't have avatar
         plan,
         members: o.total || 0,
@@ -1606,7 +1619,7 @@ export function useOrganizations() {
         billingPlanDowngrade: o.billingPlanDowngrade,
       }
     }) as Organization[]
-  }, [organizationsData])
+  }, [organizationsData, screenshotModeEpoch])
 
   return {
     organizations,
@@ -1648,6 +1661,13 @@ export function useOrganizationById(orgId: string | null | undefined) {
     error,
     refetch,
   } = useQuery(organizationQueryOptions(orgId))
+  const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
+
+  useEffect(() => {
+    return subscribeScreenshotMode(() => {
+      setScreenshotModeEpoch((epoch) => epoch + 1)
+    })
+  }, [])
 
   // Map the API response to include plan information
   const organization = useMemo(() => {
@@ -1655,14 +1675,15 @@ export function useOrganizationById(orgId: string | null | undefined) {
 
     const planName = getPlanNameFromTier(orgData.billingPlan)
     const plan = planName as CanonicalPlanId
+    const mocked = applyScreenshotModeOrganizationName(orgData)
 
     return {
-      ...orgData,
+      ...mocked,
       plan,
       planName,
       billingPlan: orgData.billingPlan,
     }
-  }, [orgData])
+  }, [orgData, screenshotModeEpoch])
 
   return {
     organization,

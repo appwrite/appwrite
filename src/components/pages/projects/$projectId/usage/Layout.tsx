@@ -731,6 +731,7 @@ function UsageLayoutContent({
                 <DateRangePicker
                   dateRange={usageDateRange}
                   onDateRangeChange={setUsageDateRange}
+                  presetId={dateRangePresetId}
                   className="h-9"
                 />
 

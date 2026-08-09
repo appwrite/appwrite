@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Copy, Key, Plus } from 'lucide-react'
+import { Key, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
-import { cn } from '@/lib/utils'
 import { PostgresCopyableField } from '@/components/pages/projects/$projectId/databases/postgres/_components/PostgresCopyableField'
 import {
   getProjectS3StorageEndpoint,
@@ -50,21 +49,49 @@ s3.list_buckets()`
   const awsCli = `export AWS_ACCESS_KEY_ID="${pid}"
 export AWS_SECRET_ACCESS_KEY="your-api-key"
 export AWS_DEFAULT_REGION="${regionValue}"
+export AWS_ENDPOINT_URL="${endpoint}"
 
-aws --endpoint-url "${endpoint}" s3 ls`
+aws s3 ls # List buckets
+aws s3 mb "s3://my-new-bucket" # Create new bucket
+aws s3 cp ./file.txt s3://my-new-bucket/file.txt # Upload file to a bucket
+aws s3 ls s3://my-new-bucket --human-readable # List files inside a bucket
+aws s3 cp s3://my-new-bucket/file.txt ./export.txt # Download file from bucket
+aws s3 rm s3://my-new-bucket/file.txt # Delete a file from bucket
+aws s3 rb "s3://my-new-bucket" --force # Remove bucket and its contents`
 
-  const rclone = `[appwrite]
+  const rclone = `# Save config to ~/.config/rclone/rclone.conf
+mkdir -p ~/.config/rclone
+cat > ~/.config/rclone/rclone.conf <<'EOF'
+[appwrite]
 type = s3
 provider = Other
 access_key_id = ${pid}
 secret_access_key = your-api-key
 endpoint = ${endpoint}
-region = ${regionValue}`
+region = ${regionValue}
+EOF
+
+# List buckets
+rclone lsd appwrite:
+
+# Create a bucket
+rclone mkdir appwrite:my-new-bucket
+
+# List files in a bucket
+rclone ls appwrite:my-new-bucket
+
+# Sync local -> remote (preview with --dry-run first)
+rclone sync ./local-folder appwrite:my-new-bucket --dry-run
+rclone sync ./local-folder appwrite:my-new-bucket
+
+# Sync remote -> local (preview with --dry-run first)
+rclone sync appwrite:my-new-bucket ./local-folder --dry-run
+rclone sync appwrite:my-new-bucket ./local-folder`
 
   return [
-    { label: 'boto3', code: boto3, language: 'python' },
     { label: 'AWS CLI', code: awsCli, language: 'bash' },
-    { label: 'rclone', code: rclone, language: 'toml' },
+    { label: 'boto3', code: boto3, language: 'python' },
+    { label: 'rclone', code: rclone, language: 'bash' },
   ]
 }
 
@@ -101,7 +128,6 @@ export function S3ConnectSection({
   const noCreatePermission = !canCreateKey(access, features)
   const createMutation = useCreateApiKey(projectId)
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
-  const [copied, setCopied] = useState(false)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
@@ -124,22 +150,22 @@ export function S3ConnectSection({
     [s3Endpoint, projectId, s3Region],
   )
 
+  const codeFileTabs = useMemo(
+    () =>
+      codeFiles.map((file, index) => ({
+        id: String(index),
+        label: file.label,
+      })),
+    [codeFiles],
+  )
+
   const initialApiKeyName = t(S3_STORAGE_API_KEY_DEFAULT_NAME)
 
   useEffect(() => {
     setSelectedFileIndex(0)
-    setCopied(false)
   }, [s3Endpoint, projectId, s3Region])
 
   const selectedFile = codeFiles[selectedFileIndex] ?? codeFiles[0]
-
-  const handleCopyCode = () => {
-    if (!selectedFile) return
-    navigator.clipboard.writeText(selectedFile.code)
-    setCopied(true)
-    toast.success(t('Copied to clipboard'))
-    setTimeout(() => setCopied(false), 2000)
-  }
 
   const handleCopyKey = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -202,8 +228,9 @@ export function S3ConnectSection({
             />
             <div className="flex flex-wrap gap-2 border-t border-border pt-3">
               <Button
+                variant="secondary"
                 size="sm"
-                className="h-9 text-[13px] gap-1.5"
+                className="h-8 gap-1.5 text-[12px]"
                 onClick={() => setCreateDrawerOpen(true)}
                 disabled={noCreatePermission}
                 title={
@@ -212,70 +239,31 @@ export function S3ConnectSection({
                     : undefined
                 }
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3.5 w-3.5" />
                 {t('Create S3 API key')}
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
-                className="h-9 text-[13px] gap-1.5"
+                className="h-8 gap-1.5 text-[12px]"
                 onClick={onViewApiKeys}
               >
-                <Key className="h-4 w-4" />
+                <Key className="h-3.5 w-3.5" />
                 {t('View API keys')}
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="min-w-0 min-h-0 flex flex-col gap-2 flex-1">
-          <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
-            {codeFiles.length > 1 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {codeFiles.map((file, i) => (
-                  <button
-                    key={file.label}
-                    type="button"
-                    onClick={() => {
-                      setSelectedFileIndex(i)
-                      setCopied(false)
-                    }}
-                    className={cn(
-                      'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                      i === selectedFileIndex
-                        ? 'bg-muted text-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
-                    )}
-                  >
-                    {file.label}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                {selectedFile?.label}
-              </span>
-            )}
-            {selectedFile ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
-                onClick={handleCopyCode}
-              >
-                {copied ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                {t('Copy')}
-              </Button>
-            ) : null}
-          </div>
+        <div className="min-w-0 min-h-0 flex flex-col flex-1">
           {selectedFile ? (
-            <ConnectCodePanel
+            <ConnectCodeExample
               code={selectedFile.code}
               language={selectedFile.language ?? 'plaintext'}
+              tabs={codeFileTabs}
+              activeTabId={String(selectedFileIndex)}
+              onTabChange={(id) => setSelectedFileIndex(Number(id))}
+              selectorAriaLabel={t('Select file')}
               fixedHeight="100%"
               className="flex-1 min-h-0"
             />

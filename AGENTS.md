@@ -539,7 +539,7 @@ Use the status-style badge variants so all badges share the same design (tinted 
 - `projects` - Project management, API keys, platforms, webhooks → `services/projects.ts`
 - `domains` - Domain management, DNS records, presets → `services/domains.ts`
 - `console` - Campaigns, coupons, plans, regions, resources → `services/console.ts`
-- `teams`, `vcs`, `backups`, `assistant`, `avatars` → See service files
+- `teams`, `vcs`, `backups`, `agent`, `assistant` (legacy chat), `avatars` → See service files
 
 **Project SDK** (`sdk.forProject(projectId)`):
 
@@ -1101,14 +1101,20 @@ Profiles control which features are available based on deployment type (cloud vs
 
 **Profiles:**
 
-- **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup)
-- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console)
+- **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup), **cookie banner** (locale-gated GDPR consent)
+- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off)
 
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 
+**Per-feature env overrides** (optional; unset = profile default):
+
+- `VITE_CONSOLE_USER_VERIFICATION` – `true`/`false` to force post-signup email verification
+- `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic
+- `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
+
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
-**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`).
+**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`, `features.agent`, `features.cookieBanner`).
 
 **Feature-driven keys:** Each flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `oauthApps`, `orgApiKeys` for org settings; `databaseBackups`, `databaseInsights` for database).
 

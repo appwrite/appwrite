@@ -91,7 +91,7 @@ import { useCommandCenterResourceSearch } from '@/hooks/use-command-center-resou
 import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
 import { CommandCenterFeedbackView } from '@/components/global/shared/CommandCenterFeedbackView'
 import { CommandCenterSupportView } from '@/components/global/shared/CommandCenterSupportView'
-import { useDocsPreview } from '@/components/global/providers/DocsPreview'
+import { useDocsPreview } from '@/components/global/providers/DocsPreviewContext'
 import { useRecentResourcesSafe } from '@/components/global/providers/RecentResourcesProvider'
 import { DatabaseTypeIcon } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeIcon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
@@ -1549,6 +1549,7 @@ export function CommandCenter({
             isMobile={isMobile}
             showTerminalShortcuts={isProjectContext && !!onToggleTerminal}
             showSqlEditorShortcuts={isProjectContext}
+            showAgentShortcuts
             onBack={() => setPages([])}
             onClose={() => onOpenChange(false)}
             onKeyDown={handleKeyDown}

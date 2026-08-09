@@ -1,5 +1,9 @@
 import { DOCS_SEARCH_INDEX } from './generated/search-index'
 import {
+  isAgentDocsEnabled,
+  isAgentDocsSlug,
+} from './agent-docs-feature'
+import {
   isFirewallDocsEnabled,
   isFirewallDocsSlug,
 } from './firewall-docs-feature'
@@ -65,6 +69,7 @@ function scoreEntry(entry: DocsSearchEntry, query: string): number {
 function isHiddenDocsSearchSlug(slug: string): boolean {
   if (!isPartnersDocsEnabled() && isPartnersDocsSlug(slug)) return true
   if (!isFirewallDocsEnabled() && isFirewallDocsSlug(slug)) return true
+  if (!isAgentDocsEnabled() && isAgentDocsSlug(slug)) return true
   return false
 }
 

@@ -24,8 +24,10 @@ import {
   isLegacyTheme,
   LEGACY_ICON_SRC,
 } from '@/lib/legacy-theme-assets'
-import { AIChatProvider } from '@/components/global/providers/AIChat'
-import { DocsPreviewProvider } from '@/components/global/providers/DocsPreview'
+import { AgentChatProvider } from '@/components/global/providers/AgentChat'
+import { DocsPreviewProvider } from '@/components/global/providers/DocsPreviewProvider'
+import { DocsContentHmrRefresh } from '@/lib/docs/DocsContentHmrRefresh'
+import '@/lib/docs/docs-content-hmr-runtime'
 import {
   ConsoleRightPane,
   ConsoleRightPaneProvider,
@@ -35,6 +37,7 @@ import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
 import { CommunitySupportPromptProvider } from '@/components/global/providers/CommunitySupportPromptProvider'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
+import { ScreenshotModeProvider } from '@/components/global/providers/ScreenshotMode'
 import { AnalyticsSessionPropsSync } from '@/components/global/providers/AnalyticsSessionPropsSync'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
 import { RootShellCatchBoundary } from '@/components/global/providers/RootShellCatchBoundary'
@@ -54,6 +57,10 @@ import {
 import { STALE_CHUNK_BOOT_SCRIPT } from '@/lib/stale-chunk-error'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import {
+  applyScreenshotModeOrganizationName,
+  isScreenshotModeActive,
+} from '@/lib/screenshot-mode'
 import { PageDirectionProvider } from '@/lib/layout/page-direction'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { useAppwriteCloudStatus } from '@/lib/react-query/hooks'
@@ -71,6 +78,7 @@ import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { getSeoRobotsMetaTags } from '@/lib/seo/indexing'
 import { I18nProvider } from '@/lib/i18n'
 import { MarketingSiteLayoutGate } from '@/lib/marketing/MarketingSiteLayoutGate'
+import { DevConstructionStripe } from '@/components/global/layout/DevConstructionStripe'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -323,11 +331,16 @@ function ContextualDocumentTitle() {
             | undefined
         )?.teams?.find((team) => team.$id === orgId)
       : undefined
-    const contextPart = project?.name ?? organization?.name
+    const organizationName = organization?.name
+      ? isScreenshotModeActive()
+        ? applyScreenshotModeOrganizationName({ name: organization.name }).name
+        : organization.name
+      : undefined
+    const contextPart = project?.name ?? organizationName
 
     const nextTitle = withPageTitleNameContext(document.title, {
       projectName: project?.name,
-      organizationName: organization?.name,
+      organizationName,
       previousContextPart,
     })
     if (document.title !== nextTitle) {
@@ -345,6 +358,21 @@ function ContextualDocumentTitle() {
 function isProjectRoute(pathname: string) {
   const parts = pathname.split('/').filter(Boolean)
   return parts[0] === 'projects' && parts.length >= 2
+}
+
+/** Full-viewport shell: construction stripe spans main column + right pane. */
+function RootAppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="root-container flex w-full min-w-0 flex-col overflow-hidden">
+      <DevConstructionStripe />
+      <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+        <div className="root-scroll-container h-full min-h-0 flex-1 overflow-hidden">
+          <MarketingSiteLayoutGate>{children}</MarketingSiteLayoutGate>
+        </div>
+        <ConsoleRightPane />
+      </div>
+    </div>
+  )
 }
 
 const STATUS_PAGE_URL = 'https://status.appwrite.online'
@@ -415,54 +443,50 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <DynamicFavicon />
         <UploadWarning />
         <ContextualDocumentTitle />
-        <ClientThemeProvider>
-          <I18nProvider>
+        {/* I18n outside ClientThemeProvider so FullscreenLoader is not remounted when
+            ThemeProvider attaches after client mount (that remount reset the 1.5s spinner). */}
+        <I18nProvider>
+          {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready.
+              Kept outside ClientThemeProvider remount boundaries. Always mount when the
+              debug override is on (auth/marketing pages set skipStaticLoader). */}
+          <FullscreenLoader
+            isVisible={
+              showFullscreenLoader ||
+              (!skipStaticLoader && (clientMounted ? isLoading : true))
+            }
+            statusBanner={
+              clientMounted && isLoaderVisible ? statusBanner : undefined
+            }
+          />
+          <ClientThemeProvider>
             <WebsiteAccessGate>
               <AnalyticsSessionPropsSync />
               <PageDirectionProvider>
                 <CookieConsentProvider>
                   <NavigationHistoryProvider>
                     <RecentResourcesProvider>
-                      {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
-                      {!skipStaticLoader ? (
-                        <FullscreenLoader
-                          isVisible={clientMounted ? isLoaderVisible : true}
-                          statusBanner={clientMounted ? statusBanner : undefined}
-                        />
-                      ) : null}
                       <SentryContextProvider>
                         <RootShellCatchBoundary>
                           <DebugModeProvider>
-                            <ConsoleRightPaneProvider>
-                              {features.aiAssistant ? (
-                                <AIChatProvider>
+                            <ScreenshotModeProvider>
+                              <ConsoleRightPaneProvider>
+                              {/* Mount when the agent profile feature is on so the
+                                  header agent button never no-ops. */}
+                              {features.agent ? (
+                                <AgentChatProvider>
                                   <DocsPreviewProvider>
                                     <PromoBannerProvider>
-                                      <div className="flex w-full min-w-0 overflow-hidden root-container">
-                                        <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                          <MarketingSiteLayoutGate>
-                                            {children}
-                                          </MarketingSiteLayoutGate>
-                                        </div>
-                                        <ConsoleRightPane />
-                                      </div>
+                                      <RootAppShell>{children}</RootAppShell>
                                       <ClientOnly>
                                         <DebugMenu />
                                       </ClientOnly>
                                     </PromoBannerProvider>
                                   </DocsPreviewProvider>
-                                </AIChatProvider>
+                                </AgentChatProvider>
                               ) : (
                                 <DocsPreviewProvider>
                                   <PromoBannerProvider>
-                                    <div className="flex w-full min-w-0 overflow-hidden root-container">
-                                      <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                        <MarketingSiteLayoutGate>
-                                          {children}
-                                        </MarketingSiteLayoutGate>
-                                      </div>
-                                      <ConsoleRightPane />
-                                    </div>
+                                    <RootAppShell>{children}</RootAppShell>
                                     <ClientOnly>
                                       <DebugMenu />
                                     </ClientOnly>
@@ -472,10 +496,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                               <ClientOnly>
                                 <CommunitySupportPromptProvider />
                               </ClientOnly>
-                            </ConsoleRightPaneProvider>
+                              </ConsoleRightPaneProvider>
+                            </ScreenshotModeProvider>
                           </DebugModeProvider>
                         </RootShellCatchBoundary>
                       </SentryContextProvider>
+                      <ClientOnly>
+                        <DocsContentHmrRefresh />
+                      </ClientOnly>
                       <ClientOnly>
                         <Toaster />
                       </ClientOnly>
@@ -489,8 +517,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 </CookieConsentProvider>
               </PageDirectionProvider>
             </WebsiteAccessGate>
-          </I18nProvider>
-        </ClientThemeProvider>
+          </ClientThemeProvider>
+        </I18nProvider>
         <Scripts />
       </body>
     </html>

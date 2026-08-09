@@ -118,6 +118,7 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
+  features: { agent: boolean },
 ): readonly ExpandedFooterGroup[] {
   return [
   {
@@ -157,6 +158,19 @@ function getExpandedFooterGroups(
         ...docsFooterLink(footerCopy.expanded.products.realtime, '/docs/apis/realtime', marketing),
         analyticsAction: getMarketingProductAnalyticsAction('realtime'),
       },
+      ...(features.agent
+        ? [
+            {
+              ...docsFooterLink(
+                footerCopy.expanded.products.agent,
+                '/docs/products/agent',
+                marketing,
+              ),
+              analyticsAction: getMarketingProductAnalyticsAction('agent'),
+              isNew: isProductNavItemNew('agent'),
+            } satisfies FooterLink,
+          ]
+        : []),
       productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
       marketingProductFooterLink(
         footerCopy.expanded.products.domains,
@@ -209,6 +223,11 @@ function getExpandedFooterGroups(
       {
         label: footerCopy.expanded.programs.enterprise,
         href: getMarketingPageUrl('/enterprise', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
+      {
+        label: footerCopy.expanded.programs.affiliates,
+        href: getMarketingPageUrl('/affiliates', marketing),
         external: isMarketingPageExternal(marketing),
       },
     ],
@@ -322,6 +341,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const expandedFooterGroups = getExpandedFooterGroups(
     features.marketing,
     footerCopy,
+    features,
   )
 
   const resourceLinks = [

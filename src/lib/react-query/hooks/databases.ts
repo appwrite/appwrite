@@ -13,7 +13,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import { useEffect, useMemo } from 'react'
-import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate } from '@appwrite.io/console'
+import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate, EmbeddingModel } from '@appwrite.io/console'
 import { DatabaseType, coerceDatabaseType, toSdkDatabaseType } from '@/lib/databases/database-type'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
@@ -2529,10 +2529,32 @@ export async function fetchAllProjectTablesForVisualizer(
 /** Column to sort rows by - any column key or system field */
 export type RowsSortBy = string
 
+/** Stable tie-breaker so equal primary sort values stay ordered (and page stably). */
+export const ROWS_LIST_ORDER_TIEBREAKER = '$sequence' as const
+
+/**
+ * Primary orderBy plus a `$sequence` secondary with the same direction.
+ * Skips the tie-breaker when already sorting by `$sequence`.
+ */
+export function buildRowListOrderQueries(
+  sortBy: RowsSortBy,
+  order: 'asc' | 'desc',
+): string[] {
+  const primary =
+    order === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
+  if (sortBy === ROWS_LIST_ORDER_TIEBREAKER) {
+    return [primary]
+  }
+  const secondary =
+    order === 'asc'
+      ? Query.orderAsc(ROWS_LIST_ORDER_TIEBREAKER)
+      : Query.orderDesc(ROWS_LIST_ORDER_TIEBREAKER)
+  return [primary, secondary]
+}
+
 function buildRowListSelectQuery(
   listSelectAttrKeys: string[] | null | undefined,
   sortBy: RowsSortBy,
-  kind: DatabaseType,
 ): string | undefined {
   if (!listSelectAttrKeys?.length) return undefined
   const fields = new Set<string>([
@@ -2540,10 +2562,9 @@ function buildRowListSelectQuery(
     '$createdAt',
     '$updatedAt',
     '$permissions',
+    // Always include: used as the secondary orderBy tie-breaker.
+    ROWS_LIST_ORDER_TIEBREAKER,
   ])
-  if (kind === DatabaseType.Tablesdb) {
-    fields.add('$sequence')
-  }
   if (sortBy) fields.add(sortBy)
   for (const k of listSelectAttrKeys) {
     if (typeof k !== 'string') continue
@@ -2598,12 +2619,11 @@ export async function fetchProjectTableRows(
   const selectQuery = buildRowListSelectQuery(
     listSelectAttrKeys,
     sortBy,
-    kind,
   )
   const queries = [
     ...(selectQuery ? [selectQuery] : []),
     ...(filterQueries ?? []),
-    order === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy),
+    ...buildRowListOrderQueries(sortBy, order),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -2613,34 +2633,25 @@ export async function fetchProjectTableRows(
       kind === DatabaseType.Documentsdb
         ? projectSdk.documentsDB.listDocuments.bind(projectSdk.documentsDB)
         : projectSdk.vectorsDB.listDocuments.bind(projectSdk.vectorsDB)
-    try {
-      const response = await listFn({
-        databaseId,
-        collectionId: tableId,
-        queries,
-        total: true,
-      })
-      const docs = (response.documents ?? []) as Record<string, unknown>[]
-      return {
-        rows: docs.map((d) => flattenDocumentForTableRow(d)),
-        total: response.total ?? 0,
-      }
-    } catch {
-      return { rows: [], total: 0 }
-    }
-  }
-
-  let response: { rows?: unknown[]; documents?: unknown[]; total?: number }
-  try {
-    response = await projectSdk.tablesDB.listRows({
+    const response = await listFn({
       databaseId,
-      tableId,
+      collectionId: tableId,
       queries,
       total: true,
     })
-  } catch {
-    response = { rows: [], total: 0 }
+    const docs = (response.documents ?? []) as Record<string, unknown>[]
+    return {
+      rows: docs.map((d) => flattenDocumentForTableRow(d)),
+      total: response.total ?? 0,
+    }
   }
+
+  const response = await projectSdk.tablesDB.listRows({
+    databaseId,
+    tableId,
+    queries,
+    total: true,
+  })
 
   return {
     rows: response.rows || response.documents || [],
@@ -3020,7 +3031,7 @@ async function ensureDocumentOrVectorCreateDataPopulated(
         type === 'number'
       ) {
         filled[key] = 0
-      } else if (isArray) {
+      } else if (type === 'vector' || isArray) {
         filled[key] = []
       } else {
         filled[key] = ''
@@ -3030,6 +3041,29 @@ async function ensureDocumentOrVectorCreateDataPopulated(
     }
   }
   return Object.keys(filled).length > 0 ? filled : payloadWithoutId
+}
+
+/**
+ * Generate vector embeddings from text via VectorsDB.
+ * Returns the embedding list from the API (not persisted until stored on a document).
+ */
+export async function createTextEmbeddings(
+  projectId: string,
+  texts: string[],
+  model?: EmbeddingModel,
+): Promise<Models.EmbeddingList> {
+  if (!projectId) {
+    throw new Error('Missing required parameters')
+  }
+  if (!Array.isArray(texts) || texts.length === 0) {
+    throw new Error('At least one text value is required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.vectorsDB.createTextEmbeddings({
+    texts,
+    ...(model ? { model } : {}),
+  })
 }
 
 /**
@@ -4198,7 +4232,7 @@ export function tableRowsQueryOptions(
   tableId: string | null | undefined,
   dbKind: DatabaseRouteKind,
   page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
+  limit: number = ROWS_DEFAULT_PAGE_SIZE,
   search?: string,
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
@@ -4210,6 +4244,10 @@ export function tableRowsQueryOptions(
     (listSelectAttrKeys?.length ?? 0) > 0
       ? [...listSelectAttrKeys!].sort().join('\u0001')
       : null
+  // Include tie-breaker in the key so caches from before secondary `$sequence`
+  // ordering are not reused (and so loader/View stay aligned).
+  const orderTieBreaker =
+    sortBy === ROWS_LIST_ORDER_TIEBREAKER ? null : ROWS_LIST_ORDER_TIEBREAKER
 
   return queryOptions({
     queryKey: [
@@ -4223,6 +4261,7 @@ export function tableRowsQueryOptions(
       normalizedSearch,
       order,
       sortBy,
+      orderTieBreaker,
       filterQueries,
       listSelectKey,
       dbKind,
@@ -4384,13 +4423,15 @@ export function tableColumnsQueryOptions(
 ) {
   const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
+    // tableId before dbKind so prefixes like
+    // ['columns', 'project', projectId, databaseId, tableId] still match.
     queryKey: [
       'columns',
       'project',
       projectId,
       databaseId,
-      dbKind,
       tableId,
+      dbKind,
       ...(hasFilters ? [filterQueries] : []),
       page,
       limit,
@@ -4408,10 +4449,8 @@ export function tableColumnsQueryOptions(
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
-    // When columns are invalidated while this observer is inactive (e.g. user on schema tab),
-    // remounting the rows view must refetch stale cache; false would keep outdated columns
-    // until a full reload.
-    refetchOnMount: true,
+    // Prefetched in route loaders; mutations invalidate/refetch via tableId prefix.
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page change)
@@ -4464,13 +4503,14 @@ export function tableIndexesQueryOptions(
 ) {
   const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
+    // tableId before dbKind so invalidate/refetch prefixes that omit dbKind match.
     queryKey: [
       'indexes',
       'project',
       projectId,
       databaseId,
-      dbKind,
       tableId,
+      dbKind,
       ...(hasFilters ? [filterQueries] : []),
       page,
       limit,
@@ -4859,7 +4899,7 @@ export function useProjectTableRows(
   tableId: string | null | undefined,
   dbKind: DatabaseRouteKind,
   page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
+  limit: number = ROWS_DEFAULT_PAGE_SIZE,
   search?: string,
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
@@ -4872,6 +4912,8 @@ export function useProjectTableRows(
     data: rowsData,
     isLoading,
     isFetching,
+    isError,
+    isPlaceholderData,
     error,
     refetch,
   } = useQuery(
@@ -4901,6 +4943,8 @@ export function useProjectTableRows(
     totalPages,
     isLoading,
     isFetching,
+    isError,
+    isPlaceholderData,
     error,
     refetch,
   }
@@ -5088,6 +5132,28 @@ export function useProjectTable(
     error,
     refetch,
   }
+}
+
+/**
+ * Hook to generate text embeddings via VectorsDB.
+ */
+export function useCreateTextEmbeddings(
+  projectId: string | null | undefined,
+) {
+  return useMutation({
+    mutationFn: async ({
+      texts,
+      model,
+    }: {
+      texts: string[]
+      model?: EmbeddingModel
+    }) => {
+      if (!projectId) {
+        throw new Error('Missing required parameters')
+      }
+      return await createTextEmbeddings(projectId, texts, model)
+    },
+  })
 }
 
 /**

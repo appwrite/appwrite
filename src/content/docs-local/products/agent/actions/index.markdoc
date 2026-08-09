@@ -1,0 +1,70 @@
+---
+layout: article
+title: Actions
+description: Learn what the Appwrite Agent can inspect, clarify, and do in your projects and in the Console.
+---
+
+The Agent has two modes of helpfulness. With documentation and Console context alone, it can explain Appwrite and guide you through setup. With [MCP](/docs/products/agent/mcp) connected, it can also call tools against your projects and drive parts of the Console UI so lists, wizards, and charts stay in sync with what just happened.
+
+You stay in control of anything that changes project data. Ambiguous or destructive work should surface as clarification before it proceeds.
+
+# Answer and guide {% #answer-and-guide %}
+
+Without tools, the Agent is still useful as a grounded guide. It can explain Appwrite concepts, walk through how-to steps for Auth, Databases, Storage, Functions, Sites, and other products, and use the page you have open to keep answers relevant.
+
+Empty-state suggestions reflect this mode: how-to chips such as creating a database, until an enabled MCP connection can run tools. Then the empty state shifts toward action prompts and a "what should we do next" framing.
+
+# Clarification {% #clarification %}
+
+Before ambiguous or risky work, the Agent may pause the turn and ask you to:
+
+| Prompt | When it appears |
+|--------|-----------------|
+| **Choice** | Pick one or more options from a list (for example which database or which column type) |
+| **Confirm** | Approve an action; higher-risk confirms can use stronger visual emphasis |
+| **Text** | Supply missing details in a single line or multiline field |
+
+Answers are structured for that turn; they continue the same run instead of starting a new conversation. Required prompts must be answered before the Agent continues, unless a prompt is explicitly optional.
+
+# MCP tools {% #mcp-tools %}
+
+With **Appwrite MCP** connected and enabled, the Agent can discover available tools, call Appwrite APIs with your OAuth authorization, and summarize create, update, delete, and read operations in the conversation timeline.
+
+Typical work includes listing databases, tables, buckets, and users; creating or updating resources (for example a todos table with columns); searching Appwrite documentation while you stay in context; and inspecting usage or related project data the tools expose.
+
+Action-oriented suggestions appear when **any** enabled MCP connection has valid authorization for tools. See [MCP connections](/docs/products/agent/mcp) and [Connect Appwrite MCP](/docs/products/agent/connect-mcp).
+
+Successful tool mutations often trigger Console [refresh actions](#console-ui-actions) so the page you already have open updates without a full reload. Resource cards and charts can also appear inline so you can jump straight to the thing that changed.
+
+# Console UI actions {% #console-ui-actions %}
+
+Separately from MCP API calls, the Agent can emit Console actions that the UI applies locally. These keep the chat and the Console in the same workflow: navigate to the right screen, open the right create flow, or show a chart next to the explanation.
+
+| Action | Effect |
+|--------|--------|
+| Navigate | Open a Console route (projects, settings, resource pages) |
+| Open create | Start create flows for databases, buckets, users, teams, functions, or sites |
+| Open dialog | Open system dialogs such as invite member, create project, connect MCP, shortcuts, docs search, feedback, or support |
+| Toast | Show success, error, info, or warning notifications |
+| Refresh | Refetch lists for databases, tables, buckets, files, users, teams, functions, sites, messaging, deployments, domains, keys, project, organization, and related Console data |
+| Theme | Switch light, dark, or system theme |
+| Show pane | Open or close the Agent or docs pane |
+| Toggle terminal | Open or close the Console terminal where available |
+| Resource cards | Render resource or list cards in chat with deep links |
+| Charts | Render usage charts (area or bar; event or gauge series; intervals such as `1m`, `15m`, `30m`, `1h`, `1d`) |
+
+Some of these actions can be replayed from conversation history as CTAs (for example navigate again or reopen a dialog), so you can re-enter the same Console flow without retyping the request.
+
+# TablesDB helpers {% #tablesdb-helpers %}
+
+In TablesDB spreadsheet and workspace views, when the Agent feature is enabled, you may see **Suggest columns** and **Suggest indexes**. Those helpers use Console AI APIs on the current table to propose schema or indexes. They are related to the same AI capability, but they are not the same as chatting through MCP: you apply changes from the TablesDB UI, and write access to the table is still required.
+
+# Permissions and safety {% #permissions-and-safety %}
+
+Agent settings (conversations, models, memory, MCP tokens, automations) are scoped to **your Console user**. Live project mutations go through **MCP OAuth** using the authorization you grant as **Appwrite Agent**, typically with broad project and organization access so tools can list and act across resources you can already manage in the Console.
+
+The Agent should ask for clarification before risky or unclear work. Always review proposed changes when you are unsure, especially deletes and permission updates.
+
+{% arrow_link href="/docs/products/agent/connect-mcp" %}
+Connect Appwrite MCP
+{% /arrow_link %}

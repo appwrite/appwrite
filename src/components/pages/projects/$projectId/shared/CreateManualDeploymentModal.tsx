@@ -16,6 +16,7 @@ import { Upload, Loader2, FileArchive } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { sdk } from '@/lib/appwrite/sdk'
 
 export type CreateManualDeploymentResourceType = 'function' | 'site'
@@ -132,6 +133,9 @@ export function CreateManualDeploymentModal({
       })
     },
     onSuccess: () => {
+      closeDialogBeforeOverlayUnmount(() => {
+        handleClose(false)
+      })
       const deployKey =
         resourceType === 'function'
           ? ['deployments', 'function', projectId, resourceId]
@@ -143,7 +147,6 @@ export function CreateManualDeploymentModal({
         })
       }
       toast.success(t('Deployment created successfully'))
-      handleClose(false)
       onSuccess?.()
     },
     onError: (err: Error) => {

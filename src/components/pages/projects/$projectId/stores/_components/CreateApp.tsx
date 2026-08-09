@@ -201,7 +201,7 @@ export function CreateApp({ open, onOpenChange }: CreateAppProps) {
             onClick={handleSubmit}
             disabled={!canSubmit || createApp.isPending}
           >
-            {createApp.isPending ? t('Creating...') : t('Create')}
+            {t('Create')}
           </Button>
         </div>
       </DialogContent>

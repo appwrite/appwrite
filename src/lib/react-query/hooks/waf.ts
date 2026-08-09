@@ -43,9 +43,13 @@ export type CreateFirewallRuleInput = {
   conditions?: string[]
   limit?: number
   interval?: number
+  /** Rate-limit bucket key: `ip` or `userId`. */
+  key?: string
   location?: string
   statusCode?: number
   challengeType?: string
+  difficulty?: number
+  ttl?: number
 }
 
 export type UpdateFirewallRuleInput = {
@@ -60,9 +64,13 @@ export type UpdateFirewallRuleInput = {
   conditions?: string[]
   limit?: number
   interval?: number
+  /** Rate-limit bucket key: `ip` or `userId`. */
+  key?: string
   location?: string
   statusCode?: number
   challengeType?: string
+  difficulty?: number
+  ttl?: number
 }
 
 function conditionsPayload(conditions?: string[]) {
@@ -312,12 +320,15 @@ async function createFirewallRule(
       return waf.createChallengeRule({
         ...base,
         challengeType: input.challengeType?.trim() || undefined,
+        difficulty: input.difficulty,
+        ttl: input.ttl,
       })
     case WafRuleAction.RateLimit:
       return waf.createRateLimitRule({
         ...base,
         limit: input.limit ?? 100,
         interval: input.interval ?? 60,
+        key: input.key,
       })
     case WafRuleAction.Redirect:
       return waf.createRedirectRule({
@@ -355,12 +366,15 @@ async function updateFirewallRule(
       return waf.updateChallengeRule({
         ...base,
         challengeType: input.challengeType,
+        difficulty: input.difficulty,
+        ttl: input.ttl,
       })
     case WafRuleAction.RateLimit:
       return waf.updateRateLimitRule({
         ...base,
         limit: input.limit,
         interval: input.interval,
+        key: input.key,
       })
     case WafRuleAction.Redirect:
       return waf.updateRedirectRule({
@@ -435,6 +449,7 @@ export function firewallRuleImpactQueryOptions(
   dateRange?: DateRange,
   chartInterval?: UsageChartInterval,
   logRetentionHours?: number,
+  action?: FirewallCreatableAction,
 ) {
   const normalizedResourceId = resourceId?.trim() || undefined
   const conditionSnapshots = buildFirewallUsageConditionSnapshots(conditions)
@@ -453,6 +468,7 @@ export function firewallRuleImpactQueryOptions(
       to ?? '',
       chartInterval ?? '',
       logRetentionHours ?? null,
+      action ?? '',
     ] as const,
     queryFn: ({ queryKey }) => {
       const [
@@ -466,6 +482,7 @@ export function firewallRuleImpactQueryOptions(
         impactTo,
         impactChartInterval,
         impactLogRetentionHours,
+        impactAction,
       ] = queryKey
 
       return fetchFirewallRuleImpact(String(impactProjectId), {
@@ -487,6 +504,9 @@ export function firewallRuleImpactQueryOptions(
           typeof impactLogRetentionHours === 'number'
             ? impactLogRetentionHours
             : undefined,
+        action: impactAction
+          ? (impactAction as FirewallCreatableAction)
+          : undefined,
       })
     },
     enabled: !!projectId,
@@ -507,6 +527,7 @@ export function useFirewallRuleImpact(
   dateRange?: DateRange,
   chartInterval?: UsageChartInterval,
   logRetentionHours?: number,
+  action?: FirewallCreatableAction,
 ) {
   const { data, isLoading, isFetching, error } = useQuery(
     firewallRuleImpactQueryOptions(
@@ -517,6 +538,7 @@ export function useFirewallRuleImpact(
       dateRange,
       chartInterval,
       logRetentionHours,
+      action,
     ),
   )
 

@@ -37,6 +37,15 @@ const LOOPBACK = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i
 
 const KNOWN_CLIENTS: KnownOAuthClientMatcher[] = [
   {
+    id: 'appwrite-agent',
+    name: 'Appwrite Agent',
+    iconPath: '/icons/appwrite.svg',
+    // First-party console Agent MCP connect. Uses a seeded public client
+    // (`appwrite-agent`), not DCR - so name + callback corroborate identity.
+    namePattern: /^appwrite agent$/i,
+    uriPatterns: [/\/agent\/mcp\/callback/i, /\/assistant\/mcp\/callback/i],
+  },
+  {
     id: 'claude-code',
     name: 'Claude Code',
     iconPath: '/icons/apps/claude.svg',

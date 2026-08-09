@@ -10,6 +10,7 @@ import type { ImperativePanelHandle } from 'react-resizable-panels'
 import { useParams, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { useT } from '@/lib/i18n/translate'
+import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { isHtmlDarkChrome, isResolvedThemeDarkChrome } from '@/lib/html-theme'
 import { monacoSyntaxHighlightRules } from '@/lib/code-syntax-theme'
 import Editor from '@monaco-editor/react'
@@ -440,6 +441,7 @@ function defineAppThemes(monaco: typeof import('monaco-editor')) {
 
 export function View() {
   const t = useT()
+  const { isMac } = usePlatform()
   const { projectId } = useParams({ strict: false })
   const { resolvedTheme } = useTheme()
   const isDark = isResolvedThemeDarkChrome(resolvedTheme)
@@ -540,9 +542,6 @@ export function View() {
     )
   }, [editorSplitWidth, explorerOpen])
 
-  const isMac =
-    typeof navigator !== 'undefined' &&
-    /Mac|iPod|iPhone|iPad/.test(navigator.platform)
   const shortcutFind = isMac ? '⌘F' : 'Ctrl+F'
   const shortcutReplace = isMac ? '⌘H' : 'Ctrl+H'
 
@@ -966,20 +965,33 @@ export function View() {
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  asChild
-                  aria-label={t('Back to functions')}
-                >
-                  <Link
-                    to="/projects/$projectId/functions"
-                    params={{ projectId: projectId! }}
+                {projectId ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    asChild
+                    aria-label={t('Back to functions')}
+                  >
+                    <Link
+                      to="/projects/$projectId/functions"
+                      params={{ projectId }}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    aria-label={t('Back to functions')}
+                    onClick={() => window.history.back()}
                   >
                     <ArrowLeft className="h-4 w-4" />
-                  </Link>
-                </Button>
+                  </Button>
+                )}
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 <p>{t('Back to functions')}</p>
@@ -1826,7 +1838,6 @@ export function View() {
               {t('from the project? This cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
-          <div className="border-t border-border" />
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"

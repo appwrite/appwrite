@@ -26,6 +26,7 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
 
@@ -55,7 +56,9 @@ export function ProjectOAuth2AppContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        <ContextMenuItem onSelect={() => onUpdate(app)}>
+        <ContextMenuItem
+          onSelect={() => openDialogAfterOverlayCloses(() => onUpdate(app))}
+        >
           <ContextMenuIcon icon={Pencil} />
           {t('Update')}
         </ContextMenuItem>
@@ -106,7 +109,9 @@ export function ProjectOAuth2AppContextMenu({
           {t('Open in new window')}
         </ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem onSelect={() => onDelete(app)}>
+        <ContextMenuItem
+          onSelect={() => openDialogAfterOverlayCloses(() => onDelete(app))}
+        >
           <ContextMenuIcon icon={Trash2} />
           {t('Delete')}
         </ContextMenuItem>

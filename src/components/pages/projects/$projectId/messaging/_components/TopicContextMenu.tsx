@@ -42,6 +42,10 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 
 export type TopicContextMenuTopic = {
   $id: string
@@ -75,7 +79,6 @@ export function TopicContextMenu({
         queryKey: ['topics', 'project', projectId],
       })
       toast.success(t('Topic deleted'))
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || t('Failed to delete topic'))
@@ -100,7 +103,7 @@ export function TopicContextMenu({
   )
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
   }
 
   const hasName = !!topic.name
@@ -208,7 +211,10 @@ export function TopicContextMenu({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate()}
+              onClick={() => {
+                closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+                deleteMutation.mutate()
+              }}
               disabled={deleteMutation.isPending}
 >
               {t('Delete')}

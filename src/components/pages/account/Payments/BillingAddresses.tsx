@@ -5,7 +5,7 @@
  * Shows all addresses with their linked organizations.
  */
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { MapPin, Link as LinkIcon, Plus, Pencil, Trash2 } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
@@ -32,17 +32,19 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
-  useCountries,
+  useCountryLookups,
   useDeleteBillingAddress,
   fetchBillingAddresses,
   organizationsFullQueryOptions,
   billingAddressesQueryOptions,
 } from '@/lib/react-query/hooks'
+import { getCountryDisplayName } from '@/lib/locale/country-lookups'
 import type { Models } from '@appwrite.io/console'
 import { AddressModal } from './Address'
 import { DeleteAddressModal } from './DeleteAddress'
 import { BillingAddressContextMenu } from './BillingAddressContextMenu'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 export function AccountBillingAddresses({
   initialData,
@@ -56,7 +58,7 @@ export function AccountBillingAddresses({
   const { data: addressesData, isFetched: addressesFetched } = useQuery(
     billingAddressesQueryOptions(),
   )
-  const { data: countriesData } = useCountries()
+  const { lookups: countryLookups } = useCountryLookups()
   useDeleteBillingAddress()
 
   const addresses =
@@ -79,27 +81,23 @@ export function AccountBillingAddresses({
     return organizations.filter((org) => org.billingAddressId === addressId)
   }
 
-  // Country lookup map
-  const countryMap = useMemo(() => {
-    if (!countriesData?.countries) return new Map()
-    return new Map(
-      countriesData.countries.map((country) => [country.code, country.name]),
-    )
-  }, [countriesData])
-
   const handleAdd = () => {
     setSelectedAddress(null)
     setAddModalOpen(true)
   }
 
   const handleEdit = (address: Models.BillingAddress) => {
-    setSelectedAddress(address)
-    setEditModalOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedAddress(address)
+      setEditModalOpen(true)
+    })
   }
 
   const handleDelete = (address: Models.BillingAddress) => {
-    setSelectedAddress(address)
-    setDeleteModalOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedAddress(address)
+      setDeleteModalOpen(true)
+    })
   }
 
   const handleAddSuccess = () => {
@@ -128,8 +126,10 @@ export function AccountBillingAddresses({
       parts.push(cityPart)
     }
     if (address.country) {
-      const countryName = countryMap.get(address.country) || address.country
-      parts.push(countryName)
+      parts.push(
+        getCountryDisplayName(address.country, countryLookups) ??
+          address.country,
+      )
     }
     return parts.join(', ') || '-'
   }

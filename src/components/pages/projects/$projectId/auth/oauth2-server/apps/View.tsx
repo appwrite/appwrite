@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Copy,
   ExternalLink,
@@ -29,6 +29,10 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -134,31 +138,24 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
     [apps],
   )
 
-  const blurActiveElement = useCallback(() => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur()
-    }
-  }, [])
-
   const openCreate = () => {
-    blurActiveElement()
-    window.setTimeout(() => {
+    openDialogAfterOverlayCloses(() => {
       setSelectedApp(null)
       setDrawerOpen(true)
-    }, 0)
+    })
   }
 
   const openUpdate = (app: Models.App) => {
-    blurActiveElement()
-    window.setTimeout(() => {
+    openDialogAfterOverlayCloses(() => {
       setSelectedApp(app)
       setDrawerOpen(true)
-    }, 0)
+    })
   }
 
   const requestDelete = (app: Models.App) => {
-    blurActiveElement()
-    setDeleteTarget(app)
+    openDialogAfterOverlayCloses(() => {
+      setDeleteTarget(app)
+    })
   }
 
   const getAppHref = (app: Models.App) =>
@@ -168,11 +165,14 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
 
   const handleDelete = async () => {
     if (!deleteTarget) return
-    try {
-      await deleteMutation.mutateAsync(deleteTarget.$id)
-      toast.success(t('OAuth2 app deleted'))
+    const appId = deleteTarget.$id
+    closeDialogBeforeOverlayUnmount(() => {
       setDeleteTarget(null)
       setSelectedApp(null)
+    })
+    try {
+      await deleteMutation.mutateAsync(appId)
+      toast.success(t('OAuth2 app deleted'))
     } catch (error) {
       toast.error(getErrorMessage(error, t('Failed to delete OAuth2 app')))
     }

@@ -661,7 +661,6 @@ export function PostgresExtensionsPanel({
               {t('Installation runs in the background and may take a few minutes.')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="border-t border-border" />
           <AlertDialogFooter className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <AlertDialogCancel disabled={actionPending}>
               {t('Cancel')}
@@ -687,7 +686,6 @@ export function PostgresExtensionsPanel({
               {t('This action cannot be undone.')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="border-t border-border" />
           <AlertDialogFooter className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <AlertDialogCancel disabled={actionPending}>
               {t('Cancel')}

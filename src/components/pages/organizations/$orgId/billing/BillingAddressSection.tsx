@@ -29,6 +29,10 @@ import {
   useDeleteOrganizationBillingAddress} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import {
+  closeDialogBeforeOverlayUnmount,
+  openDialogAfterOverlayCloses,
+} from '@/lib/utils/overlay-lock'
 import { AddressModal } from '@/components/pages/account/Payments/Address'
 import { OrgBillingAddressContextMenu } from './OrgBillingAddressContextMenu'
 
@@ -88,6 +92,7 @@ export function BillingAddressSection({
 
   const handleRemoveAddress = async () => {
     if (!orgId) return
+    closeDialogBeforeOverlayUnmount(() => setRemoveConfirmOpen(false))
     try {
       await deleteOrgAddressMutation.mutateAsync({ organizationId: orgId })
       toast.success(
@@ -95,7 +100,6 @@ export function BillingAddressSection({
           ? `${t('Billing address has been removed from')} ${organization.name}`
           : t('Billing address removed'),
       )
-      setRemoveConfirmOpen(false)
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -283,7 +287,9 @@ export function BillingAddressSection({
             <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem
                 className="text-[13px]"
-                onClick={() => setEditModalOpen(true)}
+                onSelect={() =>
+                  openDialogAfterOverlayCloses(() => setEditModalOpen(true))
+                }
               >
                 <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
               </DropdownMenuItem>
@@ -326,7 +332,11 @@ export function BillingAddressSection({
                         )}
                         <DropdownMenuItem
                           className="text-[13px]"
-                          onClick={() => setCreateModalOpen(true)}
+                          onSelect={() =>
+                            openDialogAfterOverlayCloses(() =>
+                              setCreateModalOpen(true),
+                            )
+                          }
                         >
                           <MenuItemContent icon={Plus}>{t('Add')}</MenuItemContent>
                         </DropdownMenuItem>
@@ -338,7 +348,9 @@ export function BillingAddressSection({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-[13px]"
-                onClick={() => setRemoveConfirmOpen(true)}
+                onSelect={() =>
+                  openDialogAfterOverlayCloses(() => setRemoveConfirmOpen(true))
+                }
               >
                 <MenuItemContent icon={Trash2}>{t('Remove')}</MenuItemContent>
               </DropdownMenuItem>

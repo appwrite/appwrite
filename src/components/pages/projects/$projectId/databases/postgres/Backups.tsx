@@ -65,6 +65,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { toByteCount } from '@/lib/utils/byte-display-unit'
 import { useOrganizationPlan, useProject } from '@/lib/react-query/hooks'
 import {
   getBackupPoliciesPlanLimit,
@@ -116,11 +117,12 @@ function getPostgresBackupStatus(status: string) {
   }
 }
 
-function formatBackupSize(bytes: number | undefined) {
-  if (!bytes) return '-'
-  const mb = bytes / (1000 * 1000)
+function formatBackupSize(bytes: number | bigint | undefined) {
+  const n = toByteCount(bytes)
+  if (n <= 0) return '-'
+  const mb = n / (1000 * 1000)
   if (mb < 1) {
-    return `${(bytes / 1000).toFixed(2)} KB`
+    return `${(n / 1000).toFixed(2)} KB`
   }
   return `${mb.toFixed(2)} MB`
 }
@@ -188,7 +190,10 @@ export function View({ projectId, databaseId }: ViewProps) {
 
   const policies: Models.BackupPolicy[] = policiesData?.policies || []
   const backups: Models.DedicatedDatabaseBackup[] = backupsData?.backups || []
-  const backupsTotal = backupsData?.total || 0
+  const backupsTotal =
+    typeof backupsData?.total === 'bigint'
+      ? Number(backupsData.total)
+      : backupsData?.total || 0
   const isAtBackupPoliciesLimit = isBackupPoliciesAtPlanLimit(
     policies.length,
     backupPoliciesLimit,
@@ -420,14 +425,14 @@ export function View({ projectId, databaseId }: ViewProps) {
               <h3 className="text-[15px] font-semibold text-foreground">
                 {t('Policies')}
               </h3>
-              {backupPoliciesLimit > 0 ? (
-                <Badge
-                  variant="secondary"
-                  className="text-[12px] font-normal"
-                >
-                  {policies.length}/{backupPoliciesLimit}
-                </Badge>
-              ) : null}
+              <Badge
+                variant="secondary"
+                className="text-[12px] font-normal"
+              >
+                {backupPoliciesLimit > 0
+                  ? `${policies.length}/${backupPoliciesLimit}`
+                  : t('Unlimited')}
+              </Badge>
             </div>
             {isAtBackupPoliciesLimit ? (
               <Tooltip>

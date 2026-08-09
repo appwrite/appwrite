@@ -310,8 +310,12 @@ export function CodeBlock({
   const preRef = useRef<HTMLPreElement>(null)
   const prismLanguage = getPrismLanguage(language)
   const needsExtra = EXTRA_LANGUAGES.includes(prismLanguage)
+  // Prefer Prism's live registry (built-ins like json ship with prism-react-renderer)
+  // so we don't fall back to plaintext while a redundant dynamic import is in flight.
   const languageIsRegistered =
-    !needsExtra || loadedLanguages.has(prismLanguage)
+    !needsExtra ||
+    loadedLanguages.has(prismLanguage) ||
+    Boolean(Prism.languages[prismLanguage])
   // Bump when async Prism grammars finish loading so Highlight re-tokenizes.
   const [, setLoadGeneration] = useState(0)
   const { resolvedTheme } = useTheme()

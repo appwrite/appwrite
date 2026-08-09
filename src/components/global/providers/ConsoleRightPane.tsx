@@ -3,11 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useDebugOverrides } from '@/lib/debug-overrides'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useRightPaneWidth } from '@/lib/react-query/hooks/auth'
-import { clampRightPaneWidthPx } from '@/lib/right-pane/constants'
+import {
+  clampRightPaneWidthPx,
+  RIGHT_PANE_TRANSITION_MS,
+} from '@/lib/right-pane/constants'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
+import { isAgentPagePath } from '@/lib/assistant/agent-paths'
 import {
   inlineEndPaneWidthFromPointer,
   isRtlElement,
@@ -15,7 +19,7 @@ import {
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
-import { AIChatPanelContent } from './AIChat'
+import { AgentPanelContent } from './AgentChat'
 import { DocsPreviewContent } from './DocsPreview'
 import {
   useConsoleRightPane,
@@ -34,38 +38,62 @@ const AUTH_ROUTE_PATHNAMES = new Set([
   '/verify-email',
 ])
 
-function isAssistantBlockedPath(pathname: string): boolean {
-  return AUTH_ROUTE_PATHNAMES.has(pathname)
+function isAgentBlockedPath(pathname: string): boolean {
+  return AUTH_ROUTE_PATHNAMES.has(pathname) || isAgentPagePath(pathname)
 }
 
 export function ConsoleRightPane() {
   const location = useLocation()
-  const overrides = useDebugOverrides()
+  const { features } = useConsoleProfile()
   const { account } = useAuth()
   const { widthPx, setWidthPx } = useRightPaneWidth(account)
   const { activeContent } = useConsoleRightPane()
   const panelRef = useRef<HTMLDivElement>(null)
   const [isResizing, setIsResizing] = useState(false)
+  const [displayContent, setDisplayContent] =
+    useState<ConsoleRightPaneContent | null>(null)
+  const [expanded, setExpanded] = useState(false)
 
   const isMarketingPage = useIsMarketingPage()
   const isConsolePath = useMemo(
     () => isConsoleRightPanePath(location.pathname),
     [location.pathname],
   )
-  const isAssistantBlocked = useMemo(
-    () => isAssistantBlockedPath(location.pathname),
+  const isAgentBlocked = useMemo(
+    () => isAgentBlockedPath(location.pathname),
     [location.pathname],
   )
   const resolvedContent =
     isMarketingPage || !isConsolePath
       ? null
-      : activeContent === 'assistant' &&
-          overrides.showAIAssistant &&
-          !isAssistantBlocked
-        ? 'assistant'
+      : activeContent === 'agent' && features.agent && !isAgentBlocked
+        ? 'agent'
         : activeContent === 'docs'
           ? 'docs'
           : null
+
+  useEffect(() => {
+    if (resolvedContent) {
+      setDisplayContent(resolvedContent)
+      // Double rAF so the pane mounts at width 0 before expanding.
+      let innerFrame = 0
+      const outerFrame = window.requestAnimationFrame(() => {
+        innerFrame = window.requestAnimationFrame(() => {
+          setExpanded(true)
+        })
+      })
+      return () => {
+        window.cancelAnimationFrame(outerFrame)
+        window.cancelAnimationFrame(innerFrame)
+      }
+    }
+
+    setExpanded(false)
+    const timer = window.setTimeout(() => {
+      setDisplayContent(null)
+    }, RIGHT_PANE_TRANSITION_MS)
+    return () => window.clearTimeout(timer)
+  }, [resolvedContent])
 
   const handleMouseDown = useCallback((event: React.MouseEvent) => {
     event.preventDefault()
@@ -101,33 +129,51 @@ export function ConsoleRightPane() {
     }
   }, [isResizing, setWidthPx])
 
-  if (!resolvedContent) return null
+  if (!displayContent) return null
 
   return (
     <div
       ref={panelRef}
-      style={{ width: `${widthPx}px` }}
+      style={{
+        width: expanded ? widthPx : 0,
+        transitionDuration: isResizing ? '0ms' : `${RIGHT_PANE_TRANSITION_MS}ms`,
+      }}
       className={cn(
-        'relative flex h-full shrink-0 flex-col border-s border-border bg-background',
-        resolvedContent === 'assistant' &&
-          '[&_button:not(:disabled)]:cursor-pointer',
+        // Above ConsoleLayout sticky header (z-[110]) so the centered resize
+        // rail hover/drag highlight is not clipped where it overlaps the header.
+        'relative z-[111] h-full shrink-0 overflow-hidden',
+        !isResizing &&
+          'transition-[width] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
       )}
+      aria-hidden={!expanded}
     >
       <div
-        onMouseDown={handleMouseDown}
-        style={resizeHandleOnInlineStartEdgeStyle()}
+        style={{ width: widthPx }}
         className={cn(
-          'absolute top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
-          isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
+          'relative flex h-full flex-col border-s border-border bg-background',
+          displayContent === 'agent' &&
+            '[&_button:not(:disabled)]:cursor-pointer',
+          !expanded && 'pointer-events-none',
         )}
-        aria-hidden
-      />
+      >
+        <div
+          onMouseDown={handleMouseDown}
+          style={resizeHandleOnInlineStartEdgeStyle()}
+          className={cn(
+            // Above the agent composer (`relative z-10`) so the border hover
+            // highlight is not covered along the prompt section.
+            'absolute top-0 z-20 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+            isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
+          )}
+          aria-hidden
+        />
 
-      {resolvedContent === 'docs' ? (
-        <DocsPreviewContent />
-      ) : (
-        <AIChatPanelContent />
-      )}
+        {displayContent === 'docs' ? (
+          <DocsPreviewContent />
+        ) : (
+          <AgentPanelContent />
+        )}
+      </div>
     </div>
   )
 }

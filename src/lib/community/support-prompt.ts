@@ -1,6 +1,7 @@
 import {
   Blocks,
   FileText,
+  Gift,
   HeartHandshake,
   type LucideIcon,
 } from 'lucide-react'
@@ -21,6 +22,7 @@ export type CommunitySupportActionId =
   | 'contribute'
   | 'share'
   | 'content'
+  | 'affiliates'
   | 'integrations'
 
 export type CommunitySupportIcon =
@@ -181,7 +183,7 @@ export const COMMUNITY_SUPPORT_ACTIONS: CommunitySupportAction[] = [
     id: 'contribute',
     title: 'Star us on GitHub',
     description: 'A star helps more developers discover Appwrite.',
-    href: 'https://github.com/appwrite/appwrite',
+    href: 'https://github.com/appwrite/appwrite/stargazers',
     external: true,
     icon: GitHubBrandIcon,
   },
@@ -199,15 +201,24 @@ export const COMMUNITY_SUPPORT_ACTIONS: CommunitySupportAction[] = [
     description:
       'Publish blogs, videos, or tutorials that help developers discover Appwrite.',
     href: '/community',
-    external: false,
+    external: true,
     icon: FileText,
+  },
+  {
+    id: 'affiliates',
+    title: 'Join the Affiliates program',
+    description:
+      'Share invite links and earn credits when developers upgrade to Pro.',
+    href: '/affiliates',
+    external: true,
+    icon: Gift,
   },
   {
     id: 'integrations',
     title: 'Build integrations',
     description: 'Connect Appwrite to the tools your stack already uses.',
     href: '/integrations',
-    external: false,
+    external: true,
     icon: Blocks,
   },
 ]
@@ -272,9 +283,36 @@ export function withSkippedPrompt(
 ): CommunitySupportPromptState {
   return {
     ...state,
-    // Impression should already have stamped lastShownAt; keep a fallback.
-    lastShownAt: state.lastShownAt ?? now.toISOString(),
+    // Always refresh so skip is a real prefs write (not a no-op after recordShown)
+    // and wins races against in-flight active-day updates.
+    lastShownAt: now.toISOString(),
   }
+}
+
+/**
+ * Whether `local` should be kept over `remote` after an account prefs write.
+ * Used to avoid older in-flight community-support writes clobbering newer state.
+ */
+export function isCommunitySupportStateAhead(
+  local: CommunitySupportPromptState,
+  remote: CommunitySupportPromptState,
+): boolean {
+  if (local.actionTakenAt && !remote.actionTakenAt) return true
+  if (remote.actionTakenAt && !local.actionTakenAt) return false
+
+  if (local.shownCount !== remote.shownCount) {
+    return local.shownCount > remote.shownCount
+  }
+
+  const localShown = local.lastShownAt ? Date.parse(local.lastShownAt) : 0
+  const remoteShown = remote.lastShownAt ? Date.parse(remote.lastShownAt) : 0
+  const localShownMs = Number.isFinite(localShown) ? localShown : 0
+  const remoteShownMs = Number.isFinite(remoteShown) ? remoteShown : 0
+  if (localShownMs !== remoteShownMs) {
+    return localShownMs > remoteShownMs
+  }
+
+  return local.uniqueDayCount > remote.uniqueDayCount
 }
 
 export function withTakenAction(
@@ -286,6 +324,6 @@ export function withTakenAction(
     ...state,
     actionId,
     actionTakenAt: now.toISOString(),
-    lastShownAt: state.lastShownAt ?? now.toISOString(),
+    lastShownAt: now.toISOString(),
   }
 }

@@ -16,17 +16,53 @@ export const ANALYTICS_ACTIONS = {
   'theme-toggle': 'Theme Toggle Clicked',
   'sidebar-collapse': 'Sidebar Collapse Clicked',
   'connect-project': 'Connect Project Clicked',
+  'copy-connect-sdk-prompt': 'Connect SDK Prompt Copied',
   'header-create-menu': 'Header Create Menu Clicked',
   'feedback-open': 'Feedback Opened',
   'support-open': 'Support Opened',
   'notifications-open': 'Notifications Opened',
-  'ai-assistant-open': 'AI Assistant Opened',
+  'ai-agent-open': 'AI Agent Opened',
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
   'auth-sign-up': 'Sign Up Clicked',
   'header-console': 'Header Console Clicked',
+  'header-old-console': 'Header Old Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',
+  'create-affiliate-link': 'Create Affiliate Link Clicked',
+  'copy-affiliate-link': 'Copy Affiliate Link Clicked',
+  'delete-affiliate-link': 'Delete Affiliate Link Clicked',
+  'claim-affiliate-reward': 'Claim Affiliate Reward Clicked',
+
+  // Agent (chat page + console right pane)
+  'create-agent': 'Create Agent Clicked',
+  'create-agent-automation': 'Create Agent Automation Clicked',
+  'create-agent-model': 'Create Agent Model Clicked',
+  'create-agent-memory': 'Create Agent Memory Clicked',
+  'agent-send': 'Agent Send Clicked',
+  'agent-stop': 'Agent Stop Clicked',
+  'agent-suggestion': 'Agent Suggestion Clicked',
+  'agent-attach': 'Agent Attach Clicked',
+  'agent-voice': 'Agent Voice Clicked',
+  'agent-settings': 'Agent Settings Clicked',
+  'agent-open-new-tab': 'Agent Open In New Tab Clicked',
+  'agent-close': 'Agent Close Clicked',
+  'agent-sidebar-close': 'Agent Sidebar Close Clicked',
+  'agent-sidebar-open': 'Agent Sidebar Open Clicked',
+  'agent-back': 'Agent Back Clicked',
+  'agent-tab-agents': 'Agent Agents Tab Clicked',
+  'agent-tab-automations': 'Agent Automations Tab Clicked',
+  'agent-model-picker': 'Agent Model Picker Clicked',
+  'agent-project-picker': 'Agent Project Picker Clicked',
+  'agent-manage-models': 'Agent Manage Models Clicked',
+  'agent-mcp-connect': 'Agent MCP Connect Clicked',
+  'agent-mcp-disconnect': 'Agent MCP Disconnect Clicked',
+  'agent-copy-message': 'Agent Copy Message Clicked',
+  'agent-speak-message': 'Agent Speak Message Clicked',
+  'agent-thumbs-up': 'Agent Thumbs Up Clicked',
+  'agent-thumbs-down': 'Agent Thumbs Down Clicked',
+  'agent-retry': 'Agent Retry Clicked',
+  'agent-edit-resend': 'Agent Edit Resend Clicked',
 
   // Marketing page CTAs
   'marketing-get-started': 'Marketing Get Started Clicked',
@@ -49,6 +85,7 @@ export const ANALYTICS_ACTIONS = {
   'startups-apply-now': 'Startups Apply Now Clicked',
   'startups-form-submit': 'Startups Form Submit Clicked',
   'partners-form-submit': 'Partners Form Submit Clicked',
+  'affiliates-join': 'Affiliates Join Clicked',
   'init-claim-ticket': 'Init Claim Ticket Clicked',
 
   // Pricing page CTAs
@@ -136,6 +173,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-domains': 'Marketing Product Domains Clicked',
   'marketing-product-firewall': 'Marketing Product Firewall Clicked',
   'marketing-product-advisor': 'Marketing Product Advisor Clicked',
+  'marketing-product-agent': 'Marketing Product Agent Clicked',
 
   // Docs nav
   'docs-audience-developers': 'Docs Audience Developers Clicked',
@@ -223,6 +261,7 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   domains: 'marketing-product-domains',
   firewall: 'marketing-product-firewall',
   advisor: 'marketing-product-advisor',
+  agent: 'marketing-product-agent',
 }
 
 const ORG_TAB_ACTIONS: Record<string, AnalyticsActionId> = {

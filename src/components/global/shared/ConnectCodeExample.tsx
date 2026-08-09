@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   CodeBlock,
   getCodeLanguageLabel,
@@ -8,6 +8,7 @@ import {
   type CodeBlockLanguage,
 } from '@/components/global/shared/CodeBlock'
 import { CodeSnippetCopyButton } from '@/components/global/shared/CodeSnippetCopyButton'
+import { HorizontalScrollFade } from '@/components/global/shared/HorizontalScrollFade'
 import {
   Select,
   SelectContent,
@@ -25,6 +26,8 @@ const CODE_EXAMPLE_HEADER_LABEL_CLASS =
 export type ConnectCodeExampleTab = {
   id: string
   label: string
+  /** Optional leading icon (e.g. MCP tool logos). */
+  icon?: ReactNode
 }
 
 type ConnectCodePanelProps = {
@@ -72,6 +75,8 @@ type ConnectCodeExampleProps = {
   onTabChange?: (id: string) => void
   /** How to switch between multiple snippets. Docs multicode uses `dropdown`. */
   selectorVariant?: 'tabs' | 'dropdown'
+  /** Accessible name for the file/language selector. */
+  selectorAriaLabel?: string
   fixedHeight?: string
   className?: string
   /** Extra toolbar actions rendered before the copy button (e.g. Open in SQL editor). */
@@ -88,6 +93,7 @@ export function ConnectCodeExample({
   activeTabId,
   onTabChange,
   selectorVariant = 'tabs',
+  selectorAriaLabel,
   fixedHeight,
   className,
   actions,
@@ -97,6 +103,22 @@ export function ConnectCodeExample({
   const displayCode = normalizeCodeBlockContent(code)
   const showSelector = Boolean(tabs && tabs.length > 1)
   const selectedTabId = activeTabId ?? tabs?.[0]?.id
+  const [copiedTabIds, setCopiedTabIds] = useState(() => new Set<string>())
+  const tabsKey = tabs?.map((tab) => `${tab.id}:${tab.label}`).join('|') ?? ''
+
+  useEffect(() => {
+    setCopiedTabIds(new Set())
+  }, [tabsKey])
+
+  const markActiveTabCopied = () => {
+    if (!selectedTabId) return
+    setCopiedTabIds((prev) => {
+      if (prev.has(selectedTabId)) return prev
+      const next = new Set(prev)
+      next.add(selectedTabId)
+      return next
+    })
+  }
 
   return (
     <div
@@ -124,7 +146,7 @@ export function ConnectCodeExample({
                   CODE_EXAMPLE_HEADER_LABEL_CLASS,
                   'min-w-[9rem] max-w-full bg-transparent hover:bg-transparent dark:bg-transparent dark:hover:bg-transparent',
                 )}
-                aria-label={t('Code language')}
+                aria-label={selectorAriaLabel ?? t('Code language')}
               >
                 <SelectValue />
               </SelectTrigger>
@@ -141,23 +163,45 @@ export function ConnectCodeExample({
               </SelectContent>
             </Select>
           ) : showSelector ? (
-            <div className="flex flex-wrap gap-1.5">
-              {tabs!.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => onTabChange?.(tab.id)}
-                  className={cn(
-                    'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                    activeTabId === tab.id
-                      ? 'bg-muted text-foreground'
-                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            <HorizontalScrollFade
+              className="min-w-0"
+              viewportClassName="flex gap-1.5"
+              fadeFromClassName="from-background"
+            >
+              <div
+                role="tablist"
+                aria-label={selectorAriaLabel ?? t('Select file')}
+                className="flex w-max gap-1.5"
+              >
+                {tabs!.map((tab) => {
+                  const isCopied = copiedTabIds.has(tab.id)
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selectedTabId === tab.id}
+                      title={
+                        isCopied
+                          ? `${tab.label} (${t('Copied')})`
+                          : tab.label
+                      }
+                      onClick={() => onTabChange?.(tab.id)}
+                      className={cn(
+                        'cursor-pointer inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-[color,background-color,opacity]',
+                        selectedTabId === tab.id
+                          ? 'bg-muted text-foreground'
+                          : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
+                        isCopied && 'opacity-40',
+                      )}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </HorizontalScrollFade>
           ) : (
             <span className={CODE_EXAMPLE_HEADER_LABEL_CLASS}>
               {getCodeLanguageLabel(language)}
@@ -166,7 +210,10 @@ export function ConnectCodeExample({
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {actions}
-          <CodeSnippetCopyButton content={displayCode} />
+          <CodeSnippetCopyButton
+            content={displayCode}
+            onCopied={markActiveTabCopied}
+          />
         </div>
       </div>
       <ConnectCodePanel

@@ -8,6 +8,10 @@ import {
   useContext,
 } from 'react'
 import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
+import {
   useParams,
   Link,
   useNavigate,
@@ -96,6 +100,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
+import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
 import { proxyRuleServesActiveDeployment } from '@/lib/utils/proxy-domains'
 import {
   useProjectSite,
@@ -115,6 +120,7 @@ import {
   SITE_SCREENSHOT_CARD_WIDTH,
   SITE_SCREENSHOT_CARD_HEIGHT,
 } from '@/lib/sites/screenshot-preview-sizes'
+import { mergeActiveDeploymentForCard } from '@/lib/sites/deployment-screenshots'
 import { DeploymentDownloadType, ImageFormat } from '@appwrite.io/console'
 import { useAvifSupport } from '@/lib/avif-support'
 import { toast } from 'sonner'
@@ -146,16 +152,14 @@ const DEPLOYMENTS_SELECT = [
     'providerCommitUrl',
     'providerCommitAuthor',
     'providerCommitAuthorUrl',
+    'screenshotDark',
+    'screenshotLight',
     '$createdAt',
   ]),
 ]
 
-function formatSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1000
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
+function formatSize(bytes: number | bigint): string {
+  return formatDecimalBytes(bytes)
 }
 
 function formatDuration(seconds: number): string {
@@ -177,6 +181,10 @@ function detectVcsProvider(
     }
     if (url.includes('gitlab.com')) {
       const { label, Icon } = getVcsProvider('gitlab')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
+      const { label, Icon } = getVcsProvider('bitbucket')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -480,15 +488,12 @@ export function View() {
     activeDeploymentResolved != null &&
     isDeploymentInProgress(activeDeploymentResolved.status)
 
-  // Merge list/hook so status/buildDuration update from realtime list while hook keeps fields
-  // omitted from DEPLOYMENTS_SELECT (e.g. screenshots).
-  const activeDeploymentForCard = useMemo((): Models.Deployment | undefined => {
-    const resolved = activeDeploymentResolved
-    if (!resolved) return undefined
-    const fromHook = activeDeployment
-    if (fromHook?.$id !== resolved.$id) return resolved
-    return { ...fromHook, ...resolved }
-  }, [activeDeployment, activeDeploymentResolved])
+  // Merge list/hook so status/buildDuration update from realtime list while hook keeps
+  // screenshot fields when the list row is missing or has empty screenshot IDs.
+  const activeDeploymentForCard = useMemo(
+    () => mergeActiveDeploymentForCard(activeDeployment, activeDeploymentResolved),
+    [activeDeployment, activeDeploymentResolved],
+  )
 
   const handleDownloadSource = () => {
     if (!projectId || !siteId || !activeDeploymentResolved) return
@@ -666,7 +671,6 @@ export function View() {
           : `${t('Successfully deleted')} ${selectedDeployments.size} ${t('deployments')}`,
       )
       setSelectedDeployments(new Set())
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete deployments'))
@@ -680,7 +684,11 @@ export function View() {
 
   const confirmBulkDelete = () => {
     if (selectedDeployments.size === 0) return
-    bulkDeleteMutation.mutate(Array.from(selectedDeployments))
+    const ids = Array.from(selectedDeployments)
+    closeDialogBeforeOverlayUnmount(() => {
+      setDeleteDialogOpen(false)
+    })
+    bulkDeleteMutation.mutate(ids)
   }
 
   const toggleDeployment = (deploymentId: string) => {
@@ -1977,12 +1985,12 @@ export function View() {
                                     deploymentData.status,
                                   ) && (
                                     <DropdownMenuItem
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        setCancelTargetDeploymentId(
-                                          deploymentData.$id,
-                                        )
-                                        setCancelBuildDialogOpen(true)
+                                      onSelect={() => {
+                                        const id = deploymentData.$id
+                                        openDialogAfterOverlayCloses(() => {
+                                          setCancelTargetDeploymentId(id)
+                                          setCancelBuildDialogOpen(true)
+                                        })
                                       }}
                                     >
                                       <MenuItemContent icon={XCircle}>

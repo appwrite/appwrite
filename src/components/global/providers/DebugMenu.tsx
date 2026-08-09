@@ -23,7 +23,7 @@ import {
   CalendarDays,
   Ticket,
   Boxes,
-  Keyboard,
+  Monitor,
   Terminal,
   History,
   Search,
@@ -33,6 +33,13 @@ import {
   MessageSquareQuote,
   Variable,
   Mail,
+  Code2,
+  KeyRound,
+  ShieldCheck,
+  Folder,
+  MonitorSmartphone,
+  ExternalLink,
+  Link2,
 } from 'lucide-react'
 import {
   Popover,
@@ -58,7 +65,6 @@ import {
   subscribeToDebugOverrides,
   type DebugOverrides,
   type FeatureFlagsMenuDebugKey,
-  type KeyboardLayoutOverride,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
 import {
@@ -66,7 +72,12 @@ import {
   OVERVIEW_CHART_TAB_DISABLE_KEYS,
   OVERVIEW_CHART_TAB_LABELS,
 } from '@/lib/overview-chart-tabs'
-import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
+import {
+  detectUserOs,
+  getUserOsLabel,
+  USER_OS_LABELS,
+  type UserOsOverride,
+} from '@/lib/user-os'
 import { formatInitMockCurrentDay } from '@/lib/init/mock-current-day'
 import { formatInitMockTicketType } from '@/lib/init/ticket-types'
 import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
@@ -77,6 +88,8 @@ import {
   resetDebugProfileFeatureOverrides,
   resetDebugProfileFeatureOverride,
   getCanonicalProfileFeatures,
+  getEnvProfileId,
+  hasDebugProfileOverride,
   CONSOLE_PROFILES,
   CONSOLE_PROFILE_FEATURE_LABELS,
 } from '@/lib/console-profiles'
@@ -86,6 +99,14 @@ import {
   type EndpointPresetId,
 } from '@/lib/debug-endpoint'
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
+import {
+  getEnvMcpEndpointUrl,
+  setDebugMcpEndpointOverride,
+  MCP_ENDPOINT_PRESETS,
+  type McpEndpointPresetId,
+} from '@/lib/debug-mcp-endpoint'
+import { useDebugMcpEndpoint } from '@/hooks/use-debug-mcp-endpoint'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-layer'
@@ -116,6 +137,18 @@ import {
   type DebugMenuPosition,
 } from '@/lib/debug-menu-position'
 import { getEnglishCatalog } from '@/lib/i18n'
+import { sendSentryDebugTestError } from '@/lib/sentry/init-client'
+import {
+  COMMUNITY_SUPPORT_REMINDER_MS,
+  COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
+} from '@/lib/community/support-prompt'
+import { toast } from 'sonner'
+
+const COMMUNITY_SUPPORT_REMINDER_DAYS = Math.round(
+  COMMUNITY_SUPPORT_REMINDER_MS / (24 * 60 * 60 * 1000),
+)
+/** Debug-only cadence note for the community support wizard. */
+const COMMUNITY_SUPPORT_WIZARD_CADENCE = `Shows the "A note from the team" wizard after ${COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD} unique console days, then again every ~${COMMUNITY_SUPPORT_REMINDER_DAYS} days until the user picks an action.`
 
 const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
 /** Debug menu stays English + LTR regardless of app language (developer tooling). */
@@ -168,6 +201,8 @@ interface MenuItem {
   onResetToDefault?: () => void
   description?: string
   submenu?: MenuItem[]
+  /** Optional note shown at the top of this item's submenu list. */
+  submenuNote?: string
   /** Opens the profile comparison table instead of a submenu list. */
   submenuVariant?:
     | 'profileComparison'
@@ -204,17 +239,26 @@ function isFeatureFlagOverridden(item: MenuItem): boolean {
   )
 }
 
+function matchesMenuItemSearch(item: MenuItem, query: string): boolean {
+  const trimmed = query.trim()
+  if (!trimmed) return true
+
+  const q = trimmed.toLowerCase()
+  if (item.label.toLowerCase().includes(q)) return true
+  if (item.description?.toLowerCase().includes(q)) return true
+  if (item.category?.toLowerCase().includes(q)) return true
+  if (item.submenu?.some((child) => matchesMenuItemSearch(child, query))) {
+    return true
+  }
+  return false
+}
+
 function matchesFeatureFlagSearch(item: MenuItem, query: string): boolean {
   const trimmed = query.trim()
   if (!trimmed) return true
   if (item.label === 'Reset all feature flags') return true
 
-  const q = trimmed.toLowerCase()
-  return (
-    item.label.toLowerCase().includes(q) ||
-    (item.description?.toLowerCase().includes(q) ?? false) ||
-    (item.category?.toLowerCase().includes(q) ?? false)
-  )
+  return matchesMenuItemSearch(item, query)
 }
 
 function filterFeatureFlagMenuItems(
@@ -223,6 +267,19 @@ function filterFeatureFlagMenuItems(
 ): MenuItem[] {
   if (!query.trim()) return items
   return items.filter((item) => matchesFeatureFlagSearch(item, query))
+}
+
+function filterMenuSections(
+  sections: MenuSection[],
+  query: string,
+): MenuSection[] {
+  if (!query.trim()) return sections
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => matchesMenuItemSearch(item, query)),
+    }))
+    .filter((section) => section.items.length > 0)
 }
 
 function groupFeatureFlagMenuItems(items: MenuItem[]): Array<{
@@ -258,13 +315,33 @@ function groupFeatureFlagMenuItems(items: MenuItem[]): Array<{
   return groups
 }
 
-function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
+function DebugMenuSwitchRow({
+  item,
+  id,
+  highlighted = false,
+  navIndex,
+  onHighlight,
+}: {
+  item: MenuItem
+  id?: string
+  highlighted?: boolean
+  navIndex?: number
+  onHighlight?: () => void
+}) {
   const showReset = isFeatureFlagOverridden(item)
 
   return (
     <div
+      id={id}
+      role="option"
+      aria-selected={highlighted}
+      data-debug-nav-index={navIndex}
+      onMouseEnter={onHighlight}
       className={cn(
-        'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',
+        'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors',
+        highlighted
+          ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
+          : 'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',
         item.disabled && 'opacity-50',
         item.rowClassName,
       )}
@@ -281,7 +358,7 @@ function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
           )}
         </div>
         {item.description && (
-          <div className="mt-0.5 text-[11px] text-[var(--network-globe-edge)]/80">
+          <div className="mt-0.5 whitespace-pre-line text-[11px] text-[var(--network-globe-edge)]/80">
             {item.description}
           </div>
         )}
@@ -295,6 +372,7 @@ function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
                 onClick={() => item.onResetToDefault?.()}
                 className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--network-globe-edge)]/80 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_15%,transparent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
                 aria-label={`Reset ${item.label} to default`}
+                tabIndex={-1}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
               </button>
@@ -307,9 +385,32 @@ function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
           onCheckedChange={item.switchOnChange}
           disabled={item.disabled}
           className="flex-shrink-0"
+          tabIndex={-1}
         />
       </div>
     </div>
+  )
+}
+
+function debugMenuItemRowClassName({
+  disabled,
+  active,
+  highlighted,
+  rowClassName,
+}: {
+  disabled?: boolean
+  active?: boolean
+  highlighted?: boolean
+  rowClassName?: string
+}) {
+  return cn(
+    'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40',
+    disabled
+      ? 'cursor-not-allowed opacity-50'
+      : highlighted || active
+        ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
+        : 'text-foreground/90 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground',
+    rowClassName,
   )
 }
 
@@ -319,6 +420,12 @@ function renderDebugSubmenuItemRow(
   keyPrefix: string,
   nestedSubmenuParentKey: string | null,
   setActiveSubmenu: (key: string | null) => void,
+  options?: {
+    id?: string
+    highlighted?: boolean
+    navIndex?: number
+    onHighlight?: () => void
+  },
 ) {
   const nestedSubmenuKey = nestedSubmenuParentKey
     ? `${nestedSubmenuParentKey}-${item.label}`
@@ -327,13 +434,28 @@ function renderDebugSubmenuItemRow(
   const key = `${keyPrefix}-${itemIndex}`
 
   if (item.variant === 'switch') {
-    return <DebugMenuSwitchRow key={key} item={item} />
+    return (
+      <DebugMenuSwitchRow
+        key={key}
+        item={item}
+        id={options?.id}
+        highlighted={options?.highlighted}
+        navIndex={options?.navIndex}
+        onHighlight={options?.onHighlight}
+      />
+    )
   }
 
   return (
     <button
       key={key}
+      id={options?.id}
       type="button"
+      role="option"
+      aria-selected={options?.highlighted ?? false}
+      data-debug-nav-index={options?.navIndex}
+      tabIndex={-1}
+      onMouseEnter={options?.onHighlight}
       onClick={() => {
         if (hasNestedSubmenu && nestedSubmenuKey) {
           setActiveSubmenu(nestedSubmenuKey)
@@ -342,13 +464,12 @@ function renderDebugSubmenuItemRow(
         }
       }}
       disabled={item.disabled}
-      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40 ${
-        item.disabled
-          ? 'cursor-not-allowed opacity-50'
-          : item.active
-            ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
-            : 'text-foreground/90 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground'
-      } ${item.rowClassName ?? ''}`}
+      className={debugMenuItemRowClassName({
+        disabled: item.disabled,
+        active: item.active,
+        highlighted: options?.highlighted,
+        rowClassName: item.rowClassName,
+      })}
     >
       {item.icon && (
         <span className="flex-shrink-0 text-[var(--network-globe-edge)]">{item.icon}</span>
@@ -356,7 +477,10 @@ function renderDebugSubmenuItemRow(
       <span className="flex-1">
         <span className="block font-medium">{item.label}</span>
         {item.description && (
-          <span className="mt-0.5 block text-[11px] font-normal opacity-80">
+          <span
+            className="mt-0.5 block whitespace-pre-line break-all text-[11px] font-normal opacity-80"
+            title={item.description}
+          >
             {item.description}
           </span>
         )}
@@ -370,6 +494,29 @@ function renderDebugSubmenuItemRow(
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-[var(--network-globe-edge)]/60" />
       )}
     </button>
+  )
+}
+
+type DebugNavigableEntry = {
+  id: string
+  item: MenuItem
+  /** Key used when opening this item's submenu. */
+  submenuKey: string | null
+}
+
+function isDebugPanelSubmenuVariant(
+  variant: MenuItem['submenuVariant'] | undefined,
+): boolean {
+  return (
+    variant === 'profileComparison' ||
+    variant === 'communityShareExamples' ||
+    variant === 'prefsDebug' ||
+    variant === 'initDayMock' ||
+    variant === 'initTicketMock' ||
+    variant === 'seedResources' ||
+    variant === 'terminalSettings' ||
+    variant === 'recentResources' ||
+    variant === 'envStatus'
   )
 }
 
@@ -433,6 +580,8 @@ type ResolvedSubmenu = {
   /** Menu key to return to on back; null opens the root debug list. */
   parentSubmenuKey: string | null
   submenuVariant?: MenuItem['submenuVariant']
+  /** Optional note shown above the submenu item list. */
+  note?: string
 }
 
 function menuItemHasSubmenu(item: MenuItem): boolean {
@@ -473,6 +622,7 @@ function resolveMenuItemSubmenu(
         items: item.submenu,
         parentSection: sectionTitle,
         parentSubmenuKey,
+        note: item.submenuNote,
       }
     }
   }
@@ -658,7 +808,7 @@ function TableCell({ className, ...props }: ComponentProps<'td'>) {
 }
 
 export function DebugMenu({ actions = [] }: DebugMenuProps) {
-  const { isDebugModeOpen: isVisible } = useDebugMode()
+  const { isDebugModeOpen: isVisible, closeDebugMode } = useDebugMode()
   const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(false)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
@@ -667,11 +817,26 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const [currentFavicon, setCurrentFavicon] = useState<string | null>(null)
   const { theme, setTheme } = useTheme()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
+  const [menuSearch, setMenuSearch] = useState('')
   const [featureFlagsSearch, setFeatureFlagsSearch] = useState('')
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const menuListRef = useRef<HTMLDivElement>(null)
   const languageCopy = DEBUG_MENU_LANGUAGE_COPY
   const { profileId, features } = useConsoleProfile()
-  const { preset: endpointPreset, customUrl: endpointCustomUrl } =
-    useDebugEndpoint()
+  const {
+    preset: endpointPreset,
+    customUrl: endpointCustomUrl,
+    effectiveUrl: endpointEffectiveUrl,
+    envUrl: endpointEnvUrl,
+  } = useDebugEndpoint()
+  const {
+    preset: mcpEndpointPreset,
+    customUrl: mcpEndpointCustomUrl,
+    effectiveUrl: mcpEndpointEffectiveUrl,
+  } = useDebugMcpEndpoint()
+  const profileFromOverride = hasDebugProfileOverride()
+  const envProfileId = getEnvProfileId()
   const navigate = useNavigate()
   const initLowPowerDecision = useInitLowPowerAnimationDecision()
   const [position, setPosition] = useState<DebugMenuPosition>(() =>
@@ -825,11 +990,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     return () => clearInterval(interval)
   }, [getCurrentFavicon, isOpen])
 
-  // Reset submenu when popover closes
+  // Reset submenu and search when popover closes
   useEffect(() => {
     if (!isOpen) {
       setActiveSubmenu(null)
+      setMenuSearch('')
       setFeatureFlagsSearch('')
+      setHighlightedIndex(-1)
     }
   }, [isOpen])
 
@@ -857,44 +1024,48 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Palette className="h-3 w-3" />,
     }))
 
-    const keyboardLayoutDescription =
-      overrides.keyboardLayout === 'auto'
-        ? `Auto (${isMacPlatform() ? 'macOS' : 'Windows'})`
-        : overrides.keyboardLayout === 'macos'
-          ? 'macOS layout'
-          : 'Windows layout'
+    const detectedOs = detectUserOs()
+    const userOsDescription =
+      overrides.userOs === 'auto'
+        ? `Auto (${getUserOsLabel(detectedOs)})`
+        : USER_OS_LABELS[overrides.userOs]
 
-    const keyboardLayoutOptions: MenuItem[] = (
+    const userOsOptions: MenuItem[] = (
       [
         {
           label: 'Auto',
           value: 'auto' as const,
-          description: 'Detect from device',
+          description: `Detect from device (${getUserOsLabel(detectedOs)})`,
         },
         {
-          label: 'macOS layout',
+          label: 'macOS',
           value: 'macos' as const,
-          description: 'Show macOS keyboard and ⌘ shortcuts',
+          description: 'macOS UI defaults and ⌘ shortcuts',
         },
         {
-          label: 'Windows layout',
+          label: 'Windows',
           value: 'windows' as const,
-          description: 'Show Windows keyboard and Ctrl shortcuts',
+          description: 'Windows UI defaults and Ctrl shortcuts',
+        },
+        {
+          label: 'Linux',
+          value: 'linux' as const,
+          description: 'Linux UI defaults and Ctrl shortcuts',
         },
       ] satisfies ReadonlyArray<{
         label: string
-        value: KeyboardLayoutOverride
+        value: UserOsOverride
         description: string
       }>
     ).map((option) => ({
       label: option.label,
       description: option.description,
       onClick: () => {
-        setOverrides((prev) => ({ ...prev, keyboardLayout: option.value }))
-        setDebugOverride('keyboardLayout', option.value)
+        setOverrides((prev) => ({ ...prev, userOs: option.value }))
+        setDebugOverride('userOs', option.value)
       },
-      active: overrides.keyboardLayout === option.value,
-      icon: <Keyboard className="h-3 w-3" />,
+      active: overrides.userOs === option.value,
+      icon: <Monitor className="h-3 w-3" />,
     }))
 
     const pageDirectionDescription =
@@ -975,21 +1146,34 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Languages className="h-3 w-3" />,
     }))
 
-    const activeEndpointLabel = !endpointPreset
-      ? 'Use env var'
-      : endpointPreset === 'custom' && endpointCustomUrl
-        ? `Custom: ${endpointCustomUrl.replace(/\/v1\/?$/, '')}`
-        : endpointPreset !== 'custom' &&
-            ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
-          ? ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
-              .label
-          : endpointPreset
+    const activeEndpointUrl = endpointEffectiveUrl ?? endpointEnvUrl ?? '—'
+    const activeEndpointBadge = !endpointPreset
+      ? 'Env'
+      : endpointPreset === 'custom'
+        ? 'Custom'
+        : ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
+            ?.label ?? endpointPreset
+
+    const activeMcpEndpointUrl = mcpEndpointEffectiveUrl || getEnvMcpEndpointUrl()
+    const activeMcpEndpointBadge = !mcpEndpointPreset
+      ? 'Env'
+      : mcpEndpointPreset === 'custom'
+        ? 'Custom'
+        : MCP_ENDPOINT_PRESETS[
+            mcpEndpointPreset as keyof typeof MCP_ENDPOINT_PRESETS
+          ]?.label ?? mcpEndpointPreset
+
+    const activeProfileLabel = CONSOLE_PROFILES[profileId].label
+    const activeProfileBadge = profileFromOverride ? 'Override' : 'Env'
+    const activeProfileDescription = profileFromOverride
+      ? `${activeProfileLabel} (debug override)`
+      : `${activeProfileLabel} (VITE_CONSOLE_PROFILE → ${CONSOLE_PROFILES[envProfileId].label})`
 
     const profileOptions: MenuItem[] = [
       {
         label: 'Cloud',
         description: CONSOLE_PROFILES.cloud.description,
-        active: profileId === 'cloud',
+        active: profileFromOverride && profileId === 'cloud',
         icon: <Cloud className="h-3 w-3" />,
         onClick: () => {
           applyOverrideAndGoHome(() => setDebugProfileOverride('cloud'))
@@ -998,7 +1182,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       {
         label: 'Self-hosted',
         description: CONSOLE_PROFILES['self-hosted'].description,
-        active: profileId === 'self-hosted',
+        active: profileFromOverride && profileId === 'self-hosted',
         icon: <Server className="h-3 w-3" />,
         onClick: () => {
           applyOverrideAndGoHome(() =>
@@ -1008,7 +1192,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       },
       {
         label: 'Use env var',
-        description: 'Reset to VITE_CONSOLE_PROFILE',
+        description: `Current env: ${CONSOLE_PROFILES[envProfileId].label}`,
+        active: !profileFromOverride,
         onClick: () => {
           applyOverrideAndGoHome(() => setDebugProfileOverride(null))
         },
@@ -1019,12 +1204,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         description: 'Canonical Cloud vs self-hosted feature flags',
         icon: <Columns2 className="h-3 w-3" />,
         submenuVariant: 'profileComparison',
-      },
-      {
-        label: 'Community support X examples',
-        description: 'Review all Cloud and self-hosted share drafts',
-        icon: <MessageSquareQuote className="h-3 w-3" />,
-        submenuVariant: 'communityShareExamples',
       },
     ]
 
@@ -1177,10 +1356,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenu: faviconOptions,
           },
           {
-            label: 'Keyboard layout',
-            description: keyboardLayoutDescription,
-            icon: <Keyboard className="h-3 w-3" />,
-            submenu: keyboardLayoutOptions,
+            label: 'Operating system',
+            description: userOsDescription,
+            icon: <Monitor className="h-3 w-3" />,
+            submenu: userOsOptions,
           },
           {
             label: 'Page direction',
@@ -1196,7 +1375,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Demos',
-            description: 'Preview alerts, banners, loaders, and pages.',
+            description: 'Preview alerts, banners, loaders, OAuth2, and pages.',
             icon: <Bug className="h-3 w-3" />,
             submenu: [
               {
@@ -1337,6 +1516,28 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 icon: <Bug className="h-3 w-3" />,
               },
               {
+                label: 'Test Sentry',
+                description: 'Force-init and send a test exception.',
+                onClick: () => {
+                  setIsOpen(false)
+                  void (async () => {
+                    const result = await sendSentryDebugTestError()
+                    if (result.ok) {
+                      toast.success(
+                        `Sentry test flushed (${result.eventId}). Check Issues filtered to environment "development".`,
+                      )
+                      return
+                    }
+                    toast.error(
+                      result.eventId
+                        ? `${result.reason} Event: ${result.eventId}`
+                        : result.reason,
+                    )
+                  })()
+                },
+                icon: <AlertTriangle className="h-3 w-3" />,
+              },
+              {
                 label: 'Org setup',
                 description: 'Preview organization creation progress.',
                 onClick: () => {
@@ -1355,20 +1556,254 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 icon: <Mail className="h-3 w-3" />,
               },
               {
-                label: 'Community support',
-                description: overrides.previewCommunitySupportWizard
-                  ? 'Previewing'
-                  : 'Force-show the wizard',
-                active: overrides.previewCommunitySupportWizard,
+                label: 'OAuth2',
+                description: 'Preview consent, device, outcome, and relay screens.',
+                icon: <KeyRound className="h-3 w-3" />,
+                submenu: [
+                  {
+                    label: 'All screens',
+                    description: 'Open the OAuth2 preview with a screen picker.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'consent' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <KeyRound className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Consent',
+                    description: 'Standard authorization consent.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'consent' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <ShieldCheck className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Consent (MCP)',
+                    description: 'MCP grant with scope narrowing.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'consent-mcp' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <McpIcon className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Consent (resources)',
+                    description: 'Project and organization resource pickers.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'consent-resources' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Folder className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Device code',
+                    description: 'Enter a device authorization code.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'device-enter-code' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <MonitorSmartphone className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Device confirm',
+                    description: 'Confirm a prefilled device code.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'device-confirm-code' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <MonitorSmartphone className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Device consent',
+                    description: 'Device-flow consent screen.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'device-consent' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <ShieldCheck className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Access granted',
+                    description: 'Authorization approved outcome.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'outcome-approved' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Check className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Device connected',
+                    description: 'Device-flow approved outcome.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'outcome-approved-device' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Check className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Access granted (deep link)',
+                    description: 'Approved with native deep-link retry.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'outcome-approved-deeplink' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <ExternalLink className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Request cancelled',
+                    description: 'Denied / cancelled outcome.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'outcome-denied' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <X className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Authorization failed',
+                    description: 'Invalid or expired request error.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'error' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <AlertTriangle className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Loading',
+                    description: 'Consent / device loading spinner.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'loading' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Loader2 className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Relay success',
+                    description: 'Native OAuth callback success.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'relay-success' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Check className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Relay failure',
+                    description: 'Native OAuth callback failure.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'relay-failure' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <AlertTriangle className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Relay missing URL',
+                    description: 'Missing project redirect URL.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'relay-missing' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Link2 className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Relay error',
+                    description: 'OAuth error payload without project.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'relay-error' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <AlertTriangle className="h-3 w-3" />,
+                  },
+                ],
+              },
+              {
+                label: 'Functions editor',
+                description: 'Preview the Functions local editor.',
                 onClick: () => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    previewCommunitySupportWizard: true,
-                  }))
-                  setDebugOverride('previewCommunitySupportWizard', true)
+                  navigate({ to: '/debug/code-editor-preview' })
                   setIsOpen(false)
                 },
+                icon: <Code2 className="h-3 w-3" />,
+              },
+              {
+                label: 'Community support',
+                description: 'Wizard preview and X share examples',
                 icon: <HeartHandshake className="h-3 w-3" />,
+                submenuNote: COMMUNITY_SUPPORT_WIZARD_CADENCE,
+                submenu: [
+                  {
+                    label: 'Preview wizard',
+                    description: overrides.previewCommunitySupportWizard
+                      ? 'Previewing'
+                      : 'Force-show the fullscreen wizard',
+                    active: overrides.previewCommunitySupportWizard,
+                    onClick: () => {
+                      setOverrides((prev) => ({
+                        ...prev,
+                        previewCommunitySupportWizard: true,
+                      }))
+                      setDebugOverride('previewCommunitySupportWizard', true)
+                      setIsOpen(false)
+                    },
+                    icon: <HeartHandshake className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'X share examples',
+                    description: 'Review all Cloud and self-hosted share drafts',
+                    icon: <MessageSquareQuote className="h-3 w-3" />,
+                    submenuVariant: 'communityShareExamples',
+                  },
+                ],
               },
             ],
           },
@@ -1404,7 +1839,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Seed',
-            description: 'Create mock projects, DBs, buckets, and domains.',
+            description: 'Create mock agent models, memories, projects, and more.',
             icon: <Boxes className="h-3 w-3" />,
             submenuVariant: 'seedResources',
           },
@@ -1480,6 +1915,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
+                'Cookie banner',
+                'Show the locale-gated cookie consent banner and footer cookie settings.',
+                'cookieBanner',
+                profileId,
+                features.cookieBanner,
+                { category: 'Auth & security' },
+              ),
+              createProfileFeatureFlagItem(
                 'Firewall',
                 'Show the project Firewall section, routes, rules, analytics, and logs.',
                 'firewall',
@@ -1517,12 +1960,28 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Organization' },
               ),
               createProfileFeatureFlagItem(
+                'Blog drafts',
+                'List draft blog posts above "Explore by topic" and open draft post pages (noindex).',
+                'blogDrafts',
+                profileId,
+                features.blogDrafts,
+                { category: 'Docs' },
+              ),
+              createProfileFeatureFlagItem(
                 'Partners docs',
                 'Partner documentation hub, audience switcher, and /docs/partners routes.',
                 'partnersDocs',
                 profileId,
                 features.partnersDocs,
                 { category: 'Docs' },
+              ),
+              createProfileFeatureFlagItem(
+                'Agent',
+                'In-app AI agent chat, header button, /agent routes, and Agent docs.',
+                'agent',
+                profileId,
+                features.agent,
+                { category: 'UI & tools' },
               ),
               createProfileFeatureFlagItem(
                 'Organization marketplace',
@@ -1551,21 +2010,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
                 undefined,
                 'Usage & analytics',
-              ),
-              createDebugFeatureFlagItem(
-                'AI assistant',
-                'In-app AI assistant chat panel and header button.',
-                'showAIAssistant',
-                overrides.showAIAssistant,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    showAIAssistant: checked,
-                  }))
-                  setDebugOverride('showAIAssistant', checked)
-                },
-                undefined,
-                'UI & tools',
               ),
               createDebugFeatureFlagItem(
                 'Show native app bar',
@@ -1663,7 +2107,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ),
               createDebugFeatureFlagItem(
                 'Preview community support wizard',
-                'Force-show the skippable community support fullscreen wizard.',
+                `Force-show the skippable "A note from the team" wizard. ${COMMUNITY_SUPPORT_WIZARD_CADENCE}`,
                 'previewCommunitySupportWizard',
                 overrides.previewCommunitySupportWizard,
                 (checked) => {
@@ -1767,7 +2211,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         items: [
           {
             label: 'Console profile',
-            description: CONSOLE_PROFILES[profileId].description,
+            description: activeProfileDescription,
+            badge: activeProfileBadge,
             icon:
               profileId === 'cloud' ? (
                 <Cloud className="h-3 w-3" />
@@ -1783,9 +2228,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   Exclude<EndpointPresetId, 'custom'>,
                   (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS],
                 ][]
-              ).map(([id, { label, description }]) => ({
+              ).map(([id, { label, url, description }]) => ({
                 label,
-                description,
+                description: `${url} · ${description}`,
                 onClick: () => {
                   applyOverrideAndGoHome(() => setDebugEndpointOverride(id))
                 },
@@ -1794,13 +2239,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               })),
               {
                 label: 'Custom...',
-                description: 'Enter a custom API URL',
+                description:
+                  endpointPreset === 'custom' && endpointCustomUrl
+                    ? endpointCustomUrl
+                    : 'Enter a custom API URL',
                 onClick: () => {
                   const url = window.prompt(
                     'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
                     endpointPreset === 'custom' && endpointCustomUrl
                       ? endpointCustomUrl
-                      : 'http://localhost/v1',
+                      : activeEndpointUrl !== '—'
+                        ? activeEndpointUrl
+                        : 'http://localhost/v1',
                   )
                   if (url?.trim()) {
                     applyOverrideAndGoHome(() =>
@@ -1813,7 +2263,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               },
               {
                 label: 'Use env var',
-                description: 'Reset to VITE_APPWRITE_ENDPOINT',
+                description: endpointEnvUrl
+                  ? `VITE_APPWRITE_ENDPOINT → ${endpointEnvUrl}`
+                  : 'Reset to VITE_APPWRITE_ENDPOINT',
                 onClick: () => {
                   applyOverrideAndGoHome(() => setDebugEndpointOverride(null))
                 },
@@ -1823,9 +2275,68 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             ]
             return {
               label: 'Server endpoint',
-              description: `${activeEndpointLabel} (active)`,
+              description: activeEndpointUrl,
+              badge: activeEndpointBadge,
               icon: <Globe className="h-3 w-3" />,
               submenu: endpointOptions,
+            }
+          })(),
+          (() => {
+            const envMcpUrl = getEnvMcpEndpointUrl()
+            const mcpEndpointOptions: MenuItem[] = [
+              ...(
+                Object.entries(MCP_ENDPOINT_PRESETS) as [
+                  Exclude<McpEndpointPresetId, 'custom'>,
+                  (typeof MCP_ENDPOINT_PRESETS)[keyof typeof MCP_ENDPOINT_PRESETS],
+                ][]
+              ).map(([id, { label, url, description }]) => ({
+                label,
+                description: `${url} · ${description}`,
+                onClick: () => {
+                  setDebugMcpEndpointOverride(id)
+                  setIsOpen(false)
+                },
+                active: mcpEndpointPreset === id,
+                icon: <McpIcon className="h-3 w-3" />,
+              })),
+              {
+                label: 'Custom...',
+                description:
+                  mcpEndpointPreset === 'custom' && mcpEndpointCustomUrl
+                    ? mcpEndpointCustomUrl
+                    : 'Enter a custom MCP URL',
+                onClick: () => {
+                  const url = window.prompt(
+                    'Enter Appwrite MCP endpoint URL (e.g. http://localhost:8100/)',
+                    mcpEndpointPreset === 'custom' && mcpEndpointCustomUrl
+                      ? mcpEndpointCustomUrl
+                      : activeMcpEndpointUrl || 'http://localhost:8100/',
+                  )
+                  if (url?.trim()) {
+                    setDebugMcpEndpointOverride('custom', url.trim())
+                    setIsOpen(false)
+                  }
+                },
+                active: mcpEndpointPreset === 'custom',
+                icon: <McpIcon className="h-3 w-3" />,
+              },
+              {
+                label: 'Use env var',
+                description: `VITE_APPWRITE_MCP_URL → ${envMcpUrl}`,
+                onClick: () => {
+                  setDebugMcpEndpointOverride(null)
+                  setIsOpen(false)
+                },
+                active: !mcpEndpointPreset,
+                icon: <RotateCcw className="h-3 w-3" />,
+              },
+            ]
+            return {
+              label: 'MCP endpoint',
+              description: activeMcpEndpointUrl,
+              badge: activeMcpEndpointBadge,
+              icon: <McpIcon className="h-3 w-3" />,
+              submenu: mcpEndpointOptions,
             }
           })(),
         ],
@@ -1857,13 +2368,25 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.nativeDbsMySQL,
     features.nativeDbsMongo,
     features.userVerification,
+    features.cookieBanner,
+    features.blogDrafts,
     features.oauthApps,
     features.oauth2Server,
     features.orgApiKeys,
     features.marketplace,
+    features.partnersDocs,
+    features.agent,
+    features.firewall,
     features.init,
     endpointPreset,
     endpointCustomUrl,
+    endpointEffectiveUrl,
+    endpointEnvUrl,
+    mcpEndpointPreset,
+    mcpEndpointCustomUrl,
+    mcpEndpointEffectiveUrl,
+    profileFromOverride,
+    envProfileId,
     initLowPowerDecision,
     overrides,
     banners.length,
@@ -1883,7 +2406,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     [activeSubmenu, sections],
   )
 
+  const filteredSections = useMemo(
+    () => filterMenuSections(sections, menuSearch),
+    [sections, menuSearch],
+  )
+
   const isFeatureFlagsSubmenu = currentSubmenu?.title === 'Flags'
+  const isPanelSubmenu = isDebugPanelSubmenuVariant(
+    currentSubmenu?.submenuVariant,
+  )
+  const hasSearchField = !currentSubmenu || isFeatureFlagsSubmenu
 
   const filteredFeatureFlagItems = useMemo(() => {
     if (!isFeatureFlagsSubmenu || !currentSubmenu) return []
@@ -1895,11 +2427,244 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     return groupFeatureFlagMenuItems(filteredFeatureFlagItems)
   }, [filteredFeatureFlagItems, isFeatureFlagsSubmenu])
 
+  const navigableItems = useMemo((): DebugNavigableEntry[] => {
+    if (!currentSubmenu) {
+      return filteredSections.flatMap((section) =>
+        section.items.map((item) => ({
+          id: `root__${section.title}__${item.label}`,
+          item,
+          submenuKey: menuItemHasSubmenu(item)
+            ? `${section.title}-${item.label}`
+            : null,
+        })),
+      )
+    }
+
+    if (isPanelSubmenu) return []
+
+    if (isFeatureFlagsSubmenu) {
+      return filteredFeatureFlagItems.map((item) => ({
+        id: `flags__${item.category ?? 'general'}__${item.label}`,
+        item,
+        submenuKey: null,
+      }))
+    }
+
+    return currentSubmenu.items.map((item) => ({
+      id: `submenu__${activeSubmenu}__${item.label}`,
+      item,
+      submenuKey:
+        menuItemHasSubmenu(item) && activeSubmenu
+          ? `${activeSubmenu}-${item.label}`
+          : null,
+    }))
+  }, [
+    activeSubmenu,
+    currentSubmenu,
+    filteredFeatureFlagItems,
+    filteredSections,
+    isFeatureFlagsSubmenu,
+    isPanelSubmenu,
+  ])
+
+  const navigableIndexById = useMemo(() => {
+    const map = new Map<string, number>()
+    navigableItems.forEach((entry, index) => {
+      map.set(entry.id, index)
+    })
+    return map
+  }, [navigableItems])
+
+  const navigableIdsKey = useMemo(
+    () => navigableItems.map((entry) => entry.id).join('\0'),
+    [navigableItems],
+  )
+
   useEffect(() => {
     if (!isFeatureFlagsSubmenu) {
       setFeatureFlagsSearch('')
     }
   }, [isFeatureFlagsSubmenu])
+
+  useEffect(() => {
+    setHighlightedIndex(navigableItems.length > 0 ? 0 : -1)
+  }, [navigableIdsKey, navigableItems.length])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const frame = window.requestAnimationFrame(() => {
+      if (hasSearchField) {
+        searchInputRef.current?.focus()
+        return
+      }
+      if (!isPanelSubmenu) {
+        menuListRef.current?.focus()
+      }
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [isOpen, activeSubmenu, hasSearchField, isPanelSubmenu])
+
+  useEffect(() => {
+    if (highlightedIndex < 0) return
+    const root = menuListRef.current
+    if (!root) return
+    const el = root.querySelector<HTMLElement>(
+      `[data-debug-nav-index="${highlightedIndex}"]`,
+    )
+    el?.scrollIntoView({ block: 'nearest' })
+  }, [highlightedIndex, navigableIdsKey])
+
+  const activateNavigableEntry = useCallback(
+    (entry: DebugNavigableEntry) => {
+      const { item, submenuKey } = entry
+      if (item.disabled) return
+
+      if (item.variant === 'switch') {
+        item.switchOnChange?.(!item.switchValue)
+        return
+      }
+
+      if (submenuKey && menuItemHasSubmenu(item)) {
+        setActiveSubmenu(submenuKey)
+        return
+      }
+
+      item.onClick?.()
+    },
+    [],
+  )
+
+  const handleMenuKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const isEditableTarget =
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'INPUT' ||
+        Boolean(target?.isContentEditable)
+
+      // Panel UIs (prefs, env, etc.) keep native typing; Escape still navigates back.
+      if (
+        isPanelSubmenu &&
+        isEditableTarget &&
+        target !== searchInputRef.current &&
+        event.key !== 'Escape'
+      ) {
+        return
+      }
+
+      const moveHighlight = (delta: number) => {
+        if (navigableItems.length === 0) return
+        event.preventDefault()
+        setHighlightedIndex((prev) => {
+          const start = prev < 0 ? (delta > 0 ? -1 : 0) : prev
+          const next =
+            (start + delta + navigableItems.length) % navigableItems.length
+          return next
+        })
+      }
+
+      switch (event.key) {
+        case 'ArrowDown':
+          moveHighlight(1)
+          break
+        case 'ArrowUp':
+          moveHighlight(-1)
+          break
+        case 'Home':
+          if (target === searchInputRef.current) return
+          if (navigableItems.length === 0) return
+          event.preventDefault()
+          setHighlightedIndex(0)
+          break
+        case 'End':
+          if (target === searchInputRef.current) return
+          if (navigableItems.length === 0) return
+          event.preventDefault()
+          setHighlightedIndex(navigableItems.length - 1)
+          break
+        case 'ArrowRight': {
+          const entry = navigableItems[highlightedIndex]
+          if (!entry || !entry.submenuKey || !menuItemHasSubmenu(entry.item)) {
+            return
+          }
+          event.preventDefault()
+          activateNavigableEntry(entry)
+          break
+        }
+        case 'ArrowLeft': {
+          if (!currentSubmenu) return
+          // Don't steal caret movement while editing search text.
+          if (
+            target === searchInputRef.current &&
+            (searchInputRef.current?.value.length ?? 0) > 0
+          ) {
+            return
+          }
+          event.preventDefault()
+          setActiveSubmenu(currentSubmenu.parentSubmenuKey)
+          break
+        }
+        case 'Backspace': {
+          if (target !== searchInputRef.current) return
+          if ((searchInputRef.current?.value.length ?? 0) > 0) return
+          if (!currentSubmenu) return
+          event.preventDefault()
+          setActiveSubmenu(currentSubmenu.parentSubmenuKey)
+          break
+        }
+        case 'Enter': {
+          const entry = navigableItems[highlightedIndex]
+          if (!entry) return
+          event.preventDefault()
+          activateNavigableEntry(entry)
+          break
+        }
+        case ' ': {
+          const entry = navigableItems[highlightedIndex]
+          if (!entry || entry.item.variant !== 'switch') return
+          // Keep Space typing in the search field.
+          if (target === searchInputRef.current) return
+          event.preventDefault()
+          activateNavigableEntry(entry)
+          break
+        }
+        default:
+          break
+      }
+    },
+    [
+      activateNavigableEntry,
+      currentSubmenu,
+      highlightedIndex,
+      isPanelSubmenu,
+      navigableItems,
+    ],
+  )
+
+  const handleEscapeKeyDown = useCallback(
+    (event: Event) => {
+      if (isFeatureFlagsSubmenu && featureFlagsSearch) {
+        event.preventDefault()
+        setFeatureFlagsSearch('')
+        return
+      }
+      if (!currentSubmenu && menuSearch) {
+        event.preventDefault()
+        setMenuSearch('')
+        return
+      }
+      if (currentSubmenu) {
+        event.preventDefault()
+        setActiveSubmenu(currentSubmenu.parentSubmenuKey)
+      }
+    },
+    [
+      currentSubmenu,
+      featureFlagsSearch,
+      isFeatureFlagsSubmenu,
+      menuSearch,
+    ],
+  )
 
   if (!isVisible) return null
 
@@ -1915,32 +2680,59 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       }}
     >
       <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <Tooltip open={isDragging ? false : undefined}>
-          <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
+        <div className="relative">
+          <Tooltip open={isDragging ? false : undefined}>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <button
+                  className={cn(
+                    'relative flex h-11 w-11 select-none items-center justify-center overflow-hidden rounded-xl bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,var(--background))] shadow-sm transition-colors',
+                    'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_30%,var(--background))]',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                    isDragging ? 'cursor-grabbing touch-none' : 'cursor-grab',
+                  )}
+                  aria-label="Debug menu"
+                  onPointerDown={handleDragPointerDown}
+                  onPointerMove={handleDragPointerMove}
+                  onPointerUp={finishDrag}
+                  onPointerCancel={finishDrag}
+                  onClick={handleDragClick}
+                  onDragStart={(event) => event.preventDefault()}
+                >
+                  <DebugMenuBrandMark className="relative z-10 text-foreground" />
+                </button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side={tooltipSide} sideOffset={8}>
+              Debug menu
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
               <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  setIsOpen(false)
+                  closeDebugMode()
+                }}
                 className={cn(
-                  'relative flex h-11 w-11 select-none items-center justify-center overflow-hidden rounded-xl bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,var(--background))] shadow-sm transition-colors',
-                  'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_30%,var(--background))]',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                  isDragging ? 'cursor-grabbing touch-none' : 'cursor-grab',
+                  'absolute -end-1.5 -top-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full',
+                  'border border-border bg-background text-muted-foreground shadow-sm',
+                  'hover:bg-muted hover:text-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/30',
                 )}
-                aria-label="Debug menu"
-                onPointerDown={handleDragPointerDown}
-                onPointerMove={handleDragPointerMove}
-                onPointerUp={finishDrag}
-                onPointerCancel={finishDrag}
-                onClick={handleDragClick}
-                onDragStart={(event) => event.preventDefault()}
+                aria-label="Close debug mode"
               >
-                <DebugMenuBrandMark className="relative z-10 text-foreground" />
+                <X className="h-3 w-3" />
               </button>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent side={tooltipSide} sideOffset={8}>
-            Debug menu
-          </TooltipContent>
-        </Tooltip>
+            </TooltipTrigger>
+            <TooltipContent side={tooltipSide} sideOffset={8}>
+              Close debug mode
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <PopoverContent
           dir="ltr"
           lang="en"
@@ -1965,6 +2757,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           onWheelCapture={(event) => {
             event.stopPropagation()
           }}
+          onKeyDown={handleMenuKeyDown}
+          onEscapeKeyDown={handleEscapeKeyDown}
         >
           <div className="shrink-0 border-b border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-popover/95 backdrop-blur-sm">
             <div className="px-4 py-3">
@@ -1980,28 +2774,74 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     <ChevronLeft className="h-4 w-4 text-[var(--network-globe-edge)]" />
                   </button>
                 )}
-                <span className="text-[13px] font-semibold text-foreground">
+                <span className="min-w-0 flex-1 text-[13px] font-semibold text-foreground">
                   {currentSubmenu ? currentSubmenu.title : 'Debug'}
                 </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsOpen(false)
+                        closeDebugMode()
+                      }}
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_15%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
+                      aria-label="Close debug mode"
+                    >
+                      <X className="h-4 w-4 text-[var(--network-globe-edge)]" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">Close debug mode</TooltipContent>
+                </Tooltip>
               </div>
             </div>
-            {isFeatureFlagsSubmenu ? (
+            {!currentSubmenu || isFeatureFlagsSubmenu ? (
               <div className="px-4 pb-3">
                 <div className="relative">
                   <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--network-globe-edge)]/60" />
                   <Input
+                    ref={searchInputRef}
                     autoFocus
-                    value={featureFlagsSearch}
-                    onChange={(event) =>
-                      setFeatureFlagsSearch(event.target.value)
+                    role="combobox"
+                    aria-expanded
+                    aria-controls="debug-menu-listbox"
+                    aria-autocomplete="list"
+                    aria-activedescendant={
+                      highlightedIndex >= 0 && navigableItems[highlightedIndex]
+                        ? navigableItems[highlightedIndex].id
+                        : undefined
                     }
-                    placeholder="Search flags..."
+                    value={
+                      isFeatureFlagsSubmenu ? featureFlagsSearch : menuSearch
+                    }
+                    onChange={(event) => {
+                      if (isFeatureFlagsSubmenu) {
+                        setFeatureFlagsSearch(event.target.value)
+                      } else {
+                        setMenuSearch(event.target.value)
+                      }
+                    }}
+                    placeholder={
+                      isFeatureFlagsSubmenu
+                        ? 'Search flags...'
+                        : 'Search menu...'
+                    }
                     className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 ps-8 pe-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
                   />
-                  {featureFlagsSearch ? (
+                  {(isFeatureFlagsSubmenu
+                    ? featureFlagsSearch
+                    : menuSearch) ? (
                     <button
                       type="button"
-                      onClick={() => setFeatureFlagsSearch('')}
+                      tabIndex={-1}
+                      onClick={() => {
+                        if (isFeatureFlagsSubmenu) {
+                          setFeatureFlagsSearch('')
+                        } else {
+                          setMenuSearch('')
+                        }
+                        searchInputRef.current?.focus()
+                      }}
                       className="absolute end-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[var(--network-globe-edge)]/70 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
                       aria-label="Clear search"
                     >
@@ -2013,7 +2853,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             ) : null}
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
+          <div
+            ref={menuListRef}
+            id="debug-menu-listbox"
+            role="listbox"
+            tabIndex={hasSearchField ? -1 : 0}
+            aria-label={currentSubmenu ? currentSubmenu.title : 'Debug options'}
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 outline-none"
+          >
             {currentSubmenu ? (
               currentSubmenu.submenuVariant === 'profileComparison' ? (
                 <div className="px-1" aria-label={currentSubmenu.title}>
@@ -2038,10 +2885,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ) : currentSubmenu.submenuVariant === 'envStatus' ? (
                 <DebugMenuEnvPanel />
               ) : (
-                <nav
-                  className="space-y-0.5"
-                  aria-label={currentSubmenu.title}
-                >
+                <div className="space-y-0.5">
+                  {currentSubmenu.note ? (
+                    <p className="mb-2 px-3 text-[11px] leading-relaxed text-[var(--network-globe-edge)]/90">
+                      {currentSubmenu.note}
+                    </p>
+                  ) : null}
                   {isFeatureFlagsSubmenu &&
                   featureFlagsSearch.trim() &&
                   filteredFeatureFlagItems.every(
@@ -2064,31 +2913,56 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                               {group.category}
                             </div>
                           ) : null}
-                          {group.items.map((item, itemIndex) =>
-                            renderDebugSubmenuItemRow(
+                          {group.items.map((item, itemIndex) => {
+                            const entryId = `flags__${item.category ?? 'general'}__${item.label}`
+                            const navIndex = navigableIndexById.get(entryId) ?? -1
+                            return renderDebugSubmenuItemRow(
                               item,
                               itemIndex,
                               `feature-flag-${groupIndex}`,
                               activeSubmenu,
                               setActiveSubmenu,
-                            ),
-                          )}
+                              {
+                                id: entryId,
+                                navIndex,
+                                highlighted: navIndex === highlightedIndex,
+                                onHighlight: () => {
+                                  if (navIndex >= 0) setHighlightedIndex(navIndex)
+                                },
+                              },
+                            )
+                          })}
                         </div>
                       ))
-                    : currentSubmenu.items.map((item, itemIndex) =>
-                        renderDebugSubmenuItemRow(
+                    : currentSubmenu.items.map((item, itemIndex) => {
+                        const entryId = `submenu__${activeSubmenu}__${item.label}`
+                        const navIndex = navigableIndexById.get(entryId) ?? -1
+                        return renderDebugSubmenuItemRow(
                           item,
                           itemIndex,
                           'submenu',
                           activeSubmenu,
                           setActiveSubmenu,
-                        ),
-                      )}
-                </nav>
+                          {
+                            id: entryId,
+                            navIndex,
+                            highlighted: navIndex === highlightedIndex,
+                            onHighlight: () => {
+                              if (navIndex >= 0) setHighlightedIndex(navIndex)
+                            },
+                          },
+                        )
+                      })}
+                </div>
               )
             ) : (
-              <nav className="space-y-5" aria-label="Debug options">
-                {sections.map((section) => (
+              <div className="space-y-5">
+                {menuSearch.trim() && filteredSections.length === 0 ? (
+                  <p className="px-3 py-2 text-[11px] text-[var(--network-globe-edge)]/70">
+                    No matching items
+                  </p>
+                ) : null}
+                {filteredSections.map((section) => (
                   <div key={section.title}>
                     <div className="mb-2 flex items-center gap-2 px-1">
                       <span className="text-[var(--network-globe-edge)]">{section.icon}</span>
@@ -2098,11 +2972,22 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     </div>
                     <div className="space-y-0.5">
                       {section.items.map((item, itemIndex) => {
+                        const entryId = `root__${section.title}__${item.label}`
+                        const navIndex = navigableIndexById.get(entryId) ?? -1
+                        const highlighted = navIndex === highlightedIndex
+                        const onHighlight = () => {
+                          if (navIndex >= 0) setHighlightedIndex(navIndex)
+                        }
+
                         if (item.variant === 'switch') {
                           return (
                             <DebugMenuSwitchRow
                               key={`${section.title}-${itemIndex}`}
                               item={item}
+                              id={entryId}
+                              navIndex={navIndex}
+                              highlighted={highlighted}
+                              onHighlight={onHighlight}
                             />
                           )
                         }
@@ -2113,7 +2998,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                         return (
                           <button
                             key={`${section.title}-${itemIndex}`}
+                            id={entryId}
                             type="button"
+                            role="option"
+                            aria-selected={highlighted}
+                            data-debug-nav-index={navIndex}
+                            tabIndex={-1}
+                            onMouseEnter={onHighlight}
                             onClick={(e) => {
                               e.stopPropagation()
                               if (hasSubmenu) {
@@ -2122,19 +3013,28 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                                 item.onClick()
                               }
                             }}
-                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40 ${
-                              item.active
-                                ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
-                                : 'text-foreground/90 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground'
-                            }`}
+                            className={debugMenuItemRowClassName({
+                              active: item.active,
+                              highlighted,
+                            })}
                           >
                             {item.icon && (
                               <span className="flex-shrink-0 text-[var(--network-globe-edge)]">
                                 {item.icon}
                               </span>
                             )}
-                            <span className="flex-1 font-medium">
-                              {item.label}
+                            <span className="min-w-0 flex-1">
+                              <span className="block font-medium">
+                                {item.label}
+                              </span>
+                              {item.description ? (
+                                <span
+                                  className="mt-0.5 block whitespace-pre-line break-all text-[11px] font-normal opacity-80"
+                                  title={item.description}
+                                >
+                                  {item.description}
+                                </span>
+                              ) : null}
                             </span>
                             {item.badge !== undefined && (
                               <span className="flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]">
@@ -2150,7 +3050,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     </div>
                   </div>
                 ))}
-              </nav>
+              </div>
             )}
           </div>
         </PopoverContent>

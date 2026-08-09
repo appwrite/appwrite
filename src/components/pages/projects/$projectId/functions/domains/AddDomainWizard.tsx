@@ -13,7 +13,11 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { DomainTargetCard } from '../../shared/DomainTargetCard'
-import { VerifyDomainContent } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+import {
+  VerifyDomainContent,
+  dnsPendingVerificationError,
+  type DomainVerificationError,
+} from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import {
   useCreateFunctionDomainRule,
   useProjectFunction,
@@ -42,9 +46,8 @@ export function AddDomainWizard() {
   const deleteMutation = useDeleteDomain(projectId, project?.region)
 
   const [domain, setDomain] = useState('')
-  const [verificationError, setVerificationError] = useState<string | null>(
-    null,
-  )
+  const [verificationError, setVerificationError] =
+    useState<DomainVerificationError | null>(null)
   const [behaviour, setBehaviour] = useState<'active' | 'branch' | 'redirect'>(
     'active',
   )
@@ -166,7 +169,7 @@ export function AddDomainWizard() {
         updated.status === 'created' ||
         updated.status === 'unverified'
       ) {
-        setVerificationError(t('Verification failed. Check DNS and retry.'))
+        setVerificationError(dnsPendingVerificationError(t))
       } else {
         await queryClient.refetchQueries({
           queryKey: ['proxy-rules', 'function', projectId, functionId],
@@ -178,7 +181,7 @@ export function AddDomainWizard() {
         })
       }
     } catch {
-      setVerificationError(t('Failed to verify domain'))
+      setVerificationError(dnsPendingVerificationError(t))
     }
   }
 

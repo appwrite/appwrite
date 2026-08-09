@@ -11,6 +11,8 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'blocks',
   'init',
   'generator',
+  'assistant',
+  'agent',
 ])
 
 function isConsoleAreaPath(pathname: string): boolean {
@@ -33,6 +35,7 @@ function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
   if (normalized === '/generator' || normalized.startsWith('/generator/')) {
     return true
   }
+  if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
   if (normalized === '/reset') return true
   if (normalized === '/access') return true
   return false

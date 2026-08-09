@@ -44,7 +44,9 @@ export function formatUsageResourceTypeLabel(value: string): string {
   if (trimmed === 'bucket') return 'Bucket'
   if (trimmed === 'function') return 'Function'
   if (trimmed === 'site') return 'Site'
-  if (trimmed === 'database') return 'Database'
+  if (trimmed === 'database' || trimmed === 'dedicatedDatabases') {
+    return 'Database'
+  }
   if (trimmed === 'project') return 'Project'
 
   const tableMatch = /^database\/([^/]+)\/table$/.exec(trimmed)
@@ -111,7 +113,7 @@ export function resolveUsageResourceBreakdownItem(
     }
   }
 
-  if (resourceType === 'database') {
+  if (resourceType === 'database' || resourceType === 'dedicatedDatabases') {
     const databaseResource = resolveDatabaseBreakdownResource(
       resourceId,
       lookups.databaseLookup,

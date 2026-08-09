@@ -1,15 +1,18 @@
 import { useMemo, useState } from 'react'
-import { Check, Copy, Download } from 'lucide-react'
+import { Check, Copy, Download, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  MCP_CLAUDE_CODE_INSTALL_COMMAND,
+  MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET,
   MCP_CODEX_INSTALL_COMMAND,
   MCP_EDITOR_CONFIG_SNIPPET,
+  MCP_OPENCODE_CONFIG_SNIPPET,
   MCP_SELF_HOSTED_DOCS_URL,
   getCursorMcpInstallUrl,
+  getMcpClaudeCodeInstallCommand,
   getSelfHostedClaudeCodeInstallCommand,
   getSelfHostedCodexConfig,
   getSelfHostedMcpEditorConfig,
+  getSelfHostedOpencodeConfig,
   getVscodeMcpInstallUrl,
   openMcpInstallUrl,
 } from '@/lib/config/mcp'
@@ -22,14 +25,11 @@ import { useProject } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
-import {
-  CodeBlock,
-  type CodeBlockLanguage,
-} from '@/components/global/shared/CodeBlock'
+import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { McpIcon } from '@/components/global/shared/McpIcon'
-import { cn } from '@/lib/utils'
-import { useT } from '@/lib/i18n/translate'
+import { useT, type Translator } from '@/lib/i18n/translate'
 
 export interface MCPSectionProps {
   /** Current project ID (used to prefill self-hosted MCP env) */
@@ -40,7 +40,13 @@ export interface MCPSectionProps {
   compact?: boolean
 }
 
-type McpToolId = 'claude-code' | 'codex' | 'cursor' | 'vscode'
+type McpToolId =
+  | 'claude-code'
+  | 'codex'
+  | 'cursor'
+  | 'claude-desktop'
+  | 'vscode'
+  | 'opencode'
 
 type McpToolConfig = {
   id: McpToolId
@@ -51,47 +57,69 @@ type McpToolConfig = {
   installUrl?: string
 }
 
-const CLOUD_MCP_TOOLS: McpToolConfig[] = [
-  {
-    id: 'claude-code',
-    name: 'Claude Code',
-    iconPath: '/icons/claude.svg',
-    language: 'bash',
-    code: MCP_CLAUDE_CODE_INSTALL_COMMAND,
-  },
-  {
-    id: 'codex',
-    name: 'Codex',
-    iconPath: '/icons/chatgpt.svg',
-    language: 'bash',
-    code: MCP_CODEX_INSTALL_COMMAND,
-  },
-  {
-    id: 'cursor',
-    name: 'Cursor',
-    iconPath: '/icons/cursor-ai.svg',
-    language: 'json',
-    code: JSON.stringify(MCP_EDITOR_CONFIG_SNIPPET, null, 2),
-    installUrl: getCursorMcpInstallUrl(),
-  },
-  {
-    id: 'vscode',
-    name: 'VS Code',
-    iconPath: '/icons/vscode.svg',
-    language: 'json',
-    code: JSON.stringify(MCP_EDITOR_CONFIG_SNIPPET, null, 2),
-    installUrl: getVscodeMcpInstallUrl(),
-  },
-]
+function jsonSnippet(value: unknown): string {
+  return JSON.stringify(value, null, 2)
+}
+
+const MCP_MORE_TOOLS_DOCS_HREF = '/docs/tooling/ai/mcp-servers'
+
+function getCloudMcpTools(t: Translator): McpToolConfig[] {
+  return [
+    {
+      id: 'claude-code',
+      name: 'Claude Code',
+      iconPath: '/icons/claude.svg',
+      language: 'bash',
+      code: getMcpClaudeCodeInstallCommand(
+        t('select "appwrite", then "Authenticate"'),
+      ),
+    },
+    {
+      id: 'codex',
+      name: 'Codex',
+      iconPath: '/icons/chatgpt.svg',
+      language: 'bash',
+      code: MCP_CODEX_INSTALL_COMMAND,
+    },
+    {
+      id: 'cursor',
+      name: 'Cursor',
+      iconPath: '/icons/cursor-ai.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
+      installUrl: getCursorMcpInstallUrl(),
+    },
+    {
+      id: 'claude-desktop',
+      name: 'Claude Desktop',
+      iconPath: '/icons/claude.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET),
+    },
+    {
+      id: 'vscode',
+      name: 'VS Code',
+      iconPath: '/icons/vscode.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
+      installUrl: getVscodeMcpInstallUrl(),
+    },
+    {
+      id: 'opencode',
+      name: 'OpenCode',
+      iconPath: '/icons/opencode.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_OPENCODE_CONFIG_SNIPPET),
+    },
+  ]
+}
 
 function getSelfHostedMcpTools(
   projectId: string,
   endpoint: string,
 ): McpToolConfig[] {
-  const editorConfig = JSON.stringify(
+  const editorConfig = jsonSnippet(
     getSelfHostedMcpEditorConfig(projectId, endpoint),
-    null,
-    2,
   )
   return [
     {
@@ -116,11 +144,25 @@ function getSelfHostedMcpTools(
       code: editorConfig,
     },
     {
+      id: 'claude-desktop',
+      name: 'Claude Desktop',
+      iconPath: '/icons/claude.svg',
+      language: 'json',
+      code: editorConfig,
+    },
+    {
       id: 'vscode',
       name: 'VS Code',
       iconPath: '/icons/vscode.svg',
       language: 'json',
       code: editorConfig,
+    },
+    {
+      id: 'opencode',
+      name: 'OpenCode',
+      iconPath: '/icons/opencode.svg',
+      language: 'json',
+      code: jsonSnippet(getSelfHostedOpencodeConfig(projectId, endpoint)),
     },
   ]
 }
@@ -140,7 +182,6 @@ export function MCPSection({
   const { isSelfHosted } = useConsoleProfile()
   const { project } = useProject(projectId)
   const [selectedToolId, setSelectedToolId] = useState<McpToolId>('claude-code')
-  const [copied, setCopied] = useState(false)
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null)
 
   const endpoint = useMemo(
@@ -157,8 +198,8 @@ export function MCPSection({
     () =>
       isSelfHosted
         ? getSelfHostedMcpTools(projectId, endpoint)
-        : CLOUD_MCP_TOOLS,
-    [isSelfHosted, projectId, endpoint],
+        : getCloudMcpTools(t),
+    [isSelfHosted, projectId, endpoint, t],
   )
 
   const selectedTool = useMemo(
@@ -166,12 +207,21 @@ export function MCPSection({
     [tools, selectedToolId],
   )
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(selectedTool.code)
-    setCopied(true)
-    toast.success(t('Copied to clipboard'))
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const toolTabs = useMemo(
+    () =>
+      tools.map((tool) => ({
+        id: tool.id,
+        label: tool.name,
+        icon: (
+          <img
+            src={tool.iconPath}
+            alt=""
+            className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
+          />
+        ),
+      })),
+    [tools],
+  )
 
   const handleCopyPrompt = (prompt: string) => {
     navigator.clipboard.writeText(prompt)
@@ -218,67 +268,36 @@ export function MCPSection({
       <h4 className="text-[13px] font-semibold text-foreground">
         {t('1. Install')}
       </h4>
-      <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-1.5">
-          {tools.map((tool) => {
-            const isSelected = tool.id === selectedTool.id
-            return (
-              <button
-                key={tool.id}
-                type="button"
-                onClick={() => {
-                  setSelectedToolId(tool.id)
-                  setCopied(false)
-                }}
-                className={cn(
-                  'cursor-pointer inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                  isSelected
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
-                )}
-              >
-                <img
-                  src={tool.iconPath}
-                  alt=""
-                  className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                />
-                {tool.name}
-              </button>
-            )
-          })}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
-          onClick={handleCopyCode}
-        >
-          {copied ? (
-            <Check className="h-3.5 w-3.5" />
-          ) : (
-            <Copy className="h-3.5 w-3.5" />
-          )}
-          {t('Copy')}
-        </Button>
-      </div>
-
-      <CodeBlock
+      <ConnectCodeExample
         code={selectedTool.code}
         language={selectedTool.language}
-        showCopy={false}
+        tabs={toolTabs}
+        activeTabId={selectedTool.id}
+        onTabChange={(id) => setSelectedToolId(id as McpToolId)}
+        selectorAriaLabel={t('Select tool')}
       />
 
-      {selectedTool.installUrl ? (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="h-9 text-[13px] gap-1.5"
-          onClick={() => openMcpInstallUrl(selectedTool.installUrl!)}
+      <div className="flex flex-wrap items-center gap-3">
+        {selectedTool.installUrl ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-9 text-[13px] gap-1.5"
+            onClick={() => openMcpInstallUrl(selectedTool.installUrl!)}
+          >
+            <Download className="h-4 w-4" />
+            {t('Install')}
+          </Button>
+        ) : null}
+
+        <DocsRouteLink
+          href={MCP_MORE_TOOLS_DOCS_HREF}
+          className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
         >
-          <Download className="h-4 w-4" />
-          {t('Install')}
-        </Button>
-      ) : null}
+          {t('More tools in the docs')}
+          <ExternalLink className="h-3 w-3" />
+        </DocsRouteLink>
+      </div>
     </div>
   )
 

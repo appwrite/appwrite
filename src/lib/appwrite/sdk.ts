@@ -8,6 +8,8 @@
 import {
   Account,
   Activities,
+  Affiliates,
+  Agent,
   Analytics,
   Apps,
   Assistant,
@@ -218,6 +220,7 @@ function createConsoleSdkRaw(client: Client) {
   return {
     client,
     account: new Account(client),
+    affiliates: new Affiliates(client),
     apps: new Apps(client),
     oauth2: new Oauth2(client),
     avatars: new Avatars(client),
@@ -232,6 +235,8 @@ function createConsoleSdkRaw(client: Client) {
     users: new Users(client),
     migrations: new Migrations(client),
     console: new Console(client),
+    agent: new Agent(client),
+    /** Legacy `/console/assistant` chat stream. Prefer `agent` for conversations. */
     assistant: new Assistant(client),
     sites: new Sites(client),
     domains: new Domains(client),
@@ -586,10 +591,7 @@ function installProductDatabaseUpdateSpecificationSupport(
   }) as typeof service.update
 }
 
-installProductDatabaseUpdateSpecificationSupport(
-  tablesDBForProject,
-  'tablesdb',
-)
+installProductDatabaseUpdateSpecificationSupport(tablesDBForProject, 'tablesdb')
 installProductDatabaseUpdateSpecificationSupport(
   documentsDBForProject,
   'documentsdb',

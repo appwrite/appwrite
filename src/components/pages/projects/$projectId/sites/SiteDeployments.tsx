@@ -8,6 +8,10 @@ import {
 } from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
+import {
   Clock,
   Trash2,
   GitBranch,
@@ -89,6 +93,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
+import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
 import { proxyRuleServesActiveDeployment } from '@/lib/utils/proxy-domains'
 import {
   useProjectSite,
@@ -106,6 +111,7 @@ import {
   SITE_SCREENSHOT_CARD_WIDTH,
   SITE_SCREENSHOT_CARD_HEIGHT,
 } from '@/lib/sites/screenshot-preview-sizes'
+import { mergeActiveDeploymentForCard } from '@/lib/sites/deployment-screenshots'
 import { DeploymentDownloadType, ImageFormat } from '@appwrite.io/console'
 import { useAvifSupport } from '@/lib/avif-support'
 import { toast } from 'sonner'
@@ -116,12 +122,8 @@ import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const DEPLOYMENTS_PER_PAGE = 25
 
-function formatSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1000
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
+function formatSize(bytes: number | bigint): string {
+  return formatDecimalBytes(bytes)
 }
 
 function formatDuration(seconds: number): string {
@@ -143,6 +145,10 @@ function detectVcsProvider(
     }
     if (url.includes('gitlab.com')) {
       const { label, Icon } = getVcsProvider('gitlab')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
+      const { label, Icon } = getVcsProvider('bitbucket')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -242,6 +248,8 @@ export function SiteDeploymentsView() {
       'providerCommitUrl',
       'providerCommitAuthor',
       'providerCommitAuthorUrl',
+      'screenshotDark',
+      'screenshotLight',
       '$createdAt',
     ]),
   ])
@@ -271,6 +279,8 @@ export function SiteDeploymentsView() {
         'providerCommitUrl',
         'providerCommitAuthor',
         'providerCommitAuthorUrl',
+        'screenshotDark',
+        'screenshotLight',
         '$createdAt',
       ]),
     ],
@@ -321,13 +331,10 @@ export function SiteDeploymentsView() {
     return fromList ?? activeDeployment ?? undefined
   }, [deployments, site?.deploymentId, activeDeployment])
 
-  const activeDeploymentForCard = useMemo((): Models.Deployment | undefined => {
-    const resolved = activeDeploymentResolved
-    if (!resolved) return undefined
-    const fromHook = activeDeployment
-    if (fromHook?.$id !== resolved.$id) return resolved
-    return { ...fromHook, ...resolved }
-  }, [activeDeployment, activeDeploymentResolved])
+  const activeDeploymentForCard = useMemo(
+    () => mergeActiveDeploymentForCard(activeDeployment, activeDeploymentResolved),
+    [activeDeployment, activeDeploymentResolved],
+  )
 
   // Screenshot theme: user override or current active app theme (resolvedTheme when available)
   const defaultScreenshotTheme =
@@ -562,7 +569,6 @@ export function SiteDeploymentsView() {
           : `${t('Successfully deleted')} ${selectedDeployments.size} ${t('deployments')}`,
       )
       setSelectedDeployments(new Set())
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete deployments'))
@@ -576,7 +582,11 @@ export function SiteDeploymentsView() {
 
   const confirmBulkDelete = () => {
     if (selectedDeployments.size === 0) return
-    bulkDeleteMutation.mutate(Array.from(selectedDeployments))
+    const ids = Array.from(selectedDeployments)
+    closeDialogBeforeOverlayUnmount(() => {
+      setDeleteDialogOpen(false)
+    })
+    bulkDeleteMutation.mutate(ids)
   }
 
   const toggleDeployment = (deploymentId: string) => {
@@ -1838,12 +1848,12 @@ export function SiteDeploymentsView() {
                                     deploymentData.status,
                                   ) && (
                                     <DropdownMenuItem
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        setCancelTargetDeploymentId(
-                                          deploymentData.$id,
-                                        )
-                                        setCancelBuildDialogOpen(true)
+                                      onSelect={() => {
+                                        const id = deploymentData.$id
+                                        openDialogAfterOverlayCloses(() => {
+                                          setCancelTargetDeploymentId(id)
+                                          setCancelBuildDialogOpen(true)
+                                        })
                                       }}
                                     >
                                       <MenuItemContent icon={XCircle}>

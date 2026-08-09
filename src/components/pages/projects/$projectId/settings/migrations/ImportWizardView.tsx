@@ -1201,7 +1201,7 @@ export function ImportWizardView() {
           disabled={!hasSelection || isCreatePending}
           onClick={handleCreate}
         >
-          {isCreatePending ? t('Starting...') : t('Start migration')}
+          {t('Start migration')}
         </Button>
       )}
     </div>

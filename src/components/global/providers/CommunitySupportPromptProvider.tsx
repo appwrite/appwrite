@@ -6,6 +6,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { CommunitySupportWizard } from '@/components/global/shared/CommunitySupportWizard'
 import { useCommunitySupportPrompt } from '@/lib/react-query/hooks/community-support-prompt'
 import type { ConsoleAccountCache } from '@/lib/react-query/hooks/auth'
+import { isConsoleImpersonationActive } from '@/lib/console-impersonation'
 import { setDebugOverride, useDebugOverrides } from '@/lib/debug-overrides'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
@@ -49,15 +50,32 @@ export function CommunitySupportPromptProvider() {
   const accountCache = isAuthenticated
     ? (account as ConsoleAccountCache | undefined)
     : undefined
+  const accountId =
+    accountCache && typeof accountCache === 'object' && '$id' in accountCache
+      ? accountCache.$id
+      : undefined
+  const isImpersonating = isConsoleImpersonationActive(
+    account as { impersonatorUserId?: string } | null | undefined,
+  )
   const { shouldShow, recordShown, skip, takeAction, state } =
     useCommunitySupportPrompt(accountCache, {
-      trackActiveDay: isAuthenticated && !suppressed,
+      // Pref writes are skipped while impersonating; avoid optimistic cache
+      // churn that can cascade into max-update-depth loops on /account.
+      trackActiveDay: isAuthenticated && !suppressed && !isImpersonating,
     })
   const [debugOpen, setDebugOpen] = useState(false)
   /** Keeps the wizard mounted for the current impression after prefs stamp lastShownAt. */
   const [impressionOpen, setImpressionOpen] = useState(false)
   const recordingShowRef = useRef(false)
+  /** Once the user closes/skips, never reopen this session (prefs races used to). */
+  const dismissedRef = useRef(false)
   const trackedDebugOpenRef = useRef(false)
+
+  useEffect(() => {
+    dismissedRef.current = false
+    recordingShowRef.current = false
+    setImpressionOpen(false)
+  }, [accountId])
 
   useEffect(() => {
     if (previewCommunitySupportWizard) {
@@ -69,10 +87,14 @@ export function CommunitySupportPromptProvider() {
   }, [previewCommunitySupportWizard])
 
   useEffect(() => {
-    if (debugOpen || !isAuthenticated || suppressed || !shouldShow) {
-      if (!shouldShow) {
-        recordingShowRef.current = false
-      }
+    if (
+      dismissedRef.current ||
+      debugOpen ||
+      !isAuthenticated ||
+      suppressed ||
+      isImpersonating ||
+      !shouldShow
+    ) {
       return
     }
     if (recordingShowRef.current) return
@@ -87,6 +109,7 @@ export function CommunitySupportPromptProvider() {
   }, [
     debugOpen,
     isAuthenticated,
+    isImpersonating,
     recordShown,
     shouldShow,
     state.shownCount,
@@ -108,7 +131,9 @@ export function CommunitySupportPromptProvider() {
   }, [debugOpen, suppressed, track])
 
   const open =
-    !suppressed && (debugOpen || (isAuthenticated && impressionOpen))
+    !suppressed &&
+    !isImpersonating &&
+    (debugOpen || (isAuthenticated && impressionOpen))
 
   if (!open) return null
 
@@ -121,6 +146,12 @@ export function CommunitySupportPromptProvider() {
     })
   }
 
+  const dismissImpression = () => {
+    dismissedRef.current = true
+    recordingShowRef.current = true
+    setImpressionOpen(false)
+  }
+
   return (
     <CommunitySupportWizard
       onSkip={() => {
@@ -130,7 +161,7 @@ export function CommunitySupportPromptProvider() {
           setDebugOverride('previewCommunitySupportWizard', false)
           return
         }
-        setImpressionOpen(false)
+        dismissImpression()
         skip()
       }}
       onAction={(actionId) => {
@@ -140,7 +171,7 @@ export function CommunitySupportPromptProvider() {
           setDebugOverride('previewCommunitySupportWizard', false)
           return
         }
-        setImpressionOpen(false)
+        dismissImpression()
         takeAction(actionId)
       }}
     />

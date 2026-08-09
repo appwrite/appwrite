@@ -13,14 +13,6 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import {
   Globe,
   Settings,
   RefreshCw,
@@ -31,11 +23,7 @@ import {
   Square,
   Trash2,
 } from 'lucide-react'
-import {
-  fetchDomain,
-  useDeleteOrganizationDomain,
-  useRetryDomainVerification,
-} from '@/lib/react-query/hooks'
+import { fetchDomain, useDeleteOrganizationDomain } from '@/lib/react-query/hooks'
 import {
   buildConsoleUrl,
   copyResourceAsJson,
@@ -43,8 +31,14 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
+import { RetryVerification } from '../RetryVerification'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
@@ -63,6 +57,7 @@ export function DomainContextMenu({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [retryDialogOpen, setRetryDialogOpen] = useState(false)
 
   const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
   const domainHref = buildConsoleUrl(
@@ -70,7 +65,6 @@ export function DomainContextMenu({
   )
 
   const deleteDomain = useDeleteOrganizationDomain(orgId)
-  const retryVerification = useRetryDomainVerification(orgId)
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -81,28 +75,31 @@ export function DomainContextMenu({
         queryKey: ['domains', 'organization', orgId],
       })
       toast.success(`${domain.domain} ${t('has been deleted')}`)
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || t('Failed to delete domain'))
     },
   })
 
-  const handleRetryVerification = () => {
-    retryVerification.mutate(domain.$id, {
-      onSuccess: (updatedDomain) => {
-        const verified = updatedDomain.nameservers?.toLowerCase() === 'appwrite'
-        if (verified) {
-          toast.success(t('Domain verification successful'))
-        } else {
-          toast.success(
-            t('Nameservers updated. Please wait for DNS propagation.'),
-          )
-        }
-      },
-      onError: (error) => {
-        toast.error(getErrorMessage(error))
-      },
+  const handleDeleteClick = () => {
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+  }
+
+  const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    deleteMutation.mutate()
+  }
+
+  const handleRetryVerificationClick = () => {
+    openDialogAfterOverlayCloses(() => setRetryDialogOpen(true))
+  }
+
+  const handleDomainVerified = () => {
+    queryClient.invalidateQueries({
+      queryKey: ['domains', 'organization', orgId],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['domain', domain.$id],
     })
   }
 
@@ -121,14 +118,12 @@ export function DomainContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent
-          className="w-56"
->
+        <ContextMenuContent className="w-56">
           <ContextMenuItem
             onSelect={() =>
               navigateToTab('/organizations/$orgId/domains/$domainId')
             }
->
+          >
             <ContextMenuIcon icon={Globe} />
             {t('DNS Records')}
           </ContextMenuItem>
@@ -136,14 +131,12 @@ export function DomainContextMenu({
             onSelect={() =>
               navigateToTab('/organizations/$orgId/domains/$domainId/settings')
             }
->
+          >
             <ContextMenuIcon icon={Settings} />
             {t('Settings')}
           </ContextMenuItem>
           {!isVerified && (
-            <ContextMenuItem
-              onSelect={handleRetryVerification}
->
+            <ContextMenuItem onSelect={handleRetryVerificationClick}>
               <ContextMenuIcon icon={RefreshCw} />
               {t('Retry verification')}
             </ContextMenuItem>
@@ -157,19 +150,19 @@ export function DomainContextMenu({
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', domain.$id)}
->
+              >
                 <ContextMenuIcon icon={Copy} />
                 {t('Copy ID')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Domain', domain.domain)}
->
+              >
                 <ContextMenuIcon icon={Copy} />
                 {t('Copy domain')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', domainHref)}
->
+              >
                 <ContextMenuIcon icon={Link2} />
                 {t('Copy link')}
               </ContextMenuItem>
@@ -177,64 +170,52 @@ export function DomainContextMenu({
                 onSelect={() =>
                   void copyResourceAsJson(() => fetchDomain(domain.$id))
                 }
->
+              >
                 <ContextMenuIcon icon={FileJson} />
                 {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={() => openInNewTab(domainHref)}
->
+          <ContextMenuItem onSelect={() => openInNewTab(domainHref)}>
             <ContextMenuIcon icon={ExternalLink} />
             {t('Open in new tab')}
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => openInNewWindow(domainHref)}
->
+          <ContextMenuItem onSelect={() => openInNewWindow(domainHref)}>
             <ContextMenuIcon icon={Square} />
             {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={() => setDeleteDialogOpen(true)}
->
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent
-          className="sm:max-w-md p-0"
->
-          <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Delete domain')}</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              {t('Are you sure you want to delete this domain?')}{' '}
-              {t('This action cannot be undone.')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={deleteMutation.isPending}
->
-              {t('Cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
->
-              {t('Delete')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmNameDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete domain"
+        description={
+          <>
+            {t('Are you sure you want to delete this domain?')}{' '}
+            {t('This action cannot be undone.')}
+          </>
+        }
+        confirmValue={domain.domain}
+        confirmPlaceholder="Enter domain name"
+        onConfirm={handleDelete}
+        isConfirming={deleteMutation.isPending}
+      />
+
+      <RetryVerification
+        open={retryDialogOpen}
+        onOpenChange={setRetryDialogOpen}
+        domain={domain}
+        orgId={orgId}
+        onVerified={handleDomainVerified}
+      />
     </>
   )
 }

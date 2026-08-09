@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs } from '@/lib/analytics-actions'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 export interface CreateDeploymentDropdownProps {
   onSelectGit: () => void
@@ -74,7 +75,7 @@ export function CreateDeploymentDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[220px]">
         <DropdownMenuItem
-          onClick={onSelectGit}
+          onSelect={() => openDialogAfterOverlayCloses(onSelectGit)}
           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
         >
           <GitBranch className="h-4 w-4" />
@@ -84,14 +85,14 @@ export function CreateDeploymentDropdown({
           </span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={onSelectCli}
+          onSelect={() => openDialogAfterOverlayCloses(onSelectCli)}
           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
         >
           <Terminal className="h-4 w-4" />
           <span>CLI</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={onSelectManual}
+          onSelect={() => openDialogAfterOverlayCloses(onSelectManual)}
           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
         >
           <Upload className="h-4 w-4" />

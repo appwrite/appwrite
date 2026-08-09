@@ -82,7 +82,6 @@ import type { DateRange } from 'react-day-picker'
 import { ImportCsv } from '../_components/ImportCsv'
 import { ExportCsv } from '../_components/ExportCsv'
 
-import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
   canCreateDatabase,
   canShowTableSecuritySettings,
@@ -173,7 +172,6 @@ import {
 import { useT } from '@/lib/i18n/translate'
 
 const DB_KIND = 'tablesdb' as const satisfies DatabaseRouteKind
-const SHOW_GRID_DEBUG_TOOLS = true
 const sidebarTableListScrollTopByKey = new Map<string, number>()
 
 export function Workspace({
@@ -192,7 +190,6 @@ export function Workspace({
     | Record<string, unknown>
     | undefined
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
-  const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
   const showDesktopTableSidebar = useMediaMinWidth(1024)
 
@@ -237,6 +234,12 @@ export function Workspace({
     0,
     TABLE_WORKSPACE_TABLES_LIST_LIMIT,
   )
+
+  const effectiveTableId = tableId === '-' ? undefined : tableId
+  // Prefer the dedicated table query so the shell stays mounted when the table
+  // is not on the first page of dbTables (or while that list is still settling).
+  const { table: tableDataForStatus, isLoading: tableDetailLoading } =
+    useProjectTable(projectId, databaseId, DB_KIND, effectiveTableId)
 
   // Requested page query (drives fetch when user changes page)
   const { isFetching: sidebarTablesFetching } = useProjectTables(
@@ -289,8 +292,25 @@ export function Workspace({
     sidebarTablesLoading && sidebarTables.length === 0
       ? lastSidebarTablesRef.current
       : sidebarTables
-  const selectedTable =
+  const selectedTableFromList =
     tableId === '-' ? undefined : dbTables.find((c) => c.$id === tableId)
+  const selectedTable = useMemo(() => {
+    if (tableId === '-') return undefined
+    if (selectedTableFromList) return selectedTableFromList
+    if (!tableDataForStatus) return undefined
+    const t = tableDataForStatus as Record<string, unknown>
+    const attrs = t.attributes as unknown[] | undefined
+    const idxs = t.indexes as unknown[] | undefined
+    return {
+      $id: String(t.$id ?? tableId),
+      name: (t.name as string) || 'Unnamed Table',
+      databaseId,
+      rows: (t.total as number) || 0,
+      columns: attrs?.length || 0,
+      indexes: idxs?.length || 0,
+      enabled: t.enabled !== false,
+    }
+  }, [tableId, selectedTableFromList, tableDataForStatus, databaseId])
   const isActuallyLoading =
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
   // Sidebar unmounts during loading / "not found" flashes on first table open.
@@ -391,7 +411,7 @@ export function Workspace({
     | undefined
   const { savedAttrKeys: rowsListSelectAttrKeys } = useTablesDbRowsListColumns(
     databaseId,
-    selectedTable?.$id,
+    effectiveTableId,
     accountForPrefs,
   )
   const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
@@ -416,28 +436,6 @@ export function Workspace({
   )
   const [monitorChartTick, setMonitorChartTick] = useState(0)
   const queryClient = useQueryClient()
-
-  // Debug: create 50 random containers (only when debug mode is open and on tables list)
-  const createFiftyTablesMutation = useMutation({
-    mutationFn: async () => {
-      requireOperationalDatabase(queryClient, projectId, databaseId)
-      const names = Array.from({ length: 50 }, (_, i) => `Table ${i + 1}`)
-      for (const name of names) {
-        await createProjectTable(projectId, databaseId, DB_KIND, { name })
-      }
-    },
-    onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: ['tables', 'project', projectId, databaseId],
-      })
-      toast.success(dbLabels.createdManyContainersSuccess)
-    },
-    onError: (error: Error) => {
-      toast.error(
-        error.message || dbLabels.failedToCreateContainer,
-      )
-    },
-  })
 
   const { project } = useProject(projectId)
   const useCreateDatabaseWizard = features.dedicatedDbsSupport
@@ -651,7 +649,6 @@ export function Workspace({
     },
   })
 
-  const effectiveTableId = tableId === '-' ? undefined : tableId
   const { columns: tableColumns } = useProjectTableColumns(
     projectId,
     databaseId,
@@ -659,12 +656,6 @@ export function Workspace({
     effectiveTableId,
   )
   const { indexes: tableIndexes } = useProjectTableIndexes(
-    projectId,
-    databaseId,
-    DB_KIND,
-    effectiveTableId,
-  )
-  const { table: tableDataForStatus } = useProjectTable(
     projectId,
     databaseId,
     DB_KIND,
@@ -1026,7 +1017,7 @@ export function Workspace({
     )
   }
 
-  if (tableId !== '-' && !selectedTable) {
+  if (tableId !== '-' && !selectedTable && !tableDetailLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
@@ -1435,12 +1426,16 @@ export function Workspace({
             )
           ) : (
             <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate">{selectedTable!.name}</span>
-              <CopyableId
-                id={selectedTable!.$id}
-                size="xs"
-                className="shrink-0"
-              />
+              <span className="truncate">
+                {selectedTable?.name ?? t('Loading...')}
+              </span>
+              {selectedTable ? (
+                <CopyableId
+                  id={selectedTable.$id}
+                  size="xs"
+                  className="shrink-0"
+                />
+              ) : null}
             </div>
           )
         }
@@ -1637,7 +1632,7 @@ export function Workspace({
         beforeCreateButtons={
           isDatabaseLevelView ||
           !showTableSecuritySettings ? undefined : activeTab === 'columns' &&
-            features.aiAssistant ? (
+            features.agent ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -1660,7 +1655,7 @@ export function Workspace({
                 {dbLabels.suggestSchemaCardTitle}
               </TooltipContent>
             </Tooltip>
-          ) : activeTab === 'indexes' && features.aiAssistant ? (
+          ) : activeTab === 'indexes' && features.agent ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="inline-flex">
@@ -1699,48 +1694,13 @@ export function Workspace({
         }
         titleRightContent={
           databaseTab === 'monitor' ? (
-            <>
-              <DatabaseMonitorHeaderActions
-                dateRange={monitorDateRange}
-                onDateRangeChange={(r) =>
-                  setMonitorDateRange(r ?? getDefaultMonitorDateRange())
-                }
-                onRefresh={() => setMonitorChartTick((n) => n + 1)}
-              />
-              {isDatabaseLevelView &&
-              isDebugModeOpen &&
-              SHOW_GRID_DEBUG_TOOLS ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7"
-                  onClick={() => createFiftyTablesMutation.mutate()}
-                  disabled={createFiftyTablesMutation.isPending}
-                >
-                  {createFiftyTablesMutation.isPending
-                    ? 'Creating…'
-                    : dbLabels.debugCreateManyContainers}
-                </Button>
-              ) : null}
-            </>
-          ) : undefined
-        }
-        rightContent={
-          isDatabaseLevelView &&
-          isDebugModeOpen &&
-          SHOW_GRID_DEBUG_TOOLS &&
-          databaseTab !== 'monitor' ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9"
-              onClick={() => createFiftyTablesMutation.mutate()}
-              disabled={createFiftyTablesMutation.isPending}
-            >
-              {createFiftyTablesMutation.isPending
-                ? 'Creating…'
-                : dbLabels.debugCreateManyContainers}
-            </Button>
+            <DatabaseMonitorHeaderActions
+              dateRange={monitorDateRange}
+              onDateRangeChange={(r) =>
+                setMonitorDateRange(r ?? getDefaultMonitorDateRange())
+              }
+              onRefresh={() => setMonitorChartTick((n) => n + 1)}
+            />
           ) : undefined
         }
         contentAfterBorder={
@@ -1948,6 +1908,7 @@ export function Workspace({
             {activeTab === 'rows' && selectedTable ? (
               <div className="contents">
                 <RowsSpreadsheet
+                  key={selectedTable.$id}
                   table={selectedTable}
                   canWriteRows={!noCreateRowPermission}
                   canWriteTables={!noCreateTablePermission}
@@ -1974,6 +1935,7 @@ export function Workspace({
             {selectedTable && activeTab === 'documents' && (
               <>
                 <DocumentsJsonSpreadsheet
+                  key={selectedTable.$id}
                   table={selectedTable}
                   canWriteRows={!noCreateRowPermission}
                   rowsUrlSearch={rowsUrlSearch}
@@ -2006,7 +1968,7 @@ export function Workspace({
                   openCreateColumnDialogRef.current = openDialog
                 }}
                 onSuggestReady={
-                  features.aiAssistant
+                  features.agent
                     ? (openDialog) => {
                         openSuggestColumnsDialogRef.current = openDialog
                       }
@@ -2023,7 +1985,7 @@ export function Workspace({
                   openCreateIndexDialogRef.current = openDialog
                 }}
                 onSuggestReady={
-                  features.aiAssistant
+                  features.agent
                     ? (openDialog) => {
                         openSuggestIndexesDialogRef.current = openDialog
                       }
@@ -2032,12 +1994,12 @@ export function Workspace({
                 onIndexesAbilityChange={setCanCreateIndex}
               />
             )}
-            {activeTab === 'security' && (
-              <TableSecurity table={selectedTable!} />
-            )}
-            {activeTab === 'settings' && (
-              <TableSettings table={selectedTable!} />
-            )}
+            {activeTab === 'security' && selectedTable ? (
+              <TableSecurity table={selectedTable} />
+            ) : null}
+            {activeTab === 'settings' && selectedTable ? (
+              <TableSettings table={selectedTable} />
+            ) : null}
           </>
         )}
       </div>

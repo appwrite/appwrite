@@ -17,9 +17,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  getErrorMessage,
+  getVcsInstallationErrorKind,
+} from '@/lib/utils/error-formatting'
 import {
   buildSiteUpdateParams,
+  resolveConnectBranch,
   useRepository,
   useVcsInstallations,
   useProject,
@@ -30,12 +34,14 @@ import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPic
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
+import { VcsInstallationErrorAlert } from '@/components/global/shared/VcsInstallationError'
 import { useT } from '@/lib/i18n/translate'
 import {
   getVcsProvider,
   buildVcsAuthUrl,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
+import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 
 interface GitRepositoryCardProps {
   projectId: string | null | undefined
@@ -69,11 +75,26 @@ export function GitRepositoryCard({
   // Fetch repository details if connected
   const hasRepository = site?.installationId && site.providerRepositoryId
 
-  const { data: repository, isLoading: repositoryLoading } = useRepository(
+  const {
+    data: repository,
+    isLoading: repositoryLoading,
+    isFetching: repositoryFetching,
+    error: repositoryError,
+    refetch: refetchRepository,
+  } = useRepository(
     projectId,
     site?.installationId || null,
     site?.providerRepositoryId || null,
   )
+
+  // A dead installation token makes this lookup fail, which used to render as
+  // "no repository row at all" even though the site is still connected.
+  const repositoryErrorKind = getVcsInstallationErrorKind(repositoryError)
+  const {
+    provider: installationProvider,
+    organization: installationOrganization,
+    reconnectUrl,
+  } = useVcsInstallationReconnect(projectId, site?.installationId)
 
   // Fetch installations for connect modal
   const { data: installationsData } = useVcsInstallations(projectId)
@@ -124,11 +145,12 @@ export function GitRepositoryCard({
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Repository settings updated successfully'))
-      queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
+      queryClient.setQueryData(
+        ['site', 'project', projectId, siteId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })
@@ -172,21 +194,32 @@ export function GitRepositoryCard({
       ) {
         throw new Error('Installation and Repository are required')
       }
+      const providerBranch = await resolveConnectBranch(
+        projectId,
+        selectedInstallationId,
+        selectedRepositoryId,
+        site.providerBranch ?? '',
+      )
+
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.update(
         buildSiteUpdateParams(site, {
           installationId: selectedInstallationId,
           providerRepositoryId: selectedRepositoryId,
-          providerBranch: 'main',
+          providerBranch,
         }),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Repository connected successfully'))
       setConnectDialogOpen(false)
       setSelectedRepositoryId('')
+      queryClient.setQueryData(
+        ['site', 'project', projectId, siteId],
+        updated,
+      )
       queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId],
+        queryKey: ['sites', 'project', projectId],
       })
     },
     onError: (error: unknown) => {
@@ -210,13 +243,17 @@ export function GitRepositoryCard({
         }),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Repository disconnected successfully'))
       setDisconnectDialogOpen(false)
       setSelectedBranch('')
       setSelectedDir('')
+      queryClient.setQueryData(
+        ['site', 'project', projectId, siteId],
+        updated,
+      )
       queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId],
+        queryKey: ['sites', 'project', projectId],
       })
     },
     onError: (error: unknown) => {
@@ -258,6 +295,12 @@ export function GitRepositoryCard({
       selectedDir !== (site?.providerRootDirectory || '')
     )
   }, [selectedBranch, selectedDir, site])
+
+  // The site document stores the provider's repository id, not its name, so a
+  // failed lookup falls back to the installation owner instead of an empty row.
+  const repositoryLabel = repository
+    ? `${repository.organization}/${repository.name}`
+    : installationOrganization || t('Connected repository')
 
   const installationId: string | undefined =
     site?.installationId != null ? site.installationId : undefined
@@ -357,12 +400,12 @@ export function GitRepositoryCard({
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
-            ) : repository ? (
+            ) : repository || repositoryErrorKind ? (
               <div className="flex items-center gap-3 rounded-md border border-border bg-background px-3 py-2">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted">
                   {(() => {
                     const { Icon: RepositoryProviderIcon } = getVcsProvider(
-                      repository.provider,
+                      repository?.provider ?? installationProvider,
                     )
                     return (
                       <RepositoryProviderIcon className="h-4 w-4 text-muted-foreground" />
@@ -372,21 +415,28 @@ export function GitRepositoryCard({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="truncate text-[13px] font-medium text-foreground">
-                      {repository.organization}/{repository.name}
+                      {repositoryLabel}
                     </p>
-                    {repository.private && (
+                    {repository?.private && (
                       <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     )}
                   </div>
-                  {'pushedAt' in repository && repository.pushedAt && (
+                  {!repository ? (
                     <p className="text-[12px] text-muted-foreground">
-                      {t('Last updated')}{' '}
-                      <DateTooltip date={repository.pushedAt} />
+                      {t('Repository details unavailable')}
                     </p>
+                  ) : (
+                    'pushedAt' in repository &&
+                    repository.pushedAt && (
+                      <p className="text-[12px] text-muted-foreground">
+                        {t('Last updated')}{' '}
+                        <DateTooltip date={repository.pushedAt} />
+                      </p>
+                    )
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {(repository as { url?: string }).url && (
+                  {repository && (repository as { url?: string }).url && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -423,7 +473,7 @@ export function GitRepositoryCard({
                         <DialogDescription className="text-[13px] mt-2">
                           {t('Are you sure you want to disconnect')}{' '}
                           <span className="font-medium text-foreground">
-                            {repository.organization}/{repository.name}
+                            {repositoryLabel}
                           </span>{' '}
                           {t(
                             "from this site? This will remove the Git integration but won't affect your deployments.",
@@ -456,6 +506,21 @@ export function GitRepositoryCard({
               </div>
             ) : null}
 
+            {repositoryErrorKind && (
+              <VcsInstallationErrorAlert
+                kind={repositoryErrorKind}
+                provider={installationProvider}
+                organization={installationOrganization}
+                reconnectUrl={reconnectUrl}
+                onRetry={() => refetchRepository()}
+                isRetrying={repositoryFetching}
+              >
+                {t(
+                  "This site's repository details could not be loaded. Its Git connection is unchanged, but branch and root directory options are unavailable until access is restored.",
+                )}
+              </VcsInstallationErrorAlert>
+            )}
+
             <fieldset className="rounded-lg border border-border p-4 space-y-4">
               <legend className="text-[13px] font-medium text-foreground px-2">
                 {t('Branch Settings')}
@@ -468,6 +533,7 @@ export function GitRepositoryCard({
                 value={selectedBranch}
                 onChange={setSelectedBranch}
                 label={t('Production branch')}
+                suppressInstallationError={!!repositoryErrorKind}
               />
 
               <RootDirectoryPicker

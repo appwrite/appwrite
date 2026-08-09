@@ -1,13 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Copy, ExternalLink, Key } from 'lucide-react'
+import { ExternalLink, Key, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   CodeBlock,
   type CodeBlockLanguage,
 } from '@/components/global/shared/CodeBlock'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
+import { ApiKeyDrawer } from '@/components/pages/projects/$projectId/api-keys/ApiKeyDrawer'
 import { cn } from '@/lib/utils'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
+import { analyticsAttrs } from '@/lib/analytics-actions'
+import { canCreateKey } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  useCreateApiKey,
+  useOrganizationScopes,
+  useProject,
+} from '@/lib/react-query/hooks'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 
 const TERRAFORM_PROVIDER_REPO =
@@ -16,6 +27,8 @@ const TERRAFORM_PROVIDER_REPO =
 /** Provider docs on the public Terraform Registry (pinned line matches published 0.0.x) */
 const TERRAFORM_REGISTRY_PROVIDER_DOCS =
   'https://registry.terraform.io/providers/appwrite/appwrite/latest/docs'
+
+const TERRAFORM_API_KEY_DEFAULT_NAME = 'Terraform'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -81,75 +94,57 @@ provider "appwrite" {
 export APPWRITE_PROJECT_ID="${pid}"
 export APPWRITE_API_KEY="your-api-key"`
 
-  const databaseTf = `resource "appwrite_database" "main" {
+  const databaseTf = `resource "appwrite_tablesdb" "main" {
   id   = "main"
-  name = "Main"
+  name = "main"
 }
 
-resource "appwrite_table" "users" {
-  database_id = appwrite_database.main.id
+resource "appwrite_tablesdb_table" "users" {
+  database_id = appwrite_tablesdb.main.id
   id          = "users"
-  name        = "Users"
+  name        = "users"
 }
 
-resource "appwrite_column" "name" {
-  database_id = appwrite_database.main.id
-  table_id    = appwrite_table.users.id
-  key         = "name"
-  type        = "varchar"
-  size        = 255
-  required    = true
-}
-
-resource "appwrite_column" "email" {
-  database_id = appwrite_database.main.id
-  table_id    = appwrite_table.users.id
+resource "appwrite_tablesdb_column" "email" {
+  database_id = appwrite_tablesdb.main.id
+  table_id    = appwrite_tablesdb_table.users.id
   key         = "email"
   type        = "email"
   required    = true
 }
 
-resource "appwrite_column" "age" {
-  database_id = appwrite_database.main.id
-  table_id    = appwrite_table.users.id
-  key         = "age"
-  type        = "integer"
-  min         = 0
-  max         = 150
-}
-
-resource "appwrite_column" "role" {
-  database_id = appwrite_database.main.id
-  table_id    = appwrite_table.users.id
-  key         = "role"
-  type        = "enum"
-  elements    = ["admin", "editor", "viewer"]
-  default     = "viewer"
-}
-
-resource "appwrite_column" "tags" {
-  database_id = appwrite_database.main.id
-  table_id    = appwrite_table.users.id
-  key         = "tags"
-  type        = "varchar"
-  size        = 64
-  array       = true
-}
-
-resource "appwrite_column" "location" {
-  database_id = appwrite_database.main.id
-  table_id    = appwrite_table.users.id
-  key         = "location"
-  type        = "point"
-}
-
-resource "appwrite_index" "email_unique" {
-  database_id = appwrite_database.main.id
-  table_id    = appwrite_table.users.id
+resource "appwrite_tablesdb_index" "email_unique" {
+  database_id = appwrite_tablesdb.main.id
+  table_id    = appwrite_tablesdb_table.users.id
   key         = "email_unique"
   type        = "unique"
-  columns     = [appwrite_column.email.key]
+  columns     = [appwrite_tablesdb_column.email.key]
 }`
+
+  const functionsTf = `resource "appwrite_function" "hello_world" {
+  name       = "hello-world"
+  runtime    = "node-22"
+  entrypoint = "index.js"
+  commands   = "npm install"
+}
+
+resource "appwrite_function" "on_user_create" {
+  name       = "on-user-create"
+  runtime    = "node-22"
+  events     = ["users.*.create"]
+  entrypoint = "index.js"
+  execute    = ["any"]
+}
+
+resource "appwrite_function_variable" "api_url" {
+  function_id = appwrite_function.hello_world.id
+  key         = "API_URL"
+  value       = "https://api.example.com"
+}`
+
+  const tfvarsExample = `# terraform.tfvars (gitignore this file)
+# Keys match variable names in main.tf (no TF_VAR_ prefix here).
+appwrite_api_key = "your-api-key"`
 
   return [
     {
@@ -165,6 +160,13 @@ resource "appwrite_index" "email_unique" {
         'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).',
     },
     {
+      label: 'terraform.tfvars',
+      language: 'hcl',
+      code: tfvarsExample,
+      footerHint:
+        'Place next to your .tf files. Terraform loads terraform.tfvars automatically. Add *.tfvars to .gitignore so the API key is never committed.',
+    },
+    {
       label: 'exports.sh',
       language: 'bash',
       code: exportsSh,
@@ -172,11 +174,18 @@ resource "appwrite_index" "email_unique" {
         'Shell exports matching APPWRITE_* provider options. When set, you can skip duplicate fields in provider {}. Use secrets in CI, not committed files.',
     },
     {
-      label: 'database.tf',
+      label: 'tablesdb.tf',
       language: 'hcl',
       code: databaseTf,
       footerHint:
-        'Example database, table, columns, and index. Add alongside your provider configuration.',
+        'TablesDB example: database, table, column, and index. Add alongside your provider configuration.',
+    },
+    {
+      label: 'functions.tf',
+      language: 'hcl',
+      code: functionsTf,
+      footerHint:
+        'Functions example: a basic function, an event-driven function, and an environment variable.',
     },
   ]
 }
@@ -197,96 +206,179 @@ export function TerraformConnectSection({
   onViewApiKeys,
 }: TerraformConnectSectionProps) {
   const t = useT()
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noCreatePermission = !canCreateKey(access, features)
+  const createMutation = useCreateApiKey(projectId)
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
-  const [copied, setCopied] = useState(false)
+  const [apiKeyMethod, setApiKeyMethod] = useState<'env' | 'tfvars'>('env')
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
+  const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
 
   const codeFiles = useMemo(
     () => buildTerraformExampleFiles(endpoint, projectId),
     [endpoint, projectId],
   )
 
+  const codeFileTabs = useMemo(
+    () =>
+      codeFiles.map((file, index) => ({
+        id: String(index),
+        label: file.label,
+      })),
+    [codeFiles],
+  )
+
   useEffect(() => {
     setSelectedFileIndex(0)
-    setCopied(false)
   }, [endpoint, projectId])
 
   const selectedFile = codeFiles[selectedFileIndex] ?? codeFiles[0]
 
-  const handleCopyCode = () => {
-    if (!selectedFile) return
-    navigator.clipboard.writeText(selectedFile.code)
-    setCopied(true)
-    toast.success(t('Copied to clipboard'))
-    setTimeout(() => setCopied(false), 2000)
+  const handleCopyKey = (text: string, field: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedField(field)
+    setTimeout(() => setCopiedField(null), 2000)
+  }
+
+  const handleCreateApiKey = (data: {
+    name: string
+    scopes?: string[]
+    expire?: string
+  }) => {
+    createMutation.mutate(data, {
+      onSuccess: (createdKey) => {
+        toast.success(t('API key created successfully'))
+        if (createdKey?.secret) {
+          setCreatedKeySecret(createdKey.secret)
+        } else {
+          setCreateDrawerOpen(false)
+        }
+      },
+      onError: (error: Error) => {
+        toast.error(getErrorMessage(error) || t('Failed to create API key'))
+      },
+    })
+  }
+
+  const selectTfvarsExample = () => {
+    const index = codeFiles.findIndex(
+      (file) => file.label === 'terraform.tfvars',
+    )
+    if (index >= 0) {
+      setSelectedFileIndex(index)
+    }
   }
 
   return (
+    <div className="flex min-h-0 flex-1 flex-col">
     <div className="grid grid-cols-[0.9fr_1.4fr] gap-6 pt-4 min-h-0 flex-1">
-      <div className="space-y-4 min-w-0 min-h-0 overflow-y-auto">
-        <div className="space-y-3">
+      <div className="space-y-5 min-w-0 min-h-0 overflow-y-auto">
+        <div className="space-y-2">
           <h4 className="text-[13px] font-semibold text-foreground">
             {t('Infrastructure as code')}
           </h4>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             {t(
-              'The official Appwrite Terraform provider lets you create and update project resources from', // pragma: allowlist secret
-            )}{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-              .tf
-            </code>{' '}
-            {t(
-              'files instead of clicking through the console - ideal for staging and production parity, code review, and automated pipelines.',
+              'Manage Appwrite resources as code. Copy an example on the right, then run terraform init and apply.',
             )}
           </p>
-          <p className="text-[13px] text-muted-foreground leading-relaxed">
-            {t(
-              'Use it when you want repeatable environments, documented changes in Git, or to wire Appwrite into a broader Terraform stack (VPC, DNS, functions, and more) in one workflow. The registry documents resources such as', // pragma: allowlist secret
-            )}{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-              appwrite_database
-            </code>
-            ,{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-              appwrite_bucket
-            </code>
-            ,{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-              appwrite_messaging_topic
-            </code>
-            , {t('and others, with full schemas and imports.')}
-          </p>
         </div>
-        <div className="rounded-xl border border-border bg-muted/30 overflow-hidden">
-          <div className="px-4 py-3 border-b border-border">
+
+        <div className="space-y-3">
+          <div className="space-y-1.5">
             <h4 className="text-[13px] font-semibold text-foreground">
-              {t('API keys')}
+              {t('API key')}
             </h4>
-          </div>
-          <div className="px-4 py-3 space-y-3">
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
               {t(
-                'Terraform needs an API key with scopes for the resources you manage. Pass it with',
-              )}{' '}
-              <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-                TF_VAR_appwrite_api_key
-              </code>{' '}
-              {t('or')}{' '}
-              <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-                terraform.tfvars
-              </code>
-              - {t('never commit secrets to Git.')}
+                'Required for apply. Never commit secrets to Git.',
+              )}
             </p>
+          </div>
+          <div className="flex flex-wrap gap-1 rounded-lg border border-border bg-muted/30 p-1 w-fit">
+            <button
+              type="button"
+              onClick={() => setApiKeyMethod('env')}
+              className={cn(
+                'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
+                apiKeyMethod === 'env'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {t('Environment variable')}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setApiKeyMethod('tfvars')
+                selectTfvarsExample()
+              }}
+              className={cn(
+                'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
+                apiKeyMethod === 'tfvars'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              terraform.tfvars
+            </button>
+          </div>
+          {apiKeyMethod === 'env' ? (
+            <div className="space-y-2">
+              <CodeBlock
+                code='export TF_VAR_appwrite_api_key="your-api-key"'
+                language="bash"
+                label={t('Terminal')}
+                showCopy
+              />
+              <p className="text-[12px] text-muted-foreground leading-relaxed">
+                {t(
+                  'Name after TF_VAR_ must match the variable (usually lowercase). .env files are not loaded.',
+                )}
+              </p>
+            </div>
+          ) : (
+            <p className="text-[12px] text-muted-foreground leading-relaxed">
+              {t(
+                'Terraform loads terraform.tfvars next to your .tf files automatically. Gitignore *.tfvars.',
+              )}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
             <Button
+              type="button"
               variant="secondary"
               size="sm"
-              className="h-9 text-[13px] gap-1.5"
+              className="h-8 gap-1.5 text-[12px]"
+              onClick={() => setCreateDrawerOpen(true)}
+              disabled={noCreatePermission}
+              title={
+                noCreatePermission
+                  ? t("You don't have permission to create API keys.")
+                  : undefined
+              }
+              {...analyticsAttrs('create-api-key')}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t('Create API key')}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-8 gap-1.5 text-[12px]"
               onClick={onViewApiKeys}
             >
-              <Key className="h-4 w-4" />
+              <Key className="h-3.5 w-3.5" />
               {t('View API keys')}
             </Button>
           </div>
         </div>
+
         <div className="flex flex-col gap-2">
           <a
             href={TERRAFORM_REGISTRY_PROVIDER_DOCS}
@@ -312,59 +404,17 @@ export function TerraformConnectSection({
       </div>
 
       <div className="min-w-0 min-h-0 flex flex-col gap-2 flex-1">
-        <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
-          {codeFiles.length > 1 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {codeFiles.map((file, i) => (
-                <button
-                  key={file.label}
-                  type="button"
-                  onClick={() => {
-                    setSelectedFileIndex(i)
-                    setCopied(false)
-                  }}
-                  className={cn(
-                    'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                    i === selectedFileIndex
-                      ? 'bg-muted text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
-                  )}
-                >
-                  {file.label}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              {selectedFile?.label}
-            </span>
-          )}
-          {selectedFile && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
-              onClick={handleCopyCode}
-            >
-              {copied ? (
-                <Check className="h-3.5 w-3.5" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-              {t('Copy')}
-            </Button>
-          )}
-        </div>
         {selectedFile && (
-          <div className="min-h-0 flex-1 flex flex-col">
-            <CodeBlock
-              code={selectedFile.code}
-              language={selectedFile.language}
-              showCopy={false}
-              fixedHeight="100%"
-              className="flex-1 min-h-0 flex flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0"
-            />
-          </div>
+          <ConnectCodeExample
+            code={selectedFile.code}
+            language={selectedFile.language}
+            tabs={codeFileTabs}
+            activeTabId={String(selectedFileIndex)}
+            onTabChange={(id) => setSelectedFileIndex(Number(id))}
+            selectorAriaLabel={t('Select file')}
+            fixedHeight="100%"
+            className="flex-1 min-h-0"
+          />
         )}
         {selectedFile && (
           <p className="shrink-0 text-[12px] text-muted-foreground pt-2">
@@ -386,6 +436,21 @@ export function TerraformConnectSection({
           </p>
         )}
       </div>
+    </div>
+
+    <ApiKeyDrawer
+      open={createDrawerOpen}
+      onOpenChange={(open) => {
+        setCreateDrawerOpen(open)
+        if (!open) setCreatedKeySecret(null)
+      }}
+      onSubmit={handleCreateApiKey}
+      isLoading={createMutation.isPending}
+      createdKeySecret={createdKeySecret}
+      onCopy={handleCopyKey}
+      copiedField={copiedField}
+      initialName={t(TERRAFORM_API_KEY_DEFAULT_NAME)}
+    />
     </div>
   )
 }

@@ -33,6 +33,11 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   Loader2,
   GitBranch,
   Key,
@@ -53,6 +58,10 @@ import {
   useFunctionSpecifications,
 } from '@/lib/react-query/hooks'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
+import { VcsInstallationErrorAlert } from '@/components/global/shared/VcsInstallationError'
+import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
+import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
+import { cn } from '@/lib/utils'
 import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
@@ -119,7 +128,8 @@ export function RepositoryConfigView({
   const [runtime, setRuntime] = useState(formData.runtime || '')
   const [entrypoint, setEntrypoint] = useState('')
   const [commands, setCommands] = useState('')
-  const [branch, setBranch] = useState('main')
+  // Empty so BranchSelector resolves it from the repository.
+  const [branch, setBranch] = useState('')
   const [rootDirectory, setRootDirectory] = useState('./')
   const [silentMode, setSilentMode] = useState(false)
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])
@@ -129,7 +139,12 @@ export function RepositoryConfigView({
   const [specification, setSpecification] = useState('')
   const [isDeploying, setIsDeploying] = useState(false)
 
-  const { data: repository } = useRepository(
+  const {
+    data: repository,
+    error: repositoryError,
+    isFetching: repositoryFetching,
+    refetch: refetchRepository,
+  } = useRepository(
     projectId,
     installationId || null,
     providerRepositoryId || null,
@@ -190,6 +205,34 @@ export function RepositoryConfigView({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [installationId, providerRepositoryId])
+
+  // Both calls refresh the installation token, so either one can be the first
+  // to report that the installation itself is what broke. Left unread, runtime
+  // detection just silently gives up and the step looks ready to submit.
+  const installationErrorKind =
+    getVcsInstallationErrorKind(repositoryError) ??
+    getVcsInstallationErrorKind(detectRuntimeMutation.error)
+
+  // Only a dead token can block submission. A transient failure clears on
+  // retry, and runtime detection failing on its own still leaves the manual
+  // runtime picker, so neither should strand a user who could otherwise create.
+  const createBlocked =
+    getVcsInstallationErrorKind(repositoryError) === 'reconnect'
+
+  // The search params carry the repository, so the current URL is where the
+  // user should land after re-authorizing.
+  const {
+    provider: installationProvider,
+    organization: installationOrganization,
+    reconnectUrl,
+  } = useVcsInstallationReconnect(projectId, installationId)
+
+  const handleInstallationRetry = () => {
+    refetchRepository()
+    if (installationId && providerRepositoryId) {
+      detectRuntimeMutation.mutate()
+    }
+  }
 
   useEffect(() => {
     if (functionName && !domain) {
@@ -375,9 +418,18 @@ export function RepositoryConfigView({
       </div>
       <div className="px-5 py-3 bg-muted/20 border-t border-border/50">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div
+            className={cn(
+              'h-2 w-2 rounded-full',
+              installationErrorKind
+                ? 'bg-amber-500'
+                : 'bg-emerald-500 animate-pulse',
+            )}
+          />
           <span className="text-[11px] text-muted-foreground">
-            {t('Ready to deploy')}
+            {installationErrorKind
+              ? t('Git connection needs attention')
+              : t('Ready to deploy')}
           </span>
         </div>
       </div>
@@ -420,21 +472,52 @@ export function RepositoryConfigView({
           >
             {t('Cancel')}
           </Button>
-          <Button
-            onClick={handleDeploy}
-            disabled={
-              isDeploying ||
-              !functionName ||
-              !runtime ||
-              !domain.trim() ||
-              !domainValid
-            }
-          >
-            {t('Create and deploy')}
-          </Button>
+          {createBlocked ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-block">
+                  <Button disabled>{t('Create and deploy')}</Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {t(
+                  'Reconnect the Git installation before creating this function.',
+                )}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              onClick={handleDeploy}
+              disabled={
+                isDeploying ||
+                !functionName ||
+                !runtime ||
+                !domain.trim() ||
+                !domainValid
+              }
+            >
+              {t('Create and deploy')}
+            </Button>
+          )}
         </>
       }
     >
+      {installationErrorKind && (
+        <VcsInstallationErrorAlert
+          kind={installationErrorKind}
+          provider={installationProvider}
+          organization={installationOrganization}
+          reconnectUrl={reconnectUrl}
+          onRetry={handleInstallationRetry}
+          isRetrying={repositoryFetching || detectRuntimeMutation.isPending}
+          className="mb-6"
+        >
+          {t(
+            'Appwrite could not read this repository, so the runtime was not detected and this function cannot be created from Git yet.',
+          )}
+        </VcsInstallationErrorAlert>
+      )}
+
       <div className="rounded-xl border border-border bg-card/50 p-4 mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

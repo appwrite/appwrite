@@ -9,6 +9,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Server Error': 'サーバーエラー',
   'Connection Error': '接続エラー',
   'Request Timeout': 'リクエストがタイムアウトしました',
+  'Database timed out. Try adjusting your queries or adding an index.':
+    'データベースがタイムアウトしました。クエリを調整するか、インデックスを追加してください。',
   'Something went wrong. Please try again.':
     '問題が発生しました。もう一度お試しください。',
   // Punctuated fragments and short segments
@@ -181,6 +183,9 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Write content': 'コンテンツを書く',
   'Publish blogs, videos, or tutorials that help developers discover Appwrite.':
     '開発者が Appwrite を発見できるブログ、動画、チュートリアルを公開しましょう。',
+  'Join the Affiliates program': 'アフィリエイトプログラムに参加',
+  'Share invite links and earn credits when developers upgrade to Pro.':
+    '招待リンクを共有し、開発者が Pro にアップグレードするとクレジットを獲得できます。',
   'Build integrations': 'インテグレーションを作る',
   'Connect Appwrite to the tools your stack already uses.':
     'すでにお使いのスタックのツールに Appwrite をつなげましょう。',
@@ -765,7 +770,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Payment failed - your organization has restricted access due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.': '支払いに失敗しました。未解決の請求問題により、組織は制限付きアクセスになっています。支払いが完了するまで、プロジェクトとサービスへの変更は制限されます。請求情報を更新して、完全なアクセスを回復してください。',
   'Privacy-friendly usage analytics and error reporting to help us improve Appwrite.': 'Appwrite の改善に役立つ、プライバシーに配慮した使用状況分析とエラーレポートです。',
   'Redeploy is not available for this deployment type': 'このデプロイタイプでは再デプロイを利用できません',
-  'Required for sign-in, security, and remembering your preferences.': 'サインイン、セキュリティ、設定の記憶に必要です。',
+  'Required for sign-in, site access, security, and remembering your preferences.': 'サインイン、サイトアクセス、セキュリティ、設定の記憶に必要です。',
   'Search anything - pages, tabs, settings, resources...': 'ページ、タブ、設定、リソースなど、何でも検索…',
   'Stop the current deployment? You can deploy again later.': '現在のデプロイを停止しますか?後で再度デプロイできます。',
   'That user is already the active Console session.': 'そのユーザーは既にアクティブなコンソールセッションです。',
@@ -785,7 +790,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'VCS (Version Control System) deployments are triggered from a connected Git repository and enable automatic deployments on code pushes.': 'VCS (バージョン管理システム) デプロイは、接続された Git リポジトリからトリガーされ、コードのプッシュ時に自動デプロイを可能にします。',
   'Variable value is longer than 8192 allowed characters': '変数の値が許可される8192文字を超えています',
   'Wait for the build to finish or cancel it first': 'ビルドの完了を待つか、先にキャンセルしてください',
-  'We use essential cookies to keep you signed in and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our': 'サインイン状態の維持と設定の記憶のために、必須の Cookie を使用しています。許可いただいた場合、Appwrite の利用状況を把握し改善するために分析も使用します。詳しくは',
+  'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our': 'サインイン状態の維持、サイトアクセスの管理、設定の記憶のために、必須の Cookie を使用しています。許可いただいた場合、Appwrite の利用状況を把握し改善するために分析も使用します。詳しくは', // pragma: allowlist secret
   'You cannot impersonate your own operator account.': '自分のオペレーターアカウントになりすますことはできません。',
   '75% hot-swap mechanical keyboard with Gateron G Pro Yellow switches, tri-mode USB-C/2.4GHz/BT, and 84 dye-sublimated keycaps optimized for Console shortcuts.': 'Gateron G Pro Yellow スイッチ搭載の75%ホットスワップ式メカニカルキーボード。USB-C/2.4GHz/BT のトライモードに対応し、コンソールのショートカット用に最適化された84個の昇華印刷キーキャップを備えています。',
   'Executions will appear here when your function runs.': '関数が実行されると、ここに実行結果が表示されます。',
@@ -870,6 +875,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
     '購読する Realtime チャンネルを作成します。複数のリソースに一致させるにはワイルドカード (*) を使用してください。',
   'Select events that will trigger your function or webhook.':
     '関数または Webhook をトリガーするイベントを選択してください。',
+  'Select file': 'ファイルを選択',
+  'Select tool': 'ツールを選択',
   'e.g. account or databases.*.tables.*.rows.*':
     '例: account または databases.*.tables.*.rows.*',
   'e.g. databases.*.tables.*.rows.*.create':

@@ -25,10 +25,16 @@ import {
   useCreateVcsRepository,
   useNamespacesForInstallations,
 } from '@/lib/react-query/hooks'
-import { toast } from 'sonner'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
+import { WarningAlert } from '@/components/global/shared/WarningAlert'
+import { VcsInstallationErrorAlert } from '@/components/global/shared/VcsInstallationError'
+import {
+  getErrorMessage,
+  getVcsInstallationErrorKind,
+} from '@/lib/utils/error-formatting'
+import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { GitBranch } from 'lucide-react'
@@ -94,7 +100,7 @@ export function ConnectRepositorySection({
   value,
   onValueChange,
   showBranchAndRoot = false,
-  branch = 'main',
+  branch = '',
   onBranchChange,
   rootDirectory = './',
   onRootDirectoryChange,
@@ -185,6 +191,17 @@ export function ConnectRepositorySection({
 
   const createRepositoryMutation = useCreateVcsRepository(projectId)
 
+  // A creation failure has to be explained next to the form that caused it, and
+  // a dead installation is the one cause the user can actually act on.
+  const createRepositoryErrorKind = getVcsInstallationErrorKind(
+    createRepositoryMutation.error,
+  )
+  const {
+    provider: reconnectProvider,
+    organization: reconnectOrganization,
+    reconnectUrl,
+  } = useVcsInstallationReconnect(projectId, selectedInstallationId)
+
   const hasRepository = !!value.installationId && !!value.providerRepositoryId
   const hasInstallations = installations.length > 0
 
@@ -216,8 +233,9 @@ export function ConnectRepositorySection({
         repositoryName: repo.name,
         repositoryOwner: repo.organization,
       })
-    } catch (error: unknown) {
-      toast.error(error?.message ?? t('Failed to create repository'))
+    } catch {
+      // Rendered below from createRepositoryMutation.error. Caught here only so
+      // mutateAsync does not reject unhandled.
     }
   }
 
@@ -274,6 +292,12 @@ export function ConnectRepositorySection({
               <a href={vcsAuthUrl('gitlab')}>
                 <VcsIcon type="gitlab" className="me-1.5 h-4 w-4" />
                 {t('Connect to GitLab')}
+              </a>
+            </Button>
+            <Button variant="secondary" asChild>
+              <a href={vcsAuthUrl('bitbucket')}>
+                <VcsIcon type="bitbucket" className="me-1.5 h-4 w-4" />
+                {t('Connect to Bitbucket')}
               </a>
             </Button>
           </div>
@@ -498,6 +522,30 @@ export function ConnectRepositorySection({
             >
               {t('Create')}
             </Button>
+            {createRepositoryMutation.error &&
+              (createRepositoryErrorKind ? (
+                <VcsInstallationErrorAlert
+                  kind={createRepositoryErrorKind}
+                  provider={reconnectProvider}
+                  organization={reconnectOrganization}
+                  reconnectUrl={reconnectUrl}
+                  onRetry={handleCreateRepository}
+                  isRetrying={createRepositoryMutation.isPending}
+                >
+                  {t(
+                    'The repository was not created because Appwrite could not reach this Git installation.',
+                  )}
+                </VcsInstallationErrorAlert>
+              ) : (
+                <WarningAlert title={t('Could not create the repository')}>
+                  {/* The API says why (name taken, invalid characters, quota),
+                      and guessing here would hide the real reason. */}
+                  {getErrorMessage(
+                    createRepositoryMutation.error,
+                    'Check that the name is not already taken in the selected organization, then try again.',
+                  )}
+                </WarningAlert>
+              ))}
           </div>
         )}
 

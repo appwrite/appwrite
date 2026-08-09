@@ -225,7 +225,7 @@ export function CreateTableSimilar({
               {t('Cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting || !name.trim()}>
-              {isSubmitting ? t('Creating…') : t('Create')}
+              {t('Create')}
             </Button>
           </div>
         </form>

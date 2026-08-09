@@ -33,10 +33,14 @@ export function GitSilentModeCard({ func }: GitSilentModeCardProps) {
         buildFunctionUpdateParams(func, updates),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Function updated successfully'))
+      queryClient.setQueryData(
+        ['function', 'project', projectId, func.$id],
+        updated,
+      )
       queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, func.$id],
+        queryKey: ['functions', 'project', projectId],
       })
     },
     onError: (error: unknown) => {

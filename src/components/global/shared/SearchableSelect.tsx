@@ -232,7 +232,7 @@ export function SearchableSelect({
           </div>
           <CommandList
             ref={listScrollRef}
-            className="max-h-[240px] overflow-y-auto overscroll-contain"
+            className="min-h-[180px] max-h-[240px] overflow-y-auto overscroll-contain"
           >
             {items.length === 0 && isFetching ? (
               <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">

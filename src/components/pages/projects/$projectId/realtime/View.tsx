@@ -80,6 +80,7 @@ import {
 } from '@/lib/realtime/subscription-queries'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
 const MAX_LOG_ENTRIES = 1000
@@ -943,10 +944,7 @@ export function View() {
   )
 
   const handleOpenChannelBuilder = useCallback(() => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur()
-    }
-    window.setTimeout(() => setChannelBuilderOpen(true), 0)
+    openDialogAfterOverlayCloses(() => setChannelBuilderOpen(true))
   }, [])
 
   const handleClearLogs = useCallback(() => {

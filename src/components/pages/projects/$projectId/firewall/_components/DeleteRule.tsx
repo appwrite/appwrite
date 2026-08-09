@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useDeleteFirewallRule } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
 
@@ -30,10 +31,13 @@ export function DeleteRule({
 
   const handleDelete = async () => {
     if (!rule) return
-    try {
-      await deleteMutation.mutateAsync(rule.$id)
-      toast.success(t('Firewall rule deleted'))
+    const ruleId = rule.$id
+    closeDialogBeforeOverlayUnmount(() => {
       onOpenChange(false)
+    })
+    try {
+      await deleteMutation.mutateAsync(ruleId)
+      toast.success(t('Firewall rule deleted'))
     } catch (error) {
       toast.error(
         getErrorMessage(error as Error, t('Failed to delete firewall rule')),

@@ -2,6 +2,7 @@ import {
   GLOBAL_SHORTCUT_IDS,
   GLOBAL_SHORTCUT_REFS,
 } from '@/lib/keyboard-shortcuts/global-shortcuts'
+import { detectUserOs, isMacOs } from '@/lib/user-os'
 
 export type KeyId = string
 
@@ -34,6 +35,7 @@ const SHORTCUT_GROUP_ORDER = [
   'Navigation',
   'Create',
   'Actions',
+  'Agent',
   'SQL editor',
   'Terminal',
   'Help',
@@ -44,11 +46,9 @@ function normalizeShortcutRaw(raw: string) {
   return raw.trim().toLowerCase()
 }
 
+/** Raw device detection (ignores debug OS override). Prefer `usePlatform()`. */
 export function isMacPlatform() {
-  return (
-    typeof navigator !== 'undefined' &&
-    /Mac|iPod|iPhone|iPad/.test(navigator.platform)
-  )
+  return isMacOs(detectUserOs())
 }
 
 function formatSingleDisplayKey(key: string, isMac: boolean): string {
@@ -76,6 +76,8 @@ function formatSingleDisplayKey(key: string, isMac: boolean): string {
   if (key === '?') return '?'
   if (key === ',') return ','
   if (lower === 'semicolon' || key === ';') return ';'
+  if (lower === 'quote' || key === "'" || key === '"') return "'"
+  if (lower === 'backslash' || key === '\\' || key === '|') return '\\'
   if (lower === 'period' || key === '.') return '.'
   if (key.length === 1 && /[a-z]/i.test(key)) return key.toUpperCase()
   return key
@@ -106,6 +108,10 @@ function tokenToHighlightKey(token: string, isMac: boolean): KeyId[] {
   if (token === '?') return ['shiftLeft', 'slash']
   if (token === ',') return ['comma']
   if (token === ';' || lower === 'semicolon') return ['semicolon']
+  if (token === "'" || token === '"' || lower === 'quote') return ['quote']
+  if (token === '\\' || token === '|' || lower === 'backslash') {
+    return ['backslash']
+  }
   if (token === '.' || lower === 'period') return ['period']
   if (token.length === 1 && /[a-z]/i.test(token)) return [token.toLowerCase()]
   return [lower]

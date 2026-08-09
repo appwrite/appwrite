@@ -26,10 +26,25 @@ export function setWebsiteAccessCookie(): void {
   document.cookie = `${WEBSITE_ACCESS_COOKIE_NAME}=1; path=/; max-age=${COOKIE_MAX_AGE_SECONDS}; SameSite=Lax${secure}`
 }
 
-/** Soft-launch gate: every page except `/access`. */
+/** Soft-launch gate: every page except `/access` and public affiliate invite short links. */
 export function isWebsiteAccessProtectedPath(
   pathname: string | null | undefined,
 ): boolean {
   const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
-  return normalized !== '/access'
+  if (normalized === '/access') return false
+  // `/i/{linkId}` must redirect to the API without the soft-launch password.
+  if (normalized === '/i' || normalized.startsWith('/i/')) return false
+  return true
+}
+
+/**
+ * Client gate should cover `/access` itself (password form) plus every
+ * protected path. Affiliate short links stay exempt.
+ */
+export function shouldShowWebsiteAccessGate(
+  pathname: string | null | undefined,
+): boolean {
+  const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
+  if (normalized === '/i' || normalized.startsWith('/i/')) return false
+  return true
 }

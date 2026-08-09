@@ -47,8 +47,8 @@ export type ConsoleProfileFeatures = {
   oauth2Server: boolean
   /** Organization API keys */
   orgApiKeys: boolean
-  /** In-app AI assistant chat panel and header button */
-  aiAssistant: boolean
+  /** In-app AI agent (chat panel, header button, /agent routes, and Agent docs) */
+  agent: boolean
   /** Stored execution history: function execution logs and site request logs. Self-hosted no longer persists execution documents. */
   executionLogs: boolean
   /** Database backup policies and archives */
@@ -77,6 +77,19 @@ export type ConsoleProfileFeatures = {
   userVerification: boolean
   /** Project Firewall (rules, analytics, logs) under Protect */
   firewall: boolean
+  /** Account affiliates program (referral codes, rewards, credit claims) */
+  affiliates: boolean
+  /**
+   * Cookie consent banner (locale-gated GDPR prompt, footer cookie settings).
+   * When false, consent is treated as granted and tracking scripts may load.
+   */
+  cookieBanner: boolean
+  /**
+   * Draft blog posts (`draft: true` frontmatter). When true, the blog index
+   * lists every draft above "Explore by topic" and draft post pages resolve
+   * instead of 404ing. Preview-only: keep off for public deployments.
+   */
+  blogDrafts: boolean
   /** Product analytics: tracked properties, visitor stats, and per-event metrics */
   analytics: boolean
 }
@@ -103,7 +116,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   oauthApps: 'OAuth apps',
   oauth2Server: 'OAuth2 server',
   orgApiKeys: 'Org API keys',
-  aiAssistant: 'AI assistant',
+  agent: 'Agent',
   executionLogs: 'Execution logs',
   databaseBackups: 'Database backups',
   dedicatedDbsSupport: 'Dedicated DBs (global)',
@@ -116,6 +129,9 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
   firewall: 'Firewall',
+  affiliates: 'Affiliates',
+  cookieBanner: 'Cookie banner',
+  blogDrafts: 'Blog drafts',
   analytics: 'Analytics',
 }
 
@@ -149,7 +165,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauthApps: false,
       oauth2Server: true,
       orgApiKeys: false,
-      aiAssistant: true,
+      agent: true,
       executionLogs: true,
       databaseBackups: true,
       dedicatedDbsSupport: false,
@@ -162,6 +178,9 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       edgeNetwork: true,
       userVerification: true,
       firewall: true,
+      affiliates: true,
+      cookieBanner: true,
+      blogDrafts: false,
       // Product analytics is still in development; keep it off until the
       // cloud analytics API ships. Toggle via the debug menu to work on it.
       analytics: false,
@@ -189,7 +208,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauthApps: false,
       oauth2Server: false,
       orgApiKeys: false,
-      aiAssistant: false,
+      agent: false,
       executionLogs: false,
       databaseBackups: false,
       dedicatedDbsSupport: false,
@@ -202,6 +221,9 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       edgeNetwork: false,
       userVerification: false,
       firewall: false,
+      affiliates: false,
+      cookieBanner: false,
+      blogDrafts: false,
       analytics: false,
     },
   },
@@ -285,10 +307,30 @@ export function getEnvProfileFeatures(): ConsoleProfileFeatures {
 
 /** Store the full profile object (actual value), not just the id. */
 const DEBUG_PROFILE_KEY = 'debug:consoleProfile'
+/**
+ * Cookie mirror of {@link DEBUG_PROFILE_KEY} for client-side persistence across
+ * tabs. Do not read this via `@tanstack/react-start/server` from this module —
+ * that creates an SSR circular import with the router bootstrap.
+ */
+const DEBUG_PROFILE_COOKIE = 'debug_console_profile'
+const DEBUG_PROFILE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 
-function getStoredProfile(): ConsoleProfile | null {
-  if (typeof window === 'undefined') return null
-  const stored = localStorage.getItem(DEBUG_PROFILE_KEY)
+/** Map legacy stored feature keys onto the current schema. */
+function migrateStoredProfileFeatures(
+  features: Partial<ConsoleProfileFeatures> & Record<string, unknown>,
+): Partial<ConsoleProfileFeatures> {
+  const next = { ...features } as Partial<ConsoleProfileFeatures> &
+    Record<string, unknown>
+  if (!('agent' in next) && typeof next.aiAssistant === 'boolean') {
+    next.agent = next.aiAssistant
+  }
+  delete next.aiAssistant
+  return next
+}
+
+function parseStoredProfileRaw(
+  stored: string | null | undefined,
+): ConsoleProfile | null {
   if (!stored?.trim()) return null
   try {
     const parsed = JSON.parse(stored) as unknown
@@ -300,7 +342,14 @@ function getStoredProfile(): ConsoleProfile | null {
       'features' in parsed &&
       typeof (parsed as ConsoleProfile).features === 'object'
     ) {
-      return parsed as ConsoleProfile
+      const profile = parsed as ConsoleProfile
+      return {
+        ...profile,
+        features: migrateStoredProfileFeatures(
+          profile.features as Partial<ConsoleProfileFeatures> &
+            Record<string, unknown>,
+        ) as ConsoleProfileFeatures,
+      }
     }
   } catch {
     // ignore
@@ -310,6 +359,50 @@ function getStoredProfile(): ConsoleProfile | null {
     return CONSOLE_PROFILES[stored as ConsoleProfileId]
   }
   return null
+}
+
+function syncDebugProfileCookie(profile: ConsoleProfile | null) {
+  if (typeof document === 'undefined') return
+  const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+  if (!profile) {
+    document.cookie = `${DEBUG_PROFILE_COOKIE}=; path=/; max-age=0; SameSite=Lax${secure}`
+    return
+  }
+  const payload = JSON.stringify({
+    id: profile.id,
+    features: profile.features ?? {},
+  })
+  document.cookie = `${DEBUG_PROFILE_COOKIE}=${encodeURIComponent(payload)}; path=/; max-age=${DEBUG_PROFILE_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax${secure}`
+}
+
+function persistDebugProfile(profile: ConsoleProfile | null) {
+  if (typeof window === 'undefined') return
+  if (profile) {
+    localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(profile))
+  } else {
+    localStorage.removeItem(DEBUG_PROFILE_KEY)
+  }
+  syncDebugProfileCookie(profile)
+}
+
+let didSyncDebugProfileCookieFromStorage = false
+
+function getStoredProfile(): ConsoleProfile | null {
+  // localStorage is browser-only. SSR uses canonical/env profile; partners docs
+  // route guards defer blocking on the server when the flag is off.
+  if (typeof window === 'undefined') return null
+
+  const stored = parseStoredProfileRaw(localStorage.getItem(DEBUG_PROFILE_KEY))
+  if (!didSyncDebugProfileCookieFromStorage) {
+    didSyncDebugProfileCookieFromStorage = true
+    syncDebugProfileCookie(stored)
+  }
+  return stored
+}
+
+/** Whether a debug localStorage profile override is active (vs env). */
+export function hasDebugProfileOverride(): boolean {
+  return getStoredProfile() !== null
 }
 
 /**
@@ -356,17 +449,28 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 
 /**
  * Per-feature overrides from runtime env vars (e.g.
- * VITE_CONSOLE_USER_VERIFICATION), applied on top of the canonical profile.
- * A stored debug override still wins.
+ * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
+ * VITE_CONSOLE_BLOG_DRAFTS), applied on top
+ * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
   features: ConsoleProfileFeatures,
 ): ConsoleProfileFeatures {
-  const userVerification = parseEnvFeatureOverride(
-    getRuntimeConfig().userVerification,
-  )
-  if (userVerification === null) return features
-  return { ...features, userVerification }
+  const config = getRuntimeConfig()
+  let next = features
+  const userVerification = parseEnvFeatureOverride(config.userVerification)
+  if (userVerification !== null) {
+    next = { ...next, userVerification }
+  }
+  const cookieBanner = parseEnvFeatureOverride(config.cookieBanner)
+  if (cookieBanner !== null) {
+    next = { ...next, cookieBanner }
+  }
+  const blogDrafts = parseEnvFeatureOverride(config.blogDrafts)
+  if (blogDrafts !== null) {
+    next = { ...next, blogDrafts }
+  }
+  return next
 }
 
 export function getActiveProfile(): ConsoleProfile {
@@ -424,10 +528,9 @@ export const CONSOLE_PROFILE_CHANGE_EVENT = 'consoleProfileChange'
 export function setDebugProfileOverride(profileId: ConsoleProfileId | null) {
   if (typeof window === 'undefined') return
   if (profileId) {
-    const profile = { ...CONSOLE_PROFILES[profileId], features: {} }
-    localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(profile))
+    persistDebugProfile({ ...CONSOLE_PROFILES[profileId], features: {} })
   } else {
-    localStorage.removeItem(DEBUG_PROFILE_KEY)
+    persistDebugProfile(null)
   }
   window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
 }
@@ -454,7 +557,7 @@ export function setDebugProfileFeatureOverride<
     id: profileId,
     features: nextOverrideFeatures,
   }
-  localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(nextStored))
+  persistDebugProfile(nextStored)
   window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
 }
 
@@ -468,8 +571,7 @@ export function resetDebugProfileFeatureOverrides() {
   const stored = getStoredProfile()
   if (!stored) return
   if (!VALID_PROFILE_IDS.includes(stored.id)) return
-  const canonical = { ...CONSOLE_PROFILES[stored.id], features: {} }
-  localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(canonical))
+  persistDebugProfile({ ...CONSOLE_PROFILES[stored.id], features: {} })
   window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
 }
 
@@ -486,14 +588,11 @@ export function resetDebugProfileFeatureOverride<
   const nextFeatures = { ...stored.features }
   delete nextFeatures[key]
 
-  localStorage.setItem(
-    DEBUG_PROFILE_KEY,
-    JSON.stringify({
-      ...canonical,
-      id: stored.id,
-      features: nextFeatures,
-    }),
-  )
+  persistDebugProfile({
+    ...canonical,
+    id: stored.id,
+    features: nextFeatures,
+  })
   window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
 }
 

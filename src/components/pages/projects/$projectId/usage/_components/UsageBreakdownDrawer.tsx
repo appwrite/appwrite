@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  useCountries,
+  useCountryLookups,
   useProjectRequestsBreakdownDrawer,
   useProjectBandwidthBreakdownDrawer,
   useProjectDatabaseReadsBreakdownDrawer,
@@ -22,13 +22,11 @@ import {
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { USAGE_BREAKDOWN_DRAWER_LIMIT } from '@/lib/usage/breakdown-limits'
-import { getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
 import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
 import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
 import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
-import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import {
   OVERVIEW_BANDWIDTH_ERROR,
   OVERVIEW_REQUESTS_ERROR,
@@ -85,11 +83,7 @@ export function UsageBreakdownDrawer({
   tableLookup: tableLookupProp,
 }: UsageBreakdownDrawerProps) {
   const t = useT()
-  const { data: countriesData } = useCountries()
-  const countryLookups = useMemo(
-    () => buildCountryLookups(countriesData?.countries),
-    [countriesData?.countries],
-  )
+  const { lookups: countryLookups } = useCountryLookups()
 
   const requestsQuery = useProjectRequestsBreakdownDrawer(
     projectId,
@@ -132,20 +126,18 @@ export function UsageBreakdownDrawer({
     refetch,
   } = activeQuery
 
-  const resourceLabels = useMemo(
+  const resourceItems = useMemo(
     () =>
-      dimension === 'resource' || dimension === 'resourceId'
-        ? getUsageBreakdownResourceIds(items)
-        : [],
+      dimension === 'resource' || dimension === 'resourceId' ? items : [],
     [dimension, items],
   )
 
   const fetchedLookups = useUsageResourceBreakdownLookups(
     projectId,
-    resourceLabels,
+    resourceItems,
     open &&
       (dimension === 'resource' || dimension === 'resourceId') &&
-      resourceLabels.length > 0,
+      resourceItems.length > 0,
   )
 
   const computeLookup = computeLookupProp ?? fetchedLookups.computeLookup

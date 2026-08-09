@@ -304,6 +304,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'No analytics data': '分析データがありません',
   'Total requests': 'リクエスト合計',
   'Block rate': 'ブロック率',
+  'Challenge solves': 'Challenge 解決数',
+  'Avg solve time': '平均解決時間',
+  solved: '解決済み',
   'Request activity over time': '経時的なリクエストアクティビティ',
   'Top blocked IPs': 'ブロック数上位の IP',
   'No blocked IPs in this period': 'この期間にブロックされた IP はありません',
@@ -794,19 +797,67 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Read the docs': 'ドキュメントを読む',
   'Use the Appwrite CLI to manage your project from the terminal. Install the CLI, log in, then point it at this project.':
     'Appwrite CLI を使用してターミナルからプロジェクトを管理します。CLI をインストールし、ログインして、このプロジェクトを指定してください。',
+  'Manage this project from the terminal. Use an interactive browser login on your machine, or an API key in CI/CD.':
+    'ターミナルからこのプロジェクトを管理します。手元ではブラウザでの対話ログイン、CI/CD では API キーを使います。',
+  Interactive: '対話モード',
+  'CI/CD': 'CI/CD',
   'Install the CLI': 'CLI のインストール',
   'Install script': 'インストールスクリプト',
   'Full installation guide': '完全なインストールガイド',
   'Log in': 'ログイン',
+  '2. Log in': '2. ログイン',
   'Your email (blurred)': 'メールアドレス (ぼかし)',
   'Connect to this project': 'このプロジェクトに接続',
+  '3. Connect to this project': '3. このプロジェクトに接続',
   'For non-interactive use (CI/CD), add':
     '非対話的な使用 (CI/CD) には、次を追加',
   'Create API keys in your project settings.':
     'プロジェクト設定で API キーを作成してください。',
+  'Opens your browser to authorize the CLI with OAuth (device flow). No password in the terminal.':
+    'ブラウザを開き、OAuth (デバイスフロー) で CLI を承認します。ターミナルにパスワードは不要です。',
+  'Opens your browser for OAuth. No password in the terminal.':
+    'ブラウザで OAuth 認証。ターミナルにパスワードは不要です。',
+  'About device authorization': 'デバイス認証について',
+  'Device auth': 'デバイス認証',
+  'Interactive setup. Pick or create a project and write appwrite.config.json.':
+    '対話セットアップ。プロジェクトを選択または作成し、appwrite.config.json を書き出します。',
+  'Interactive init. Writes appwrite.config.json.':
+    '対話 init。appwrite.config.json を書き出します。',
+  'Authenticate with an API key': 'API キーで認証',
+  '2. Authenticate with an API key': '2. API キーで認証',
+  'Non-interactive mode for CI/CD. Sets endpoint, project, and key for headless commands.':
+    'CI/CD 向けの非対話モード。エンドポイント、プロジェクト、キーを設定してヘッドレスコマンドを実行します。',
+  'Headless CI/CD auth: endpoint, project, and key.':
+    'ヘッドレス CI/CD 認証: エンドポイント、プロジェクト、キー。',
+  'Non-interactive docs': '非対話ドキュメント',
+  'CI docs': 'CI ドキュメント',
+  'Install guide': 'インストールガイド',
+  'Try it': '試す',
+  'Common interactive commands after login and init:':
+    'ログインと init のあとのよく使う対話コマンド:',
+  'Common headless commands after configuring the client:':
+    'client 設定後のよく使うヘッドレスコマンド:',
+  'After login and init:': 'ログインと init のあと:',
+  'After configuring the client:': 'client 設定のあと:',
+  'Try in Appwrite Terminal': 'Appwrite Terminal で試す',
+  'Open Appwrite Terminal': 'Appwrite Terminal を開く',
+  'Run CLI commands in your browser against this project. Your Console session is already connected.':
+    'ブラウザでこのプロジェクトに対して CLI コマンドを実行します。Console セッションはすでに接続済みです。',
+  "You don't have permission to open the project terminal.":
+    'プロジェクトターミナルを開く権限がありません。',
+  'For local workflows like pull, push, init, and run, use your machine terminal after install.':
+    'pull、push、init、run などのローカル作業は、インストール後に手元のターミナルを使ってください。',
+  'Example commands': 'コマンド例',
+  'Pull resources': 'リソースを pull',
+  'Push resources': 'リソースを push',
+  'Init a function': '関数を init',
+  'Run a function locally': '関数をローカル実行',
+  'List users': 'ユーザー一覧',
+  'Create a team': 'チームを作成',
+  'Create a function deployment': '関数デプロイを作成',
   'CLI commands': 'CLI コマンド',
-  'Give your AI agent accurate Appwrite SDK context-method signatures, patterns, and best practices for your language. Install once per project or globally; works in Cursor, Claude Code, and other compatible tools.':
-    'AI エージェントに、使用する言語向けの正確な Appwrite SDK コンテキストメソッドシグネチャ、パターン、ベストプラクティスを提供します。プロジェクトごとまたはグローバルに 1 回インストール。Cursor、Claude Code、その他の互換ツールで動作します。',
+  'Give your AI agent accurate Appwrite SDK context: method signatures, patterns, and best practices for your language. Run the setup once; you choose project or global scope in the prompts. Works with Cursor, Claude Code, and other compatible tools.':
+    'AI エージェントに、使用言語向けの正確な Appwrite SDK コンテキスト（メソッドシグネチャ、パターン、ベストプラクティス）を提供します。セットアップは 1 回実行し、プロンプトでプロジェクトまたはグローバルのスコープを選びます。Cursor、Claude Code、その他の互換ツールで動作します。',
   'Skills are available for': 'スキルは次で利用可能:',
   'pick what you use during setup.':
     'セットアップ時に使用するものを選択してください。',
@@ -822,6 +873,23 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'プロジェクト (このリポジトリ) またはグローバル。',
   'prefer symlink so skills stay up to date.':
     'スキルを最新に保つため、シンボリックリンクを推奨。',
+  'Skills help your agent write Appwrite code. Ask one of these after installing. For live project actions like listing users, use MCP.':
+    'Skills はエージェントが Appwrite のコードを書くのを助けます。インストール後に次のいずれかを聞いてください。ユーザー一覧などプロジェクト上のライブ操作には MCP を使います。',
+  'SDK context for your AI agent: accurate methods, patterns, and best practices. For live project actions like listing users, use MCP.':
+    'AI エージェント向けの SDK コンテキスト: 正確なメソッド、パターン、ベストプラクティス。ユーザー一覧などプロジェクト上のライブ操作には MCP を使います。',
+  'Available for TypeScript, Dart, Go, and more.':
+    'TypeScript、Dart、Go などで利用できます。',
+  'Run in project root. Pick SDKs, tools, scope, and method.':
+    'プロジェクトルートで実行。SDK、ツール、スコープ、方法を選択します。',
+  'Run in project root.': 'プロジェクトルートで実行してください。',
+  'Ask your agent to write Appwrite code:':
+    'エージェントに Appwrite のコードを書いてもらう:',
+  'Implement email/password sign-in with the Appwrite SDK':
+    'Appwrite SDK でメール/パスワードのサインインを実装して',
+  'Review my Appwrite auth implementation against best practices':
+    '私の Appwrite 認証実装をベストプラクティスに照らしてレビューして',
+  'Add Realtime updates to my dashboard with the Appwrite SDK':
+    'Appwrite SDK でダッシュボードに Realtime 更新を追加して',
   'Use a project-scoped HTTPS endpoint with SigV4-compatible signing to attach Storage to rclone, IaC, or custom pipelines. Copyable endpoint, access key, and secret will appear here when the integration is ready.':
     'SigV4 互換の署名を持つプロジェクトスコープの HTTPS エンドポイントを使用して、Storage を rclone、IaC、またはカスタムパイプラインに接続します。統合の準備ができ次第、コピー可能なエンドポイント、アクセスキー、シークレットがここに表示されます。',
   'Work in progress - nothing to copy yet.':
@@ -903,6 +971,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Install: 'インストール',
   'MCP servers': 'MCP サーバー',
   '1. Install': '1. インストール',
+  'More tools in the docs': 'その他のツールはドキュメントで',
   '2. Try it': '2. 試す',
   'Continue to Try it': '試すに進む',
   'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.':
@@ -956,10 +1025,47 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '再現可能な環境、Git での変更の記録、または 1 つのワークフローで Appwrite をより広範な Terraform スタック (VPC、DNS、Functions など) に接続したい場合に使用します。レジストリには次のようなリソースが文書化されています',
   'and others, with full schemas and imports.':
     'など、完全なスキーマとインポート付き。',
+  'Declare Appwrite resources in .tf files and apply them with Terraform. Use the examples for provider setup, TablesDB, and Functions.':
+    'Appwrite リソースを .tf ファイルで宣言し、Terraform で適用します。プロバイダー設定、TablesDB、Functions の例を参照してください。',
+  'Manage Appwrite resources as code. Copy an example on the right, then run terraform init and apply.':
+    'Appwrite リソースをコードで管理します。右の例をコピーし、terraform init と apply を実行してください。',
+  'Required for apply. Never commit secrets to Git.':
+    'apply に必要です。シークレットを Git にコミットしないでください。',
+  'Name after TF_VAR_ must match the variable (usually lowercase). .env files are not loaded.':
+    'TF_VAR_ の後ろの名前は変数と一致させる必要があります (通常は小文字)。.env ファイルは読み込まれません。',
+  'Terraform loads terraform.tfvars next to your .tf files automatically. Gitignore *.tfvars.':
+    'Terraform は .tf ファイルの隣の terraform.tfvars を自動で読み込みます。*.tfvars を .gitignore に追加してください。',
+  'Pass your API key with TF_VAR_appwrite_api_key or the terraform.tfvars example. Never commit secrets to Git.':
+    'API キーは TF_VAR_appwrite_api_key または terraform.tfvars の例で渡してください。シークレットを Git にコミットしないでください。',
   'Terraform needs an API key with scopes for the resources you manage. Pass it with':
     'Terraform には、管理するリソースのスコープを持つ API キーが必要です。次で渡します',
+  'Terraform needs an API key with scopes for the resources you manage. Never commit secrets to Git.':
+    'Terraform には、管理するリソースのスコープを持つ API キーが必要です。シークレットを Git にコミットしないでください。',
   'never commit secrets to Git.':
     'シークレットを Git にコミットしないでください。',
+  'Environment variable': '環境変数',
+  'Terraform maps TF_VAR_<name> to variable "<name>". The name after TF_VAR_ must match exactly (usually lowercase), so for var.appwrite_api_key run:':
+    'Terraform は TF_VAR_<name> を variable "<name>" に対応付けます。TF_VAR_ の後ろの名前は正確に一致させる必要があり (通常は小文字)、var.appwrite_api_key の場合は次を実行します:',
+  'A .env file is not read by Terraform. Export the variable in your shell (or use direnv) before terraform apply.':
+    '.env ファイルは Terraform では読み込まれません。terraform apply の前にシェルで変数を export するか、direnv などを使ってください。',
+  'Add a terraform.tfvars file next to your .tf files. Terraform loads it automatically. See the terraform.tfvars example tab, and gitignore *.tfvars.':
+    '.tf ファイルの隣に terraform.tfvars を置きます。Terraform が自動で読み込みます。terraform.tfvars の例タブを参照し、*.tfvars を .gitignore に追加してください。',
+  'Place next to your .tf files. Terraform loads terraform.tfvars automatically. Add *.tfvars to .gitignore so the API key is never committed.':
+    '.tf ファイルの隣に置きます。Terraform は terraform.tfvars を自動で読み込みます。API キーをコミットしないよう *.tfvars を .gitignore に追加してください。',
+  'TablesDB example: database, table, columns, and index. Add alongside your provider configuration.':
+    'TablesDB の例: データベース、テーブル、カラム、インデックス。プロバイダー設定と一緒に追加してください。',
+  'TablesDB example: database, table, column, and index. Add alongside your provider configuration.':
+    'TablesDB の例: データベース、テーブル、カラム、インデックス。プロバイダー設定と一緒に追加してください。',
+  'Storage example: buckets with size limits, extensions, and image transformations.':
+    'Storage の例: サイズ制限、拡張子、画像変換付きのバケット。',
+  'Storage example: buckets and a file upload from a local path on the machine running Terraform.':
+    'Storage の例: バケットと、Terraform を実行するマシン上のローカルパスからのファイルアップロード。',
+  'Functions example: a basic function, an event-driven function, and an environment variable.':
+    'Functions の例: 基本的な関数、イベント駆動関数、環境変数。',
+  'Auth example: a team and a user. Pass passwords through variables (see terraform.tfvars), not hard-coded strings.':
+    'Auth の例: チームとユーザー。パスワードはハードコードせず、変数 (terraform.tfvars を参照) で渡してください。',
+  'Example database, table, columns, and index. Add alongside your provider configuration.':
+    'データベース、テーブル、列、インデックスの例。プロバイダー設定と一緒に追加してください。',
   'Provider docs on Terraform Registry':
     'Terraform Registry のプロバイダードキュメント',
   "Provider uses this project's endpoint and project ID. Run":
@@ -1112,6 +1218,47 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "Couldn't load realtime usage": 'Realtime 使用量を読み込めませんでした',
   "Couldn't load storage usage": 'ストレージ使用量を読み込めませんでした',
   "Couldn't load webhooks usage": 'Webhook 使用量を読み込めませんでした',
+  "Couldn't load agent usage": 'Agent 使用量を読み込めませんでした',
+  Conversations: '会話',
+  'Tool calls': 'ツール呼び出し',
+  Memories: 'メモリ',
+  Tokens: 'トークン',
+  'Input tokens': '入力トークン',
+  'Output tokens': '出力トークン',
+  conversations: '会話',
+  automations: 'オートメーション',
+  tokens: 'トークン',
+  'Agent runs finished during the selected period. Each completed, failed, or stopped LLM turn counts as one run.':
+    '選択期間中に完了した Agent の実行。完了、失敗、または停止した各 LLM ターンが 1 回の実行としてカウントされます。',
+  'User messages created during the selected period. Each message you send to the agent counts as one.':
+    '選択期間中に作成されたユーザーメッセージ。エージェントに送信する各メッセージが 1 件としてカウントされます。',
+  'Conversations created during the selected period. Each new agent conversation counts as one.':
+    '選択期間中に作成された会話。新しい各 Agent 会話が 1 件としてカウントされます。',
+  'Tool calls finished during the selected period. Each completed tool invocation by the agent counts as one.':
+    '選択期間中に完了したツール呼び出し。エージェントが完了した各ツール呼び出しが 1 件としてカウントされます。',
+  'Memories written during the selected period. Each memory the agent stores counts as one.':
+    '選択期間中に書き込まれたメモリ。エージェントが保存する各メモリが 1 件としてカウントされます。',
+  'Automation runs started during the selected period. Each automation execution counts as one.':
+    '選択期間中に開始されたオートメーション実行。各オートメーション実行が 1 件としてカウントされます。',
+  'Total tokens consumed by the agent during the selected period, including both input and output tokens.':
+    '選択期間中にエージェントが消費したトークンの合計 (入力と出力の両方を含む)。',
+  'Input tokens consumed by the agent during the selected period.':
+    '選択期間中にエージェントが消費した入力トークン。',
+  'Output tokens generated by the agent during the selected period.':
+    '選択期間中にエージェントが生成した出力トークン。',
+  'Agent runs, messages, conversations, tool calls, memories, automations, and token usage.':
+    'Agent の実行、メッセージ、会話、ツール呼び出し、メモリ、オートメーション、トークン使用量。',
+  'Your personal Agent activity: runs, messages, conversations, tool calls, memories, automations, and tokens.':
+    '個人の Agent アクティビティ: 実行、メッセージ、会話、ツール呼び出し、メモリ、オートメーション、トークン。',
+  'Your personal Agent activity: tokens, runs, messages, conversations, tool calls, and automations.':
+    '個人の Agent アクティビティ: トークン、実行、メッセージ、会話、ツール呼び出し、オートメーション。',
+  'Your personal Agent activity: tokens, messages, conversations, tool calls, and automations.':
+    '個人の Agent アクティビティ: トークン、メッセージ、会話、ツール呼び出し、オートメーション。',
+  'Input and output tokens consumed by the agent during the selected period.':
+    '選択期間中にエージェントが消費した入力トークンと出力トークン。',
+  'Messages, conversations, and tool calls during the selected period.':
+    '選択期間中のメッセージ、会話、ツール呼び出し。',
+  'Input and output tokens': '入力と出力のトークン',
   'Rolling monthly active user count over time. Each point is the MAU snapshot at that moment, not new users in that interval. MAU beyond your plan limit may incur additional charges.':
     '経時的な月間アクティブユーザー数。各ポイントはその時点の MAU スナップショットであり、その間隔の新規ユーザーではありません。プラン上限を超える MAU には追加料金が発生する場合があります。',
   'Phone OTP verification attempts during the selected period. Each SMS or voice OTP sent counts toward your plan limit.':
@@ -1393,8 +1540,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '(ホスト、ポート、ユーザー名、パスワード) と',
   '(Region, Subdomain, Admin Secret) and':
     '(リージョン、サブドメイン、Admin Secret) と',
-  '(also called ALIAS or ANAME - e.g. Cloudflare, DNSimple, Route 53), you can keep the CNAME above. Otherwise, please verify using':
-    '(ALIAS または ANAME とも呼ばれます。例: Cloudflare、DNSimple、Route 53)、上記の CNAME を維持できます。それ以外の場合は、次で検証してください',
   'A list of domain providers and their DNS settings is available':
     'ドメインプロバイダーとその DNS 設定のリストが利用可能です',
   'API Endpoint': 'API エンドポイント',
@@ -1431,7 +1576,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Authentication: '認証',
   'Before installing Git in a locally hosted Appwrite project, ensure your environment variables are configured.':
     'ローカルホストの Appwrite プロジェクトに Git をインストールする前に、環境変数が設定されていることを確認してください。',
-  'CNAME flattening': 'CNAME フラット化',
   'Certificate verification (SSL/TLS)': '証明書の検証 (SSL/TLS)',
   'Choose services you wish to enable or disable for the client API. When disabled, the services are not accessible to client SDKs but remain accessible to server SDKs.':
     'クライアント API で有効または無効にするサービスを選択してください。無効にすると、クライアント SDK からはアクセスできませんが、サーバー SDK からは引き続きアクセス可能です。',
@@ -1762,9 +1906,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'を有効にしました。',
   here: 'こちら',
   installations: 'インストール',
-  'instead.': 'を使用してください。',
-  'is an apex domain, CNAME records are not supported by every DNS provider. If yours supports':
-    'はエイペックスドメインです。すべての DNS プロバイダーが CNAME レコードをサポートしているわけではありません。サポートしている場合',
+  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.": // pragma: allowlist secret
+    'を使用してください。Cloudflare やその他の CDN を使用している場合は、Appwrite が独自の CDN 経由でドメインを配信するため、このレコードのプロキシを無効 (DNS only) にしてください。', // pragma: allowlist secret
+  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
+    'はエイペックスドメインです。CNAME レコードは一部のプロバイダーでのみサポートされています。サポートされていない場合は、次で検証してください',
   item: '項目',
   'key for the API key.': 'API キーのキー。',
   nameservers: 'ネームサーバー',

@@ -27,12 +27,11 @@ import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
   useProjectRequestsBreakdowns,
   useProjectRequestsChartOnly,
-  useCountries,
+  useCountryLookups,
   refetchProjectRequestsUsageQueries,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
-import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   OVERVIEW_CHART_HEIGHT,
@@ -47,7 +46,7 @@ import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { useT } from '@/lib/i18n/translate'
-import { splitUsageBreakdownEntries, getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
+import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 import { UsageResourceBreakdownCard } from './_components/UsageResourceBreakdownCard'
 import {
@@ -347,11 +346,7 @@ export function RequestsSection({
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<RequestsBreakdownDrawerState | null>(null)
   const showBreakdown = !disableUsageBreakdownQueries
-  const { data: countriesData } = useCountries()
-  const countryLookups = useMemo(
-    () => buildCountryLookups(countriesData?.countries),
-    [countriesData?.countries],
-  )
+  const { lookups: countryLookups } = useCountryLookups()
 
   const {
     data: chartOverview,
@@ -378,15 +373,16 @@ export function RequestsSection({
     [breakdowns],
   )
 
-  const resourceBreakdownIds = useMemo(() => {
-    return getUsageBreakdownResourceIds(resourceEntry?.items ?? [])
-  }, [resourceEntry?.items])
+  const resourceBreakdownItems = useMemo(
+    () => resourceEntry?.items ?? [],
+    [resourceEntry?.items],
+  )
 
   const { computeLookup, databaseLookup, storageLookup, tableLookup } =
     useUsageResourceBreakdownLookups(
       projectId,
-      resourceBreakdownIds,
-      showBreakdown && resourceBreakdownIds.length > 0,
+      resourceBreakdownItems,
+      showBreakdown && resourceBreakdownItems.length > 0,
     )
 
   useEffect(() => {

@@ -22,6 +22,7 @@ const INTERNAL_MARKETING_ROUTES = new Set<MarketingPagePath>([
   '/partners',
   '/education',
   '/startups',
+  '/affiliates',
   '/community',
   '/changelog',
   '/blog',

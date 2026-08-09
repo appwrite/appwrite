@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { expect, test } from '@playwright/test'
 import { env } from './config/env'
+import { withWebsiteAccessCookie } from './helpers/website-access'
 
 type StorageState = {
   cookies?: unknown[]
@@ -35,7 +36,9 @@ test('authenticate once and persist storage state', async ({
 
   if (env.E2E_TEST_SESSION_SECRET && !canPasswordLogin) {
     try {
-      const storageState = parseSessionSecret(env.E2E_TEST_SESSION_SECRET)
+      const storageState = withWebsiteAccessCookie(
+        parseSessionSecret(env.E2E_TEST_SESSION_SECRET),
+      )
       fs.writeFileSync(authPath, JSON.stringify(storageState, null, 2), 'utf-8')
       return
     } catch (error) {
@@ -90,10 +93,15 @@ test('authenticate once and persist storage state', async ({
   })
 
   // Cookie fallback (localStorage) is what the SDK uses cross-origin; storageState
-  // captures both cookies and origin localStorage.
+  // captures both cookies and origin localStorage. Keep the soft-launch access
+  // cookie so console tests are not redirected to /access.
   await context.storageState({ path: authPath })
 
-  const state = JSON.parse(fs.readFileSync(authPath, 'utf-8')) as StorageState
+  const state = withWebsiteAccessCookie(
+    JSON.parse(fs.readFileSync(authPath, 'utf-8')) as StorageState,
+  )
+  fs.writeFileSync(authPath, JSON.stringify(state, null, 2), 'utf-8')
+
   const hasCookies = (state.cookies?.length ?? 0) > 0
   const hasOrigins = (state.origins?.length ?? 0) > 0
   expect(

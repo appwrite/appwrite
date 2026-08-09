@@ -1,0 +1,49 @@
+---
+layout: article
+title: MCP connections
+description: Learn how the Appwrite Agent uses MCP servers to call tools and take actions in your projects.
+---
+
+**MCP connections** tell the Agent which [Model Context Protocol](https://modelcontextprotocol.io) servers it can use for tools. For Appwrite Agent, the primary connection is **Appwrite MCP**, the hosted server that lets the Agent take actions in your Appwrite projects with your account.
+
+Without a connected, enabled server, the Agent still answers questions and guides you through the Console. With Appwrite MCP ready, it can list tools and call Appwrite APIs, and empty-state suggestions shift from how-to chips to action-oriented prompts.
+
+Manage the connection under **Agent** > **Settings** > **MCP**, or from the MCP controls in the Agent UI.
+
+# Appwrite MCP {% #appwrite-mcp %}
+
+**Appwrite MCP** is listed by default. Its job is to let the Agent call Appwrite tools after you authorize the **Appwrite Agent** OAuth client. The hosted endpoint is `mcp.appwrite.io` by default (the same surface used by [external IDE agents](/docs/tooling/ai/mcp-servers)).
+
+| State | Meaning |
+|-------|---------|
+| Not connected | The Agent can answer questions but cannot run Appwrite project tools |
+| Connected | Tools are available when the connection is enabled |
+| Reconnect | The previous authorization expired, was revoked, or no longer matches the expected MCP URL; connect again |
+
+On Appwrite Cloud, opening the Agent often connects Appwrite MCP **silently** using your existing Console session. If silent authorization is not possible, the Console falls back to an interactive OAuth flow (popup, or full-page redirect if the popup is blocked). See [Connect Appwrite MCP](/docs/products/agent/connect-mcp).
+
+{% info title="Same MCP, different clients" %}
+Appwrite MCP is shared infrastructure. Appwrite Agent is a first-party Console client. Cursor, Claude Code, and other IDEs connect to the same hosted MCP with their own OAuth clients. Authorizing the Agent does not replace IDE setup, and IDE setup does not replace the Agent connection.
+{% /info %}
+
+# What authorization grants {% #authorization %}
+
+Connecting Appwrite MCP grants the Agent OAuth access so tools can act with your identity. The Console requests standard identity scopes plus project and organization access, and binds that access with authorization details so tokens can actually list and operate on projects (not only appear broadly permitted in a consent screen).
+
+In practice: if tools fail to list projects after a connect that looked successful, reconnect from **Settings** > **MCP** so authorization is refreshed with the current Appwrite MCP URL and client configuration.
+
+# Enabling and disabling {% #enabling-and-disabling %}
+
+Each connection can be enabled or disabled without deleting it. Disabled connections stay on your account but are not used for tool calls, and they do not unlock action-oriented empty-state suggestions. Use disable when you want to pause tool use temporarily (for example while you only want guidance, not mutations).
+
+# Other MCP connections {% #other-mcp-connections %}
+
+The Agent settings list shows Appwrite MCP and any other MCP connections already stored on your account. Connection status, enable/disable, and disconnect apply to those rows. For building with MCP outside Appwrite Agent, see the [MCP servers](/docs/tooling/ai/mcp-servers) tooling docs.
+
+# How tools show up in chat {% #how-tools-show-up-in-chat %}
+
+When the Agent calls tools, the conversation timeline shows tool activity for the turn: which tools ran, and summaries of create, update, delete, or read outcomes. Successful mutations may also trigger [Console refresh actions](/docs/products/agent/actions#console-ui-actions) so lists update without a full page reload. Resource cards and charts can appear inline so you can open the affected resource from the chat.
+
+{% arrow_link href="/docs/products/agent/connect-mcp" %}
+Connect Appwrite MCP
+{% /arrow_link %}

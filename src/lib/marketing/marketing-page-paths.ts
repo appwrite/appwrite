@@ -11,6 +11,7 @@ export const MARKETING_PAGE_PATHS = [
   '/education',
   '/partners',
   '/enterprise',
+  '/affiliates',
   '/community',
   '/changelog',
   '/blog',

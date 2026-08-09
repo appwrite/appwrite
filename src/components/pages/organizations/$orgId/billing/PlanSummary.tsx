@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/tooltip'
 import { formatCurrency, formatDate } from './utils'
 import { cn } from '@/lib/utils'
+import { formatDecimalBytes, toByteCount } from '@/lib/utils/byte-display-unit'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import {
   Collapsible,
@@ -1069,16 +1070,18 @@ function BillingProjectResourceRow({
   onUpgrade?: () => void
 }) {
   const t = useT()
+  const usage = toByteCount(resource.usage)
+  const limit = resource.limit == null ? null : toByteCount(resource.limit)
   const usagePercentage =
-    resource.limit && resource.limit > 0
-      ? Math.min(100, (resource.usage / resource.limit) * 100)
+    limit && limit > 0
+      ? Math.min(100, (usage / limit) * 100)
       : null
   const usageFormatted =
     resource.usageLabel ??
-    formatResourceUsage(resource.usage, resource.formatType)
+    formatResourceUsage(usage, resource.formatType)
   const limitFormatted =
-    resource.limit !== null
-      ? formatResourceLimit(resource.limit, resource.formatType)
+    limit !== null
+      ? formatResourceLimit(limit, resource.formatType)
       : t('Unlimited')
 
   const usageContent = resource.usageDescription ? (
@@ -1088,7 +1091,7 @@ function BillingProjectResourceRow({
           <span className="underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
             {!resource.showLimit
               ? usageFormatted
-              : resource.limit === 0
+              : limit === 0
                 ? usageFormatted
                 : `${usageFormatted} / ${limitFormatted}`}
           </span>
@@ -1102,7 +1105,7 @@ function BillingProjectResourceRow({
     <>
       {!resource.showLimit
         ? usageFormatted
-        : resource.limit === 0
+        : limit === 0
           ? usageFormatted
           : `${usageFormatted} / ${limitFormatted}`}
     </>
@@ -1169,12 +1172,8 @@ function BillingProjectResourceRow({
 }
 
 // Helper functions
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1000
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+function formatBytes(bytes: number | bigint): string {
+  return formatDecimalBytes(bytes)
 }
 
 function formatNumber(num: number): string {

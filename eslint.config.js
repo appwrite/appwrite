@@ -12,6 +12,7 @@ export default tseslint.config(
       'node_modules/**',
       'scripts/**',
       'src/components/ui/**',
+      'src/components/pages/projects/$projectId/shared/connect-snippets/**',
       '.output',
       '.nitro',
     ],

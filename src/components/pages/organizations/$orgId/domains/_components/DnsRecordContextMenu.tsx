@@ -27,6 +27,7 @@ import {
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 interface DnsRecordContextMenuProps {
   orgId: string
@@ -62,7 +63,11 @@ export function DnsRecordContextMenu({
       <ContextMenuContent className="w-56">
         {!locked ? (
           <>
-            <ContextMenuItem onSelect={() => onUpdate(record)}>
+            <ContextMenuItem
+              onSelect={() =>
+                openDialogAfterOverlayCloses(() => onUpdate(record))
+              }
+            >
               <ContextMenuIcon icon={Pencil} />
               {t('Update')}
             </ContextMenuItem>
@@ -122,7 +127,11 @@ export function DnsRecordContextMenu({
         </ContextMenuItem>
         <ContextMenuSeparator />
         {!locked ? (
-          <ContextMenuItem onSelect={() => onDelete(record)}>
+          <ContextMenuItem
+            onSelect={() =>
+              openDialogAfterOverlayCloses(() => onDelete(record))
+            }
+          >
             <ContextMenuIcon icon={Trash2} />
             {t('Delete')}
           </ContextMenuItem>

@@ -1,5 +1,5 @@
 export {
-  BUCKET_FILE_STORAGE_GAUGE_METRIC as BUCKET_STORAGE_GAUGE_METRIC,
+  STORAGE_GAUGE_METRIC,
   fetchProjectStorageOverview,
   formatStorageBytesTotal as formatStorageTotal,
   formatStorageBytesValue as formatStorageValue,

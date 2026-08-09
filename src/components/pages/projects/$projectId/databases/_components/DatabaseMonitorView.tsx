@@ -59,7 +59,6 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import {
   collectUsageResourceBreakdownItems,
-  getUsageBreakdownResourceIds,
 } from '@/lib/usage/usage-resources-breakdown'
 import { useUsageResourceBreakdownLookups } from '@/lib/react-query/hooks'
 
@@ -245,15 +244,11 @@ export function DatabaseMonitorView({
         : [],
     [readsBreakdowns, writesBreakdowns, showBreakdown, serverless],
   )
-  const resourceLookupIds = useMemo(
-    () => getUsageBreakdownResourceIds(resourceBreakdownItems),
-    [resourceBreakdownItems],
-  )
   const { computeLookup, databaseLookup, storageLookup, tableLookup } =
     useUsageResourceBreakdownLookups(
       projectId,
-      resourceLookupIds,
-      showBreakdown && serverless && resourceLookupIds.length > 0,
+      resourceBreakdownItems,
+      showBreakdown && serverless && resourceBreakdownItems.length > 0,
     )
 
   const refetchMonitor = useCallback(async () => {

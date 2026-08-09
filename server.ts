@@ -64,11 +64,22 @@
  */
 
 import path from 'node:path'
+// Keep this import first among local modules so Sentry is ready when this file
+// is started without `--preload` (preload is still required to catch failures
+// in sibling static imports below).
+import {
+  captureServerException,
+  flushSentryServer,
+} from './src/lib/sentry/init-server.ts'
 import {
   getAllMarketingPrerenderPaths,
   getMarketingPrerenderHtmlFile,
 } from './src/lib/marketing/marketing-build-paths.ts'
 import { isThreadsRoutePath } from './src/lib/threads/prerender-paths.ts'
+import {
+  isLegacyConsolePath,
+  rewriteLegacyConsolePath,
+} from './src/lib/legacy-console-path.ts'
 import {
   injectRuntimeConfigIntoHtml,
   readRuntimeConfigFromEnv,
@@ -703,6 +714,10 @@ async function initializeStaticRoutes(
     log.error(
       `Failed to load static files from ${clientDirectory}: ${String(error)}`,
     )
+    captureServerException(error, {
+      source: 'static-routes-init',
+      clientDirectory,
+    })
   }
 
   return { routes, loaded, skipped }
@@ -757,6 +772,8 @@ async function initializeServer() {
     log.success('TanStack Start application handler initialized')
   } catch (error) {
     log.error(`Failed to load server handler: ${String(error)}`)
+    captureServerException(error, { source: 'server-handler-load' })
+    await flushSentryServer()
     process.exit(1)
   }
 
@@ -854,6 +871,11 @@ async function initializeServer() {
           })
         } catch (error) {
           log.error(`Server handler error: ${String(error)}`)
+          captureServerException(error, {
+            source: 'server-handler-fetch',
+            url: req.url,
+            method: req.method,
+          })
           return internalServerErrorResponse()
         }
       },
@@ -864,6 +886,7 @@ async function initializeServer() {
       log.error(
         `Uncaught server error: ${error instanceof Error ? error.message : String(error)}`,
       )
+      captureServerException(error, { source: 'bun-serve-error' })
       return internalServerErrorResponse()
     },
   })
@@ -872,7 +895,9 @@ async function initializeServer() {
 }
 
 // Initialize the server
-initializeServer().catch((error: unknown) => {
+initializeServer().catch(async (error: unknown) => {
   log.error(`Failed to start server: ${String(error)}`)
+  captureServerException(error, { source: 'server-initialize' })
+  await flushSentryServer()
   process.exit(1)
 })

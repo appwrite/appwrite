@@ -193,7 +193,8 @@ export function useInitialLoader() {
   }, [location.pathname])
 
   useEffect(() => {
-    // If initial load has already completed, never show loader again
+    // After the first console paint, skip the loader for in-console navigations
+    // (including agent ↔ org, since agent lives under the console shell).
     if (hasCompletedInitialLoadRef.current) {
       return
     }

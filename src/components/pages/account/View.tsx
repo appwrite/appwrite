@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   CreditCard,
+  Gift,
   LogOut,
   MapPin,
   Monitor,
@@ -17,6 +18,7 @@ import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/Ser
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { ACCOUNT_SETTINGS_CARD_INDEX } from '@/lib/settings-search/account-settings-cards'
 import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
+import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 import { useT } from '@/lib/i18n/translate'
 
@@ -25,6 +27,7 @@ export type AccountSectionId =
   | 'security'
   | 'sessions'
   | 'applications'
+  | 'affiliates'
   | 'payment-methods'
   | 'billing-addresses'
 
@@ -32,6 +35,8 @@ const BILLING_SECTIONS = new Set<AccountSectionId>([
   'payment-methods',
   'billing-addresses',
 ])
+
+const AFFILIATES_SECTIONS = new Set<AccountSectionId>(['affiliates'])
 
 export function View() {
   const location = useLocation()
@@ -55,6 +60,7 @@ export function View() {
       if (section === 'security') return 'security'
       if (section === 'sessions') return 'sessions'
       if (section === 'applications') return 'applications'
+      if (section === 'affiliates') return 'affiliates'
       if (section === 'payment-methods') return 'payment-methods'
       if (section === 'billing-addresses') return 'billing-addresses'
     }
@@ -92,6 +98,28 @@ export function View() {
         icon: Package,
         keywords: ['applications', 'oauth', 'authorized', 'consent', 'revoke'],
       },
+      ...(features.affiliates
+        ? [
+            {
+              id: 'affiliates',
+              label: t('Affiliates'),
+              to: '/account/affiliates',
+              icon: Gift,
+              keywords: [
+                'affiliate',
+                'referral',
+                'credits',
+                'earn',
+                'reward',
+                'pro',
+                'link',
+                'invite',
+                'clicks',
+                'signups',
+              ],
+            },
+          ]
+        : []),
       ...(features.billing
         ? [
             {
@@ -113,10 +141,13 @@ export function View() {
     ]
 
     return items
-  }, [features.billing, t])
+  }, [features.affiliates, features.billing, t])
 
   const accountSettingsCardIndex = useMemo(() => {
     return ACCOUNT_SETTINGS_CARD_INDEX.filter((entry) => {
+      if (entry.sectionId === 'affiliates') {
+        return features.affiliates
+      }
       if (
         entry.sectionId === 'payment-methods' ||
         entry.sectionId === 'billing-addresses'
@@ -131,13 +162,24 @@ export function View() {
       }
       return true
     })
-  }, [features.billing, features.accountIdentities, features.accountMfa])
+  }, [
+    features.affiliates,
+    features.billing,
+    features.accountIdentities,
+    features.accountMfa,
+  ])
 
   useEffect(() => {
     if (!features.billing && BILLING_SECTIONS.has(activeSection)) {
       navigate({ to: '/account', replace: true })
     }
   }, [activeSection, features.billing, navigate])
+
+  useEffect(() => {
+    if (!features.affiliates && AFFILIATES_SECTIONS.has(activeSection)) {
+      navigate({ to: '/account', replace: true })
+    }
+  }, [activeSection, features.affiliates, navigate])
 
   const openAccountCommandCenter = useCallback(() => {
     setCommandCenterInitialSubPage(null)
@@ -147,6 +189,13 @@ export function View() {
   const openAccountShortcutsHelp = useCallback(() => {
     setCommandCenterInitialSubPage('shortcuts')
     setCommandCenterOpen(true)
+  }, [])
+
+  useEffect(() => {
+    return registerCommandCenterOpener((page) => {
+      setCommandCenterInitialSubPage(page)
+      setCommandCenterOpen(true)
+    })
   }, [])
 
   useGlobalCommandShortcuts({

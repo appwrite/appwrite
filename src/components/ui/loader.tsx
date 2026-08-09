@@ -1,4 +1,4 @@
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 
@@ -7,6 +7,9 @@ import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+
+/** Delay before the bottom spinner appears on long loads. */
+const SPINNER_DELAY_MS = 1500
 
 function LoaderBrandMark() {
   return (
@@ -46,21 +49,24 @@ export function FullscreenLoader({
   statusBanner,
 }: FullscreenLoaderProps) {
   const t = useT()
+  const hasStatusBanner = Boolean(statusBanner)
   const [shouldRender, setShouldRender] = useState(isVisible)
   const [showSpinner, setShowSpinner] = useState(false)
 
-  // Show spinner only after 1.5 seconds of loading, and only when status is not indicating an issue
+  // Show spinner only after 1.5s of the current visible period. Depend on a
+  // boolean for the status banner so object identity cannot reset the timer.
   useEffect(() => {
-    if (isVisible && !statusBanner) {
+    if (!isVisible || hasStatusBanner) {
       setShowSpinner(false)
-      const timer = setTimeout(() => {
-        setShowSpinner(true)
-      }, 1500)
-      return () => clearTimeout(timer)
-    } else {
-      setShowSpinner(false)
+      return
     }
-  }, [isVisible, statusBanner])
+
+    setShowSpinner(false)
+    const timer = setTimeout(() => {
+      setShowSpinner(true)
+    }, SPINNER_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [isVisible, hasStatusBanner])
 
   useEffect(() => {
     if (isVisible) {
@@ -84,6 +90,7 @@ export function FullscreenLoader({
           transition={{ duration: 0.5, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] bg-background"
           aria-label="Loading"
+          data-fullscreen-loader=""
         >
           {statusBanner &&
             (() => {
@@ -146,11 +153,15 @@ export function FullscreenLoader({
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <LoaderBrandMark />
           </div>
-          {showSpinner && !statusBanner && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-              <div className="w-4 h-4 border-2 rounded-full animate-spin border-muted border-t-muted-foreground" />
+          {showSpinner && !hasStatusBanner ? (
+            <div
+              className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
+              data-fullscreen-loader-spinner=""
+              aria-hidden
+            >
+              <Loader2 className="h-5 w-5 animate-spin text-foreground/70" />
             </div>
-          )}
+          ) : null}
         </motion.div>
       )}
     </AnimatePresence>

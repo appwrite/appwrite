@@ -47,6 +47,36 @@ export const ACCOUNT_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['applications', 'oauth', 'authorized', 'consent', 'revoke'],
   },
   {
+    sectionId: 'affiliates',
+    title: 'Affiliates program',
+    keywords: [
+      'affiliate',
+      'referral',
+      'credits',
+      'earn',
+      'reward',
+      'pro',
+      'clicks',
+      'signups',
+      'conversions',
+    ],
+  },
+  {
+    sectionId: 'affiliates',
+    title: 'Links',
+    keywords: ['link', 'invite', 'share', 'referral code'],
+  },
+  {
+    sectionId: 'affiliates',
+    title: 'Referrals',
+    keywords: ['referral', 'signup', 'converted', 'pending', 'country'],
+  },
+  {
+    sectionId: 'affiliates',
+    title: 'Rewards',
+    keywords: ['reward', 'credits', 'claim', 'pending', 'balance'],
+  },
+  {
     sectionId: 'payment-methods',
     title: 'Payment methods',
     keywords: ['card', 'credit card', 'stripe', 'payment method'],

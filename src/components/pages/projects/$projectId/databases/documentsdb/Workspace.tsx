@@ -80,7 +80,6 @@ import type { DateRange } from 'react-day-picker'
 import { ImportCsv } from '../_components/ImportCsv'
 import { ExportCsv } from '../_components/ExportCsv'
 
-import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
   canCreateDatabase,
   canShowTableSecuritySettings,
@@ -179,7 +178,6 @@ import {
 import { useT } from '@/lib/i18n/translate'
 
 const DB_KIND = 'documentsdb' as const satisfies DatabaseRouteKind
-const SHOW_GRID_DEBUG_TOOLS = false
 const sidebarTableListScrollTopByKey = new Map<string, number>()
 
 export function Workspace({
@@ -198,7 +196,6 @@ export function Workspace({
     | Record<string, unknown>
     | undefined
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
-  const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
   const showDesktopTableSidebar = useMediaMinWidth(1024)
 
@@ -409,28 +406,6 @@ export function Workspace({
   )
   const [monitorChartTick, setMonitorChartTick] = useState(0)
   const queryClient = useQueryClient()
-
-  // Debug: create 50 random containers (only when debug mode is open and on tables list)
-  const createFiftyTablesMutation = useMutation({
-    mutationFn: async () => {
-      requireOperationalDatabase(queryClient, projectId, databaseId)
-      const names = Array.from({ length: 50 }, (_, i) => `Table ${i + 1}`)
-      for (const name of names) {
-        await createProjectTable(projectId, databaseId, DB_KIND, { name })
-      }
-    },
-    onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: ['tables', 'project', projectId, databaseId],
-      })
-      toast.success(dbLabels.createdManyContainersSuccess)
-    },
-    onError: (error: Error) => {
-      toast.error(
-        error.message || dbLabels.failedToCreateContainer,
-      )
-    },
-  })
 
   const { project } = useProject(projectId)
   const useCreateDatabaseWizard = features.dedicatedDbsSupport
@@ -1586,48 +1561,13 @@ export function Workspace({
         }
         titleRightContent={
           databaseTab === 'monitor' ? (
-            <>
-              <DatabaseMonitorHeaderActions
-                dateRange={monitorDateRange}
-                onDateRangeChange={(r) =>
-                  setMonitorDateRange(r ?? getDefaultMonitorDateRange())
-                }
-                onRefresh={() => setMonitorChartTick((n) => n + 1)}
-              />
-              {isDatabaseLevelView &&
-              isDebugModeOpen &&
-              SHOW_GRID_DEBUG_TOOLS ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7"
-                  onClick={() => createFiftyTablesMutation.mutate()}
-                  disabled={createFiftyTablesMutation.isPending}
-                >
-                  {createFiftyTablesMutation.isPending
-                    ? 'Creating…'
-                    : dbLabels.debugCreateManyContainers}
-                </Button>
-              ) : null}
-            </>
-          ) : undefined
-        }
-        rightContent={
-          isDatabaseLevelView &&
-          isDebugModeOpen &&
-          SHOW_GRID_DEBUG_TOOLS &&
-          databaseTab !== 'monitor' ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9"
-              onClick={() => createFiftyTablesMutation.mutate()}
-              disabled={createFiftyTablesMutation.isPending}
-            >
-              {createFiftyTablesMutation.isPending
-                ? 'Creating…'
-                : dbLabels.debugCreateManyContainers}
-            </Button>
+            <DatabaseMonitorHeaderActions
+              dateRange={monitorDateRange}
+              onDateRangeChange={(r) =>
+                setMonitorDateRange(r ?? getDefaultMonitorDateRange())
+              }
+              onRefresh={() => setMonitorChartTick((n) => n + 1)}
+            />
           ) : undefined
         }
         contentAfterBorder={
@@ -1821,6 +1761,7 @@ export function Workspace({
             {activeTab === 'rows' && selectedTable ? (
               <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                 <RowsSpreadsheet
+                  key={selectedTable.$id}
                   table={selectedTable}
                   canWriteRows={!noCreateRowPermission}
                   canWriteTables={!noCreateTablePermission}

@@ -64,11 +64,11 @@ export function getFirewallTrafficSeriesTotals(
   )
 }
 
-export function sortFirewallTrafficSeriesByValueDesc(
+export function sortFirewallTrafficSeriesByValueAsc(
   totals: Record<FirewallTrafficSeriesKey, number>,
 ) {
   return [...FIREWALL_TRAFFIC_SERIES].sort((a, b) => {
-    const diff = totals[b.key] - totals[a.key]
+    const diff = totals[a.key] - totals[b.key]
     if (diff !== 0) return diff
     return (
       FIREWALL_TRAFFIC_SERIES.findIndex((series) => series.key === a.key) -

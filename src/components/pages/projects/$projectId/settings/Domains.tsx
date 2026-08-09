@@ -35,6 +35,7 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { VerifyDomainDialog } from './domains/VerifyDomain'
 import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
@@ -101,18 +102,24 @@ export function Domains({
   }
 
   const handleRetry = (rule: Models.ProxyRule) => {
-    setSelectedRule(rule)
-    setRetryDomainOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setRetryDomainOpen(true)
+    })
   }
 
   const handleViewLogs = (rule: Models.ProxyRule) => {
-    setSelectedRule(rule)
-    setViewLogsOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setViewLogsOpen(true)
+    })
   }
 
   const handleDelete = (rule: Models.ProxyRule) => {
-    setSelectedRule(rule)
-    setDeleteDomainOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setDeleteDomainOpen(true)
+    })
   }
 
   const canRetry = (status: string) => {

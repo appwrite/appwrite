@@ -1,13 +1,12 @@
-import { ReactNode } from 'react'
-import { LucideIcon } from 'lucide-react'
+import { type ComponentType, type ReactNode } from 'react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 export interface EmptyStateProps {
   /**
-   * Icon to display in the empty state
+   * Icon to display in the empty state (Lucide or any `className` icon).
    */
-  icon?: LucideIcon
+  icon?: ComponentType<{ className?: string }>
   /**
    * Title text (defaults based on isEmpty/hasFilters)
    */

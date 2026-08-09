@@ -50,6 +50,11 @@ interface DateRangePickerProps {
   className?: string
   /** Radix PopoverContent `align` - default `end` for wide triggers in headers. */
   popoverContentAlign?: 'start' | 'center' | 'end'
+  /**
+   * Authoritative quick-select id when known (e.g. saved usage prefs).
+   * Preferred over inferring from snapshotted `dateRange` timestamps.
+   */
+  presetId?: string | null
 }
 
 export function DateRangePicker({
@@ -57,6 +62,7 @@ export function DateRangePicker({
   onDateRangeChange,
   className,
   popoverContentAlign = 'end',
+  presetId = null,
 }: DateRangePickerProps) {
   const t = useT()
   const { formatDate } = useLocalizedDateFormat()
@@ -72,10 +78,12 @@ export function DateRangePicker({
     }
   }, [dateRange, isOpen])
 
-  const matchingPreset = React.useMemo(
-    () => findMatchingPreset(dateRange),
-    [dateRange],
-  )
+  const matchingPreset = React.useMemo(() => {
+    if (presetId) {
+      return getUsageDateRangePresetByValue(presetId) ?? findMatchingPreset(dateRange)
+    }
+    return findMatchingPreset(dateRange)
+  }, [dateRange, presetId])
 
   const pendingMatchingPreset = React.useMemo(
     () => findMatchingPreset(pendingDateRange),
@@ -93,7 +101,13 @@ export function DateRangePicker({
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
-      setPendingDateRange(dateRange)
+      // Refresh rolling presets to a live window so quick-select stays matched.
+      if (presetId) {
+        const preset = getUsageDateRangePresetByValue(presetId)
+        setPendingDateRange(preset ? preset.getRange() : dateRange)
+      } else {
+        setPendingDateRange(dateRange)
+      }
       setIsOpen(true)
       return
     }

@@ -6,6 +6,7 @@ import {
   ArrowLeftRight,
   BarChart2,
   BookOpen,
+  BotMessageSquare,
   Boxes,
   Building2,
   ChevronDown,
@@ -56,6 +57,7 @@ import { GraphqlIcon } from '@/components/global/shared/GraphqlIcon'
 import { OAuthIcon } from '@/components/global/shared/OAuthIcon'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
 import { DOCS_NAV_ACTIVE_BG_CLASS, DOCS_NAV_SCROLL_CLASS } from '@/lib/docs/nav-styles'
+import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
 import { isFirewallDocsPathname } from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
 import { isDocsProductNavNew } from '@/lib/products/new-badge'
@@ -119,6 +121,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   key: Key,
   'user-circle': UserCircle,
   sparkles: Sparkles,
+  bot: BotMessageSquare,
   terminal: Terminal,
   share: Share2,
   shield: Shield,
@@ -467,16 +470,35 @@ export function DocsGlobalSidebar({
   const marketingEnabled = features.marketing
   const audience = getDocsAudienceFromPathname(pathname)
   const globalNav = getDocsGlobalNav(audience)
+  const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  useEffect(() => {
+    // Wait until after mount so localStorage debug overrides are applied before
+    // we decide to bounce feature-gated docs sections.
+    if (!hasMounted) return
     if (!features.partnersDocs && isPartnersDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
       return
     }
     if (!features.firewall && isFirewallDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
+      return
     }
-  }, [features.firewall, features.partnersDocs, navigate, pathname])
+    if (!features.agent && isAgentDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
+    }
+  }, [
+    features.agent,
+    features.firewall,
+    features.partnersDocs,
+    hasMounted,
+    navigate,
+    pathname,
+  ])
 
   return (
     <TooltipProvider>

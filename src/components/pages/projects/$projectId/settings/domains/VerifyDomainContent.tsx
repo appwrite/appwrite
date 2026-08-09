@@ -4,8 +4,9 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 import type { Models } from '@appwrite.io/console'
-import { Copy, Check, Loader2, ExternalLink, Info } from 'lucide-react'
+import { Copy, Check, Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
@@ -15,13 +16,33 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 
 const DNS_PROVIDERS_LINK =
   '/docs/advanced/platform/custom-domains'
+
+export type DomainVerificationError = {
+  title: string
+  message: string
+  /** DNS not ready yet - show amber guidance instead of a hard error */
+  pending?: boolean
+}
+
+/** Shared alert when proxy-rule DNS is not confirmed yet. */
+export function dnsPendingVerificationError(
+  t: (text: string) => string,
+): DomainVerificationError {
+  return {
+    title: t('Domain not verified yet'),
+    message: t(
+      'DNS changes can take up to 48 hours to propagate. Confirm the records below at your DNS provider, wait a bit, then try again.',
+    ),
+    pending: true,
+  }
+}
 
 interface VerifyDomainContentProps {
   rule: Models.ProxyRule
@@ -43,8 +64,8 @@ interface VerifyDomainContentProps {
   onVerify?: () => void
   isVerifying?: boolean
   isChanging?: boolean
-  /** Inline verification error message (replaces toast) */
-  verificationError?: string | null
+  /** Inline verification error (string or structured alert) */
+  verificationError?: DomainVerificationError | string | null
 }
 
 type DnsRecord = {
@@ -52,6 +73,7 @@ type DnsRecord = {
   name: string
   value: string
   ttl: number | null
+  badge?: string
 }
 
 function DnsRecordsTable({
@@ -91,7 +113,17 @@ function DnsRecordsTable({
         {records.map((r, i) => (
           <TableRow key={`${r.type}-${i}`}>
             <TableCell className="px-4 py-3 font-mono text-[12px]">
-              {r.type}
+              <span className="inline-flex items-center gap-1.5">
+                {r.type}
+                {r.badge ? (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] shrink-0 font-sans font-medium normal-case tracking-normal"
+                  >
+                    {t(r.badge)}
+                  </Badge>
+                ) : null}
+              </span>
             </TableCell>
             <TableCell
               className="px-4 py-3 font-mono text-[12px] truncate max-w-[180px]"
@@ -145,6 +177,7 @@ export function VerifyDomainContent({
 }: VerifyDomainContentProps) {
   const t = useT()
   const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<string | null>(null)
   const {
     cname: rawCname,
     a,
@@ -203,6 +236,17 @@ export function VerifyDomainContent({
     ...(hasAaaa ? [{ id: 'aaaa' as const, label: 'AAAA' }] : []),
   ]
 
+  const selectedTab =
+    activeTab && tabOptions.some((tab) => tab.id === activeTab)
+      ? activeTab
+      : (tabOptions[0]?.id ?? 'cname')
+
+  // Must run before any early return so hook count stays stable across renders.
+  const isApex = useMemo(() => {
+    const apex = getApexDomain(rule.domain)
+    return !!apex && apex === rule.domain.trim().toLowerCase()
+  }, [rule.domain])
+
   if (isLoading) {
     return (
       <div className="flex min-h-[180px] items-center justify-center">
@@ -213,9 +257,15 @@ export function VerifyDomainContent({
 
   if (error || tabOptions.length === 0) {
     return (
-      <p className="text-[13px] text-destructive">
-        {t('Failed to load DNS instructions. Please try again.')}
-      </p>
+      <Alert
+        variant="default"
+        className="border-red-500/30 bg-red-500/10"
+      >
+        <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+        <AlertDescription className="text-[13px] text-red-600 dark:text-red-400">
+          {t('Failed to load DNS instructions. Please try again.')}
+        </AlertDescription>
+      </Alert>
     )
   }
 
@@ -225,11 +275,6 @@ export function VerifyDomainContent({
   const nameserverNote = t(
     'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.',
   )
-
-  const isApex = useMemo(() => {
-    const apex = getApexDomain(rule.domain)
-    return !!apex && apex === rule.domain.trim().toLowerCase()
-  }, [rule.domain])
 
   const apexCnameNote = (
     <Alert
@@ -244,18 +289,24 @@ export function VerifyDomainContent({
             {rule.domain}
           </code>{' '}
           {t(
-            'is an apex domain, CNAME records are not supported by every DNS provider. If yours supports',
+            "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using",
           )}{' '}
-          <span className="font-medium text-foreground">
-            {t('CNAME flattening')}
-          </span>{' '}
+          {hasNameservers ? (
+            <button
+              type="button"
+              className="font-medium text-foreground underline underline-offset-2 hover:no-underline"
+              onClick={() => setActiveTab('nameservers')}
+            >
+              {t('nameservers')}
+            </button>
+          ) : (
+            <span className="font-medium text-foreground">
+              {t('an A or AAAA record')}
+            </span>
+          )}{' '}
           {t(
-            '(also called ALIAS or ANAME - e.g. Cloudflare, DNSimple, Route 53), you can keep the CNAME above. Otherwise, please verify using',
+            "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.",
           )}
-          {hasNameservers
-            ? ` ${t('nameservers')} `
-            : ` ${t('an A or AAAA record')} `}
-          {t('instead.')}
         </p>
       </AlertDescription>
     </Alert>
@@ -276,7 +327,13 @@ export function VerifyDomainContent({
       },
     ]
     if (hasCaa) {
-      rows.push({ type: 'CAA', name: '@', value: caa!, ttl: 3600 })
+      rows.push({
+        type: 'CAA',
+        name: '@',
+        value: caa!,
+        ttl: 3600,
+        badge: 'Recommended',
+      })
     }
     return rows
   }
@@ -351,7 +408,11 @@ export function VerifyDomainContent({
             )}
           </>
         ) : (
-          <Tabs defaultValue={tabOptions[0].id} className="w-full">
+          <Tabs
+            value={selectedTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             <div className="pb-4">
               <TabsList>
                 {tabOptions.map((tab) => (
@@ -431,12 +492,53 @@ export function VerifyDomainContent({
     </>
   )
 
+  const structuredError =
+    verificationError && typeof verificationError !== 'string'
+      ? verificationError
+      : null
+  const plainError =
+    typeof verificationError === 'string' ? verificationError : null
+  const errorPending = structuredError?.pending ?? false
+  const errorTitle =
+    structuredError?.title ??
+    (plainError ? t('Verification failed') : null)
+  const errorMessage = structuredError?.message ?? plainError
+
   return (
     <div className={compact ? 'space-y-4' : 'space-y-6'}>
-      {verificationError && (
-        <p role="alert" className="text-[13px] text-destructive">
-          {verificationError}
-        </p>
+      {errorMessage && errorTitle && (
+        <Alert
+          variant="default"
+          className={
+            errorPending
+              ? 'border-amber-500/30 bg-amber-500/10 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400'
+              : 'border-red-500/30 bg-red-500/10 [&>svg]:text-red-600 dark:[&>svg]:text-red-400'
+          }
+        >
+          {errorPending ? (
+            <Info className="h-4 w-4" />
+          ) : (
+            <AlertCircle className="h-4 w-4" />
+          )}
+          <AlertTitle
+            className={
+              errorPending
+                ? 'text-[13px] font-medium text-amber-700 dark:text-amber-400'
+                : 'text-[13px] font-medium text-red-600 dark:text-red-400'
+            }
+          >
+            {errorTitle}
+          </AlertTitle>
+          <AlertDescription
+            className={
+              errorPending
+                ? 'text-[13px] text-amber-700/90 dark:text-amber-400/90'
+                : 'text-[13px] text-red-600 dark:text-red-400'
+            }
+          >
+            {errorMessage}
+          </AlertDescription>
+        </Alert>
       )}
       {rule.status === 'verifying' && (
         <Alert variant="default" className="border-blue-500/30 bg-blue-500/5">

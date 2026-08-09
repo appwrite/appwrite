@@ -34,6 +34,10 @@ import {
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
+import {
   parsePostgresTableId,
   postgresNav,
   type PostgresTableTab,
@@ -166,11 +170,15 @@ export function PostgresTableContextMenu({
     }
   }
 
+  const handleDeleteClick = () => {
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+  }
+
   const handleDelete = async () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
     try {
       await executeSql.mutateAsync(buildPostgresDropTableSql(tableId))
       toast.success(`${tableName} ${t('has been deleted')}`)
-      setDeleteDialogOpen(false)
       navigate({
         ...postgresNav({ projectId, databaseId }).sql(),
         replace: true,
@@ -264,7 +272,7 @@ export function PostgresTableContextMenu({
           {canWrite ? (
             <>
               <ContextMenuSeparator />
-              <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+              <ContextMenuItem onSelect={handleDeleteClick}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Trash2 className="size-4" />
                 </span>
