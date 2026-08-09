@@ -105,8 +105,9 @@ class XList extends Action
         }
 
         /**
-         * Ordering by '$createdAt' alone is not deterministic, files created within the
-         * same timestamp can be returned in any order. Break the tie on '$sequence'.
+         * '$createdAt' is not unique, so the database appends '$sequence' as a tie breaker,
+         * but always ASC. That contradicts the requested DESC order for files sharing a
+         * timestamp. Set the tie breaker explicitly so both sort in the same direction.
          */
         $orders = Query::getByType($queries, [
             Query::TYPE_ORDER_ASC,
