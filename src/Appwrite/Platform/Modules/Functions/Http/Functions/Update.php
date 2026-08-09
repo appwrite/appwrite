@@ -246,10 +246,16 @@ class Update extends Base
             ]);
 
             if (!$existingRepository->isEmpty()) {
+                // Reset providerPullRequestIds: it tracks which external PR authors are
+                // authorized to deploy, keyed only by numeric PR ID (see VCS/Http/GitHub/
+                // Authorize/External/Update.php). Carrying over the old repository's list
+                // would let a PR on the *new* repository with the same numeric ID as one
+                // previously authorized on the *old* repository deploy without authorization.
                 $repository = $dbForPlatform->updateDocument('repositories', $existingRepository->getId(), new Document([
                     'installationId' => $installation->getId(),
                     'installationInternalId' => $installation->getSequence(),
                     'providerRepositoryId' => $providerRepositoryId,
+                    'providerPullRequestIds' => [],
                 ]));
             } else {
                 $repository = $dbForPlatform->createDocument('repositories', new Document([
