@@ -142,7 +142,10 @@ class X extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        return !empty($this->getUserEmail($accessToken));
+        // X only populates confirmed_email once the address is confirmed, so its presence is the verification signal
+        $user = $this->getUser($accessToken);
+
+        return !empty($user['data']['confirmed_email']);
     }
 
     /**
