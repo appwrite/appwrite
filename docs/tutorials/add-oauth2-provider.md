@@ -248,12 +248,21 @@ Then wire the action in:
 
 ### 2.5 Response model
 
+For a standalone provider (the common case):
+
 1. Add `public const MODEL_OAUTH2_XXX = 'oAuth2Xxx';` in `src/Appwrite/Utopia/Response.php`
 2. Create `src/Appwrite/Utopia/Response/Model/OAuth2Xxx.php` extending `OAuth2Base` (see `OAuth2Yahoo.php`)
 3. Register it in `app/init/models.php` with `Response::setModel(new OAuth2Xxx());`
 4. Include `Response::MODEL_OAUTH2_XXX` in:
    - `OAuth2ProviderList.php`
    - `Project/Http/Project/OAuth2/Get.php`
+
+**Shared models for sandbox / alternate IDs:** Production and sandbox variants that expose the same response shape reuse one model. Do not create a second model class. Instead, list both provider ids in `$conditions['$id']`, and point both Update actions at the same `MODEL_OAUTH2_*` constant. Examples:
+
+- `paypal` / `paypalSandbox` → `OAuth2Paypal` with `'$id' => ['paypal', 'paypalSandbox']`
+- `tradeshift` / `tradeshiftBox` → `OAuth2Tradeshift` with `'$id' => ['tradeshift', 'tradeshiftBox']`
+
+You still need a separate adapter class, Update action, and `oAuthProviders.php` entry for each id; only the response model is shared. Each id must still appear in `Base::getProviderActions()` and in `OAuth2ProviderTest`.
 
 ### 2.6 Tests and changelog
 
