@@ -55,6 +55,16 @@
         "reference": ""
     },
     {
+        "term": "emails.deletion.preview",
+        "comment": "These strings are used in the account deletion confirmation email templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.deletion.heading",
+        "comment": "These strings are used in the account deletion confirmation email templates.",
+        "reference": ""
+    },
+    {
         "term": "emails.deletion.hello",
         "comment": "These strings are used in the account deletion confirmation email templates.",
         "reference": ""
