@@ -190,6 +190,17 @@ export const heSitesDictionary: Record<string, string> = {
   'Failed to update site name': 'עדכון שם האתר נכשל',
   'Site name is required': 'נדרש שם אתר',
 
+  // Settings: status card
+  'Enable or disable this site without deleting it.':
+    'הפעילו או השביתו את האתר הזה מבלי למחוק אותו.',
+  'Site has been enabled': 'האתר הופעל',
+  'Site has been disabled': 'האתר הושבת',
+  'Site is disabled': 'האתר מושבת',
+  'This site is disabled and not accessible to visitors. Console actions remain available.':
+    'האתר הזה מושבת ואינו נגיש למבקרים. פעולות מהקונסולה עדיין זמינות.',
+  'Enable this site in the Settings tab': 'הפעילו את האתר בלשונית ההגדרות',
+  'to make it available to visitors.': 'כדי להפוך אותו לזמין למבקרים.',
+
   // Settings: danger zone
   'Delete site': 'מחיקת אתר',
   'Permanently delete this site and all its data. This action cannot be undone.':
