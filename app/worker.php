@@ -5,6 +5,7 @@ $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Queue\Connection\Redis as RedisConnection;
 use Swoole\Runtime;
 use Utopia\Console;
 use Utopia\Database\Document;
@@ -15,7 +16,6 @@ use Utopia\Platform\Service;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Redis as BrokerRedis;
 use Utopia\Queue\Connection\Locking;
-use Utopia\Queue\Connection\Redis as RedisConnection;
 use Utopia\Queue\Server;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -67,13 +67,15 @@ if (\str_starts_with($workerName, 'databases')) {
 
 $redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
 $redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);
+$redisUser = System::getEnv('_APP_REDIS_USER', '');
+$redisPass = System::getEnv('_APP_REDIS_PASS', '');
 
 // A dedicated connection drives the blocking receive loop; a lock-guarded one
 // serializes acks/publishes from the per-message coroutines.
 $adapter = new Swoole(
     new BrokerRedis(
-        receive: new RedisConnection($redisHost, $redisPort),
-        commands: new Locking(new RedisConnection($redisHost, $redisPort)),
+        receive: new RedisConnection($redisHost, $redisPort, $redisUser, $redisPass),
+        commands: new Locking(new RedisConnection($redisHost, $redisPort, $redisUser, $redisPass)),
     ),
     System::getEnv('_APP_WORKERS_NUM', 1),
     $queueName,
