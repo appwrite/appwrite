@@ -145,6 +145,14 @@ class XList extends Action
                 'userMFA' => $auths['membershipsMfa'] ?? false,
                 'userAccessedAt' => $auths['membershipsUserAccessedAt'] ?? false,
             ]),
+            new Document(\array_merge([
+                'totp' => true,
+                'email' => true,
+                'phone' => true,
+                'custom' => false,
+            ], $auths['mfaFactors'] ?? [], [
+                '$id' => 'mfa-factors',
+            ])),
         ];
     }
 }

@@ -762,7 +762,14 @@ return [
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
+            [
+                '$id' => ID::custom('_key_expire'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['expire'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
         ],
     ],
 
