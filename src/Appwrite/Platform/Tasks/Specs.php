@@ -779,10 +779,7 @@ class Specs extends Action
                     $parsedSpecs = $specs->parse();
                     $this->verifyParsedSpec($parsedSpecs);
                 } catch (\RuntimeException $e) {
-                    // The CLI reports a throw and carries on, so a spec that
-                    // failed to generate leaves the task reporting success and
-                    // the missing file is met further down the pipeline, where
-                    // it reads as specs never having been run.
+                    // A throw is reported and carried on from, so stop here
                     Console::error("Spec generation failed for {$platform} ({$format}): " . $e->getMessage());
                     Console::exit(1);
                 }
