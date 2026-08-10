@@ -4682,13 +4682,9 @@ Http::put('/v1/account/tokens/deletion')
 
         $deletion = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
-        $dbForProject->purgeCachedDocument('users', $profile->getId());
-        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
-
-        $sessions = $profile->getAttribute('sessions', []);
-        foreach ($sessions as $session) {
-            $dbForProject->deleteDocument('sessions', $session->getId());
-        }
+        $dbForProject->deleteDocuments('sessions', [
+            Query::equal('userInternalId', [$profile->getSequence()]),
+        ]);
 
         $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
