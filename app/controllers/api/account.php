@@ -305,8 +305,19 @@ Http::post('/v1/account')
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
-        if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
-            $personalDataValidator = new PersonalData($userId, $email, $name, null);
+        $auths = $project->getAttribute('auths', []);
+        if (
+            ($auths['personalDataCheckUserId'] ?? false) ||
+            ($auths['personalDataCheckUserEmail'] ?? false) ||
+            ($auths['personalDataCheckUserName'] ?? false) ||
+            ($auths['personalDataCheckUserPhone'] ?? false)
+        ) {
+            $personalDataValidator = new PersonalData(
+                userId: ($auths['personalDataCheckUserId'] ?? false) ? $userId : null,
+                email: ($auths['personalDataCheckUserEmail'] ?? false) ? $email : null,
+                name: ($auths['personalDataCheckUserName'] ?? false) ? $name : null,
+                phone: null, // phone not available at registration
+            );
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
@@ -3329,8 +3340,19 @@ Http::patch('/v1/account/password')
             $history = array_slice($history, -$historyLimit);
         }
 
-        if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
-            $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
+        $auths = $project->getAttribute('auths', []);
+        if (
+            ($auths['personalDataCheckUserId'] ?? false) ||
+            ($auths['personalDataCheckUserEmail'] ?? false) ||
+            ($auths['personalDataCheckUserName'] ?? false) ||
+            ($auths['personalDataCheckUserPhone'] ?? false)
+        ) {
+            $personalDataValidator = new PersonalData(
+                userId: ($auths['personalDataCheckUserId'] ?? false) ? $user->getId() : null,
+                email: ($auths['personalDataCheckUserEmail'] ?? false) ? $user->getAttribute('email') : null,
+                name: ($auths['personalDataCheckUserName'] ?? false) ? $user->getAttribute('name') : null,
+                phone: ($auths['personalDataCheckUserPhone'] ?? false) ? $user->getAttribute('phone') : null,
+            );
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
