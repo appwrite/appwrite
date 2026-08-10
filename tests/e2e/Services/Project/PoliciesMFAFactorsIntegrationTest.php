@@ -116,12 +116,28 @@ final class PoliciesMFAFactorsIntegrationTest extends Scope
         $this->assertSame(200, $verification['headers']['status-code']);
         $this->assertContains('custom', $verification['body']['factors']);
 
-        // Step 5: Restore email and disable custom again
+        // Step 5: Leave a custom challenge pending, then restore email and disable custom again
+        $pending = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $member['sessionHeaders'], [
+            'factor' => 'custom',
+        ]);
+        $this->assertSame(201, $pending['headers']['status-code']);
+
+        $pendingSecret = $this->client->call(Client::METHOD_GET, '/users/' . $member['userId'] . '/mfa/challenges/' . $pending['body']['$id'], $serverHeaders);
+        $this->assertSame(200, $pendingSecret['headers']['status-code']);
+
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', $serverHeaders, [
             'custom' => false,
             'email' => true,
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
+
+        // Disabling a factor also invalidates challenges issued while it was enabled
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $member['sessionHeaders'], [
+            'challengeId' => $pending['body']['$id'],
+            'otp' => $pendingSecret['body']['code'],
+        ]);
+        $this->assertSame(501, $verification['headers']['status-code']);
+        $this->assertSame('user_auth_method_unsupported', $verification['body']['type']);
 
         $factors = $this->client->call(Client::METHOD_GET, '/account/mfa/factors', $member['sessionHeaders']);
         $this->assertSame(200, $factors['headers']['status-code']);
