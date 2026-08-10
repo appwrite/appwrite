@@ -237,10 +237,19 @@ abstract class ScheduleBase extends Action
 
             foreach ($batches as $batch) {
                 $dbStart = microtime(true);
-                $documents = $dbForPlatform->find('projects', [
-                    Query::equal('$id', $batch),
-                    Query::limit(count($batch)),
-                ]);
+                // The project's subquery attributes cost one query each, per project — five
+                // thousand extra queries for a batch of a thousand projects — and no
+                // schedule task reads them. The only attributes used here are accessedAt,
+                // teamId, database and the sequence, and the documents enqueued for the
+                // workers are reloaded there by id, so the stripped arrays never reach the
+                // code that needs them. Same group Action::$filters marks as Project.
+                $documents = $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->find('projects', [
+                        Query::equal('$id', $batch),
+                        Query::limit(count($batch)),
+                    ]),
+                    ['subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryBlocks', 'subQueryDevKeys']
+                );
                 $dbQueryDuration += microtime(true) - $dbStart;
 
                 $transformStart = microtime(true);
