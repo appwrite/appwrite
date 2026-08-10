@@ -10,7 +10,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 
@@ -56,7 +55,6 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
-            ->inject('authorization')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
@@ -69,7 +67,6 @@ class Update extends Action
         Response $response,
         Database $dbForPlatform,
         Document $project,
-        Authorization $authorization,
         Event $queueForEvents,
     ): void {
         $auths = $project->getAttribute('auths', []);
@@ -94,8 +91,8 @@ class Update extends Action
             'auths' => $auths,
         ]);
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
-        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $updates);
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $queueForEvents
             ->setParam('projectId', $project->getId())
