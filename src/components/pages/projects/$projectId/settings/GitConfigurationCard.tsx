@@ -460,11 +460,11 @@ export function GitConfigurationCard({
           </div>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <Button
               variant="secondary"
               size="sm"
-              className="h-9 text-[13px]"
+              className="h-9 w-full text-[13px] sm:w-auto"
               asChild
             >
               <a href={vcsAuthUrl('github')} target="_blank" rel="noreferrer">
@@ -475,7 +475,7 @@ export function GitConfigurationCard({
             <Button
               variant="secondary"
               size="sm"
-              className="h-9 text-[13px]"
+              className="h-9 w-full text-[13px] sm:w-auto"
               asChild
             >
               <a href={vcsAuthUrl('gitlab')} target="_blank" rel="noreferrer">
@@ -486,7 +486,7 @@ export function GitConfigurationCard({
             <Button
               variant="secondary"
               size="sm"
-              className="h-9 text-[13px]"
+              className="h-9 w-full text-[13px] sm:w-auto"
               asChild
             >
               <a
