@@ -38,18 +38,6 @@ class ScheduleFunctions extends ScheduleBase
     }
 
     /**
-     * Deterministic per-function offset, in seconds, within [0, $window).
-     *
-     * Schedules that share a cron slot (everyone runs `0 * * * *`) are spread
-     * across the window instead of all being enqueued in the same second,
-     * while each function keeps a stable slot so run intervals stay exact.
-     */
-    public static function spreadOffset(string $resourceId, int $window): int
-    {
-        return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
-    }
-
-    /**
      * Spread window, in seconds, for a given schedule. The default applies
      * _APP_FUNCTIONS_SCHEDULE_SPREAD to every schedule; override to scope
      * or vary the window per schedule (e.g. by project or plan).
