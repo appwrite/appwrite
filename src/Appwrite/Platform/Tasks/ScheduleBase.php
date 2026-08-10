@@ -36,6 +36,18 @@ abstract class ScheduleBase extends Action
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
 
+    /**
+     * Deterministic per-resource offset, in seconds, within [0, $window).
+     *
+     * Schedules that share a cron slot are spread across the window instead
+     * of all being enqueued in the same second, while each resource keeps a
+     * stable slot so run intervals stay exact.
+     */
+    public static function spreadOffset(string $resourceId, int $window): int
+    {
+        return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
+    }
+
     protected function loadResource(Document $project, callable $getProjectDB, array $schedule): Document
     {
         return $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
