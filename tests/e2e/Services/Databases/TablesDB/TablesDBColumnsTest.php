@@ -71,17 +71,15 @@ final class TablesDBColumnsTest extends Scope
             $byKey[$column['key']] = $column;
         }
 
-        // Sizes must match the dedicated per-column endpoints
+        // Sizes must match the dedicated per-column endpoints. The fixed width
+        // types do not expose a size, it is implied by the type.
         $this->assertEquals('string', $byKey['title']['type']);
         $this->assertEquals(128, $byKey['title']['size']);
         $this->assertEquals('varchar', $byKey['slug']['type']);
         $this->assertEquals(64, $byKey['slug']['size']);
         $this->assertEquals('text', $byKey['modulePath']['type']);
-        $this->assertEquals(65535, $byKey['modulePath']['size']);
         $this->assertEquals('mediumtext', $byKey['summary']['type']);
-        $this->assertEquals(16777215, $byKey['summary']['size']);
         $this->assertEquals('longtext', $byKey['archive']['type']);
-        $this->assertEquals(2147483647, $byKey['archive']['size']);
 
         // Format shorthands become a string of that format
         $this->assertEquals('string', $byKey['email']['type']);
@@ -95,11 +93,15 @@ final class TablesDBColumnsTest extends Scope
         $this->assertEquals(['on', 'off'], $byKey['status']['elements']);
         $this->assertEquals('on', $byKey['status']['default']);
 
+        // Longer than any of the sized string types allow, so it only fits if
+        // the text column really got its 65535 default
+        $modulePath = \str_repeat('src/Appwrite/Platform/Modules/Databases/', 200);
+
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', $headers, [
             'rowId' => ID::unique(),
             'data' => [
                 'title' => 'Appwrite',
-                'modulePath' => 'src/Appwrite/Platform/Modules/Databases',
+                'modulePath' => $modulePath,
                 'email' => 'team@appwrite.io',
                 'website' => 'https://appwrite.io',
                 'address' => '127.0.0.1',
@@ -108,7 +110,7 @@ final class TablesDBColumnsTest extends Scope
         ]);
 
         $this->assertEquals(201, $row['headers']['status-code']);
-        $this->assertEquals('src/Appwrite/Platform/Modules/Databases', $row['body']['modulePath']);
+        $this->assertEquals($modulePath, $row['body']['modulePath']);
         $this->assertEquals('off', $row['body']['status']);
     }
 
