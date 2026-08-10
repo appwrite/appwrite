@@ -782,6 +782,7 @@ class Specs extends Action
                     // A throw is reported and carried on from, so stop here
                     Console::error("Spec generation failed for {$platform} ({$format}): " . $e->getMessage());
                     Console::exit(1);
+                    return;
                 }
 
                 $encodedSpecs = \json_encode($parsedSpecs, JSON_PRETTY_PRINT);
