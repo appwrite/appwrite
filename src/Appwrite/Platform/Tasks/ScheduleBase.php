@@ -36,6 +36,18 @@ abstract class ScheduleBase extends Action
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
 
+    /**
+     * Deterministic per-resource offset, in seconds, within [0, $window).
+     *
+     * Schedules that share a cron slot are spread across the window instead
+     * of all being enqueued in the same second, while each resource keeps a
+     * stable slot so run intervals stay exact.
+     */
+    public static function spreadOffset(string $resourceId, int $window): int
+    {
+        return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
+    }
+
     protected function loadResource(Document $project, callable $getProjectDB, array $schedule): Document
     {
         return $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
@@ -237,10 +249,19 @@ abstract class ScheduleBase extends Action
 
             foreach ($batches as $batch) {
                 $dbStart = microtime(true);
-                $documents = $dbForPlatform->find('projects', [
-                    Query::equal('$id', $batch),
-                    Query::limit(count($batch)),
-                ]);
+                // The project's subquery attributes cost one query each, per project — five
+                // thousand extra queries for a batch of a thousand projects — and no
+                // schedule task reads them. The only attributes used here are accessedAt,
+                // teamId, database and the sequence, and the documents enqueued for the
+                // workers are reloaded there by id, so the stripped arrays never reach the
+                // code that needs them. Same group Action::$filters marks as Project.
+                $documents = $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->find('projects', [
+                        Query::equal('$id', $batch),
+                        Query::limit(count($batch)),
+                    ]),
+                    ['subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryBlocks', 'subQueryDevKeys']
+                );
                 $dbQueryDuration += microtime(true) - $dbStart;
 
                 $transformStart = microtime(true);

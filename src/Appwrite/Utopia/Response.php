@@ -277,6 +277,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_SESSION_LIMIT = 'policySessionLimit';
     public const MODEL_POLICY_USER_LIMIT = 'policyUserLimit';
     public const MODEL_POLICY_MEMBERSHIP_PRIVACY = 'policyMembershipPrivacy';
+    public const MODEL_POLICY_MFA_FACTORS = 'policyMfaFactors';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';

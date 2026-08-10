@@ -23,6 +23,7 @@ trait PoliciesBase
             'session-limit' => ['total'],
             'user-limit' => ['total'],
             'membership-privacy' => ['userId', 'userEmail', 'userPhone', 'userName', 'userMFA', 'userAccessedAt'],
+            'mfa-factors' => ['totp', 'email', 'phone', 'custom'],
         ];
     }
 

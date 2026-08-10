@@ -3,22 +3,15 @@
 namespace Appwrite\Auth\Validator;
 
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
-use Utopia\Validator;
+use Utopia\Validator\Phone as UtopiaPhone;
 
 /**
  * Phone.
  *
  * Validates a number for the E.164 format.
  */
-class Phone extends Validator
+class Phone extends UtopiaPhone
 {
-    protected bool $allowEmpty;
-
-    public function __construct(bool $allowEmpty = false)
-    {
-        $this->allowEmpty = $allowEmpty;
-    }
-
     /**
      * Get Description.
      *
@@ -38,44 +31,18 @@ class Phone extends Validator
      *
      * @return bool
      */
-    public function isValid($value): bool
+    public function isValid(mixed $value): bool
     {
-        if (!is_string($value)) {
+        if (!parent::isValid($value)) {
             return false;
         }
 
-        if ($this->allowEmpty && \strlen($value) === 0) {
+        if ($this->allowEmpty && $value === '') {
             return true;
         }
 
-        if (CallingCode::fromPhoneNumber($value) === null) {
-            return false;
-        }
+        $value = $this->normalize ? self::normalize($value) : $value;
 
-        return !!\preg_match('/^\+[1-9]\d{6,14}$/', $value);
-    }
-
-    /**
-     * Is array
-     *
-     * Function will return true if object is array.
-     *
-     * @return bool
-     */
-    public function isArray(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Get Type
-     *
-     * Returns validator type.
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return self::TYPE_STRING;
+        return CallingCode::fromPhoneNumber($value) !== null;
     }
 }

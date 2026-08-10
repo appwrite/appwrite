@@ -46,7 +46,7 @@ class Create extends CreateDocumentAction
             ->setHttpPath('/v1/embeddings/text')
             ->desc('Create text embeddings')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'embeddings.write')
             ->label('resourceType', RESOURCE_TYPE_EMBEDDINGS_TEXT)
             ->label('audits.event', 'embedding.create')
             ->label('audits.resource', 'embeddings/text')
