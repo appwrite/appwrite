@@ -105,6 +105,10 @@ class Update extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
+        if ($challenge->getAttribute('expire') < DateTime::formatTz(DateTime::now())) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
         $type = $challenge->getAttribute('type');
 
         $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {

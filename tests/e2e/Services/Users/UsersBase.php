@@ -633,6 +633,16 @@ trait UsersBase
     {
         $projectId = $this->getProject()['$id'];
 
+        // Enable the custom factor, which the MFA factors policy disables by default
+        $policy = $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'custom' => true,
+        ]);
+
+        $this->assertEquals(200, $policy['headers']['status-code']);
+
         $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,

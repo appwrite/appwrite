@@ -211,6 +211,7 @@ class Deletes extends Action
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredOAuth2Grants($project, $getProjectDB);
+                $this->deleteExpiredChallenges($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
@@ -1164,6 +1165,24 @@ class Deletes extends Action
             Query::orderAsc('expire'),
             Query::orderAsc(),
         ], $dbForProject);
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @return void
+     * @throws Exception|Throwable
+     */
+    private function deleteExpiredChallenges(Document $project, callable $getProjectDB): void
+    {
+        Console::info('Delete expired challenges');
+
+        $this->deleteByGroup('challenges', [
+            Query::select([...$this->selects, 'expire']),
+            Query::lessThan('expire', DateTime::format(new \DateTime())),
+            Query::orderAsc('expire'),
+            Query::orderAsc(),
+        ], $getProjectDB($project));
     }
 
     /**

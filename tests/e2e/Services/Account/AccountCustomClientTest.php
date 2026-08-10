@@ -4276,6 +4276,26 @@ final class AccountCustomClientTest extends Scope
         $projectId = $this->getProject()['$id'];
         $apiKey = $this->getProject()['apiKey'];
 
+        // Enable the custom factor, which the MFA factors policy disables by default
+        $policy = $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'custom' => true,
+        ]);
+
+        $this->assertEquals(200, $policy['headers']['status-code']);
+
+        // Custom factor becomes visible when the policy enables it
+        $factors = $this->client->call(Client::METHOD_GET, '/account/mfa/factors', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $factors['headers']['status-code']);
+        $this->assertTrue($factors['body']['custom']);
+
         // Create custom factor challenge using existing authenticated session
         $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
             'content-type' => 'application/json',

@@ -131,6 +131,19 @@ class Create extends Action
         ProofsToken $proofForToken,
         ProofsCode $proofForCode
     ): void {
+        $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
+        $factorEnabled = match ($factor) {
+            Type::TOTP => $mfaFactors['totp'] ?? true,
+            Type::EMAIL => $mfaFactors['email'] ?? true,
+            Type::PHONE => $mfaFactors['phone'] ?? true,
+            Type::CUSTOM => $mfaFactors['custom'] ?? false,
+            default => true, // Recovery codes always remain available as a fallback
+        };
+
+        if (!$factorEnabled) {
+            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
+        }
+
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
 
         $code = $proofForCode->generate();
