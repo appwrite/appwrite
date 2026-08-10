@@ -19,7 +19,6 @@ import {
   syncCliAuthFiles,
   syncCliProjectConfig,
 } from '@/lib/cli-shell/bootstrap-cli-container'
-import { withIsolatedAmdGlobals } from '@/lib/cli-shell/amd-globals'
 import {
   CLI_BOOTSTRAP_READY_MESSAGE,
   CLI_PROJECT_CWD,
@@ -34,10 +33,8 @@ import {
 } from '@/lib/cli-shell/fetch-bridge'
 import { getBlockedCliCommandMessage } from '@/lib/cli-shell/blocked-cli-commands'
 import { isAppwriteCliCommand } from '@/lib/cli-shell/is-appwrite-command'
-import { ensureAppwriteBinStub } from '@/lib/cli-shell/install-appwrite-cli'
 import { prepareCliCommand } from '@/lib/cli-shell/prepare-command'
-import { shouldWriteCliStderr } from '@/lib/cli-shell/almostnode-patches'
-import '@/lib/cli-shell/suppress-process-exit-rejections'
+import { shouldWriteCliStderr } from '@/lib/cli-shell/cli-output'
 import {
   CLI_TERMINAL_MUTED,
   CLI_TERMINAL_RESET,
@@ -733,11 +730,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       const projectBootstrap = getProjectBootstrapState(projectId)
 
       if (containerRef.current) {
-        ensureAppwriteBinStub(containerRef.current.vfs)
         return containerRef.current
       }
       if (projectBootstrap.container) {
-        ensureAppwriteBinStub(projectBootstrap.container.vfs)
         containerRef.current = projectBootstrap.container
         setStatus('ready')
         setBootstrapError(null)
@@ -1386,8 +1381,20 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         return
       }
 
-      const command = prepareCliCommand(rawCommand)
-      if (!command) return
+      const prepared = prepareCliCommand(rawCommand)
+      if (prepared.type === 'empty') return
+
+      if (prepared.type === 'unsupported') {
+        prepared.message.split('\n').forEach((line, index, lines) => {
+          writeStderrLine(line, {
+            showPromptAfter: index === lines.length - 1,
+            sessionId: targetSessionId,
+          })
+        })
+        return
+      }
+
+      const command = prepared.args
 
       let container: CliShellContainer
       try {
@@ -1438,8 +1445,6 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       const getOutputApi = () =>
         terminalApisRef.current.get(targetSessionId) ?? null
 
-      // Do not pass `signal`: almostnode treats any signal as long-running and
-      // waits forever for process.exit() instead of using the idle timeout.
       const runOptions: CliShellRunOptions = {
         cwd: CLI_PROJECT_CWD,
         onStdout: (chunk) => {
@@ -1456,9 +1461,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       }
 
       try {
-        const result = await withIsolatedAmdGlobals(() =>
-          container.run(command, runOptions),
-        )
+        const result = await container.run(command, runOptions)
 
         if (result.stdout && !streamedStdout) {
           stdoutAccum = result.stdout
@@ -1472,19 +1475,13 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
           stderrAccum = result.stderr
           writeCliTerminalRaw(getOutputApi(), result.stderr)
         }
-        if (
-          result.exitCode !== 0 &&
-          !result.stdout &&
-          !result.stderr
-        ) {
+        // Only when the command failed silently. The CLI reports its own
+        // failures -- `✗ Error: ...` -- and announcing the exit code as well
+        // reads as a second, separate thing having gone wrong.
+        if (result.exitCode !== 0 && !result.stdout && !result.stderr) {
           writeStderrLine(`Command failed with exit code ${result.exitCode}.`, {
             sessionId: targetSessionId,
           })
-        } else if (result.exitCode !== 0) {
-          writeSystemLine(
-            `Process exited with code ${result.exitCode}.`,
-            targetSessionId,
-          )
         }
       } catch (error: unknown) {
         const message =
@@ -1520,7 +1517,6 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       setOpen,
       showInputPromptIfIdle,
       writeStderrLine,
-      writeSystemLine,
     ],
   )
 
