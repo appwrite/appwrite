@@ -163,11 +163,7 @@ class Update extends Base
         // to match the shape Keycloak's OAuth2 adapter expects (getKeycloakDomain(), getKeycloakRealm()).
         // The `endpoint` and `realmName` params are optional; if omitted, existing stored values are preserved.
         // `clientSecret` is optional; if omitted, the existing stored secret is preserved.
-        $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-        $existing = [];
-        if (!empty($storedRaw)) {
-            $existing = \json_decode($storedRaw, true) ?: [];
-        }
+        $existing = $this->decodeStoredSecret($project);
         $encodedSecret = \json_encode([
             'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
             'keycloakDomain' => $endpoint ?? ($existing['keycloakDomain'] ?? ''),

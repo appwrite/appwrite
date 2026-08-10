@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2;
 
+use Appwrite\Auth\OAuth2\Secret as OAuth2Secret;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -352,6 +353,12 @@ abstract class Base extends Action
         $providerId = static::getProviderId();
         $stored = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
 
+        if ($stored === '' || $stored === []) {
+            return [];
+        }
+
+        $stored = OAuth2Secret::normalize($stored);
+
         if (empty($stored)) {
             return [];
         }
@@ -407,7 +414,8 @@ abstract class Base extends Action
                 }
 
                 $providerClass = static::getProviderClass();
-                $providerInstance = new $providerClass(appId: $oAuthProviders[$appIdKey], appSecret: $oAuthProviders[$appSecretKey], callback: '', state: [], scopes: []);
+                $normalizedSecret = OAuth2Secret::normalize($oAuthProviders[$appSecretKey]);
+                $providerInstance = new $providerClass(appId: $oAuthProviders[$appIdKey], appSecret: $normalizedSecret, callback: '', state: [], scopes: []);
 
                 // E2E integration check
                 if (\method_exists($providerInstance, 'verifyCredentials')) {

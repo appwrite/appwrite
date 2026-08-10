@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http;
 
+use Appwrite\Auth\OAuth2\Secret as OAuth2Secret;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\Utopia\Response;
@@ -82,7 +83,7 @@ class Action extends PlatformAction
             $refreshToken = $gitHubSession->getAttribute('providerRefreshToken');
 
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-            $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+            $appSecret = OAuth2Secret::fromProject($project, $provider);
 
             $oAuthProviders = Config::getParam('oAuthProviders');
             $className = $oAuthProviders[$provider]['class'];
