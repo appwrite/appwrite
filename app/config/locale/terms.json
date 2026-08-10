@@ -50,6 +50,41 @@
         "reference": ""
     },
     {
+        "term": "emails.deletion.subject",
+        "comment": "These strings are used in the account deletion confirmation email templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.deletion.hello",
+        "comment": "These strings are used in the account deletion confirmation email templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.deletion.body",
+        "comment": "These strings are used in the account deletion confirmation email templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.deletion.footer",
+        "comment": "These strings are used in the account deletion confirmation email templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.deletion.thanks",
+        "comment": "These strings are used in the account deletion confirmation email templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.deletion.buttonText",
+        "comment": "These strings are used in the account deletion confirmation email templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.deletion.signature",
+        "comment": "These strings are used in the account deletion confirmation email templates.",
+        "reference": ""
+    },
+    {
         "term": "emails.recovery.subject",
         "comment": "These strings are used in the password recovery templates.",
         "reference": ""

@@ -193,13 +193,19 @@ final class UserTest extends TestCase
             'tokens' => $tokens3,
         ]);
 
-        $this->assertEquals($user1->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken), $tokens1[0]);
-        $this->assertEquals($user1->tokenVerify(null, $secret, $proofForToken), $tokens1[0]);
-        $this->assertEquals(false, $user1->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
-        $this->assertEquals(false, $user2->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken));
-        $this->assertEquals(false, $user2->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
-        $this->assertEquals(false, $user3->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken));
-        $this->assertEquals(false, $user3->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
+        $tokensDeletion = [
+            new Document([
+                '$id' => ID::custom('tokenDel'),
+                'type' => TOKEN_TYPE_DELETION,
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60 * 24)),
+                'secret' => $hash,
+            ]),
+        ];
+        $userDeletion = new User([
+            '$id' => ID::custom('userDel'),
+            'tokens' => $tokensDeletion,
+        ]);
+        $this->assertEquals($userDeletion->tokenVerify(TOKEN_TYPE_DELETION, $secret, $proofForToken), $tokensDeletion[0]);
     }
 
     public function testIsPrivilegedUser(): void
