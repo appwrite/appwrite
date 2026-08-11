@@ -12,6 +12,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
+import { useParams } from '@tanstack/react-router'
 import { Query, ID, type Models } from '@appwrite.io/console'
 import {
   BillingPlanTier,
@@ -319,9 +320,15 @@ export async function fetchOrganizationPlan(orgId: string) {
  * Query function to fetch current user's roles and scopes for an organization.
  * Use in organization context (orgId) or project context (project's teamId).
  * When API is unavailable or fails, returns defaultRoles and defaultScopes (full access).
+ *
+ * `projectId` resolves project-specific roles (`project-{id}-{role}`) for that
+ * one project. Omitting it is what the org-wide view wants, but the backend then
+ * downgrades every project-specific role to `analyst` — so any caller reasoning
+ * about access *within* a project must pass the id. See `console-project-roles`.
  */
 export async function fetchOrganizationScopes(
   organizationId: string,
+  projectId?: string | null,
 ): Promise<OrganizationRolesScopes> {
   if (!organizationId) {
     return { roles: [...DEFAULT_ROLES], scopes: [...DEFAULT_SCOPES] }
@@ -330,12 +337,16 @@ export async function fetchOrganizationScopes(
     const orgService = sdk.forConsole.organizations as unknown as {
       getScopes?(params: {
         organizationId: string
+        projectId?: string
       }): Promise<{ roles?: string[]; scopes?: string[] }>
     }
     if (typeof orgService.getScopes !== 'function') {
       return { roles: [...DEFAULT_ROLES], scopes: [...DEFAULT_SCOPES] }
     }
-    const response = await orgService.getScopes({ organizationId })
+    const response = await orgService.getScopes({
+      organizationId,
+      ...(projectId ? { projectId } : {}),
+    })
     return {
       roles: response.roles ?? [...DEFAULT_ROLES],
       scopes: response.scopes ?? [...DEFAULT_SCOPES],
@@ -455,7 +466,10 @@ export function organizationFailedInvoicePresenceQueryOptions(
 export function useOrganizationFailedInvoicePresence(
   organizationId: string | null | undefined,
 ) {
-  const { access } = useOrganizationScopes(organizationId)
+  // Billing is org-level, so resolve org-wide even when rendered inside a project.
+  const { access } = useOrganizationScopes(organizationId, undefined, {
+    projectId: null,
+  })
   const canFetchInvoices = canSeeOrganizationBilling(access)
   return useQuery({
     ...organizationFailedInvoicePresenceQueryOptions(organizationId),
@@ -1443,12 +1457,16 @@ export function organizationPlanQueryOptions(orgId: string | null | undefined) {
  */
 export function organizationScopesQueryOptions(
   organizationId: string | null | undefined,
+  projectId?: string | null,
 ) {
   const features = getActiveProfileFeatures()
   const enabled = !!organizationId && !!features.orgRoles
   return queryOptions({
-    queryKey: ['organization', 'scopes', organizationId],
-    queryFn: () => fetchOrganizationScopes(organizationId!),
+    // projectId is part of the key: org-wide and project-scoped resolutions of
+    // the same membership are genuinely different answers and must not share a
+    // cache entry.
+    queryKey: ['organization', 'scopes', organizationId, projectId ?? null],
+    queryFn: () => fetchOrganizationScopes(organizationId!, projectId),
     enabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -1730,11 +1748,19 @@ export function useOrganizationPlan(
  * Use in organization context (orgId) or project context (project's teamId).
  * When profile does not support roles (orgRoles: false), returns full access without fetching.
  *
+ * Inside a project route the current `projectId` is picked up from the router
+ * and used to resolve project-specific roles. That default is deliberate: the
+ * alternative is passing the id explicitly at ~50 call sites, where a single
+ * omission silently downgrades a member to read-only rather than failing loudly.
+ * Pass `{ projectId: null }` to force the org-wide answer while inside a project
+ * route (billing and org settings want that).
+ *
  * @param initialData - Optional data from route loader to avoid layout shift on first paint
  */
 export function useOrganizationScopes(
   organizationId: string | null | undefined,
   initialData?: Awaited<ReturnType<typeof fetchOrganizationScopes>>,
+  options?: { projectId?: string | null },
 ): {
   roles: string[]
   scopes: string[]
@@ -1746,8 +1772,14 @@ export function useOrganizationScopes(
   const features = getActiveProfileFeatures()
   const shouldFetch = !!organizationId && features.orgRoles
 
+  const routeParams = useParams({ strict: false }) as { projectId?: string }
+  const projectId =
+    options && 'projectId' in options
+      ? options.projectId
+      : (routeParams?.projectId ?? null)
+
   const { data, isLoading, error, refetch } = useQuery({
-    ...organizationScopesQueryOptions(organizationId),
+    ...organizationScopesQueryOptions(organizationId, projectId),
     enabled: shouldFetch,
     initialData,
     initialDataUpdatedAt: initialData ? 1 : 0,
@@ -2018,7 +2050,10 @@ export function useOrganizationInvoices(
   limit: number = DEFAULT_PAGE_SIZE,
   queries?: string[],
 ) {
-  const { access } = useOrganizationScopes(organizationId)
+  // Billing is org-level, so resolve org-wide even when rendered inside a project.
+  const { access } = useOrganizationScopes(organizationId, undefined, {
+    projectId: null,
+  })
   const canFetchInvoices = canSeeOrganizationBilling(access)
   const { data, isLoading, isFetching, isPending, error, refetch } = useQuery({
     ...organizationInvoicesQueryOptions(organizationId, page, limit, queries),

@@ -29,6 +29,16 @@ import { AdditionalChargeAlert } from '@/components/global/shared/AdditionalChar
 import { wouldIncurPlanAddonCharge } from '@/lib/billing/plan-addon-charge'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
+import {
+  ProjectAccessSelector,
+  DEFAULT_PROJECT_ROLE,
+} from './_components/ProjectAccessSelector'
+import {
+  buildProjectRole,
+  type ProjectAccessEntry,
+} from '@/lib/console-project-roles'
 import type { Models } from '@appwrite.io/console'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -39,6 +49,12 @@ interface InviteMember {
   email: string
   role: 'owner' | 'developer' | 'editor' | 'analyst' | 'billing'
 }
+
+/**
+ * Whether access is granted across the whole organization or per project.
+ * Per-project access is a paid capability, gated on the plan flag below.
+ */
+type AccessType = 'all' | 'specific'
 
 interface InviteMembersDialogProps {
   open: boolean
@@ -100,6 +116,30 @@ export function InviteMembersDialog({
     { email: '', role: 'owner' },
   ])
   const [touchedFields, setTouchedFields] = useState<Set<number>>(new Set())
+  const [accessType, setAccessType] = useState<AccessType>('all')
+  const [projectAccess, setProjectAccess] = useState<ProjectAccessEntry[]>([])
+
+  const supportsProjectRoles = Boolean(
+    features.orgRoles && organizationPlan?.supportsProjectSpecificRoles,
+  )
+  // Project access applies to every invite in this dialog — the rows describe
+  // the access being granted, not the individual recipient.
+  const useProjectAccess = supportsProjectRoles && accessType === 'specific'
+
+  const validProjectAccess = useMemo(
+    () => projectAccess.filter((row) => row.projectId && row.roleName),
+    [projectAccess],
+  )
+
+  const buildRoles = (invite: InviteMember): string[] => {
+    if (useProjectAccess) {
+      return validProjectAccess.map((row) =>
+        buildProjectRole(row.projectId, row.roleName),
+      )
+    }
+    // When orgRoles is disabled, all members are owners
+    return [features.orgRoles ? invite.role : 'owner']
+  }
 
   // Check if we're at or near the limit
   // memberLimit === null means unlimited, memberLimit === 0 might also mean unlimited
@@ -152,16 +192,17 @@ export function InviteMembersDialog({
         (invite) =>
           invite.email.trim() !== '' && isValidEmail(invite.email.trim()),
       ) &&
-      canAddMore
+      canAddMore &&
+      // Granting per-project access with no projects selected would send an
+      // invite that carries no access at all.
+      (!useProjectAccess || validProjectAccess.length > 0)
     )
-  }, [invites, canAddMore])
+  }, [invites, canAddMore, useProjectAccess, validProjectAccess])
 
   // Create membership mutation
   const createMembershipMutation = useMutation({
     mutationFn: async (invite: InviteMember) => {
-      // When orgRoles disabled, all members are owners
-      const role = features.orgRoles ? invite.role : 'owner'
-      const roles = [role]
+      const roles = buildRoles(invite)
 
       // Construct the redirect URL for accepting the invitation
       const acceptUrl = `${window.location.origin}/join`
@@ -218,6 +259,8 @@ export function InviteMembersDialog({
       setInvites([
         { email: '', role: features.orgRoles ? 'developer' : 'owner' },
       ])
+      setAccessType('all')
+      setProjectAccess([])
       onOpenChange(false)
     } catch (error) {
       toast.error(
@@ -271,6 +314,8 @@ export function InviteMembersDialog({
         { email: '', role: features.orgRoles ? 'developer' : 'owner' },
       ])
       setTouchedFields(new Set())
+      setAccessType('all')
+      setProjectAccess([])
     }
     onOpenChange(newOpen)
   }
@@ -317,6 +362,60 @@ export function InviteMembersDialog({
                 currency={additionalMemberCharge.currency}
                 perUnit
               />
+            </div>
+          )}
+
+          {/* Access scope: whole organization, or named projects only */}
+          {supportsProjectRoles && (
+            <div className="mb-4 space-y-1.5">
+              <Label className="text-[13px] font-medium">{t('Access')}</Label>
+              <RadioGroup
+                value={accessType}
+                onValueChange={(value: AccessType) => {
+                  setAccessType(value)
+                  // Seed an empty row so the selector is immediately usable.
+                  if (value === 'specific' && projectAccess.length === 0) {
+                    setProjectAccess([
+                      { projectId: '', roleName: DEFAULT_PROJECT_ROLE },
+                    ])
+                  }
+                }}
+                className="flex flex-row gap-4"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem id="access-all" value="all" />
+                  <Label
+                    htmlFor="access-all"
+                    className="cursor-pointer text-[13px] font-normal"
+                  >
+                    {t('All projects')}
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem id="access-specific" value="specific" />
+                  <Label
+                    htmlFor="access-specific"
+                    className="cursor-pointer text-[13px] font-normal"
+                  >
+                    {t('Specific projects')}
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
+          {useProjectAccess && (
+            <div className="mb-4">
+              <ProjectAccessSelector
+                orgId={organizationId}
+                value={projectAccess}
+                onChange={setProjectAccess}
+              />
+              {validProjectAccess.length === 0 && (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  {t('Add at least one project to grant access.')}
+                </p>
+              )}
             </div>
           )}
 
@@ -385,8 +484,10 @@ export function InviteMembersDialog({
                     )}
                   </div>
 
-                  {/* Role Select - hidden when orgRoles disabled (all members are owners) */}
-                  {features.orgRoles && (
+                  {/* Role Select - hidden when orgRoles disabled (all members are
+                      owners), and when access is per project (the role is set
+                      per project row instead) */}
+                  {features.orgRoles && !useProjectAccess && (
                     <div className="w-36 shrink-0">
                       <Select
                         value={invite.role}
