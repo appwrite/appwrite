@@ -576,7 +576,7 @@ export async function fetchProjectVariables(projectId: string) {
  * `null` (org-wide access) and `[]` (access to no project) are different
  * results, so they must not collapse to the same key.
  */
-export function projectRestrictionKey(
+function projectRestrictionKey(
   restrictToProjectIds?: string[] | null,
 ): string {
   return Array.isArray(restrictToProjectIds)
