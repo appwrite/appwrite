@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   getDebugEndpointOverride,
   getDebugCustomEndpoint,
+  getCustomDebugEndpoints,
   getEffectiveEndpointBaseUrl,
   getEnvEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -19,6 +20,9 @@ export function useDebugEndpoint() {
   const [customUrl, setCustomUrl] = useState<string | null>(
     getDebugCustomEndpoint,
   )
+  const [customEndpoints, setCustomEndpoints] = useState(
+    getCustomDebugEndpoints,
+  )
   const [effectiveUrl, setEffectiveUrl] = useState(
     () => getEffectiveEndpointBaseUrl() ?? getEnvEndpointBaseUrl(),
   )
@@ -28,10 +32,11 @@ export function useDebugEndpoint() {
     return subscribeToDebugEndpointChange(() => {
       setPreset(getDebugEndpointOverride())
       setCustomUrl(getDebugCustomEndpoint())
+      setCustomEndpoints(getCustomDebugEndpoints())
       setEffectiveUrl(getEffectiveEndpointBaseUrl() ?? getEnvEndpointBaseUrl())
       setEnvUrl(getEnvEndpointBaseUrl())
     })
   }, [])
 
-  return { preset, customUrl, effectiveUrl, envUrl }
+  return { preset, customUrl, customEndpoints, effectiveUrl, envUrl }
 }
