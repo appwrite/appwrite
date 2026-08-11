@@ -11,7 +11,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
-import { activeProjectsQueryOptions } from '@/lib/react-query/hooks'
+import {
+  activeProjectsQueryOptions,
+  organizationProjectScopeQueryOptions,
+} from '@/lib/react-query/hooks'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n/translate'
@@ -68,8 +71,20 @@ export function ProjectSelector({
     if (!open) setSearch('')
   }, [open])
 
+  // Restrict the list to what a project-scoped member can actually open.
+  const { data: projectScope } = useQuery(
+    organizationProjectScopeQueryOptions(orgTeamId),
+  )
+
   const { data, isFetching } = useQuery({
-    ...activeProjectsQueryOptions(orgTeamId, 0, limit, debouncedSearch),
+    ...activeProjectsQueryOptions(
+      orgTeamId,
+      0,
+      limit,
+      debouncedSearch,
+      undefined,
+      projectScope ?? null,
+    ),
     enabled: !!orgTeamId && open,
     placeholderData: keepPreviousData,
   })

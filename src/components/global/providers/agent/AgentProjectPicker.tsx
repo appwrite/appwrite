@@ -19,10 +19,12 @@ import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { useQuery } from '@tanstack/react-query'
 import {
   formatProjectNameForDisplay,
   useProject,
   useProjectsForTeamInfinite,
+  organizationProjectScopeQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const PROJECT_PICKER_PAGE_SIZE = 25
@@ -63,6 +65,12 @@ export function AgentProjectPicker({
   }, [open])
 
   const listOrgId = !disabled && open ? organizationId : null
+  // Restrict the picker to what a project-scoped member can actually open.
+  const { data: pickerProjectScopeData } = useQuery(
+    organizationProjectScopeQueryOptions(listOrgId),
+  )
+  const pickerProjectScope = pickerProjectScopeData ?? null
+
   const {
     projects,
     isFetching,
@@ -73,6 +81,8 @@ export function AgentProjectPicker({
     listOrgId,
     PROJECT_PICKER_PAGE_SIZE,
     open ? debouncedSearch || undefined : undefined,
+    undefined,
+    pickerProjectScope,
   )
 
   const { project: selectedProject } = useProject(value || undefined)

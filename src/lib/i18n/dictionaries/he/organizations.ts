@@ -83,6 +83,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Alert removed': 'ההתראה הוסרה',
   'Alert when spending reaches': 'התראה כשההוצאה מגיעה ל',
   'All projects': 'כל הפרויקטים',
+  'Add project': 'הוספת פרויקט',
+  'Add at least one project to grant access.': 'יש להוסיף לפחות פרויקט אחד כדי להעניק גישה.',
+  'Remove project': 'הסרת פרויקט',
+  'Specific projects': 'פרויקטים מסוימים',
   'All resources except team management and billing writes.':
     'כל המשאבים מלבד ניהול הצוות ופעולות כתיבה בחיוב.',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':

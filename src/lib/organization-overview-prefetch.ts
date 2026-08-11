@@ -7,6 +7,7 @@ import {
   organizationQueryOptions,
   organizationPlanQueryOptions,
   organizationScopesQueryOptions,
+  organizationProjectScopeQueryOptions,
   prefetchOrganizationInvoiceDataIfAllowed,
 } from '@/lib/react-query/hooks/organizations'
 import { activeProjectsQueryOptions, pinnedProjectsQueryOptions } from '@/lib/react-query/hooks/projects'
@@ -88,6 +89,12 @@ export async function prefetchOrganizationOverviewData(
     | undefined
   const pinnedIds = parsePinnedProjectIds(team?.prefs)
 
+  // Resolved before the list so the prefetched entry lands on the same cache
+  // key the overview will read, instead of being refetched on mount.
+  const projectScope = await queryClient
+    .ensureQueryData(organizationProjectScopeQueryOptions(orgId))
+    .catch(() => null)
+
   await Promise.all([
     queryClient.ensureQueryData(
       activeProjectsQueryOptions(
@@ -96,6 +103,7 @@ export async function prefetchOrganizationOverviewData(
         projectsLimit,
         search,
         pinnedIds,
+        projectScope ?? null,
       ),
     ),
     ...(pinnedIds.length > 0

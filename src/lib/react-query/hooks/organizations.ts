@@ -21,6 +21,11 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
+import { fetchConsoleAccount } from '@/lib/console-account-get'
+import {
+  hasProjectSpecificRoles,
+  projectIdsFromRoles,
+} from '@/lib/console-project-roles'
 import {
   DEFAULT_ROLES,
   DEFAULT_SCOPES,
@@ -1467,6 +1472,57 @@ export function organizationScopesQueryOptions(
     // cache entry.
     queryKey: ['organization', 'scopes', organizationId, projectId ?? null],
     queryFn: () => fetchOrganizationScopes(organizationId!, projectId),
+    enabled,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Project ids the current user may reach in this organization, or `null` when
+ * they are an org-wide member and every project is visible.
+ *
+ * This cannot come from `getScopes`: called without a project id it reports a
+ * project-scoped member as a bare `analyst` and discards which projects the
+ * roles referred to. The raw membership is the only place those ids survive, so
+ * it is read directly — the same approach the previous console took.
+ *
+ * An empty array is meaningful (access to no project) and must not be confused
+ * with `null`.
+ */
+export async function fetchOrganizationProjectScope(
+  organizationId: string,
+): Promise<string[] | null> {
+  if (!organizationId || !getActiveProfileFeatures().orgRoles) return null
+  try {
+    const account = await fetchConsoleAccount()
+    if (!account?.$id) return null
+    const response = await sdk.forConsole.teams.listMemberships({
+      teamId: organizationId,
+      queries: [Query.equal('userId', account.$id)],
+    })
+    const roles = response?.memberships?.[0]?.roles ?? []
+    if (!hasProjectSpecificRoles(roles)) return null
+    return projectIdsFromRoles(roles)
+  } catch {
+    // Never fail closed on a lookup error: fall back to the unrestricted list
+    // and let the API reject anything this member cannot open.
+    return null
+  }
+}
+
+export function organizationProjectScopeQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  const features = getActiveProfileFeatures()
+  const enabled = !!organizationId && !!features.orgRoles
+  return queryOptions({
+    queryKey: ['organization', 'project-scope', organizationId],
+    queryFn: () => fetchOrganizationProjectScope(organizationId!),
     enabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,

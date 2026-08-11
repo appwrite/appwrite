@@ -46,6 +46,7 @@ import {
   organizationPlanQueryOptions,
   prefetchOrganizationInvoiceDataIfAllowed,
   organizationScopesQueryOptions,
+  organizationProjectScopeQueryOptions,
   activeProjectsQueryOptions,
   deleteOrganization,
   organizationMembershipsQueryOptions,
@@ -1182,6 +1183,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setDisplayedPage((p) => (p === urlProjectsPage ? p : urlProjectsPage))
   }, [urlProjectsPage])
 
+  // Projects this member may reach; null when they have org-wide access.
+  const { data: orgProjectScope } = useQuery(
+    organizationProjectScopeQueryOptions(orgTeamId),
+  )
+  const restrictToProjectIds = orgProjectScope ?? null
+
   // Fetch data for the requested page (triggers load when user changes page); exclude pinned when not searching
   const {
     data: requestedProjectsData,
@@ -1194,6 +1201,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       urlProjectsLimit,
       searchQuery,
       listExcludePinnedIds,
+      restrictToProjectIds,
     ),
     placeholderData: keepPreviousData})
 
@@ -1206,6 +1214,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         urlProjectsLimit,
         searchQuery,
         listExcludePinnedIds,
+        restrictToProjectIds,
       ),
       placeholderData: keepPreviousData})
 
@@ -1856,6 +1865,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       const projectPages = Array.from(
         new Set([0, Math.max(0, requestedPage - 1)]),
       )
+      // Resolved before the lists so the prefetch matches the key the overview
+      // will read for the organization being switched to.
+      const nextProjectScope = await queryClient
+        .ensureQueryData(organizationProjectScopeQueryOptions(nextOrgId))
+        .catch(() => null)
 
       await Promise.all([
         queryClient.ensureQueryData(
@@ -1874,6 +1888,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               urlProjectsLimit,
               searchQuery,
               searchQuery.trim() ? undefined : nextPinnedIds,
+              nextProjectScope,
             ),
           ),
         ),
