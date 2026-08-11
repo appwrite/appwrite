@@ -71,7 +71,6 @@ export function ProjectSelector({
     if (!open) setSearch('')
   }, [open])
 
-  // Restrict the list to what a project-scoped member can actually open.
   const { data: projectScope } = useQuery(
     organizationProjectScopeQueryOptions(orgTeamId),
   )

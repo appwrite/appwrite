@@ -1183,7 +1183,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setDisplayedPage((p) => (p === urlProjectsPage ? p : urlProjectsPage))
   }, [urlProjectsPage])
 
-  // Projects this member may reach; null when they have org-wide access.
   const { data: orgProjectScope } = useQuery(
     organizationProjectScopeQueryOptions(orgTeamId),
   )
@@ -1865,8 +1864,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       const projectPages = Array.from(
         new Set([0, Math.max(0, requestedPage - 1)]),
       )
-      // Resolved before the lists so the prefetch matches the key the overview
-      // will read for the organization being switched to.
+      // Resolved first so the prefetch lands on the key the overview reads.
       const nextProjectScope = await queryClient
         .ensureQueryData(organizationProjectScopeQueryOptions(nextOrgId))
         .catch(() => null)
@@ -3506,9 +3504,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         | 'analyst'
                                                         | 'billing',
                                                     )
-                                                    // Reopen the dialog in the
-                                                    // mode the member is
-                                                    // actually stored in.
                                                     setEditAccessType(
                                                       memberProjectAccess.length >
                                                         0

@@ -89,8 +89,7 @@ export async function prefetchOrganizationOverviewData(
     | undefined
   const pinnedIds = parsePinnedProjectIds(team?.prefs)
 
-  // Resolved before the list so the prefetched entry lands on the same cache
-  // key the overview will read, instead of being refetched on mount.
+  // Resolved first so the prefetch lands on the key the overview reads.
   const projectScope = await queryClient
     .ensureQueryData(organizationProjectScopeQueryOptions(orgId))
     .catch(() => null)

@@ -65,7 +65,6 @@ export function AgentProjectPicker({
   }, [open])
 
   const listOrgId = !disabled && open ? organizationId : null
-  // Restrict the picker to what a project-scoped member can actually open.
   const { data: pickerProjectScopeData } = useQuery(
     organizationProjectScopeQueryOptions(listOrgId),
   )

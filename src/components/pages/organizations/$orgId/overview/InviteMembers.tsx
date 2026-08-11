@@ -373,7 +373,6 @@ export function InviteMembersDialog({
                 value={accessType}
                 onValueChange={(value: AccessType) => {
                   setAccessType(value)
-                  // Seed an empty row so the selector is immediately usable.
                   if (value === 'specific' && projectAccess.length === 0) {
                     setProjectAccess([
                       { projectId: '', roleName: DEFAULT_PROJECT_ROLE },

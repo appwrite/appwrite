@@ -369,7 +369,6 @@ export function ProjectSelector({
   const projectSearchActive = Boolean(projectSearch.trim())
   const listExcludePinnedIds = projectSearchActive ? undefined : pinnedIds
 
-  // Restrict the switcher to what a project-scoped member can actually open.
   const { data: switcherProjectScopeData } = useQuery(
     organizationProjectScopeQueryOptions(resolvedTeam?.$id),
   )
