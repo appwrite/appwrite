@@ -225,7 +225,7 @@ trait TeamsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, count($response['body']['teams']));
+        $this->assertSame(2, count($response['body']['teams']));
 
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',

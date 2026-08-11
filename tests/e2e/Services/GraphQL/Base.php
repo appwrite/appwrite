@@ -514,8 +514,8 @@ trait Base
 
         $this->assertNotEmpty($image->output('png'));
         $this->assertIsArray($dimensions);
-        $this->assertEquals(100, $dimensions[0]);
-        $this->assertEquals(100, $dimensions[1]);
+        $this->assertSame(100, $dimensions[0]);
+        $this->assertSame(100, $dimensions[1]);
     }
 
     public function getQuery(string $name): string

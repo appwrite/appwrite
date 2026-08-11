@@ -327,7 +327,7 @@ trait UsersBase
         // Test empty prefs is object not array
         $bodyString = $user['body'];
         $prefs = substr($bodyString, strpos($bodyString, '"prefs":') + 8, 2);
-        $this->assertEquals('{}', $prefs);
+        $this->assertSame('{}', $prefs);
 
         $body = json_decode($bodyString, true);
 
@@ -562,7 +562,7 @@ trait UsersBase
 
         $this->assertEquals(201, $token['headers']['status-code']);
         $this->assertEquals($data['userId'], $token['body']['userId']);
-        $this->assertEquals(15, strlen($token['body']['secret']));
+        $this->assertSame(15, strlen($token['body']['secret']));
         $this->assertNotEmpty($token['body']['expire']);
 
         /**

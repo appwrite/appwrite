@@ -131,6 +131,9 @@
     "config": {
         "platform": {
         },
+        "audit": {
+            "abandoned": "report"
+        },
         "allow-plugins": {
             "php-http/discovery": true,
             "tbachert/spi": true
