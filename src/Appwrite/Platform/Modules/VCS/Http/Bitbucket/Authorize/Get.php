@@ -31,9 +31,12 @@ class Get extends Base
             System::getEnv('_APP_VCS_BITBUCKET_CLIENT_SECRET', ''),
             $callback,
             $state,
+            // Bitbucket's scopes don't cascade, and creating a repository is
+            // an admin privilege rather than a write one
             [
                 'account',
                 'repository:write',
+                'repository:admin',
                 'pullrequest:write',
                 'webhook',
             ]
