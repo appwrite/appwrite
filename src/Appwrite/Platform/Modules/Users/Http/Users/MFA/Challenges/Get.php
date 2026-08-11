@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -68,6 +69,7 @@ class Get extends Action
             $challenge->isEmpty()
             || $challenge->getAttribute('userId') !== $userId
             || $challenge->getAttribute('type') !== Type::CUSTOM
+            || $challenge->getAttribute('expire') < DateTime::formatTz(DateTime::now())
         ) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }

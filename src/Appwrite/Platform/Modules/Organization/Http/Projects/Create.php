@@ -102,7 +102,13 @@ class Create extends Action
             'membershipsMfa' => false,
             'membershipsUserId' => false,
             'membershipsUserPhone' => false,
-            'invalidateSessions' => true
+            'invalidateSessions' => true,
+            'mfaFactors' => [
+                'totp' => true,
+                'email' => true,
+                'phone' => true,
+                'custom' => false,
+            ],
         ];
 
         foreach ($auth as $method) {

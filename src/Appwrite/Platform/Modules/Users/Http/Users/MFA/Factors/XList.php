@@ -70,10 +70,11 @@ class XList extends Action
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, Response $response, Database $dbForProject): void
+    public function action(string $userId, Response $response, Database $dbForProject, Document $project): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -83,10 +84,13 @@ class XList extends Action
 
         $totp = TOTP::getAuthenticatorFromUser($user);
 
+        $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
+
         $factors = new Document([
-            Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
-            Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+            Type::TOTP => ($mfaFactors['totp'] ?? true) && $totp !== null && $totp->getAttribute('verified', false),
+            Type::EMAIL => ($mfaFactors['email'] ?? true) && $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
+            Type::PHONE => ($mfaFactors['phone'] ?? true) && $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
+            Type::CUSTOM => $mfaFactors['custom'] ?? false
         ]);
 
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);

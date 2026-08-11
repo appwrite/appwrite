@@ -105,7 +105,25 @@ class Update extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
+        if ($challenge->getAttribute('expire') < DateTime::formatTz(DateTime::now())) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
         $type = $challenge->getAttribute('type');
+
+        // Consult the current policy so disabling a factor also invalidates outstanding challenges
+        $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
+        $factorEnabled = match ($type) {
+            Type::TOTP => $mfaFactors['totp'] ?? true,
+            Type::EMAIL => $mfaFactors['email'] ?? true,
+            Type::PHONE => $mfaFactors['phone'] ?? true,
+            Type::CUSTOM => $mfaFactors['custom'] ?? false,
+            default => true, // Recovery codes always remain available as a fallback
+        };
+
+        if (!$factorEnabled) {
+            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
+        }
 
         $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
             if (
