@@ -4,6 +4,14 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Phrase;
+use Appwrite\Auth\OAuth2\Saml as SAMLAdapter;
+use Appwrite\Auth\SAML\AuthnRequest as SAMLAuthnRequest;
+use Appwrite\Auth\SAML\Identity as SAMLIdentity;
+use Appwrite\Auth\SAML\Metadata as SAMLMetadata;
+use Appwrite\Auth\SAML\Provider as SAMLProvider;
+use Appwrite\Auth\SAML\Response as SAMLResponse;
+use Appwrite\Auth\SAML\Settings as SAMLSettings;
+use Appwrite\Auth\SAML\Ticket as SAMLTicket;
 use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
@@ -46,6 +54,7 @@ use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -1325,7 +1334,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
+    ->param('provider', '', new WhiteList(SAMLProvider::oauth2Providers(), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'] && ($node['protocol'] ?? 'oauth2') === 'oauth2')))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', ...SAMLProvider::samlProviders()]))
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -1403,7 +1412,7 @@ Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
+    ->param('provider', '', new WhiteList(SAMLProvider::oauth2Providers(), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
@@ -1439,7 +1448,7 @@ Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('origin', '*')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
+    ->param('provider', '', new WhiteList(SAMLProvider::oauth2Providers(), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
@@ -1479,6 +1488,12 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->label('docs', false)
+    // Unlike the OAuth2 entry points, this route accepts every configured
+    // provider including SAML. It is not an entry point: the SAML assertion
+    // consumer service redirects here after it has verified the assertion
+    // signature, with a single-use code it minted itself. The user lookup,
+    // account creation and session issuing below are protocol independent and
+    // are shared by both flows.
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
@@ -1501,7 +1516,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, GeoRecord $geoRecord, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('cache')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, GeoRecord $geoRecord, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, Cache $cache) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1528,6 +1544,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
         $oauth2 = new $className($appId, $appSecret, $callback);
+
+        // The SAML adapter resolves its single-use code out of the cache rather
+        // than by calling a provider, so it needs the cache the assertion
+        // consumer service wrote to.
+        if ($oauth2 instanceof SAMLAdapter) {
+            SAMLAdapter::setCache($cache);
+        }
 
         if (!empty($state)) {
             try {
@@ -2147,7 +2170,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
+    ->param('provider', '', new WhiteList(SAMLProvider::oauth2Providers(), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'] && ($node['protocol'] ?? 'oauth2') === 'oauth2')))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', ...SAMLProvider::samlProviders()]))
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -4931,4 +4954,297 @@ Http::delete('/v1/account/identities/:identityId')
             ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
 
         $response->noContent();
+    });
+
+// SAML
+//
+// SAML is a different protocol to OAuth2, so it gets its own endpoints rather
+// than another value on the OAuth2 routes: sign-in starts with a signed XML
+// AuthnRequest, and the assertion comes back as a POST body rather than a
+// `?code=` query parameter. Once the assertion has been validated the flow
+// rejoins the OAuth2 redirect route, which owns the user lookup, account
+// creation and session issuing that both protocols share.
+
+/**
+ * Build the SAML settings for a project from its stored configuration.
+ *
+ * The identity provider half is stored by the console; the service provider
+ * half is derived from the request so a project works on any hostname it is
+ * served from without extra configuration.
+ */
+$samlProject = (function (string $projectId, Document $project, Database $dbForPlatform, Authorization $authorization): Document {
+    // A browser following a SAML sign-in link cannot set the
+    // X-Appwrite-Project header, and the identity provider posts the assertion
+    // back with no Appwrite headers at all. The project id in the path is
+    // therefore the authoritative source for these routes.
+    if (!$project->isEmpty() && $project->getId() === $projectId) {
+        return $project;
+    }
+
+    $resolved = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+
+    if ($resolved->isEmpty()) {
+        throw new Exception(Exception::PROJECT_NOT_FOUND);
+    }
+
+    return $resolved;
+});
+
+$samlSettings = (function (Document $project, Request $request): SAMLSettings {
+    $providers = $project->getAttribute('oAuthProviders', []);
+
+    if (($providers['samlEnabled'] ?? false) !== true) {
+        throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'SAML is disabled for this project.');
+    }
+
+    $config = \json_decode($providers['samlSecret'] ?? '{}', true);
+    $config = \is_array($config) ? $config : [];
+
+    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+    $port = $request->getPort();
+    $base = $protocol . '://' . $request->getHostname();
+
+    // An empty port means the default for the scheme. Appending a bare colon
+    // would produce `http://localhost:`, which then fails to match the
+    // Recipient the identity provider echoes back.
+    if ($port !== '' && $protocol === 'https' && $port !== '443') {
+        $base .= ':' . $port;
+    } elseif ($port !== '' && $protocol === 'http' && $port !== '80') {
+        $base .= ':' . $port;
+    }
+
+    $spEntityId = $providers['samlAppid'] ?? '';
+    $acsUrl = $base . '/v1/account/sessions/saml/' . $project->getId() . '/callback';
+
+    return new SAMLSettings(
+        idpEntityId: $config['idpEntityId'] ?? '',
+        idpSsoUrl: $config['idpSsoUrl'] ?? '',
+        x509Cert: $config['x509Cert'] ?? '',
+        spEntityId: empty($spEntityId) ? $base . '/v1/account/sessions/saml/' . $project->getId() . '/metadata' : $spEntityId,
+        acsUrl: $acsUrl,
+        nameIdFormat: $config['nameIdFormat'] ?? SAMLSettings::DEFAULT_NAME_ID_FORMAT,
+        attributeMap: $config['attributeMap'] ?? [],
+    );
+});
+
+Http::get('/v1/account/sessions/saml/:projectId')
+    ->desc('Create SAML session')
+    ->groups(['api', 'account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('scope', 'public')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'sessions',
+        name: 'createSamlSession',
+        description: '/docs/references/account/create-session-saml.md',
+        type: MethodType::WEBAUTH,
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_MOVED_PERMANENTLY,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::HTML,
+        // Preview SDK builds show the whole surface, so they do not hide.
+        hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') === 'enabled' ? false : [APP_SDK_PLATFORM_SERVER],
+    ))
+    ->label('abuse-limit', 50)
+    ->label('abuse-key', 'ip:{ip}')
+    ->param('projectId', '', new Text(1024), 'Project ID.')
+    ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful sign-in. Only URLs from hostnames in your project\'s platform list are allowed.', true, ['redirectValidator'])
+    ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed sign-in. Only URLs from hostnames in your project\'s platform list are allowed.', true, ['redirectValidator'])
+    ->param('token', false, new Boolean(), 'Return a token instead of creating a session.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('cache')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->action(function (string $projectId, string $success, string $failure, bool $token, Request $request, Response $response, Document $project, Cache $cache, Database $dbForPlatform, Authorization $authorization) use ($samlSettings, $samlProject, $oauthDefaultSuccess, $oauthDefaultFailure) {
+        $project = $samlProject($projectId, $project, $dbForPlatform, $authorization);
+        $settings = $samlSettings($project, $request);
+
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $redirectBase = $protocol . '://' . $request->getHostname();
+
+        if ($port !== '' && $protocol === 'https' && $port !== '443') {
+            $redirectBase .= ':' . $port;
+        } elseif ($port !== '' && $protocol === 'http' && $port !== '80') {
+            $redirectBase .= ':' . $port;
+        }
+
+        if (empty($success)) {
+            $success = $redirectBase . $oauthDefaultSuccess;
+        }
+
+        if (empty($failure)) {
+            $failure = $redirectBase . $oauthDefaultFailure;
+        }
+
+        $authnRequest = new SAMLAuthnRequest($settings);
+        $relayState = SAMLTicket::token();
+
+        // RelayState is capped at 80 bytes by the SAML binding spec, so the
+        // state the OAuth2 flow carries in a query parameter is held server
+        // side and only this token makes the round trip. `token` has to be
+        // included: the shared redirect route reads $state['token']
+        // unconditionally when deciding between a session and a token.
+        (new SAMLTicket($cache))->save(SAMLTicket::REQUESTS, $relayState, [
+            'success' => $success,
+            'failure' => $failure,
+            'token' => $token,
+            'requestId' => $authnRequest->getId(),
+            'projectId' => $project->getId(),
+        ], SAMLTicket::REQUEST_TTL);
+
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($authnRequest->getRedirectUrl($relayState));
+    });
+
+Http::post('/v1/account/sessions/saml/:projectId/callback')
+    ->desc('Create SAML callback')
+    ->groups(['account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('scope', 'public')
+    ->label('origin', '*')
+    ->label('docs', false)
+    ->label('abuse-limit', 50)
+    ->label('abuse-key', 'ip:{ip}')
+    ->param('projectId', '', new Text(1024), 'Project ID.')
+    // A base64 SAML response runs to several kilobytes, far beyond the 2048
+    // that OAuth2 authorization codes need.
+    ->param('SAMLResponse', '', new Text(131072), 'Base64 encoded SAML response.')
+    ->param('RelayState', '', new Text(256), 'Opaque state token issued when the sign-in started.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('cache')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->action(function (string $projectId, string $samlResponse, string $relayState, Request $request, Response $response, Document $project, Cache $cache, Database $dbForPlatform, Authorization $authorization) use ($samlProject) {
+        $project = $samlProject($projectId, $project, $dbForPlatform, $authorization);
+        $ticket = new SAMLTicket($cache);
+        $state = $relayState === '' ? null : $ticket->consume(SAMLTicket::REQUESTS, $relayState);
+
+        // Without the stored request there is nothing to bind this assertion
+        // to, and no validated redirect target to send errors to.
+        if ($state === null) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'This SAML sign-in has expired or was already completed. Please try signing in again.');
+        }
+
+        $failureRedirect = (function (string $message) use ($state, $response) {
+            $failure = $state['failure'] ?? '';
+
+            if (empty($failure)) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, $message);
+            }
+
+            $parsed = URLParser::parse($failure);
+            $query = URLParser::parseQuery($parsed['query']);
+            $query['error'] = \json_encode([
+                'message' => $message,
+                'type' => Exception::USER_UNAUTHORIZED,
+                'code' => 401,
+            ]);
+            $parsed['query'] = URLParser::unparseQuery($query);
+
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->redirect(URLParser::unparse($parsed), 301);
+        });
+
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $base = $protocol . '://' . $request->getHostname();
+
+        if ($port !== '' && $protocol === 'https' && $port !== '443') {
+            $base .= ':' . $port;
+        } elseif ($port !== '' && $protocol === 'http' && $port !== '80') {
+            $base .= ':' . $port;
+        }
+
+        try {
+            $providers = $project->getAttribute('oAuthProviders', []);
+            $config = \json_decode($providers['samlSecret'] ?? '{}', true);
+            $config = \is_array($config) ? $config : [];
+            $spEntityId = $providers['samlAppid'] ?? '';
+
+            $settings = new SAMLSettings(
+                idpEntityId: $config['idpEntityId'] ?? '',
+                idpSsoUrl: $config['idpSsoUrl'] ?? '',
+                x509Cert: $config['x509Cert'] ?? '',
+                spEntityId: empty($spEntityId) ? $base . '/v1/account/sessions/saml/' . $project->getId() . '/metadata' : $spEntityId,
+                acsUrl: $base . '/v1/account/sessions/saml/' . $project->getId() . '/callback',
+                nameIdFormat: $config['nameIdFormat'] ?? SAMLSettings::DEFAULT_NAME_ID_FORMAT,
+                attributeMap: $config['attributeMap'] ?? [],
+            );
+
+            $assertion = new SAMLResponse($settings, $samlResponse);
+            $assertion->validate($state['requestId'] ?? null);
+
+            // The stored request is already single-use, so this only closes the
+            // narrower window where the same assertion is delivered twice
+            // before either delivery finishes.
+            if (!$ticket->claimAssertion($assertion->getAssertionId(), $assertion->getExpiry())) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'This SAML assertion has already been used.');
+            }
+
+            $identity = SAMLIdentity::fromResponse($assertion, $settings);
+        } catch (\Throwable $error) {
+            $failureRedirect($error->getMessage());
+
+            return;
+        }
+
+        // Hand the validated identity to the shared OAuth2 redirect route. A
+        // multi-kilobyte assertion cannot be relayed through a redirect URL, so
+        // it is exchanged here for a single-use code that can.
+        $code = SAMLTicket::token();
+
+        $ticket->save(SAMLTicket::IDENTITIES, $code, [
+            'id' => $identity->getId(),
+            'email' => $identity->getEmail(),
+            'name' => $identity->getName(),
+        ], SAMLTicket::IDENTITY_TTL);
+
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($base . '/v1/account/sessions/oauth2/saml/redirect?' . \http_build_query([
+                'project' => $project->getId(),
+                'code' => $code,
+                'state' => \json_encode([
+                    'success' => $state['success'] ?? '',
+                    'failure' => $state['failure'] ?? '',
+                    'token' => $state['token'] ?? false,
+                ]),
+            ]));
+    });
+
+Http::get('/v1/account/sessions/saml/:projectId/metadata')
+    ->desc('Get SAML metadata')
+    ->groups(['api', 'account'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('abuse-limit', 50)
+    ->label('abuse-key', 'ip:{ip}')
+    ->param('projectId', '', new Text(1024), 'Project ID.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->action(function (string $projectId, Request $request, Response $response, Document $project, Database $dbForPlatform, Authorization $authorization) use ($samlSettings, $samlProject) {
+        $project = $samlProject($projectId, $project, $dbForPlatform, $authorization);
+        $metadata = new SAMLMetadata($samlSettings($project, $request));
+
+        $response
+            ->addHeader('Content-Type', 'application/samlmetadata+xml')
+            ->addHeader('Content-Disposition', 'inline; filename="appwrite-saml-metadata.xml"')
+            ->send($metadata->toXml());
     });
