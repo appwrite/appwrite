@@ -1166,7 +1166,25 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { data: consoleTeam } = useConsoleTeam(orgTeamId)
   const teamPrefs = (consoleTeam as { prefs?: Record<string, unknown> } | null)
     ?.prefs
-  const pinnedIds = useMemo(() => parsePinnedProjectIds(teamPrefs), [teamPrefs])
+  const allPinnedIds = useMemo(
+    () => parsePinnedProjectIds(teamPrefs),
+    [teamPrefs],
+  )
+  const { data: orgProjectScope } = useQuery(
+    organizationProjectScopeQueryOptions(orgTeamId),
+  )
+  const restrictToProjectIds = orgProjectScope ?? null
+
+  // Pins live in org-level team prefs and are shared by every member, so a
+  // project-scoped member would otherwise see pinned cards for projects they
+  // cannot open. Filtering here also keeps them out of the exclude list and
+  // the project count.
+  const pinnedIds = useMemo(() => {
+    if (!restrictToProjectIds) return allPinnedIds
+    const allowed = new Set(restrictToProjectIds)
+    return allPinnedIds.filter((id) => allowed.has(id))
+  }, [allPinnedIds, restrictToProjectIds])
+
   const updateTeamPrefsMutation = useUpdateConsoleTeamPrefs(orgTeamId)
 
   /** While searching, list API must include pinned rows if they match; pinned section is hidden in the UI. */
@@ -1182,11 +1200,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setRequestedPage((p) => (p === urlProjectsPage ? p : urlProjectsPage))
     setDisplayedPage((p) => (p === urlProjectsPage ? p : urlProjectsPage))
   }, [urlProjectsPage])
-
-  const { data: orgProjectScope } = useQuery(
-    organizationProjectScopeQueryOptions(orgTeamId),
-  )
-  const restrictToProjectIds = orgProjectScope ?? null
 
   // Fetch data for the requested page (triggers load when user changes page); exclude pinned when not searching
   const {

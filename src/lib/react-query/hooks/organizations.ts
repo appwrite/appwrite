@@ -1505,7 +1505,16 @@ export async function fetchOrganizationProjectScope(
       teamId: organizationId,
       queries: [Query.equal('userId', account.$id)],
     })
-    const roles = response?.memberships?.[0]?.roles ?? []
+    // Matched on userId rather than taking the first row: if the query filter
+    // is ever ignored the first membership is some other member, and their
+    // project scope would then be applied to everyone.
+    const memberships = (response?.memberships ?? []) as Array<{
+      userId?: string
+      roles?: string[]
+    }>
+    const mine = memberships.find((m) => m.userId === account.$id)
+    if (!mine) return null
+    const roles = mine.roles ?? []
     if (!hasProjectSpecificRoles(roles)) return null
     return projectIdsFromRoles(roles)
   } catch {
