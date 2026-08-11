@@ -1336,6 +1336,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Native databases': 'מסדי נתונים native',
   'Dedicated PostgreSQL and MySQL engines for teams that need direct SQL compatibility.':
     'מנועי PostgreSQL ו-MySQL ייעודיים לצוותים שצריכים תאימות SQL ישירה.',
+  'A dedicated PostgreSQL engine for teams that need direct SQL compatibility.':
+    'מנוע PostgreSQL ייעודי לצוותים שצריכים תאימות SQL ישירה.',
   'Relational-style database with tables, columns, and indexes. Ideal for structured data and complex queries.':
     'מסד נתונים בסגנון relational עם טבלאות, עמודות ואינדקסים. מתאים לנתונים מובנים ולשאילתות מורכבות.',
   'Document-based storage with flexible schemas. Store JSON documents and query with filters and full-text search.':
