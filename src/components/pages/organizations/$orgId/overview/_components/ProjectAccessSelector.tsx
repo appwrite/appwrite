@@ -6,7 +6,6 @@
  * filtered out so a member cannot be given two conflicting roles on one project.
  */
 
-import { useMemo, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -17,8 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
-import { useProjectsForTeam } from '@/lib/react-query/hooks/projects'
+import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
 import {
   PROJECT_ROLE_VALUES,
   type ProjectAccessEntry,
@@ -47,14 +45,6 @@ export function ProjectAccessSelector({
   onChange,
 }: ProjectAccessSelectorProps) {
   const t = useT()
-  const [search, setSearch] = useState('')
-  const { projects, isFetching } = useProjectsForTeam(orgId, 0, 25, search)
-
-  const projectNameById = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const project of projects) map.set(project.$id, project.name)
-    return map
-  }, [projects])
 
   const updateRow = (index: number, patch: Partial<ProjectAccessEntry>) => {
     onChange(value.map((row, i) => (i === index ? { ...row, ...patch } : row)))
@@ -71,34 +61,12 @@ export function ProjectAccessSelector({
   return (
     <div className="space-y-2">
       {value.map((row, index) => {
-        // Exclude projects taken by *other* rows, but keep this row's own
-        // selection so the trigger can still resolve its name.
-        const taken = new Set(
-          value.filter((_, i) => i !== index).map((r) => r.projectId),
-        )
-        // Project names are not unique. The id disambiguates them for the
-        // reader, and keeps each row's cmdk value distinct — sharing one makes
-        // same-named projects highlight and navigate as a single item.
-        const items = projects
-          .filter((p) => !taken.has(p.$id))
-          .map((p) => ({
-            value: p.$id,
-            label: p.name,
-            description: p.$id,
-            searchText: `${p.name} ${p.$id}`,
-          }))
-
-        // An already-saved project may not be in the current (searched or
-        // paginated) page; keep it selectable so editing never drops a row.
-        if (row.projectId && !items.some((i) => i.value === row.projectId)) {
-          const label = projectNameById.get(row.projectId) ?? row.projectId
-          items.unshift({
-            value: row.projectId,
-            label,
-            description: row.projectId,
-            searchText: `${label} ${row.projectId}`,
-          })
-        }
+        // Projects taken by other rows are dropped from this one's list so a
+        // member cannot be given two roles on the same project.
+        const takenByOtherRows = value
+          .filter((_, i) => i !== index)
+          .map((r) => r.projectId)
+          .filter(Boolean)
 
         return (
           <div key={index} className="flex items-end gap-2">
@@ -108,16 +76,14 @@ export function ProjectAccessSelector({
                   {t('Project')}
                 </Label>
               )}
-              <SearchableSelect
+              <ProjectSelector
+                orgTeamId={orgId}
                 value={row.projectId}
-                onValueChange={(projectId) => updateRow(index, { projectId })}
-                items={items}
-                placeholder={t('Select project')}
-                searchPlaceholder={t('Search projects')}
-                emptyMessage={t('No projects found')}
-                onSearchChange={setSearch}
-                isFetching={isFetching}
-                showPlaceholderWhenEmpty
+                onSelectProject={(projectId) =>
+                  updateRow(index, { projectId })
+                }
+                excludeProjectIds={takenByOtherRows}
+                showProjectId
                 triggerClassName="h-9 w-full text-[13px]"
                 // Few projects per org, so the reserved height reads as empty space.
                 listClassName="min-h-0"

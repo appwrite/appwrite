@@ -14,6 +14,7 @@ import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import {
   activeProjectsQueryOptions,
   organizationProjectScopeQueryOptions,
+  useProject,
 } from '@/lib/react-query/hooks'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
@@ -25,6 +26,20 @@ const DEFAULT_PROJECT_LIMIT = 15
 export interface ProjectSelectorProps {
   /** Organization/team ID to fetch projects for */
   orgTeamId: string | null
+  /**
+   * Selected project id, for the controlled case. Omit where selecting is an
+   * action rather than a value (navigating, or handing the id to a callback):
+   * the trigger then keeps showing the placeholder.
+   */
+  value?: string
+  /** Project ids to leave out, e.g. ones already chosen by a sibling selector. */
+  excludeProjectIds?: string[]
+  /**
+   * Show the project id beneath each name. Project names are not unique, so
+   * anywhere the list can contain duplicates this is the only way to tell them
+   * apart.
+   */
+  showProjectId?: boolean
   /** Called when a project is selected (used when getProjectLink is not provided) */
   onSelectProject?: (projectId: string) => void
   /** When provided, navigates on select (avoids layout shift vs full page reload) */
@@ -42,11 +57,16 @@ export interface ProjectSelectorProps {
   triggerClassName?: string
   /** Custom class for the popover content */
   contentClassName?: string
+  /** Custom class for the popover's scroll area (e.g. `min-h-0` for short lists) */
+  listClassName?: string
   disabled?: boolean
 }
 
 export function ProjectSelector({
   orgTeamId,
+  value = '',
+  excludeProjectIds,
+  showProjectId = false,
   onSelectProject,
   getProjectLink,
   placeholder = 'Select project',
@@ -54,6 +74,7 @@ export function ProjectSelector({
   showApiKeysCount = false,
   triggerClassName,
   contentClassName,
+  listClassName,
   disabled = false,
 }: ProjectSelectorProps) {
   const t = useT()
@@ -81,16 +102,21 @@ export function ProjectSelector({
       0,
       limit,
       debouncedSearch,
-      undefined,
+      excludeProjectIds,
       projectScope ?? null,
     ),
     enabled: !!orgTeamId && open,
     placeholderData: keepPreviousData,
   })
 
+  // The selected project may sit outside the current page or search, so it is
+  // resolved separately; without it the trigger falls back to the placeholder
+  // and a controlled selection looks empty.
+  const { project: selectedProject } = useProject(value || undefined)
+
   const items = useMemo(() => {
     const list = data?.projects ?? []
-    return list.map((project: Models.Project) => {
+    const mapped = list.map((project: Models.Project) => {
       const name = formatProjectNameForDisplay(project.name)
       const paused = project.status === 'paused'
       const apiKeysCount = 0
@@ -98,14 +124,32 @@ export function ProjectSelector({
       return {
         value: project.$id,
         label: paused ? `${name} ${t('(Paused)')}` : name,
-        searchText: project.name,
+        // Includes the id so the value stays unique: names are not, and cmdk
+        // keys rows by it, so duplicates would highlight and navigate as one.
+        searchText: `${project.name} ${project.$id}`,
         description:
           showApiKeysCount && apiKeysCount > 0
             ? `${apiKeysCount} API key${apiKeysCount === 1 ? '' : 's'}`
-            : undefined,
+            : showProjectId
+              ? project.$id
+              : undefined,
       }
     })
-  }, [data?.projects, showApiKeysCount, t])
+
+    if (value && !mapped.some((item) => item.value === value)) {
+      const name = selectedProject?.name
+        ? formatProjectNameForDisplay(selectedProject.name)
+        : value
+      mapped.unshift({
+        value,
+        label: name,
+        searchText: `${name} ${value}`,
+        description: showProjectId ? value : undefined,
+      })
+    }
+
+    return mapped
+  }, [data?.projects, showApiKeysCount, showProjectId, t, value, selectedProject])
 
   const handleSelectProject = (projectId: string) => {
     const link = getProjectLink?.(projectId)
@@ -118,7 +162,7 @@ export function ProjectSelector({
 
   return (
     <SearchableSelect
-      value=""
+      value={value}
       onValueChange={handleSelectProject}
       items={items}
       placeholder={t(placeholder)}
@@ -127,6 +171,7 @@ export function ProjectSelector({
       disabled={disabled || !orgTeamId}
       triggerClassName={triggerClassName}
       contentClassName={contentClassName}
+      listClassName={listClassName}
       onSearchChange={setSearch}
       isFetching={isFetching}
       onOpenChange={setOpen}
