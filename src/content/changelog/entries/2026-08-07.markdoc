@@ -1,0 +1,11 @@
+---
+layout: changelog
+title: "Scheduled executions shift slightly on Free and Education plans"
+date: 2026-08-07
+---
+
+Starting today, scheduled function executions on Free and Education plans may run a very short time before or after their configured time, rather than exactly on the minute. The shift is minimal, your schedules keep the same interval, and their start times are simply distributed across each window.
+
+Spreading these executions smooths out the load that builds when many schedules fire at once, such as on the hour. In practice this means fewer cold starts and more consistent execution times for scheduled functions on these plans.
+
+No action is needed. If your workload depends on executions running at an exact time, Pro and Enterprise plans continue to run schedules precisely as configured.
