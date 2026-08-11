@@ -46,6 +46,12 @@ export interface SearchableSelectProps {
   disabled?: boolean
   triggerClassName?: string
   contentClassName?: string
+  /**
+   * Overrides the scroll area's sizing. The default reserves `min-h-[180px]` so
+   * droplists with many options do not resize while searching; pass `min-h-0`
+   * where the list is short and that reservation reads as empty space.
+   */
+  listClassName?: string
   emptyMessage?: string
   /** When true, trigger shows placeholder-style text when no value selected */
   showPlaceholderWhenEmpty?: boolean
@@ -114,6 +120,7 @@ export function SearchableSelect({
   disabled = false,
   triggerClassName,
   contentClassName,
+  listClassName,
   emptyMessage = 'No results',
   showPlaceholderWhenEmpty = true,
   onSearchChange,
@@ -232,7 +239,10 @@ export function SearchableSelect({
           </div>
           <CommandList
             ref={listScrollRef}
-            className="min-h-[180px] max-h-[240px] overflow-y-auto overscroll-contain"
+            className={cn(
+              'min-h-[180px] max-h-[240px] overflow-y-auto overscroll-contain',
+              listClassName,
+            )}
           >
             {items.length === 0 && isFetching ? (
               <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">

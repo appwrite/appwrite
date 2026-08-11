@@ -76,16 +76,27 @@ export function ProjectAccessSelector({
         const taken = new Set(
           value.filter((_, i) => i !== index).map((r) => r.projectId),
         )
+        // Project names are not unique. The id disambiguates them for the
+        // reader, and keeps each row's cmdk value distinct — sharing one makes
+        // same-named projects highlight and navigate as a single item.
         const items = projects
           .filter((p) => !taken.has(p.$id))
-          .map((p) => ({ value: p.$id, label: p.name }))
+          .map((p) => ({
+            value: p.$id,
+            label: p.name,
+            description: p.$id,
+            searchText: `${p.name} ${p.$id}`,
+          }))
 
         // An already-saved project may not be in the current (searched or
         // paginated) page; keep it selectable so editing never drops a row.
         if (row.projectId && !items.some((i) => i.value === row.projectId)) {
+          const label = projectNameById.get(row.projectId) ?? row.projectId
           items.unshift({
             value: row.projectId,
-            label: projectNameById.get(row.projectId) ?? row.projectId,
+            label,
+            description: row.projectId,
+            searchText: `${label} ${row.projectId}`,
           })
         }
 
@@ -108,6 +119,8 @@ export function ProjectAccessSelector({
                 isFetching={isFetching}
                 showPlaceholderWhenEmpty
                 triggerClassName="h-9 w-full text-[13px]"
+                // Few projects per org, so the reserved height reads as empty space.
+                listClassName="min-h-0"
               />
             </div>
 
