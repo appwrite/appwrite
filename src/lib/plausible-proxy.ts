@@ -22,21 +22,14 @@ export function resolvePlausibleEventUrl(scriptSrc: string): string {
   }
 }
 
-/** Prefer CDN/client headers so Plausible receives the visitor IP, not the server's. */
+/**
+ * Visitor IP from Cloudflare Transform Rule header `X-CDN-Client-IP` (`ip.src`).
+ * Do not fall back to `cf-connecting-ip` / `x-real-ip` / `x-forwarded-for`:
+ * those can carry the wrong hop and pollute Plausible country stats (e.g. our
+ * German origin). If this header is missing, callers must skip the event.
+ */
 export function getClientIpFromRequest(request: Request): string | null {
-  const cfConnectingIp = request.headers.get('cf-connecting-ip')?.trim()
-  if (cfConnectingIp) return cfConnectingIp
-
-  const realIp = request.headers.get('x-real-ip')?.trim()
-  if (realIp) return realIp
-
-  const forwardedFor = request.headers.get('x-forwarded-for')
-  if (forwardedFor) {
-    const first = forwardedFor.split(',')[0]?.trim()
-    if (first) return first
-  }
-
-  return null
+  return request.headers.get('x-cdn-client-ip')?.trim() || null
 }
 
 export async function proxyPlausibleScript(
@@ -82,6 +75,12 @@ export async function proxyPlausibleEvent(
   }
 
   const clientIp = getClientIpFromRequest(request)
+  // Never forward to Plausible without a visitor IP: the upstream request would
+  // otherwise appear to come from this app server and pollute geo stats.
+  if (!clientIp) {
+    return new Response(null, { status: 204 })
+  }
+
   const headers = new Headers()
   headers.set(
     'Content-Type',
@@ -91,9 +90,7 @@ export async function proxyPlausibleEvent(
     'User-Agent',
     request.headers.get('user-agent') || 'Unknown',
   )
-  if (clientIp) {
-    headers.set('X-Forwarded-For', clientIp)
-  }
+  headers.set('X-Forwarded-For', clientIp)
 
   try {
     const upstream = await fetch(eventUrl, {
