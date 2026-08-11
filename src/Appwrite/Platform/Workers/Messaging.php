@@ -6,8 +6,6 @@ use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Usage\Context as UsageContext;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
 use Swoole\Runtime;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -30,6 +28,7 @@ use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Fast2SMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Messaging\Adapter\SMS\Inforu;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
@@ -811,12 +810,7 @@ class Messaging extends Action
         $from = System::getEnv('_APP_SMS_FROM', '');
         Span::add('message.from', $from);
 
-        try {
-            $phoneNumber = PhoneNumberUtil::getInstance()->parse($recipients[0] ?? '');
-            Span::add('message.country_code', $phoneNumber->getCountryCode());
-        } catch (NumberParseException $e) {
-            Span::add('message.country_code', 'unknown');
-        }
+        Span::add('message.country_code', CallingCode::fromPhoneNumber($recipients[0] ?? '') ?? 'unknown');
 
         $sms = new SMS(
             $recipients,
