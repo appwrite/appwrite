@@ -14,9 +14,15 @@ import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import {
   activeProjectsQueryOptions,
   organizationProjectScopeQueryOptions,
-  useProject,
 } from '@/lib/react-query/hooks'
-import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
+// Imported from the module rather than the hooks barrel: pulling `useProject`
+// through the barrel drags every hook module into this component's SSR import
+// chain, which closes a cycle back to the router and leaves `routeTree`
+// uninitialized when `getRouter` runs.
+import {
+  formatProjectNameForDisplay,
+  useProject,
+} from '@/lib/react-query/hooks/projects'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
