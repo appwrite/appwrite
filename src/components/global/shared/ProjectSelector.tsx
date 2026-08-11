@@ -11,21 +11,14 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
-import {
-  activeProjectsQueryOptions,
-  organizationProjectScopeQueryOptions,
-} from '@/lib/react-query/hooks'
-// Imported from the module rather than the hooks barrel: pulling `useProject`
-// through the barrel drags every hook module into this component's SSR import
-// chain, which closes a cycle back to the router and leaves `routeTree`
-// uninitialized when `getRouter` runs.
+import { organizationProjectScopeQueryOptions } from '@/lib/react-query/hooks'
 import {
   formatProjectNameForDisplay,
   useProject,
+  useProjectsForTeamInfinite,
 } from '@/lib/react-query/hooks/projects'
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n/translate'
-import type { Models } from '@appwrite.io/console'
 
 const DEFAULT_PROJECT_LIMIT = 15
 
@@ -102,18 +95,22 @@ export function ProjectSelector({
     organizationProjectScopeQueryOptions(orgTeamId),
   )
 
-  const { data, isFetching } = useQuery({
-    ...activeProjectsQueryOptions(
-      orgTeamId,
-      0,
-      limit,
-      debouncedSearch,
-      excludeProjectIds,
-      projectScope ?? null,
-    ),
-    enabled: !!orgTeamId && open,
-    placeholderData: keepPreviousData,
-  })
+  // Infinite rather than a single page: an organization can hold far more
+  // projects than one page, and the droplist previously just stopped at the
+  // first `limit` with no way to reach the rest.
+  const {
+    projects,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useProjectsForTeamInfinite(
+    open ? orgTeamId : null,
+    limit,
+    debouncedSearch || undefined,
+    excludeProjectIds,
+    projectScope ?? null,
+  )
 
   // The selected project may sit outside the current page or search, so it is
   // resolved separately; without it the trigger falls back to the placeholder
@@ -121,10 +118,9 @@ export function ProjectSelector({
   const { project: selectedProject } = useProject(value || undefined)
 
   const items = useMemo(() => {
-    const list = data?.projects ?? []
-    const mapped = list.map((project: Models.Project) => {
+    const mapped = projects.map((project) => {
       const name = formatProjectNameForDisplay(project.name)
-      const paused = project.status === 'paused'
+      const paused = project.paused === true
       const apiKeysCount = 0
 
       return {
@@ -155,7 +151,7 @@ export function ProjectSelector({
     }
 
     return mapped
-  }, [data?.projects, showApiKeysCount, showProjectId, t, value, selectedProject])
+  }, [projects, showApiKeysCount, showProjectId, t, value, selectedProject])
 
   const handleSelectProject = (projectId: string) => {
     const link = getProjectLink?.(projectId)
@@ -180,6 +176,9 @@ export function ProjectSelector({
       listClassName={listClassName}
       onSearchChange={setSearch}
       isFetching={isFetching}
+      hasNextPage={hasNextPage}
+      isFetchingNextPage={isFetchingNextPage}
+      onLoadMore={fetchNextPage}
       onOpenChange={setOpen}
       showPlaceholderWhenEmpty
     />
