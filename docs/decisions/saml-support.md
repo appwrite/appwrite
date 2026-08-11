@@ -188,6 +188,36 @@ Two independent single-use mechanisms:
   (`Ticket::claimAssertion`), closing the narrower window where the same
   assertion is delivered twice before either delivery completes.
 
+**Both run under a distributed lock.** Each is a check-then-act sequence — read
+the record, then delete or write it — and under Swoole's concurrent workers two
+requests carrying the same relay token, exchange code or assertion ID can
+otherwise both pass the check before either writes. "Single use" enforced by two
+separate cache calls is not single use. `Ticket` takes the `locks` resource and
+runs each redemption inside a lock keyed on the record.
+
+## 9. Only fully constrained bearer confirmations are accepted
+
+`SubjectConfirmation` must use `urn:oasis:names:tc:SAML:2.0:cm:bearer`, and its
+`Recipient`, `NotOnOrAfter` and `InResponseTo` are all mandatory.
+
+**Why the method matters.** Bearer is the only method meaning "possession of
+this assertion is proof of identity", which is the assumption this service
+provider makes. `holder-of-key` requires the presenter to prove they hold a
+key, and `sender-vouches` puts the attesting party on the hook — honouring
+either as though it were bearer authenticates whoever delivered the assertion
+rather than whoever it was issued for.
+
+**Why the constraints are mandatory rather than checked-if-present.** They are
+what stop a captured bearer assertion being useful: `Recipient` binds it to this
+ACS, `NotOnOrAfter` bounds how long it lives, `InResponseTo` binds it to a
+request we issued. An assertion that omits them is not a weaker credential to be
+accepted with fewer checks; it is one that was never constrained, and the
+earlier "validate only when present" reading meant a stripped-down assertion
+skipped the very checks that made it safe.
+
+An assertion may carry several `SubjectConfirmation` elements and is confirmed
+if any one is satisfied, so each is tried in turn.
+
 ## Testing
 
 32 unit tests in `tests/unit/Auth/SAML/`. The negative cases are the point:

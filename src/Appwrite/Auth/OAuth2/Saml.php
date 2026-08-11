@@ -4,7 +4,6 @@ namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\SAML\Ticket;
-use Utopia\Cache\Cache;
 
 /**
  * Adapter that lets a completed SAML sign-in reuse the OAuth2 session
@@ -29,13 +28,13 @@ use Utopia\Cache\Cache;
 class Saml extends OAuth2
 {
     /**
-     * Cache used to resolve the exchange code. Injected by the ACS route
-     * rather than the constructor, because the OAuth2 provider signature is
-     * fixed at ($appId, $appSecret, $callback).
+     * Ticket store used to redeem the exchange code. Injected by the redirect
+     * route rather than the constructor, because the OAuth2 provider signature
+     * is fixed at ($appId, $appSecret, $callback).
      *
-     * @var Cache|null
+     * @var Ticket|null
      */
-    private static ?Cache $cache = null;
+    private static ?Ticket $ticket = null;
 
     /**
      * @var array<string, mixed>|null
@@ -43,13 +42,13 @@ class Saml extends OAuth2
     private ?array $identity = null;
 
     /**
-     * @param Cache $cache
+     * @param Ticket $ticket
      *
      * @return void
      */
-    public static function setCache(Cache $cache): void
+    public static function setTicket(Ticket $ticket): void
     {
-        self::$cache = $cache;
+        self::$ticket = $ticket;
     }
 
     /**
@@ -96,11 +95,11 @@ class Saml extends OAuth2
             throw new Exception('SAML identity has not been resolved for this request.', 401);
         }
 
-        if (self::$cache === null) {
-            throw new Exception('SAML identity cache is unavailable.', 500);
+        if (self::$ticket === null) {
+            throw new Exception('SAML identity store is unavailable.', 500);
         }
 
-        $identity = (new Ticket(self::$cache))->consume(Ticket::IDENTITIES, $code);
+        $identity = self::$ticket->consume(Ticket::IDENTITIES, $code);
 
         if ($identity === null) {
             throw new Exception('This SAML sign-in has already been used or has expired. Please try signing in again.', 401);

@@ -269,6 +269,45 @@ final class ResponseTest extends TestCase
     }
 
     /**
+     * Only the bearer method means "possession of this assertion proves
+     * identity". holder-of-key and sender-vouches require the presenter to
+     * demonstrate something further, which this service provider does not do,
+     * so accepting them would authenticate whoever delivered the assertion.
+     */
+    public function testNonBearerConfirmationMethodIsRejected(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessageMatches('/bearer method/i');
+
+        $this->validate($this->builder->build([
+            'method' => 'urn:oasis:names:tc:SAML:2.0:cm:holder-of-key',
+        ]));
+    }
+
+    /**
+     * Recipient is what binds a bearer assertion to this ACS. Without it, one
+     * captured at another service provider could be replayed here.
+     */
+    public function testConfirmationWithoutRecipientIsRejected(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessageMatches('/missing a recipient/i');
+
+        $this->validate($this->builder->build(['recipient' => '']));
+    }
+
+    /**
+     * A bearer assertion with no expiry would stay usable forever.
+     */
+    public function testConfirmationWithoutExpiryIsRejected(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessageMatches('/missing an expiry/i');
+
+        $this->validate($this->builder->build(['notOnOrAfter' => '']));
+    }
+
+    /**
      * Identity-provider-initiated sign-in is out of scope, so an unsolicited
      * response must be refused rather than silently accepted.
      */

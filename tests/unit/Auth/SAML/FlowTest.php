@@ -152,7 +152,7 @@ final class FlowTest extends TestCase
             'name' => $identity->getName(),
         ], Ticket::IDENTITY_TTL);
 
-        SamlAdapter::setCache($this->cache);
+        SamlAdapter::setTicket(new Ticket($this->cache));
         $adapter = new SamlAdapter('', '', '');
 
         $accessToken = $adapter->getAccessToken($code);
@@ -184,7 +184,7 @@ final class FlowTest extends TestCase
             'name' => '',
         ], Ticket::IDENTITY_TTL);
 
-        SamlAdapter::setCache($this->cache);
+        SamlAdapter::setTicket(new Ticket($this->cache));
 
         $first = new SamlAdapter('', '', '');
         $first->getAccessToken($code);

@@ -35,6 +35,14 @@ class Response
     private const string STATUS_SUCCESS = 'urn:oasis:names:tc:SAML:2.0:status:Success';
 
     /**
+     * The only subject confirmation method a service provider can honour on its
+     * own: possession of the assertion is the proof. holder-of-key and
+     * sender-vouches both require the presenter to demonstrate something
+     * further.
+     */
+    private const string CONFIRMATION_BEARER = 'urn:oasis:names:tc:SAML:2.0:cm:bearer';
+
+    /**
      * Tolerance applied to NotBefore/NotOnOrAfter, in seconds, to absorb clock
      * drift between us and the IdP.
      */
@@ -460,9 +468,21 @@ class Response
     }
 
     /**
-     * Enforce SubjectConfirmationData: the assertion must be addressed to our
-     * ACS, still within its window, and carry the InResponseTo of a request we
-     * issued.
+     * Require a fully constrained bearer SubjectConfirmation.
+     *
+     * The bearer method is the only one this service provider can honour: it
+     * means possession of the assertion is proof of identity. `holder-of-key`
+     * and `sender-vouches` both require the presenter to demonstrate something
+     * further, and treating them as bearer would accept an assertion that was
+     * never meant to authenticate whoever delivered it.
+     *
+     * The constraints on a bearer confirmation are what stop a captured
+     * assertion being useful elsewhere or later, so Recipient, NotOnOrAfter and
+     * InResponseTo are all mandatory rather than checked only when present.
+     *
+     * An assertion may carry several SubjectConfirmation elements; the subject
+     * is confirmed if any one of them is satisfied, so each is tried in turn
+     * and the reason from the last failure is reported.
      *
      * @param string|null $expectedInResponseTo
      *
@@ -470,24 +490,6 @@ class Response
      */
     private function assertSubjectConfirmation(?string $expectedInResponseTo): void
     {
-        $confirmation = $this->element('/samlp:Response/saml:Assertion/saml:Subject/saml:SubjectConfirmation/saml:SubjectConfirmationData');
-
-        if ($confirmation === null) {
-            throw new Exception('SAML assertion is missing subject confirmation data.');
-        }
-
-        $recipient = $confirmation->getAttribute('Recipient');
-
-        if ($recipient !== '' && !\hash_equals($this->settings->getAcsUrl(), $recipient)) {
-            throw new Exception('SAML assertion recipient does not match the assertion consumer service URL.');
-        }
-
-        $notOnOrAfter = $confirmation->getAttribute('NotOnOrAfter');
-
-        if ($notOnOrAfter !== '' && \time() - self::CLOCK_SKEW >= self::timestamp($notOnOrAfter)) {
-            throw new Exception('SAML assertion has expired.');
-        }
-
         // Unsolicited (IdP-initiated) responses are out of scope. Without a
         // request of our own there is nothing to bind the response to, so a
         // captured assertion could be replayed into any browser session.
@@ -495,7 +497,79 @@ class Response
             throw new Exception('Unsolicited SAML responses are not supported. Start the sign-in from Appwrite rather than from the identity provider.');
         }
 
-        $inResponseTo = $confirmation->getAttribute('InResponseTo');
+        $confirmations = $this->xpath->query('/samlp:Response/saml:Assertion/saml:Subject/saml:SubjectConfirmation');
+
+        if ($confirmations === false || $confirmations->length === 0) {
+            throw new Exception('SAML assertion is missing subject confirmation.');
+        }
+
+        $failure = null;
+
+        foreach ($confirmations as $confirmation) {
+            if (!$confirmation instanceof DOMElement) {
+                continue;
+            }
+
+            try {
+                $this->assertBearerConfirmation($confirmation, $expectedInResponseTo);
+
+                return;
+            } catch (Exception $error) {
+                $failure = $error;
+            }
+        }
+
+        throw $failure ?? new Exception('SAML assertion has no usable subject confirmation.');
+    }
+
+    /**
+     * Check one SubjectConfirmation against the bearer requirements.
+     *
+     * @param DOMElement $confirmation
+     * @param string $expectedInResponseTo
+     *
+     * @return void
+     */
+    private function assertBearerConfirmation(DOMElement $confirmation, string $expectedInResponseTo): void
+    {
+        if ($confirmation->getAttribute('Method') !== self::CONFIRMATION_BEARER) {
+            throw new Exception('SAML assertion subject confirmation must use the bearer method.');
+        }
+
+        $data = $this->element('./saml:SubjectConfirmationData', $confirmation);
+
+        if ($data === null) {
+            throw new Exception('SAML assertion is missing subject confirmation data.');
+        }
+
+        $recipient = $data->getAttribute('Recipient');
+
+        if ($recipient === '') {
+            throw new Exception('SAML assertion subject confirmation is missing a recipient.');
+        }
+
+        if (!\hash_equals($this->settings->getAcsUrl(), $recipient)) {
+            throw new Exception('SAML assertion recipient does not match the assertion consumer service URL.');
+        }
+
+        $notOnOrAfter = $data->getAttribute('NotOnOrAfter');
+
+        if ($notOnOrAfter === '') {
+            throw new Exception('SAML assertion subject confirmation is missing an expiry.');
+        }
+
+        if (\time() - self::CLOCK_SKEW >= self::timestamp($notOnOrAfter)) {
+            throw new Exception('SAML assertion has expired.');
+        }
+
+        $notBefore = $data->getAttribute('NotBefore');
+
+        // NotBefore is not permitted on a bearer confirmation at all.
+        if ($notBefore !== '' && \time() + self::CLOCK_SKEW < self::timestamp($notBefore)) {
+            throw new Exception('SAML assertion is not yet valid.');
+        }
+
+        $inResponseTo = $data->getAttribute('InResponseTo');
 
         if ($inResponseTo === '' || !\hash_equals($expectedInResponseTo, $inResponseTo)) {
             throw new Exception('SAML assertion does not correspond to the authentication request that started this sign-in.');

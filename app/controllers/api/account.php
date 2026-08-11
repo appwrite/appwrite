@@ -1517,7 +1517,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('cookieDomain')
     ->inject('authorization')
     ->inject('cache')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, GeoRecord $geoRecord, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, Cache $cache) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('locks')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, GeoRecord $geoRecord, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, Cache $cache, callable $locks) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1549,7 +1550,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // than by calling a provider, so it needs the cache the assertion
         // consumer service wrote to.
         if ($oauth2 instanceof SAMLAdapter) {
-            SAMLAdapter::setCache($cache);
+            SAMLAdapter::setTicket(new SAMLTicket($cache, $locks));
         }
 
         if (!empty($state)) {
@@ -5061,7 +5062,8 @@ Http::get('/v1/account/sessions/saml/:projectId')
     ->inject('cache')
     ->inject('dbForPlatform')
     ->inject('authorization')
-    ->action(function (string $projectId, string $success, string $failure, bool $token, Request $request, Response $response, Document $project, Cache $cache, Database $dbForPlatform, Authorization $authorization) use ($samlSettings, $samlProject, $oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('locks')
+    ->action(function (string $projectId, string $success, string $failure, bool $token, Request $request, Response $response, Document $project, Cache $cache, Database $dbForPlatform, Authorization $authorization, callable $locks) use ($samlSettings, $samlProject, $oauthDefaultSuccess, $oauthDefaultFailure) {
         $project = $samlProject($projectId, $project, $dbForPlatform, $authorization);
         $settings = $samlSettings($project, $request);
 
@@ -5091,7 +5093,7 @@ Http::get('/v1/account/sessions/saml/:projectId')
         // side and only this token makes the round trip. `token` has to be
         // included: the shared redirect route reads $state['token']
         // unconditionally when deciding between a session and a token.
-        (new SAMLTicket($cache))->save(SAMLTicket::REQUESTS, $relayState, [
+        (new SAMLTicket($cache, $locks))->save(SAMLTicket::REQUESTS, $relayState, [
             'success' => $success,
             'failure' => $failure,
             'token' => $token,
@@ -5125,9 +5127,10 @@ Http::post('/v1/account/sessions/saml/:projectId/callback')
     ->inject('cache')
     ->inject('dbForPlatform')
     ->inject('authorization')
-    ->action(function (string $projectId, string $samlResponse, string $relayState, Request $request, Response $response, Document $project, Cache $cache, Database $dbForPlatform, Authorization $authorization) use ($samlProject) {
+    ->inject('locks')
+    ->action(function (string $projectId, string $samlResponse, string $relayState, Request $request, Response $response, Document $project, Cache $cache, Database $dbForPlatform, Authorization $authorization, callable $locks) use ($samlProject) {
         $project = $samlProject($projectId, $project, $dbForPlatform, $authorization);
-        $ticket = new SAMLTicket($cache);
+        $ticket = new SAMLTicket($cache, $locks);
         $state = $relayState === '' ? null : $ticket->consume(SAMLTicket::REQUESTS, $relayState);
 
         // Without the stored request there is nothing to bind this assertion

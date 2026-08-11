@@ -52,8 +52,44 @@ class Ticket
      */
     public const int IDENTITY_TTL = 120;
 
-    public function __construct(private readonly Cache $cache)
+    /**
+     * How long a redemption may hold its lock, and how long a caller waits for
+     * one. Both are short: the critical section is a cache read and write.
+     */
+    private const int LOCK_TTL = 10;
+    private const float LOCK_TIMEOUT = 5.0;
+
+    /**
+     * @param Cache $cache
+     * @param (callable(string, int, callable, float): mixed)|null $locks
+     *        The `locks` resource. Redemptions are check-then-act sequences, so
+     *        without it two concurrent requests can both pass a single-use
+     *        check. Optional only so the protocol code stays unit-testable.
+     */
+    public function __construct(
+        private readonly Cache $cache,
+        private readonly mixed $locks = null,
+    ) {
+    }
+
+    /**
+     * Run a redemption under a lock keyed on the record, so the read and the
+     * write that follows it cannot interleave with another request for the same
+     * key.
+     *
+     * @param string $collection
+     * @param string $key
+     * @param callable(): mixed $callback
+     *
+     * @return mixed
+     */
+    private function exclusively(string $collection, string $key, callable $callback): mixed
     {
+        if (!\is_callable($this->locks)) {
+            return $callback();
+        }
+
+        return ($this->locks)('saml:' . $collection . ':' . $key, self::LOCK_TTL, $callback, self::LOCK_TIMEOUT);
     }
 
     /**
@@ -92,19 +128,25 @@ class Ticket
      */
     public function consume(string $collection, string $key): ?array
     {
-        $record = $this->cache->load($collection, self::maxAge($collection), $key);
+        // The read and the delete have to be one step. Two requests arriving
+        // with the same relay token or exchange code would otherwise both load
+        // the record before either deleted it, and both would be handed a
+        // session.
+        return $this->exclusively($collection, $key, function () use ($collection, $key): ?array {
+            $record = $this->cache->load($collection, self::maxAge($collection), $key);
 
-        $this->cache->purge($collection, $key);
+            $this->cache->purge($collection, $key);
 
-        if (!\is_array($record) || !isset($record['payload'], $record['expiresAt'])) {
-            return null;
-        }
+            if (!\is_array($record) || !isset($record['payload'], $record['expiresAt'])) {
+                return null;
+            }
 
-        if ($record['expiresAt'] < \time()) {
-            return null;
-        }
+            if ($record['expiresAt'] < \time()) {
+                return null;
+            }
 
-        return $record['payload'];
+            return $record['payload'];
+        });
     }
 
     /**
@@ -123,17 +165,22 @@ class Ticket
     public function claimAssertion(string $assertionId, int $expiry): bool
     {
         $key = \hash('sha256', $assertionId);
-        $ttl = \max(1, $expiry - \time());
 
-        $existing = $this->cache->load(self::ASSERTIONS, $ttl, $key);
+        // Same reasoning as consume(): checking whether the assertion has been
+        // seen and recording that it has must not interleave, or two deliveries
+        // of one assertion both conclude they are the first.
+        return $this->exclusively(self::ASSERTIONS, $key, function () use ($key, $expiry): bool {
+            $ttl = \max(1, $expiry - \time());
+            $existing = $this->cache->load(self::ASSERTIONS, $ttl, $key);
 
-        if (\is_array($existing) && ($existing['expiresAt'] ?? 0) >= \time()) {
-            return false;
-        }
+            if (\is_array($existing) && ($existing['expiresAt'] ?? 0) >= \time()) {
+                return false;
+            }
 
-        $this->cache->save(self::ASSERTIONS, ['payload' => true, 'expiresAt' => $expiry], $key);
+            $this->cache->save(self::ASSERTIONS, ['payload' => true, 'expiresAt' => $expiry], $key);
 
-        return true;
+            return true;
+        });
     }
 
     /**

@@ -86,7 +86,11 @@ final class AssertionBuilder
         $notOnOrAfter = $options['notOnOrAfter'] ?? \gmdate('Y-m-d\TH:i:s\Z', $now + 300);
         $attributes = $options['attributes'] ?? '<saml:Attribute Name="email"><saml:AttributeValue>user@example.com</saml:AttributeValue></saml:Attribute>';
 
+        $method = $options['method'] ?? 'urn:oasis:names:tc:SAML:2.0:cm:bearer';
+
         $inResponseToAttr = $inResponseTo === '' ? '' : ' InResponseTo="' . $inResponseTo . '"';
+        $recipientAttr = $recipient === '' ? '' : ' Recipient="' . $recipient . '"';
+        $confirmationExpiryAttr = $notOnOrAfter === '' ? '' : ' NotOnOrAfter="' . $notOnOrAfter . '"';
 
         return <<<XML
         <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="{$responseId}" Version="2.0" IssueInstant="{$notBefore}">
@@ -95,8 +99,8 @@ final class AssertionBuilder
             <saml:Issuer>{$issuer}</saml:Issuer>
             <saml:Subject>
               <saml:NameID>{$nameId}</saml:NameID>
-              <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
-                <saml:SubjectConfirmationData{$inResponseToAttr} Recipient="{$recipient}" NotOnOrAfter="{$notOnOrAfter}"/>
+              <saml:SubjectConfirmation Method="{$method}">
+                <saml:SubjectConfirmationData{$inResponseToAttr}{$recipientAttr}{$confirmationExpiryAttr}/>
               </saml:SubjectConfirmation>
             </saml:Subject>
             <saml:Conditions NotBefore="{$notBefore}" NotOnOrAfter="{$notOnOrAfter}">
