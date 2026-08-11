@@ -343,6 +343,23 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Salesforce',
     ],
+    // SAML is not an OAuth2 provider: it has no client secret, no
+    // code-for-token exchange, and its assertion arrives by POST rather than as
+    // a `?code=` query parameter. It lives in this config so that it shares the
+    // project credential storage and the console provider listing, but the
+    // `protocol` key keeps it out of the OAuth2 routes, which filter on it.
+    'saml' => [
+        'name' => 'SAML',
+        'developers' => 'https://docs.oasis-open.org/security/saml/v2.0/',
+        'icon' => 'icon-saml',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => true,
+        'mock' => false,
+        'protocol' => 'saml',
+        'class' => 'Appwrite\\Auth\\OAuth2\\Saml',
+    ],
     'slack' => [
         'name' => 'Slack',
         'developers' => 'https://api.slack.com/',

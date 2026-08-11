@@ -313,6 +313,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_PODIO = 'oAuth2Podio';
     public const MODEL_OAUTH2_NOTION = 'oAuth2Notion';
     public const MODEL_OAUTH2_SALESFORCE = 'oAuth2Salesforce';
+    public const MODEL_OAUTH2_SAML = 'oAuth2Saml';
     public const MODEL_OAUTH2_YAHOO = 'oAuth2Yahoo';
     public const MODEL_OAUTH2_LINKEDIN = 'oAuth2Linkedin';
     public const MODEL_OAUTH2_DISQUS = 'oAuth2Disqus';

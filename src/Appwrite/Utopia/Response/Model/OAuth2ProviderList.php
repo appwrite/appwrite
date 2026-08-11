@@ -40,6 +40,7 @@ class OAuth2ProviderList extends Model
                     Response::MODEL_OAUTH2_PODIO,
                     Response::MODEL_OAUTH2_NOTION,
                     Response::MODEL_OAUTH2_SALESFORCE,
+                    Response::MODEL_OAUTH2_SAML,
                     Response::MODEL_OAUTH2_YAHOO,
                     Response::MODEL_OAUTH2_LINKEDIN,
                     Response::MODEL_OAUTH2_DISQUS,

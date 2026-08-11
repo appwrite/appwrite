@@ -50,6 +50,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Paypal\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\PaypalSandbox\Update as UpdateOAuth2PaypalSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Podio\Update as UpdateOAuth2Podio;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Salesforce\Update as UpdateOAuth2Salesforce;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Saml\Update as UpdateOAuth2Saml;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as UpdateOAuth2Slack;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Stripe\Update as UpdateOAuth2Stripe;
@@ -208,6 +209,7 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Podio::getName(), new UpdateOAuth2Podio());
         $this->addAction(UpdateOAuth2Notion::getName(), new UpdateOAuth2Notion());
         $this->addAction(UpdateOAuth2Salesforce::getName(), new UpdateOAuth2Salesforce());
+        $this->addAction(UpdateOAuth2Saml::getName(), new UpdateOAuth2Saml());
         $this->addAction(UpdateOAuth2Yahoo::getName(), new UpdateOAuth2Yahoo());
         $this->addAction(UpdateOAuth2Linkedin::getName(), new UpdateOAuth2Linkedin());
         $this->addAction(UpdateOAuth2Disqus::getName(), new UpdateOAuth2Disqus());

@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\SAML\Provider as SAMLProvider;
 use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
@@ -30,7 +31,7 @@ Http::patch('/v1/projects/:projectId/oauth2')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'Provider Name')
+    ->param('provider', '', new WhiteList(SAMLProvider::oauth2Providers(), true), 'Provider Name')
     ->param('appId', null, new Nullable(new Text(256)), 'Provider app ID. Max length: 256 chars.', true)
     ->param('secret', null, new Nullable(new text(512)), 'Provider secret key. Max length: 512 chars.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Provider status. Set to \'false\' to disable new session creation.', true)

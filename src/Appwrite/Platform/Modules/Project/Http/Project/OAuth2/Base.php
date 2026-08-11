@@ -298,6 +298,7 @@ abstract class Base extends Action
             'podio' => Podio\Update::class,
             'notion' => Notion\Update::class,
             'salesforce' => Salesforce\Update::class,
+            'saml' => Saml\Update::class,
             'yahoo' => Yahoo\Update::class,
             'linkedin' => Linkedin\Update::class,
             'disqus' => Disqus\Update::class,
