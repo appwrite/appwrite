@@ -17,6 +17,7 @@ import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType,
 import { DatabaseType, coerceDatabaseType, toSdkDatabaseType } from '@/lib/databases/database-type'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
@@ -819,16 +820,26 @@ export async function fetchProjectConsoleDatabases(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const searchArg = search?.trim() || undefined
+  const trimmedSearch = search?.trim() || ''
+
+  // Console list has no text `search` param; match name or `$id` in one list call.
+  const searchQueries = trimmedSearch
+    ? [
+        Query.or([
+          Query.contains('name', trimmedSearch),
+          Query.startsWith('$id', trimmedSearch),
+        ]),
+      ]
+    : []
+
   const queries = [
     ...(filterQueries ?? []),
-    ...(searchArg ? [Query.contains('name', searchArg)] : []),
+    ...searchQueries,
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  // Same `/console/databases` list path used by All Databases.
   const response = await projectSdk.console.listDatabases({ queries })
 
   const databases = (response.databases ?? []).map((db) =>
@@ -2315,11 +2326,11 @@ export async function fetchProjectTables(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...buildAttributePrefixSearchQueries(['name', '$id'], search),
     order === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const searchArg = search?.trim() || undefined
 
   const kind = resolveProjectDatabaseType(dbKind)
 
@@ -2328,7 +2339,6 @@ export async function fetchProjectTables(
       const response = await projectSdk.documentsDB.listCollections({
         databaseId,
         queries,
-        search: searchArg,
       })
       return {
         tables: response.collections ?? [],
@@ -2344,7 +2354,6 @@ export async function fetchProjectTables(
       const response = await projectSdk.vectorsDB.listCollections({
         databaseId,
         queries,
-        search: searchArg,
       })
       return {
         tables: response.collections ?? [],
@@ -2360,7 +2369,6 @@ export async function fetchProjectTables(
     response = await projectSdk.tablesDB.listTables({
       databaseId,
       queries,
-      search: searchArg,
     })
   } catch {
     response = { tables: [], total: 0 }
