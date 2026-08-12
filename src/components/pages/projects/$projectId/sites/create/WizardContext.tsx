@@ -171,16 +171,20 @@ export function useWizard() {
  */
 export function WizardProvider({ children }: { children: ReactNode }) {
   // Reconnecting a Git installation leaves the page and comes back, remounting
-  // the wizard, so what the user filled in is kept across that load
+  // the wizard, so what the user filled in is kept across that load. It is
+  // stored against the path that wrote it, so starting a different site later
+  // in the same tab begins empty rather than inheriting an abandoned run.
   const [formData, setFormData] = useState<WizardFormData>(() => {
     if (typeof window === 'undefined') return defaultFormData
     try {
       const raw = sessionStorage.getItem(FORM_DATA_STORAGE_KEY)
       if (!raw) return defaultFormData
-      return {
-        ...defaultFormData,
-        ...(JSON.parse(raw) as Partial<WizardFormData>),
+      const { path, formData: stored } = JSON.parse(raw) as {
+        path?: string
+        formData?: Partial<WizardFormData>
       }
+      if (path !== window.location.pathname) return defaultFormData
+      return { ...defaultFormData, ...stored }
     } catch {
       return defaultFormData
     }
@@ -200,7 +204,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     } = formData
 
     try {
-      sessionStorage.setItem(FORM_DATA_STORAGE_KEY, JSON.stringify(stored))
+      sessionStorage.setItem(
+        FORM_DATA_STORAGE_KEY,
+        JSON.stringify({ path: window.location.pathname, formData: stored }),
+      )
     } catch {
       // ignore quota errors
     }
