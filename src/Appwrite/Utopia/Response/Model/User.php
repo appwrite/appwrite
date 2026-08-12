@@ -61,7 +61,7 @@ class User extends Model
                 ],
                 'description' => 'Password hashing algorithm configuration.',
                 'required' => false,
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => new \stdClass(),
                 'array' => false,
             ])

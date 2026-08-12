@@ -72,7 +72,7 @@ class Document extends Any
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Document permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
-                'default' => '',
+                'default' => [],
                 'example' => ['read("any")'],
                 'array' => true,
             ]);

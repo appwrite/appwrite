@@ -55,7 +55,7 @@ class Runtime extends Model
             ->addRule('supports', [
                 'type' => self::TYPE_STRING,
                 'description' => 'List of supported architectures.',
-                'default' => '',
+                'default' => [],
                 'example' => 'amd64',
                 'array' => true,
             ])

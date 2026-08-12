@@ -42,7 +42,7 @@ class Presence extends Model
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Presence permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
-                'default' => '',
+                'default' => [],
                 'example' => ['read("any")'],
                 'array' => true,
             ])

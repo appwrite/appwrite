@@ -126,13 +126,13 @@ class Migration extends Model
             ->addRule('statusCounters', [
                 'type' => self::TYPE_JSON,
                 'description' => 'A group of counters that represent the total progress of the migration.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => '{"Database": {"PENDING": 0, "SUCCESS": 1, "ERROR": 0, "SKIP": 0, "PROCESSING": 0, "WARNING": 0}}',
             ])
             ->addRule('resourceData', [
                 'type' => self::TYPE_JSON,
                 'description' => 'An array of objects containing the report data of the resources that were migrated.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => '[{"resource":"Database","id":"public","status":"SUCCESS","message":""}]',
             ])
             ->addRule('errors', [
@@ -145,7 +145,7 @@ class Migration extends Model
             ->addRule('options', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Migration options used during the migration process.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => '{"bucketId": "exports", "notify": false}',
             ])
         ;
