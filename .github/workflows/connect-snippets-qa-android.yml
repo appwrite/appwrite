@@ -318,6 +318,10 @@ jobs:
           api-level: 34
           target: google_apis
           arch: x86_64
+          # Without a profile the AVD is a tiny 320x640 screen, which
+          # truncates the app's greeting text and breaks the flow's
+          # exact-text asserts (seen on the ionic lane).
+          profile: pixel_5
           ram-size: 4096M
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
