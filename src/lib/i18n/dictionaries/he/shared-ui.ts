@@ -261,7 +261,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Get help from our support team': 'קבלו עזרה מצוות התמיכה שלנו',
   'Get started by creating your first item.':
     'התחילו ביצירת הפריט הראשון שלכם.',
-  'Git organization': 'ארגון Git',
+  'Organization': 'ארגון',
   'Git repository': 'Git repo',
   'GitHub Issues': 'GitHub Issues',
   'GitHub repository': 'GitHub repo',

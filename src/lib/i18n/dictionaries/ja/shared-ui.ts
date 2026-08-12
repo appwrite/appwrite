@@ -152,7 +152,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Get help from our support team': 'サポートチームに問い合わせる',
   'Get started by creating your first item.':
     '最初のアイテムを作成して始めましょう。',
-  'Git organization': 'Git 組織',
+  'Organization': '組織',
   'Git repository': 'Git リポジトリ',
   'GitHub Issues': 'GitHub Issues',
   'GitHub repository': 'GitHub リポジトリ',
