@@ -108,63 +108,6 @@ const defaultFormData: WizardFormData = {
 const FORM_DATA_STORAGE_KEY = 'sites-create-wizard-form-data'
 
 /**
- * Reconnecting a Git installation redirects out to the provider and back, which
- * remounts the wizard, so what the user filled in is kept across that load.
- *
- * Only these fields are stored: `variables` holds values the user typed as
- * secrets, `uploadFile` doesn't survive JSON, `template` is refetched from
- * `templateId`, and the created ids describe a run that is already over.
- */
-const PERSISTED_FIELDS = [
-  'siteName',
-  'siteId',
-  'installationId',
-  'providerRepositoryId',
-  'providerBranch',
-  'providerRootDirectory',
-  'providerSilentMode',
-  'templateId',
-  'framework',
-  'buildRuntime',
-  'installCommand',
-  'buildCommand',
-  'startCommand',
-  'outputDirectory',
-  'fallbackFile',
-  'domain',
-  'domainValid',
-  'repositoryOwner',
-  'repositoryName',
-  'repositoryUrl',
-] as const satisfies readonly (keyof WizardFormData)[]
-
-function readStoredFormData(): WizardFormData {
-  if (typeof window === 'undefined') return defaultFormData
-  try {
-    const raw = sessionStorage.getItem(FORM_DATA_STORAGE_KEY)
-    if (!raw) return defaultFormData
-    return {
-      ...defaultFormData,
-      ...(JSON.parse(raw) as Partial<WizardFormData>),
-    }
-  } catch {
-    return defaultFormData
-  }
-}
-
-function writeStoredFormData(formData: WizardFormData) {
-  try {
-    const stored: Record<string, unknown> = {}
-    for (const field of PERSISTED_FIELDS) {
-      stored[field] = formData[field]
-    }
-    sessionStorage.setItem(FORM_DATA_STORAGE_KEY, JSON.stringify(stored))
-  } catch {
-    // ignore quota errors
-  }
-}
-
-/**
  * Wizard path type
  */
 export type WizardPath = 'repository' | 'template' | 'manual' | 'deploy'
@@ -227,10 +170,40 @@ export function useWizard() {
  * Wizard provider component
  */
 export function WizardProvider({ children }: { children: ReactNode }) {
-  const [formData, setFormData] = useState<WizardFormData>(readStoredFormData)
+  // Reconnecting a Git installation leaves the page and comes back, remounting
+  // the wizard, so what the user filled in is kept across that load
+  const [formData, setFormData] = useState<WizardFormData>(() => {
+    if (typeof window === 'undefined') return defaultFormData
+    try {
+      const raw = sessionStorage.getItem(FORM_DATA_STORAGE_KEY)
+      if (!raw) return defaultFormData
+      return {
+        ...defaultFormData,
+        ...(JSON.parse(raw) as Partial<WizardFormData>),
+      }
+    } catch {
+      return defaultFormData
+    }
+  })
 
   useEffect(() => {
-    writeStoredFormData(formData)
+    // `variables` holds values typed into secret fields, `uploadFile` doesn't
+    // survive JSON, `template` is refetched from `templateId`, and the created
+    // ids describe a run that is already over
+    const {
+      variables: _variables,
+      uploadFile: _uploadFile,
+      template: _template,
+      createdSiteId: _createdSiteId,
+      createdDeploymentId: _createdDeploymentId,
+      ...stored
+    } = formData
+
+    try {
+      sessionStorage.setItem(FORM_DATA_STORAGE_KEY, JSON.stringify(stored))
+    } catch {
+      // ignore quota errors
+    }
   }, [formData])
   const [currentPath, setCurrentPath] = useState<WizardPath | undefined>(
     undefined,
