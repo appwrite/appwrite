@@ -10,6 +10,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useEffect,
   useMemo,
   ReactNode,
 } from 'react'
@@ -104,6 +105,65 @@ const defaultFormData: WizardFormData = {
   uploadFile: undefined,
 }
 
+const FORM_DATA_STORAGE_KEY = 'sites-create-wizard-form-data'
+
+/**
+ * Reconnecting a Git installation redirects out to the provider and back, which
+ * remounts the wizard, so what the user filled in is kept across that load.
+ *
+ * Only these fields are stored: `variables` holds values the user typed as
+ * secrets, `uploadFile` doesn't survive JSON, `template` is refetched from
+ * `templateId`, and the created ids describe a run that is already over.
+ */
+const PERSISTED_FIELDS = [
+  'siteName',
+  'siteId',
+  'installationId',
+  'providerRepositoryId',
+  'providerBranch',
+  'providerRootDirectory',
+  'providerSilentMode',
+  'templateId',
+  'framework',
+  'buildRuntime',
+  'installCommand',
+  'buildCommand',
+  'startCommand',
+  'outputDirectory',
+  'fallbackFile',
+  'domain',
+  'domainValid',
+  'repositoryOwner',
+  'repositoryName',
+  'repositoryUrl',
+] as const satisfies readonly (keyof WizardFormData)[]
+
+function readStoredFormData(): WizardFormData {
+  if (typeof window === 'undefined') return defaultFormData
+  try {
+    const raw = sessionStorage.getItem(FORM_DATA_STORAGE_KEY)
+    if (!raw) return defaultFormData
+    return {
+      ...defaultFormData,
+      ...(JSON.parse(raw) as Partial<WizardFormData>),
+    }
+  } catch {
+    return defaultFormData
+  }
+}
+
+function writeStoredFormData(formData: WizardFormData) {
+  try {
+    const stored: Record<string, unknown> = {}
+    for (const field of PERSISTED_FIELDS) {
+      stored[field] = formData[field]
+    }
+    sessionStorage.setItem(FORM_DATA_STORAGE_KEY, JSON.stringify(stored))
+  } catch {
+    // ignore quota errors
+  }
+}
+
 /**
  * Wizard path type
  */
@@ -167,7 +227,11 @@ export function useWizard() {
  * Wizard provider component
  */
 export function WizardProvider({ children }: { children: ReactNode }) {
-  const [formData, setFormData] = useState<WizardFormData>(defaultFormData)
+  const [formData, setFormData] = useState<WizardFormData>(readStoredFormData)
+
+  useEffect(() => {
+    writeStoredFormData(formData)
+  }, [formData])
   const [currentPath, setCurrentPath] = useState<WizardPath | undefined>(
     undefined,
   )
