@@ -29,6 +29,13 @@ jobs:
     timeout-minutes: 60
     strategy:
       fail-fast: false
+      # Every lane downloads a Gradle distribution, an SDK platform and an
+      # emulator image through the runners' shared NAT egress, and the
+      # endpoints (services.gradle.org especially) reset connections when
+      # all seven pull at once - which lane loses is random, so the matrix
+      # flapped between runs. Three at a time trades wall clock for the
+      # determinism a QA workflow needs.
+      max-parallel: 3
       matrix:
         include:
           - id: react-native
@@ -192,26 +199,35 @@ jobs:
           # Capacitor's android library ships Java 21 bytecode; the shared
           # default stays on 17 because React Native and Flutter test it.
           # Export JAVA_HOME too: gradlew resolves it before consulting PATH.
-          # Java comes from the image's preinstalled Temurin JDKs
-          # (JAVA_HOME_<ver>_X64, mirroring GitHub's runner image) instead of
-          # mise: the Adoptium download was by far the most throttled fetch
-          # ("refused stream" for 10+ minutes at a time). mise only installs
-          # the rest, and falls back for java if the image ever drops it.
+          # The JDK never comes from mise here - its Adoptium download was by
+          # far the most throttled request on these runners ("refused stream"
+          # for 10+ minutes at a time). The image ships JDK 17; any other
+          # version comes from Ubuntu's archive, served by a regional mirror
+          # instead of the CDNs that throttle this shared egress.
+          find_jdk() {
+            eval "from_env=\"\${JAVA_HOME_${1}_X64:-}\""
+            for dir in "$from_env" "/usr/lib/jvm/temurin-$1-jdk-amd64" \
+                "/usr/lib/jvm/java-$1-openjdk-amd64"; do
+              if [ -n "$dir" ] && [ -x "$dir/bin/java" ]; then
+                echo "$dir"
+                return 0
+              fi
+            done
+            return 1
+          }
           install_tools() {
             ver="${{ matrix.java || 'temurin-17' }}"
             ver="${ver#temurin-}"
-            eval "sys=\"\${JAVA_HOME_${ver}_X64:-}\""
-            if [ -n "$sys" ] && [ -x "$sys/bin/java" ]; then
-              echo "JAVA_HOME=$sys" >> "$GITHUB_ENV"
-              # The mise config still lists java, and `mise run` (the maestro
-              # task) auto-installs missing config tools - which would retry
-              # the throttled Adoptium download mid-test. Make mise ignore
-              # its java entry in all later steps; JAVA_HOME covers it.
-              echo "MISE_DISABLE_TOOLS=java" >> "$GITHUB_ENV"
-            else
-              mise use "java@temurin-$ver" || return 1
-              echo "JAVA_HOME=$(mise where java)" >> "$GITHUB_ENV"
+            if ! jdk="$(find_jdk "$ver")"; then
+              sudo apt-get update -qq || return 1
+              sudo apt-get install -y -qq "openjdk-$ver-jdk" || return 1
+              jdk="$(find_jdk "$ver")" || return 1
             fi
+            echo "JAVA_HOME=$jdk" >> "$GITHUB_ENV"
+            # The mise config lists java, and `mise run` (the maestro task)
+            # auto-installs missing config tools - which would put the
+            # throttled download back in the middle of the test.
+            echo "MISE_DISABLE_TOOLS=java" >> "$GITHUB_ENV"
             mise install node maestro gradle || return 1
           }
           # On RunsOn all matrix jobs share a few NAT egress IPs, and the
@@ -373,9 +389,12 @@ jobs:
             cp "$APK_PATH" artifacts/ || true
           fi
           if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
+            # target/ and gen/ are Tauri's Rust build output and generated
+            # Android project - without them the tauri artifact was ~2 GB,
+            # which took longer to upload than the test took to run.
             zip -qr artifacts/app-source.zip "$APP_DIR" \
               -x "*/node_modules/*" "*/.git/*" "*/build/*" "*/.gradle/*" \
-              "*/dist/*" "*/.expo/*" "*/Pods/*" || true
+              "*/dist/*" "*/.expo/*" "*/Pods/*" "*/target/*" "*/gen/*" || true
           fi
 
       - name: Upload Maestro logs and screenshots
