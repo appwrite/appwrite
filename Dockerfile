@@ -1,6 +1,10 @@
 FROM composer:2 AS composer
 
 ARG TESTING=false
+ARG UTOPIA_CACHE_REFERENCE=''
+ARG UTOPIA_DATABASE_REFERENCE=''
+ARG UTOPIA_HTTP_REFERENCE=''
+ARG UTOPIA_MONGO_REFERENCE=''
 ENV TESTING=$TESTING
 
 WORKDIR /usr/local/src/
@@ -10,7 +14,31 @@ COPY composer.json /usr/local/src/
 
 RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
-    `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
+    `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi` \
+ && if [ -n "$UTOPIA_CACHE_REFERENCE" ] || [ -n "$UTOPIA_DATABASE_REFERENCE" ] || [ -n "$UTOPIA_HTTP_REFERENCE" ] || [ -n "$UTOPIA_MONGO_REFERENCE" ]; then \
+      test -n "$UTOPIA_CACHE_REFERENCE" \
+      && test -n "$UTOPIA_DATABASE_REFERENCE" \
+      && test -n "$UTOPIA_HTTP_REFERENCE" \
+      && test -n "$UTOPIA_MONGO_REFERENCE" \
+      && git init /tmp/utopia-monorepo \
+      && git -C /tmp/utopia-monorepo remote add origin https://github.com/utopia-php/monorepo.git \
+      && git -C /tmp/utopia-monorepo fetch --depth 1 origin "$UTOPIA_CACHE_REFERENCE" \
+      && git -C /tmp/utopia-monorepo checkout --detach FETCH_HEAD \
+      && cp -R /tmp/utopia-monorepo/packages/cache/src/. vendor/utopia-php/cache/src/ \
+      && git -C /tmp/utopia-monorepo fetch --depth 1 origin "$UTOPIA_HTTP_REFERENCE" \
+      && git -C /tmp/utopia-monorepo checkout --detach FETCH_HEAD \
+      && cp -R /tmp/utopia-monorepo/packages/http/src/. vendor/utopia-php/http/src/ \
+      && git init /tmp/utopia-database \
+      && git -C /tmp/utopia-database remote add origin https://github.com/utopia-php/database.git \
+      && git -C /tmp/utopia-database fetch --depth 1 origin "$UTOPIA_DATABASE_REFERENCE" \
+      && git -C /tmp/utopia-database checkout --detach FETCH_HEAD \
+      && cp -R /tmp/utopia-database/src/. vendor/utopia-php/database/src/ \
+      && git init /tmp/utopia-mongo \
+      && git -C /tmp/utopia-mongo remote add origin https://github.com/utopia-php/mongo.git \
+      && git -C /tmp/utopia-mongo fetch --depth 1 origin "$UTOPIA_MONGO_REFERENCE" \
+      && git -C /tmp/utopia-mongo checkout --detach FETCH_HEAD \
+      && cp -R /tmp/utopia-mongo/src/. vendor/utopia-php/mongo/src/; \
+    fi
 
 FROM appwrite/base:2.0.0 AS base
 
