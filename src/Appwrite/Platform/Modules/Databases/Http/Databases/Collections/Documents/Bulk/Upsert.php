@@ -20,6 +20,7 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -169,12 +170,13 @@ class Upsert extends Action
         }
 
         $dbForDatabases = $getDatabasesDB($database);
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $upserted = [];
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(function () use ($dbForDatabases, $database, $collection, $documents, $plan, &$upserted) {
+            $modified = $dbForDatabases->withPreserveDates(function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
                 return $dbForDatabases->upsertDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $collectionTableId,
                     $documents,
                     onNext: function (Document $document) use ($plan, &$upserted) {
                         if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
@@ -185,8 +187,10 @@ class Upsert extends Action
             });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
-        } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException(), params: ['multiple']);
+        } catch (UniqueException $e) {
+            throw new Exception($this->getUniqueConstraintException(), previous: $e);
+        } catch (DuplicateException $e) {
+            throw new Exception($this->getDuplicateException(), previous: $e, params: ['multiple']);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
