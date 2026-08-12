@@ -453,7 +453,7 @@ export function ConnectRepositorySection({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="git-org" className="text-[13px]">
-                {t('Git organization')}
+                {t('Organization')}
               </Label>
               <Select value={selectedOrgKey} onValueChange={selectOrgOption}>
                 <SelectTrigger id="git-org" className="h-9 text-[13px]">
