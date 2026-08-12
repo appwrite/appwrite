@@ -157,6 +157,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor,
+      # which makes Chrome's sandbox crash on launch ("session not created:
+      # Chrome instance exited" from Maestro's ChromeDriver). GitHub-hosted
+      # images ship with the restriction disabled; the RunsOn AMI keeps the
+      # Ubuntu default, so lift it here.
+      - name: Allow unprivileged user namespaces (Chrome sandbox)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Check Appwrite variables
         run: |
           if [ -z "$CODE_SNIPPET_QA_ENDPOINT" ] || [ -z "$CODE_SNIPPET_QA_PROJECT_ID" ]; then
