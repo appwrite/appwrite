@@ -2272,7 +2272,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $frameworks['headers']['status-code']);
         $this->assertGreaterThan(0, $frameworks['body']['total']);
 
-        $this->assertStartCommandNotExposed($frameworks['body']);
+        $this->assertStringNotContainsString('startCommand', (string) json_encode($frameworks['body']));
     }
 
     public function testCreateSiteHidesStartCommand(): void

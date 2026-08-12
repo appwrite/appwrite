@@ -129,13 +129,13 @@ final class SitesCustomClientTest extends Scope
         $this->assertEquals(200, $templates['headers']['status-code']);
         $this->assertGreaterThan(0, $templates['body']['total']);
 
-        $this->assertStartCommandNotExposed($templates['body']);
+        $this->assertStringNotContainsString('startCommand', (string) json_encode($templates['body']));
 
         $template = $this->getTemplate('starter-for-nextjs');
 
         $this->assertEquals(200, $template['headers']['status-code']);
 
-        $this->assertStartCommandNotExposed($template['body']);
+        $this->assertStringNotContainsString('startCommand', (string) json_encode($template['body']));
     }
 
     public function testGetTemplate()

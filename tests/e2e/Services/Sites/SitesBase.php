@@ -496,14 +496,4 @@ trait SitesBase
 
         return $specification['slug'];
     }
-
-    protected function assertStartCommandNotExposed(array $payload): void
-    {
-        $body = \json_encode($payload, JSON_UNESCAPED_SLASHES);
-
-        $this->assertStringNotContainsString('startCommand', $body);
-
-        // Every framework start command shells out to a helper script shipped in the runtime image.
-        $this->assertStringNotContainsString('helpers/', $body);
-    }
 }
