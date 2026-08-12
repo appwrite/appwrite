@@ -675,6 +675,30 @@ export function pinnedProjectsQueryOptions(
 }
 
 /**
+ * Resolve a specific set of projects by id.
+ *
+ * Use where ids are known but the projects may sit outside whatever page or
+ * search is currently loaded — e.g. naming the projects a member has
+ * project-specific roles on. Disabled for an empty set so no request is made.
+ */
+export function projectsByIdsQueryOptions(
+  orgId: string | null | undefined,
+  projectIds: string[],
+) {
+  const idsKey =
+    projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
+  return queryOptions({
+    queryKey: ['projects', 'by-ids', orgId, idsKey],
+    queryFn: () => fetchProjectsByIds(orgId!, projectIds),
+    enabled: !!orgId && projectIds.length > 0,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    gcTime: orgId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
  * Query options for fetching project variables (full list; paginate in the hook/UI).
  */
 export function projectVariablesQueryOptions(

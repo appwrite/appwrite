@@ -48,6 +48,7 @@ import {
   organizationScopesQueryOptions,
   organizationProjectScopeQueryOptions,
   activeProjectsQueryOptions,
+  projectsByIdsQueryOptions,
   deleteOrganization,
   organizationMembershipsQueryOptions,
   mapOrganizationMembershipsToTeamMembers,
@@ -184,6 +185,7 @@ import {
 import {
   buildProjectRole,
   parseProjectAccess,
+  projectIdsFromRoles,
   type ProjectAccessEntry,
 } from '@/lib/console-project-roles'
 import { CreateOrganizationDialog } from './CreateOrganization'
@@ -1668,6 +1670,32 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       mapOrganizationMembershipsToTeamMembers(displayedMembershipsRaw, orgId),
     [displayedMembershipsRaw, orgId],
   )
+  // Projects named by any member's project-specific roles on this page.
+  // Resolved by id rather than read off the org's project list, which is
+  // paginated and searched and so will not contain most of them.
+  const memberProjectIds = useMemo(() => {
+    if (!supportsProjectRoles) return []
+    const ids = new Set<string>()
+    for (const member of memberships) {
+      for (const id of projectIdsFromRoles(member.roles)) ids.add(id)
+    }
+    return Array.from(ids)
+  }, [memberships, supportsProjectRoles])
+
+  const { data: memberProjectsData } = useQuery(
+    projectsByIdsQueryOptions(orgTeamId, memberProjectIds),
+  )
+
+  const memberProjectNameById = useMemo(() => {
+    const map = new Map<string, string>(orgProjectNameById)
+    const resolved = (memberProjectsData?.projects ?? []) as Array<{
+      $id: string
+      name: string
+    }>
+    for (const project of resolved) map.set(project.$id, project.name)
+    return map
+  }, [memberProjectsData, orgProjectNameById])
+
   const membershipsTotal = displayedMembershipsRaw?.total ?? 0
 
   const membershipsLoading =
@@ -3474,6 +3502,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             {t('Role')}
                                           </TableHead>
                                         )}
+                                        {supportsProjectRoles && (
+                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden md:table-cell">
+                                            {t('Projects')}
+                                          </TableHead>
+                                        )}
                                         {features.accountMfa && (
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
                                             {t('MFA')}
@@ -3496,6 +3529,30 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           supportsProjectRoles
                                             ? parseProjectAccess(member.roles)
                                             : []
+                                        // A project-scoped member has no single
+                                        // org role: their roles can differ per
+                                        // project, so only collapse to one badge
+                                        // when they all agree.
+                                        const projectRoleNames = Array.from(
+                                          new Set(
+                                            memberProjectAccess.map(
+                                              (row) => row.roleName,
+                                            ),
+                                          ),
+                                        )
+                                        const roleBadge =
+                                          projectRoleNames.length === 1
+                                            ? orgMembershipRoleDisplay(
+                                                projectRoleNames[0],
+                                              )
+                                            : { Icon: RoleIcon, label: roleLabel }
+                                        const rolesDiffer =
+                                          projectRoleNames.length > 1
+                                        const projectLabel = (
+                                          projectId: string,
+                                        ) =>
+                                          memberProjectNameById.get(projectId) ??
+                                          projectId
                                         const canManageMembers =
                                           canInviteOrgMember(access, features)
                                         return (
@@ -3580,20 +3637,50 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             </TableCell>
                                             {features.orgRoles && (
                                               <TableCell className="px-4 py-3">
+                                                <div className="flex items-center justify-center">
+                                                  <Badge
+                                                    variant="secondary"
+                                                    className={cn(
+                                                      'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
+                                                    )}
+                                                  >
+                                                    {rolesDiffer ? (
+                                                      t('Multiple roles')
+                                                    ) : (
+                                                      <>
+                                                        <roleBadge.Icon
+                                                          className="h-3 w-3 shrink-0"
+                                                          aria-hidden
+                                                        />
+                                                        {t(roleBadge.label)}
+                                                      </>
+                                                    )}
+                                                  </Badge>
+                                                </div>
+                                              </TableCell>
+                                            )}
+                                            {supportsProjectRoles && (
+                                              <TableCell className="px-4 py-3 hidden md:table-cell">
                                                 <div className="flex items-center justify-center gap-1">
-                                                  {memberProjectAccess.length >
+                                                  {memberProjectAccess.length ===
                                                   0 ? (
+                                                    <span className="text-[12px] text-muted-foreground">
+                                                      {t('All projects')}
+                                                    </span>
+                                                  ) : (
                                                     <>
-                                                      <Badge
-                                                        variant="secondary"
-                                                        className="inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5 max-w-[180px]"
-                                                      >
-                                                        <span className="truncate">
-                                                          {`${t(orgMembershipRoleDisplay(memberProjectAccess[0].roleName).label)}: ${orgProjectNameById.get(memberProjectAccess[0].projectId) ?? memberProjectAccess[0].projectId}`}
-                                                        </span>
-                                                      </Badge>
+                                                      <span className="max-w-[220px] truncate text-[12px]">
+                                                        {memberProjectAccess
+                                                          .slice(0, 2)
+                                                          .map((row) =>
+                                                            projectLabel(
+                                                              row.projectId,
+                                                            ),
+                                                          )
+                                                          .join(', ')}
+                                                      </span>
                                                       {memberProjectAccess.length >
-                                                        1 && (
+                                                        2 && (
                                                         <Tooltip>
                                                           <TooltipTrigger
                                                             asChild
@@ -3602,41 +3689,28 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                               variant="secondary"
                                                               className="text-[11px] font-medium border px-1.5 py-0.5"
                                                             >
-                                                              {`+${memberProjectAccess.length - 1}`}
+                                                              {`+${memberProjectAccess.length - 2}`}
                                                             </Badge>
                                                           </TooltipTrigger>
                                                           <TooltipContent>
                                                             <div className="flex flex-col gap-0.5">
-                                                              {memberProjectAccess
-                                                                .slice(1)
-                                                                .map((row) => (
+                                                              {memberProjectAccess.map(
+                                                                (row) => (
                                                                   <span
                                                                     key={
                                                                       row.projectId
                                                                     }
                                                                     className="text-[11px]"
                                                                   >
-                                                                    {`${t(orgMembershipRoleDisplay(row.roleName).label)}: ${orgProjectNameById.get(row.projectId) ?? row.projectId}`}
+                                                                    {`${projectLabel(row.projectId)} — ${t(orgMembershipRoleDisplay(row.roleName).label)}`}
                                                                   </span>
-                                                                ))}
+                                                                ),
+                                                              )}
                                                             </div>
                                                           </TooltipContent>
                                                         </Tooltip>
                                                       )}
                                                     </>
-                                                  ) : (
-                                                    <Badge
-                                                      variant="secondary"
-                                                      className={cn(
-                                                        'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
-                                                      )}
-                                                    >
-                                                      <RoleIcon
-                                                        className="h-3 w-3 shrink-0"
-                                                        aria-hidden
-                                                      />
-                                                      {t(roleLabel)}
-                                                    </Badge>
                                                   )}
                                                 </div>
                                               </TableCell>
