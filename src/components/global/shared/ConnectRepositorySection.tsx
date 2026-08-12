@@ -532,8 +532,13 @@ export function ConnectRepositorySection({
                   onRetry={handleCreateRepository}
                   isRetrying={createRepositoryMutation.isPending}
                 >
-                  {t(
-                    'The repository was not created because Appwrite could not reach this Git installation.',
+                  {/* A name already taken reaches here as a provider failure
+                      too, so the API's reason wins over the generic one. */}
+                  {getErrorMessage(
+                    createRepositoryMutation.error,
+                    t(
+                      'The repository was not created because Appwrite could not reach this Git installation.',
+                    ),
                   )}
                 </VcsInstallationErrorAlert>
               ) : (
