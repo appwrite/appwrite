@@ -113,6 +113,7 @@ class Upsert extends Action
         }
 
         foreach ($documents as $key => $document) {
+            $document = $this->normalizeData($document);
             if ($transactionId === null) {
                 $document = $this->parseOperators($document, $collection);
             }
