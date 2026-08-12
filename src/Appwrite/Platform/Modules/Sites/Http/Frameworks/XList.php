@@ -79,9 +79,7 @@ class XList extends Base
             }
         }
 
-        // Response models only filter nested Documents. Handing over the raw config arrays
-        // ships every key they carry, including the start, bundle and env commands that
-        // belong to the runtime image.
+        // Response models only filter nested Documents; plain arrays ship every key they carry.
         $frameworks = \array_map(fn (array $framework) => new Document(\array_replace($framework, [
             'adapters' => \array_map(
                 fn (array $adapter) => new Document($adapter),
