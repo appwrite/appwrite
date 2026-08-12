@@ -565,6 +565,49 @@ function normalizeValueForColumn(
   return value as unknown[]
 }
 
+function findColumnForAttrKey(
+  columns: unknown[],
+  key: string,
+): unknown | undefined {
+  return columns.find((c) => {
+    const col = c as Record<string, unknown>
+    return (
+      col.key === key ||
+      col.name === key ||
+      col.$id === key ||
+      col.attribute === key
+    )
+  })
+}
+
+/** Map a full API row document into spreadsheet `RowData` (all non-$ attributes). */
+function mapApiRowToRowData(
+  apiRow: Record<string, unknown>,
+  columns: unknown[],
+  options?: { rowNumber?: number; fallbackId?: string },
+): RowData {
+  const data: Record<
+    string,
+    string | number | bigint | boolean | unknown[] | null
+  > = {}
+  Object.keys(apiRow).forEach((key) => {
+    if (key.startsWith('$')) return
+    data[key] = normalizeValueForColumn(
+      apiRow[key],
+      findColumnForAttrKey(columns, key),
+    ) as string | number | boolean | unknown[] | null
+  })
+  return {
+    $id: (apiRow.$id as string) ?? options?.fallbackId ?? '',
+    $sequence: apiRow.$sequence as number | undefined,
+    rowNumber: options?.rowNumber ?? 0,
+    data,
+    $createdAt: apiRow.$createdAt as string | undefined,
+    $updatedAt: apiRow.$updatedAt as string | undefined,
+    $permissions: (apiRow.$permissions as string[]) || [],
+  }
+}
+
 function getTableColumnKey(col: unknown): string | null {
   const c = col as {
     key?: string
@@ -3933,19 +3976,53 @@ export function RowsSpreadsheet({
     }
   }
 
-  const openRowInDrawer = (
-    row: RowData,
-    options?: {
-      focusedField?: string | null
-      initialTab?: 'data' | 'permissions' | null
+  // List rows may be projected via Query.select (visible spreadsheet columns only).
+  // Always load the full row before opening the update drawer so hidden attrs are present.
+  const openRowInDrawerRequestRef = useRef(0)
+  const openRowInDrawer = useCallback(
+    (
+      row: RowData,
+      options?: {
+        focusedField?: string | null
+        initialTab?: 'data' | 'permissions' | null
+      },
+    ) => {
+      rowSelectionAnchorRef.current = row.$id
+      setFocusedField(options?.focusedField ?? null)
+      setDrawerInitialTab(options?.initialTab ?? 'data')
+
+      const applyRow = (fullRow: RowData) => {
+        setSelectedRowForEdit(fullRow)
+        setEditDrawerOpen(true)
+      }
+
+      if (!projectId || !databaseId || !tableId) {
+        applyRow(row)
+        return
+      }
+
+      const requestId = ++openRowInDrawerRequestRef.current
+      fetchProjectTableRow(projectId, databaseId, DB_KIND, tableId, row.$id)
+        .then((apiRow: unknown) => {
+          if (requestId !== openRowInDrawerRequestRef.current) return
+          if (!apiRow || typeof apiRow !== 'object') {
+            applyRow(row)
+            return
+          }
+          applyRow(
+            mapApiRowToRowData(apiRow as Record<string, unknown>, apiColumns, {
+              rowNumber: row.rowNumber,
+              fallbackId: row.$id,
+            }),
+          )
+        })
+        .catch(() => {
+          if (requestId !== openRowInDrawerRequestRef.current) return
+          applyRow(row)
+        })
     },
-  ) => {
-    rowSelectionAnchorRef.current = row.$id
-    setSelectedRowForEdit(row)
-    setFocusedField(options?.focusedField ?? null)
-    setDrawerInitialTab(options?.initialTab ?? 'data')
-    setEditDrawerOpen(true)
-  }
+    [projectId, databaseId, tableId, apiColumns],
+  )
 
   const handleRowMultiSelectPointer = (rowId: string, event: MouseEvent) => {
     if (!isRowMultiSelectModifierClick(event)) return false
@@ -4066,56 +4143,41 @@ export function RowsSpreadsheet({
       const rowId = match[1]
       const openToPermissions = !!match[2]
 
+      // Always fetch the full row. List rows may omit hidden spreadsheet columns
+      // via Query.select, so reusing `fromCurrentPage` would open an incomplete form.
       const fromCurrentPage = currentRows.find((r) => r.$id === rowId)
-      if (fromCurrentPage) {
-        setSelectedRowForEdit(fromCurrentPage)
-        setFocusedField(null)
-        setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
-        setEditDrawerOpen(true)
-        return
-      }
-
-      fetchProjectTableRow(projectId, databaseId, DB_KIND, tableId, rowId).then(
-        (apiRow: unknown) => {
-          if (!apiRow || typeof apiRow !== 'object') return
-          const rowObj = apiRow as Record<string, unknown>
-          const data: Record<
-            string,
-            string | number | bigint | boolean | unknown[] | null
-          > = {}
-          Object.keys(rowObj).forEach((key) => {
-            if (!key.startsWith('$')) {
-              const value = rowObj[key]
-              const col = columnsForNormalize.find(
-                (c: Record<string, unknown>) =>
-                  c.key === key ||
-                  c.name === key ||
-                  c.$id === key ||
-                  c.attribute === key,
-              )
-              data[key] = normalizeValueForColumn(value, col) as
-                | string
-                | number
-                | boolean
-                | unknown[]
-                | null
+      fetchProjectTableRow(projectId, databaseId, DB_KIND, tableId, rowId)
+        .then((apiRow: unknown) => {
+          if (!apiRow || typeof apiRow !== 'object') {
+            if (fromCurrentPage) {
+              setSelectedRowForEdit(fromCurrentPage)
+              setFocusedField(null)
+              setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
+              setEditDrawerOpen(true)
             }
-          })
-          const rowData: RowData = {
-            $id: (rowObj.$id as string) ?? rowId,
-            $sequence: rowObj.$sequence as number | undefined,
-            rowNumber: 0,
-            data,
-            $createdAt: rowObj.$createdAt as string | undefined,
-            $updatedAt: rowObj.$updatedAt as string | undefined,
-            $permissions: (rowObj.$permissions as string[]) || [],
+            return
           }
-          setSelectedRowForEdit(rowData)
+          setSelectedRowForEdit(
+            mapApiRowToRowData(
+              apiRow as Record<string, unknown>,
+              columnsForNormalize,
+              {
+                rowNumber: fromCurrentPage?.rowNumber ?? 0,
+                fallbackId: rowId,
+              },
+            ),
+          )
           setFocusedField(null)
           setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
           setEditDrawerOpen(true)
-        },
-      )
+        })
+        .catch(() => {
+          if (!fromCurrentPage) return
+          setSelectedRowForEdit(fromCurrentPage)
+          setFocusedField(null)
+          setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
+          setEditDrawerOpen(true)
+        })
     },
     [projectId, databaseId, tableId],
   )

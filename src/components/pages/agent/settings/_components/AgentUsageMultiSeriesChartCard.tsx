@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
   createAgentCountAxisTickFormatter,
@@ -329,8 +330,11 @@ export function AgentUsageMultiSeriesChartCard({
                             {series.map((entry) => (
                               <p
                                 key={entry.dataKey}
-                                className="text-[13px] font-medium text-foreground"
+                                className="flex items-center gap-1.5 text-[13px] font-medium text-foreground"
                               >
+                                <ChartSeriesDot
+                                  color={`var(${entry.colorVar})`}
+                                />
                                 {formatValue(Number(data[entry.dataKey]) || 0)}{' '}
                                 <span className="font-normal text-muted-foreground">
                                   {t(entry.label)}

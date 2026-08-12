@@ -13,6 +13,7 @@ import {
   UsageChartXAxis,
   UsageChartYAxis,
 } from '@/components/global/shared/ChartXAxis'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import {
   OVERVIEW_CHART_HEIGHT,
   overviewChartPanelBodyClass,
@@ -20,6 +21,7 @@ import {
   overviewChartPanelChartFillClass,
 } from '@/components/pages/projects/$projectId/overview/chart-panel'
 import {
+  FIREWALL_TRAFFIC_SERIES,
   getFirewallTrafficSeriesTotals,
   sortFirewallTrafficSeriesByValueAsc,
   type FirewallTrafficSeriesKey,
@@ -187,19 +189,34 @@ export function FirewallTrafficChart({
                           {point.fullDate}
                         </p>
                         <div className="space-y-1">
-                          {sortedPayload.map((entry) => (
-                            <div
-                              key={String(entry.dataKey)}
-                              className="flex items-center justify-between gap-6"
-                            >
-                              <span className="text-[11px] text-muted-foreground">
-                                {entry.name}
-                              </span>
-                              <span className="text-[13px] font-medium tabular-nums text-foreground">
-                                {seriesValue(entry).toLocaleString()}
-                              </span>
-                            </div>
-                          ))}
+                          {sortedPayload.map((entry) => {
+                            const seriesKey = String(
+                              entry.dataKey ?? '',
+                            ) as FirewallTrafficSeriesKey
+                            const seriesColor =
+                              FIREWALL_TRAFFIC_SERIES.find(
+                                (series) => series.key === seriesKey,
+                              )?.color ??
+                              (typeof entry.color === 'string'
+                                ? entry.color
+                                : undefined)
+                            return (
+                              <div
+                                key={String(entry.dataKey)}
+                                className="flex items-center justify-between gap-6"
+                              >
+                                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                  {seriesColor ? (
+                                    <ChartSeriesDot color={seriesColor} />
+                                  ) : null}
+                                  {entry.name}
+                                </span>
+                                <span className="text-[13px] font-medium tabular-nums text-foreground">
+                                  {seriesValue(entry).toLocaleString()}
+                                </span>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
                     )

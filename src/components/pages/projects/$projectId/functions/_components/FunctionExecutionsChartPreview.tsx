@@ -17,6 +17,7 @@ import {
 } from 'recharts'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { cn } from '@/lib/utils'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { useT } from '@/lib/i18n/translate'
 import {
   useFunctionExecutionsForFunctionChart,
@@ -74,10 +75,12 @@ function ChartTooltipBody({ point }: { point: ChartPoint }) {
       {point.date ? (
         <p className="text-[12px] font-medium text-foreground">{point.date}</p>
       ) : null}
-      <p className="text-[12px] tabular-nums text-muted-foreground">
+      <p className="flex items-center gap-1.5 text-[12px] tabular-nums text-muted-foreground">
+        <ChartSeriesDot color={EXECUTIONS_COLOR} />
         {formatExecutionsValue(point.executions)} {t('executions')}
       </p>
-      <p className="text-[12px] tabular-nums text-muted-foreground">
+      <p className="flex items-center gap-1.5 text-[12px] tabular-nums text-muted-foreground">
+        <ChartSeriesDot color={GB_HOURS_COLOR} />
         {formatGbHoursValue(point.gbHours)} {t('GB-hours')}
       </p>
     </>

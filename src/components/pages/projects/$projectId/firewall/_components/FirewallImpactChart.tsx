@@ -13,6 +13,7 @@ import {
   UsageChartXAxis,
   UsageChartYAxis,
 } from '@/components/global/shared/ChartXAxis'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import {
   OVERVIEW_CHART_HEIGHT,
   overviewChartPanelBodyClass,
@@ -125,7 +126,8 @@ export function FirewallImpactChart({
                         </p>
                         <div className="space-y-1">
                           <div className="flex justify-between gap-6 text-[11px]">
-                            <span className="text-muted-foreground">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <ChartSeriesDot color="hsl(var(--muted-foreground))" />
                               {t('Total traffic')}
                             </span>
                             <span className="font-medium tabular-nums text-foreground">
@@ -133,7 +135,8 @@ export function FirewallImpactChart({
                             </span>
                           </div>
                           <div className="flex justify-between gap-6 text-[11px]">
-                            <span className="text-muted-foreground">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <ChartSeriesDot color={FIREWALL_IMPACT_MATCHED_COLOR} />
                               {t('Matched by rule')}
                             </span>
                             <span className="font-medium tabular-nums text-foreground">

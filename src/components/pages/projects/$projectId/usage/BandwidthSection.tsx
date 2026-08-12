@@ -25,6 +25,7 @@ import {
   USAGE_CHART_RESPONSIVE_CONTAINER_PROPS,
 } from '@/lib/usage/chart-layout'
 import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
@@ -343,13 +344,15 @@ function BandwidthChartCard({
                           </p>
                           {showDualSeries ? (
                             <div className="space-y-0.5">
-                              <p className="text-[13px] font-medium text-foreground">
+                              <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                                <ChartSeriesDot color="var(--chart-2)" />
                                 {formatBandwidthValue(data.inbound)}{' '}
                                 <span className="font-normal text-muted-foreground">
                                   {t('inbound')}
                                 </span>
                               </p>
-                              <p className="text-[13px] font-medium text-foreground">
+                              <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                                <ChartSeriesDot color="var(--chart-brand)" />
                                 {formatBandwidthValue(data.outbound)}{' '}
                                 <span className="font-normal text-muted-foreground">
                                   {t('outbound')}
