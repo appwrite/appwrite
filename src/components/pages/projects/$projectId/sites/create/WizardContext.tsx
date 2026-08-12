@@ -170,10 +170,8 @@ export function useWizard() {
  * Wizard provider component
  */
 export function WizardProvider({ children }: { children: ReactNode }) {
-  // Reconnecting a Git installation leaves the page and comes back, remounting
-  // the wizard, so what the user filled in is kept across that load. It is
-  // stored against the path that wrote it, so starting a different site later
-  // in the same tab begins empty rather than inheriting an abandoned run.
+  // Reconnecting a Git installation leaves the page and comes back, and the
+  // path keeps an abandoned run out of the next site created in the same tab
   const [formData, setFormData] = useState<WizardFormData>(() => {
     if (typeof window === 'undefined') return defaultFormData
     try {
@@ -191,9 +189,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   })
 
   useEffect(() => {
-    // `variables` holds values typed into secret fields, `uploadFile` doesn't
-    // survive JSON, `template` is refetched from `templateId`, and the created
-    // ids describe a run that is already over
+    // `variables` holds values typed into secret fields; the rest are either
+    // refetched or not serialisable
     const {
       variables: _variables,
       uploadFile: _uploadFile,

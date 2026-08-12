@@ -532,8 +532,7 @@ export function ConnectRepositorySection({
                   onRetry={handleCreateRepository}
                   isRetrying={createRepositoryMutation.isPending}
                 >
-                  {/* A name already taken reaches here as a provider failure
-                      too, so the API's reason wins over the generic one. */}
+                  {/* A name already taken lands here too, so the API wins */}
                   {getErrorMessage(
                     createRepositoryMutation.error,
                     t(
