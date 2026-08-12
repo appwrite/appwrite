@@ -407,10 +407,28 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }} # For Commander to install from GH
         run: |
           mise trust
-          mise install
-          if [ -n "${{ matrix.tools }}" ]; then
-            mise use ${{ matrix.tools }}
-          fi
+          # Install only this directory's assertion tools plus the lane's
+          # runtime - a bare `mise install` would also pull node, maestro and
+          # the JDK from the parent tests/connect-qa/mise.toml, which server
+          # lanes never use. On RunsOn all matrix jobs share a few NAT egress
+          # IPs, and the whole matrix downloading the JDK at once got
+          # throttled (http2 "refused stream"). The retry with backoff and
+          # jitter absorbs any throttling that still occurs.
+          install_tools() {
+            mise install hurl 'github:commander-cli/commander' || return 1
+            if [ -n "${{ matrix.tools }}" ]; then
+              mise use ${{ matrix.tools }} || return 1
+            fi
+          }
+          for attempt in 1 2 3 4; do
+            if install_tools; then
+              exit 0
+            fi
+            delay=$((attempt * 20 + RANDOM % 20))
+            echo "::warning::Tool install failed (attempt $attempt), retrying in ${delay}s"
+            sleep "$delay"
+          done
+          install_tools
 
       - name: Install Swift
         if: startsWith(matrix.id, 'swift')
