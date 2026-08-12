@@ -18,11 +18,9 @@ import {
 import { RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
-  frameworkHasSsrAdapter,
   frameworkHasStaticAdapter,
   getFrameworkAdapterDefaults,
 } from '@/lib/frameworks'
-import { StartCommandLabel } from '../_components/StartCommandLabel'
 import { useWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
 
@@ -30,12 +28,10 @@ interface BuildSettingsProps {
   installCommand: string
   buildCommand: string
   outputDirectory: string
-  startCommand?: string
   fallbackFile?: string
   onInstallCommandChange: (value: string) => void
   onBuildCommandChange: (value: string) => void
   onOutputDirectoryChange: (value: string) => void
-  onStartCommandChange?: (value: string) => void
   onFallbackFileChange?: (value: string) => void
   frameworkKey?: string
   disabled?: boolean
@@ -47,12 +43,10 @@ export function BuildSettings({
   installCommand,
   buildCommand,
   outputDirectory,
-  startCommand = '',
   fallbackFile = '',
   onInstallCommandChange,
   onBuildCommandChange,
   onOutputDirectoryChange,
-  onStartCommandChange,
   onFallbackFileChange,
   frameworkKey,
   disabled = false,
@@ -62,15 +56,10 @@ export function BuildSettings({
   const t = useT()
   const { getFramework, getFrameworkDefaults } = useWizard()
   const framework = frameworkKey ? getFramework(frameworkKey) : undefined
-  const showStartCommand = frameworkHasSsrAdapter(framework)
   const isSsrOnlyFramework =
     !!framework && !frameworkHasStaticAdapter(framework)
   const showFallbackFile = !!onFallbackFileChange && !isSsrOnlyFramework
   const fallbackDisabled = disabled || !frameworkKey
-  const ssrDefaults = useMemo(
-    () => getFrameworkAdapterDefaults(framework, 'ssr'),
-    [framework],
-  )
   const staticDefaults = useMemo(
     () => getFrameworkAdapterDefaults(framework, 'static'),
     [framework],
@@ -80,7 +69,6 @@ export function BuildSettings({
     installCommand: 'npm install',
     buildCommand: 'npm run build',
     outputDirectory: '.output',
-    startCommand: '',
     fallbackFile: '',
   })
 
@@ -92,16 +80,10 @@ export function BuildSettings({
         installCommand: createDefaults.installCommand,
         buildCommand: createDefaults.buildCommand,
         outputDirectory: createDefaults.outputDirectory,
-        startCommand: ssrDefaults.startCommand,
         fallbackFile: staticDefaults.fallbackFile,
       })
     }
-  }, [
-    frameworkKey,
-    getFrameworkDefaults,
-    ssrDefaults.startCommand,
-    staticDefaults.fallbackFile,
-  ])
+  }, [frameworkKey, getFrameworkDefaults, staticDefaults.fallbackFile])
 
   const handleResetInstall = () => {
     onInstallCommandChange(defaults.installCommand)
@@ -109,10 +91,6 @@ export function BuildSettings({
 
   const handleResetBuild = () => {
     onBuildCommandChange(defaults.buildCommand)
-  }
-
-  const handleResetStart = () => {
-    onStartCommandChange?.(defaults.startCommand)
   }
 
   const handleResetOutput = () => {
@@ -125,7 +103,6 @@ export function BuildSettings({
 
   const isInstallModified = installCommand !== defaults.installCommand
   const isBuildModified = buildCommand !== defaults.buildCommand
-  const isStartModified = startCommand !== defaults.startCommand
   const isOutputModified = outputDirectory !== defaults.outputDirectory
   const isFallbackModified = fallbackFile !== defaults.fallbackFile
 
@@ -206,39 +183,6 @@ export function BuildSettings({
                 className="h-9 font-mono text-[13px]"
               />
             </div>
-
-            {showStartCommand && onStartCommandChange && (
-              <div className="space-y-2">
-                <StartCommandLabel
-                  htmlFor="start-command"
-                  trailing={
-                    isStartModified ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleResetStart}
-                        disabled={disabled}
-                        className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                      >
-                        <RotateCcw className="me-1 h-3 w-3" />
-                        {t('Reset')}
-                      </Button>
-                    ) : undefined
-                  }
-                />
-                <Input
-                  id="start-command"
-                  value={startCommand}
-                  onChange={(e) => onStartCommandChange(e.target.value)}
-                  placeholder={
-                    ssrDefaults.startCommand || t('Enter start command')
-                  }
-                  disabled={disabled}
-                  className="h-9 font-mono text-[13px]"
-                />
-              </div>
-            )}
 
             {/* Output Directory */}
             <div className="space-y-2">

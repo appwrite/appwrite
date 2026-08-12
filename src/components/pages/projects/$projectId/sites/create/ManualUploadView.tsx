@@ -26,10 +26,6 @@ import { ID } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useCreateSite, useCreateSiteDomain } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
-import {
-  getFrameworkAdapterDefaults,
-  getStartCommandForSiteCreate,
-} from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
@@ -47,7 +43,6 @@ export function ManualUploadView() {
     formData,
     updateFormData,
     frameworks,
-    getFramework,
     getFrameworkDefaults,
     generateDomain,
     setCurrentPath,
@@ -69,9 +64,6 @@ export function ManualUploadView() {
   const [outputDirectory, setOutputDirectory] = useState(
     formData.outputDirectory || '',
   )
-  const [startCommand, setStartCommand] = useState(
-    formData.startCommand || '',
-  )
   const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
@@ -86,14 +78,9 @@ export function ManualUploadView() {
   useEffect(() => {
     if (framework) {
       const defaults = getFrameworkDefaults(framework)
-      const ssrDefaults = getFrameworkAdapterDefaults(
-        getFramework(framework),
-        'ssr',
-      )
       if (!installCommand) setInstallCommand(defaults.installCommand)
       if (!buildCommand) setBuildCommand(defaults.buildCommand)
       if (!outputDirectory) setOutputDirectory(defaults.outputDirectory)
-      if (!startCommand) setStartCommand(ssrDefaults.startCommand)
       if (!fallbackFile) setFallbackFile(defaults.fallbackFile)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -174,16 +161,10 @@ export function ManualUploadView() {
         buildRuntime: defaults.buildRuntime,
         installCommand: installCommand || undefined,
         buildCommand: buildCommand || undefined,
-        startCommand: getStartCommandForSiteCreate(
-          getFramework(framework),
-          startCommand,
-        ),
         outputDirectory: outputDirectory || undefined,
         adapter: defaults.adapter || undefined,
         fallbackFile:
-          defaults.adapter === 'static'
-            ? fallbackFile || undefined
-            : undefined,
+          defaults.adapter === 'static' ? fallbackFile || undefined : undefined,
       })
 
       // 2. Create domain rule
@@ -220,7 +201,6 @@ export function ManualUploadView() {
         installCommand,
         buildCommand,
         outputDirectory,
-        startCommand,
       })
 
       // Update form data
@@ -437,14 +417,9 @@ export function ManualUploadView() {
               onValueChange={(value) => {
                 setFramework(value)
                 const defaults = getFrameworkDefaults(value)
-                const ssrDefaults = getFrameworkAdapterDefaults(
-                  getFramework(value),
-                  'ssr',
-                )
                 setInstallCommand(defaults.installCommand)
                 setBuildCommand(defaults.buildCommand)
                 setOutputDirectory(defaults.outputDirectory)
-                setStartCommand(ssrDefaults.startCommand)
                 setFallbackFile(defaults.fallbackFile)
               }}
             >
@@ -471,12 +446,10 @@ export function ManualUploadView() {
         installCommand={installCommand}
         buildCommand={buildCommand}
         outputDirectory={outputDirectory}
-        startCommand={startCommand}
         fallbackFile={fallbackFile}
         onInstallCommandChange={setInstallCommand}
         onBuildCommandChange={setBuildCommand}
         onOutputDirectoryChange={setOutputDirectory}
-        onStartCommandChange={setStartCommand}
         onFallbackFileChange={setFallbackFile}
         frameworkKey={framework}
       />
@@ -511,7 +484,10 @@ export function ManualUploadView() {
             {t(
               'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.', // pragma: allowlist secret
             )}{' '}
-            <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
+            <DocsRouteLink
+              className="link-neutral font-medium"
+              href="/docs/products/sites/domains"
+            >
               {t('Learn more →')}
             </DocsRouteLink>
           </p>

@@ -50,7 +50,6 @@ export interface WizardFormData {
   buildRuntime: string | undefined
   installCommand: string
   buildCommand: string
-  startCommand: string
   outputDirectory: string
   fallbackFile: string
 
@@ -91,7 +90,6 @@ const defaultFormData: WizardFormData = {
   buildRuntime: undefined,
   installCommand: '',
   buildCommand: '',
-  startCommand: '',
   outputDirectory: '',
   fallbackFile: '',
   variables: [],
@@ -140,7 +138,6 @@ interface WizardContextValue {
   getFrameworkDefaults: (frameworkKey: string) => {
     installCommand: string
     buildCommand: string
-    startCommand: string
     outputDirectory: string
     buildRuntime: string
     adapter: string
@@ -232,7 +229,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   )
 
   const getFrameworkDefaults = useCallback(
-    (frameworkKey: string) => getFrameworkCreateDefaults(getFramework(frameworkKey)),
+    (frameworkKey: string) =>
+      getFrameworkCreateDefaults(getFramework(frameworkKey)),
     [getFramework],
   )
 
