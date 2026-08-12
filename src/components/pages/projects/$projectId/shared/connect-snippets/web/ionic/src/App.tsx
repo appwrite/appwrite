@@ -46,7 +46,10 @@ function Home({
 
   return (
     <>
-      <IonText>Hello, {user.name}</IonText>
+      {/* One interpolated string: JSX would otherwise split the greeting
+          into two text nodes, which Android's accessibility tree exposes
+          separately and breaks text matching in native webview tests. */}
+      <IonText>{`Hello, ${user.name}`}</IonText>
       <IonButton onClick={handleSignOut}>Sign out</IonButton>
     </>
   )

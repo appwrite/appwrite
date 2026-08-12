@@ -6,6 +6,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
 import io.appwrite.services.Account;
 
 public class MainActivity extends Activity {
@@ -40,15 +41,19 @@ public class MainActivity extends Activity {
     Account account = new Account(AppwriteClient.get(this));
     // The SDK is coroutine-based; CoroutineCallback bridges it to Java.
     // Callbacks land on a background thread - post UI work to the view.
-    account.get(new CoroutineCallback<>((user, error) ->
-        layout.post(() -> {
-          layout.removeAllViews();
-          if (user == null) {
-            addSignedOutHome(layout);
-          } else {
-            addSignedInHome(layout, user.getName());
-          }
-        })));
+    // The methods declare AppwriteException, so javac requires the catch;
+    // in callback style errors are delivered to the callback instead.
+    try {
+      account.get(new CoroutineCallback<>((user, error) ->
+          layout.post(() -> {
+            layout.removeAllViews();
+            if (user == null) {
+              addSignedOutHome(layout);
+            } else {
+              addSignedInHome(layout, user.getName());
+            }
+          })));
+    } catch (AppwriteException ignored) {}
     return layout;
   }
 
@@ -80,11 +85,13 @@ public class MainActivity extends Activity {
     signOut.setAllCaps(false);
     signOut.setOnClickListener(v -> {
       Account account = new Account(AppwriteClient.get(this));
-      account.deleteSession("current",
-          new CoroutineCallback<>((result, error) ->
-              layout.post(() -> {
-                if (error == null) showHome();
-              })));
+      try {
+        account.deleteSession("current",
+            new CoroutineCallback<>((result, error) ->
+                layout.post(() -> {
+                  if (error == null) showHome();
+                })));
+      } catch (AppwriteException ignored) {}
     });
     layout.addView(signOut);
   }
