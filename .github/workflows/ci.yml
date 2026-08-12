@@ -288,10 +288,6 @@ jobs:
           build-args: |
             DEBUG=false
             TESTING=true
-            UTOPIA_CACHE_REFERENCE=d7c0806f9bbdafee794849398f65e8ece322711d
-            UTOPIA_DATABASE_REFERENCE=74d9af59947d1f3c6998fb23715bf2d8f1cf4e0b
-            UTOPIA_HTTP_REFERENCE=b6747451178c2f9581e5ee6e34a6de1bdfabed4d
-            UTOPIA_MONGO_REFERENCE=daea8f8213c33f52e8b66d0f5366428bf2f5a4b8
             VERSION=dev
 
   unit:
