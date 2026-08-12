@@ -306,6 +306,17 @@ jobs:
 
       - name: Assert the endpoint is embedded in the APK
         run: |
+          # Tauri embeds the frontend assets brotli-compressed inside the
+          # Rust library, so strings-scanning the APK cannot see them;
+          # check the Vite build output that gets embedded instead.
+          if [ "${{ matrix.id }}" = "tauri" ]; then
+            if ! grep -rqF "$CODE_SNIPPET_QA_ENDPOINT" "$APP_DIR/dist"; then
+              echo "::error::$CODE_SNIPPET_QA_ENDPOINT is not present in the Vite build output - the env vars never reached the bundle."
+              exit 1
+            fi
+            echo "Endpoint found in the Vite build output."
+            exit 0
+          fi
           if ! unzip -p "$APK_PATH" | strings | grep -qF "$CODE_SNIPPET_QA_ENDPOINT"; then
             echo "::error::$CODE_SNIPPET_QA_ENDPOINT is not present in the APK - the env vars never reached the bundle."
             exit 1
