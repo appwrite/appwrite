@@ -1824,7 +1824,7 @@ Http::patch('/v1/users/:userId/prefs')
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PREFERENCES,
+                model: Response::MODEL_USER,
             )
         ]
     ))
@@ -1846,7 +1846,7 @@ Http::patch('/v1/users/:userId/prefs')
         $queueForEvents
             ->setParam('userId', $user->getId());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 Http::patch('/v1/users/:userId/targets/:targetId')
