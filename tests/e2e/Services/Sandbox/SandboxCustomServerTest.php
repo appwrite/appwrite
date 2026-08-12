@@ -28,7 +28,7 @@ final class SandboxCustomServerTest extends Scope
     {
         $sandbox = $this->call(Client::METHOD_POST, '/sandbox', [
             'sandboxId' => 'test',
-            'pool' => 'python',
+            'image' => 'python:3.12-slim',
         ]);
 
         $this->assertEquals(201, $sandbox['headers']['status-code']);
@@ -45,14 +45,14 @@ final class SandboxCustomServerTest extends Scope
     {
         $duplicate = $this->call(Client::METHOD_POST, '/sandbox', [
             'sandboxId' => $sandbox['$id'],
-            'pool' => 'python',
+            'image' => 'python:3.12-slim',
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
         $this->assertEquals('sandbox_already_exists', $duplicate['body']['type']);
     }
 
-    public function testCreateWithoutPoolOrImage(): void
+    public function testCreateWithoutImage(): void
     {
         $sandbox = $this->call(Client::METHOD_POST, '/sandbox');
 
@@ -63,16 +63,7 @@ final class SandboxCustomServerTest extends Scope
     {
         $sandbox = $this->call(Client::METHOD_POST, '/sandbox', [
             'sandboxId' => 'Not_Valid',
-            'pool' => 'python',
-        ]);
-
-        $this->assertEquals(400, $sandbox['headers']['status-code']);
-    }
-
-    public function testCreateUnknownPool(): void
-    {
-        $sandbox = $this->call(Client::METHOD_POST, '/sandbox', [
-            'pool' => 'missing',
+            'image' => 'python:3.12-slim',
         ]);
 
         $this->assertEquals(400, $sandbox['headers']['status-code']);

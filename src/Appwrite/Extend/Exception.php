@@ -425,7 +425,7 @@ class Exception extends \Exception
     /** Sandbox */
     public const string SANDBOX_NOT_FOUND = 'sandbox_not_found';
     public const string SANDBOX_ALREADY_EXISTS = 'sandbox_already_exists';
-    public const string SANDBOX_POOL_EXHAUSTED = 'sandbox_pool_exhausted';
+    public const string SANDBOX_LIMIT_EXCEEDED = 'sandbox_limit_exceeded';
 
     /** Advisor */
     public const string INSIGHT_NOT_FOUND = 'insight_not_found';

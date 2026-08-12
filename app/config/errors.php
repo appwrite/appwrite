@@ -606,9 +606,9 @@ return [
         'description' => 'A sandbox with the requested ID already exists.',
         'code' => 409,
     ],
-    Exception::SANDBOX_POOL_EXHAUSTED => [
-        'name' => Exception::SANDBOX_POOL_EXHAUSTED,
-        'description' => 'The sandbox pool has no available capacity. Try again shortly.',
+    Exception::SANDBOX_LIMIT_EXCEEDED => [
+        'name' => Exception::SANDBOX_LIMIT_EXCEEDED,
+        'description' => 'There is no capacity for more sandboxes. Try again shortly.',
         'code' => 429,
     ],
 

@@ -37,7 +37,7 @@ abstract class Base extends Action
         return match ($error->getCode()) {
             404 => new Exception(Exception::SANDBOX_NOT_FOUND),
             409 => new Exception(Exception::SANDBOX_ALREADY_EXISTS),
-            429 => new Exception(Exception::SANDBOX_POOL_EXHAUSTED),
+            429 => new Exception(Exception::SANDBOX_LIMIT_EXCEEDED),
             400, 415 => new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error->getMessage()),
             default => new Exception(Exception::GENERAL_SERVER_ERROR, $error->getMessage()),
         };

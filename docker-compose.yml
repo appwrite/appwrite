@@ -1550,7 +1550,9 @@ services:
       - ARTIFACT_ENDPOINT=http://orchestrator-sandboxes:8080
       - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.0.2
       - SANDBOX_DOMAIN=sandboxes.test
-      - SANDBOX_POOLS_JSON=[{"id":"python","image":"python:3.12-slim","port":3000,"maxIdleSeconds":900}]
+      # The API only creates image-based sandboxes, but the service disables
+      # its sandbox routes entirely when no pool is declared.
+      - SANDBOX_POOLS_JSON=[{"id":"default","image":"python:3.12-slim","port":3000,"maxIdleSeconds":900}]
 
   mariadb:
     image: mariadb:10.11
