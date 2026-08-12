@@ -10,6 +10,11 @@ env:
   CODE_SNIPPET_QA_ENDPOINT: ${{ vars.CODE_SNIPPET_QA_ENDPOINT }}
   CODE_SNIPPET_QA_PROJECT_ID: ${{ vars.CODE_SNIPPET_QA_PROJECT_ID }}
   APP_ID: io.appwrite.connectqa
+  # write-env.mjs overwrites gradle.properties, dropping the templates'
+  # org.gradle.jvmargs, and the 8-vCPU runner spawns twice the dex workers
+  # of ubuntu-latest - D8 then OOMs the default daemon heap ("Error while
+  # merging dex archives"). Give every Gradle daemon an explicit 4 GB heap.
+  GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
 
 defaults:
   run:
@@ -34,7 +39,8 @@ jobs:
             create: npx -y create-expo-app@latest "$APP_DIR" --template blank-typescript --no-install
             configure: jq --arg id "$APP_ID" '.expo.android.package = $id' app.json > app.json.tmp && mv app.json.tmp app.json
             install: npm install && npm install react-native-appwrite
-            build: npx expo prebuild --platform android --no-install && ./android/gradlew -p android assembleRelease --no-daemon
+            # --clean keeps prebuild idempotent so the build step can retry.
+            build: npx expo prebuild --platform android --no-install --clean && ./android/gradlew -p android assembleRelease --no-daemon
             apk: android/app/build/outputs/apk/release/app-release.apk
 
           - id: flutter
@@ -102,7 +108,9 @@ jobs:
             create: npx -y create-vite@latest "$APP_DIR" --template vanilla-ts
             configure: 'true'
             install: npm install && npm install appwrite @capacitor/core @capacitor/cli @capacitor/android
-            build: npm run build && npx cap add android && npx cap sync android && ./android/gradlew -p android assembleDebug
+            # rm -rf android keeps `cap add` idempotent so the build step
+            # can retry (it refuses to add an existing platform).
+            build: npm run build && rm -rf android && npx cap add android && npx cap sync android && ./android/gradlew -p android assembleDebug
             apk: android/app/build/outputs/apk/debug/app-debug.apk
 
           - id: ionic
@@ -117,7 +125,7 @@ jobs:
             create: npx -y create-vite@latest "$APP_DIR" --template react-ts
             configure: 'true'
             install: npm install && npm install appwrite @ionic/react @capacitor/core @capacitor/cli @capacitor/android
-            build: npm run build && npx cap add android && npx cap sync android && ./android/gradlew -p android assembleDebug
+            build: npm run build && rm -rf android && npx cap add android && npx cap sync android && ./android/gradlew -p android assembleDebug
             apk: android/app/build/outputs/apk/debug/app-debug.apk
 
           - id: tauri
@@ -160,6 +168,11 @@ jobs:
           install: false
 
       - name: Install tooling via mise (node, maestro, java, gradle)
+        env:
+          # mise pulls the Temurin JDK and maestro from GitHub releases;
+          # authenticated requests get much friendlier rate limits than the
+          # anonymous per-IP bucket these runners' shared egress falls into.
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           mise trust
           # Capacitor's android library ships Java 21 bytecode; the shared
@@ -176,11 +189,11 @@ jobs:
           # On RunsOn all matrix jobs share a few NAT egress IPs, and the
           # simultaneous JDK/node downloads can get throttled per-IP (http2
           # "refused stream"). Retry with backoff and jitter absorbs it.
-          for attempt in 1 2 3 4; do
+          for attempt in 1 2 3 4 5; do
             if install_tools; then
               exit 0
             fi
-            delay=$((attempt * 20 + RANDOM % 20))
+            delay=$((attempt * 45 + RANDOM % 30))
             echo "::warning::Tool install failed (attempt $attempt), retrying in ${delay}s"
             sleep "$delay"
           done
@@ -253,7 +266,20 @@ jobs:
       - name: Build the APK
         run: |
           cd "$APP_DIR"
-          ${{ matrix.build }}
+          # First attempts can die on throttled downloads (gradle wrapper
+          # dists, SDK components) through the runners' shared egress.
+          # Gradle resumes from its caches on retry, and the build commands
+          # are idempotent; real build errors still fail all three attempts.
+          for attempt in 1 2 3; do
+            if ( ${{ matrix.build }} ); then
+              break
+            elif [ "$attempt" = 3 ]; then
+              exit 1
+            fi
+            delay=$((attempt * 30 + RANDOM % 30))
+            echo "::warning::Build failed (attempt $attempt), retrying in ${delay}s"
+            sleep "$delay"
+          done
           APK="$PWD/${{ matrix.apk }}"
           if [ ! -f "$APK" ]; then
             echo "::error::Build did not produce ${{ matrix.apk }}"
