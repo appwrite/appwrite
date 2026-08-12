@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables;
 
+use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Create as CollectionCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -10,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -72,5 +74,10 @@ class Create extends CollectionCreate
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
+    }
+
+    public function action(string $databaseId, string $tableId, string $name, ?array $permissions, bool $rowSecurity, bool $enabled, array $columns, array $indexes, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    {
+        parent::action($databaseId, $tableId, $name, $permissions, $rowSecurity, $enabled, $columns, $indexes, $response, $dbForProject, $getDatabasesDB, $queueForEvents, $authorization);
     }
 }
