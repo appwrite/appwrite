@@ -595,6 +595,23 @@ return [
         'code' => 400,
     ],
 
+    /** Sandbox */
+    Exception::SANDBOX_NOT_FOUND => [
+        'name' => Exception::SANDBOX_NOT_FOUND,
+        'description' => 'Sandbox with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::SANDBOX_ALREADY_EXISTS => [
+        'name' => Exception::SANDBOX_ALREADY_EXISTS,
+        'description' => 'A sandbox with the requested ID already exists.',
+        'code' => 409,
+    ],
+    Exception::SANDBOX_POOL_EXHAUSTED => [
+        'name' => Exception::SANDBOX_POOL_EXHAUSTED,
+        'description' => 'The sandbox pool has no available capacity. Try again shortly.',
+        'code' => 429,
+    ],
+
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [
         'name' => Exception::INSTALLATION_NOT_FOUND,

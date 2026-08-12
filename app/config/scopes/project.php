@@ -215,6 +215,16 @@ return [
         'description' => 'Access to create, update, and delete storage files',
         'category' => 'Storage',
     ],
+    // Sandbox
+    'sandboxes.read' => [
+        'description' => 'Access to read sandboxes',
+        'category' => 'Sandbox',
+    ],
+    'sandboxes.write' => [
+        'description' => 'Access to create and delete sandboxes',
+        'category' => 'Sandbox',
+    ],
+
     'tokens.read' => [
         'description' => 'Access to read storage file tokens',
         'category' => 'Storage',

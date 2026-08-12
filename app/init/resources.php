@@ -19,6 +19,7 @@ use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Sandbox\Client as SandboxClient;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
@@ -87,6 +88,21 @@ $container->set('jobs', function () {
     }
 
     return new Jobs($client);
+}, []);
+
+$container->set('sandboxes', function () {
+    $client = (new Client(new CurlAdapter()))
+        ->withBearerAuth(System::getEnv('_APP_SANDBOX_SECRET', ''))
+        ->withTimeout(30);
+
+    // Keep the injection resolvable without _APP_SANDBOX_HOST and fail at
+    // call time instead, so installs without the service stay bootable.
+    $host = System::getEnv('_APP_SANDBOX_HOST', '');
+    if ($host !== '') {
+        $client = $client->withBaseUri($host);
+    }
+
+    return new SandboxClient($client);
 }, []);
 
 $container->set('screenshots', function () {

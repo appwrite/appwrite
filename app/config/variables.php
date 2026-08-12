@@ -1054,6 +1054,25 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_SANDBOX_HOST',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes deployments-service that serves the sandbox API.',
+                'introduction' => '1.10.0',
+                'default' => 'http://orchestrator-sandboxes:8080',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SANDBOX_SECRET',
+                'description' => 'The secret used to authenticate with the sandbox API. Make sure to change this.',
+                'introduction' => '1.10.0',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_BROWSER_HOST',
                 'description' => 'The host used by Appwrite to communicate with the browser service for screenshots.',
                 'introduction' => '1.8.0',

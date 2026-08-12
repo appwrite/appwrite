@@ -211,6 +211,20 @@ return [
         'icon' => '',
         'platforms' => ['server', 'console'],
     ],
+    'sandbox' => [
+        'key' => 'sandbox',
+        'name' => 'Sandbox',
+        'subtitle' => 'The Sandbox service allows you to create and manage isolated workspaces for running commands and working with files.',
+        'description' => '',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
     'tokens' => [
         'key' => 'tokens',
         'name' => 'Tokens',
