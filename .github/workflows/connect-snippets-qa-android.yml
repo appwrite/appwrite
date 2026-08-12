@@ -18,7 +18,9 @@ defaults:
 jobs:
   qa:
     name: ${{ matrix.id }}
-    runs-on: ubuntu-latest
+    # AWS runner via RunsOn; profile defined in .github/runs-on.yml. The
+    # emulator needs KVM, so this profile runs on nested-virt instances.
+    runs-on: runs-on=${{ github.run_id }}/runner=snippets-qa-android
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -135,18 +137,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The default runner image leaves ~14 GB free, which the SDK caches,
-      # Gradle builds, and the emulator system image + AVD overflow (flutter
-      # and react-native died with ENOSPC mid-run). Drop the big preinstalled
-      # toolchains we never touch. Keep /usr/local/lib/android (the SDK) and
-      # /opt/hostedtoolcache (flutter-action installs there).
-      - name: Free up runner disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
-            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
-          sudo docker system prune -af > /dev/null 2>&1 || true
-          df -h /
-
+      # GitHub-hosted runners left only ~14 GB free, which the SDK caches,
+      # Gradle builds, and the emulator system image + AVD overflowed (flutter
+      # and react-native died with ENOSPC mid-run) - the RunsOn profile
+      # provisions an 80 GB volume instead, so no cleanup step is needed.
       - name: Check Appwrite variables
         run: |
           if [ -z "$CODE_SNIPPET_QA_ENDPOINT" ] || [ -z "$CODE_SNIPPET_QA_PROJECT_ID" ]; then

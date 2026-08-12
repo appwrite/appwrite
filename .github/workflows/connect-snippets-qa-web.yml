@@ -17,7 +17,8 @@ defaults:
 jobs:
   qa:
     name: ${{ matrix.id }}
-    runs-on: ubuntu-latest
+    # AWS runner via RunsOn; profile defined in .github/runs-on.yml.
+    runs-on: runs-on=${{ github.run_id }}/runner=snippets-qa
     timeout-minutes: 30
     strategy:
       fail-fast: false

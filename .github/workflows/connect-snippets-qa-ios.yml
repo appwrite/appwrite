@@ -18,6 +18,8 @@ defaults:
 jobs:
   qa:
     name: ${{ matrix.id }}
+    # Stays on GitHub-hosted macOS: RunsOn (the AWS runner provider used by
+    # the other snippet QA workflows) only offers Linux and Windows runners.
     runs-on: macos-15
     timeout-minutes: 60
     strategy:
