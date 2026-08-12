@@ -8,7 +8,6 @@ runners:
     family: [c7i, c7a, m7i, m7a]
     image: ubuntu24-full-x64
     volume: 80gb
-    extras: [s3-cache]
 
   # Connect snippets QA (Android): Gradle builds plus an x86_64 emulator.
   # The emulator needs KVM, which on AWS requires nested virtualization -
@@ -19,4 +18,3 @@ runners:
     image: ubuntu24-full-x64
     volume: 80gb
     nested-virt: true
-    extras: [s3-cache]

@@ -162,10 +162,24 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # jdx/mise-action bootstraps the mise binary from GitHub releases, and
+      # that curl kept getting connection-reset through these runners'
+      # egress (GitHub throttles the anonymous per-IP bucket hard). mise's
+      # apt repository rides a different CDN and apt retries politely, so
+      # install the binary from there and wire up the env the action would
+      # have set.
       - name: Install mise
-        uses: jdx/mise-action@v2
-        with:
-          install: false
+        run: |
+          sudo install -dm 755 /etc/apt/keyrings
+          curl -fsSL --retry 10 --retry-all-errors https://mise.jdx.dev/gpg-key.pub \
+            | gpg --dearmor | sudo tee /etc/apt/keyrings/mise-archive-keyring.gpg > /dev/null
+          echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=amd64] https://mise.jdx.dev/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/mise.list > /dev/null
+          sudo apt-get update -qq -o Dir::Etc::sourcelist="sources.list.d/mise.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
+          sudo apt-get install -y -qq mise
+          echo "MISE_YES=1" >> "$GITHUB_ENV"
+          echo "MISE_TRUSTED_CONFIG_PATHS=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+          echo "$HOME/.local/share/mise/shims" >> "$GITHUB_PATH"
 
       - name: Install tooling via mise (node, maestro, java, gradle)
         env:
@@ -270,13 +284,15 @@ jobs:
           # dists, SDK components) through the runners' shared egress.
           # Gradle resumes from its caches on retry, and the build commands
           # are idempotent; real build errors still fail all three attempts.
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4; do
             if ( ${{ matrix.build }} ); then
               break
-            elif [ "$attempt" = 3 ]; then
+            elif [ "$attempt" = 4 ]; then
               exit 1
             fi
-            delay=$((attempt * 30 + RANDOM % 30))
+            # The resets against services.gradle.org persisted for minutes,
+            # so spread the attempts out rather than burning them quickly.
+            delay=$((attempt * 60 + RANDOM % 30))
             echo "::warning::Build failed (attempt $attempt), retrying in ${delay}s"
             sleep "$delay"
           done
