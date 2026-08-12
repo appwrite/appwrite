@@ -1172,7 +1172,7 @@ class Deletes extends Action
         ];
 
         // Current index is on {`type`, `expire`}
-        // Should be changed to use only {`expire`}
+        // Should be changed to {`expire`}
 
         foreach ($types as $type) {
             $this->deleteByGroup('tokens', [
