@@ -91,7 +91,11 @@ class Base extends Queries
             new Limit(),
             new Offset(),
             new Cursor(),
-            new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
+            new Filter(
+                attributes: $attributes,
+                idAttributeType: Database::VAR_INTEGER,
+                maxValuesCount: APP_DATABASE_QUERY_MAX_VALUES
+            ),
             new Order($attributes),
         ];
 

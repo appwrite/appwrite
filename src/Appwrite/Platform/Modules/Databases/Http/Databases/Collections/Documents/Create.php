@@ -147,20 +147,14 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array|\stdClass $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
     {
-        // The JSON object validators guarantee object shape for both parameters, so
-        // decoding is all that is left. Encoded scalars and lists are rejected during
-        // validation, before the handler adds system fields or touches the database.
-        $data = \is_string($data)
-            ? \json_decode($data, true)
-            : $data;
+        $data = $this->normalizeData($data);
 
         if ($documents !== null) {
             foreach ($documents as $key => $document) {
-                if (\is_string($document)) {
-                    $documents[$key] = \json_decode($document, true);
-                }
+                /** @var string|array|\stdClass $document */
+                $documents[$key] = $this->normalizeData($document);
             }
         }
 

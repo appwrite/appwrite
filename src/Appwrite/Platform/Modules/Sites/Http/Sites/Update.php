@@ -195,6 +195,10 @@ class Update extends Base
             $framework = $site->getAttribute('framework');
         }
 
+        if (empty($buildRuntime)) {
+            $buildRuntime = $site->getAttribute('buildRuntime');
+        }
+
         $buildSpecification ??= $site->getAttribute('buildSpecification', APP_SITES_BUILD_SPECIFICATION_DEFAULT);
 
         $repositoryId = $site->getAttribute('repositoryId', '');

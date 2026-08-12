@@ -35,7 +35,7 @@ trait ProxyBase
                 ]
             ]);
             $this->assertEquals(200, $rules['headers']['status-code']);
-            $this->assertEquals(0, count($rules['body']['rules']));
+            $this->assertSame(0, count($rules['body']['rules']));
             $this->assertEquals(0, $rules['body']['total']);
         }
     }
