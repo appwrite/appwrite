@@ -7,7 +7,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.exceptions.AppwriteException;
 import io.appwrite.services.Account;
 
 public final class SignIn {
@@ -46,8 +45,9 @@ public final class SignIn {
       error.setVisibility(View.GONE);
 
       Account account = new Account(AppwriteClient.get(context));
-      // The method declares AppwriteException, so javac requires the
-      // catch; in callback style errors arrive in the callback instead.
+      // Some methods declare AppwriteException (checked), so javac wants
+      // a catch; errors arrive in the callback either way. Exception
+      // keeps it compiling across SDK versions that differ in @Throws.
       try {
         account.createEmailPasswordSession(emailValue, passwordValue,
             new CoroutineCallback<>((session, e) -> layout.post(() -> {
@@ -57,7 +57,7 @@ public final class SignIn {
                 showError(error, e, "Sign in failed");
               }
             })));
-      } catch (AppwriteException ignored) {}
+      } catch (Exception ignored) {}
     });
 
     TextView hint = new TextView(context);

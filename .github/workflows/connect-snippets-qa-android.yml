@@ -191,14 +191,23 @@ jobs:
           mise trust
           # Capacitor's android library ships Java 21 bytecode; the shared
           # default stays on 17 because React Native and Flutter test it.
-          # Export JAVA_HOME too: gradlew resolves it before consulting PATH,
-          # and the runner image pre-sets it to the system JDK 17.
+          # Export JAVA_HOME too: gradlew resolves it before consulting PATH.
+          # Java comes from the image's preinstalled Temurin JDKs
+          # (JAVA_HOME_<ver>_X64, mirroring GitHub's runner image) instead of
+          # mise: the Adoptium download was by far the most throttled fetch
+          # ("refused stream" for 10+ minutes at a time). mise only installs
+          # the rest, and falls back for java if the image ever drops it.
           install_tools() {
-            if [ -n "${{ matrix.java }}" ]; then
-              mise use "java@${{ matrix.java }}" || return 1
+            ver="${{ matrix.java || 'temurin-17' }}"
+            ver="${ver#temurin-}"
+            eval "sys=\"\${JAVA_HOME_${ver}_X64:-}\""
+            if [ -n "$sys" ] && [ -x "$sys/bin/java" ]; then
+              echo "JAVA_HOME=$sys" >> "$GITHUB_ENV"
+            else
+              mise use "java@temurin-$ver" || return 1
               echo "JAVA_HOME=$(mise where java)" >> "$GITHUB_ENV"
             fi
-            mise install || return 1
+            mise install node maestro gradle || return 1
           }
           # On RunsOn all matrix jobs share a few NAT egress IPs, and the
           # simultaneous JDK/node downloads can get throttled per-IP (http2
@@ -340,6 +349,10 @@ jobs:
           # android-emulator-runner executes each script line as a separate
           # `sh -c`, so anything multi-line lives in run-maestro.sh instead.
           script: |
+            # System ANR dialogs ("Pixel Launcher isn't responding" while the
+            # emulator settles under CI load) sit on top of everything and
+            # fail every visibility assert - suppress them.
+            adb shell settings put global hide_error_dialogs 1
             adb install -r "$APK_PATH"
             adb logcat -c
             bash run-maestro.sh

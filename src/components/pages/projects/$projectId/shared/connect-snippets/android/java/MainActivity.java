@@ -6,7 +6,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.exceptions.AppwriteException;
 import io.appwrite.services.Account;
 
 public class MainActivity extends Activity {
@@ -41,8 +40,9 @@ public class MainActivity extends Activity {
     Account account = new Account(AppwriteClient.get(this));
     // The SDK is coroutine-based; CoroutineCallback bridges it to Java.
     // Callbacks land on a background thread - post UI work to the view.
-    // The methods declare AppwriteException, so javac requires the catch;
-    // in callback style errors are delivered to the callback instead.
+    // Some methods declare AppwriteException (checked), so javac wants a
+    // catch; errors are delivered to the callback either way. Exception
+    // keeps it compiling across SDK versions that differ in @Throws.
     try {
       account.get(new CoroutineCallback<>((user, error) ->
           layout.post(() -> {
@@ -53,7 +53,7 @@ public class MainActivity extends Activity {
               addSignedInHome(layout, user.getName());
             }
           })));
-    } catch (AppwriteException ignored) {}
+    } catch (Exception ignored) {}
     return layout;
   }
 
@@ -91,7 +91,7 @@ public class MainActivity extends Activity {
                 layout.post(() -> {
                   if (error == null) showHome();
                 })));
-      } catch (AppwriteException ignored) {}
+      } catch (Exception ignored) {}
     });
     layout.addView(signOut);
   }
