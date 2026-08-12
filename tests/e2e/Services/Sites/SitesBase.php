@@ -19,9 +19,6 @@ trait SitesBase
     protected string $stdout = '';
     protected string $stderr = '';
 
-    /** @var list<string>|null */
-    protected ?array $internalStartCommands = null;
-
     protected function setupSite(mixed $params): string
     {
         $site = $this->client->call(Client::METHOD_POST, '/sites', array_merge([
@@ -501,57 +498,21 @@ trait SitesBase
         return $specification['slug'];
     }
 
-    /**
-     * The commands that boot a framework are an internal contract between Appwrite and the
-     * runtime image, and they change without notice. Leaking one lets a client copy it into
-     * their own site, so it must not reach a response body at all - not as a value a console
-     * could render, and not as a default a console could offer as a placeholder.
-     *
-     * @return list<string>
-     */
-    protected function getInternalStartCommands(): array
+    protected function assertStartCommandNotExposed(array $payload): void
     {
-        if ($this->internalStartCommands !== null) {
-            return $this->internalStartCommands;
-        }
+        $body = \json_encode($payload, JSON_UNESCAPED_SLASHES);
 
-        $commands = [];
+        $this->assertStringNotContainsString('startCommand', $body);
+
+        // Every framework start command shells out to a helper script shipped in the runtime image.
+        $this->assertStringNotContainsString('helpers/', $body);
 
         foreach (Config::getParam('frameworks', []) as $framework) {
             foreach ($framework['adapters'] ?? [] as $adapter) {
                 if (!empty($adapter['startCommand'])) {
-                    $commands[] = $adapter['startCommand'];
+                    $this->assertStringNotContainsString($adapter['startCommand'], $body);
                 }
             }
-        }
-
-        $this->assertNotEmpty($commands, 'Expected at least one framework to define a start command.');
-
-        $this->internalStartCommands = \array_values(\array_unique($commands));
-
-        return $this->internalStartCommands;
-    }
-
-    protected function assertStartCommandNotExposed(mixed $payload, string $path = 'body'): void
-    {
-        if (\is_string($payload)) {
-            foreach ($this->getInternalStartCommands() as $command) {
-                $this->assertNotSame($command, $payload, 'Internal start command exposed at ' . $path);
-            }
-
-            // Every internal command shells out to a helper script shipped in the runtime image.
-            $this->assertStringNotContainsString('helpers/', $payload, 'Internal helper script exposed at ' . $path);
-
-            return;
-        }
-
-        if (!\is_array($payload)) {
-            return;
-        }
-
-        foreach ($payload as $key => $value) {
-            $this->assertNotSame('startCommand', $key, 'Start command exposed at ' . $path . '.' . $key);
-            $this->assertStartCommandNotExposed($value, $path . '.' . $key);
         }
     }
 }
