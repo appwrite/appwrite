@@ -116,6 +116,7 @@ class Exception extends \Exception
     public const string USER_TARGET_ALREADY_EXISTS = 'user_target_already_exists';
     public const string USER_API_KEY_AND_SESSION_SET = 'user_api_key_and_session_set';
     public const string USER_JWT_AND_COOKIE_SET = 'user_jwt_and_cookie_set';
+    public const string USER_JWT_CREATION_DENIED = 'user_jwt_creation_denied';
     public const string USER_ID_MISSING = 'user_id_missing';
 
     public const string API_KEY_EXPIRED = 'api_key_expired';
