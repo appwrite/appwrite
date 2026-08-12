@@ -166,11 +166,42 @@ jobs:
           # default stays on 17 because React Native and Flutter test it.
           # Export JAVA_HOME too: gradlew resolves it before consulting PATH,
           # and the runner image pre-sets it to the system JDK 17.
-          if [ -n "${{ matrix.java }}" ]; then
-            mise use "java@${{ matrix.java }}"
-            echo "JAVA_HOME=$(mise where java)" >> "$GITHUB_ENV"
-          fi
-          mise install
+          install_tools() {
+            if [ -n "${{ matrix.java }}" ]; then
+              mise use "java@${{ matrix.java }}" || return 1
+              echo "JAVA_HOME=$(mise where java)" >> "$GITHUB_ENV"
+            fi
+            mise install || return 1
+          }
+          # On RunsOn all matrix jobs share a few NAT egress IPs, and the
+          # simultaneous JDK/node downloads can get throttled per-IP (http2
+          # "refused stream"). Retry with backoff and jitter absorbs it.
+          for attempt in 1 2 3 4; do
+            if install_tools; then
+              exit 0
+            fi
+            delay=$((attempt * 20 + RANDOM % 20))
+            echo "::warning::Tool install failed (attempt $attempt), retrying in ${delay}s"
+            sleep "$delay"
+          done
+          install_tools
+
+      # GitHub-hosted ubuntu runners preinstall the Android SDK; the RunsOn
+      # image does not, so Gradle dies with "SDK location not found". Install
+      # cmdline-tools and accept the licenses - Gradle/AGP then auto-installs
+      # whatever platforms and build-tools each lane declares, and the
+      # emulator runner installs the system image through sdkmanager.
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # Tauri's Rust cross-compile does not go through AGP's auto-install; it
+      # needs the NDK on disk and NDK_HOME exported.
+      - name: Install Android NDK (Tauri only)
+        if: matrix.id == 'tauri'
+        run: |
+          sdkmanager --install "ndk;27.1.12297006"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/27.1.12297006" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.1.12297006" >> "$GITHUB_ENV"
 
       - name: Install Flutter
         if: matrix.id == 'flutter'
