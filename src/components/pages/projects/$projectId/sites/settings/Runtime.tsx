@@ -37,11 +37,7 @@ export function View() {
         keywords: ['runtime', 'ssr', 'server', 'start', 'image', 'node'],
       },
       node: (
-        <SiteRuntimeImageCard
-          projectId={projectId}
-          siteId={siteId}
-          site={site}
-        />
+        <SiteRuntimeImageCard projectId={projectId} siteId={siteId} site={site} />
       ),
     },
     {
