@@ -31,14 +31,14 @@ class Installation extends Model
             ->addRule('provider', [
                 'type' => self::TYPE_STRING,
                 'description' => 'VCS (Version Control System) provider name.',
-                'default' => [],
+                'default' => '',
                 'example' => 'github',
                 'array' => false,
             ])
             ->addRule('organization', [
                 'type' => self::TYPE_STRING,
                 'description' => 'VCS (Version Control System) organization name.',
-                'default' => [],
+                'default' => '',
                 'example' => 'appwrite',
                 'array' => false,
             ])

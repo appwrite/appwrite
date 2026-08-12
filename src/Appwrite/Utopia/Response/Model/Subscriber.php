@@ -37,7 +37,7 @@ class Subscriber extends Model
             ->addRule('target', [
                 'type' => Response::MODEL_TARGET,
                 'description' => 'Target.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => [
                     '$id' => '259125845563242502',
                     '$createdAt' => self::TYPE_DATETIME_EXAMPLE,

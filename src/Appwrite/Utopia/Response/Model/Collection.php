@@ -31,7 +31,7 @@ class Collection extends Model
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
-                'default' => '',
+                'default' => [],
                 'example' => ['read("any")'],
                 'array' => true
             ])
@@ -56,7 +56,7 @@ class Collection extends Model
             ->addRule('documentSecurity', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether document-level permissions are enabled. [Learn more about permissions](https://appwrite.io/docs/permissions).',
-                'default' => '',
+                'default' => false,
                 'example' => true,
             ])
             ->addRule('attributes', [

@@ -79,7 +79,7 @@ class UsageFunctions extends Model
             ->addRule('functions', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of functions per period.',
-                'default' => 0,
+                'default' => [],
                 'example' => 0,
                 'array' => true
             ])
