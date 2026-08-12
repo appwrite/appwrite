@@ -203,6 +203,11 @@ jobs:
             eval "sys=\"\${JAVA_HOME_${ver}_X64:-}\""
             if [ -n "$sys" ] && [ -x "$sys/bin/java" ]; then
               echo "JAVA_HOME=$sys" >> "$GITHUB_ENV"
+              # The mise config still lists java, and `mise run` (the maestro
+              # task) auto-installs missing config tools - which would retry
+              # the throttled Adoptium download mid-test. Make mise ignore
+              # its java entry in all later steps; JAVA_HOME covers it.
+              echo "MISE_DISABLE_TOOLS=java" >> "$GITHUB_ENV"
             else
               mise use "java@temurin-$ver" || return 1
               echo "JAVA_HOME=$(mise where java)" >> "$GITHUB_ENV"
