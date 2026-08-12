@@ -121,6 +121,87 @@ final class DistributedTest extends TestCase
         $lock->release();
     }
 
+    public function testAdoptedTokenRefreshesLeaseThroughAnotherConnection(): void
+    {
+        $holder = new Distributed($this->redis, $this->key, 30);
+        $this->assertTrue($holder->tryAcquire());
+        $token = $holder->token();
+        $this->assertNotNull($token);
+
+        $redis = new Redis();
+        $this->assertTrue($redis->connect(
+            getenv('REDIS_HOST') ?: 'redis',
+            (int) (getenv('REDIS_PORT') ?: 6379),
+            1.0,
+        ));
+
+        $refresher = (new Distributed($redis, $this->key, 30))->adopt($token);
+
+        $this->assertSame($token, $refresher->token());
+        $this->assertTrue($refresher->refresh());
+        $this->assertTrue($holder->isHeld());
+
+        $holder->release();
+        $redis->close();
+    }
+
+    public function testAdoptedStaleTokenCannotRefreshOrReleaseSuccessor(): void
+    {
+        $holder = new Distributed($this->redis, $this->key, 30);
+        $this->assertTrue($holder->tryAcquire());
+        $token = $holder->token();
+        $this->assertNotNull($token);
+
+        $redis = new Redis();
+        $this->assertTrue($redis->connect(
+            getenv('REDIS_HOST') ?: 'redis',
+            (int) (getenv('REDIS_PORT') ?: 6379),
+            1.0,
+        ));
+        $refresher = (new Distributed($redis, $this->key, 30))->adopt($token);
+
+        $this->redis->del($this->key);
+        $successor = new Distributed($this->redis, $this->key, 30);
+        $this->assertTrue($successor->tryAcquire());
+
+        $this->assertFalse($refresher->refresh());
+        $refresher->release();
+        $this->assertTrue($successor->isHeld());
+
+        $successor->release();
+        $redis->close();
+    }
+
+    public function testEmptyTokenCannotBeAdopted(): void
+    {
+        $lock = new Distributed($this->redis, $this->key, 30);
+
+        try {
+            $lock->adopt('');
+            $this->fail('An empty token must not grant authority over a distributed lock');
+        } catch (\InvalidArgumentException) {
+            $this->assertNull($lock->token());
+            $this->assertFalse($lock->refresh());
+        }
+    }
+
+    public function testHeldLockCannotReplaceItsToken(): void
+    {
+        $lock = new Distributed($this->redis, $this->key, 30);
+        $this->assertTrue($lock->tryAcquire());
+        $token = $lock->token();
+
+        try {
+            $lock->adopt('another-token');
+            $this->fail('Replacing a held lock token would abandon its authority to release the lease');
+        } catch (\LogicException) {
+            $this->assertSame($token, $lock->token());
+            $this->assertTrue($lock->isHeld());
+        } finally {
+            $lock->release();
+        }
+    }
+
     public function testTokenIsTheValueOnTheKeyAndIsClearedOnRelease(): void
     {
         $lock = new Distributed($this->redis, $this->key, 30);

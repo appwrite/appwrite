@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Utopia\Lock;
 
 use Closure;
+use InvalidArgumentException;
+use LogicException;
 use Redis;
 use Utopia\Lock\Exception\Contention;
 
@@ -136,6 +138,30 @@ final class Distributed implements Lock
         }
 
         return $this->redis->get($this->key) === $this->token;
+    }
+
+    /**
+     * Use a token minted by another instance for this lock key.
+     *
+     * Token adoption lets a holder delegate token-guarded commands such as
+     * {@see refresh()} to an instance backed by a different Redis connection.
+     * Possession of the token carries the same authority as the original
+     * instance: {@see release()} can also release the lease while it still owns
+     * the key.
+     */
+    public function adopt(string $token): self
+    {
+        if ($token === '') {
+            throw new InvalidArgumentException('Token must not be empty');
+        }
+
+        if ($this->token !== null) {
+            throw new LogicException('Cannot replace the token of a distributed lock');
+        }
+
+        $this->token = $token;
+
+        return $this;
     }
 
     /**

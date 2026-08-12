@@ -147,6 +147,22 @@ $lock->withLock(function () {
 
 Release is atomic: a Lua script verifies the lock value still matches this instance's token before deleting, so a lock that expires and is re-acquired elsewhere is never released by accident.
 
+The holder can delegate token-guarded commands to another Redis connection. This is useful when a background coroutine refreshes the lease while the action continues using its own connection:
+
+```php
+$token = $lock->token();
+if ($token === null) {
+    throw new RuntimeException('The lock is not held');
+}
+
+$refresher = (new Distributed($otherRedis, key: 'jobs:rebuild-index', ttl: 120))
+    ->adopt($token);
+
+$refresher->refresh();
+```
+
+An adopted token has the same authority as the original instance, including the ability to release the lease. A refresh or release remains safe after the lease expires because the Lua script only acts while the adopted token still matches the value on the key.
+
 ### Exception handling
 
 ```php
