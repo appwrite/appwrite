@@ -1171,6 +1171,9 @@ class Deletes extends Action
             TOKEN_TYPE_EMAIL,
         ];
 
+        // Current index is on {`type`, `expire`}
+        // Should be changed to use only {`expire`}
+
         foreach ($types as $type) {
             $this->deleteByGroup('tokens', [
                 Query::select([...$this->selects, 'expire']),
