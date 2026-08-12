@@ -267,7 +267,9 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
                   <SelectItem key={r.$id} value={r.$id || r.key}>
                     <div className="flex items-center gap-2">
                       <RuntimeIcon runtime={r.$id || r.key} size="sm" />
-                      {r.name}
+                      <span>
+                        {r.name} {r.version}
+                      </span>
                     </div>
                   </SelectItem>
                 ))}
