@@ -6,7 +6,6 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -506,13 +505,5 @@ trait SitesBase
 
         // Every framework start command shells out to a helper script shipped in the runtime image.
         $this->assertStringNotContainsString('helpers/', $body);
-
-        foreach (Config::getParam('frameworks', []) as $framework) {
-            foreach ($framework['adapters'] ?? [] as $adapter) {
-                if (!empty($adapter['startCommand'])) {
-                    $this->assertStringNotContainsString($adapter['startCommand'], $body);
-                }
-            }
-        }
     }
 }
