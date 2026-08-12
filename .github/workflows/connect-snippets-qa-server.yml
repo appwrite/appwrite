@@ -18,6 +18,11 @@ env:
   APPWRITE_ENDPOINT: ${{ vars.CODE_SNIPPET_QA_ENDPOINT }}
   APPWRITE_PROJECT_ID: ${{ vars.CODE_SNIPPET_QA_PROJECT_ID }}
   APPWRITE_API_KEY: ${{ secrets.CODE_SNIPPET_QA_API_KEY }}
+  # TODO: revert to plain "appwrite" once a PyPI release contains
+  # PolicyMfaFactors (appwrite/sdk-for-python#153). Cloud now returns an
+  # mfa-factors policy from GET /v1/project/policies that released Python
+  # SDKs (<= 22.2.0) cannot parse, so list_policies() crashes.
+  APPWRITE_PYTHON_SDK: git+https://github.com/appwrite/sdk-for-python@fix/policy-mfa-factors
 
 defaults:
   run:
@@ -161,14 +166,14 @@ jobs:
             kind: cli
             snippets: python/vanilla
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv
-            install: .venv/bin/pip install --quiet appwrite
+            install: .venv/bin/pip install --quiet "$APPWRITE_PYTHON_SDK"
             run: .venv/bin/python main.py
 
           - id: python-fastapi
             kind: http
             snippets: python/fastapi
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv
-            install: .venv/bin/pip install --quiet appwrite fastapi uvicorn
+            install: .venv/bin/pip install --quiet "$APPWRITE_PYTHON_SDK" fastapi uvicorn
             port: 8000
             start: .venv/bin/uvicorn main:app --port 8000
 
@@ -178,7 +183,7 @@ jobs:
             kind: http
             snippets: python/django
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv && .venv/bin/pip install --quiet django && .venv/bin/django-admin startproject config .
-            install: .venv/bin/pip install --quiet appwrite
+            install: .venv/bin/pip install --quiet "$APPWRITE_PYTHON_SDK"
             port: 8000
             start: .venv/bin/python manage.py runserver 8000
 
@@ -186,7 +191,7 @@ jobs:
             kind: http
             snippets: python/flask
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv
-            install: .venv/bin/pip install --quiet appwrite flask
+            install: .venv/bin/pip install --quiet "$APPWRITE_PYTHON_SDK" flask
             port: 5000
             start: .venv/bin/python app.py
 
