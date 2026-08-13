@@ -251,7 +251,7 @@ return [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
-                'outputDirectory' => './.output/public',
+                'outputDirectory' => './dist/client',
                 'startCommand' => 'bash helpers/server.sh',
             ]
         ]
