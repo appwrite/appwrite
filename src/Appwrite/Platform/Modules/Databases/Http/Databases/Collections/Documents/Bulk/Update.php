@@ -93,11 +93,9 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, Event $queueForEvents, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, string $collectionId, string|array|\stdClass $data, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, Event $queueForEvents, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
     {
-        $data = \is_string($data)
-            ? \json_decode($data, true)
-            : $data;
+        $data = $this->normalizeData($data);
 
         if (empty($data)) {
             throw new Exception($this->getMissingPayloadException());

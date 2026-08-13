@@ -268,6 +268,45 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * Convert a request object to the associative shape Document expects while
+     * retaining empty objects at any nested depth.
+     *
+     * @return array<string, mixed>
+     */
+    protected function normalizeData(string|array|\stdClass $data): array
+    {
+        if (\is_string($data)) {
+            $data = \json_decode($data);
+            if (!$data instanceof \stdClass && !\is_array($data)) {
+                return [];
+            }
+        }
+
+        if ($data instanceof \stdClass) {
+            $data = (array) $data;
+        }
+
+        return \array_map($this->normalizeValue(...), $data);
+    }
+
+    private function normalizeValue(mixed $value): mixed
+    {
+        if ($value instanceof \stdClass) {
+            $properties = (array) $value;
+
+            return $properties === []
+                ? $value
+                : \array_map($this->normalizeValue(...), $properties);
+        }
+
+        if (\is_array($value)) {
+            return \array_map($this->normalizeValue(...), $value);
+        }
+
+        return $value;
+    }
+
+    /**
      * Remove configured removable attributes from a document.
      * Used for relationship path handling to remove API-specific attributes.
      */
