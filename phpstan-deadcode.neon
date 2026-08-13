@@ -25,6 +25,10 @@ parameters:
         - tests/resources
     ignoreErrors:
         # Referenced in appwrite/cloud.
+        # Test helpers: appwrite/cloud's e2e suites extend these traits.
+        - '#^Unused Tests\\E2E\\Services\\Functions\\FunctionsBase::getExecution$#'
+        - '#^Unused Tests\\E2E\\Services\\Functions\\FunctionsBase::listExecutions$#'
+        - '#^Unused Tests\\E2E\\Services\\Sites\\SitesBase::listLogs$#'
         - '#^Unused Appwrite\\Auth\\MFA\\Challenge::challenge$#'
         - '#^Unused Appwrite\\Auth\\MFA\\Challenge::verify$#'
         - '#^Unused Appwrite\\Certificates\\Adapter::getCertificateStatus$#'
