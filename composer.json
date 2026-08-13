@@ -16,6 +16,7 @@
         "analyze": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G",
         "bench": "vendor/bin/phpbench run --report=benchmark",
         "check": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G",
+        "dead-code": "./vendor/bin/phpstan analyse -c phpstan-deadcode.neon --memory-limit=2G",
         "refactor": "vendor/bin/rector process",
         "refactor:check": "vendor/bin/rector process --dry-run",
         "installer:clean": "php src/Appwrite/Platform/Installer/Server.php --clean",
@@ -65,7 +66,6 @@
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "2.0.*",
         "utopia-php/agents": "2.*",
-        "utopia-php/analytics": "0.15.*",
         "utopia-php/audit": "3.0.*",
         "utopia-php/auth": "^0.10",
         "utopia-php/cache": "^4.0.0",
@@ -91,7 +91,6 @@
         "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "3.0.*",
-        "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "^1.0.0",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
@@ -123,7 +122,8 @@
         "textalk/websocket": "1.5.*",
         "czproject/git-php": "4.*",
         "laravel/pint": "1.*",
-        "rector/rector": "^2.4"
+        "rector/rector": "^2.4",
+        "shipmonk/dead-code-detector": "^0.13"
     },
     "provide": {
         "ext-phpiredis": "*"

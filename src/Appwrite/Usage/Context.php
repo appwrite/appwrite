@@ -24,16 +24,6 @@ class Context
     }
 
     /**
-     * Add a document to reduce
-     */
-    public function addReduce(Document $document): self
-    {
-        $this->reduce[] = $document;
-
-        return $this;
-    }
-
-    /**
      * Get all metrics
      *
      * @return array<array{key: string, value: int}>
@@ -86,11 +76,6 @@ class Context
         return $this;
     }
 
-    public function getResource(): string
-    {
-        return '';
-    }
-
     public function setResourceId(string $resourceId): self
     {
         return $this;
@@ -104,11 +89,6 @@ class Context
     public function setResourceInternalId(string $resourceInternalId): self
     {
         return $this;
-    }
-
-    public function getResourceInternalId(): string
-    {
-        return '';
     }
 
     /**

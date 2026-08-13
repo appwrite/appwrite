@@ -195,46 +195,6 @@ trait FunctionsBase
         return $variable;
     }
 
-    protected function getVariable(string $functionId, string $variableId): mixed
-    {
-        $variable = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        return $variable;
-    }
-
-    protected function updateVariable(string $functionId, string $variableId, mixed $params): mixed
-    {
-        $variable = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $variable;
-    }
-
-    protected function listVariables(string $functionId, mixed $params = []): mixed
-    {
-        $variables = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $variables;
-    }
-
-    protected function deleteVariable(string $functionId, string $variableId): mixed
-    {
-        $variable = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        return $variable;
-    }
-
     protected function getFunction(string $functionId): mixed
     {
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
@@ -255,16 +215,6 @@ trait FunctionsBase
         return $deployment;
     }
 
-    protected function getExecution(string $functionId, $executionId): mixed
-    {
-        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        return $execution;
-    }
-
     protected function listFunctions(mixed $params = []): mixed
     {
         $functions = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
@@ -283,16 +233,6 @@ trait FunctionsBase
         ], $this->getHeaders()), $params);
 
         return $deployments;
-    }
-
-    protected function listExecutions(string $functionId, mixed $params = []): mixed
-    {
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $executions;
     }
 
     protected function packageFunction(string $function): CURLFile
@@ -445,27 +385,6 @@ trait FunctionsBase
         ]);
 
         return $response;
-    }
-
-    protected function setupDuplicateDeployment(string $functionId, string $deploymentId): string
-    {
-        $deployment = $this->createDuplicateDeployment($functionId, $deploymentId);
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-
-        $deploymentId = $deployment['body']['$id'];
-        $this->assertNotEmpty($deploymentId);
-
-        $this->assertEventually(function () use ($functionId, $deploymentId) {
-            $deployment = $this->getDeployment($functionId, $deploymentId);
-            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
-
-        $this->assertEventually(function () use ($functionId, $deploymentId) {
-            $function = $this->getFunction($functionId);
-            $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
-
-        return $deploymentId;
     }
 
     protected function createDuplicateDeployment(string $functionId, string $deploymentId): mixed

@@ -18,11 +18,6 @@ class Delete extends TransactionsDelete
         return 'deleteVectorsDBTransaction';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_NONE;
-    }
-
     public function __construct()
     {
         $this

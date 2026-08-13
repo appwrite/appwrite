@@ -131,22 +131,6 @@ abstract class Scope extends TestCase
     }
 
     /**
-     * Check if the database adapter supports resizing attributes
-     */
-    protected function getSupportForAttributeResizing(): bool
-    {
-        return $this->getConsoleVariables()['supportForAttributeResizing'] ?? true;
-    }
-
-    /**
-     * Check if the database adapter supports fixed schemas with row width limits
-     */
-    protected function getSupportForSchemas(): bool
-    {
-        return $this->getConsoleVariables()['supportForSchemas'] ?? true;
-    }
-
-    /**
      * Check if the database adapter supports attributes
      */
     protected function getSupportForAttributes(): bool
@@ -160,14 +144,6 @@ abstract class Scope extends TestCase
     protected function getMaxIndexLength(): int
     {
         return $this->getConsoleVariables()['maxIndexLength'] ?? 767;
-    }
-
-    /**
-     * Check if the database adapter uses integer sequence IDs
-     */
-    protected function getSupportForIntegerIds(): bool
-    {
-        return $this->getConsoleVariables()['supportForIntegerIds'] ?? true;
     }
 
     protected function getLastEmail(int $limit = 1, ?callable $probe = null): array
@@ -272,24 +248,6 @@ abstract class Scope extends TestCase
         }
 
         return [];
-    }
-
-    protected function assertLastRequest(callable $probe, string $type, $timeoutMs = 20_000, $waitMs = 500): array
-    {
-        $hostname = match ($type) {
-            'webhook' => 'request-catcher-webhook',
-            'sms' => 'request-catcher-sms',
-            default => throw new \Exception('Invalid request catcher type.'),
-        };
-
-        $this->assertEventually(function () use (&$request, $probe, $hostname) {
-            $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
-            $request['data'] = json_decode($request['data'], true);
-
-            call_user_func($probe, $request);
-        }, $timeoutMs, $waitMs);
-
-        return $request;
     }
 
     protected function assertSamePixels(string $expectedImagePath, string $actualImageBlob): void
