@@ -73,7 +73,7 @@ class Create extends Action
         $signature = $request->getHeaderLine('x-hub-signature-256', '');
         $secretKey = $vcsWebhookSecret('github');
 
-        $valid = empty($secretKey) ? true : $vcs->validateWebhookEvent($payload, $signature, $secretKey);
+        $valid = empty($secretKey) || $vcs->validateWebhookEvent($payload, $signature, $secretKey);
         Span::add('vcs.github.event.signature.valid', $valid);
 
         if (!$valid) {
@@ -111,78 +111,44 @@ class Create extends Action
 
         $providerInstallationId = $parsedPayload["installationId"];
 
-        $installationCursor = null;
-        do {
-            $installationQueries = [
-                Query::equal('providerInstallationId', [$providerInstallationId]),
-                Query::equal('provider', ['github']),
-                Query::limit(1000),
-            ];
-            if ($installationCursor !== null) {
-                $installationQueries[] = Query::cursorAfter($installationCursor);
-            }
-            $installations = $authorization->skip(fn () => $dbForPlatform->find('installations', $installationQueries));
+        $authorization->skip(fn () => $dbForPlatform->foreach('installations', function (Document $installation) use ($dbForPlatform, $getProjectDB) {
+            $project = $dbForPlatform->getDocument('projects', $installation->getAttribute('projectId', ''));
 
-            foreach ($installations as $installation) {
-                $projectId = $installation->getAttribute('projectId', '');
-                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            if (!$project->isEmpty() && $this->isProjectInCurrentRegion($project)) {
+                $dbForProject = $getProjectDB($project);
 
-                if (!$project->isEmpty() && $this->isProjectInCurrentRegion($project)) {
-                    $dbForProject = $getProjectDB($project);
-
-                    foreach (['functions', 'sites'] as $collection) {
-                        $cursor = null;
-                        do {
-                            $queries = [
-                                Query::equal('installationInternalId', [$installation->getSequence()]),
-                                Query::limit(1000),
-                            ];
-                            if ($cursor !== null) {
-                                $queries[] = Query::cursorAfter($cursor);
-                            }
-                            $resources = $authorization->skip(fn () => $dbForProject->find($collection, $queries));
-
-                            foreach ($resources as $resource) {
-                                $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), new Document([
-                                    'installationId' => '',
-                                    'installationInternalId' => '',
-                                    'providerRepositoryId' => '',
-                                    'providerBranch' => '',
-                                    'providerSilentMode' => false,
-                                    'providerRootDirectory' => '',
-                                    'repositoryId' => '',
-                                    'repositoryInternalId' => '',
-                                ])));
-                            }
-
-                            $cursor = count($resources) === 1000 ? $resources[array_key_last($resources)] : null;
-                        } while ($cursor !== null);
-                    }
-                }
-
-                $cursor = null;
-                do {
-                    $queries = [
+                foreach (['functions', 'sites'] as $collection) {
+                    $dbForProject->foreach($collection, function (Document $resource) use ($dbForProject, $collection) {
+                        $dbForProject->updateDocument($collection, $resource->getId(), new Document([
+                            'installationId' => '',
+                            'installationInternalId' => '',
+                            'providerRepositoryId' => '',
+                            'providerBranch' => '',
+                            'providerSilentMode' => false,
+                            'providerRootDirectory' => '',
+                            'repositoryId' => '',
+                            'repositoryInternalId' => '',
+                        ]));
+                    }, [
                         Query::equal('installationInternalId', [$installation->getSequence()]),
                         Query::limit(1000),
-                    ];
-                    if ($cursor !== null) {
-                        $queries[] = Query::cursorAfter($cursor);
-                    }
-                    $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', $queries));
-
-                    foreach ($repositories as $repository) {
-                        $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
-                    }
-
-                    $cursor = count($repositories) === 1000 ? $repositories[array_key_last($repositories)] : null;
-                } while ($cursor !== null);
-
-                $authorization->skip(fn () => $dbForPlatform->deleteDocument('installations', $installation->getId()));
+                    ]);
+                }
             }
 
-            $installationCursor = count($installations) === 1000 ? $installations[array_key_last($installations)] : null;
-        } while ($installationCursor !== null);
+            $dbForPlatform->foreach('repositories', function (Document $repository) use ($dbForPlatform) {
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
+            }, [
+                Query::equal('installationInternalId', [$installation->getSequence()]),
+                Query::limit(1000),
+            ]);
+
+            $dbForPlatform->deleteDocument('installations', $installation->getId());
+        }, [
+            Query::equal('providerInstallationId', [$providerInstallationId]),
+            Query::equal('provider', ['github']),
+            Query::limit(1000),
+        ]));
     }
 
     private function isProjectInCurrentRegion(Document $project): bool
@@ -232,6 +198,11 @@ class Create extends Action
         Span::add('vcs.github.event.branch', $providerBranch);
         Span::add('vcs.github.event.installation.id', $providerInstallationId);
 
+        // Create new deployment only on push (not committed by us) and not when branch is deleted
+        if ($providerCommitAuthorEmail === APP_VCS_GITHUB_EMAIL || $providerBranchDeleted) {
+            return;
+        }
+
         $vcs = $vcsFactory->fromInstallation(new Document([
             'provider' => 'github',
             'providerInstallationId' => $providerInstallationId,
@@ -243,11 +214,8 @@ class Create extends Action
             Query::limit(100),
         ]));
 
-        // Create new deployment only on push (not committed by us) and not when branch is deleted
-        if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchDeleted) {
-            $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
-            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
-        }
+        $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
+        $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
     }
 
     private function handlePullRequestEvent(
@@ -261,67 +229,68 @@ class Create extends Action
     ) {
         $action = $parsedPayload["action"] ?? '';
 
-        if ($action == "opened" || $action == "reopened" || $action == "synchronize") {
-            $providerBranch = $parsedPayload["branch"] ?? '';
-            $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
-            $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
-            $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
-            $providerInstallationId = $parsedPayload["installationId"] ?? '';
-            $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
-            $providerPullRequestId = $parsedPayload["pullRequestNumber"] ?? '';
-            $providerCommitHash = $parsedPayload["commitHash"] ?? '';
-            $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
-            $external = $parsedPayload["external"] ?? true;
-            $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
-            $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
-
-            Span::add('vcs.github.event.repo.id', $providerRepositoryId);
-            Span::add('vcs.github.event.repo.name', $providerRepositoryName);
-            Span::add('vcs.github.event.branch', $providerBranch);
-            Span::add('vcs.github.event.installation.id', $providerInstallationId);
-
-            // Ignore sync for non-external. We handle it in push webhook
-            if (!$external && $parsedPayload["action"] == "synchronize") {
-                return;
-            }
-
-            $vcs = $vcsFactory->fromInstallation(new Document([
-                'provider' => 'github',
-                'providerInstallationId' => $providerInstallationId,
-            ]));
-
-            try {
-                $commitDetails = $vcs->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
-            } catch (\Throwable $e) {
-                Console::warning("Failed to fetch commit '{$providerCommitHash}': " . $e->getMessage());
-                $commitDetails = [];
-            }
-            $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
-            $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
-
-            $prFiles = $vcs->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
-            $providerAffectedFiles = [
-                ...array_column($prFiles, 'filename'),
-                // Only renamed files include previous_filename; skip missing values from other file changes.
-                ...array_filter(array_column($prFiles, 'previous_filename'))
-            ];
-
-            $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
-                Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                Query::orderDesc('$createdAt')
-            ]));
-
-            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
-        } elseif ($action == "closed") {
+        if ($action === "closed") {
             // Allowed external contributions cleanup
-
-            $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
-            $providerPullRequestId = $parsedPayload["pullRequestNumber"] ?? '';
-            $external = $parsedPayload["external"] ?? true;
-
-            if ($external) {
-                (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, 'github', $providerRepositoryId, $providerPullRequestId);
+            if ($parsedPayload["external"] ?? true) {
+                (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, 'github', $parsedPayload["repositoryId"] ?? '', $parsedPayload["pullRequestNumber"] ?? '');
             }
+
+            return;
         }
+
+        if (!\in_array($action, ["opened", "reopened", "synchronize"])) {
+            return;
+        }
+
+        $providerBranch = $parsedPayload["branch"] ?? '';
+        $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
+        $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
+        $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
+        $providerInstallationId = $parsedPayload["installationId"] ?? '';
+        $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
+        $providerPullRequestId = $parsedPayload["pullRequestNumber"] ?? '';
+        $providerCommitHash = $parsedPayload["commitHash"] ?? '';
+        $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
+        $external = $parsedPayload["external"] ?? true;
+        $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
+        $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
+
+        Span::add('vcs.github.event.repo.id', $providerRepositoryId);
+        Span::add('vcs.github.event.repo.name', $providerRepositoryName);
+        Span::add('vcs.github.event.branch', $providerBranch);
+        Span::add('vcs.github.event.installation.id', $providerInstallationId);
+
+        // Ignore sync for non-external. We handle it in push webhook
+        if (!$external && $action === "synchronize") {
+            return;
+        }
+
+        $vcs = $vcsFactory->fromInstallation(new Document([
+            'provider' => 'github',
+            'providerInstallationId' => $providerInstallationId,
+        ]));
+
+        try {
+            $commitDetails = $vcs->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
+        } catch (\Throwable $e) {
+            Console::warning("Failed to fetch commit '{$providerCommitHash}': " . $e->getMessage());
+            $commitDetails = [];
+        }
+        $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
+        $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
+
+        $prFiles = $vcs->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
+        $providerAffectedFiles = [
+            ...array_column($prFiles, 'filename'),
+            // Only renamed files include previous_filename; skip missing values from other file changes.
+            ...array_filter(array_column($prFiles, 'previous_filename'))
+        ];
+
+        $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
+            Query::equal('providerRepositoryId', [$providerRepositoryId]),
+            Query::orderDesc('$createdAt')
+        ]));
+
+        $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
     }
 }
