@@ -51,16 +51,11 @@ public final class SignUp {
       error.setVisibility(View.GONE);
 
       Account account = new Account(AppwriteClient.get(context));
-      // Some methods declare AppwriteException (checked), so javac wants
-      // a catch; errors arrive in the callback either way. Exception
-      // keeps it compiling across SDK versions that differ in @Throws.
       try {
         account.create(
-            // ID.unique() from Java: the padding default must be passed.
             ID.Companion.unique(7),
             emailValue,
             passwordValue,
-            // Appwrite rejects an empty name; omit it instead.
             nameValue.isEmpty() ? null : nameValue,
             new CoroutineCallback<>((user, e) -> {
               if (e != null) {

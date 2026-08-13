@@ -38,11 +38,6 @@ public class MainActivity extends Activity {
     layout.addView(status);
 
     Account account = new Account(AppwriteClient.get(this));
-    // The SDK is coroutine-based; CoroutineCallback bridges it to Java.
-    // Callbacks land on a background thread - post UI work to the view.
-    // Some methods declare AppwriteException (checked), so javac wants a
-    // catch; errors are delivered to the callback either way. Exception
-    // keeps it compiling across SDK versions that differ in @Throws.
     try {
       account.get(new CoroutineCallback<>((user, error) ->
           layout.post(() -> {

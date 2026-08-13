@@ -45,9 +45,6 @@ public final class SignIn {
       error.setVisibility(View.GONE);
 
       Account account = new Account(AppwriteClient.get(context));
-      // Some methods declare AppwriteException (checked), so javac wants
-      // a catch; errors arrive in the callback either way. Exception
-      // keeps it compiling across SDK versions that differ in @Throws.
       try {
         account.createEmailPasswordSession(emailValue, passwordValue,
             new CoroutineCallback<>((session, e) -> layout.post(() -> {
