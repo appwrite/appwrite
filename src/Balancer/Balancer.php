@@ -46,7 +46,16 @@ class Balancer
         return $this;
     }
 
-    public function run(): ?Option
+    /**
+     * Every option that passed all filters, in the order they were added.
+     *
+     * `run()` narrows this to one option through the algorithm. Callers that
+     * have to act on all of them — fanning a request out to every option that
+     * qualifies, rather than balancing between them — read them here.
+     *
+     * @return Option[]
+     */
+    public function getFilteredOptions(): array
     {
         $options = $this->options;
 
@@ -54,7 +63,12 @@ class Balancer
             $options = \array_filter($options, $filter);
         }
 
-        $options = \array_values($options);
+        return \array_values($options);
+    }
+
+    public function run(): ?Option
+    {
+        $options = $this->getFilteredOptions();
 
         if (\count($options) === 0) {
             return null;

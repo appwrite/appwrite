@@ -244,4 +244,40 @@ class BalancerTest extends TestCase
         $this->assertEquals('fra-2', $groupOptions[4]->getState('dataCenter'));
         $this->assertEquals('lon-1', $groupOptions[5]->getState('dataCenter'));
     }
+
+    public function testFilteredOptions(): void
+    {
+        $balancer = new Balancer(new First());
+
+        $balancer
+            ->addOption(new Option(['hostname' => 'worker-1', 'isOnline' => true, 'cpu' => 80]))
+            ->addOption(new Option(['hostname' => 'worker-2', 'isOnline' => false, 'cpu' => 20]))
+            ->addOption(new Option(['hostname' => 'worker-3', 'isOnline' => true, 'cpu' => 35]));
+
+        // Unfiltered, every option qualifies
+        $this->assertCount(3, $balancer->getFilteredOptions());
+
+        $balancer->addFilter(fn ($option) => $option->getState('isOnline') === true);
+
+        $filtered = $balancer->getFilteredOptions();
+
+        // All survivors, not just the one the algorithm would pick
+        $this->assertCount(2, $filtered);
+        $this->assertEquals('worker-1', $filtered[0]->getState('hostname'));
+        $this->assertEquals('worker-3', $filtered[1]->getState('hostname'));
+        $this->assertEquals('worker-1', ($balancer->run() ?? new Option([]))->getState('hostname'));
+
+        $balancer->addFilter(fn ($option) => $option->getState('cpu') < 50);
+
+        $filtered = $balancer->getFilteredOptions();
+
+        // Filters compose, and the keys are reindexed from zero
+        $this->assertCount(1, $filtered);
+        $this->assertEquals('worker-3', $filtered[0]->getState('hostname'));
+
+        $balancer->addFilter(fn ($option) => false);
+
+        $this->assertSame([], $balancer->getFilteredOptions());
+        $this->assertNull($balancer->run());
+    }
 }
