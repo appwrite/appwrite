@@ -193,6 +193,9 @@ abstract class OAuth2
         \curl_setopt($ch, CURLOPT_HEADER, 0);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_USERAGENT, 'Appwrite OAuth2');
+        // Defense in depth: restrict curl to http(s) even though provider URLs are hardcoded per adapter.
+        \curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+        \curl_setopt($ch, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
 
         if (!empty($payload)) {
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);

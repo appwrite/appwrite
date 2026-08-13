@@ -144,6 +144,10 @@ class Webhooks extends Action
             ]
         );
         \curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+        // The URL is validated at save time to be http(s) only; without these, a redirect
+        // response could still steer curl to a non-http(s) protocol (e.g. file://, gopher://).
+        \curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+        \curl_setopt($ch, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
 
         if (!$webhook->getAttribute('security', true)) {
             \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
