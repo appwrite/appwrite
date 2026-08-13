@@ -210,6 +210,18 @@ trait SitesBase
         return $deployment;
     }
 
+    protected function listLogs(string $siteId, array $queries = []): mixed
+    {
+        $logs = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries
+        ]);
+
+        return $logs;
+    }
+
     protected function listSites(mixed $params = []): mixed
     {
         $sites = $this->client->call(Client::METHOD_GET, '/sites', array_merge([
