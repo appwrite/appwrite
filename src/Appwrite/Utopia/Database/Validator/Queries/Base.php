@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\IndexedQueries;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Filter;
 use Utopia\Database\Validator\Query\Limit;
@@ -13,7 +13,7 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Order;
 use Utopia\Database\Validator\Query\Select;
 
-class Base extends Queries
+class Base extends IndexedQueries
 {
     /**
      * Expression constructor
@@ -103,7 +103,18 @@ class Base extends Queries
             $validators[] = new Select($allAttributes);
         }
 
-        parent::__construct($validators);
+        // Search queries need a fulltext index on the attribute. Database::find()
+        // enforces that too, but throws a QueryException the endpoints do not catch,
+        // so an unsupported search surfaces as a 500 instead of a validation error.
+        $indexes = [];
+        foreach ($collection['indexes'] ?? [] as $index) {
+            $indexes[] = new Document([
+                'type' => $index['type'],
+                'attributes' => $index['attributes'],
+            ]);
+        }
+
+        parent::__construct($allAttributes, $indexes, $validators);
     }
 
     public function isSelectQueryAllowed(): bool
