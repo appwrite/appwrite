@@ -38,17 +38,9 @@ class Execution extends Model
                 'example' => [Role::any()->toString()],
                 'array' => true,
             ])
-            ->addRule('functionId', [
+            ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function ID.',
-                'required' => false,
-                'default' => '',
-                'example' => '5e5ea6g16897e',
-            ])
-            ->addRule('siteId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Site ID.',
-                'required' => false,
+                'description' => 'Function or site ID.',
                 'default' => '',
                 'example' => '5e5ea6g16897e',
             ])
@@ -167,17 +159,7 @@ class Execution extends Model
      */
     public function filter(Document $document): Document
     {
-        $resourceType = $document->getAttribute('resourceType', 'functions');
-        $resourceId = $document->getAttribute('resourceId', '');
-
-        if ($resourceType === 'sites') {
-            $document->setAttribute('siteId', $resourceId);
-        } else {
-            $document->setAttribute('functionId', $resourceId);
-        }
-
         $document->removeAttribute('resourceType');
-        $document->removeAttribute('resourceId');
 
         return $document;
     }

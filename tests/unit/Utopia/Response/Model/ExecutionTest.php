@@ -10,37 +10,21 @@ use Utopia\Database\Document;
 
 final class ExecutionTest extends TestCase
 {
-    public function testFunctionExecutionUsesFunctionId(): void
-    {
-        $execution = (new Execution())->filter(new Document([
-            'resourceType' => 'functions',
-            'resourceId' => 'function-id',
-        ]));
-
-        $this->assertSame('function-id', $execution->getAttribute('functionId'));
-        $this->assertFalse($execution->isSet('siteId'));
-        $this->assertFalse($execution->isSet('resourceType'));
-        $this->assertFalse($execution->isSet('resourceId'));
-    }
-
-    public function testSiteExecutionUsesSiteId(): void
+    public function testPreservesResourceId(): void
     {
         $execution = (new Execution())->filter(new Document([
             'resourceType' => 'sites',
             'resourceId' => 'site-id',
         ]));
 
-        $this->assertSame('site-id', $execution->getAttribute('siteId'));
-        $this->assertFalse($execution->isSet('functionId'));
+        $this->assertSame('site-id', $execution->getAttribute('resourceId'));
         $this->assertFalse($execution->isSet('resourceType'));
-        $this->assertFalse($execution->isSet('resourceId'));
     }
 
-    public function testResourceIdsAreOptional(): void
+    public function testResourceIdIsRequired(): void
     {
         $rules = (new Execution())->getRules();
 
-        $this->assertFalse($rules['functionId']['required']);
-        $this->assertFalse($rules['siteId']['required']);
+        $this->assertTrue($rules['resourceId']['required']);
     }
 }

@@ -10,6 +10,42 @@ use PHPUnit\Framework\TestCase;
 
 final class V27Test extends TestCase
 {
+    public function testRestoresLegacyExecutionFunctionId(): void
+    {
+        $filter = new V27();
+
+        $result = $filter->parse([
+            '$id' => 'execution',
+            'resourceId' => 'function',
+        ], Response::MODEL_EXECUTION);
+
+        $this->assertSame([
+            '$id' => 'execution',
+            'functionId' => 'function',
+        ], $result);
+    }
+
+    public function testRestoresLegacyExecutionListFunctionId(): void
+    {
+        $filter = new V27();
+
+        $result = $filter->parse([
+            'total' => 1,
+            'executions' => [[
+                '$id' => 'execution',
+                'resourceId' => 'function',
+            ]],
+        ], Response::MODEL_EXECUTION_LIST);
+
+        $this->assertSame([
+            'total' => 1,
+            'executions' => [[
+                '$id' => 'execution',
+                'functionId' => 'function',
+            ]],
+        ], $result);
+    }
+
     public function testRestoresLegacyMigrationResourceShape(): void
     {
         $filter = new V27();
