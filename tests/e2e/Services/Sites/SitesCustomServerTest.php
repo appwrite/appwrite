@@ -1619,6 +1619,92 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testDeploymentEndpointsRequireMatchingResourceType(): void
+    {
+        $sharedId = ID::unique();
+
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Resource type site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => $sharedId,
+        ]);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'functionId' => $sharedId,
+            'name' => 'Resource type function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => ['any'],
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false',
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        /**
+         * Test for FAILURE — a function that shares the site custom ID must not
+         * read or mutate the site deployment (resourceType mismatch).
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $sharedId . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $sharedId . '/deployment', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'deploymentId' => $deploymentId,
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $sharedId . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS — the owning site path still works.
+         */
+        $response = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($deploymentId, $response['body']['$id']);
+
+        $this->client->call(Client::METHOD_DELETE, '/functions/' . $sharedId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
     public function testCreateDuplicateDeploymentRequiresOwnership(): void
     {
         $siteId = $this->setupSite([
@@ -2260,6 +2346,46 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('installCommand', $framework['adapters'][0]);
         $this->assertArrayHasKey('buildCommand', $framework['adapters'][0]);
         $this->assertArrayHasKey('outputDirectory', $framework['adapters'][0]);
+    }
+
+    public function testGetFrameworksHidesStartCommand(): void
+    {
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertGreaterThan(0, $frameworks['body']['total']);
+
+        $this->assertStringNotContainsString('startCommand', (string) json_encode($frameworks['body']));
+    }
+
+    public function testCreateSiteHidesStartCommand(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'SSR site without a start command',
+            'framework' => 'nextjs',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './.next',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+        ]);
+
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+
+        // An omitted start command stays empty; the runtime resolves its own default at boot.
+        $this->assertSame('', $site['body']['startCommand']);
+
+        $this->cleanupSite($siteId);
     }
 
     public function testSiteStatic(): void

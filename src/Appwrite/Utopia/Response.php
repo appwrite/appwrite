@@ -562,6 +562,10 @@ class Response extends SwooleResponse
                 }
 
                 foreach ($data[$key] as $index => $item) {
+                    if (\is_array($item) && !\is_array($rule['type']) && self::hasModel($rule['type'])) {
+                        $item = new Document($item);
+                    }
+
                     if ($item instanceof Document) {
                         $ruleType = null;
 

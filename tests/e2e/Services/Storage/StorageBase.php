@@ -741,7 +741,7 @@ trait StorageBase
             ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertEquals(1, count($files['body']['files']));
+        $this->assertSame(1, count($files['body']['files']));
 
         $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
@@ -752,7 +752,7 @@ trait StorageBase
             ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertEquals(1, count($files['body']['files']));
+        $this->assertSame(1, count($files['body']['files']));
 
         $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
@@ -763,7 +763,7 @@ trait StorageBase
             ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertEquals(1, count($files['body']['files']));
+        $this->assertSame(1, count($files['body']['files']));
 
         $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
@@ -774,7 +774,7 @@ trait StorageBase
             ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertEquals(0, count($files['body']['files']));
+        $this->assertSame(0, count($files['body']['files']));
 
         /**
          * Test for FAILURE unknown Bucket
@@ -864,9 +864,9 @@ trait StorageBase
         $image->readImageBlob($file3['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
 
-        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
+        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
 
         $file4 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -887,9 +887,9 @@ trait StorageBase
         $image->readImageBlob($file4['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
 
-        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-        $this->assertEquals('JPEG', $image->getImageFormat());
+        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
+        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
+        $this->assertSame('JPEG', $image->getImageFormat());
 
         $file5 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
@@ -974,9 +974,9 @@ trait StorageBase
         $image->readImageBlob($file7['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
 
-        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
+        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
 
         /**
          * Test large files decompress successfully
@@ -1131,7 +1131,7 @@ trait StorageBase
         $imageAfter = new \Imagick();
         $imageAfter->readImageBlob($file3['body']);
 
-        $this->assertNotEquals($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+        $this->assertNotSame($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
     }
 
     public function testFilePreviewCacheControlOnCacheHit(): void
@@ -1874,7 +1874,7 @@ trait StorageBase
             ]));
 
             $this->assertEquals(200, $download['headers']['status-code']);
-            $this->assertEquals($totalSize, strlen($download['body']));
+            $this->assertSame($totalSize, strlen($download['body']));
             $this->assertEquals(hash_file('sha256', $source), hash('sha256', $download['body']));
         } finally {
             if (isset($bucketId)) {

@@ -1223,9 +1223,9 @@ trait TransactionsBase
             }
         }
 
-        $this->assertEquals(0, $oldCategoryCount);
-        $this->assertEquals(4, $updatedCategoryCount); // 4 existing docs updated
-        $this->assertEquals(3, $newCategoryCount); // 3 new docs
+        $this->assertSame(0, $oldCategoryCount);
+        $this->assertSame(4, $updatedCategoryCount); // 4 existing docs updated
+        $this->assertSame(3, $newCategoryCount); // 3 new docs
     }
 
     /**

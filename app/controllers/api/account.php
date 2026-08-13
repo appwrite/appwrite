@@ -3219,7 +3219,7 @@ Http::post('/v1/account/jwts')
         group: 'tokens',
         name: 'createJWT',
         description: '/docs/references/account/create-jwt.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -3232,11 +3232,16 @@ Http::post('/v1/account/jwts')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('abuse-key', 'url:{url},userId:{userId}')
+    ->inject('request')
     ->inject('response')
     ->inject('user')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (int $duration, Response $response, User $user, Store $store, ProofsToken $proofForToken) {
+    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken) {
+        if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
+            throw new Exception(Exception::USER_JWT_CREATION_DENIED);
+        }
+
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         if (!$sessionId) {

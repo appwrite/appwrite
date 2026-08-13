@@ -39,7 +39,7 @@ trait WebhooksBase
         $this->assertEquals('', $webhook['body']['authUsername']);
         $this->assertEquals('', $webhook['body']['authPassword']);
         $this->assertNotEmpty($webhook['body']['secret']);
-        $this->assertEquals(128, \strlen($webhook['body']['secret']));
+        $this->assertSame(128, \strlen($webhook['body']['secret']));
         $this->assertEquals(0, $webhook['body']['attempts']);
         $this->assertEquals('', $webhook['body']['logs']);
 
@@ -683,7 +683,7 @@ trait WebhooksBase
         $originalSecret = $webhook['body']['secret'];
 
         $this->assertNotEmpty($originalSecret);
-        $this->assertEquals(128, \strlen($originalSecret));
+        $this->assertSame(128, \strlen($originalSecret));
 
         // Update secret
         $updated = $this->updateWebhookSecret($webhookId);
@@ -691,7 +691,7 @@ trait WebhooksBase
         $this->assertEquals(200, $updated['headers']['status-code']);
         $this->assertEquals($webhookId, $updated['body']['$id']);
         $this->assertNotEmpty($updated['body']['secret']);
-        $this->assertEquals(128, \strlen($updated['body']['secret']));
+        $this->assertSame(128, \strlen($updated['body']['secret']));
         $this->assertNotEquals($originalSecret, $updated['body']['secret']);
 
         // Verify secret is not exposed via GET
@@ -726,7 +726,7 @@ trait WebhooksBase
         $webhookId = $webhook['body']['$id'];
         $originalSecret = $webhook['body']['secret'];
         $this->assertNotEmpty($originalSecret);
-        $this->assertEquals(128, \strlen($originalSecret));
+        $this->assertSame(128, \strlen($originalSecret));
 
         // Step 1: Trigger user creation with the original auto-generated secret
         $email1 = uniqid() . 'rotation1@localhost.test';
@@ -1908,7 +1908,7 @@ trait WebhooksBase
         $this->assertEquals('olduser', $webhook['body']['httpUser']);
         $this->assertEquals('oldpass', $webhook['body']['httpPass']);
         $this->assertNotEmpty($webhook['body']['signatureKey']);
-        $this->assertEquals(128, \strlen($webhook['body']['signatureKey']));
+        $this->assertSame(128, \strlen($webhook['body']['signatureKey']));
 
         // Cleanup
         $this->deleteWebhook($webhook['body']['$id']);
@@ -2108,7 +2108,7 @@ trait WebhooksBase
         $this->assertArrayNotHasKey('authPassword', $updated['body']);
 
         $this->assertNotEmpty($updated['body']['signatureKey']);
-        $this->assertEquals(128, \strlen($updated['body']['signatureKey']));
+        $this->assertSame(128, \strlen($updated['body']['signatureKey']));
 
         // Cleanup
         $this->deleteWebhook($webhookId);

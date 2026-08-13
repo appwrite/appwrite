@@ -2575,8 +2575,11 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        // Create API key on source project
-        $response = $this->client->call(Client::METHOD_POST, '/project/keys', $sourceHeaders, [
+        // Create API key on source project (key creation is denied for key-authorized requests)
+        $response = $this->client->call(Client::METHOD_POST, '/project/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'keyId' => ID::unique(),
             'name' => 'Test API Key',
             'scopes' => ['databases.read', 'databases.write'],
@@ -4926,7 +4929,7 @@ trait MigrationsBase
 
         $this->assertEquals(201, $user['headers']['status-code']);
         $userId = $user['body']['$id'];
-        $this->assertEquals(1, \count($user['body']['targets']));
+        $this->assertSame(1, \count($user['body']['targets']));
         $targetId = $user['body']['targets'][0]['$id'];
 
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
@@ -5050,7 +5053,7 @@ trait MigrationsBase
 
         $this->assertEquals(201, $user['headers']['status-code']);
         $userId = $user['body']['$id'];
-        $this->assertEquals(1, \count($user['body']['targets']));
+        $this->assertSame(1, \count($user['body']['targets']));
         $targetId = $user['body']['targets'][0]['$id'];
 
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
@@ -5433,7 +5436,7 @@ trait MigrationsBase
         $this->assertEquals($messageId, $response['body']['$id']);
         $this->assertEquals('scheduled', $response['body']['status']);
         $this->assertEquals('Migration Scheduled Email', $response['body']['data']['subject']);
-        $this->assertEquals(
+        $this->assertSame(
             (new \DateTime($futureDate))->getTimestamp(),
             (new \DateTime($response['body']['scheduledAt']))->getTimestamp(),
         );

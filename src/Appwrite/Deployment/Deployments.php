@@ -3,6 +3,7 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
@@ -506,7 +507,7 @@ readonly class Deployments
         $key = $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime');
         $runtime = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', [])[$key] ?? null;
         if ($runtime === null) {
-            throw new \Exception('Runtime "' . $key . '" is not supported');
+            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $key . '" is not supported');
         }
 
         return $runtime;

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables;
 
+use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Create as CollectionCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -10,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -64,7 +66,7 @@ class Create extends CollectionCreate
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('rowSecurity', false, new Boolean(true), 'Enables configuring permissions for individual rows. A user needs one of row or table level permissions to access a row. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is table enabled? When set to \'disabled\', users cannot access the table but Server SDKs with and API key can still read and write to the table. No data is lost when this is toggled.', true)
-            ->param('columns', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of column definitions to create. Each column should contain: key (string), type (string: string, integer, float, boolean, datetime, relationship), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
+            ->param('columns', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of column definitions to create. Each column should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
             ->param('indexes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of column keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -72,5 +74,10 @@ class Create extends CollectionCreate
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
+    }
+
+    public function action(string $databaseId, string $tableId, string $name, ?array $permissions, bool $rowSecurity, bool $enabled, array $columns, array $indexes, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    {
+        parent::action($databaseId, $tableId, $name, $permissions, $rowSecurity, $enabled, $columns, $indexes, $response, $dbForProject, $getDatabasesDB, $queueForEvents, $authorization);
     }
 }
