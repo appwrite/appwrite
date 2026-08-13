@@ -6,10 +6,16 @@
     "keywords": [
         "smtp",
         "mail",
-        "email"
+        "email",
+        "mime"
     ],
     "require": {
         "php": ">=8.3"
+    },
+    "suggest": {
+        "ext-fileinfo": "Detects the media type of an attachment added by path",
+        "ext-openssl": "Required for TLS, whether implicit or through STARTTLS",
+        "ext-swoole": "Required for the coroutine-native Transport\\Swoole"
     },
     "autoload": {
         "psr-4": {
@@ -22,7 +28,8 @@
         }
     },
     "scripts": {
-        "test": "phpunit --testsuite unit"
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e"
     },
     "config": {
         "optimize-autoloader": true,

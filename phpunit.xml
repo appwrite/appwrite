@@ -10,6 +10,9 @@
         <testsuite name="unit">
             <directory>tests/Unit</directory>
         </testsuite>
+        <testsuite name="e2e">
+            <directory>tests/E2E</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
