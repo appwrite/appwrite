@@ -335,6 +335,7 @@ class Exception extends \Exception
     /** Keys */
     public const string KEY_NOT_FOUND = 'key_not_found';
     public const string KEY_ALREADY_EXISTS = 'key_already_exists';
+    public const string KEY_CREATION_DENIED = 'key_creation_denied';
 
     /** Dev Keys */
     public const string DEV_KEY_GONE = 'dev_key_gone';

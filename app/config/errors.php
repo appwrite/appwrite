@@ -1216,6 +1216,11 @@ return [
         'description' => 'Key with the same ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
+    Exception::KEY_CREATION_DENIED => [
+        'name' => Exception::KEY_CREATION_DENIED,
+        'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
+        'code' => 403,
+    ],
     Exception::DEV_KEY_GONE => [
         'name' => Exception::DEV_KEY_GONE,
         'description' => 'Dev key creation is no longer available.',
