@@ -288,6 +288,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         framework,
         installCommand: defaults.installCommand,
         buildCommand: defaults.buildCommand,
+        startCommand: undefined,
         outputDirectory: defaults.outputDirectory,
         buildRuntime: defaults.buildRuntime ?? 'node-22',
         adapter: defaults.adapter ?? '',

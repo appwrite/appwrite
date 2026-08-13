@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -70,47 +64,40 @@ export function SiteRuntimeStartCommandCard({
   }
 
   return (
-    <Accordion
-      type="single"
-      collapsible
-      className="rounded-xl border border-border bg-card/50 overflow-hidden"
-    >
-      <AccordionItem value="advanced" className="border-none">
-        <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
-          <span className="text-[15px] font-semibold text-foreground">
-            {t('Advanced')}
-          </span>
-        </AccordionTrigger>
-        <AccordionContent className="p-0 border-t border-border">
-          <div className="px-6 py-4">
-            <p className="text-[13px] text-muted-foreground">
-              {t(
-                'Command used to start your SSR server after a successful deploy. Leave it empty to use the framework default.',
-              )}
-            </p>
-            <div className="space-y-2 mt-4">
-              <StartCommandLabel htmlFor="site-start-command" />
-              <Input
-                id="site-start-command"
-                value={startCommand}
-                onChange={(e) => setStartCommand(e.target.value)}
-                placeholder={t('Enter start command')}
-                className="h-9 max-w-md font-mono text-[13px]"
-              />
-            </div>
-          </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30">
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              disabled={!hasChanges || updateSiteMutation.isPending}
-              onClick={handleSave}
-            >
-              {t('Update')}
-            </Button>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Start command')}
+        </h3>
+        <p className="text-[13px] text-muted-foreground mt-2">
+          {t(
+            'Command used to start your SSR server after a successful deploy. Leave it empty to use the framework default.',
+          )}
+        </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="space-y-2">
+          <StartCommandLabel htmlFor="site-start-command" />
+          <Input
+            id="site-start-command"
+            value={startCommand}
+            onChange={(e) => setStartCommand(e.target.value)}
+            placeholder={t('Enter start command')}
+            className="h-9 max-w-md font-mono text-[13px]"
+          />
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || updateSiteMutation.isPending}
+          onClick={handleSave}
+        >
+          {t('Update')}
+        </Button>
+      </div>
+    </div>
   )
 }

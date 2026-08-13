@@ -8,7 +8,6 @@ import { SiteRuntimeImageCard } from './SiteRuntimeImageCard'
 import { SiteRuntimeTimeoutCard } from './SiteRuntimeTimeoutCard'
 import { SiteRuntimeLoggingCard } from './SiteRuntimeLoggingCard'
 import { SiteRuntimeSpecificationCard } from './SiteRuntimeSpecificationCard'
-import { SiteRuntimeStartCommandCard } from './SiteRuntimeStartCommandCard'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -80,20 +79,6 @@ export function View() {
           siteId={siteId}
           site={site}
           isCloud={isCloud}
-        />
-      ),
-    },
-    {
-      id: 'advanced',
-      search: {
-        title: 'Advanced',
-        keywords: ['start', 'command', 'entrypoint', 'ssr'],
-      },
-      node: (
-        <SiteRuntimeStartCommandCard
-          projectId={projectId}
-          siteId={siteId}
-          site={site}
         />
       ),
     },

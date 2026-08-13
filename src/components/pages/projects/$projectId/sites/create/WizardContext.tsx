@@ -50,6 +50,7 @@ export interface WizardFormData {
   buildRuntime: string | undefined
   installCommand: string
   buildCommand: string
+  startCommand: string
   outputDirectory: string
   fallbackFile: string
 
@@ -90,6 +91,7 @@ const defaultFormData: WizardFormData = {
   buildRuntime: undefined,
   installCommand: '',
   buildCommand: '',
+  startCommand: '',
   outputDirectory: '',
   fallbackFile: '',
   variables: [],

@@ -122,6 +122,7 @@ export function RepositoryConfigView({
   const [outputDirectory, setOutputDirectory] = useState(
     formData.outputDirectory || '',
   )
+  const [startCommand, setStartCommand] = useState(formData.startCommand || '')
   const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
@@ -299,6 +300,7 @@ export function RepositoryConfigView({
         buildRuntime: defaults.buildRuntime,
         installCommand: installCommand || undefined,
         buildCommand: buildCommand || undefined,
+        startCommand: startCommand || undefined,
         outputDirectory: outputDirectory || undefined,
         adapter: defaults.adapter || undefined,
         fallbackFile:
@@ -806,10 +808,12 @@ export function RepositoryConfigView({
         installCommand={installCommand}
         buildCommand={buildCommand}
         outputDirectory={outputDirectory}
+        startCommand={startCommand}
         fallbackFile={fallbackFile}
         onInstallCommandChange={setInstallCommand}
         onBuildCommandChange={setBuildCommand}
         onOutputDirectoryChange={setOutputDirectory}
+        onStartCommandChange={setStartCommand}
         onFallbackFileChange={setFallbackFile}
         frameworkKey={framework}
       />
