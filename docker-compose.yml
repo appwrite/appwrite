@@ -1537,7 +1537,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: ghcr.io/open-runtimes/orchestrator/deployments-service:1.0.2
+    image: ghcr.io/open-runtimes/orchestrator/sandbox-service:1.1.0
     restart: unless-stopped
     user: root
     networks:
@@ -1548,11 +1548,9 @@ services:
       - ORCHESTRATOR_BACKEND=docker
       - DOCKER_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator-sandboxes:8080
-      - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.0.2
+      - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.1.0
+      # Sandbox URLs are minted under this domain and served on DATA_PORT (8081).
       - SANDBOX_DOMAIN=sandboxes.test
-      # The API only creates image-based sandboxes, but the service disables
-      # its sandbox routes entirely when no pool is declared.
-      - SANDBOX_POOLS_JSON=[{"id":"default","image":"python:3.12-slim","port":3000,"maxIdleSeconds":900}]
 
   mariadb:
     image: mariadb:10.11
