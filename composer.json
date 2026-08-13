@@ -84,7 +84,7 @@
         "utopia-php/validators": "^0.4",
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.8.*",
-        "utopia-php/lock": "0.2.*",
+        "utopia-php/lock": "0.3.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.0",
         "utopia-php/migration": "^2.0.0",
