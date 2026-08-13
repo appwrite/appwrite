@@ -81,10 +81,7 @@ class XList extends Base
         });
 
         $total = $includeTotal ? \count($templates) : 0;
-        $templates = \array_map(
-            fn (array $template) => new Document($template),
-            \array_slice($templates, $offset, $limit)
-        );
+        $templates = \array_slice($templates, $offset, $limit);
         $response->dynamic(new Document([
             'templates' => $templates,
             'total' => $total,

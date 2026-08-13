@@ -562,6 +562,12 @@ class Response extends SwooleResponse
                 }
 
                 foreach ($data[$key] as $index => $item) {
+                    // Config rows arrive as plain arrays and would ship every key they carry.
+                    // Unions are skipped: only the branch below can pick their model per item.
+                    if (\is_array($item) && !\is_array($rule['type']) && self::hasModel($rule['type'])) {
+                        $item = new Document($item);
+                    }
+
                     if ($item instanceof Document) {
                         $ruleType = null;
 
