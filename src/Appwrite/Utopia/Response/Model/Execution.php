@@ -38,29 +38,36 @@ class Execution extends Model
                 'example' => [Role::any()->toString()],
                 'array' => true,
             ])
-            // TODO: Sites listLogs will not have this, and will need siteId instead
             ->addRule('functionId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function ID.',
+                'required' => false,
+                'default' => '',
+                'example' => '5e5ea6g16897e',
+            ])
+            ->addRule('siteId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Site ID.',
+                'required' => false,
                 'default' => '',
                 'example' => '5e5ea6g16897e',
             ])
             ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function\'s deployment ID used to create the execution.',
+                'description' => 'Deployment ID used to create the execution.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('trigger', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'The trigger that caused the function to execute. Possible values can be: `http`, `schedule`, or `event`.',
+                'description' => 'The trigger that caused the resource to execute. Possible values can be: `http`, `schedule`, or `event`.',
                 'default' => '',
                 'example' => 'http',
                 'enum' => ['http', 'schedule', 'event'],
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, `failed`, or `scheduled`.',
+                'description' => 'The status of the resource execution. Possible values can be: `waiting`, `processing`, `completed`, `failed`, or `scheduled`.',
                 'default' => '',
                 'example' => 'processing',
                 'enum' => ['waiting', 'processing', 'completed', 'failed', 'scheduled'],
@@ -104,14 +111,14 @@ class Execution extends Model
             ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function logs. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'description' => 'Resource logs. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
                 'sensitive' => true,
             ])
             ->addRule('errors', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function errors. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'description' => 'Resource errors. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
                 'sensitive' => true,
@@ -160,9 +167,18 @@ class Execution extends Model
      */
     public function filter(Document $document): Document
     {
+        $resourceType = $document->getAttribute('resourceType', 'functions');
+        $resourceId = $document->getAttribute('resourceId', '');
+
+        if ($resourceType === 'sites') {
+            $document->setAttribute('siteId', $resourceId);
+        } else {
+            $document->setAttribute('functionId', $resourceId);
+        }
+
         $document->removeAttribute('resourceType');
-        $document->setAttribute('functionId', $document->getAttribute('resourceId', ''));
         $document->removeAttribute('resourceId');
+
         return $document;
     }
 }
