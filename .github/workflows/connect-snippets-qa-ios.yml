@@ -19,7 +19,13 @@ jobs:
   qa:
     name: ${{ matrix.id }}
     # Stays on GitHub-hosted macOS: RunsOn (the AWS runner provider used by
-    # the other snippet QA workflows) only offers Linux and Windows runners.
+    # the other snippet QA workflows) cannot offer macOS - Apple's license
+    # forces a 24h minimum allocation on EC2 Mac dedicated hosts, which is
+    # incompatible with per-job runners (https://runs-on.com/runners/macos/).
+    # Note: this repo is private, so macOS minutes bill at 10x - if jobs die
+    # in seconds with "not started because recent account payments have
+    # failed or your spending limit needs to be increased", that is the org's
+    # GitHub billing, not this workflow.
     runs-on: macos-15
     timeout-minutes: 60
     strategy:
@@ -45,7 +51,16 @@ jobs:
             config_file: .env
             create: npx -y create-expo-app@latest "$APP_DIR" --template blank-typescript --no-install
             configure: jq --arg id "$APP_ID" '.expo.ios.bundleIdentifier = $id' app.json > app.json.tmp && mv app.json.tmp app.json
-            install: npm install && npm install react-native-appwrite
+            # react-native-appwrite hard-pins expo-file-system 18.*.*, which
+            # conflicts with the Expo SDK 54 app's 19.x and mixes two versions
+            # of the native module (crashed Android at launch; the iOS pods
+            # have the same skew). Override it to the app's own version until
+            # appwrite/sdk-for-react-native#114 ships.
+            install: >-
+              npm install && npm install react-native-appwrite &&
+              npx expo install expo-file-system &&
+              npm pkg set 'overrides.expo-file-system=$expo-file-system' &&
+              npm install
             build: npx expo prebuild --platform ios --no-install && pod install --project-directory=ios && xcodebuild -workspace ios/*.xcworkspace -scheme "$(xcodebuild -workspace ios/*.xcworkspace -list -json | jq -r '.workspace.schemes[0]')" -configuration Release -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
             app_search: build/Build/Products/Release-iphonesimulator
 
@@ -121,6 +136,11 @@ jobs:
           install: false
 
       - name: Install tooling via mise (node, maestro, java)
+        env:
+          # mise pulls maestro and the JDK from GitHub releases; authenticated
+          # requests get much friendlier rate limits than the anonymous
+          # per-IP bucket (learned the hard way on the Android workflow).
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           mise trust
           mise install
@@ -224,6 +244,18 @@ jobs:
 
       - name: Assert the endpoint is embedded in the app bundle
         run: |
+          # Tauri embeds the frontend assets brotli-compressed inside the
+          # Rust binary, so grepping the bundle cannot see them; check the
+          # Vite build output that gets embedded instead (same fix as the
+          # Android workflow).
+          if [ "${{ matrix.id }}" = "tauri" ]; then
+            if ! grep -rqF "$CODE_SNIPPET_QA_ENDPOINT" "$APP_DIR/dist"; then
+              echo "::error::$CODE_SNIPPET_QA_ENDPOINT is not present in the Vite build output - the config never reached the build."
+              exit 1
+            fi
+            echo "Endpoint found in the Vite build output."
+            exit 0
+          fi
           if ! grep -raqF "$CODE_SNIPPET_QA_ENDPOINT" "$APP_PATH"; then
             echo "::error::$CODE_SNIPPET_QA_ENDPOINT is not present in $APP_PATH - the config never reached the build."
             exit 1
@@ -276,9 +308,13 @@ jobs:
             cp -R "$HOME/.maestro/tests/." artifacts/maestro-default-output/ || true
           fi
           if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
+            # target/ and gen/ are Tauri's Rust build output and generated
+            # Xcode project - without them the Android tauri artifact was
+            # ~2 GB and took longer to upload than the test took to run.
             zip -qr artifacts/app-source.zip "$APP_DIR" \
               -x "*/node_modules/*" "*/.git/*" "*/build/*" "*/Pods/*" \
-              "*/.expo/*" "*/DerivedData/*" "*.xcodeproj/*" || true
+              "*/.expo/*" "*/DerivedData/*" "*.xcodeproj/*" \
+              "*/target/*" "*/gen/*" || true
           fi
 
       - name: Upload Maestro logs and screenshots
