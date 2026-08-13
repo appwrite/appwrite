@@ -344,6 +344,15 @@ Http::post('/v1/account')
             }
         }
 
+        // Makes sure this email is not already used in another identity
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$email]),
+        ]);
+        if (!$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
+        }
+
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $email, $name, null);
             if (!$personalDataValidator->isValid($password)) {
@@ -1631,34 +1640,49 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failureRedirect(Exception::USER_MISSING_ID);
         }
 
-        $providerEmail = '';
-        try {
-            $providerEmail = $oauth2->getUserEmail($accessToken);
-            if (\strlen($providerEmail) > 320) {
-                $providerEmail = '';
+        $name = '';
+        $nameOAuth = $oauth2->getUserName($accessToken);
+        $userParam = $request->getParam('user');
+        if (!empty($nameOAuth)) {
+            $name = $nameOAuth;
+        } elseif ($userParam !== null) {
+            $userDecoded = \json_decode($userParam, true);
+            if (isset($userDecoded['name']['firstName']) && isset($userDecoded['name']['lastName'])) {
+                $name = $userDecoded['name']['firstName'] . ' ' . $userDecoded['name']['lastName'];
             }
-        } catch (\Throwable) {
-            // Provider profile data is optional and must not prevent sign-in.
         }
+        $providerEmail = $oauth2->getUserEmail($accessToken);
+        $email = $providerEmail;
 
-        $identity = $dbForProject->findOne('identities', [
-            Query::equal('provider', [$provider]),
-            Query::equal('providerUid', [$oauth2ID]),
-        ]);
-
-        $identityUserId = $identity->getAttribute('userId', '');
-        if ($identity->isEmpty()) {
-            // Sessions predate identities, so retain provider ID lookup for legacy users.
-            $providerSession = $dbForProject->findOne('sessions', [
+        $identityByProvider = new Document();
+        if (empty($providerEmail)) {
+            $identityByProvider = $dbForProject->findOne('identities', [
                 Query::equal('provider', [$provider]),
                 Query::equal('providerUid', [$oauth2ID]),
             ]);
-            $identityUserId = $providerSession->getAttribute('userId', '');
         }
 
         // Check if this identity is connected to a different user
         if (!$user->isEmpty()) {
-            if (!empty($identityUserId) && $identityUserId !== $user->getId()) {
+            $userId = $user->getId();
+
+            if (!empty($providerEmail)) {
+                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$providerEmail]),
+                    Query::notEqual('userInternalId', $user->getSequence()),
+                ]);
+                if (!$identityWithMatchingEmail->isEmpty()) {
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                }
+
+                $userWithMatchingEmail = $dbForProject->find('users', [
+                    Query::equal('email', [$email]),
+                    Query::notEqual('$id', $userId),
+                ]);
+                if (!empty($userWithMatchingEmail)) {
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                }
+            } elseif (!$identityByProvider->isEmpty() && $identityByProvider->getAttribute('userId') !== $userId) {
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
 
@@ -1675,36 +1699,95 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        if ($user->isEmpty() && !empty($identityUserId)) {
-            $identityUser = $dbForProject->getDocument('users', $identityUserId);
-            if ($identityUser->isEmpty()) {
-                $failureRedirect(Exception::USER_NOT_FOUND);
+        if ($user->isEmpty()) {
+            $session = $dbForProject->findOne('sessions', [ // Get user by provider id
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
+            ]);
+            if (!$session->isEmpty()) {
+                $user->setAttributes($dbForProject->getDocument('users', $session->getAttribute('userId'))->getArrayCopy());
             }
-
-            $user->setAttributes($identityUser->getArrayCopy());
         }
 
         $createdUserId = '';
-        $createdTargetId = '';
-        $cleanupCreatedUser = function (string $userId, string $targetId) use ($authorization, $dbForProject): void {
-            if (empty($userId)) {
-                return;
+        if ($user->isEmpty() && empty($providerEmail)) {
+            if (!$identityByProvider->isEmpty()) {
+                $identityUser = $dbForProject->getDocument('users', $identityByProvider->getAttribute('userId'));
+                if ($identityUser->isEmpty()) {
+                    $failureRedirect(Exception::USER_NOT_FOUND);
+                }
+
+                $user->setAttributes($identityUser->getArrayCopy());
+            } else {
+                $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
+
+                if ($limit !== 0) {
+                    $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+
+                    if ($total >= $limit) {
+                        $failureRedirect(Exception::USER_COUNT_EXCEEDED);
+                    }
+                }
+
+                try {
+                    $userId = ID::unique();
+                    $user->setAttributes([
+                        '$id' => $userId,
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::user($userId)),
+                            Permission::delete(Role::user($userId)),
+                        ],
+                        'email' => null,
+                        'emailVerification' => false,
+                        'status' => true,
+                        'password' => null,
+                        'hash' => $proofForPassword->getHash()->getName(),
+                        'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                        'passwordUpdate' => null,
+                        'registration' => DateTime::now(),
+                        'reset' => false,
+                        'name' => empty($name) ? null : $name,
+                        'mfa' => false,
+                        'prefs' => new \stdClass(),
+                        'sessions' => null,
+                        'tokens' => null,
+                        'memberships' => null,
+                        'authenticators' => null,
+                        'search' => implode(' ', [$userId, $name]),
+                        'accessedAt' => DateTime::now(),
+                        'emailCanonical' => null,
+                        'emailIsCanonical' => null,
+                        'emailIsCorporate' => null,
+                        'emailIsDisposable' => null,
+                        'emailIsFree' => null,
+                    ]);
+
+                    $user->removeAttribute('$sequence');
+                    $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+                    $createdUserId = $user->getId();
+                } catch (Duplicate) {
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                }
+            }
+        }
+
+        if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
+            if (empty($email)) {
+                $failureRedirect(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
             }
 
-            $authorization->skip(fn () => $dbForProject->deleteDocument('users', $userId));
+            $isVerified = $oauth2->isEmailVerified($accessToken);
 
-            if (!empty($targetId)) {
-                $authorization->skip(fn () => $dbForProject->deleteDocument('targets', $targetId));
+            $identity = $dbForProject->findOne('identities', [
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
+            ]);
+
+            if (!$identity->isEmpty()) {
+                $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
             }
 
-            $authorization->removeRole(Role::user($userId)->toString());
-        };
-
-        if ($user->isEmpty()) { // No user logged in or with this OAuth2 identity, create a new user
-            $name = '';
-            $email = '';
-            $emails = [];
-            $isVerified = false;
             $emailMetadata = [
                 'emailCanonical' => null,
                 'emailIsCanonical' => null,
@@ -1712,27 +1795,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'emailIsDisposable' => null,
                 'emailIsFree' => null,
             ];
-
-            // OAuth profile fields are optional. They are only used as defaults for a new user.
-            try {
-                $name = $oauth2->getUserName($accessToken);
-            } catch (\Throwable) {
-                // The provider ID is the identity; a missing name must not prevent sign-in.
-            }
-
-            if (empty($name)) {
-                $userParam = $request->getParam('user');
-                if ($userParam !== null) {
-                    $userDecoded = \json_decode($userParam, true);
-                    if (isset($userDecoded['name']['firstName']) && isset($userDecoded['name']['lastName'])) {
-                        $name = $userDecoded['name']['firstName'] . ' ' . $userDecoded['name']['lastName'];
-                    }
-                }
-            }
-
-            if (!empty($providerEmail)) {
+            $emails = [$email];
+            if ($user->isEmpty()) {
                 try {
-                    $isVerified = $oauth2->isEmailVerified($accessToken);
                     $parsedEmail = new Email($providerEmail);
                     $canonical = $parsedEmail->getCanonical();
                     $canonicalize = (
@@ -1751,96 +1816,100 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailIsFree' => $parsedEmail->isFree(),
                     ];
                 } catch (\Throwable) {
-                    // Invalid provider email is equivalent to no account email.
-                    $email = '';
-                    $isVerified = false;
+                    $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
                 }
             }
 
-            if (!empty($email)) {
-                $emailAllowed = true;
-                if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
-                    $emailAllowed = false;
-                }
-                if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
-                    $emailAllowed = false;
-                }
-                if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
-                    $emailAllowed = false;
-                }
-                if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
-                    $emailAllowed = false;
-                }
-
+            // If user is not found, check if there is a user with the same email
+            if ($user->isEmpty()) {
                 $userWithEmail = $dbForProject->findOne('users', [
                     Query::equal('email', $emails),
                 ]);
-                $targetWithEmail = $dbForProject->findOne('targets', [
-                    Query::equal('identifier', $emails),
-                ]);
-
-                if (!$emailAllowed || !$userWithEmail->isEmpty() || !$targetWithEmail->isEmpty()) {
-                    $email = '';
-                    $isVerified = false;
-                    $emailMetadata = [
-                        'emailCanonical' => null,
-                        'emailIsCanonical' => null,
-                        'emailIsCorporate' => null,
-                        'emailIsDisposable' => null,
-                        'emailIsFree' => null,
-                    ];
+                if (!$userWithEmail->isEmpty()) {
+                    if (!$isVerified) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
+                    $user->setAttributes($userWithEmail->getArrayCopy());
                 }
             }
 
-            $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
-
-            if ($limit !== 0) {
-                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
-
-                if ($total >= $limit) {
-                    $failureRedirect(Exception::USER_COUNT_EXCEEDED);
+            // If user is not found, check if there is an identity with the same email
+            if ($user->isEmpty()) {
+                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$providerEmail]),
+                ]);
+                if (!$identityWithMatchingEmail->isEmpty()) {
+                    if (!$isVerified) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
+                    $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
                 }
             }
 
-            try {
-                $userId = ID::unique();
-                $user->setAttributes([
-                    '$id' => $userId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::user($userId)),
-                        Permission::delete(Role::user($userId)),
-                    ],
-                    'email' => empty($email) ? null : $email,
-                    'emailVerification' => !empty($email) && $isVerified,
-                    'status' => true,
-                    'password' => null,
-                    'hash' => $proofForPassword->getHash()->getName(),
-                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                    'passwordUpdate' => null,
-                    'registration' => DateTime::now(),
-                    'reset' => false,
-                    'name' => empty($name) ? null : $name,
-                    'mfa' => false,
-                    'prefs' => new \stdClass(),
-                    'sessions' => null,
-                    'tokens' => null,
-                    'memberships' => null,
-                    'authenticators' => null,
-                    'search' => implode(' ', [$userId, $email, $name]),
-                    'accessedAt' => DateTime::now(),
-                    'emailCanonical' => $emailMetadata['emailCanonical'],
-                    'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
-                    'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
-                    'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
-                    'emailIsFree' => $emailMetadata['emailIsFree'],
-                ]);
+            if ($user->isEmpty()) { // Last option -> create the user
+                $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
-                $user->removeAttribute('$sequence');
-                $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
-                $createdUserId = $userDoc->getId();
-                if (!empty($email)) {
-                    $target = $dbForProject->createDocument('targets', new Document([
+                if ($limit !== 0) {
+                    $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+
+                    if ($total >= $limit) {
+                        $failureRedirect(Exception::USER_COUNT_EXCEEDED);
+                    }
+                }
+
+                if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+                    $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
+                }
+
+                if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+                    $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
+                }
+
+                if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+                    $failureRedirect(Exception::USER_EMAIL_FREE);
+                }
+
+                if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+                    $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
+                }
+
+                try {
+                    $userId = ID::unique();
+                    $user->setAttributes([
+                        '$id' => $userId,
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::user($userId)),
+                            Permission::delete(Role::user($userId)),
+                        ],
+                        'email' => $email,
+                        'emailVerification' => $isVerified, // Trust the provider's userinfo claim, not the mere fact an email was returned
+                        'status' => true,
+                        'password' => null,
+                        'hash' => $proofForPassword->getHash()->getName(),
+                        'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                        'passwordUpdate' => null,
+                        'registration' => DateTime::now(),
+                        'reset' => false,
+                        'name' => $name,
+                        'mfa' => false,
+                        'prefs' => new \stdClass(),
+                        'sessions' => null,
+                        'tokens' => null,
+                        'memberships' => null,
+                        'authenticators' => null,
+                        'search' => implode(' ', [$userId, $email, $name]),
+                        'accessedAt' => DateTime::now(),
+                        'emailCanonical' => $emailMetadata['emailCanonical'],
+                        'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
+                        'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
+                        'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
+                        'emailIsFree' => $emailMetadata['emailIsFree'],
+                    ]);
+
+                    $user->removeAttribute('$sequence');
+                    $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+                    $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
                             Permission::update(Role::user($user->getId())),
@@ -1851,11 +1920,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
-                    $createdTargetId = $target->getId();
+                } catch (Duplicate) {
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
-            } catch (Duplicate) {
-                $cleanupCreatedUser($createdUserId, $createdTargetId);
-                $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         }
 
@@ -1866,49 +1933,137 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        $identityCreated = false;
-        if ($identity->isEmpty()) {
-            $userId = $user->getId();
+        if (empty($user->getAttribute('email')) && !empty($providerEmail)) {
+            $emailMetadata = [
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
+            ];
+
+            $isVerified = $oauth2->isEmailVerified($accessToken);
 
             try {
-                $identity = $dbForProject->createDocument('identities', new Document([
-                    '$id' => ID::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::user($userId)),
-                        Permission::delete(Role::user($userId)),
-                    ],
-                    'userInternalId' => $user->getSequence(),
-                    'userId' => $userId,
-                    'provider' => $provider,
-                    'providerUid' => $oauth2ID,
-                    'providerEmail' => $providerEmail,
-                    'providerAccessToken' => $accessToken,
-                    'providerRefreshToken' => $refreshToken,
-                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-                ]));
-                $identityCreated = true;
-            } catch (Duplicate) {
-                $reconcileUser = !empty($createdUserId);
-                $cleanupCreatedUser($createdUserId, $createdTargetId);
-                $createdUserId = '';
-                $createdTargetId = '';
+                $parsedEmail = new Email($providerEmail);
+                $canonical = $parsedEmail->getCanonical();
+                $canonicalize = (
+                    $project->getId() === 'console'
+                    || ($plan['supportsCanonicalEmailValidation'] ?? false)
+                )
+                    && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
+                    && $isVerified;
+                $email = $canonicalize ? $canonical : $providerEmail;
+                $emails = array_values(array_unique([$email, $providerEmail]));
+                $emailMetadata = [
+                    'emailCanonical' => $canonical,
+                    'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
+                    'emailIsCorporate' => $parsedEmail->isCorporate(),
+                    'emailIsDisposable' => $parsedEmail->isDisposable(),
+                    'emailIsFree' => $parsedEmail->isFree(),
+                ];
+            } catch (\Throwable) {
+                $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
+            }
+
+            $userWithMatchingEmail = $dbForProject->find('users', [
+                Query::equal('email', $emails),
+                Query::notEqual('$id', $user->getId()),
+            ]);
+            if (!empty($userWithMatchingEmail)) {
+                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+                $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+                $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+                $failureRedirect(Exception::USER_EMAIL_FREE);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+                $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
+            }
+
+            $user->setAttribute('email', $email);
+            // Never downgrade an already-verified user; only ever promote to verified
+            $user->setAttribute('emailVerification', $user->getAttribute('emailVerification', false) || $isVerified);
+            $user->setAttribute('emailCanonical', $emailMetadata['emailCanonical']);
+            $user->setAttribute('emailIsCanonical', $emailMetadata['emailIsCanonical']);
+            $user->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate']);
+            $user->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable']);
+            $user->setAttribute('emailIsFree', $emailMetadata['emailIsFree']);
+        }
+
+        $identity = $dbForProject->findOne('identities', [
+            Query::equal('userInternalId', [$user->getSequence()]),
+            Query::equal('provider', [$provider]),
+            Query::equal('providerUid', [$oauth2ID]),
+        ]);
+        if ($identity->isEmpty()) {
+            // Before creating the identity, check if the email is already associated with another user
+            $userId = $user->getId();
+
+            if (!empty($providerEmail)) {
+                $identitiesWithMatchingEmail = $dbForProject->find('identities', [
+                    Query::equal('providerEmail', [$providerEmail]),
+                    Query::notEqual('userInternalId', $user->getSequence()),
+                ]);
+                if (!empty($identitiesWithMatchingEmail)) {
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
+                }
+            }
+
+            $identity = new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
+                'userInternalId' => $user->getSequence(),
+                'userId' => $userId,
+                'provider' => $provider,
+                'providerUid' => $oauth2ID,
+                'providerEmail' => $providerEmail,
+                'providerAccessToken' => $accessToken,
+                'providerRefreshToken' => $refreshToken,
+                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
+            ]);
+
+            try {
+                $identity = $dbForProject->createDocument('identities', $identity);
+            } catch (Duplicate $error) {
+                if (!empty($providerEmail)) {
+                    throw $error;
+                }
+
+                $userCreated = !empty($createdUserId);
+                if ($userCreated) {
+                    $authorization->skip(fn () => $dbForProject->deleteDocument('users', $createdUserId));
+                    $authorization->removeRole(Role::user($createdUserId)->toString());
+                }
 
                 $identity = $dbForProject->findOne('identities', [
                     Query::equal('provider', [$provider]),
                     Query::equal('providerUid', [$oauth2ID]),
                 ]);
-
                 if ($identity->isEmpty()) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
 
-                $identityUserId = $identity->getAttribute('userId', '');
-                if (!$reconcileUser && $identityUserId !== $user->getId()) {
+                $identityUserId = $identity->getAttribute('userId');
+                if (!$userCreated && $identityUserId !== $user->getId()) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
 
-                if ($reconcileUser) {
+                if ($userCreated) {
                     $identityUser = $dbForProject->getDocument('users', $identityUserId);
                     if ($identityUser->isEmpty()) {
                         $failureRedirect(Exception::USER_NOT_FOUND);
@@ -1918,9 +2073,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $authorization->addRole(Role::user($user->getId())->toString());
                 }
             }
-        }
-
-        if (!$identityCreated) {
+        } else {
             $identity
                 ->setAttribute('providerAccessToken', $accessToken)
                 ->setAttribute('providerRefreshToken', $refreshToken)
@@ -1931,6 +2084,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'providerAccessTokenExpiry' => $identity->getAttribute('providerAccessTokenExpiry'),
             ]));
         }
+
+        if (empty($user->getAttribute('name'))) {
+            $user->setAttribute('name', $oauth2->getUserName($accessToken));
+        }
+
+        $user->setAttribute('status', true);
+
+        $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
@@ -2239,6 +2400,14 @@ Http::post('/v1/account/tokens/magic-url')
                 if ($total >= $limit) {
                     throw new Exception(Exception::USER_COUNT_EXCEEDED);
                 }
+            }
+
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if (!$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
@@ -2558,6 +2727,15 @@ Http::post('/v1/account/tokens/email')
                 if ($total >= $limit) {
                     throw new Exception(Exception::USER_COUNT_EXCEEDED);
                 }
+            }
+
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if (!$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
@@ -3406,6 +3584,16 @@ Http::patch('/v1/account/email')
         $oldEmail = $user->getAttribute('email');
 
         $email = \strtolower($email);
+
+        // Makes sure this email is not already used in another identity
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$email]),
+            Query::notEqual('userInternalId', $user->getSequence()),
+        ]);
+        if (!$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
+        }
 
         $emailMetadata = [
             'emailCanonical' => null,

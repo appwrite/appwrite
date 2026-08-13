@@ -75,6 +75,15 @@ class Update extends Action
         $email = \strtolower($email);
 
         if (\strlen($email) !== 0) {
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+                Query::notEqual('userInternalId', $user->getSequence()),
+            ]);
+            if (!$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            }
+
             $target = $dbForProject->findOne('targets', [
                 Query::equal('identifier', [$email]),
             ]);

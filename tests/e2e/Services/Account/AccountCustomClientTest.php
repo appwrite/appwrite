@@ -748,6 +748,42 @@ final class AccountCustomClientTest extends Scope
         return $response['cookies']['a_session_' . $projectId];
     }
 
+    protected function configureMockOAuth(string $appId): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => $appId,
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    protected function createMockOAuthSession(?string $session = null, bool $followRedirects = true): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        if ($session !== null) {
+            $headers['cookie'] = 'a_session_' . $projectId . '=' . $session;
+        }
+
+        return $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock', $headers, [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: $followRedirects);
+    }
+
     /**
      * Helper to delete any existing user with the given email.
      * Used to prevent parallel test conflicts when tests share
@@ -3094,19 +3130,8 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($response['body']['$id'], $userId);
-        $this->assertEmpty($response['body']['name']);
-        $this->assertEmpty($response['body']['email']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['identities']);
-        $this->assertEquals('useroauth@localhost.test', $response['body']['identities'][0]['providerEmail']);
+        $this->assertEquals('User Name', $response['body']['name']);
+        $this->assertEquals('useroauth@localhost.test', $response['body']['email']);
 
         // Since we only support one oauth user, let's also check updateSession here
 
@@ -3152,127 +3177,159 @@ final class AccountCustomClientTest extends Scope
 
     public function testOAuthWithoutProfileCreatesAndReusesUser(): void
     {
-        $provider = 'mock';
         $projectId = $this->getProject()['$id'];
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'provider' => $provider,
-            'appId' => 'without-profile',
-            'secret' => '123456',
-            'enabled' => true,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('success', $response['body']['result']);
-
+        $appId = 'without-profile-' . \bin2hex(\random_bytes(8));
         $sessionCookieKey = 'a_session_' . $projectId;
-        $session = $response['cookies'][$sessionCookieKey];
-        $response = $this->client->call(Client::METHOD_GET, '/account', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => $sessionCookieKey . '=' . $session,
-        ]);
+        $userId = '';
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEmpty($response['body']['email']);
-        $this->assertEmpty($response['body']['name']);
-        $this->assertFalse($response['body']['emailVerification']);
-        $userId = $response['body']['$id'];
+        try {
+            $this->configureMockOAuth($appId);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ]);
+            $response = $this->createMockOAuthSession();
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $session = $response['cookies'][$sessionCookieKey];
-        $response = $this->client->call(Client::METHOD_GET, '/account', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => $sessionCookieKey . '=' . $session,
-        ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('success', $response['body']['result']);
+            $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($userId, $response['body']['$id']);
+            $session = $response['cookies'][$sessionCookieKey];
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEmpty($response['body']['email']);
+            $this->assertEmpty($response['body']['name']);
+            $this->assertFalse($response['body']['emailVerification']);
+            $userId = $response['body']['$id'];
 
-        $this->assertEquals(204, $response['headers']['status-code']);
+            $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'provider' => $provider,
-            'appId' => '1',
-            'secret' => '123456',
-            'enabled' => true,
-        ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body']['identities']);
+            $this->assertEquals($appId, $response['body']['identities'][0]['providerUid']);
+            $this->assertEmpty($response['body']['identities'][0]['providerEmail']);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+            // Remove the provider session so the next login must resolve through the identity.
+            $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(204, $response['headers']['status-code']);
+
+            $response = $this->createMockOAuthSession();
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+
+            $session = $response['cookies'][$sessionCookieKey];
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($userId, $response['body']['$id']);
+        } finally {
+            if (!empty($userId)) {
+                $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            $this->configureMockOAuth('1');
+        }
+    }
+
+    public function testConvertAnonymousAccountOAuth2WithoutProfile(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $appId = 'without-profile-' . \bin2hex(\random_bytes(8));
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $session = $this->createAnonymousSession();
+        $userId = '';
+
+        try {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $userId = $response['body']['$id'];
+
+            $this->configureMockOAuth($appId);
+
+            $response = $this->createMockOAuthSession($session);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('success', $response['body']['result']);
+            $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+
+            $session = $response['cookies'][$sessionCookieKey];
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($userId, $response['body']['$id']);
+            $this->assertEmpty($response['body']['email']);
+            $this->assertEmpty($response['body']['name']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body']['identities']);
+            $this->assertEquals($appId, $response['body']['identities'][0]['providerUid']);
+            $this->assertEmpty($response['body']['identities'][0]['providerEmail']);
+        } finally {
+            if (!empty($userId)) {
+                $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            $this->configureMockOAuth('1');
+        }
     }
 
     public function testOAuthConcurrentIdentityClaimCreatesSingleUser(): void
     {
-        $provider = 'mock';
         $projectId = $this->getProject()['$id'];
         $raceId = \bin2hex(\random_bytes(8));
+        $appId = 'race-' . $raceId;
         $name = 'OAuth Race ' . $raceId;
-        $redirect = '';
 
         try {
-            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console',
-                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            ], [
-                'provider' => $provider,
-                'appId' => 'race-' . $raceId,
-                'secret' => '123456',
-                'enabled' => true,
-            ]);
+            $this->configureMockOAuth($appId);
 
-            $this->assertEquals(200, $response['headers']['status-code']);
-
-            $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-            ], [
-                'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-                'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-            ], followRedirects: false);
-
+            $response = $this->createMockOAuthSession(followRedirects: false);
             $this->assertEquals(301, $response['headers']['status-code']);
 
             $oauthClient = new Client();
@@ -3328,7 +3385,6 @@ final class AccountCustomClientTest extends Scope
                 foreach ($handles as $handle) {
                     \curl_multi_remove_handle($multi, $handle);
                 }
-                $handles = [];
                 \curl_multi_close($multi);
             }
 
@@ -3349,6 +3405,19 @@ final class AccountCustomClientTest extends Scope
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertCount(1, $response['body']['users']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/users/identities', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'queries' => [
+                    Query::equal('providerUid', [$appId])->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body']['identities']);
         } finally {
             $response = $this->client->call(Client::METHOD_GET, '/users', [
                 'content-type' => 'application/json',
@@ -3368,21 +3437,11 @@ final class AccountCustomClientTest extends Scope
                 ]);
             }
 
-            $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console',
-                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            ], [
-                'provider' => $provider,
-                'appId' => '1',
-                'secret' => '123456',
-                'enabled' => true,
-            ]);
+            $this->configureMockOAuth('1');
         }
     }
 
-    public function testOAuthUnverifiedEmailCreatesSeparateAccount(): void
+    public function testOAuthUnverifiedEmailCannotLinkToExistingAccount(): void
     {
         $provider = 'mock-unverified';
         $appId = '1';
@@ -3423,7 +3482,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // The provider email is only a profile default, so it must not link to the existing user.
+        // Attempt OAuth login with unverified email - should fail because existing user has same email
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -3433,68 +3492,18 @@ final class AccountCustomClientTest extends Scope
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('success', $response['body']['result']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('failure', $response['body']['result']);
 
-        $sessionCookieKey = 'a_session_' . $this->getProject()['$id'];
-        $session = $response['cookies'][$sessionCookieKey];
-        $response = $this->client->call(Client::METHOD_GET, '/account', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => $sessionCookieKey . '=' . $session,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEquals($existingUserId, $response['body']['$id']);
-        $this->assertEmpty($response['body']['email']);
-        $this->assertFalse($response['body']['emailVerification']);
-        $oauthUserId = $response['body']['$id'];
-
-        $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => $sessionCookieKey . '=' . $session,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['identities']);
-        $this->assertEquals($email, $response['body']['identities'][0]['providerEmail']);
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $existingUserId, [
+        // Clean up - delete the user
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $existingUserId, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+        ]));
 
         $this->assertEquals(204, $response['headers']['status-code']);
-
-        // providerEmail is informational and must not reserve an otherwise available user email.
-        $response = $this->client->call(Client::METHOD_POST, '/account', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => 'password',
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $emailUserId = $response['body']['$id'];
-
-        foreach ([$emailUserId, $oauthUserId] as $userId) {
-            $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]);
-
-            $this->assertEquals(204, $response['headers']['status-code']);
-        }
     }
 
     /**
@@ -3639,7 +3648,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($query['error'] ?? null);
     }
 
-    public function testOAuthVerifiedEmailCreatesSeparateAccount(): void
+    public function testOAuthVerifiedEmailCanLinkToExistingAccount(): void
     {
         $provider = 'mock';
         $appId = '1';
@@ -3678,7 +3687,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // A verified provider email is still only a profile default and must not link accounts.
+        // Attempt OAuth login with verified email - should succeed and link to existing account
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -3691,6 +3700,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
 
+        // Verify the OAuth identity was linked to the existing user
         $sessionCookieKey = 'a_session_' . $this->getProject()['$id'];
         $session = $response['cookies'][$sessionCookieKey];
 
@@ -3702,21 +3712,18 @@ final class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEquals($existingUserId, $response['body']['$id']);
-        $this->assertEmpty($response['body']['email']);
-        $this->assertFalse($response['body']['emailVerification']);
-        $oauthUserId = $response['body']['$id'];
+        $this->assertEquals($existingUserId, $response['body']['$id']);
+        $this->assertEquals($email, $response['body']['email']);
 
-        foreach ([$existingUserId, $oauthUserId] as $userId) {
-            $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]);
+        // Clean up - delete the user
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $existingUserId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]));
 
-            $this->assertEquals(204, $response['headers']['status-code']);
-        }
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testGetSessionByID(): void
