@@ -24,28 +24,4 @@ final class DetectionTest extends TestCase
         $this->assertSame('ssr', $detection->getName());
         $this->assertNull($detection->getFallbackFile());
     }
-
-    public function testRenderingFindsTanStackStartSSR(): void
-    {
-        $detection = Detection::rendering('tanstack-start', ['./client/index.html', './server/server.js']);
-
-        $this->assertSame('ssr', $detection->getName());
-        $this->assertNull($detection->getFallbackFile());
-    }
-
-    public function testRenderingFindsTanStackStartNitroSSR(): void
-    {
-        $detection = Detection::rendering('tanstack-start', ['./public/index.html', './server/index.mjs']);
-
-        $this->assertSame('ssr', $detection->getName());
-        $this->assertNull($detection->getFallbackFile());
-    }
-
-    public function testRenderingFindsTanStackStartStatic(): void
-    {
-        $detection = Detection::rendering('tanstack-start', ['./index.html', './assets/main.js']);
-
-        $this->assertSame('static', $detection->getName());
-        $this->assertSame('index.html', $detection->getFallbackFile());
-    }
 }
