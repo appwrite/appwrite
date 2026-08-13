@@ -562,6 +562,11 @@ class Response extends SwooleResponse
                 }
 
                 foreach ($data[$key] as $index => $item) {
+                    // A model-typed rule handed a raw array would otherwise ship every key it carries.
+                    if (\is_array($item) && (\is_array($rule['type']) || self::hasModel($rule['type']))) {
+                        $item = new Document($item);
+                    }
+
                     if ($item instanceof Document) {
                         $ruleType = null;
 
@@ -597,6 +602,10 @@ class Response extends SwooleResponse
                     }
                 }
             } else {
+                if (\is_array($data[$key]) && (\is_array($rule['type']) || self::hasModel($rule['type']))) {
+                    $data[$key] = new Document($data[$key]);
+                }
+
                 if ($data[$key] instanceof Document) {
                     $data[$key] = $this->output($data[$key], $rule['type']);
                 }

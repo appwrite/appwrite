@@ -188,6 +188,27 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('hidden', $single);
     }
 
+    public function testResponseModelListsOfArrays(): void
+    {
+        $output = $this->response->output(new Document([
+            'singles' => [
+                [
+                    'string' => 'lorem ipsum',
+                    'integer' => 123,
+                    'boolean' => true,
+                    'hidden' => 'secret'
+                ]
+            ],
+        ]), 'lists');
+
+        $this->assertCount(1, $output['singles']);
+
+        $single = $output['singles'][0];
+        $this->assertArrayHasKey('string', $single);
+        $this->assertArrayHasKey('required', $single);
+        $this->assertArrayNotHasKey('hidden', $single);
+    }
+
     public function testResponseModelNested(): void
     {
         $output = $this->response->output(new Document([
