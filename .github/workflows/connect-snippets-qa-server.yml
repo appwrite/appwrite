@@ -18,6 +18,11 @@ env:
   APPWRITE_ENDPOINT: ${{ vars.CODE_SNIPPET_QA_ENDPOINT }}
   APPWRITE_PROJECT_ID: ${{ vars.CODE_SNIPPET_QA_PROJECT_ID }}
   APPWRITE_API_KEY: ${{ secrets.CODE_SNIPPET_QA_API_KEY }}
+  # TODO: revert to plain "appwrite" once a PyPI release contains
+  # PolicyMfaFactors (appwrite/sdk-for-python#153). Cloud now returns an
+  # mfa-factors policy from GET /v1/project/policies that released Python
+  # SDKs (<= 22.2.0) cannot parse, so list_policies() crashes.
+  APPWRITE_PYTHON_SDK: git+https://github.com/appwrite/sdk-for-python@fix/policy-mfa-factors
 
 defaults:
   run:
@@ -26,10 +31,16 @@ defaults:
 jobs:
   qa:
     name: ${{ matrix.id }}
-    runs-on: ubuntu-latest
+    # AWS runner via RunsOn; profile defined in .github/runs-on.yml.
+    runs-on: runs-on=${{ github.run_id }}/runner=snippets-qa
     timeout-minutes: 30
     strategy:
       fail-fast: false
+      # RunsOn instances share a few NAT egress IPs, and launching all ~40
+      # lanes at once got the runners' downloads throttled per-IP (mise's
+      # bootstrap curl died with connection resets). 15 concurrent jobs is
+      # the scale the web QA workflow runs at without issues.
+      max-parallel: 15
       matrix:
         # Two sample shapes, two assertion tools:
         #   kind: http - the sample serves PATCH/GET /v1/policies; Hurl
@@ -155,14 +166,14 @@ jobs:
             kind: cli
             snippets: python/vanilla
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv
-            install: .venv/bin/pip install --quiet appwrite
+            install: .venv/bin/pip install --quiet "$APPWRITE_PYTHON_SDK"
             run: .venv/bin/python main.py
 
           - id: python-fastapi
             kind: http
             snippets: python/fastapi
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv
-            install: .venv/bin/pip install --quiet appwrite fastapi uvicorn
+            install: .venv/bin/pip install --quiet "$APPWRITE_PYTHON_SDK" fastapi uvicorn
             port: 8000
             start: .venv/bin/uvicorn main:app --port 8000
 
@@ -172,7 +183,7 @@ jobs:
             kind: http
             snippets: python/django
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv && .venv/bin/pip install --quiet django && .venv/bin/django-admin startproject config .
-            install: .venv/bin/pip install --quiet appwrite
+            install: .venv/bin/pip install --quiet "$APPWRITE_PYTHON_SDK"
             port: 8000
             start: .venv/bin/python manage.py runserver 8000
 
@@ -180,7 +191,7 @@ jobs:
             kind: http
             snippets: python/flask
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv
-            install: .venv/bin/pip install --quiet appwrite flask
+            install: .venv/bin/pip install --quiet "$APPWRITE_PYTHON_SDK" flask
             port: 5000
             start: .venv/bin/python app.py
 
@@ -406,10 +417,28 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }} # For Commander to install from GH
         run: |
           mise trust
-          mise install
-          if [ -n "${{ matrix.tools }}" ]; then
-            mise use ${{ matrix.tools }}
-          fi
+          # Install only this directory's assertion tools plus the lane's
+          # runtime - a bare `mise install` would also pull node, maestro and
+          # the JDK from the parent tests/connect-qa/mise.toml, which server
+          # lanes never use. On RunsOn all matrix jobs share a few NAT egress
+          # IPs, and the whole matrix downloading the JDK at once got
+          # throttled (http2 "refused stream"). The retry with backoff and
+          # jitter absorbs any throttling that still occurs.
+          install_tools() {
+            mise install hurl 'github:commander-cli/commander' || return 1
+            if [ -n "${{ matrix.tools }}" ]; then
+              mise use ${{ matrix.tools }} || return 1
+            fi
+          }
+          for attempt in 1 2 3 4; do
+            if install_tools; then
+              exit 0
+            fi
+            delay=$((attempt * 20 + RANDOM % 20))
+            echo "::warning::Tool install failed (attempt $attempt), retrying in ${delay}s"
+            sleep "$delay"
+          done
+          install_tools
 
       - name: Install Swift
         if: startsWith(matrix.id, 'swift')

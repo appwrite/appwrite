@@ -11,8 +11,11 @@ public final class AppwriteClient {
     if (instance == null) {
       synchronized (AppwriteClient.class) {
         if (instance == null) {
-          instance = new Client(context.getApplicationContext())
-              .setEndpoint(BuildConfig.APPWRITE_ENDPOINT)
+          String endpoint = BuildConfig.APPWRITE_ENDPOINT;
+          instance = new Client(
+                  context.getApplicationContext(),
+                  endpoint,
+                  endpoint.replaceFirst("http", "ws"))
               .setProject(BuildConfig.APPWRITE_PROJECT_ID);
         }
       }
