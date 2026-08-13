@@ -13,26 +13,19 @@ class Event
     public const DATABASE_CLASS_NAME = 'DatabaseV1';
 
     public const DELETE_QUEUE_NAME = 'v1-deletes';
-    public const DELETE_CLASS_NAME = 'DeletesV1';
 
     public const AUDITS_QUEUE_NAME = 'v1-audits';
-    public const AUDITS_CLASS_NAME = 'AuditsV1';
 
     public const MAILS_QUEUE_NAME = 'v1-mails';
-    public const MAILS_CLASS_NAME = 'MailsV1';
 
     public const NOTIFICATIONS_QUEUE_NAME = 'v1-notifications';
-    public const NOTIFICATIONS_CLASS_NAME = 'NotificationsV1';
 
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
-    public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
     public const FUNCTIONS_QUEUE_TTL = 60 * 60 * 24 * 7; // 7 days
 
     public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
-    public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
 
     public const STATS_USAGE_QUEUE_NAME = 'v1-stats-usage';
-    public const STATS_USAGE_CLASS_NAME = 'StatsUsageV1';
 
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
@@ -41,22 +34,16 @@ class Event
     public const CERTIFICATES_CLASS_NAME = 'CertificatesV1';
 
     public const BUILDS_QUEUE_NAME = 'v1-builds';
-    public const BUILDS_CLASS_NAME = 'BuildsV1';
 
     public const JOBS_QUEUE_NAME = 'v1-jobs';
-    public const JOBS_CLASS_NAME = 'JobsV1';
 
     public const SCREENSHOTS_QUEUE_NAME = 'v1-screenshots';
-    public const SCREENSHOTS_CLASS_NAME = 'ScreenshotsV1';
 
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
-    public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
     public const EXECUTIONS_QUEUE_NAME = 'v1-executions';
-    public const EXECUTIONS_CLASS_NAME = 'ExecutionsV1';
 
     public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
-    public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
 
     protected string $queue = '';
     protected string $class = '';
@@ -96,14 +83,6 @@ class Event
     }
 
     /**
-     * Get paused state for this event.
-     */
-    public function getPaused(): bool
-    {
-        return $this->paused;
-    }
-
-    /**
      * Set queue used for this event.
      *
      * @param string $queue
@@ -124,19 +103,6 @@ class Event
     public function getQueue(): string
     {
         return $this->queue;
-    }
-
-    /**
-     * Set TTL (time-to-live) for jobs in this queue.
-     *
-     * @param int $ttl TTL in seconds
-     * @return static
-     */
-    public function setTTL(int $ttl): static
-    {
-        $this->ttl = $ttl;
-
-        return $this;
     }
 
     /**
@@ -224,18 +190,6 @@ class Event
     public function setUser(Document $user): static
     {
         $this->user = $user;
-
-        return $this;
-    }
-
-    /**
-     * Set user ID for this event.
-     *
-     * @return static
-     */
-    public function setUserId(string $userId): static
-    {
-        $this->userId = $userId;
 
         return $this;
     }

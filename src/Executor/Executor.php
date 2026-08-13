@@ -17,13 +17,7 @@ class Executor
 
     public const METHOD_GET = 'GET';
     public const METHOD_POST = 'POST';
-    public const METHOD_PUT = 'PUT';
-    public const METHOD_PATCH = 'PATCH';
     public const METHOD_DELETE = 'DELETE';
-    public const METHOD_HEAD = 'HEAD';
-    public const METHOD_OPTIONS = 'OPTIONS';
-    public const METHOD_CONNECT = 'CONNECT';
-    public const METHOD_TRACE = 'TRACE';
 
     protected bool $selfSigned = false;
 
@@ -173,32 +167,6 @@ class Executor
         return $response['body'];
     }
 
-    public function createCommand(
-        string $deploymentId,
-        string $projectId,
-        string $command,
-        int $timeout
-    ) {
-        $runtimeId = "$projectId-$deploymentId-build";
-        $route = "/runtimes/$runtimeId/commands";
-
-        $params = [
-            'command' => $command,
-            'timeout' => $timeout
-        ];
-
-        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
-
-        $status = $response['headers']['status-code'];
-        if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : ($response['body']['message'] ?? '');
-            $type = \is_array($response['body']) ? ($response['body']['type'] ?? ExecutorException::GENERAL_UNKNOWN) : ExecutorException::GENERAL_UNKNOWN;
-            throw new ExecutorException($message, $status, type: $type);
-        }
-
-        return $response['body'];
-    }
-
     /**
      * Call
      *
@@ -324,7 +292,7 @@ class Executor
 
         if ($curlError) {
             if ($curlError == CURLE_OPERATION_TIMEDOUT) {
-                throw new ExecutorTimeout('Executor request timed out', $timeout);
+                throw new ExecutorTimeout('Executor request timed out after ' . $timeout . ' seconds');
             }
             throw new ExecutorException($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
         }

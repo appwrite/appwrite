@@ -146,19 +146,4 @@ final class V17Test extends TestCase
 
         $this->assertEquals($expected, $result);
     }
-
-    public static function webhookProvider(): array
-    {
-        return [
-            'remove webhook additions' => [
-                [
-                    'enabled' => true,
-                    'logs' => ['test', 'test'],
-                    'attempts' => 1
-                ],
-                [
-                ],
-            ],
-        ];
-    }
 }

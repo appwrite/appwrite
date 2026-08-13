@@ -99,7 +99,6 @@ class Exception extends \Exception
     public const string USER_EMAIL_NOT_VERIFIED = 'user_email_not_verified';
     public const string USER_MISSING_ID = 'user_missing_id';
     public const string USER_MORE_FACTORS_REQUIRED = 'user_more_factors_required';
-    public const string USER_INVALID_CHALLENGE = 'user_invalid_challenge';
     public const string USER_AUTHENTICATOR_NOT_FOUND = 'user_authenticator_not_found';
     public const string USER_AUTHENTICATOR_ALREADY_VERIFIED = 'user_authenticator_already_verified';
     public const string USER_RECOVERY_CODES_ALREADY_EXISTS = 'user_recovery_codes_already_exists';

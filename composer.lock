@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4ad47c6924e38efc505314c491e8315e",
+    "content-hash": "1e71e6593aadcb27e643cd2caefb88f8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3121,52 +3121,6 @@
             "time": "2026-05-29T10:44:54+00:00"
         },
         {
-            "name": "utopia-php/analytics",
-            "version": "0.15.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/analytics.git",
-                "reference": "ce5be7042ad518b83e401dcd785d20c4cc872c67"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/ce5be7042ad518b83e401dcd785d20c4cc872c67",
-                "reference": "ce5be7042ad518b83e401dcd785d20c4cc872c67",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "laravel/pint": "dev-main",
-                "phpunit/phpunit": "^9.3",
-                "utopia-php/system": "0.10.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Analytics\\": "src/Analytics"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library to track events & users.",
-            "keywords": [
-                "analytics",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/analytics/issues",
-                "source": "https://github.com/utopia-php/analytics/tree/0.15.2"
-            },
-            "time": "2026-02-09T12:46:39+00:00"
-        },
-        {
             "name": "utopia-php/audit",
             "version": "3.0.1",
             "source": {
@@ -4577,59 +4531,6 @@
                 "source": "https://github.com/utopia-php/pools/tree/2.0.2"
             },
             "time": "2026-08-05T18:07:20+00:00"
-        },
-        {
-            "name": "utopia-php/preloader",
-            "version": "0.2.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/preloader.git",
-                "reference": "65ef48392e72172f584b0baa2e224f9a1cebcce0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/65ef48392e72172f584b0baa2e224f9a1cebcce0",
-                "reference": "65ef48392e72172f584b0baa2e224f9a1cebcce0",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Preloader\\": "src/Preloader"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "Utopia Preloader library is simple and lite library for managing PHP preloading configuration",
-            "keywords": [
-                "framework",
-                "php",
-                "preload",
-                "preloader",
-                "preloading",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/preloader/issues",
-                "source": "https://github.com/utopia-php/preloader/tree/0.2.4"
-            },
-            "time": "2020-10-24T07:04:59+00:00"
         },
         {
             "name": "utopia-php/psr7",
@@ -7645,6 +7546,83 @@
                 }
             ],
             "time": "2025-02-07T05:00:38+00:00"
+        },
+        {
+            "name": "shipmonk/dead-code-detector",
+            "version": "0.13.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/shipmonk-rnd/dead-code-detector.git",
+                "reference": "a12cdd093624362743c8814a96a54fcc0a57d96d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/shipmonk-rnd/dead-code-detector/zipball/a12cdd093624362743c8814a96a54fcc0a57d96d",
+                "reference": "a12cdd093624362743c8814a96a54fcc0a57d96d",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 || ^8.0",
+                "phpstan/phpstan": "^2.1.12"
+            },
+            "require-dev": {
+                "composer-runtime-api": "^2.0",
+                "composer/semver": "^3.4",
+                "doctrine/orm": "^2.19 || ^3.0",
+                "editorconfig-checker/editorconfig-checker": "^10.6.0",
+                "ergebnis/composer-normalize": "^2.45.0",
+                "nette/application": "^3.1",
+                "nette/component-model": "^3.0",
+                "nette/utils": "^3.0 || ^4.0",
+                "nikic/php-parser": "^5.4.0",
+                "phpstan/phpstan-phpunit": "^2.0.4",
+                "phpstan/phpstan-strict-rules": "^2.0.3",
+                "phpstan/phpstan-symfony": "^2.0.2",
+                "phpunit/phpcov": "^8.2",
+                "phpunit/phpunit": "^9.6.22",
+                "shipmonk/coding-standard": "^0.1.3",
+                "shipmonk/composer-dependency-analyser": "^1.8.2",
+                "shipmonk/name-collision-detector": "^2.1.1",
+                "shipmonk/phpstan-dev": "^0.1.1",
+                "shipmonk/phpstan-rules": "^4.1.0",
+                "symfony/contracts": "^2.5 || ^3.0",
+                "symfony/dependency-injection": "^5.4 || ^6.0 || ^7.0",
+                "symfony/doctrine-bridge": "^5.4 || ^6.0 || ^7.0",
+                "symfony/event-dispatcher": "^5.4 || ^6.0 || ^7.0",
+                "symfony/http-kernel": "^5.4 || ^6.0 || ^7.0",
+                "symfony/routing": "^5.4 || ^6.0 || ^7.0",
+                "symfony/validator": "^5.4 || ^6.0 || ^7.0",
+                "twig/twig": "^3.0"
+            },
+            "type": "phpstan-extension",
+            "extra": {
+                "phpstan": {
+                    "includes": [
+                        "rules.neon"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ShipMonk\\PHPStan\\DeadCode\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Dead code detector to find unused PHP code via PHPStan extension. Can automatically remove dead PHP code. Supports libraries like Symfony, Doctrine, PHPUnit etc. Detects dead cycles. Can detect dead code that is tested.",
+            "keywords": [
+                "PHPStan",
+                "dead code",
+                "static analysis",
+                "unused code"
+            ],
+            "support": {
+                "issues": "https://github.com/shipmonk-rnd/dead-code-detector/issues",
+                "source": "https://github.com/shipmonk-rnd/dead-code-detector/tree/0.13.5"
+            },
+            "time": "2025-10-13T12:19:42+00:00"
         },
         {
             "name": "staabm/side-effects-detector",
