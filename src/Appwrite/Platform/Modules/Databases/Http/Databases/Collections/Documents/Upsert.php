@@ -20,6 +20,7 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -329,9 +330,9 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $database, $collection, $newDocument) {
+            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $collectionTableId, $newDocument) {
                 return $dbForDatabases->upsertDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $collectionTableId,
                     [$newDocument],
                     onNext: function (Document $document) use (&$upserted) {
                         $upserted[] = $document;
@@ -340,8 +341,10 @@ class Upsert extends Action
             });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
-        } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException(), params: [$documentId]);
+        } catch (UniqueException $e) {
+            throw new Exception($this->getUniqueConstraintException(), previous: $e);
+        } catch (DuplicateException $e) {
+            throw new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {

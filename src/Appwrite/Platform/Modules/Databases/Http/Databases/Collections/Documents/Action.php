@@ -165,6 +165,16 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * Get the appropriate unique constraint exception.
+     */
+    protected function getUniqueConstraintException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION
+            : Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION;
+    }
+
+    /**
      * Get the appropriate conflict exception.
      */
     protected function getConflictException(): string
