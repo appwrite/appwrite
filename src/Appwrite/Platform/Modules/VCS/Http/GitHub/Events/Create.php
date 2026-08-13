@@ -231,14 +231,18 @@ class Create extends Action
 
         if ($action === "closed") {
             // Allowed external contributions cleanup
-            if ($parsedPayload["external"] ?? true) {
-                (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, 'github', $parsedPayload["repositoryId"] ?? '', $parsedPayload["pullRequestNumber"] ?? '');
+            $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
+            $providerPullRequestId = $parsedPayload["pullRequestNumber"] ?? '';
+            $external = $parsedPayload["external"] ?? true;
+
+            if ($external) {
+                (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, 'github', $providerRepositoryId, $providerPullRequestId);
             }
 
             return;
         }
 
-        if (!\in_array($action, ["opened", "reopened", "synchronize"])) {
+        if (!\in_array($action, ["opened", "reopened", "synchronize"], true)) {
             return;
         }
 
