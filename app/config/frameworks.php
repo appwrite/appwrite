@@ -143,7 +143,7 @@ return [
                 'key' => 'static',
                 'buildCommand' => 'npm run generate',
                 'installCommand' => 'npm install',
-                'outputDirectory' => './output/public',
+                'outputDirectory' => './.output/public',
                 'startCommand' => 'bash helpers/server.sh',
             ]
         ]
@@ -240,11 +240,15 @@ return [
         'bundleCommand' => 'bash /usr/local/server/helpers/tanstack-start/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/tanstack-start/env.sh',
         'adapters' => [
+            // TanStack Start >= 1.133 builds vite-native, emitting the server
+            // entry as dist/server/server.js next to dist/client. Builds that
+            // opt into the nitro plugin emit .output instead, which the runtime
+            // still detects, but they have to override the directory here.
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
-                'outputDirectory' => './.output',
+                'outputDirectory' => './dist',
                 'startCommand' => 'bash helpers/tanstack-start/server.sh',
             ],
             'static' => [
