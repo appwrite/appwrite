@@ -343,9 +343,12 @@ abstract class Scope extends TestCase
         }
 
         $query = http_build_query($queryParams);
+        $url = 'http://' . $hostname . ':5000/__find_request__?' . $query;
 
-        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
-            $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
+        for ($attempt = 0; $attempt <= $maxAttempts; $attempt++) {
+            $response = @file_get_contents($url);
+            $requests = is_string($response) ? json_decode($response, true) : [];
+
             if (is_array($requests)) {
                 for ($i = count($requests) - 1; $i >= 0; $i--) {
                     $request = $this->decodeRequestData($requests[$i]);
@@ -369,30 +372,8 @@ abstract class Scope extends TestCase
                 }
             }
 
-            usleep($delayMs * 1000);
-        }
-
-        $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
-        if (is_array($requests)) {
-            for ($i = count($requests) - 1; $i >= 0; $i--) {
-                $request = $this->decodeRequestData($requests[$i]);
-                if ($probe !== null) {
-                    try {
-                        $probe($request);
-                        return $request;
-                    } catch (\Throwable $error) {
-                        continue;
-                    }
-                }
-
-                if ($enforceProjectId) {
-                    $requestProjectId = $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '';
-                    if ($requestProjectId === $projectId) {
-                        return $request;
-                    }
-                } else {
-                    return $request;
-                }
+            if ($attempt < $maxAttempts) {
+                usleep($delayMs * 1000);
             }
         }
 
