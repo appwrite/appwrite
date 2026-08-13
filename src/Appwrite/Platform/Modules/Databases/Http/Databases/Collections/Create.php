@@ -258,6 +258,9 @@ class Create extends Action
         $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
         $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
+        // Reload the collection so its subquery filters include the schema created above.
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument($databaseKey, $collection->getId()));
+
         $queueForEvents
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
