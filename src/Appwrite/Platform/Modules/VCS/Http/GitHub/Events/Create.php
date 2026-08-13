@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\RepositoryPullRequestCleanup;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -319,20 +320,7 @@ class Create extends Action
             $external = $parsedPayload["external"] ?? true;
 
             if ($external) {
-                $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
-                    Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                    Query::orderDesc('$createdAt')
-                ]));
-
-                foreach ($repositories as $repository) {
-                    $providerPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);
-
-                    if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
-                        $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
-                        $repository = $repository->setAttribute('providerPullRequestIds', $providerPullRequestIds);
-                        $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
-                    }
-                }
+                (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, 'github', $providerRepositoryId, $providerPullRequestId);
             }
         }
     }
