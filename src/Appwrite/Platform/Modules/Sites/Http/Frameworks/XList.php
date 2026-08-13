@@ -79,9 +79,17 @@ class XList extends Base
             }
         }
 
+        // Response models only filter nested Documents; plain arrays ship every key they carry.
+        $frameworks = \array_map(fn (array $framework) => new Document(\array_replace($framework, [
+            'adapters' => \array_map(
+                fn (array $adapter) => new Document($adapter),
+                $framework['adapters'] ?? []
+            ),
+        ])), \array_values($frameworks));
+
         $response->dynamic(new Document([
             'total' => count($frameworks),
-            'frameworks' => \array_values($frameworks)
+            'frameworks' => $frameworks
         ]), Response::MODEL_FRAMEWORK_LIST);
     }
 }

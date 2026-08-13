@@ -562,12 +562,6 @@ class Response extends SwooleResponse
                 }
 
                 foreach ($data[$key] as $index => $item) {
-                    // A model-typed rule handed a raw array would otherwise ship every key it carries.
-                    // Union types are left alone: their branch resolves a model per item.
-                    if (\is_array($item) && !\is_array($rule['type']) && self::hasModel($rule['type'])) {
-                        $item = new Document($item);
-                    }
-
                     if ($item instanceof Document) {
                         $ruleType = null;
 
