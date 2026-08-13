@@ -163,14 +163,6 @@ class Create extends Action
                 }
             }
 
-            // Makes sure this email is not already used in another identity
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                Query::equal('providerEmail', [$email]),
-            ]);
-            if (! $identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
-            }
-
             $emailMetadata = [
                 'emailCanonical' => null,
                 'emailIsCanonical' => null,

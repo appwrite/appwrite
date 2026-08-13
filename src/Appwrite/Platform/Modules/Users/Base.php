@@ -29,14 +29,6 @@ class Base extends Action
 
         if (!empty($email)) {
             $email = \strtolower($email);
-
-            // Makes sure this email is not already used in another identity
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                Query::equal('providerEmail', [$email]),
-            ]);
-            if (!$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
-            }
         }
 
         try {
