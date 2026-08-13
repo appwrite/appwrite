@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Utopia\SMTP\Tests\Unit;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Utopia\SMTP\Exception;
 use Utopia\SMTP\Mime\Header;
 
 final class HeaderTest extends TestCase
@@ -111,7 +111,7 @@ final class HeaderTest extends TestCase
 
     public function testRefusesAValueItCannotBreak(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         Header::line('X-Token', str_repeat('a', 999));
     }

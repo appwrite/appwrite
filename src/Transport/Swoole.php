@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Utopia\SMTP\Transport;
 
 use Swoole\Coroutine\Client;
-use Utopia\SMTP\ConnectionException;
+use Utopia\SMTP\Exception\ConnectionException;
+use Utopia\SMTP\Exception\TimeoutException;
 use Utopia\SMTP\Tls;
 use Utopia\SMTP\Verification;
 
@@ -24,6 +25,9 @@ final class Swoole implements Transport
     /** Bytes taken off the socket but not yet handed out. */
     private string $buffer = '';
 
+    /** The deadline currently configured for sends, which is not a per-call argument here. */
+    private ?float $writeTimeout = null;
+
     public function __construct(
         private readonly string $host,
         private readonly int $port,
@@ -38,32 +42,40 @@ final class Swoole implements Transport
 
         $client = new Client(SWOOLE_SOCK_TCP | ($tls ? SWOOLE_SSL : 0));
         $client->set($this->settings($timeout));
+        $started = microtime(true);
 
         if (! $client->connect($this->host, $this->port, $timeout)) {
-            throw new ConnectionException("Cannot reach {$this->host}:{$this->port}: " . $this->error($client));
+            $reason = "Cannot reach {$this->host}:{$this->port}: " . $this->error($client);
+
+            throw microtime(true) - $started >= $timeout
+                ? new TimeoutException($reason)
+                : new ConnectionException($reason);
         }
 
         $this->client = $client;
         $this->tls = $tls;
         $this->buffer = '';
+        $this->writeTimeout = null;
     }
 
     public function read(int $length, float $timeout): string
     {
         if ($length < 1) {
-            throw new ConnectionException('A read needs a positive length');
+            throw new \InvalidArgumentException('A read needs a positive length');
         }
 
         if ($this->buffer === '') {
             $client = $this->client();
+            $started = microtime(true);
             $data = $client->recv($timeout);
 
             if (! \is_string($data) || $data === '') {
-                throw new ConnectionException(
-                    $client->errCode === SOCKET_ETIMEDOUT
-                        ? 'Timed out waiting for the server'
-                        : 'The server closed the connection: ' . $this->error($client),
-                );
+                // SOCKET_ETIMEDOUT would say this outright, but it comes from
+                // ext-sockets, which this package does not require and Swoole
+                // does not provide. The clock is ours either way.
+                throw microtime(true) - $started >= $timeout
+                    ? new TimeoutException('Timed out waiting for the server')
+                    : new ConnectionException('The server closed the connection: ' . $this->error($client));
             }
 
             $this->buffer = $data;
@@ -79,11 +91,24 @@ final class Swoole implements Transport
     {
         $client = $this->client();
 
+        // send() takes no deadline of its own, so the one asked for here has to
+        // be configured on the client first. Left alone it would keep whatever
+        // connect was given, and a write budget would quietly mean nothing.
+        if ($this->writeTimeout !== $timeout) {
+            $client->set(['write_timeout' => $timeout]);
+            $this->writeTimeout = $timeout;
+        }
+
         for ($written = 0; $written < \strlen($data);) {
+            $started = microtime(true);
             $sent = $client->send(substr($data, $written));
 
             if (! \is_int($sent) || $sent < 1) {
-                throw new ConnectionException('Failed writing to the server: ' . $this->error($client));
+                $reason = 'Failed writing to the server: ' . $this->error($client);
+
+                throw microtime(true) - $started >= $timeout
+                    ? new TimeoutException($reason)
+                    : new ConnectionException($reason);
             }
 
             $written += $sent;
@@ -96,8 +121,17 @@ final class Swoole implements Transport
 
         $client = $this->client();
 
+        // enableSSL blocks until the handshake is done and takes no deadline
+        // either, so the same applies.
+        $client->set(['connect_timeout' => $timeout]);
+        $started = microtime(true);
+
         if (! $client->enableSSL()) {
-            throw new ConnectionException("STARTTLS handshake with {$this->host} failed: " . $this->error($client));
+            $reason = "STARTTLS handshake with {$this->host} failed: " . $this->error($client);
+
+            throw microtime(true) - $started >= $timeout
+                ? new TimeoutException($reason)
+                : new ConnectionException($reason);
         }
 
         $this->tls = true;
@@ -115,6 +149,7 @@ final class Swoole implements Transport
             $this->client = null;
             $this->tls = false;
             $this->buffer = '';
+            $this->writeTimeout = null;
         }
     }
 
@@ -125,6 +160,7 @@ final class Swoole implements Transport
     {
         $settings = [
             'timeout' => $timeout,
+            'connect_timeout' => $timeout,
             'ssl_verify_peer' => $this->options->verify !== Verification::None,
             'ssl_allow_self_signed' => $this->options->verify !== Verification::Full,
             'ssl_host_name' => $this->options->peerName ?? $this->host,
@@ -180,8 +216,8 @@ final class Swoole implements Transport
 
     private function client(): Client
     {
-        if (!$this->client instanceof Client) {
-            throw new ConnectionException('The transport is not connected');
+        if (! $this->client instanceof Client) {
+            throw new \LogicException('The transport is not connected');
         }
 
         return $this->client;

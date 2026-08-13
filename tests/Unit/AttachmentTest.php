@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Utopia\SMTP\Tests\Unit;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Utopia\SMTP\Address;
 use Utopia\SMTP\Attachment;
-use Utopia\SMTP\Exception;
 use Utopia\SMTP\Message;
 
 final class AttachmentTest extends TestCase
@@ -143,21 +143,21 @@ final class AttachmentTest extends TestCase
 
     public function testRefusesAFileItCannotRead(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         Attachment::fromPath('/nonexistent/utopia-smtp/missing.txt');
     }
 
     public function testRefusesAHeaderInjectedThroughTheName(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         Attachment::fromString('x', "notes.txt\r\nContent-Type: text/evil");
     }
 
     public function testRefusesAHeaderInjectedThroughTheContentId(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         Attachment::fromString('x', 'logo.png')->inline("logo\r\nX-Evil: yes");
     }

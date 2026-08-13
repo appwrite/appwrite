@@ -95,7 +95,21 @@ Every `Reply` carries an `Outcome`, which is the four reply classes of RFC 5321 
 | `Transient` | 4yz | Failed, but the same command may work later. |
 | `Permanent` | 5yz | Failed, and sending it again changes nothing. |
 
-The other failures are `ConnectionException` for the socket, `ProtocolException` for a reply that makes no sense, and `AuthenticationException` for credentials. All extend `Utopia\SMTP\Exception`.
+## Failures
+
+Everything the library raises at runtime extends `Utopia\SMTP\Exception\SmtpException`, so one `catch` covers any way a send can go wrong:
+
+| Exception | Raised when |
+| --- | --- |
+| `ConnectionException` | The socket could not be opened, read, written or upgraded. |
+| `TimeoutException` | A deadline passed. Extends `ConnectionException`. |
+| `ProtocolException` | The server said something that is not a reply, or not one the command allows. |
+| `AuthenticationException` | No mechanism was shared, or the credentials were refused. |
+| `TransactionException` | The envelope or the data was refused. Carries the `Reply`. |
+| `CapabilityException` | The server cannot carry this message, such as a size above what it advertises. |
+| `MessageException` | The message could not be produced, such as an attachment that stopped being readable. |
+
+Mistakes in the calling code are deliberately outside that hierarchy. An address that is not an address, or a header the message owns, raises the SPL `InvalidArgumentException`; using a transport that was never connected raises `LogicException`. Catching `SmtpException` therefore never hides a bug in your own code.
 
 ## Encryption
 
@@ -191,7 +205,19 @@ A `Client` is one connection. Pooling belongs to [`utopia-php/pools`](https://gi
 
 `STARTTLS`, `AUTH`, `SIZE`, `8BITMIME`, `SMTPUTF8` and `ENHANCEDSTATUSCODES` are used when the server advertises them. A message with a non-ASCII local part is refused before sending when the server cannot carry it. `PIPELINING` is parsed but not yet used.
 
-Timeouts are one value rather than the six minimums of RFC 5321 section 4.5.3.2, which were written for relays under load.
+## Timeouts
+
+Reaching a server and hearing back from it fail differently and deserve different patience:
+
+```php
+use Utopia\SMTP\Timeouts;
+
+new Client($transport, timeouts: new Timeouts(connect: 5.0, read: 60.0, write: 30.0));
+```
+
+The defaults are ten seconds to connect and thirty to read or write. Each applies per operation rather than per session, so a large message is bounded by its own size and not by a single deadline for the whole exchange. A handshake counts as connecting.
+
+A host that is down should be given up on quickly, while the reply after the final dot can take as long as the server needs to scan the message — RFC 5321 section 4.5.3.2 asks for ten minutes there. The specification wants six separate minimums; three knobs is the useful part of that, and the deviation is deliberate.
 
 ## Testing
 

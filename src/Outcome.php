@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Utopia\SMTP;
 
+use Utopia\SMTP\Exception\ProtocolException;
+
 /**
  * The four reply classes of RFC 5321 section 4.2.1. One value rather than a set
  * of predicates: a reply is exactly one of these, and 3yz is not a failure.

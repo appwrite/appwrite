@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 namespace Utopia\SMTP\Tests\Unit;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Utopia\SMTP\Address;
 use Utopia\SMTP\Auth\Login;
 use Utopia\SMTP\Auth\Plain;
-use Utopia\SMTP\AuthenticationException;
 use Utopia\SMTP\Client;
-use Utopia\SMTP\ConnectionException;
 use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Envelope;
-use Utopia\SMTP\Exception;
+use Utopia\SMTP\Exception\AuthenticationException;
+use Utopia\SMTP\Exception\CapabilityException;
+use Utopia\SMTP\Exception\ConnectionException;
+use Utopia\SMTP\Exception\ProtocolException;
+use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message;
 use Utopia\SMTP\Outcome;
-use Utopia\SMTP\ProtocolException;
 use Utopia\SMTP\Tests\Unit\Support\FakeTransport;
-use Utopia\SMTP\TransactionException;
 
 final class ClientTest extends TestCase
 {
@@ -189,7 +190,7 @@ final class ClientTest extends TestCase
     {
         $client = new Client($this->transport(), encryption: Encryption::StartTls);
 
-        $this->expectException(ConnectionException::class);
+        $this->expectException(CapabilityException::class);
 
         $client->sendRaw($this->envelope(), 'Body');
     }
@@ -318,7 +319,7 @@ final class ClientTest extends TestCase
     {
         $client = new Client($this->transport([], 'SIZE 10'), encryption: Encryption::None);
 
-        $this->expectException(Exception::class);
+        $this->expectException(CapabilityException::class);
 
         $client->sendRaw($this->envelope(), str_repeat('x', 11));
     }
@@ -356,7 +357,7 @@ final class ClientTest extends TestCase
     {
         $client = new Client($this->transport(), encryption: Encryption::None);
 
-        $this->expectException(Exception::class);
+        $this->expectException(CapabilityException::class);
 
         $client->send(new Message(
             from: new Address('jane@example.test'),
@@ -371,7 +372,7 @@ final class ClientTest extends TestCase
     {
         $client = new Client($this->transport(), encryption: Encryption::None);
 
-        $this->expectException(Exception::class);
+        $this->expectException(CapabilityException::class);
 
         $client->sendRaw(new Envelope('jäne@example.test', ['john@example.test']), 'Body');
     }
@@ -552,7 +553,7 @@ final class ClientTest extends TestCase
     {
         $client = new Client($this->transport(), encryption: Encryption::None);
 
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         $client->command("NOOP\r\nRCPT TO:<eve@example.test>", [250]);
     }

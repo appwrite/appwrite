@@ -6,10 +6,10 @@ namespace Utopia\SMTP\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\SMTP\Client;
-use Utopia\SMTP\ConnectionException;
 use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Envelope;
-use Utopia\SMTP\ProtocolException;
+use Utopia\SMTP\Exception\ConnectionException;
+use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Tests\Unit\Support\FakeTransport;
 
 /**

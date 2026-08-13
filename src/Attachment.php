@@ -20,7 +20,7 @@ final readonly class Attachment
         public ?string $cid = null,
     ) {
         if (preg_match('/[\r\n\x00]/', $name . $type . ($cid)) === 1) {
-            throw new Exception('An attachment name, type or identifier must not span lines');
+            throw new \InvalidArgumentException('An attachment name, type or identifier must not span lines');
         }
     }
 
@@ -30,7 +30,7 @@ final readonly class Attachment
     public static function fromPath(string $path, ?string $name = null, ?string $type = null): self
     {
         if (! is_readable($path)) {
-            throw new Exception("Cannot read attachment: {$path}");
+            throw new \InvalidArgumentException("Cannot read attachment: {$path}");
         }
 
         return new self(

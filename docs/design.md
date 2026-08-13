@@ -91,10 +91,19 @@ Failures divide by cause, not by layer:
 
 | Exception | Raised when |
 | --- | --- |
-| `ConnectionException` | The socket fails, or a read passes the timeout. |
+| `ConnectionException` | The socket could not be opened, read, written or upgraded. |
+| `TimeoutException` | A deadline passed. A connection failure, narrowed. |
 | `ProtocolException` | A reply is malformed, or its code is not one the command allows. |
 | `AuthenticationException` | No advertised mechanism matches, or credentials are refused. |
 | `TransactionException` | The envelope or the data is refused. Carries the `Reply`. |
+| `CapabilityException` | The server said what it can do and this message needs more. |
+| `MessageException` | The message could not be produced. |
+
+All of them extend `Exception\SmtpException`, which extends nothing but `\Exception`, so a caller can treat any protocol failure as one category. Caller mistakes stay outside it and raise SPL types — `InvalidArgumentException` for an address that is not an address, `LogicException` for a transport used before it was connected. That line is what `packages/storage` draws, and it is the useful one: catching the package base must never swallow a bug in the calling code.
+
+`TimeoutException` extends `ConnectionException` rather than sitting beside it, so a caller who does not care why the socket failed writes one catch, and a caller deciding whether to retry writes two. Which error number means "timed out" varies by platform, and `SOCKET_ETIMEDOUT` comes from `ext-sockets`, which this package does not require and Swoole does not provide, so both transports tell the two apart by the clock they set themselves — except where the stream layer already knows, since `stream_get_meta_data()` reports it outright.
+
+Carrying the budget into the coroutine transport takes more than passing it along. `Swoole\Coroutine\Client::recv()` accepts a deadline per call, but `send()` and `enableSSL()` do not: they use whatever the client was configured with. A write budget handed to `write()` therefore has to be written into the client settings before the send, or it means nothing and the connect deadline silently governs instead.
 
 ## Encryption
 

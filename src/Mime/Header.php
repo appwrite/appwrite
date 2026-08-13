@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\SMTP\Mime;
 
-use Utopia\SMTP\Exception;
-
 /**
  * A header field, from a name and a value to bytes a server will accept.
  *
@@ -96,7 +94,7 @@ final readonly class Header
 
         foreach (explode(' ', $line) as $word) {
             if (\strlen($word) > self::HARD) {
-                throw new Exception("The {$name} header has an unbreakable run of " . \strlen($word) . ' octets');
+                throw new \InvalidArgumentException("The {$name} header has an unbreakable run of " . \strlen($word) . ' octets');
             }
 
             $candidate = $current === '' ? $word : "{$current} {$word}";

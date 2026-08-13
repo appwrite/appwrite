@@ -49,20 +49,20 @@ final readonly class Message implements \Stringable
         ?string $messageId = null,
     ) {
         if ($to === [] && $cc === [] && $bcc === []) {
-            throw new Exception('A message needs at least one recipient');
+            throw new \InvalidArgumentException('A message needs at least one recipient');
         }
 
         if (preg_match('/[\r\n]/', $subject) === 1) {
-            throw new Exception('A subject must not span lines');
+            throw new \InvalidArgumentException('A subject must not span lines');
         }
 
         foreach ($headers as $name => $value) {
             if (\in_array(strtolower($name), self::RESERVED, true)) {
-                throw new Exception("The message owns the {$name} header");
+                throw new \InvalidArgumentException("The message owns the {$name} header");
             }
 
             if (preg_match('/[\r\n\x00]/', $name . $value) === 1) {
-                throw new Exception("The {$name} header must not span lines");
+                throw new \InvalidArgumentException("The {$name} header must not span lines");
             }
         }
 

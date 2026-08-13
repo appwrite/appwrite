@@ -8,13 +8,13 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Utopia\SMTP\Address;
 use Utopia\SMTP\Auth\Login;
 use Utopia\SMTP\Auth\Plain;
-use Utopia\SMTP\AuthenticationException;
 use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Envelope;
+use Utopia\SMTP\Exception\AuthenticationException;
+use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message;
 use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Tests\E2E\Support\Server;
-use Utopia\SMTP\TransactionException;
 
 /**
  * The session: encryption, authentication, recipients and connection reuse,

@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Utopia\SMTP\Mime;
 
 use Utopia\SMTP\Attachment;
-use Utopia\SMTP\ConnectionException;
-use Utopia\SMTP\Exception;
+use Utopia\SMTP\Exception\MessageException;
 
 /**
  * One node of the MIME tree: either content, an attachment, or a boundary with
@@ -124,7 +123,7 @@ final readonly class Part
         $handle = @fopen((string) $attachment->path, 'rb');
 
         if ($handle === false) {
-            throw new Exception("Cannot read attachment: {$attachment->path}");
+            throw new MessageException("Cannot read attachment: {$attachment->path}");
         }
 
         try {
@@ -132,7 +131,7 @@ final readonly class Part
                 $block = fread($handle, self::BLOCK);
 
                 if ($block === false) {
-                    throw new ConnectionException("Failed reading attachment: {$attachment->path}");
+                    throw new MessageException("Failed reading attachment: {$attachment->path}");
                 }
 
                 if ($block !== '') {

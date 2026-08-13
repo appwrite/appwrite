@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Utopia\SMTP\Tests\Unit;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Utopia\SMTP\Address;
-use Utopia\SMTP\Exception;
 
 final class AddressTest extends TestCase
 {
@@ -51,35 +51,35 @@ final class AddressTest extends TestCase
 
     public function testRejectsAnAddressWithNoDomain(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new Address('jane');
     }
 
     public function testRejectsAnAddressThatIsNotAnAddress(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new Address('jane doe@example.test');
     }
 
     public function testRejectsALocalPartOverTheLimit(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new Address(str_repeat('a', 65) . '@example.test');
     }
 
     public function testRejectsAHeaderInjectedThroughTheDisplayName(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new Address('jane@example.test', "Jane\r\nBcc: eve@example.test");
     }
 
     public function testRejectsACommandInjectedThroughTheAddress(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new Address("jane@example.test>\r\nRCPT TO:<eve@example.test");
     }

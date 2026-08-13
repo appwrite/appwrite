@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\SMTP\Tests\Unit\Support;
 
-use Utopia\SMTP\ConnectionException;
+use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Transport\Transport;
 
 /**

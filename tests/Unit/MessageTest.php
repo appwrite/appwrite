@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Utopia\SMTP\Tests\Unit;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Utopia\SMTP\Address;
 use Utopia\SMTP\Attachment;
-use Utopia\SMTP\Exception;
 use Utopia\SMTP\Message;
 
 final class MessageTest extends TestCase
@@ -178,28 +178,28 @@ final class MessageTest extends TestCase
 
     public function testRejectsAMessageWithNoRecipients(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new Message(new Address('jane@example.test'), [], 'Hello', 'Body');
     }
 
     public function testRejectsAHeaderInjectedThroughTheSubject(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         $this->message(subject: "Hello\r\nBcc: eve@example.test");
     }
 
     public function testRejectsACustomHeaderTheMessageOwns(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         $this->message(headers: ['Bcc' => 'eve@example.test']);
     }
 
     public function testRejectsAHeaderInjectedThroughACustomHeader(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         $this->message(headers: ['X-Mailer' => "Utopia\r\nBcc: eve@example.test"]);
     }

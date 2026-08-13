@@ -24,12 +24,12 @@ final readonly class Envelope
         private bool $utf8 = false,
     ) {
         if ($recipients === []) {
-            throw new Exception('An envelope needs at least one recipient');
+            throw new \InvalidArgumentException('An envelope needs at least one recipient');
         }
 
         foreach ([$sender, ...$recipients] as $path) {
             if (preg_match('/[\r\n\x00]/', $path) === 1) {
-                throw new Exception('A path must not span lines');
+                throw new \InvalidArgumentException('A path must not span lines');
             }
         }
     }

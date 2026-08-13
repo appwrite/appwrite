@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Utopia\SMTP\Tests\Unit;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Utopia\SMTP\Address;
 use Utopia\SMTP\Envelope;
-use Utopia\SMTP\Exception;
 use Utopia\SMTP\Message;
 
 final class EnvelopeTest extends TestCase
@@ -50,14 +50,14 @@ final class EnvelopeTest extends TestCase
 
     public function testRejectsAnEnvelopeWithNoRecipients(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new Envelope('jane@example.test', []);
     }
 
     public function testRejectsACommandInjectedThroughAPath(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new Envelope('jane@example.test', ["john@example.test>\r\nRCPT TO:<eve@example.test"]);
     }

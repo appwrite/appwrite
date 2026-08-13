@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Utopia\SMTP\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Outcome;
-use Utopia\SMTP\ProtocolException;
 use Utopia\SMTP\Reply;
 
 final class ReplyTest extends TestCase

@@ -6,7 +6,7 @@ namespace Utopia\SMTP\Tests\Unit\Transport;
 
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
-use Utopia\SMTP\ConnectionException;
+use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Tls;
 use Utopia\SMTP\Transport\Swoole;
 use Utopia\SMTP\Verification;
@@ -179,7 +179,7 @@ final class SwooleTest extends TestCase
         $this->coroutine(function (): void {
             $transport = $this->connect();
 
-            $this->expectException(ConnectionException::class);
+            $this->expectException(\InvalidArgumentException::class);
 
             $transport->read(0, 2.0);
         });
@@ -188,7 +188,7 @@ final class SwooleTest extends TestCase
     public function testReadingBeforeConnectingFails(): void
     {
         $this->coroutine(function (): void {
-            $this->expectException(ConnectionException::class);
+            $this->expectException(\LogicException::class);
 
             (new Swoole('127.0.0.1', 1))->read(8192, 2.0);
         });
@@ -200,7 +200,7 @@ final class SwooleTest extends TestCase
             $transport = $this->connect();
             $transport->close();
 
-            $this->expectException(ConnectionException::class);
+            $this->expectException(\LogicException::class);
 
             $transport->read(8192, 2.0);
         });
@@ -216,6 +216,27 @@ final class SwooleTest extends TestCase
             // range can pair with the source port the kernel just handed us and
             // succeed against itself.
             (new Swoole('127.0.0.1', 1))->connect(2.0, false);
+        });
+    }
+
+    public function testAWriteBudgetReachesTheClient(): void
+    {
+        // send() takes no deadline argument, so the only place a write budget
+        // can land is the client's own settings. Asking the client is the only
+        // way to know it was not quietly dropped.
+        $this->coroutine(function (): void {
+            $transport = $this->connect();
+            $transport->write("NOOP\r\n", 7.5);
+
+            $client = (new \ReflectionProperty(Swoole::class, 'client'))->getValue($transport);
+            $this->assertInstanceOf(\Swoole\Coroutine\Client::class, $client);
+
+            $settings = $client->setting;
+            $this->assertIsArray($settings);
+            $this->assertArrayHasKey('write_timeout', $settings);
+            $this->assertEqualsWithDelta(7.5, $settings['write_timeout'], PHP_FLOAT_EPSILON);
+
+            $transport->close();
         });
     }
 

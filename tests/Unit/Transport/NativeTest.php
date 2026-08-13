@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Utopia\SMTP\Tests\Unit\Transport;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\SMTP\ConnectionException;
+use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Transport\Native;
 
 /**
@@ -125,7 +125,7 @@ final class NativeTest extends TestCase
     {
         $transport = $this->connect();
 
-        $this->expectException(ConnectionException::class);
+        $this->expectException(\InvalidArgumentException::class);
 
         $transport->read(0, 2.0);
     }
@@ -134,7 +134,7 @@ final class NativeTest extends TestCase
     {
         $transport = new Native('127.0.0.1', 1);
 
-        $this->expectException(ConnectionException::class);
+        $this->expectException(\LogicException::class);
 
         $transport->read(8192, 2.0);
     }
@@ -144,7 +144,7 @@ final class NativeTest extends TestCase
         $transport = $this->connect();
         $transport->close();
 
-        $this->expectException(ConnectionException::class);
+        $this->expectException(\LogicException::class);
 
         $transport->read(8192, 2.0);
     }

@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Utopia\SMTP;
 
 use Utopia\SMTP\Auth\Authenticator;
+use Utopia\SMTP\Exception\AuthenticationException;
+use Utopia\SMTP\Exception\CapabilityException;
+use Utopia\SMTP\Exception\ConnectionException;
+use Utopia\SMTP\Exception\ProtocolException;
+use Utopia\SMTP\Exception\SmtpException;
+use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Mime\Encoding;
 use Utopia\SMTP\Transport\Transport;
 
@@ -42,7 +48,7 @@ final class Client
         private readonly string $domain = 'localhost',
         private readonly array $authenticators = [],
         private readonly Encryption $encryption = Encryption::Opportunistic,
-        private readonly float $timeout = 30.0,
+        private readonly Timeouts $timeouts = new Timeouts(),
     ) {
         $this->capabilities = Capabilities::none();
     }
@@ -86,7 +92,7 @@ final class Client
 
         try {
             foreach ($this->stuff(\is_string($content) ? [$content] : $content) as $chunk) {
-                $this->transport->write($chunk, $this->timeout);
+                $this->transport->write($chunk, $this->timeouts->write);
             }
         } catch (\Throwable $exception) {
             // The terminating dot never went out, so the server is still reading
@@ -118,7 +124,7 @@ final class Client
     public function command(string $command, int|array $expect): Reply
     {
         if (preg_match('/[\r\n]/', $command) === 1) {
-            throw new Exception('A command must not span lines');
+            throw new \InvalidArgumentException('A command must not span lines');
         }
 
         return $this->exchange(
@@ -142,7 +148,7 @@ final class Client
     {
         try {
             if ($write !== '') {
-                $this->transport->write($write, $this->timeout);
+                $this->transport->write($write, $this->timeouts->write);
             }
 
             return $this->expect($expect);
@@ -168,7 +174,7 @@ final class Client
         if ($this->ready) {
             try {
                 $this->command('QUIT', [221]);
-            } catch (Exception) {
+            } catch (SmtpException) {
                 // Saying goodbye is a courtesy; the socket closes either way.
             }
         }
@@ -194,7 +200,7 @@ final class Client
             return;
         }
 
-        $this->transport->connect($this->timeout, $this->encryption === Encryption::Implicit);
+        $this->transport->connect($this->timeouts->connect, $this->encryption === Encryption::Implicit);
         $this->exchange([220]);
         $this->hello();
         $this->secure();
@@ -222,14 +228,14 @@ final class Client
 
         if (! $this->capabilities->has('STARTTLS')) {
             if ($this->encryption === Encryption::StartTls) {
-                throw new ConnectionException('The server does not offer STARTTLS');
+                throw new CapabilityException('The server does not offer STARTTLS');
             }
 
             return;
         }
 
         $this->command('STARTTLS', [220]);
-        $this->transport->startTls($this->timeout);
+        $this->transport->startTls($this->timeouts->connect);
 
         // Anything already buffered arrived in the clear and could have been
         // injected ahead of the handshake, so it is dropped unread. The
@@ -306,7 +312,7 @@ final class Client
             $max = $this->capabilities->maxSize();
 
             if ($max !== null && $size > $max) {
-                throw new Exception("The message is {$size} bytes and the server takes at most {$max}");
+                throw new CapabilityException("The message is {$size} bytes and the server takes at most {$max}");
             }
 
             if ($this->capabilities->has('SIZE')) {
@@ -320,7 +326,7 @@ final class Client
 
         if ($envelope->isInternational()) {
             if (! $this->capabilities->has('SMTPUTF8')) {
-                throw new Exception('The server does not offer SMTPUTF8, so a non-ASCII address cannot be sent');
+                throw new CapabilityException('The server does not offer SMTPUTF8, so a non-ASCII address cannot be sent');
             }
 
             $parameters .= ' SMTPUTF8';
@@ -435,7 +441,7 @@ final class Client
                 throw new ProtocolException('The reply line is too long');
             }
 
-            $this->buffer .= $this->transport->read(self::CHUNK, $this->timeout);
+            $this->buffer .= $this->transport->read(self::CHUNK, $this->timeouts->read);
         }
 
         $line = substr($this->buffer, 0, $position);

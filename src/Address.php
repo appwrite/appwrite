@@ -23,26 +23,26 @@ final readonly class Address implements \Stringable
         public string $name = '',
     ) {
         if (preg_match('/[\r\n\x00]/', $email . $name) === 1) {
-            throw new Exception('An address must not span lines');
+            throw new \InvalidArgumentException('An address must not span lines');
         }
 
         $at = strrpos($email, '@');
 
         if (\in_array($at, [false, 0, \strlen($email) - 1], true)) {
-            throw new Exception("Not an address: {$email}");
+            throw new \InvalidArgumentException("Not an address: {$email}");
         }
 
         $local = substr($email, 0, $at);
         $domain = substr($email, $at + 1);
 
         if (\strlen($local) > self::MAX_LOCAL || \strlen($domain) > self::MAX_DOMAIN) {
-            throw new Exception("Address is over the length limits of RFC 5321: {$email}");
+            throw new \InvalidArgumentException("Address is over the length limits of RFC 5321: {$email}");
         }
 
         // filter_var refuses every non-ASCII local part, which RFC 6531 allows,
         // so it only gets to judge the addresses it understands.
         if (Encoding::isAscii($email) && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-            throw new Exception("Not an address: {$email}");
+            throw new \InvalidArgumentException("Not an address: {$email}");
         }
     }
 
