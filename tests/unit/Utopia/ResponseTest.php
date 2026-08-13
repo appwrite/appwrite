@@ -14,7 +14,6 @@ use Swoole\Http\Response as SwooleResponse;
 use Tests\Unit\Utopia\Response\Filters\First;
 use Tests\Unit\Utopia\Response\Filters\Second;
 use Utopia\Database\Document;
-use Utopia\System\System;
 
 final class ResponseTest extends TestCase
 {
@@ -126,9 +125,7 @@ final class ResponseTest extends TestCase
             'region' => 'default',
         ]), Response::MODEL_PROJECT);
 
-        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'cloud') {
-            $project['wafEnabled'] = false;
-        }
+        $project['wafEnabled'] = false;
 
         $generated = GeneratedProject::from($project);
 
