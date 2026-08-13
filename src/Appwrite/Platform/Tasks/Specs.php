@@ -81,7 +81,7 @@ class Specs extends Action
     }
 
     /**
-     * Platforms to include in PR creation.
+     * SDK example platforms to include in PR creation.
      * Override in a subclass to exclude specific platforms.
      *
      * @return array<string>
@@ -577,6 +577,54 @@ class Specs extends Action
         return $sdkPlatforms;
     }
 
+    /**
+     * @return array<string>
+     */
+    protected function getSDKPlatformsForMethod(Method $method): array
+    {
+        $platforms = \array_values(\array_unique($this->getSDKPlatformsForRouteSecurity($method->getAuth())));
+        $hide = $method->isHidden();
+
+        if ($hide === true) {
+            return [];
+        }
+
+        if (\is_array($hide)) {
+            $platforms = \array_values(\array_diff($platforms, $hide));
+        }
+
+        return $platforms;
+    }
+
+    /**
+     * Merge platform security schemes into the canonical OpenAPI component.
+     * Platform-specific definitions are retained as extension overrides when
+     * two platforms use the same scheme name differently.
+     *
+     * @param array<string, array<string, array<string, mixed>>> $platformKeys
+     * @return array<string, array<string, mixed>>
+     */
+    protected function mergeKeys(array $platformKeys): array
+    {
+        $keys = [];
+        $definitions = [];
+
+        foreach ($platformKeys as $platform => $schemes) {
+            foreach ($schemes as $name => $scheme) {
+                if (!isset($keys[$name])) {
+                    $keys[$name] = $scheme;
+                    $definitions[$name] = $scheme;
+                } elseif ($definitions[$name] !== $scheme) {
+                    $keys[$name]['x-appwrite']['overrides'][$platform] = $scheme;
+                }
+
+                $keys[$name]['x-appwrite']['platforms'][] = $platform;
+            }
+        }
+
+        return $keys;
+    }
+
     public function action(string $version, string $mode, ?string $git, ?string $message, ?string $branch): void
     {
         if (\is_null($git)) {
@@ -612,7 +660,104 @@ class Specs extends Action
 
         $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
-        $keys = $this->getKeys();
+        $platformKeys = $this->getKeys();
+        $keys = $this->mergeKeys($platformKeys);
+        $routes = [];
+        $services = [];
+        $routeNamespaces = [];
+
+        foreach ($appRoutes as $method) {
+            foreach ($method as $route) {
+                $sdks = $route->getLabel('sdk', false);
+
+                if (empty($sdks) || !$route->getLabel('docs', true)) {
+                    continue;
+                }
+
+                if ($route->getLabel('mock', false) !== $mocks) {
+                    continue;
+                }
+
+                if (!\is_array($sdks)) {
+                    $sdks = [$sdks];
+                }
+
+                $include = false;
+                foreach ($sdks as $sdk) {
+                    /** @var Method $sdk */
+                    if (empty($sdk->getNamespace()) || empty($this->getSDKPlatformsForMethod($sdk))) {
+                        continue;
+                    }
+
+                    $include = true;
+                    $routeNamespaces[$sdk->getNamespace()] = true;
+                }
+
+                if ($include) {
+                    $routes[] = $route;
+                }
+            }
+        }
+
+        /**
+         * Tag names must match Method namespaces (path tags), e.g. tablesDB.
+         * Service config keys stay lowercase (tablesdb); descriptions resolve
+         * case-insensitively from services.php.
+         */
+        $serviceDescriptions = [];
+        $configuredServices = [];
+
+        foreach (Config::getParam('services', []) as $service) {
+            $serviceKey = $service['key'] ?? '';
+            if ($serviceKey === '') {
+                continue;
+            }
+
+            $serviceDescriptions[\strtolower($serviceKey)] = $service['subtitle'] ?? '';
+
+            if (
+                !isset($service['docs'])
+                || !isset($service['sdk'])
+                || !$service['docs']
+                || !$service['sdk']
+                || empty(\array_intersect($platforms, $service['platforms'] ?? []))
+            ) {
+                continue;
+            }
+
+            $configuredServices[$serviceKey] = $service['subtitle'] ?? '';
+        }
+
+        $seenServices = [];
+        foreach (\array_keys($routeNamespaces) as $namespace) {
+            $services[] = [
+                'name' => $namespace,
+                'description' => $serviceDescriptions[\strtolower($namespace)] ?? '',
+            ];
+            $seenServices[\strtolower($namespace)] = true;
+        }
+
+        foreach ($configuredServices as $serviceKey => $description) {
+            if (isset($seenServices[\strtolower($serviceKey)])) {
+                continue;
+            }
+
+            $services[] = [
+                'name' => $serviceKey,
+                'description' => $description,
+            ];
+        }
+
+        $arguments = [
+            $specsContainer,
+            $services,
+            $routes,
+            $response->getModels(),
+            $keys,
+            0,
+            '',
+            fn (array $security): array => $this->getSDKPlatformsForRouteSecurity($security),
+        ];
 
         $generatedFiles = [];
         $endpoint = System::getEnv('_APP_HOME', 'https://appwrite.io');
@@ -623,187 +768,59 @@ class Specs extends Action
             throw new Exception('Failed to create specs directory: ' . $specsDir);
         }
 
-        foreach ($platforms as $platform) {
-            $routes = [];
-            $models = [];
-            $services = [];
-            $routeNamespaces = [];
+        foreach (['open-api3'] as $format) {
+            $formatInstance = $this->getFormatInstance($format, $arguments);
+            $specs = new Specification($formatInstance);
 
-            foreach ($appRoutes as $key => $method) {
-                foreach ($method as $route) {
-                    $sdks = $route->getLabel('sdk', false);
+            $formatInstance
+                ->setParam('name', APP_NAME)
+                ->setParam('description', 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)')
+                ->setParam('endpoint', 'https://cloud.appwrite.io/v1')
+                ->setParam('endpoint.docs', 'https://<REGION>.cloud.appwrite.io/v1')
+                ->setParam('version', APP_VERSION_STABLE)
+                ->setParam('terms', $endpoint . '/policy/terms')
+                ->setParam('support.email', $email)
+                ->setParam('support.url', $endpoint . '/support')
+                ->setParam('contact.name', APP_NAME . ' Team')
+                ->setParam('contact.email', $email)
+                ->setParam('contact.url', $endpoint . '/support')
+                ->setParam('license.name', 'BSD-3-Clause')
+                ->setParam('license.url', 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE')
+                ->setParam('docs.description', 'Full API docs, specs and tutorials')
+                ->setParam('docs.url', $endpoint . '/docs');
 
-                    if (empty($sdks)) {
-                        continue;
-                    }
+            $path = $mocks
+                ? $specsDir . '/' . $format . '-mocks.json'
+                : $specsDir . '/' . $format . '-' . $version . '.json';
 
-                    if (!\is_array($sdks)) {
-                        $sdks = [$sdks];
-                    }
-
-                    foreach ($sdks as $sdk) {
-                        /** @var Method $sdk */
-                        $hide = $sdk->isHidden();
-
-                        if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
-                            continue;
-                        }
-
-                        $routeSecurity = $sdk->getAuth();
-                        $sdkPlatforms = $this->getSDKPlatformsForRouteSecurity($routeSecurity);
-
-                        if (!$route->getLabel('docs', true)) {
-                            continue;
-                        }
-
-                        if ($route->getLabel('mock', false) && !$mocks) {
-                            continue;
-                        }
-
-                        if (!$route->getLabel('mock', false) && $mocks) {
-                            continue;
-                        }
-
-                        if (empty($sdk->getNamespace())) {
-                            continue;
-                        }
-
-                        if (!\in_array($platform, $sdkPlatforms)) {
-                            continue;
-                        }
-
-                        $routes[] = $route;
-                        $routeNamespaces[$sdk->getNamespace()] = true;
-                    }
-                }
+            try {
+                $parsedSpecs = $specs->parse();
+                $parsedSpecs['x-appwrite']['platforms'] = \array_map(
+                    fn (string $platform): array => [
+                        'authCount' => $authCounts[$platform] ?? 0,
+                        'securitySchemes' => \array_keys($platformKeys[$platform] ?? []),
+                    ],
+                    \array_combine($platforms, $platforms),
+                );
+                $this->verifyParsedSpec($parsedSpecs);
+            } catch (\RuntimeException $e) {
+                Console::error("Spec generation failed ({$format}): " . $e->getMessage());
+                Console::exit(1);
+                return;
             }
 
-            /**
-             * Tag names must match Method namespaces (path tags), e.g. tablesDB.
-             * Service config keys stay lowercase (tablesdb); descriptions resolve
-             * case-insensitively from services.php.
-             */
-            $serviceDescriptions = [];
-            $configuredServices = [];
+            $encodedSpecs = \json_encode($parsedSpecs, JSON_PRETTY_PRINT);
 
-            foreach (Config::getParam('services', []) as $service) {
-                $serviceKey = $service['key'] ?? '';
-                if ($serviceKey === '') {
-                    continue;
-                }
-
-                $serviceDescriptions[\strtolower($serviceKey)] = $service['subtitle'] ?? '';
-
-                if (
-                    !isset($service['docs']) // Skip service if not part of the public API
-                    || !isset($service['sdk'])
-                    || !$service['docs']
-                    || !$service['sdk']
-                ) {
-                    continue;
-                }
-
-                // Check if current platform is included in service's platforms
-                if (!\in_array($platform, $service['platforms'] ?? [])) {
-                    continue;
-                }
-
-                $configuredServices[$serviceKey] = $service['subtitle'] ?? '';
+            if ($encodedSpecs === false) {
+                throw new Exception('Failed to encode ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . \json_last_error_msg());
             }
 
-            $seenServices = [];
-
-            foreach (\array_keys($routeNamespaces) as $namespace) {
-                $services[] = [
-                    'name' => $namespace,
-                    'description' => $serviceDescriptions[\strtolower($namespace)] ?? '',
-                ];
-                $seenServices[\strtolower($namespace)] = true;
+            if (\file_put_contents($path, $encodedSpecs) === false) {
+                throw new Exception('Failed to save ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . $path);
             }
 
-            foreach ($configuredServices as $serviceKey => $description) {
-                if (isset($seenServices[\strtolower($serviceKey)])) {
-                    continue;
-                }
-
-                $services[] = [
-                    'name' => $serviceKey,
-                    'description' => $description,
-                ];
-            }
-
-            $models = $response->getModels();
-
-            foreach ($models as $key => $value) {
-                if ($platform !== APP_SDK_PLATFORM_CONSOLE && !$value->isPublic()) {
-                    unset($models[$key]);
-                }
-            }
-
-            $arguments = [
-                $specsContainer,
-                $services,
-                $routes,
-                $models,
-                $keys[$platform],
-                $authCounts[$platform] ?? 0,
-                $platform
-            ];
-
-            foreach (['open-api3'] as $format) {
-                $formatInstance = $this->getFormatInstance($format, $arguments);
-                $specs = new Specification($formatInstance);
-
-                $formatInstance
-                    ->setParam('name', APP_NAME)
-                    ->setParam('description', 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)')
-                    ->setParam('endpoint', 'https://cloud.appwrite.io/v1')
-                    ->setParam('endpoint.docs', 'https://<REGION>.cloud.appwrite.io/v1')
-                    ->setParam('version', APP_VERSION_STABLE)
-                    ->setParam('terms', $endpoint . '/policy/terms')
-                    ->setParam('support.email', $email)
-                    ->setParam('support.url', $endpoint . '/support')
-                    ->setParam('contact.name', APP_NAME . ' Team')
-                    ->setParam('contact.email', $email)
-                    ->setParam('contact.url', $endpoint . '/support')
-                    ->setParam('license.name', 'BSD-3-Clause')
-                    ->setParam('license.url', 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE')
-                    ->setParam('docs.description', 'Full API docs, specs and tutorials')
-                    ->setParam('docs.url', $endpoint . '/docs');
-
-                $path = $mocks
-                    ? $specsDir . '/' . $format . '-mocks-' . $platform . '.json'
-                    : $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
-
-                try {
-                    $parsedSpecs = $specs->parse();
-                    $this->verifyParsedSpec($parsedSpecs);
-                } catch (\RuntimeException $e) {
-                    // A throw is reported and carried on from, so stop here
-                    Console::error("Spec generation failed for {$platform} ({$format}): " . $e->getMessage());
-                    Console::exit(1);
-                    return;
-                }
-
-                $encodedSpecs = \json_encode($parsedSpecs, JSON_PRETTY_PRINT);
-
-                unset($parsedSpecs);
-
-                if ($encodedSpecs === false) {
-                    throw new Exception('Failed to encode ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . \json_last_error_msg());
-                }
-
-                if (\file_put_contents($path, $encodedSpecs) === false) {
-                    throw new Exception('Failed to save ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . $path);
-                }
-
-                $generatedFiles[] = realpath($path);
-                Console::success('Saved ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . realpath($path));
-
-                unset($encodedSpecs, $specs, $formatInstance);
-            }
-
-            unset($arguments, $models, $routes, $services);
+            $generatedFiles[] = realpath($path);
+            Console::success('Saved ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . realpath($path));
         }
 
         if ($git === 'yes') {
@@ -833,18 +850,13 @@ class Specs extends Action
 
             // Copy generated spec files into specs/{version}/ subdirectory
             $prPlatforms = static::getPlatformsForPR();
-            $prFiles = \array_filter(
-                $generatedFiles,
-                fn (string $file) => \in_array(
-                    \substr(\basename($file, '.json'), \strrpos(\basename($file, '.json'), '-') + 1),
-                    $prPlatforms,
-                    true
-                )
-            );
-
             $specsSubDir = $mocks ? 'mocks' : $version;
             \exec('mkdir -p ' . \escapeshellarg("{$target}/specs/{$specsSubDir}"));
-            foreach ($prFiles as $file) {
+            $legacyPattern = $mocks ? 'open-api3-mocks-*.json' : "open-api3-{$version}-*.json";
+            foreach (\glob("{$target}/specs/{$specsSubDir}/{$legacyPattern}") ?: [] as $legacyFile) {
+                \unlink($legacyFile);
+            }
+            foreach ($generatedFiles as $file) {
                 $fileName = \basename($file);
                 \exec('cp ' . \escapeshellarg($file) . ' ' . \escapeshellarg("{$target}/specs/{$specsSubDir}/{$fileName}"));
                 Console::success("Copied spec file to repo: specs/{$specsSubDir}/{$fileName}");

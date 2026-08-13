@@ -2,7 +2,6 @@
 
 namespace Appwrite\SDK\Specification\Format;
 
-use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -128,10 +127,8 @@ class OpenAPI3 extends Format
             $produces = ($sdk->getContentType())->value;
             $routeSecurity = $sdk->getAuth();
 
-            $specs = new Specs();
-            $sdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($routeSecurity);
-
-            $sdkPlatforms = array_values(array_unique($sdkPlatforms));
+            $sdkPlatforms = \array_values(\array_unique($this->getPlatformsForSecurity($sdk->getAuth())));
+            $availablePlatforms = $this->getMethodPlatforms($sdk);
             $namespace = $sdk->getNamespace();
 
             $descContents = $this->getDescriptionContents($desc);
@@ -159,6 +156,14 @@ class OpenAPI3 extends Format
                 ],
             ];
 
+            if ($availablePlatforms !== $sdkPlatforms) {
+                $temp['x-appwrite']['available-platforms'] = $availablePlatforms;
+            }
+
+            if ($sdk->getType() === MethodType::LOCATION && !empty($sdk->getLocationAuth())) {
+                $temp['x-appwrite']['location-auth'] = $sdk->getLocationAuth();
+            }
+
             if ($sdk->getDescriptionFilePath() !== null) {
                 $temp['x-appwrite']['edit'] = 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription();
             }
@@ -176,10 +181,10 @@ class OpenAPI3 extends Format
                     /** @var Method $methodObj */
                     $desc = $methodObj->getDescriptionFilePath();
 
-                    $methodSecurities = $methodObj->getAuth();
-                    $methodSdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($methodSecurities);
+                    $methodSdkPlatforms = \array_values(\array_unique($this->getPlatformsForSecurity($methodObj->getAuth())));
+                    $methodAvailablePlatforms = $this->getMethodPlatforms($methodObj);
 
-                    if (!\in_array($this->platform, $methodSdkPlatforms)) {
+                    if (empty($methodAvailablePlatforms)) {
                         continue;
                     }
 
@@ -194,7 +199,8 @@ class OpenAPI3 extends Format
                         'name' => $methodObj->getMethodName(),
                         'namespace' => $methodObj->getNamespace(),
                         'desc' => $methodObj->getDesc(),
-                        'auth' => \array_slice($methodSecurities, 0, $this->authCount),
+                        'auth' => $methodSecurities,
+                        'platforms' => $methodSdkPlatforms,
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
@@ -202,6 +208,10 @@ class OpenAPI3 extends Format
                         'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
                         'public' => $methodObj->isPublic(),
                     ];
+
+                    if ($methodAvailablePlatforms !== $methodSdkPlatforms) {
+                        $additionalMethod['available-platforms'] = $methodAvailablePlatforms;
+                    }
 
                     // add deprecation only if method has it!
                     if ($methodObj->getDeprecated()) {
@@ -267,6 +277,16 @@ class OpenAPI3 extends Format
                     }
 
                     $temp['x-appwrite']['methods'][] = $additionalMethod;
+                    $availablePlatforms = \array_values(\array_unique(\array_merge(
+                        $temp['x-appwrite']['available-platforms'] ?? $temp['x-appwrite']['platforms'],
+                        $methodAvailablePlatforms,
+                    )));
+
+                    if ($availablePlatforms !== $temp['x-appwrite']['platforms']) {
+                        $temp['x-appwrite']['available-platforms'] = $availablePlatforms;
+                    } else {
+                        unset($temp['x-appwrite']['available-platforms']);
+                    }
                 }
             }
 
@@ -407,7 +427,7 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
+                $temp['x-appwrite']['auth'] = $securities;
 
                 if ($sdk->getType() === MethodType::LOCATION) {
                     foreach ($sdk->getLocationAuth() as $key) {
@@ -1116,5 +1136,24 @@ class OpenAPI3 extends Format
         \ksort($output['paths']);
 
         return $output;
+    }
+
+    /**
+     * @return array<string>
+     */
+    private function getMethodPlatforms(Method $method): array
+    {
+        $platforms = \array_values(\array_unique($this->getPlatformsForSecurity($method->getAuth())));
+        $hide = $method->isHidden();
+
+        if ($hide === true) {
+            return [];
+        }
+
+        if (\is_array($hide)) {
+            $platforms = \array_values(\array_diff($platforms, $hide));
+        }
+
+        return $platforms;
     }
 }

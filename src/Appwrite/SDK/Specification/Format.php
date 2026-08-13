@@ -2,6 +2,7 @@
 
 namespace Appwrite\SDK\Specification;
 
+use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\Utopia\Response\Model;
 use Utopia\DI\Container;
@@ -25,6 +26,8 @@ abstract class Format
     protected array $keys;
     protected int $authCount;
     protected string $platform;
+    /** @var callable(array): array<string> */
+    protected $platformsForSecurity;
     protected array $params = [
         'name' => '',
         'description' => '',
@@ -41,8 +44,16 @@ abstract class Format
         'license.url' => '',
     ];
 
-    public function __construct(Container $container, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
-    {
+    public function __construct(
+        Container $container,
+        array $services,
+        array $routes,
+        array $models,
+        array $keys,
+        int $authCount,
+        string $platform,
+        ?callable $platformsForSecurity = null,
+    ) {
         $this->container = $container;
         $this->services = $services;
         $this->routes = $routes;
@@ -50,6 +61,34 @@ abstract class Format
         $this->keys = $keys;
         $this->authCount = $authCount;
         $this->platform = $platform;
+        $this->platformsForSecurity = $platformsForSecurity ?? function (array $security): array {
+            $platforms = [];
+
+            foreach ($security as $type) {
+                switch ($type) {
+                    case AuthType::SESSION:
+                        $platforms[] = APP_SDK_PLATFORM_CLIENT;
+                        break;
+                    case AuthType::JWT:
+                    case AuthType::KEY:
+                        $platforms[] = APP_SDK_PLATFORM_SERVER;
+                        break;
+                    case AuthType::ADMIN:
+                        $platforms[] = APP_SDK_PLATFORM_CONSOLE;
+                        break;
+                }
+            }
+
+            return $platforms;
+        };
+    }
+
+    /**
+     * @return array<string>
+     */
+    protected function getPlatformsForSecurity(array $security): array
+    {
+        return ($this->platformsForSecurity)($security);
     }
 
     /**

@@ -26,6 +26,7 @@ use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
+use Appwrite\SDK\Specification\Platform as PlatformSpecification;
 use Appwrite\Spec\OpenAPI3;
 use Appwrite\Spec\StaticSpec;
 use CzProject\GitPhp\Git;
@@ -311,13 +312,26 @@ class SDKs extends Action
                 } else {
                     Console::log('  Fetching API spec...');
 
-                    $specPath = __DIR__ . '/../../../../app/config/specs/open-api3-' . $version . '-' . $language['family'] . '.json';
+                    $specPath = __DIR__ . '/../../../../app/config/specs/open-api3-' . $version . '.json';
 
                     if (!file_exists($specPath)) {
                         throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
                     }
 
-                    $spec = file_get_contents($specPath);
+                    $contents = file_get_contents($specPath);
+                    if ($contents === false) {
+                        throw new \Exception('Failed to read spec file: ' . $specPath . '.');
+                    }
+
+                    $decoded = \json_decode($contents, true);
+                    if (!\is_array($decoded)) {
+                        throw new \Exception('Failed to decode spec file: ' . $specPath . '.');
+                    }
+
+                    $spec = \json_encode(PlatformSpecification::filter($decoded, $language['family']));
+                    if ($spec === false) {
+                        throw new \Exception('Failed to encode spec file: ' . $specPath . '.');
+                    }
                 }
 
                 $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';

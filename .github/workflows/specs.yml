@@ -73,8 +73,9 @@ jobs:
           # Create or checkout the feature branch
           git checkout -b "${GIT_BRANCH}" || git checkout "${GIT_BRANCH}"
 
-          # Copy spec files
+          # Replace the legacy platform specs with the unified spec
           mkdir -p "specs/${VERSION}"
+          rm -f specs/${VERSION}/open-api3-${VERSION}-*.json
           cp ${GITHUB_WORKSPACE}/${SPECS_DIR}/*${VERSION}*.json "specs/${VERSION}/" 2>/dev/null || true
 
           # Copy latest specs if version is latest
