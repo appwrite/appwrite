@@ -1,0 +1,13 @@
+/vendor/
+composer.phar
+.phpunit.result.cache
+.phpunit.cache/
+*.cache
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+.env

@@ -1,0 +1,33 @@
+{
+    "name": "utopia-php/smtp",
+    "description": "Lite & fast micro PHP SMTP library that is easy to learn",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "smtp",
+        "mail",
+        "email"
+    ],
+    "require": {
+        "php": ">=8.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\SMTP\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\SMTP\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
