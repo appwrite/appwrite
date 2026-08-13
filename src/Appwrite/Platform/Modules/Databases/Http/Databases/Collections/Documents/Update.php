@@ -19,6 +19,7 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -326,15 +327,17 @@ class Update extends Action
             $document = $dbForDatabases->withRequestTimestamp(
                 $requestTimestamp,
                 fn () => $dbForDatabases->withPreserveDates(fn () => $dbForDatabases->updateDocument(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $collectionTableId,
                     $document->getId(),
                     $newDocument
                 ))
             );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
-        } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException(), params: [$documentId]);
+        } catch (UniqueException $e) {
+            throw new Exception($this->getUniqueConstraintException(), previous: $e);
+        } catch (DuplicateException $e) {
+            throw new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {

@@ -6262,6 +6262,8 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals($this->getUniqueConstraintException(), $duplicate['body']['type']);
+        $this->assertStringNotContainsString('requested ID', $duplicate['body']['message']);
 
         // Test for exception when inserting new doc and then updating to conflict
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -6298,6 +6300,16 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals($this->getUniqueConstraintException(), $duplicate['body']['type']);
+        $this->assertStringNotContainsString('requested ID', $duplicate['body']['message']);
+
+    }
+
+    private function getUniqueConstraintException(): string
+    {
+        return $this->getRecordResource() === 'rows'
+            ? Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION
+            : Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION;
     }
 
     public function testPersistentCreatedAt(): void
