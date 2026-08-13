@@ -18,15 +18,15 @@ final class FrameworksTest extends TestCase
     public function testStaticOutputStaysInsideSsrOutput(): void
     {
         foreach ($this->frameworks as $key => $framework) {
-            // Next.js exports a static site to its own root rather than into the ssr build.
-            if ($key === 'nextjs') {
-                continue;
-            }
-
             $ssr = $framework['adapters']['ssr']['outputDirectory'] ?? null;
             $static = $framework['adapters']['static']['outputDirectory'] ?? null;
 
             if ($ssr === null || $static === null) {
+                continue;
+            }
+
+            // An unnested static directory is its own build root, like Next.js ./out.
+            if (\substr_count(\rtrim($static, '/'), '/') <= 1) {
                 continue;
             }
 
