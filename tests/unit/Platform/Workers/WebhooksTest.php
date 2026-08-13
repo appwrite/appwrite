@@ -26,9 +26,10 @@ require_once __DIR__ . '/../../../../app/init.php';
 
 final class WebhooksTest extends TestCase
 {
-    public function testFailureThresholdSendsOneAlertForStaleConcurrentMessages(): void
+    public function testFailureThresholdUsesLockAndSendsOneAlertForStaleMessages(): void
     {
-        $database = $this->createPlatformDatabase();
+        $adapter = new LockTrackingMemory();
+        $database = $this->createPlatformDatabase($adapter);
         $this->seedOwnerUser($database);
         $database->createCollection('webhooks', [], [], [
             Permission::create(Role::any()),
@@ -96,8 +97,106 @@ final class WebhooksTest extends TestCase
         }
 
         $this->assertCount(1, $publisher->getEvents('v1-notifications'));
+        $this->assertSame(2, $adapter->getWebhookLockingReads());
         $this->assertFalse($database->getDocument('webhooks', 'webhook-1')->getAttribute('enabled'));
         $this->assertSame(11, $database->getDocument('webhooks', 'webhook-1')->getAttribute('attempts'));
+    }
+
+    public function testFailedAlertEnqueueRollsBackPauseForRetry(): void
+    {
+        $database = $this->createPlatformDatabase();
+        $this->seedOwnerUser($database);
+        $database->createCollection('webhooks', [], [], [
+            Permission::create(Role::any()),
+            Permission::read(Role::any()),
+            Permission::update(Role::any()),
+            Permission::delete(Role::any()),
+        ], false);
+        $database->createAttribute('webhooks', 'attempts', Database::VAR_INTEGER, 0, true);
+        $database->createAttribute('webhooks', 'enabled', Database::VAR_BOOLEAN, 0, true);
+        $database->createAttribute('webhooks', 'events', Database::VAR_STRING, Database::LENGTH_KEY, true, null, true, true);
+        $database->createAttribute('webhooks', 'logs', Database::VAR_STRING, 20000, false);
+
+        $webhook = new Document([
+            '$id' => 'webhook-1',
+            '$sequence' => 201,
+            'attempts' => 9,
+            'enabled' => true,
+            'events' => ['documents.create'],
+            'name' => 'Payments',
+            'url' => 'http://127.0.0.1:1',
+            'signatureKey' => 'secret',
+            'httpUser' => '',
+            'httpPass' => '',
+            'security' => false,
+        ]);
+        $database->createDocument('webhooks', $webhook);
+
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 1,
+            'name' => 'Production',
+            'teamInternalId' => 'team-internal-1',
+            'region' => 'fra',
+            'webhooks' => [$webhook],
+        ]);
+        $message = new Message([
+            'pid' => 'pid',
+            'queue' => 'v1-webhooks',
+            'timestamp' => \time(),
+            'payload' => [
+                'events' => ['documents.create'],
+                'payload' => [],
+                'user' => [],
+            ],
+        ]);
+        $publisher = new class () extends MockPublisher {
+            private int $attempts = 0;
+            private array $deduplicationKeys = [];
+
+            public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+            {
+                if ($queue->name === 'v1-notifications') {
+                    $this->attempts++;
+                    $this->deduplicationKeys[] = $payload['deduplicationKey'];
+                    return false;
+                }
+
+                return parent::enqueue($queue, $payload, $priority);
+            }
+
+            public function getAttempts(): int
+            {
+                return $this->attempts;
+            }
+
+            public function getDeduplicationKeys(): array
+            {
+                return $this->deduplicationKeys;
+            }
+        };
+        $worker = new Webhooks();
+
+        try {
+            $worker->action(
+                $message,
+                $project,
+                $database,
+                new NotificationPublisher($publisher, new Queue('v1-notifications')),
+                new UsagePublisher($publisher, new Queue('v1-usage')),
+                new Log(),
+                []
+            );
+            $this->fail('Expected notification enqueue failure.');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Failed to enqueue webhook paused notification.', $error->getMessage());
+        }
+
+        $stored = $database->getDocument('webhooks', 'webhook-1');
+        $this->assertTrue($stored->getAttribute('enabled'));
+        $this->assertSame(9, $stored->getAttribute('attempts'));
+        $this->assertSame(3, $publisher->getAttempts());
+        $this->assertCount(1, \array_unique($publisher->getDeduplicationKeys()));
     }
 
     public function testSendAlertPublishesNotificationMessage(): void
@@ -349,12 +448,12 @@ final class WebhooksTest extends TestCase
         }
     }
 
-    private function createPlatformDatabase(): Database
+    private function createPlatformDatabase(?Memory $adapter = null): Database
     {
         $authorization = new Authorization();
         $authorization->addRole(Role::any()->toString());
 
-        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database = new Database($adapter ?? new Memory(), new Cache(new NoCache()));
         $database
             ->setAuthorization($authorization)
             ->setDatabase('webhookTests')
@@ -405,5 +504,24 @@ final class WebhooksTest extends TestCase
             'email' => 'developer@example.test',
             'name' => 'Developer User',
         ]));
+    }
+}
+
+final class LockTrackingMemory extends Memory
+{
+    private int $webhookLockingReads = 0;
+
+    public function getDocument(Document $collection, string $id, array $queries = [], bool $forUpdate = false): Document
+    {
+        if ($collection->getId() === 'webhooks' && $forUpdate) {
+            $this->webhookLockingReads++;
+        }
+
+        return parent::getDocument($collection, $id, $queries, $forUpdate);
+    }
+
+    public function getWebhookLockingReads(): int
+    {
+        return $this->webhookLockingReads;
     }
 }

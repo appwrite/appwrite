@@ -174,10 +174,17 @@ class Webhooks extends Action
                 $logs .= 'Body: ' . "\n" . \mb_strcut($responseBody, 0, 10000) . "\n"; // Limit to 10kb
             }
 
-            $shouldAlert = false;
-            $dbForPlatform->withTransaction(function () use ($dbForPlatform, &$webhook, $logs, &$shouldAlert): void {
-                $shouldAlert = false;
+            $dbForPlatform->withTransaction(function () use (
+                $dbForPlatform,
+                &$webhook,
+                $logs,
+                $statusCode,
+                $project,
+                $publisherForNotifications,
+                $plan
+            ): void {
                 $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId(), forUpdate: true);
+                $pauseCycle = $webhook->getUpdatedAt();
                 $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
                 $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
                 $attempts = $webhook->getAttribute('attempts');
@@ -189,17 +196,27 @@ class Webhooks extends Action
                     $webhook->getAttribute('enabled', true)
                     && $attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))
                 ) {
+                    $queued = $this->sendAlert(
+                        $attempts,
+                        $statusCode,
+                        $webhook,
+                        $project,
+                        $dbForPlatform,
+                        $publisherForNotifications,
+                        $plan,
+                        $pauseCycle
+                    );
+
+                    if (!$queued) {
+                        throw new \RuntimeException('Failed to enqueue webhook paused notification.');
+                    }
+
                     $webhook->setAttribute('enabled', false);
                     $updatePayload['enabled'] = false;
-                    $shouldAlert = true;
                 }
 
                 $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
             });
-
-            if ($shouldAlert) {
-                $this->sendAlert($webhook->getAttribute('attempts'), $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
-            }
 
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
@@ -239,9 +256,10 @@ class Webhooks extends Action
      * @param Database $dbForPlatform
      * @param NotificationPublisher $publisherForNotifications
      * @param array $plan
-     * @return void
+     * @param string|null $pauseCycle
+     * @return bool
      */
-    public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $plan): void
+    public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $plan, ?string $pauseCycle = null): bool
     {
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
@@ -254,7 +272,7 @@ class Webhooks extends Action
         );
 
         if (empty($ownerMemberships)) {
-            return;
+            return true;
         }
 
         $userIds = \array_values(\array_unique(\array_filter(\array_map(
@@ -263,7 +281,7 @@ class Webhooks extends Action
         ))));
 
         if (empty($userIds)) {
-            return;
+            return true;
         }
 
         $users = $dbForPlatform->find('users', [
@@ -272,7 +290,7 @@ class Webhooks extends Action
         ]);
 
         if (empty($users)) {
-            return;
+            return true;
         }
 
         $projectId = $project->getId();
@@ -327,10 +345,10 @@ class Webhooks extends Action
                 : "/projects/{$projectId}/settings/webhooks");
             $template->setParam('{{attempts}}', $attempts);
 
-            $publisherForNotifications->enqueue(new NotificationMessage(
+            $queued = $publisherForNotifications->enqueue(new NotificationMessage(
                 project: $project,
                 recipients: $recipients,
-                deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),
+                deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . ($pauseCycle ?? $webhook->getUpdatedAt()),
                 subject: $subject,
                 bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
                 body: $template->render(),
@@ -346,7 +364,13 @@ class Webhooks extends Action
                     'platform' => $plan['platformName'] ?? APP_NAME,
                 ],
             ));
+
+            if ($queued === false) {
+                return false;
+            }
         }
+
+        return true;
     }
 
     private static function hasOwnerRole(Document $membership): bool
