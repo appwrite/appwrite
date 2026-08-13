@@ -203,10 +203,7 @@ export function SiteBuildFrameworkCard({
     },
     onSuccess: (updated) => {
       toast.success(t('Framework settings updated successfully'))
-      queryClient.setQueryData(
-        ['site', 'project', projectId, siteId],
-        updated,
-      )
+      queryClient.setQueryData(['site', 'project', projectId, siteId], updated)
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })
@@ -228,6 +225,9 @@ export function SiteBuildFrameworkCard({
       adapter: adapter || undefined,
       outputDirectory: outputDirectory || undefined,
       fallbackFile: fallbackFile || undefined,
+      ...(framework !== site?.framework || adapter !== site?.adapter
+        ? { startCommand: undefined }
+        : {}),
     })
   }
 
@@ -246,7 +246,9 @@ export function SiteBuildFrameworkCard({
           {t('Framework')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          {t('Choose your stack, adapter mode, and where build output is written.')}
+          {t(
+            'Choose your stack, adapter mode, and where build output is written.',
+          )}
         </p>
       </div>
       <div className="border-t border-border" />
