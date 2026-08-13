@@ -2223,7 +2223,14 @@ trait MigrationsBase
             'functionId' => ID::unique(),
             'name' => 'Test',
             'runtime' => 'node-22',
-            'entrypoint' => 'index.js'
+            'entrypoint' => 'index.js',
+            // The timeout is the executor's WHOLE budget, not the time the code gets: it is
+            // passed straight through as `timeout:` and the executor spends it starting a
+            // cold runtime before the handler runs. The migration copies it to the
+            // destination, where the execution below is that function's first ever run, so
+            // the default 15s is charged to a cold start on a docker-in-docker daemon --
+            // ten seconds was already measured as too little for that in CI.
+            'timeout' => 60
         ]);
 
         $deploymentId = $this->setupDeployment($functionId, [
@@ -2314,8 +2321,9 @@ trait MigrationsBase
             'body' => 'test'
         ]);
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertStringContainsString('body-is-test', $execution['body']['logs']);
+        $this->assertEquals(201, $execution['headers']['status-code'], 'Execution was not created: ' . json_encode($execution['body'], JSON_PRETTY_PRINT));
+        $this->assertSame('completed', $execution['body']['status'], 'Execution did not complete: ' . json_encode($execution['body'], JSON_PRETTY_PRINT));
+        $this->assertStringContainsString('body-is-test', (string) $execution['body']['logs'], 'Execution completed without the logs it printed: ' . json_encode($execution['body'], JSON_PRETTY_PRINT));
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
