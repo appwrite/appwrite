@@ -81,7 +81,12 @@ import {
 } from '@/lib/user-os'
 import { formatInitMockCurrentDay } from '@/lib/init/mock-current-day'
 import { formatInitMockTicketType } from '@/lib/init/ticket-types'
-import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
+import type { FaviconStatus } from '@/hooks/use-favicon'
+import {
+  formatFaviconStatusSummary,
+  getFaviconStatus,
+  subscribeFaviconStatus,
+} from '@/lib/favicon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   setDebugProfileOverride,
@@ -125,6 +130,7 @@ import { DebugMenuTerminalPanel } from '@/components/global/providers/DebugMenuT
 import { DebugMenuRecentResourcesPanel } from '@/components/global/providers/DebugMenuRecentResourcesPanel'
 import { DebugMenuCommunityShareExamplesPanel } from '@/components/global/providers/DebugMenuCommunityShareExamplesPanel'
 import { DebugMenuEnvPanel } from '@/components/global/providers/DebugMenuEnvPanel'
+import { DebugMenuFaviconPanel } from '@/components/global/providers/DebugMenuFaviconPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -216,6 +222,7 @@ interface MenuItem {
     | 'terminalSettings'
     | 'recentResources'
     | 'envStatus'
+    | 'faviconStatus'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
@@ -586,7 +593,8 @@ function isDebugPanelSubmenuVariant(
     variant === 'seedResources' ||
     variant === 'terminalSettings' ||
     variant === 'recentResources' ||
-    variant === 'envStatus'
+    variant === 'envStatus' ||
+    variant === 'faviconStatus'
   )
 }
 
@@ -665,7 +673,8 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'seedResources' ||
     item.submenuVariant === 'terminalSettings' ||
     item.submenuVariant === 'recentResources' ||
-    item.submenuVariant === 'envStatus'
+    item.submenuVariant === 'envStatus' ||
+    item.submenuVariant === 'faviconStatus'
   )
 }
 
@@ -883,8 +892,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
   const { addMockBanner, clearAllBanners, banners } = usePromoBanner()
-  const { setFavicon, getCurrentFavicon } = useFavicon()
-  const [currentFavicon, setCurrentFavicon] = useState<string | null>(null)
+  const [faviconStatus, setFaviconStatus] = useState<FaviconStatus>(() =>
+    getFaviconStatus(),
+  )
   const { theme, setTheme } = useTheme()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
   const [menuSearch, setMenuSearch] = useState('')
@@ -1049,17 +1059,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     }
   }, [])
 
-  // Update current favicon state when it changes
+  // Keep favicon status summary in sync for the Appearance menu label.
   useEffect(() => {
-    const updateCurrentFavicon = () => {
-      const favicon = getCurrentFavicon()
-      setCurrentFavicon(favicon)
-    }
-
-    updateCurrentFavicon()
-    const interval = setInterval(updateCurrentFavicon, 500)
-    return () => clearInterval(interval)
-  }, [getCurrentFavicon, isOpen])
+    if (!isOpen) return
+    return subscribeFaviconStatus(setFaviconStatus)
+  }, [isOpen])
 
   // Reset submenu and search when popover closes
   useEffect(() => {
@@ -1278,30 +1282,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       },
     ]
 
-    const faviconOptions: MenuItem[] = (
-      [
-        { label: 'Default', faviconValue: 'default' },
-        { label: 'Green', faviconValue: 'green' },
-        { label: 'Blue', faviconValue: 'blue' },
-        { label: 'Red', faviconValue: 'red' },
-        { label: 'Theme', faviconValue: 'theme' },
-        { label: 'Theme + Green', faviconValue: 'theme-green' },
-        { label: 'Theme + Blue', faviconValue: 'theme-blue' },
-        { label: 'Theme + Red', faviconValue: 'theme-red' },
-      ] as const satisfies ReadonlyArray<{
-        label: string
-        faviconValue: FaviconVariant
-      }>
-    ).map((opt) => ({
-      label: opt.label,
-      onClick: () => {
-        setFavicon(opt.faviconValue)
-        setIsOpen(false)
-      },
-      active: currentFavicon === opt.faviconValue,
-      icon: <Image className="h-3 w-3" />,
-    }))
-
     const lowPowerAnimationOptions: MenuItem[] = (
       [
         {
@@ -1423,8 +1403,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Favicon',
+            description: formatFaviconStatusSummary(faviconStatus),
             icon: <Image className="h-3 w-3" />,
-            submenu: faviconOptions,
+            submenuVariant: 'faviconStatus',
           },
           {
             label: 'Operating system',
@@ -2468,7 +2449,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     ]
   }, [
     theme,
-    currentFavicon,
+    faviconStatus,
     profileId,
     features.dedicatedDbsSupport,
     features.dedicatedDbsDocumentsDB,
@@ -2504,7 +2485,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     actions,
     navigate,
     setTheme,
-    setFavicon,
     addMockBanner,
     clearAllBanners,
     languageCopy,
@@ -2861,7 +2841,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'initTicketMock' ||
               currentSubmenu?.submenuVariant === 'terminalSettings' ||
               currentSubmenu?.submenuVariant === 'recentResources' ||
-              currentSubmenu?.submenuVariant === 'envStatus'
+              currentSubmenu?.submenuVariant === 'envStatus' ||
+              currentSubmenu?.submenuVariant === 'faviconStatus'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -2995,6 +2976,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuRecentResourcesPanel />
               ) : currentSubmenu.submenuVariant === 'envStatus' ? (
                 <DebugMenuEnvPanel />
+              ) : currentSubmenu.submenuVariant === 'faviconStatus' ? (
+                <DebugMenuFaviconPanel />
               ) : (
                 <div className="space-y-0.5">
                   {currentSubmenu.note ? (

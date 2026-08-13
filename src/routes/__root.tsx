@@ -241,12 +241,21 @@ function LegacyThemeFavicon() {
 
   useEffect(() => {
     if (isLegacyTheme(theme, resolvedTheme)) {
-      applyFaviconHref(LEGACY_ICON_SRC, { cacheBust: false })
+      applyFaviconHref(LEGACY_ICON_SRC, {
+        cacheBust: false,
+        source: 'legacy-theme',
+        reason: 'Legacy debug theme is active',
+        variant: 'default',
+      })
       return
     }
 
     const variant = getDefaultFaviconVariant()
-    applyFaviconVariant(variant, { cacheBust: false })
+    applyFaviconVariant(variant, {
+      cacheBust: false,
+      source: 'default',
+      reason: 'Idle (default favicon)',
+    })
   }, [theme, resolvedTheme])
 
   return null

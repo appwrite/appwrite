@@ -3168,6 +3168,10 @@ export function AgentPanelContent({
     conversation: activeConversation,
     isPending:
       createMessageMutation.isPending || updateMessageMutation.isPending,
+    projectId: contextProjectId,
+    projectName: project?.name,
+    organizationId,
+    pathname: location.pathname,
   })
 
   const latestAssistantMessage = useMemo(
