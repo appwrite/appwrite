@@ -45,7 +45,18 @@ jobs:
             config_file: .env
             create: npx -y create-expo-app@latest "$APP_DIR" --template blank-typescript --no-install
             configure: jq --arg id "$APP_ID" '.expo.android.package = $id' app.json > app.json.tmp && mv app.json.tmp app.json
-            install: npm install && npm install react-native-appwrite
+            # react-native-appwrite hard-pins expo-file-system 18.*.*, so npm
+            # nests a second copy next to the Expo SDK 54 app's 19.x. Expo
+            # autolinking then mixes both versions' native code and the app
+            # dies at launch with NoClassDefFoundError on
+            # FilePermissionModule (removed in 19). Override it to the app's
+            # own version until appwrite/sdk-for-react-native#114 ships; the
+            # auth flow under test does not touch the file APIs.
+            install: >-
+              npm install && npm install react-native-appwrite &&
+              npx expo install expo-file-system &&
+              npm pkg set 'overrides.expo-file-system=$expo-file-system' &&
+              npm install
             # --clean keeps prebuild idempotent so the build step can retry.
             build: npx expo prebuild --platform android --no-install --clean && ./android/gradlew -p android assembleRelease --no-daemon
             apk: android/app/build/outputs/apk/release/app-release.apk

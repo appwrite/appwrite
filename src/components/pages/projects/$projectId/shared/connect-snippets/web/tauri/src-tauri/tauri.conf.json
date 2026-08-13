@@ -9,6 +9,13 @@
     "devUrl": "http://localhost:5173"
   },
   "app": {
+    "windows": [
+      {
+        "title": "Connect QA",
+        "width": 800,
+        "height": 600
+      }
+    ],
     "withGlobalTauri": true,
     "security": {
       "csp": null
