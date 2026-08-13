@@ -59,6 +59,31 @@ final class SandboxCustomServerTest extends Scope
         $this->assertEquals(400, $sandbox['headers']['status-code']);
     }
 
+    public function testCreateSpecification(): void
+    {
+        $sandbox = $this->call(Client::METHOD_POST, '/sandbox', [
+            'sandboxId' => 'sized',
+            'image' => 'python:3.12-slim',
+            'specification' => 's-1vcpu-1gb',
+        ]);
+
+        $this->assertEquals(201, $sandbox['headers']['status-code']);
+        $this->assertEquals('ready', $sandbox['body']['status']);
+
+        $this->assertEquals(204, $this->call(Client::METHOD_DELETE, '/sandbox/sized')['headers']['status-code']);
+    }
+
+    public function testCreateUnknownSpecification(): void
+    {
+        $sandbox = $this->call(Client::METHOD_POST, '/sandbox', [
+            'sandboxId' => 'huge',
+            'image' => 'python:3.12-slim',
+            'specification' => 's-64vcpu-256gb',
+        ]);
+
+        $this->assertEquals(400, $sandbox['headers']['status-code']);
+    }
+
     public function testCreateInvalidId(): void
     {
         $sandbox = $this->call(Client::METHOD_POST, '/sandbox', [

@@ -48,6 +48,8 @@ final class ClientTest extends TestCase
             image: 'python:3.12-slim',
             port: 4000,
             command: 'sleep infinity',
+            cpu: 2.0,
+            memory: 2048,
             environment: ['GREETING' => 'hello'],
             ports: [5173],
             timeoutSeconds: 0,
@@ -62,6 +64,8 @@ final class ClientTest extends TestCase
             'id' => 'p1-abc',
             'image' => 'python:3.12-slim',
             'port' => 4000,
+            'cpu' => 2.0,
+            'memory' => 2048,
             'timeoutSeconds' => 0,
             'idleTimeoutSeconds' => 60,
             'command' => 'sleep infinity',
@@ -83,6 +87,10 @@ final class ClientTest extends TestCase
         $this->assertArrayNotHasKey('command', $body);
         $this->assertArrayNotHasKey('environment', $body);
         $this->assertArrayNotHasKey('ports', $body);
+        // json_encode drops the fraction on a whole float, so 1.0 goes out as
+        // 1 — which the orchestrator still reads as its float cpu field.
+        $this->assertEqualsWithDelta(1.0, $body['cpu'], PHP_FLOAT_EPSILON);
+        $this->assertSame(512, $body['memory']);
         $this->assertSame(300, $body['timeoutSeconds']);
         $this->assertSame(900, $body['idleTimeoutSeconds']);
     }

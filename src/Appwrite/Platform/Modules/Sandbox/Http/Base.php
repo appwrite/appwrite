@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Modules\Sandbox\Http;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Compute\Base as ComputeBase;
 use Appwrite\Sandbox\Exception as SandboxException;
 use Utopia\Database\Document;
 
-abstract class Base extends Action
+abstract class Base extends ComputeBase
 {
     /**
      * Sandboxes share one orchestrator across all projects, so ids are

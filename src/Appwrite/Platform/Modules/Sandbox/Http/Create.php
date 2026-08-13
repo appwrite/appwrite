@@ -3,16 +3,19 @@
 namespace Appwrite\Platform\Modules\Sandbox\Http;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\Sandbox\Client;
 use Appwrite\Sandbox\Exception as SandboxException;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Range;
@@ -52,6 +55,14 @@ class Create extends Base
             ))
             ->param('sandboxId', 'unique()', new Text(36), 'Unique ID. Choose a custom ID or generate a random ID with `ID.unique()`. Lowercase alphanumeric with interior hyphens, max 36 chars.', true)
             ->param('image', '', new Text(256), 'Container image to start the sandbox from.')
+            // Sandboxes are created ad hoc and in volume, so an unstated size
+            // is the modest fallback rather than the largest box available.
+            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan, preferFallback: true), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Compute specification sizing the sandbox.', true, ['plan'])
             ->param('port', 3000, new Range(1, 65535), 'Port the sandbox contract is served on.', true)
             ->param('command', '', new Text(2048), 'Command to run instead of the installed sandbox agent.', true)
             ->param('variables', [], new Assoc(), 'Environment variables key-value JSON object.', true)
@@ -67,6 +78,7 @@ class Create extends Base
     public function action(
         string $sandboxId,
         string $image,
+        string $specification,
         int $port,
         string $command,
         array $variables,
@@ -83,6 +95,7 @@ class Create extends Base
         }
 
         $prefix = $this->prefix($project);
+        $spec = Config::getParam('specifications', [])[$specification] ?? [];
 
         try {
             $status = $sandboxes->create(
@@ -90,6 +103,8 @@ class Create extends Base
                 image: $image,
                 port: $port,
                 command: $command,
+                cpu: (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT),
+                memory: (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT),
                 environment: \array_map(\strval(...), $variables),
                 ports: \array_values(\array_map(\intval(...), $ports)),
                 timeoutSeconds: $timeout,

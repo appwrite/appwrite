@@ -32,6 +32,8 @@ class Client
         string $image,
         int $port = 3000,
         string $command = '',
+        float $cpu = 1.0,
+        int $memory = 512,
         array $environment = [],
         array $ports = [],
         int $timeoutSeconds = 300,
@@ -41,6 +43,8 @@ class Client
             'id' => $id,
             'image' => $image,
             'port' => $port,
+            'cpu' => $cpu,
+            'memory' => $memory,
             'timeoutSeconds' => $timeoutSeconds,
             'idleTimeoutSeconds' => $idleTimeoutSeconds,
         ];
