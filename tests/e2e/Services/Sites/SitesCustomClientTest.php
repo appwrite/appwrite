@@ -117,7 +117,7 @@ final class SitesCustomClientTest extends Scope
         $this->assertEquals(400, $templates['headers']['status-code']);
     }
 
-    public function testListTemplatesHidesStartCommand()
+    public function testListTemplatesHidesInternalFields()
     {
         $templates = $this->client->call(Client::METHOD_GET, '/sites/templates', array_merge([
             'content-type' => 'application/json',
@@ -130,6 +130,7 @@ final class SitesCustomClientTest extends Scope
         $this->assertGreaterThan(0, $templates['body']['total']);
 
         $this->assertStringNotContainsString('startCommand', (string) json_encode($templates['body']));
+        $this->assertStringNotContainsString('score', (string) json_encode($templates['body']));
 
         $template = $this->getTemplate('starter-for-nextjs');
 
