@@ -3097,6 +3097,17 @@ final class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['name']);
         $this->assertEmpty($response['body']['email']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['identities']);
+        $this->assertEquals('useroauth@localhost.test', $response['body']['identities'][0]['providerEmail']);
+
         // Since we only support one oauth user, let's also check updateSession here
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
@@ -3228,6 +3239,147 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    public function testOAuthConcurrentIdentityClaimCreatesSingleUser(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+        $raceId = \bin2hex(\random_bytes(8));
+        $name = 'OAuth Race ' . $raceId;
+        $redirect = '';
+
+        try {
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ], [
+                'provider' => $provider,
+                'appId' => 'race-' . $raceId,
+                'secret' => '123456',
+                'enabled' => true,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], [
+                'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+                'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            ], followRedirects: false);
+
+            $this->assertEquals(301, $response['headers']['status-code']);
+
+            $oauthClient = new Client();
+            $oauthClient->setEndpoint('');
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+            $redirect = $response['headers']['location'];
+
+            $multi = \curl_multi_init();
+            $handles = [];
+            $responses = [];
+
+            try {
+                for ($i = 0; $i < 10; $i++) {
+                    $handle = \curl_init($redirect);
+                    \curl_setopt_array($handle, [
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_FOLLOWLOCATION => false,
+                        CURLOPT_HTTPHEADER => [
+                            'origin: http://localhost',
+                            'content-type: application/json',
+                            'x-appwrite-project: ' . $projectId,
+                        ],
+                        CURLOPT_TIMEOUT => 120,
+                    ]);
+                    \curl_multi_add_handle($multi, $handle);
+                    $handles[] = $handle;
+                }
+
+                do {
+                    $result = \curl_multi_exec($multi, $running);
+                    if ($result !== CURLM_OK || !$running) {
+                        break;
+                    }
+
+                    if (\curl_multi_select($multi, 1.0) === -1) {
+                        \usleep(1_000);
+                    }
+                } while (true);
+
+                $this->assertSame(CURLM_OK, $result);
+
+                foreach ($handles as $handle) {
+                    $responses[] = [
+                        'status' => \curl_getinfo($handle, CURLINFO_HTTP_CODE),
+                        'error' => \curl_error($handle),
+                    ];
+                }
+            } finally {
+                foreach ($handles as $handle) {
+                    \curl_multi_remove_handle($multi, $handle);
+                }
+                $handles = [];
+                \curl_multi_close($multi);
+            }
+
+            foreach ($responses as $oauthResponse) {
+                $this->assertSame('', $oauthResponse['error']);
+                $this->assertSame(301, $oauthResponse['status']);
+            }
+
+            $response = $this->client->call(Client::METHOD_GET, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'queries' => [
+                    Query::equal('name', [$name])->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body']['users']);
+        } finally {
+            $response = $this->client->call(Client::METHOD_GET, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'queries' => [
+                    Query::equal('name', [$name])->toString(),
+                ],
+            ]);
+
+            foreach ($response['body']['users'] ?? [] as $oauthUser) {
+                $this->client->call(Client::METHOD_DELETE, '/users/' . $oauthUser['$id'], [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ], [
+                'provider' => $provider,
+                'appId' => '1',
+                'secret' => '123456',
+                'enabled' => true,
+            ]);
+        }
     }
 
     public function testOAuthUnverifiedEmailCreatesSeparateAccount(): void

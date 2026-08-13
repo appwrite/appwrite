@@ -1632,6 +1632,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $providerEmail = '';
+        try {
+            $providerEmail = $oauth2->getUserEmail($accessToken);
+            if (\strlen($providerEmail) > 320) {
+                $providerEmail = '';
+            }
+        } catch (\Throwable) {
+            // Provider profile data is optional and must not prevent sign-in.
+        }
+
         $identity = $dbForProject->findOne('identities', [
             Query::equal('provider', [$provider]),
             Query::equal('providerUid', [$oauth2ID]),
@@ -1675,6 +1684,22 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $user->setAttributes($identityUser->getArrayCopy());
         }
 
+        $createdUserId = '';
+        $createdTargetId = '';
+        $cleanupCreatedUser = function (string $userId, string $targetId) use ($authorization, $dbForProject): void {
+            if (empty($userId)) {
+                return;
+            }
+
+            $authorization->skip(fn () => $dbForProject->deleteDocument('users', $userId));
+
+            if (!empty($targetId)) {
+                $authorization->skip(fn () => $dbForProject->deleteDocument('targets', $targetId));
+            }
+
+            $authorization->removeRole(Role::user($userId)->toString());
+        };
+
         if ($user->isEmpty()) { // No user logged in or with this OAuth2 identity, create a new user
             $name = '';
             $email = '';
@@ -1705,9 +1730,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
             }
 
-            try {
-                $providerEmail = $oauth2->getUserEmail($accessToken);
-                if (!empty($providerEmail)) {
+            if (!empty($providerEmail)) {
+                try {
                     $isVerified = $oauth2->isEmailVerified($accessToken);
                     $parsedEmail = new Email($providerEmail);
                     $canonical = $parsedEmail->getCanonical();
@@ -1726,12 +1750,11 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailIsDisposable' => $parsedEmail->isDisposable(),
                         'emailIsFree' => $parsedEmail->isFree(),
                     ];
+                } catch (\Throwable) {
+                    // Invalid provider email is equivalent to no account email.
+                    $email = '';
+                    $isVerified = false;
                 }
-            } catch (\Throwable) {
-                // Invalid or unavailable provider email is equivalent to no email.
-                $providerEmail = '';
-                $email = '';
-                $isVerified = false;
             }
 
             if (!empty($email)) {
@@ -1815,8 +1838,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                 $user->removeAttribute('$sequence');
                 $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+                $createdUserId = $userDoc->getId();
                 if (!empty($email)) {
-                    $dbForProject->createDocument('targets', new Document([
+                    $target = $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
                             Permission::update(Role::user($user->getId())),
@@ -1827,8 +1851,10 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
+                    $createdTargetId = $target->getId();
                 }
             } catch (Duplicate) {
+                $cleanupCreatedUser($createdUserId, $createdTargetId);
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         }
@@ -1840,26 +1866,61 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
         }
 
+        $identityCreated = false;
         if ($identity->isEmpty()) {
             $userId = $user->getId();
 
-            $dbForProject->createDocument('identities', new Document([
-                '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($userId)),
-                    Permission::delete(Role::user($userId)),
-                ],
-                'userInternalId' => $user->getSequence(),
-                'userId' => $userId,
-                'provider' => $provider,
-                'providerUid' => $oauth2ID,
-                'providerEmail' => $providerEmail,
-                'providerAccessToken' => $accessToken,
-                'providerRefreshToken' => $refreshToken,
-                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-            ]));
-        } else {
+            try {
+                $identity = $dbForProject->createDocument('identities', new Document([
+                    '$id' => ID::unique(),
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::user($userId)),
+                        Permission::delete(Role::user($userId)),
+                    ],
+                    'userInternalId' => $user->getSequence(),
+                    'userId' => $userId,
+                    'provider' => $provider,
+                    'providerUid' => $oauth2ID,
+                    'providerEmail' => $providerEmail,
+                    'providerAccessToken' => $accessToken,
+                    'providerRefreshToken' => $refreshToken,
+                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
+                ]));
+                $identityCreated = true;
+            } catch (Duplicate) {
+                $reconcileUser = !empty($createdUserId);
+                $cleanupCreatedUser($createdUserId, $createdTargetId);
+                $createdUserId = '';
+                $createdTargetId = '';
+
+                $identity = $dbForProject->findOne('identities', [
+                    Query::equal('provider', [$provider]),
+                    Query::equal('providerUid', [$oauth2ID]),
+                ]);
+
+                if ($identity->isEmpty()) {
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                }
+
+                $identityUserId = $identity->getAttribute('userId', '');
+                if (!$reconcileUser && $identityUserId !== $user->getId()) {
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                }
+
+                if ($reconcileUser) {
+                    $identityUser = $dbForProject->getDocument('users', $identityUserId);
+                    if ($identityUser->isEmpty()) {
+                        $failureRedirect(Exception::USER_NOT_FOUND);
+                    }
+
+                    $user->setAttributes($identityUser->getArrayCopy());
+                    $authorization->addRole(Role::user($user->getId())->toString());
+                }
+            }
+        }
+
+        if (!$identityCreated) {
             $identity
                 ->setAttribute('providerAccessToken', $accessToken)
                 ->setAttribute('providerRefreshToken', $refreshToken)
