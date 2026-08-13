@@ -57,10 +57,6 @@ import {
   useCreateSiteDomain,
   useCreateVcsDeployment,
 } from '@/lib/react-query/hooks'
-import {
-  getFrameworkAdapterDefaults,
-  getStartCommandForSiteCreate,
-} from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
@@ -89,7 +85,6 @@ export function RepositoryConfigView({
     formData,
     updateFormData,
     frameworks,
-    getFramework,
     getFrameworkDefaults,
     generateDomain,
   } = useWizard()
@@ -189,21 +184,15 @@ export function RepositoryConfigView({
       if (detectedFramework) {
         setFramework(detectedFramework)
         const defaults = getFrameworkDefaults(detectedFramework)
-        const ssrDefaults = getFrameworkAdapterDefaults(
-          getFramework(detectedFramework),
-          'ssr',
-        )
         setInstallCommand(data.installCommand ?? defaults.installCommand)
         setBuildCommand(data.buildCommand ?? defaults.buildCommand)
         setOutputDirectory(data.outputDirectory ?? defaults.outputDirectory)
-        setStartCommand(ssrDefaults.startCommand)
         setFallbackFile(defaults.fallbackFile)
         updateFormData({
           framework: detectedFramework,
           buildRuntime: defaults.buildRuntime,
           installCommand: data.installCommand ?? defaults.installCommand,
           buildCommand: data.buildCommand ?? defaults.buildCommand,
-          startCommand: ssrDefaults.startCommand,
           outputDirectory: data.outputDirectory ?? defaults.outputDirectory,
           fallbackFile: defaults.fallbackFile,
         })
@@ -266,14 +255,9 @@ export function RepositoryConfigView({
   useEffect(() => {
     if (framework) {
       const defaults = getFrameworkDefaults(framework)
-      const ssrDefaults = getFrameworkAdapterDefaults(
-        getFramework(framework),
-        'ssr',
-      )
       if (!installCommand) setInstallCommand(defaults.installCommand)
       if (!buildCommand) setBuildCommand(defaults.buildCommand)
       if (!outputDirectory) setOutputDirectory(defaults.outputDirectory)
-      if (!startCommand) setStartCommand(ssrDefaults.startCommand)
       if (!fallbackFile) setFallbackFile(defaults.fallbackFile)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -308,7 +292,6 @@ export function RepositoryConfigView({
     try {
       // Use framework defaults from SDK (buildRuntime, adapter, fallbackFile) for create
       const defaults = getFrameworkDefaults(framework)
-      const frameworkModel = getFramework(framework)
       // 1. Create the site
       const site = await createSiteMutation.mutateAsync({
         siteId: siteId || undefined,
@@ -317,10 +300,7 @@ export function RepositoryConfigView({
         buildRuntime: defaults.buildRuntime,
         installCommand: installCommand || undefined,
         buildCommand: buildCommand || undefined,
-        startCommand: getStartCommandForSiteCreate(
-          frameworkModel,
-          startCommand,
-        ),
+        startCommand: startCommand || undefined,
         outputDirectory: outputDirectory || undefined,
         adapter: defaults.adapter || undefined,
         fallbackFile:
@@ -687,14 +667,9 @@ export function RepositoryConfigView({
                   onValueChange={(value) => {
                     setFramework(value)
                     const defaults = getFrameworkDefaults(value)
-                    const ssrDefaults = getFrameworkAdapterDefaults(
-                      getFramework(value),
-                      'ssr',
-                    )
                     setInstallCommand(defaults.installCommand)
                     setBuildCommand(defaults.buildCommand)
                     setOutputDirectory(defaults.outputDirectory)
-                    setStartCommand(ssrDefaults.startCommand)
                     setFallbackFile(defaults.fallbackFile)
                   }}
                 >

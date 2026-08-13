@@ -140,7 +140,6 @@ interface WizardContextValue {
   getFrameworkDefaults: (frameworkKey: string) => {
     installCommand: string
     buildCommand: string
-    startCommand: string
     outputDirectory: string
     buildRuntime: string
     adapter: string
@@ -232,7 +231,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   )
 
   const getFrameworkDefaults = useCallback(
-    (frameworkKey: string) => getFrameworkCreateDefaults(getFramework(frameworkKey)),
+    (frameworkKey: string) =>
+      getFrameworkCreateDefaults(getFramework(frameworkKey)),
     [getFramework],
   )
 
