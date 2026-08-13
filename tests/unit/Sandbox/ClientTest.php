@@ -40,16 +40,51 @@ final class ClientTest extends TestCase
 
     public function testCreate(): void
     {
-        $response = (new Response(201, body: new Stream('{"id":"p1-abc","poolId":"py","status":"ready","url":"http://s-token.sandboxes.test"}')))
+        $response = (new Response(201, body: new Stream('{"id":"p1-abc","status":"ready","url":"http://s-token.sandboxes.test"}')))
             ->withHeader('Content-Type', 'application/json');
 
-        $status = $this->client($response)->create(['id' => 'p1-abc', 'pool' => 'py']);
+        $status = $this->client($response)->create(
+            id: 'p1-abc',
+            image: 'python:3.12-slim',
+            port: 4000,
+            command: 'sleep infinity',
+            environment: ['GREETING' => 'hello'],
+            ports: [5173],
+            timeoutSeconds: 0,
+            idleTimeoutSeconds: 60,
+        );
 
         $this->assertSame('ready', $status['status']);
         $this->assertSame('http://s-token.sandboxes.test', $status['url']);
         $this->assertSame('POST', $this->request->getMethod());
         $this->assertSame('/v1/sandbox', (string)$this->request->getUri());
-        $this->assertEquals(['id' => 'p1-abc', 'pool' => 'py'], \json_decode((string)$this->request->getBody(), true));
+        $this->assertEquals([
+            'id' => 'p1-abc',
+            'image' => 'python:3.12-slim',
+            'port' => 4000,
+            'timeoutSeconds' => 0,
+            'idleTimeoutSeconds' => 60,
+            'command' => 'sleep infinity',
+            'environment' => ['GREETING' => 'hello'],
+            'ports' => [5173],
+        ], \json_decode((string)$this->request->getBody(), true));
+    }
+
+    public function testCreateOmitsUnsetOptionals(): void
+    {
+        $response = (new Response(201, body: new Stream('{"id":"p1-abc","status":"ready"}')))
+            ->withHeader('Content-Type', 'application/json');
+
+        $this->client($response)->create(id: 'p1-abc', image: 'python:3.12-slim');
+
+        // The orchestrator rejects unknown fields and reads an empty one as a
+        // value, so an unset option must not reach the wire at all.
+        $body = \json_decode((string)$this->request->getBody(), true);
+        $this->assertArrayNotHasKey('command', $body);
+        $this->assertArrayNotHasKey('environment', $body);
+        $this->assertArrayNotHasKey('ports', $body);
+        $this->assertSame(300, $body['timeoutSeconds']);
+        $this->assertSame(900, $body['idleTimeoutSeconds']);
     }
 
     public function testGet(): void

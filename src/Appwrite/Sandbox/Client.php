@@ -21,14 +21,43 @@ class Client
     }
 
     /**
-     * @param array<string, mixed> $params Orchestrator create payload (pool or image, ports, environment, ...).
+     * @param array<string, string> $environment Environment variables for the workload.
+     * @param list<int> $ports Extra ports the sandbox serves, beyond the contract's own.
      * @return array<string, mixed> The sandbox status.
      * @throws Exception on an error response
      * @throws ClientExceptionInterface on transport failure
      */
-    public function create(array $params): array
-    {
-        return $this->json($this->factory->json(Method::POST, '/v1/sandbox', $params));
+    public function create(
+        string $id,
+        string $image,
+        int $port = 3000,
+        string $command = '',
+        array $environment = [],
+        array $ports = [],
+        int $timeoutSeconds = 300,
+        int $idleTimeoutSeconds = 900,
+    ): array {
+        $payload = [
+            'id' => $id,
+            'image' => $image,
+            'port' => $port,
+            'timeoutSeconds' => $timeoutSeconds,
+            'idleTimeoutSeconds' => $idleTimeoutSeconds,
+        ];
+
+        // The orchestrator rejects unknown fields and reads an empty one as a
+        // value, so anything unset is left off the wire entirely.
+        if ($command !== '') {
+            $payload['command'] = $command;
+        }
+        if ($environment !== []) {
+            $payload['environment'] = $environment;
+        }
+        if ($ports !== []) {
+            $payload['ports'] = $ports;
+        }
+
+        return $this->json($this->factory->json(Method::POST, '/v1/sandbox', $payload));
     }
 
     /**
@@ -36,9 +65,9 @@ class Client
      * @throws Exception on an error response
      * @throws ClientExceptionInterface on transport failure
      */
-    public function get(string $sandboxId): array
+    public function get(string $id): array
     {
-        return $this->json($this->factory->createRequest(Method::GET, '/v1/sandbox/' . \rawurlencode($sandboxId)));
+        return $this->json($this->factory->createRequest(Method::GET, '/v1/sandbox/' . \rawurlencode($id)));
     }
 
     /**
@@ -55,9 +84,9 @@ class Client
      * @throws Exception on an error response
      * @throws ClientExceptionInterface on transport failure
      */
-    public function delete(string $sandboxId): void
+    public function delete(string $id): void
     {
-        $this->assertSuccess($this->client->sendRequest($this->factory->createRequest(Method::DELETE, '/v1/sandbox/' . \rawurlencode($sandboxId))));
+        $this->assertSuccess($this->client->sendRequest($this->factory->createRequest(Method::DELETE, '/v1/sandbox/' . \rawurlencode($id))));
     }
 
     /**

@@ -83,26 +83,18 @@ class Create extends Base
         }
 
         $prefix = $this->prefix($project);
-        $params = [
-            'id' => $prefix . $sandboxId,
-            'image' => $image,
-            'port' => $port,
-            'timeoutSeconds' => $timeout,
-            'idleTimeoutSeconds' => $idleTimeout,
-        ];
-
-        if ($command !== '') {
-            $params['command'] = $command;
-        }
-        if ($variables !== []) {
-            $params['environment'] = $variables;
-        }
-        if ($ports !== []) {
-            $params['ports'] = \array_map(\intval(...), $ports);
-        }
 
         try {
-            $status = $sandboxes->create($params);
+            $status = $sandboxes->create(
+                id: $prefix . $sandboxId,
+                image: $image,
+                port: $port,
+                command: $command,
+                environment: \array_map(\strval(...), $variables),
+                ports: \array_values(\array_map(\intval(...), $ports)),
+                timeoutSeconds: $timeout,
+                idleTimeoutSeconds: $idleTimeout,
+            );
         } catch (SandboxException $e) {
             throw $this->mapError($e);
         }
