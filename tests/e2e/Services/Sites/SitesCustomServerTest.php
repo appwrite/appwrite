@@ -2348,6 +2348,46 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('outputDirectory', $framework['adapters'][0]);
     }
 
+    public function testGetFrameworksHidesStartCommand(): void
+    {
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertGreaterThan(0, $frameworks['body']['total']);
+
+        $this->assertStringNotContainsString('startCommand', (string) json_encode($frameworks['body']));
+    }
+
+    public function testCreateSiteHidesStartCommand(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'SSR site without a start command',
+            'framework' => 'nextjs',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './.next',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+        ]);
+
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+
+        // An omitted start command stays empty; the runtime resolves its own default at boot.
+        $this->assertSame('', $site['body']['startCommand']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testSiteStatic(): void
     {
         $siteId = $this->setupSite([
