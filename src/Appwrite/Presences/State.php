@@ -47,7 +47,7 @@ class State
         if ($ownerOverride !== null) {
             $permissions = [];
             foreach ($allowedPermissions as $permission) {
-                $permissions[] = (new Permission($permission, 'user', $ownerOverride))->toString();
+                $permissions[] = (new Permission($permission->value, 'user', $ownerOverride))->toString();
             }
         } else {
             $isAPIKey = $user->isKey($authorization->getRoles());
@@ -59,7 +59,7 @@ class State
                 $permissions = [];
                 if (!empty($user->getId()) && !$isPrivilegedUser) {
                     foreach ($allowedPermissions as $permission) {
-                        $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                        $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
                     }
                 }
             }
