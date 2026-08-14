@@ -44,8 +44,10 @@ async function getProjectAccess(
   if (!teamId) return null
 
   try {
+    // Scoped to this project so project-specific roles resolve to their real
+    // role; without the id the backend reports them as read-only analyst.
     const scopes = await queryClient.ensureQueryData(
-      organizationScopesQueryOptions(teamId),
+      organizationScopesQueryOptions(teamId, projectId),
     )
     if (!scopes) return null
     return deriveAccessFromRolesScopes(scopes.roles, scopes.scopes)

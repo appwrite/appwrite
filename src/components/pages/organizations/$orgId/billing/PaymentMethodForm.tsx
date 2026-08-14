@@ -122,13 +122,20 @@ export function PaymentMethodForm({
   const t = useT()
   const [cardholderName, setCardholderName] = useState('')
   const [selectedState, setSelectedState] = useState<string>('')
-  const [showStatePicker, setShowStatePicker] = useState(false)
+  // Post-Stripe confirm step (US state and/or recovery name entry).
+  const [showConfirmStep, setShowConfirmStep] = useState(false)
+  // US state is required only when Stripe reports card.country === 'US'.
+  // Matches old console: never show the US state list for other countries,
+  // and never fall back to it when country is unknown.
+  const [requiresState, setRequiresState] = useState(false)
+  // Recovery: SetupIntent already succeeded but Appwrite link never landed.
+  // Card form is skipped; cardholder name must be collected on the confirm step.
+  const [isRecovery, setIsRecovery] = useState(false)
   const [isStripeLoading, setIsStripeLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [providerMethodId, setProviderMethodId] = useState<string | null>(null)
-  const [stateOptional, setStateOptional] = useState(false)
   const [addedCardPreview, setAddedCardPreview] = useState<CardPreview | null>(
     null,
   )
@@ -219,9 +226,12 @@ export function PaymentMethodForm({
 
         // If a previous attempt already drove the SetupIntent to succeeded
         // (Appwrite PM exists with clientSecret but no providerMethodId
-        // because the backend link never landed), skip the card form: surface
-        // the state picker in optional mode so the user can just confirm +
-        // link without re-entering card details.
+        // because the backend link never landed), skip the card form and
+        // show a confirm step so the user can enter a name and finish linking.
+        // Only require US state when Stripe returns an expanded card with
+        // country === 'US' (same gate as the old console). retrieveSetupIntent
+        // usually does not expand payment_method, so country is often unknown
+        // here - do not fall back to the US state list in that case.
         const { setupIntent: existingIntent } =
           await stripe.retrieveSetupIntent(secret)
         if (!mounted) return
@@ -231,11 +241,9 @@ export function PaymentMethodForm({
           const pmCard = typeof pm === 'object' && pm !== null ? pm.card : null
           if (pmId) {
             setProviderMethodId(pmId)
-            // stripe.retrieveSetupIntent doesn't expand payment_method, so
-            // pmCard is usually null here. The Appwrite PM record also stays
-            // empty until setPaymentMethodProvider lands, so in recovery
-            // flows the preview will often be missing - that's expected and
-            // the view degrades to a "card was entered previously" message.
+            // Appwrite PM stays empty until setPaymentMethodProvider lands, so
+            // the preview is often missing - the view degrades to a
+            // "card was entered previously" message.
             if (pmCard?.last4) {
               setAddedCardPreview({
                 brand: pmCard.brand ?? '',
@@ -244,8 +252,9 @@ export function PaymentMethodForm({
                 expYear: pmCard.exp_year ?? 0,
               })
             }
-            setStateOptional(true)
-            setShowStatePicker(true)
+            setIsRecovery(true)
+            setRequiresState(pmCard?.country === 'US')
+            setShowConfirmStep(true)
             setIsStripeLoading(false)
             return
           }
@@ -328,12 +337,13 @@ export function PaymentMethodForm({
       submitAbortRef.current = null
       setCardholderName('')
       setSelectedState('')
-      setShowStatePicker(false)
+      setShowConfirmStep(false)
+      setRequiresState(false)
+      setIsRecovery(false)
       setError(null)
       setPaymentMethodId(null)
       setClientSecret(null)
       setProviderMethodId(null)
-      setStateOptional(false)
       setAddedCardPreview(null)
       setIsStripeLoading(true)
     }
@@ -355,7 +365,7 @@ export function PaymentMethodForm({
       setError(t('Please enter a cardholder name'))
       return
     }
-    if (showStatePicker && !selectedState && !stateOptional) {
+    if (showConfirmStep && requiresState && !selectedState) {
       setError(t('Please select a state'))
       return
     }
@@ -474,9 +484,8 @@ export function PaymentMethodForm({
             ? stripePaymentMethod.card
             : initialPmCard
 
-        // Cache the card preview for the state picker view whenever we have
-        // expanded card info, so every path (US + recovery) shows the user
-        // which card they're attaching the state to.
+        // Cache the card preview for the confirm step whenever we have
+        // expanded card info, so the US state path shows which card was added.
         if (pmCard?.last4) {
           setAddedCardPreview({
             brand: pmCard.brand ?? '',
@@ -486,18 +495,14 @@ export function PaymentMethodForm({
           })
         }
 
-        if (pmCard?.country === 'US' && !showStatePicker) {
+        // Same gate as the old console: only collect US state when Stripe
+        // reports card.country === 'US'. If the card object is missing
+        // (string PM id after retrieve / 3DS), skip state and link — do not
+        // fall back to the US state list for non-US cards.
+        if (pmCard?.country === 'US' && !showConfirmStep) {
           setProviderMethodId(resolvedProviderMethodId)
-          setShowStatePicker(true)
-          return
-        }
-
-        // No card object available (recovery path). Offer state as optional
-        // so US users can still attach one without blocking non-US users.
-        if (!pmCard && !showStatePicker) {
-          setProviderMethodId(resolvedProviderMethodId)
-          setStateOptional(true)
-          setShowStatePicker(true)
+          setRequiresState(true)
+          setShowConfirmStep(true)
           return
         }
       }
@@ -596,7 +601,7 @@ export function PaymentMethodForm({
         variant === 'dialog' ? 'px-6 pb-4' : undefined,
       )}
     >
-      {!showStatePicker ? (
+      {!showConfirmStep ? (
         <>
           <div className="space-y-2">
             <Label htmlFor="cardholder-name" className="text-[13px]">
@@ -657,9 +662,9 @@ export function PaymentMethodForm({
             </div>
           )}
 
-          {/* Card-form is skipped on the recovery path, so ask for the
+          {/* Card form is skipped on the recovery path, so ask for the
               cardholder name here so the backend link has a value to store. */}
-          {stateOptional && (
+          {isRecovery && (
             <div className="space-y-2">
               <Label htmlFor="cardholder-name-recover" className="text-[13px]">
                 {t('Cardholder name')} <span className="text-destructive">*</span>
@@ -675,32 +680,29 @@ export function PaymentMethodForm({
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="state" className="text-[13px]">
-              {t('State')}{' '}
-              {stateOptional ? (
-                t('(optional)')
-              ) : (
-                <span className="text-destructive">*</span>
-              )}
-            </Label>
-            <Select
-              value={selectedState}
-              onValueChange={setSelectedState}
-              disabled={isLoading}
-            >
-              <SelectTrigger id="state" className="h-9 text-[13px]">
-                <SelectValue placeholder={t('Select a state')} />
-              </SelectTrigger>
-              <SelectContent>
-                {US_STATES.map((state) => (
-                  <SelectItem key={state.value} value={state.value}>
-                    {state.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {requiresState && (
+            <div className="space-y-2">
+              <Label htmlFor="state" className="text-[13px]">
+                {t('State')} <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={selectedState}
+                onValueChange={setSelectedState}
+                disabled={isLoading}
+              >
+                <SelectTrigger id="state" className="h-9 text-[13px]">
+                  <SelectValue placeholder={t('Select a state')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {US_STATES.map((state) => (
+                    <SelectItem key={state.value} value={state.value}>
+                      {state.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       )}
 
@@ -741,10 +743,10 @@ export function PaymentMethodForm({
           disabled={
             isLoading ||
             !cardholderName.trim() ||
-            (showStatePicker && !selectedState && !stateOptional)
+            (showConfirmStep && requiresState && !selectedState)
           }
         >
-          {showStatePicker ? t('Save') : t('Add')}
+          {showConfirmStep ? t('Save') : t('Add')}
         </Button>
       </div>
     </form>

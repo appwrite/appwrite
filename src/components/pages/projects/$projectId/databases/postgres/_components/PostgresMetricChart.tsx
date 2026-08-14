@@ -22,6 +22,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { useT } from '@/lib/i18n/translate'
 
 export type PostgresMetricSeriesPoint = {
@@ -470,24 +471,16 @@ export function PostgresMetricChart({
                         </p>
                         {hasSecondary && secondaryLabel ? (
                           <div className="space-y-1">
-                            <p className="text-[13px] font-medium text-foreground">
-                              <span
-                                className="me-1.5 inline-block h-2 w-2 rounded-full align-middle"
-                                style={{ backgroundColor: CHART_COLOR }}
-                              />
+                            <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                              <ChartSeriesDot color={CHART_COLOR} />
                               {t(seriesPrimaryLabel)}:{' '}
                               {unit
                                 ? `${formatY(row.value)} ${unit}`
                                 : formatY(row.value)}
                             </p>
                             {row.secondaryValue != null ? (
-                              <p className="text-[13px] font-medium text-foreground">
-                                <span
-                                  className="me-1.5 inline-block h-2 w-2 rounded-full align-middle"
-                                  style={{
-                                    backgroundColor: SECONDARY_CHART_COLOR,
-                                  }}
-                                />
+                              <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                                <ChartSeriesDot color={SECONDARY_CHART_COLOR} />
                                 {t(secondaryLabel)}:{' '}
                                 {secondaryUnit
                                   ? `${secondaryFormatter(row.secondaryValue)} ${secondaryUnit}`

@@ -107,19 +107,19 @@ const ICONS = {
 }
 
 const SEARCH_PLACEHOLDERS: Record<ResourceIdType, string> = {
-  database: 'Search databases...',
-  table: 'Search',
-  bucket: 'Search buckets...',
-  file: 'Search files...',
-  row: 'Search rows...',
-  column: 'Search columns...',
-  index: 'Search indexes...',
-  function: 'Search functions...',
-  site: 'Search sites...',
-  team: 'Search teams...',
-  user: 'Search users...',
-  topic: 'Search topics...',
-  provider: 'Search providers...',
+  database: 'Search databases by name or ID...',
+  table: 'Search tables by name or ID...',
+  bucket: 'Search buckets by name or ID...',
+  file: 'Search files by name or ID...',
+  row: 'Search rows by ID...',
+  column: 'Search columns by key or ID...',
+  index: 'Search indexes by key or ID...',
+  function: 'Search functions by name or ID...',
+  site: 'Search sites by name or ID...',
+  team: 'Search teams by name or ID...',
+  user: 'Search users by name, email, or ID...',
+  topic: 'Search topics by name or ID...',
+  provider: 'Search providers by name or ID...',
 }
 
 export function EventResourceIdSelector({

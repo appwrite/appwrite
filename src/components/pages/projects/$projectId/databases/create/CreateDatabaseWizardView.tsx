@@ -133,6 +133,8 @@ type DbTypeOptionMeta = DbTypeChoice & {
 const DB_TYPE_GROUPS: {
   title: string
   description: string
+  /** Used when MySQL is hidden from the native group. */
+  descriptionPostgresOnly?: string
   options: DbTypeChoice[]
 }[] = [
   {
@@ -167,6 +169,8 @@ const DB_TYPE_GROUPS: {
     title: 'Native databases',
     description:
       'Dedicated PostgreSQL and MySQL engines for teams that need direct SQL compatibility.',
+    descriptionPostgresOnly:
+      'A dedicated PostgreSQL engine for teams that need direct SQL compatibility.',
     options: [
       {
         id: 'Postgres',
@@ -320,7 +324,10 @@ export function CreateDatabaseWizardView() {
         }
         return { ...opt, comingSoon: false }
       }
-      if (opt.id === 'DocumentsDB' || opt.id === 'VectorsDB') {
+      if (opt.id === 'DocumentsDB') {
+        if (!features.dedicatedDbsDocumentsDB) {
+          return { ...opt, comingSoon: true }
+        }
         if (!supportsDedicatedDatabaseCompute) {
           return {
             ...opt,
@@ -328,16 +335,51 @@ export function CreateDatabaseWizardView() {
             comingSoonMessage: regionUnavailableMessage,
           }
         }
-        return { ...opt, comingSoon: opt.comingSoon }
+        return { ...opt, comingSoon: false }
+      }
+      if (opt.id === 'VectorsDB') {
+        if (!features.dedicatedDbsVectorsDB) {
+          return { ...opt, comingSoon: true }
+        }
+        if (!supportsDedicatedDatabaseCompute) {
+          return {
+            ...opt,
+            comingSoon: true,
+            comingSoonMessage: regionUnavailableMessage,
+          }
+        }
+        return { ...opt, comingSoon: false }
       }
       return { ...opt, comingSoon: opt.comingSoon }
     })
   }, [
     features.nativeDbsPostgres,
     features.nativeDbsMySQL,
+    features.dedicatedDbsDocumentsDB,
+    features.dedicatedDbsVectorsDB,
     supportsDedicatedDatabaseCompute,
     regionUnavailableMessage,
   ])
+
+  const visibleDbTypeGroups = useMemo(() => {
+    return DB_TYPE_GROUPS.map((group) => {
+      const options = group.options.filter((opt) => {
+        // MySQL is fully gated behind the flag (no "coming soon" teaser).
+        if (opt.id === 'MySQL') return features.nativeDbsMySQL
+        return true
+      })
+      if (options.length === 0) return null
+      const description =
+        group.title === 'Native databases' &&
+        !features.nativeDbsMySQL &&
+        group.descriptionPostgresOnly
+          ? group.descriptionPostgresOnly
+          : group.description
+      return { ...group, description, options }
+    }).filter(
+      (group): group is NonNullable<typeof group> => group != null,
+    )
+  }, [features.nativeDbsMySQL])
 
   /** Show specs section when type uses dedicated compute (incl. TablesDB). */
   const showSpecsForType =
@@ -977,7 +1019,7 @@ export function CreateDatabaseWizardView() {
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {DB_TYPE_GROUPS.map((group, groupIndex) => (
+            {visibleDbTypeGroups.map((group, groupIndex) => (
               <div
                 key={group.title}
                 className={cn(

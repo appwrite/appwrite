@@ -204,41 +204,44 @@ function AllDatabasesGridCardShell({
             'pb-0',
           )}
         >
-          <div className="min-w-0 overflow-hidden">
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-              <h3 className="truncate text-[14px] font-medium text-foreground">
-                {db.name}
-              </h3>
-              {shouldShowNoBackupWarning(hasBackupPolicy, showBackups) ? (
-                <NoBackupPoliciesWarningIcon />
-              ) : null}
-              <DedicatedDatabaseStatusBadge
-                status={dedicated?.status ?? db.status}
-                onlyWhenNotReady
-              />
-              {db.enabled === false ? (
-                <Badge
-                  variant="error"
-                  className="text-[10px] font-medium shrink-0"
-                >
-                  {t('Disabled')}
-                </Badge>
-              ) : null}
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <div className="min-w-0 overflow-hidden">
+              <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                <h3 className="truncate text-[14px] font-medium text-foreground">
+                  {db.name}
+                </h3>
+                {shouldShowNoBackupWarning(hasBackupPolicy, showBackups) ? (
+                  <NoBackupPoliciesWarningIcon />
+                ) : null}
+                <DedicatedDatabaseStatusBadge
+                  status={dedicated?.status ?? db.status}
+                  onlyWhenNotReady
+                />
+                {db.enabled === false ? (
+                  <Badge
+                    variant="error"
+                    className="text-[10px] font-medium shrink-0"
+                  >
+                    {t('Disabled')}
+                  </Badge>
+                ) : null}
+              </div>
+              <div className="mt-1.5">
+                <CopyableId id={db.$id} size="xs" maxWidth={120} />
+              </div>
             </div>
-            <div className="mt-1.5">
-              <CopyableId id={db.$id} size="xs" maxWidth={120} />
-            </div>
+            <DatabaseTypeBadge
+              apiType={db.apiType ?? db.databaseType}
+              engine={dedicated?.engine}
+              product={dedicated?.api}
+              className="shrink-0"
+            />
           </div>
 
           {midContent}
 
           <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
             <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
-              <DatabaseTypeBadge
-                apiType={db.apiType ?? db.databaseType}
-                engine={dedicated?.engine}
-                product={dedicated?.api}
-              />
               <span className="truncate text-muted-foreground">
                 {resolveDatabaseComputeLabel(
                   databaseComputeHints(db),

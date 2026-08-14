@@ -16,6 +16,7 @@ import {
 import { useEffect, useMemo } from 'react'
 import { Query, DomainRegistrationType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { isPendingDomainTransferStatus } from '@/lib/domains/transfer-status'
@@ -60,15 +61,13 @@ export async function fetchOrganizationDomains(
   const queries = [
     Query.equal('teamId', organizationId),
     ...(filterQueries ?? []),
+    ...buildAttributePrefixSearchQueries(['domain', '$id'], search),
     orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await sdk.forConsole.domains.list({
-    queries,
-    search: search?.trim() || undefined,
-  })
+  const response = await sdk.forConsole.domains.list({ queries })
 
   return {
     domains: response.domains || [],

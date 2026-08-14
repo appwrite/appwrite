@@ -38,17 +38,17 @@ public class MainActivity extends Activity {
     layout.addView(status);
 
     Account account = new Account(AppwriteClient.get(this));
-    // The SDK is coroutine-based; CoroutineCallback bridges it to Java.
-    // Callbacks land on a background thread - post UI work to the view.
-    account.get(new CoroutineCallback<>((user, error) ->
-        layout.post(() -> {
-          layout.removeAllViews();
-          if (user == null) {
-            addSignedOutHome(layout);
-          } else {
-            addSignedInHome(layout, user.getName());
-          }
-        })));
+    try {
+      account.get(new CoroutineCallback<>((user, error) ->
+          layout.post(() -> {
+            layout.removeAllViews();
+            if (user == null) {
+              addSignedOutHome(layout);
+            } else {
+              addSignedInHome(layout, user.getName());
+            }
+          })));
+    } catch (Exception ignored) {}
     return layout;
   }
 
@@ -80,11 +80,13 @@ public class MainActivity extends Activity {
     signOut.setAllCaps(false);
     signOut.setOnClickListener(v -> {
       Account account = new Account(AppwriteClient.get(this));
-      account.deleteSession("current",
-          new CoroutineCallback<>((result, error) ->
-              layout.post(() -> {
-                if (error == null) showHome();
-              })));
+      try {
+        account.deleteSession("current",
+            new CoroutineCallback<>((result, error) ->
+                layout.post(() -> {
+                  if (error == null) showHome();
+                })));
+      } catch (Exception ignored) {}
     });
     layout.addView(signOut);
   }

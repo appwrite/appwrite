@@ -9,6 +9,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { isStoragePlaceholderBucketId } from '@/lib/storage-routes'
 import {
@@ -54,15 +55,13 @@ export async function fetchProjectBuckets(
     sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
+    ...buildAttributePrefixSearchQueries(['name', '$id'], search),
     orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.storage.listBuckets({
-    queries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.storage.listBuckets({ queries })
 
   return {
     buckets: response.buckets || [],

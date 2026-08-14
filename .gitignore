@@ -77,3 +77,7 @@ e2e/screenshots/
 # OAuth2 e2e screenshots (uploaded via gitshot)
 .shots/
 scripts/oauth2-shots.mjs
+
+# Playwright MCP scratch output
+.playwright-mcp/
+*.png

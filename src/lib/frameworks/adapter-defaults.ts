@@ -3,7 +3,6 @@ import type { Models } from '@appwrite.io/console'
 export type FrameworkAdapterBuildFields = {
   installCommand: string
   buildCommand: string
-  startCommand: string
   outputDirectory: string
   fallbackFile: string
 }
@@ -30,7 +29,6 @@ export function getFrameworkAdapterBuildFields(
   return {
     installCommand: adapter?.installCommand ?? '',
     buildCommand: adapter?.buildCommand ?? '',
-    startCommand: adapter?.startCommand ?? '',
     outputDirectory: adapter?.outputDirectory ?? '',
     fallbackFile: adapter?.fallbackFile ?? '',
   }
@@ -62,17 +60,6 @@ export function frameworkHasStaticAdapter(
   return framework?.adapters?.some((a) => a.key === 'static') ?? false
 }
 
-/** Start command for sites.create when the framework supports SSR. */
-export function getStartCommandForSiteCreate(
-  framework: Models.Framework | undefined,
-  startCommand: string,
-): string | undefined {
-  if (!frameworkHasSsrAdapter(framework)) return undefined
-  const value = startCommand.trim()
-  if (value) return value
-  return getFrameworkAdapterDefaults(framework, 'ssr').startCommand || undefined
-}
-
 /**
  * Defaults when creating a site (prefer static adapter when available).
  */
@@ -86,7 +73,6 @@ export function getFrameworkCreateDefaults(
     return {
       installCommand: 'npm install',
       buildCommand: 'npm run build',
-      startCommand: '',
       outputDirectory: '.output',
       fallbackFile: '',
       adapter: 'static',

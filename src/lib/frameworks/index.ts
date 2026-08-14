@@ -28,7 +28,6 @@ export {
   getFrameworkCreateDefaults,
   frameworkHasSsrAdapter,
   frameworkHasStaticAdapter,
-  getStartCommandForSiteCreate,
 } from './adapter-defaults'
 
 export type { FrameworkAdapterBuildFields } from './adapter-defaults'

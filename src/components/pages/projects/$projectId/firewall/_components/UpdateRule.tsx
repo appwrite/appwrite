@@ -21,11 +21,16 @@ import { useUpdateFirewallRule } from '@/lib/react-query/hooks'
 import {
   type FirewallCreatableAction,
   type FirewallRateLimitKey,
+  type FirewallRateLimitStrategy,
   getRuleRateLimit,
   getRuleRedirect,
   getRuleChallenge,
   FIREWALL_RATE_LIMIT_KEYS,
   FIREWALL_RATE_LIMIT_KEY_DEFAULT,
+  FIREWALL_RATE_LIMIT_STRATEGIES,
+  FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT,
+  MAX_BUCKET_SIZE_MIN,
+  MAX_BUCKET_SIZE_MAX,
   CHALLENGE_DIFFICULTY_MIN,
   CHALLENGE_DIFFICULTY_MAX,
   CHALLENGE_DIFFICULTY_DEFAULT,
@@ -73,6 +78,10 @@ export function UpdateRule({
   const [rateLimitKey, setRateLimitKey] = useState<FirewallRateLimitKey>(
     FIREWALL_RATE_LIMIT_KEY_DEFAULT,
   )
+  const [strategy, setStrategy] = useState<FirewallRateLimitStrategy>(
+    FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT,
+  )
+  const [maxBucketSize, setMaxBucketSize] = useState(50)
   const [difficulty, setDifficulty] = useState(CHALLENGE_DIFFICULTY_DEFAULT)
   const [ttl, setTtl] = useState(CHALLENGE_TTL_DEFAULT)
   const [location, setLocation] = useState('/')
@@ -93,6 +102,14 @@ export function UpdateRule({
     setLimit(rateLimit?.limit ?? 100)
     setInterval(rateLimit?.interval ?? 60)
     setRateLimitKey(rateLimit?.key ?? FIREWALL_RATE_LIMIT_KEY_DEFAULT)
+    setStrategy(rateLimit?.strategy ?? FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT)
+    // maxBucketSize comes back as 0 for non-token-bucket rules; seed the field
+    // to the current limit so switching to token bucket has a sensible value.
+    setMaxBucketSize(
+      rateLimit?.maxBucketSize && rateLimit.maxBucketSize > 0
+        ? rateLimit.maxBucketSize
+        : (rateLimit?.limit ?? 100),
+    )
     const challenge = getRuleChallenge(rule)
     setDifficulty(challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT)
     setTtl(challenge?.ttl ?? CHALLENGE_TTL_DEFAULT)
@@ -112,7 +129,12 @@ export function UpdateRule({
     name.trim().length > 0 &&
     (!needsResourceId || resourceId.trim().length > 0) &&
     areFirewallConditionsComplete(conditions) &&
-    (action !== WafRuleAction.RateLimit || (limit > 0 && interval > 0)) &&
+    (action !== WafRuleAction.RateLimit ||
+      (limit > 0 &&
+        interval > 0 &&
+        (strategy !== 'tokenBucket' ||
+          (maxBucketSize >= MAX_BUCKET_SIZE_MIN &&
+            maxBucketSize <= MAX_BUCKET_SIZE_MAX)))) &&
     (action !== WafRuleAction.Challenge ||
       (difficulty >= CHALLENGE_DIFFICULTY_MIN &&
         difficulty <= CHALLENGE_DIFFICULTY_MAX &&
@@ -137,6 +159,8 @@ export function UpdateRule({
         limit,
         interval,
         key: rateLimitKey,
+        strategy,
+        maxBucketSize,
         difficulty,
         ttl,
         location: location.trim(),
@@ -154,6 +178,39 @@ export function UpdateRule({
   const actionExtras =
     action === WafRuleAction.RateLimit ? (
       <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label className="text-[12px]">{t('Strategy')}</Label>
+          {/* Strategy is fixed at creation and cannot be changed on update. */}
+          <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted/40 px-3 text-[13px] text-muted-foreground">
+            {t(
+              FIREWALL_RATE_LIMIT_STRATEGIES.find((s) => s.value === strategy)
+                ?.label ?? strategy,
+            )}
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="update-firewall-key" className="text-[12px]">
+            {t('Limit by')}
+          </Label>
+          <Select
+            value={rateLimitKey}
+            disabled={updateMutation.isPending}
+            onValueChange={(value) =>
+              setRateLimitKey(value as FirewallRateLimitKey)
+            }
+          >
+            <SelectTrigger id="update-firewall-key" className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FIREWALL_RATE_LIMIT_KEYS.map((k) => (
+                <SelectItem key={k.value} value={k.value}>
+                  {t(k.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="space-y-1.5">
           <Label htmlFor="update-firewall-limit" className="text-[12px]">
             {t('Request limit')}
@@ -180,34 +237,32 @@ export function UpdateRule({
             disabled={updateMutation.isPending}
           />
         </div>
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="update-firewall-key" className="text-[12px]">
-            {t('Limit by')}
-          </Label>
-          <Select
-            value={rateLimitKey}
-            disabled={updateMutation.isPending}
-            onValueChange={(value) =>
-              setRateLimitKey(value as FirewallRateLimitKey)
-            }
-          >
-            <SelectTrigger id="update-firewall-key" className="h-9 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FIREWALL_RATE_LIMIT_KEYS.map((k) => (
-                <SelectItem key={k.value} value={k.value}>
-                  {t(k.label)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-[12px] text-muted-foreground">
-            {t(
-              'Track the request quota per client IP or per authenticated user.',
-            )}
-          </p>
-        </div>
+        {strategy === 'tokenBucket' ? (
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label
+              htmlFor="update-firewall-max-bucket-size"
+              className="text-[12px]"
+            >
+              {t('Max bucket size')}
+            </Label>
+            <Input
+              id="update-firewall-max-bucket-size"
+              type="number"
+              min={MAX_BUCKET_SIZE_MIN}
+              max={MAX_BUCKET_SIZE_MAX}
+              value={maxBucketSize}
+              onChange={(e) =>
+                setMaxBucketSize(Number(e.target.value) || MAX_BUCKET_SIZE_MIN)
+              }
+              disabled={updateMutation.isPending}
+            />
+            <p className="text-[12px] text-muted-foreground">
+              {t(
+                'The largest burst allowed. Defaults to the request limit when left unset.',
+              )}
+            </p>
+          </div>
+        ) : null}
       </div>
     ) : action === WafRuleAction.Challenge ? (
       <div className="grid gap-3 sm:grid-cols-2">

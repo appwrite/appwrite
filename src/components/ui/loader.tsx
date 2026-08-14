@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils'
 
 /** Delay before the bottom spinner appears on long loads. */
 const SPINNER_DELAY_MS = 1500
+/** Exit fade duration (seconds). Keep short + easeOut so reveal feels instant. */
+const EXIT_DURATION_S = 0.22
 
 function LoaderBrandMark() {
   return (
@@ -50,7 +52,6 @@ export function FullscreenLoader({
 }: FullscreenLoaderProps) {
   const t = useT()
   const hasStatusBanner = Boolean(statusBanner)
-  const [shouldRender, setShouldRender] = useState(isVisible)
   const [showSpinner, setShowSpinner] = useState(false)
 
   // Show spinner only after 1.5s of the current visible period. Depend on a
@@ -68,27 +69,15 @@ export function FullscreenLoader({
     return () => clearTimeout(timer)
   }, [isVisible, hasStatusBanner])
 
-  useEffect(() => {
-    if (isVisible) {
-      setShouldRender(true)
-    } else {
-      // Start fade-out immediately; onComplete after animation finishes
-      setShouldRender(false)
-      const timer = setTimeout(() => {
-        onComplete?.()
-      }, 500) // Match exit animation duration
-      return () => clearTimeout(timer)
-    }
-  }, [isVisible, onComplete])
-
   return (
-    <AnimatePresence>
-      {shouldRender && (
+    <AnimatePresence onExitComplete={onComplete}>
+      {isVisible && (
         <motion.div
           initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
-          className="fixed inset-0 z-[9999] bg-background"
+          transition={{ duration: EXIT_DURATION_S, ease: 'easeOut' }}
+          className="fixed inset-0 z-[9999] bg-background will-change-[opacity]"
           aria-label="Loading"
           data-fullscreen-loader=""
         >

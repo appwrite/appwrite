@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import {
   useTeamMemberships,
   useCreateTeamMembership,
   useDeleteTeamMembership,
-  useProjectUsers,
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -32,7 +31,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
+import { UserSelector } from '@/components/global/shared/UserSelector'
 import { MembershipContextMenu } from '../_components/MembershipContextMenu'
 import { MembershipUpdateDrawer } from '../_components/MembershipUpdateDrawer'
 import { Plus, Trash2, X, Info, Loader2, Users } from 'lucide-react'
@@ -95,7 +94,6 @@ export function TeamMembers({
 
   const createMembershipMutation = useCreateTeamMembership(projectId, teamId)
   const deleteMembershipMutation = useDeleteTeamMembership(projectId, teamId)
-  const { users } = useProjectUsers(projectId, 0, 100)
 
   const memberships = membershipsData?.memberships || []
   const total = membershipsData?.total || 0
@@ -428,7 +426,6 @@ export function TeamMembers({
         onSubmit={handleCreateMembership}
         isLoading={createMembershipMutation.isPending}
         projectId={projectId ?? ''}
-        users={users}
         memberships={memberships}
       />
 
@@ -451,7 +448,6 @@ interface CreateMembershipDialogProps {
   onSubmit: (data: { userId: string; roles: string[] }) => void
   isLoading: boolean
   projectId: string
-  users: Array<{ $id: string; name?: string; email?: string; phone?: string }>
   memberships: Models.Membership[]
 }
 
@@ -461,21 +457,18 @@ function CreateMembershipDialog({
   onSubmit,
   isLoading,
   projectId,
-  users,
   memberships,
 }: CreateMembershipDialogProps) {
   const t = useT()
   const [selectedUserId, setSelectedUserId] = useState('')
   const [roles, setRoles] = useState<string[]>([])
   const [roleInput, setRoleInput] = useState('')
-  const existingMemberUserIds = new Set(
-    memberships.map((membership) => membership.userId).filter(Boolean),
+
+  const existingMemberUserIds = useMemo(
+    () =>
+      new Set(memberships.map((membership) => membership.userId).filter(Boolean)),
+    [memberships],
   )
-  const availableUsers = users.filter((user) => !existingMemberUserIds.has(user.$id))
-  const userItems = availableUsers.map((user) => ({
-    value: user.$id,
-    label: user.name || user.email || user.phone || user.$id,
-  }))
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
@@ -521,14 +514,15 @@ function CreateMembershipDialog({
               <Label htmlFor="member-user">
                 {t('User')} <span className="text-destructive">*</span>
               </Label>
-              <SearchableSelect
-                value={selectedUserId}
-                onValueChange={setSelectedUserId}
-                items={userItems}
-                placeholder={t('Select a user')}
-                searchPlaceholder={t('Search users...')}
-                emptyMessage={t('No available users')}
-              />
+              {open ? (
+                <UserSelector
+                  projectId={projectId}
+                  value={selectedUserId}
+                  onValueChange={setSelectedUserId}
+                  placeholder={t('Select a user')}
+                  excludeIds={existingMemberUserIds}
+                />
+              ) : null}
             </div>
 
             <div className="space-y-2">

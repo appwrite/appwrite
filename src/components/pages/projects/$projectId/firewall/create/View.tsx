@@ -24,8 +24,13 @@ import { useCreateFirewallRule } from '@/lib/react-query/hooks'
 import {
   type FirewallCreatableAction,
   type FirewallRateLimitKey,
+  type FirewallRateLimitStrategy,
   FIREWALL_RATE_LIMIT_KEYS,
   FIREWALL_RATE_LIMIT_KEY_DEFAULT,
+  FIREWALL_RATE_LIMIT_STRATEGIES,
+  FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT,
+  MAX_BUCKET_SIZE_MIN,
+  MAX_BUCKET_SIZE_MAX,
   CHALLENGE_DIFFICULTY_MIN,
   CHALLENGE_DIFFICULTY_MAX,
   CHALLENGE_DIFFICULTY_DEFAULT,
@@ -90,6 +95,8 @@ const DEFAULT_FORM = {
   limit: 100,
   interval: 60,
   rateLimitKey: FIREWALL_RATE_LIMIT_KEY_DEFAULT as FirewallRateLimitKey,
+  strategy: FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT as FirewallRateLimitStrategy,
+  maxBucketSize: 50,
   difficulty: CHALLENGE_DIFFICULTY_DEFAULT,
   ttl: CHALLENGE_TTL_DEFAULT,
   location: '/',
@@ -125,7 +132,11 @@ export function View() {
     (!needsResourceId || form.resourceId.trim().length > 0) &&
     areFirewallConditionsComplete(conditions) &&
     (form.action !== WafRuleAction.RateLimit ||
-      (form.limit > 0 && form.interval > 0)) &&
+      (form.limit > 0 &&
+        form.interval > 0 &&
+        (form.strategy !== 'tokenBucket' ||
+          (form.maxBucketSize >= MAX_BUCKET_SIZE_MIN &&
+            form.maxBucketSize <= MAX_BUCKET_SIZE_MAX)))) &&
     (form.action !== WafRuleAction.Challenge ||
       (form.difficulty >= CHALLENGE_DIFFICULTY_MIN &&
         form.difficulty <= CHALLENGE_DIFFICULTY_MAX &&
@@ -168,6 +179,8 @@ export function View() {
         limit: form.limit,
         interval: form.interval,
         key: form.rateLimitKey,
+        strategy: form.strategy,
+        maxBucketSize: form.maxBucketSize,
         difficulty: form.difficulty,
         ttl: form.ttl,
         location: form.location.trim(),
@@ -188,6 +201,53 @@ export function View() {
   const actionExtras =
     form.action === WafRuleAction.RateLimit ? (
       <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="firewall-strategy" className="text-[12px]">
+            {t('Strategy')}
+          </Label>
+          <Select
+            value={form.strategy}
+            onValueChange={(value) =>
+              setForm({
+                ...form,
+                strategy: value as FirewallRateLimitStrategy,
+              })
+            }
+          >
+            <SelectTrigger id="firewall-strategy" className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FIREWALL_RATE_LIMIT_STRATEGIES.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {t(s.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="firewall-key" className="text-[12px]">
+            {t('Limit by')}
+          </Label>
+          <Select
+            value={form.rateLimitKey}
+            onValueChange={(value) =>
+              setForm({ ...form, rateLimitKey: value as FirewallRateLimitKey })
+            }
+          >
+            <SelectTrigger id="firewall-key" className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FIREWALL_RATE_LIMIT_KEYS.map((k) => (
+                <SelectItem key={k.value} value={k.value}>
+                  {t(k.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="space-y-1.5">
           <Label htmlFor="firewall-limit" className="text-[12px]">
             {t('Request limit')}
@@ -222,33 +282,31 @@ export function View() {
             }
           />
         </div>
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="firewall-key" className="text-[12px]">
-            {t('Limit by')}
-          </Label>
-          <Select
-            value={form.rateLimitKey}
-            onValueChange={(value) =>
-              setForm({ ...form, rateLimitKey: value as FirewallRateLimitKey })
-            }
-          >
-            <SelectTrigger id="firewall-key" className="h-9 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FIREWALL_RATE_LIMIT_KEYS.map((k) => (
-                <SelectItem key={k.value} value={k.value}>
-                  {t(k.label)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-[12px] text-muted-foreground">
-            {t(
-              'Track the request quota per client IP or per authenticated user.',
-            )}
-          </p>
-        </div>
+        {form.strategy === 'tokenBucket' ? (
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="firewall-max-bucket-size" className="text-[12px]">
+              {t('Max bucket size')}
+            </Label>
+            <Input
+              id="firewall-max-bucket-size"
+              type="number"
+              min={MAX_BUCKET_SIZE_MIN}
+              max={MAX_BUCKET_SIZE_MAX}
+              value={form.maxBucketSize}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  maxBucketSize: Number(e.target.value) || MAX_BUCKET_SIZE_MIN,
+                })
+              }
+            />
+            <p className="text-[12px] text-muted-foreground">
+              {t(
+                'The largest burst allowed. Defaults to the request limit when left unset.',
+              )}
+            </p>
+          </div>
+        ) : null}
       </div>
     ) : form.action === WafRuleAction.Challenge ? (
       <div className="grid gap-3 sm:grid-cols-2">

@@ -124,6 +124,7 @@ import {
   useProject,
   useConsoleTeam,
   activeProjectsQueryOptions,
+  organizationProjectScopeQueryOptions,
   consoleAccountQueryOptions,
   useAIChatActiveConversationId,
   useAIChatPanelOpen,
@@ -3025,6 +3026,12 @@ export function AgentPanelContent({
     () => parsePinnedProjectIds(routeOrgTeam?.prefs),
     [routeOrgTeam?.prefs],
   )
+  // Part of the overview's cache key, so it has to be resolved here too.
+  const { data: routeOrgProjectScopeData } = useQuery(
+    organizationProjectScopeQueryOptions(routeOrgId),
+  )
+  const routeOrgProjectScope = routeOrgProjectScopeData ?? null
+
   const {
     data: routeOrgProjectsPage,
     isFetched: routeOrgProjectsFetched,
@@ -3037,6 +3044,7 @@ export function AgentPanelContent({
       GRID_DEFAULT_PAGE_SIZE,
       '',
       routeOrgPinnedIds.length > 0 ? routeOrgPinnedIds : undefined,
+      routeOrgProjectScope,
     ),
     enabled: Boolean(
       needsComposerProjectDefault &&
@@ -3168,6 +3176,10 @@ export function AgentPanelContent({
     conversation: activeConversation,
     isPending:
       createMessageMutation.isPending || updateMessageMutation.isPending,
+    projectId: contextProjectId,
+    projectName: project?.name,
+    organizationId,
+    pathname: location.pathname,
   })
 
   const latestAssistantMessage = useMemo(

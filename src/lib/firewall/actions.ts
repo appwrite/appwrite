@@ -33,6 +33,23 @@ export type FirewallRateLimitKey =
 
 export const FIREWALL_RATE_LIMIT_KEY_DEFAULT: FirewallRateLimitKey = 'ip'
 
+/** Rate-limiting algorithms a rate-limit rule can use. */
+export const FIREWALL_RATE_LIMIT_STRATEGIES = [
+  { value: 'fixedWindow', label: 'Fixed window' },
+  { value: 'slidingWindow', label: 'Sliding window' },
+  { value: 'tokenBucket', label: 'Token bucket' },
+] as const
+
+export type FirewallRateLimitStrategy =
+  (typeof FIREWALL_RATE_LIMIT_STRATEGIES)[number]['value']
+
+export const FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT: FirewallRateLimitStrategy =
+  'fixedWindow'
+
+/** Token-bucket burst capacity bounds. */
+export const MAX_BUCKET_SIZE_MIN = 1
+export const MAX_BUCKET_SIZE_MAX = 1000000
+
 export function getFirewallActionLabel(action: string): string {
   switch (action) {
     case WafRuleAction.Deny:
@@ -157,10 +174,18 @@ function normalizeRateLimitKey(value: unknown): FirewallRateLimitKey {
     : FIREWALL_RATE_LIMIT_KEY_DEFAULT
 }
 
+function normalizeRateLimitStrategy(value: unknown): FirewallRateLimitStrategy {
+  return FIREWALL_RATE_LIMIT_STRATEGIES.some((s) => s.value === value)
+    ? (value as FirewallRateLimitStrategy)
+    : FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT
+}
+
 export function getRuleRateLimit(rule: Models.WafRule): {
   limit: number
   interval: number
   key: FirewallRateLimitKey
+  strategy: FirewallRateLimitStrategy
+  maxBucketSize: number
 } | null {
   if (
     isRateLimitRule(rule) &&
@@ -171,6 +196,8 @@ export function getRuleRateLimit(rule: Models.WafRule): {
       limit: rule.limit,
       interval: rule.interval,
       key: normalizeRateLimitKey(rule.key),
+      strategy: normalizeRateLimitStrategy(rule.strategy),
+      maxBucketSize: toFiniteNumber(rule.maxBucketSize) ?? 0,
     }
   }
 
@@ -181,7 +208,13 @@ export function getRuleRateLimit(rule: Models.WafRule): {
   const interval = toFiniteNumber(config.interval)
   if (limit == null || interval == null) return null
 
-  return { limit, interval, key: normalizeRateLimitKey(config.key) }
+  return {
+    limit,
+    interval,
+    key: normalizeRateLimitKey(config.key),
+    strategy: normalizeRateLimitStrategy(config.strategy),
+    maxBucketSize: toFiniteNumber(config.maxBucketSize) ?? 0,
+  }
 }
 
 export function getRuleChallenge(rule: Models.WafRule): {

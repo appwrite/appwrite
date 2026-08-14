@@ -45,7 +45,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
-import { getStartCommandForSiteCreate } from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import {
@@ -274,7 +273,6 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             buildRuntime: templateFramework.buildRuntime,
             adapter: templateFramework.adapter,
             fallbackFile: templateFramework.fallbackFile,
-            startCommand: sdkDefaults.startCommand,
           }
         : sdkDefaults
 
@@ -290,10 +288,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         framework,
         installCommand: defaults.installCommand,
         buildCommand: defaults.buildCommand,
-        startCommand: getStartCommandForSiteCreate(
-          frameworkInfo,
-          defaults.adapter === 'ssr' ? defaults.startCommand ?? '' : '',
-        ),
+        startCommand: undefined,
         outputDirectory: defaults.outputDirectory,
         buildRuntime: defaults.buildRuntime ?? 'node-22',
         adapter: defaults.adapter ?? '',
@@ -707,7 +702,10 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             {t(
               'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.', // pragma: allowlist secret
             )}{' '}
-            <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
+            <DocsRouteLink
+              className="link-neutral font-medium"
+              href="/docs/products/sites/domains"
+            >
               {t('Learn more →')}
             </DocsRouteLink>
           </p>

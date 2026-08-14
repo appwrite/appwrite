@@ -1,6 +1,14 @@
 import { useEffect, useRef } from 'react'
-import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
-import { getDefaultFaviconVariant } from '@/lib/favicon'
+import {
+  useFavicon,
+  type FaviconApplyMeta,
+  type FaviconVariant,
+} from '@/hooks/use-favicon'
+import {
+  getDefaultFaviconVariant,
+  isStatusFaviconVariant,
+  type FaviconStatusContext,
+} from '@/lib/favicon'
 import { usesThemeAwareFaviconHost } from '@/lib/utils/theme-favicon-host'
 import {
   getAssistantConversationStatusTone,
@@ -49,6 +57,10 @@ type AgentConversationFaviconInput = {
    * before conversation status catches up from realtime.
    */
   isPending?: boolean
+  projectId?: string | null
+  projectName?: string | null
+  organizationId?: string | null
+  pathname?: string | null
 }
 
 /**
@@ -60,6 +72,10 @@ export function useAgentConversationFavicon({
   enabled = true,
   conversation,
   isPending = false,
+  projectId = null,
+  projectName = null,
+  organizationId = null,
+  pathname = null,
 }: AgentConversationFaviconInput): void {
   const { setFavicon, getCurrentFavicon } = useFavicon()
   const setFaviconRef = useRef(setFavicon)
@@ -77,6 +93,14 @@ export function useAgentConversationFavicon({
   conversationRef.current = conversation
   const isPendingRef = useRef(isPending)
   isPendingRef.current = isPending
+  const projectIdRef = useRef(projectId)
+  projectIdRef.current = projectId
+  const projectNameRef = useRef(projectName)
+  projectNameRef.current = projectName
+  const organizationIdRef = useRef(organizationId)
+  organizationIdRef.current = organizationId
+  const pathnameRef = useRef(pathname)
+  pathnameRef.current = pathname
 
   const conversationId = conversation?.$id ?? null
   const status = conversation?.status ?? null
@@ -84,6 +108,53 @@ export function useAgentConversationFavicon({
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+
+    function buildContext(
+      conversationIdValue: string | null,
+      statusValue: string | null,
+      lockStateValue: string | null,
+      pending: boolean,
+    ): FaviconStatusContext {
+      const fields: NonNullable<FaviconStatusContext['fields']> = []
+      if (statusValue) fields.push({ label: 'Status', value: statusValue })
+      if (lockStateValue) fields.push({ label: 'Lock', value: lockStateValue })
+      if (pending) fields.push({ label: 'Pending', value: 'message create/update' })
+      return {
+        projectId: projectIdRef.current ?? undefined,
+        projectName: projectNameRef.current ?? undefined,
+        organizationId: organizationIdRef.current ?? undefined,
+        conversationId: conversationIdValue ?? undefined,
+        pathname: pathnameRef.current ?? undefined,
+        fields: fields.length > 0 ? fields : undefined,
+      }
+    }
+
+    function agentMeta(
+      reason: string,
+      conversationIdValue: string | null,
+      statusValue: string | null,
+      lockStateValue: string | null,
+      pending: boolean,
+    ): FaviconApplyMeta {
+      const context = buildContext(
+        conversationIdValue,
+        statusValue,
+        lockStateValue,
+        pending,
+      )
+      const detailParts = [
+        context.projectId ? `project ${context.projectId}` : null,
+        context.conversationId ? `conversation ${context.conversationId}` : null,
+        statusValue ? `status=${statusValue}` : null,
+        pending ? 'message pending' : null,
+      ].filter(Boolean)
+      return {
+        source: 'agent-conversation',
+        reason,
+        detail: detailParts.length > 0 ? detailParts.join(' · ') : undefined,
+        context,
+      }
+    }
 
     function clearResetTimer(): void {
       if (resetTimerRef.current !== null) {
@@ -98,35 +169,35 @@ export function useAgentConversationFavicon({
       // Never capture a status color as the "original" — otherwise restore
       // leaves the tab stuck on blue/green/red.
       const resolved = current ?? getDefaultFaviconVariant()
-      originalFaviconRef.current =
-        resolved === 'blue' ||
-        resolved === 'green' ||
-        resolved === 'red' ||
-        resolved === 'theme-blue' ||
-        resolved === 'theme-green' ||
-        resolved === 'theme-red'
-          ? getDefaultFaviconVariant()
-          : resolved
+      originalFaviconRef.current = isStatusFaviconVariant(resolved)
+        ? getDefaultFaviconVariant()
+        : resolved
     }
 
-    function restoreOriginalFavicon(): void {
+    function restoreOriginalFavicon(reason: string): void {
       clearResetTimer()
       const original = originalFaviconRef.current ?? getDefaultFaviconVariant()
-      setFaviconRef.current(original)
+      setFaviconRef.current(
+        original,
+        agentMeta(reason, conversationId, status, lockState, isPending),
+      )
       originalFaviconRef.current = null
     }
 
-    function applyVariant(variant: FaviconVariant): void {
+    function applyVariant(variant: FaviconVariant, reason: string): void {
       clearResetTimer()
       captureOriginalFavicon()
-      setFaviconRef.current(variant)
+      setFaviconRef.current(
+        variant,
+        agentMeta(reason, conversationId, status, lockState, isPending),
+      )
     }
 
     function scheduleRestore(): void {
       clearResetTimer()
       resetTimerRef.current = window.setTimeout(() => {
         resetTimerRef.current = null
-        restoreOriginalFavicon()
+        restoreOriginalFavicon('Restored after agent terminal favicon timeout')
       }, TERMINAL_FAVICON_RESET_MS)
     }
 
@@ -141,7 +212,9 @@ export function useAgentConversationFavicon({
         originalFaviconRef.current &&
         resetTimerRef.current !== null
       ) {
-        restoreOriginalFavicon()
+        restoreOriginalFavicon(
+          'Restored when tab became visible after agent settled',
+        )
       }
     }
 
@@ -152,7 +225,9 @@ export function useAgentConversationFavicon({
       previousToneRef.current = null
       previousConversationIdRef.current = null
       if (originalFaviconRef.current) {
-        restoreOriginalFavicon()
+        restoreOriginalFavicon(
+          'Restored because agent favicon tracking disabled',
+        )
       }
       return () => {
         document.removeEventListener('visibilitychange', onVisibilityChange)
@@ -184,9 +259,16 @@ export function useAgentConversationFavicon({
         trackedInFlightIdRef.current = conversationId
       } else if (isPending) {
         // Brand-new send before the conversation id is known.
-        trackedInFlightIdRef.current = trackedInFlightIdRef.current ?? '__pending__'
+        trackedInFlightIdRef.current =
+          trackedInFlightIdRef.current ?? '__pending__'
       }
-      applyVariant(inProgressFavicon())
+      const reason =
+        isPending && !isInFlightTone(tone)
+          ? 'Agent message pending (waiting for conversation status)'
+          : tone === 'queued'
+            ? 'Agent conversation queued'
+            : 'Agent conversation running'
+      applyVariant(inProgressFavicon(), reason)
     } else {
       const sawInFlight =
         !!conversationId &&
@@ -197,7 +279,7 @@ export function useAgentConversationFavicon({
 
       if (tone === 'failed' && (sawInFlight || transitionedFromInFlight)) {
         trackedInFlightIdRef.current = null
-        applyVariant(failureFavicon())
+        applyVariant(failureFavicon(), 'Agent conversation failed')
         scheduleRestore()
       } else if (
         tone === 'ready' &&
@@ -206,20 +288,34 @@ export function useAgentConversationFavicon({
       ) {
         trackedInFlightIdRef.current = null
         if (isCancelledOrStopped(status)) {
-          restoreOriginalFavicon()
+          restoreOriginalFavicon(
+            'Restored after agent conversation was stopped',
+          )
         } else {
-          applyVariant(successFavicon())
+          applyVariant(successFavicon(), 'Agent conversation ready')
           scheduleRestore()
         }
       } else if (originalFaviconRef.current && !resetTimerRef.current) {
-        restoreOriginalFavicon()
+        restoreOriginalFavicon(
+          'Restored after agent conversation left in-flight',
+        )
       }
     }
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
-  }, [enabled, conversationId, status, lockState, isPending])
+  }, [
+    enabled,
+    conversationId,
+    status,
+    lockState,
+    isPending,
+    projectId,
+    projectName,
+    organizationId,
+    pathname,
+  ])
 
   useEffect(() => {
     return () => {
@@ -231,6 +327,16 @@ export function useAgentConversationFavicon({
       if (originalFaviconRef.current) {
         setFaviconRef.current(
           originalFaviconRef.current ?? getDefaultFaviconVariant(),
+          {
+            source: 'agent-conversation',
+            reason: 'Restored on agent favicon hook unmount',
+            context: {
+              projectId: projectIdRef.current ?? undefined,
+              projectName: projectNameRef.current ?? undefined,
+              organizationId: organizationIdRef.current ?? undefined,
+              pathname: pathnameRef.current ?? undefined,
+            },
+          },
         )
         originalFaviconRef.current = null
       }

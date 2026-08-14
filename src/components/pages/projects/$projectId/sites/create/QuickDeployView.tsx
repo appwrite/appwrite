@@ -30,10 +30,6 @@ import {
   useCreateSiteDomain,
   useCreateTemplateDeployment,
 } from '@/lib/react-query/hooks'
-import {
-  getFrameworkAdapterDefaults,
-  getStartCommandForSiteCreate,
-} from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
@@ -131,14 +127,9 @@ export function QuickDeployView({
       !initialOutput
     ) {
       const defaults = getFrameworkDefaults(framework)
-      const ssrDefaults = getFrameworkAdapterDefaults(
-        getFramework(framework),
-        'ssr',
-      )
       setInstallCommand(defaults.installCommand)
       setBuildCommand(defaults.buildCommand)
       setOutputDirectory(defaults.outputDirectory)
-      setStartCommand(ssrDefaults.startCommand)
     }
   }, [
     framework,
@@ -188,10 +179,7 @@ export function QuickDeployView({
         buildRuntime: defaults.buildRuntime,
         installCommand: installCommand || defaults.installCommand,
         buildCommand: buildCommand || defaults.buildCommand,
-        startCommand: getStartCommandForSiteCreate(
-          getFramework(framework),
-          startCommand,
-        ),
+        startCommand: startCommand || undefined,
         outputDirectory: outputDirectory || defaults.outputDirectory,
         adapter: defaults.adapter || undefined,
       })
@@ -441,14 +429,9 @@ export function QuickDeployView({
               onValueChange={(value) => {
                 setFramework(value)
                 const defaults = getFrameworkDefaults(value)
-                const ssrDefaults = getFrameworkAdapterDefaults(
-                  getFramework(value),
-                  'ssr',
-                )
                 setInstallCommand(defaults.installCommand)
                 setBuildCommand(defaults.buildCommand)
                 setOutputDirectory(defaults.outputDirectory)
-                setStartCommand(ssrDefaults.startCommand)
               }}
             >
               <SelectTrigger className="h-9 text-[13px]">
@@ -539,7 +522,10 @@ export function QuickDeployView({
             {t(
               'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.', // pragma: allowlist secret
             )}{' '}
-            <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
+            <DocsRouteLink
+              className="link-neutral font-medium"
+              href="/docs/products/sites/domains"
+            >
               {t('Learn more →')}
             </DocsRouteLink>
           </p>

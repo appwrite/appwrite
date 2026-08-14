@@ -14,6 +14,7 @@ import {
   UsageChartXAxis,
   UsageChartYAxis,
 } from '@/components/global/shared/ChartXAxis'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import {
   OVERVIEW_CHART_HEIGHT,
   overviewChartPanelBodyClass,
@@ -151,7 +152,8 @@ export function FirewallActionActivityChart({
                         </p>
                         <div className="space-y-1">
                           <div className="flex justify-between gap-6 text-[11px]">
-                            <span className="text-muted-foreground">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <ChartSeriesDot color={SOLVES_COLOR} />
                               {valueLabel}
                             </span>
                             <span className="font-medium tabular-nums text-foreground">
@@ -160,7 +162,8 @@ export function FirewallActionActivityChart({
                           </div>
                           {showSolveTime ? (
                             <div className="flex justify-between gap-6 text-[11px]">
-                              <span className="text-muted-foreground">
+                              <span className="flex items-center gap-1.5 text-muted-foreground">
+                                <ChartSeriesDot color={SOLVE_TIME_COLOR} />
                                 {solveTimeLabel}
                               </span>
                               <span className="font-medium tabular-nums text-foreground">

@@ -67,10 +67,6 @@ export function BuildSettings({
     !!framework && !frameworkHasStaticAdapter(framework)
   const showFallbackFile = !!onFallbackFileChange && !isSsrOnlyFramework
   const fallbackDisabled = disabled || !frameworkKey
-  const ssrDefaults = useMemo(
-    () => getFrameworkAdapterDefaults(framework, 'ssr'),
-    [framework],
-  )
   const staticDefaults = useMemo(
     () => getFrameworkAdapterDefaults(framework, 'static'),
     [framework],
@@ -80,7 +76,6 @@ export function BuildSettings({
     installCommand: 'npm install',
     buildCommand: 'npm run build',
     outputDirectory: '.output',
-    startCommand: '',
     fallbackFile: '',
   })
 
@@ -92,16 +87,10 @@ export function BuildSettings({
         installCommand: createDefaults.installCommand,
         buildCommand: createDefaults.buildCommand,
         outputDirectory: createDefaults.outputDirectory,
-        startCommand: ssrDefaults.startCommand,
         fallbackFile: staticDefaults.fallbackFile,
       })
     }
-  }, [
-    frameworkKey,
-    getFrameworkDefaults,
-    ssrDefaults.startCommand,
-    staticDefaults.fallbackFile,
-  ])
+  }, [frameworkKey, getFrameworkDefaults, staticDefaults.fallbackFile])
 
   const handleResetInstall = () => {
     onInstallCommandChange(defaults.installCommand)
@@ -109,10 +98,6 @@ export function BuildSettings({
 
   const handleResetBuild = () => {
     onBuildCommandChange(defaults.buildCommand)
-  }
-
-  const handleResetStart = () => {
-    onStartCommandChange?.(defaults.startCommand)
   }
 
   const handleResetOutput = () => {
@@ -125,7 +110,6 @@ export function BuildSettings({
 
   const isInstallModified = installCommand !== defaults.installCommand
   const isBuildModified = buildCommand !== defaults.buildCommand
-  const isStartModified = startCommand !== defaults.startCommand
   const isOutputModified = outputDirectory !== defaults.outputDirectory
   const isFallbackModified = fallbackFile !== defaults.fallbackFile
 
@@ -209,31 +193,12 @@ export function BuildSettings({
 
             {showStartCommand && onStartCommandChange && (
               <div className="space-y-2">
-                <StartCommandLabel
-                  htmlFor="start-command"
-                  trailing={
-                    isStartModified ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleResetStart}
-                        disabled={disabled}
-                        className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                      >
-                        <RotateCcw className="me-1 h-3 w-3" />
-                        {t('Reset')}
-                      </Button>
-                    ) : undefined
-                  }
-                />
+                <StartCommandLabel htmlFor="start-command" />
                 <Input
                   id="start-command"
                   value={startCommand}
                   onChange={(e) => onStartCommandChange(e.target.value)}
-                  placeholder={
-                    ssrDefaults.startCommand || t('Enter start command')
-                  }
+                  placeholder={t('Enter start command')}
                   disabled={disabled}
                   className="h-9 font-mono text-[13px]"
                 />

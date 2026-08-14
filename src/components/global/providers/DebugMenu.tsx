@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Megaphone,
   Trash2,
+  Plus,
   RotateCcw,
   Image,
   Palette,
@@ -80,7 +81,12 @@ import {
 } from '@/lib/user-os'
 import { formatInitMockCurrentDay } from '@/lib/init/mock-current-day'
 import { formatInitMockTicketType } from '@/lib/init/ticket-types'
-import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
+import type { FaviconStatus } from '@/hooks/use-favicon'
+import {
+  formatFaviconStatusSummary,
+  getFaviconStatus,
+  subscribeFaviconStatus,
+} from '@/lib/favicon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   setDebugProfileOverride,
@@ -95,6 +101,7 @@ import {
 } from '@/lib/console-profiles'
 import {
   setDebugEndpointOverride,
+  removeCustomDebugEndpoint,
   ENDPOINT_PRESETS,
   type EndpointPresetId,
 } from '@/lib/debug-endpoint'
@@ -123,6 +130,7 @@ import { DebugMenuTerminalPanel } from '@/components/global/providers/DebugMenuT
 import { DebugMenuRecentResourcesPanel } from '@/components/global/providers/DebugMenuRecentResourcesPanel'
 import { DebugMenuCommunityShareExamplesPanel } from '@/components/global/providers/DebugMenuCommunityShareExamplesPanel'
 import { DebugMenuEnvPanel } from '@/components/global/providers/DebugMenuEnvPanel'
+import { DebugMenuFaviconPanel } from '@/components/global/providers/DebugMenuFaviconPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -214,10 +222,15 @@ interface MenuItem {
     | 'terminalSettings'
     | 'recentResources'
     | 'envStatus'
+    | 'faviconStatus'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
   category?: string
+  /** Optional secondary remove action (e.g. saved custom endpoints). */
+  onRemove?: () => void
+  /** Accessible label for the remove button. */
+  removeLabel?: string
 }
 
 interface MenuSection {
@@ -446,35 +459,27 @@ function renderDebugSubmenuItemRow(
     )
   }
 
-  return (
-    <button
-      key={key}
-      id={options?.id}
-      type="button"
-      role="option"
-      aria-selected={options?.highlighted ?? false}
-      data-debug-nav-index={options?.navIndex}
-      tabIndex={-1}
-      onMouseEnter={options?.onHighlight}
-      onClick={() => {
-        if (hasNestedSubmenu && nestedSubmenuKey) {
-          setActiveSubmenu(nestedSubmenuKey)
-        } else if (item.onClick) {
-          item.onClick()
-        }
-      }}
-      disabled={item.disabled}
-      className={debugMenuItemRowClassName({
-        disabled: item.disabled,
-        active: item.active,
-        highlighted: options?.highlighted,
-        rowClassName: item.rowClassName,
-      })}
-    >
+  const handleSelect = () => {
+    if (hasNestedSubmenu && nestedSubmenuKey) {
+      setActiveSubmenu(nestedSubmenuKey)
+    } else if (item.onClick) {
+      item.onClick()
+    }
+  }
+
+  const rowClassName = debugMenuItemRowClassName({
+    disabled: item.disabled,
+    active: item.active,
+    highlighted: options?.highlighted,
+    rowClassName: item.rowClassName,
+  })
+
+  const content = (
+    <>
       {item.icon && (
         <span className="flex-shrink-0 text-[var(--network-globe-edge)]">{item.icon}</span>
       )}
-      <span className="flex-1">
+      <span className="min-w-0 flex-1">
         <span className="block font-medium">{item.label}</span>
         {item.description && (
           <span
@@ -493,6 +498,78 @@ function renderDebugSubmenuItemRow(
       {hasNestedSubmenu && (
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-[var(--network-globe-edge)]/60" />
       )}
+    </>
+  )
+
+  if (item.onRemove) {
+    return (
+      <div
+        key={key}
+        id={options?.id}
+        role="option"
+        aria-selected={options?.highlighted ?? false}
+        data-debug-nav-index={options?.navIndex}
+        onMouseEnter={options?.onHighlight}
+        className={cn(
+          'flex items-center gap-1 rounded-lg transition-colors',
+          options?.highlighted || item.active
+            ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))]'
+            : 'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)]',
+          item.rowClassName,
+        )}
+      >
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={handleSelect}
+          disabled={item.disabled}
+          className={cn(
+            'flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-start text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40',
+            item.disabled
+              ? 'cursor-not-allowed opacity-50'
+              : 'text-foreground/90 hover:text-foreground',
+          )}
+        >
+          {content}
+        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={(event) => {
+                event.stopPropagation()
+                item.onRemove?.()
+              }}
+              className="mr-1.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[var(--network-globe-edge)]/80 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_15%,transparent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
+              aria-label={item.removeLabel ?? `Remove ${item.label}`}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            {item.removeLabel ?? 'Remove'}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      key={key}
+      id={options?.id}
+      type="button"
+      role="option"
+      aria-selected={options?.highlighted ?? false}
+      data-debug-nav-index={options?.navIndex}
+      tabIndex={-1}
+      onMouseEnter={options?.onHighlight}
+      onClick={handleSelect}
+      disabled={item.disabled}
+      className={rowClassName}
+    >
+      {content}
     </button>
   )
 }
@@ -516,7 +593,8 @@ function isDebugPanelSubmenuVariant(
     variant === 'seedResources' ||
     variant === 'terminalSettings' ||
     variant === 'recentResources' ||
-    variant === 'envStatus'
+    variant === 'envStatus' ||
+    variant === 'faviconStatus'
   )
 }
 
@@ -595,7 +673,8 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'seedResources' ||
     item.submenuVariant === 'terminalSettings' ||
     item.submenuVariant === 'recentResources' ||
-    item.submenuVariant === 'envStatus'
+    item.submenuVariant === 'envStatus' ||
+    item.submenuVariant === 'faviconStatus'
   )
 }
 
@@ -813,8 +892,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
   const { addMockBanner, clearAllBanners, banners } = usePromoBanner()
-  const { setFavicon, getCurrentFavicon } = useFavicon()
-  const [currentFavicon, setCurrentFavicon] = useState<string | null>(null)
+  const [faviconStatus, setFaviconStatus] = useState<FaviconStatus>(() =>
+    getFaviconStatus(),
+  )
   const { theme, setTheme } = useTheme()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
   const [menuSearch, setMenuSearch] = useState('')
@@ -827,6 +907,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const {
     preset: endpointPreset,
     customUrl: endpointCustomUrl,
+    customEndpoints: endpointCustomEndpoints,
     effectiveUrl: endpointEffectiveUrl,
     envUrl: endpointEnvUrl,
   } = useDebugEndpoint()
@@ -978,17 +1059,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     }
   }, [])
 
-  // Update current favicon state when it changes
+  // Keep favicon status summary in sync for the Appearance menu label.
   useEffect(() => {
-    const updateCurrentFavicon = () => {
-      const favicon = getCurrentFavicon()
-      setCurrentFavicon(favicon)
-    }
-
-    updateCurrentFavicon()
-    const interval = setInterval(updateCurrentFavicon, 500)
-    return () => clearInterval(interval)
-  }, [getCurrentFavicon, isOpen])
+    if (!isOpen) return
+    return subscribeFaviconStatus(setFaviconStatus)
+  }, [isOpen])
 
   // Reset submenu and search when popover closes
   useEffect(() => {
@@ -1207,30 +1282,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       },
     ]
 
-    const faviconOptions: MenuItem[] = (
-      [
-        { label: 'Default', faviconValue: 'default' },
-        { label: 'Green', faviconValue: 'green' },
-        { label: 'Blue', faviconValue: 'blue' },
-        { label: 'Red', faviconValue: 'red' },
-        { label: 'Theme', faviconValue: 'theme' },
-        { label: 'Theme + Green', faviconValue: 'theme-green' },
-        { label: 'Theme + Blue', faviconValue: 'theme-blue' },
-        { label: 'Theme + Red', faviconValue: 'theme-red' },
-      ] as const satisfies ReadonlyArray<{
-        label: string
-        faviconValue: FaviconVariant
-      }>
-    ).map((opt) => ({
-      label: opt.label,
-      onClick: () => {
-        setFavicon(opt.faviconValue)
-        setIsOpen(false)
-      },
-      active: currentFavicon === opt.faviconValue,
-      icon: <Image className="h-3 w-3" />,
-    }))
-
     const lowPowerAnimationOptions: MenuItem[] = (
       [
         {
@@ -1352,8 +1403,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Favicon',
+            description: formatFaviconStatusSummary(faviconStatus),
             icon: <Image className="h-3 w-3" />,
-            submenu: faviconOptions,
+            submenuVariant: 'faviconStatus',
           },
           {
             label: 'Operating system',
@@ -1984,6 +2036,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'UI & tools' },
               ),
               createProfileFeatureFlagItem(
+                'Notifications',
+                'Console notifications center (header bell and inbox popover).',
+                'notifications',
+                profileId,
+                features.notifications,
+                { category: 'UI & tools' },
+              ),
+              createProfileFeatureFlagItem(
                 'Organization marketplace',
                 profileId === 'cloud'
                   ? 'Org Marketplace tab (browse and publish apps). Cloud profile only.'
@@ -2222,6 +2282,37 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenu: profileOptions,
           },
           (() => {
+            const customEndpointItems: MenuItem[] = endpointCustomEndpoints.map(
+              (url) => {
+                let hostLabel = url
+                try {
+                  hostLabel = new URL(url).host
+                } catch {
+                  // keep full URL as label
+                }
+                return {
+                  label: hostLabel,
+                  description: url,
+                  onClick: () => {
+                    applyOverrideAndGoHome(() =>
+                      setDebugEndpointOverride('custom', url),
+                    )
+                  },
+                  active:
+                    endpointPreset === 'custom' && endpointCustomUrl === url,
+                  icon: <Globe className="h-3 w-3" />,
+                  removeLabel: 'Remove custom endpoint',
+                  onRemove: () => {
+                    const wasActive = removeCustomDebugEndpoint(url)
+                    if (wasActive) {
+                      // Override already cleared; reload so clients pick up env endpoint.
+                      applyOverrideAndGoHome(() => undefined)
+                    }
+                  },
+                }
+              },
+            )
+
             const endpointOptions: MenuItem[] = [
               ...(
                 Object.entries(ENDPOINT_PRESETS) as [
@@ -2237,12 +2328,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 active: endpointPreset === id,
                 icon: <Globe className="h-3 w-3" />,
               })),
+              ...customEndpointItems,
               {
-                label: 'Custom...',
-                description:
-                  endpointPreset === 'custom' && endpointCustomUrl
-                    ? endpointCustomUrl
-                    : 'Enter a custom API URL',
+                label: 'Add custom...',
+                description: 'Save a custom API URL to this list',
                 onClick: () => {
                   const url = window.prompt(
                     'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
@@ -2258,8 +2347,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     )
                   }
                 },
-                active: endpointPreset === 'custom',
-                icon: <Globe className="h-3 w-3" />,
+                icon: <Plus className="h-3 w-3" />,
+                rowClassName:
+                  'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] pt-2',
               },
               {
                 label: 'Use env var',
@@ -2359,7 +2449,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     ]
   }, [
     theme,
-    currentFavicon,
+    faviconStatus,
     profileId,
     features.dedicatedDbsSupport,
     features.dedicatedDbsDocumentsDB,
@@ -2376,10 +2466,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.marketplace,
     features.partnersDocs,
     features.agent,
+    features.notifications,
     features.firewall,
     features.init,
     endpointPreset,
     endpointCustomUrl,
+    endpointCustomEndpoints,
     endpointEffectiveUrl,
     endpointEnvUrl,
     mcpEndpointPreset,
@@ -2393,7 +2485,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     actions,
     navigate,
     setTheme,
-    setFavicon,
     addMockBanner,
     clearAllBanners,
     languageCopy,
@@ -2750,7 +2841,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'initTicketMock' ||
               currentSubmenu?.submenuVariant === 'terminalSettings' ||
               currentSubmenu?.submenuVariant === 'recentResources' ||
-              currentSubmenu?.submenuVariant === 'envStatus'
+              currentSubmenu?.submenuVariant === 'envStatus' ||
+              currentSubmenu?.submenuVariant === 'faviconStatus'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -2884,6 +2976,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuRecentResourcesPanel />
               ) : currentSubmenu.submenuVariant === 'envStatus' ? (
                 <DebugMenuEnvPanel />
+              ) : currentSubmenu.submenuVariant === 'faviconStatus' ? (
+                <DebugMenuFaviconPanel />
               ) : (
                 <div className="space-y-0.5">
                   {currentSubmenu.note ? (

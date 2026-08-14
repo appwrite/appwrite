@@ -1,4 +1,4 @@
-import { Outlet, useParams, useNavigate } from '@tanstack/react-router'
+import { Outlet, useParams, useNavigate, Link } from '@tanstack/react-router'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import {
@@ -11,7 +11,8 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMemo } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   RefreshProvider,
   useRefresh,
@@ -111,6 +112,38 @@ function SiteLayoutContent() {
     [projectId, siteId, showSettingsTab, t],
   )
 
+  const disabledAlert =
+    site && site.enabled === false ? (
+      <div className="border-b border-border bg-amber-500/5">
+        <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+          <Alert
+            variant="default"
+            className="border-amber-500/30 bg-transparent"
+          >
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+              {t('Site is disabled')}
+            </AlertTitle>
+            <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+              <span className="inline">
+                {t(
+                  'This site is disabled and not accessible to visitors. Console actions remain available.',
+                )}{' '}
+                <Link
+                  to="/projects/$projectId/sites/$siteId/settings"
+                  params={{ projectId: projectId!, siteId: siteId! }}
+                  className="font-medium underline hover:no-underline inline"
+                >
+                  {t('Enable this site in the Settings tab')}
+                </Link>{' '}
+                {t('to make it available to visitors.')}
+              </span>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    ) : undefined
+
   return (
     <div className="flex flex-col">
       <ServiceHeader
@@ -139,6 +172,7 @@ function SiteLayoutContent() {
         showRefresh={activeTab === 'logs' && hasRefreshHandler}
         onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
         isRefreshing={isRefreshing}
+        contentAfterBorder={disabledAlert}
       />
       <div className="flex-1 min-h-0">
         <Outlet />

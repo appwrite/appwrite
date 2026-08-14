@@ -421,8 +421,12 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                     'flex min-w-0 flex-row items-center justify-between gap-x-4',
                   )}
                 >
-                  <h1 className="min-w-0 flex-1 truncate text-[17px] font-semibold leading-tight text-foreground">
-                    {title}
+                  <h1 className="min-w-0 flex-1 overflow-hidden text-[17px] font-semibold leading-tight text-foreground">
+                    {typeof title === 'string' ? (
+                      <span className="block truncate">{title}</span>
+                    ) : (
+                      title
+                    )}
                   </h1>
                   {titleRightContent ? (
                     <div className="flex shrink-0 items-center justify-end gap-2 overflow-visible @[560px]:gap-3">

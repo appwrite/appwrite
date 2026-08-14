@@ -1,6 +1,6 @@
-import type { createContainer } from 'almostnode'
+import type { WasmCliContainer } from './wasm/runtime'
 
-export type CliShellContainer = ReturnType<typeof createContainer>
+export type CliShellContainer = WasmCliContainer
 
 export type CliShellLine =
   | { type: 'command'; text: string }

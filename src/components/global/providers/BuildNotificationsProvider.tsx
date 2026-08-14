@@ -31,8 +31,8 @@ import { toast } from 'sonner'
 import { Bell } from 'lucide-react'
 import type { RealtimeResponseEvent, Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
-import { getDefaultFaviconVariant } from '@/lib/favicon'
+import { useFavicon, type FaviconApplyMeta, type FaviconVariant } from '@/hooks/use-favicon'
+import { getDefaultFaviconVariant, isStatusFaviconVariant } from '@/lib/favicon'
 import { usesThemeAwareFaviconHost } from '@/lib/utils/theme-favicon-host'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { registerRegionalConsoleRealtimeListener } from '@/lib/realtime/regional-console-hub'
@@ -144,6 +144,49 @@ function buildSuccessFavicon(): FaviconVariant {
 
 function buildFailureFavicon(): FaviconVariant {
   return usesThemeAwareFaviconHost() ? 'theme-red' : 'red'
+}
+
+function buildMeta(
+  reason: string,
+  builds: Iterable<ActiveBuild>,
+  extras?: {
+    projectId?: string
+    projectName?: string
+    organizationId?: string
+    pathname?: string
+  },
+): FaviconApplyMeta {
+  const list = Array.from(builds)
+  return {
+    source: 'build-notifications',
+    reason,
+    detail: formatActiveBuildsDetail(list),
+    context: {
+      projectId: extras?.projectId,
+      projectName: extras?.projectName,
+      organizationId: extras?.organizationId,
+      pathname: extras?.pathname,
+      resources: list.map((b) => ({
+        type: b.resourceType,
+        id: b.resourceId,
+        status: b.status,
+        deploymentId: b.deploymentId,
+      })),
+    },
+  }
+}
+
+function formatActiveBuildsDetail(
+  builds: Iterable<ActiveBuild> | ActiveBuild[],
+): string | undefined {
+  const list = Array.isArray(builds) ? builds : Array.from(builds)
+  if (list.length === 0) return undefined
+  return list
+    .map(
+      (b) =>
+        `${b.resourceType} ${b.resourceId} · ${b.status} · deployment ${b.deploymentId}`,
+    )
+    .join('; ')
 }
 
 let permissionPromptShown = false
@@ -317,14 +360,36 @@ export function BuildNotificationsProvider({
   getCurrentFaviconRef.current = getCurrentFavicon
   const relevanceCtxRef = useRef<RelevanceContext>(relevanceCtx)
   relevanceCtxRef.current = relevanceCtx
+  const pathnameRef = useRef(location.pathname)
+  pathnameRef.current = location.pathname
 
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    function lookupProjectMeta(): {
+      projectId: string
+      projectName?: string
+      organizationId?: string
+    } {
+      const projectId = projectIdRef.current
+      const cached = queryClientRef.current.getQueryData<{
+        name?: string
+        teamId?: string
+      }>(['project', projectId])
+      return {
+        projectId,
+        projectName: cached?.name?.trim() || undefined,
+        organizationId: cached?.teamId?.trim() || undefined,
+      }
+    }
+
     function captureOriginalFavicon(): void {
       if (originalFaviconRef.current) return
       const current = getCurrentFaviconRef.current()
-      originalFaviconRef.current = current ?? getDefaultFaviconVariant()
+      const resolved = current ?? getDefaultFaviconVariant()
+      originalFaviconRef.current = isStatusFaviconVariant(resolved)
+        ? getDefaultFaviconVariant()
+        : resolved
     }
 
     function clearResetTimer(): void {
@@ -340,22 +405,41 @@ export function BuildNotificationsProvider({
      * route. When `target` is `null`, the favicon should go back to whatever
      * it was before we touched it.
      */
-    function applyDesiredFavicon(target: FaviconVariant | null): void {
+    function applyDesiredFavicon(
+      target: FaviconVariant | null,
+      reason: string,
+    ): void {
       lastDesiredFaviconRef.current = target
       // Only paint when the user is on a Sites/Functions page; otherwise the
       // navigation effect below will paint when they come back.
       if (relevanceCtxRef.current.type === null) return
+      const projectMeta = lookupProjectMeta()
+      const builds = Array.from(activeBuildsRef.current.values())
+      const meta = buildMeta(reason, builds, {
+        ...projectMeta,
+        pathname: pathnameRef.current,
+      })
+      if (meta.context) {
+        meta.context.resources = builds.map((b) => ({
+          type: b.resourceType,
+          id: b.resourceId,
+          name: lookupResourceName(b.resourceType, b.resourceId),
+          status: b.status,
+          deploymentId: b.deploymentId,
+        }))
+      }
       if (target === null) {
         const original = originalFaviconRef.current ?? getDefaultFaviconVariant()
-        setFaviconRef.current(original)
+        setFaviconRef.current(original, meta)
+        originalFaviconRef.current = null
       } else {
         captureOriginalFavicon()
-        setFaviconRef.current(target)
+        setFaviconRef.current(target, meta)
       }
     }
 
-    function restoreOriginalFavicon(): void {
-      applyDesiredFavicon(null)
+    function restoreOriginalFavicon(reason = 'Restored after builds settled'): void {
+      applyDesiredFavicon(null, reason)
     }
 
     function scheduleFaviconReset(): void {
@@ -461,9 +545,15 @@ export function BuildNotificationsProvider({
         tracked.delete(update.deploymentId)
         if (had) {
           if (builds.size === 0) {
-            applyDesiredFavicon(null)
+            applyDesiredFavicon(
+              null,
+              'Restored after timed-out build removed from active set',
+            )
           } else {
-            applyDesiredFavicon(buildInProgressFavicon())
+            applyDesiredFavicon(
+              buildInProgressFavicon(),
+              `${builds.size} build(s) still in progress after timeout cleanup`,
+            )
           }
         }
         return
@@ -489,7 +579,10 @@ export function BuildNotificationsProvider({
         })
         tracked.add(update.deploymentId)
         clearResetTimer()
-        applyDesiredFavicon(buildInProgressFavicon())
+        applyDesiredFavicon(
+          buildInProgressFavicon(),
+          `${builds.size} ${update.resourceType} build(s) in progress`,
+        )
         // First time we see this build start, nudge the user to enable browser
         // notifications so they hear about completion. Already gated by the
         // relevance check above, so we know we're on the right page.
@@ -560,16 +653,25 @@ export function BuildNotificationsProvider({
       if (builds.size === 0) {
         if (canceled) {
           // Canceling is a user action, not an error - just go back to normal.
-          applyDesiredFavicon(null)
+          applyDesiredFavicon(
+            null,
+            `Restored after ${update.resourceType} build was canceled`,
+          )
         } else {
           applyDesiredFavicon(
             failed || timedOut ? buildFailureFavicon() : buildSuccessFavicon(),
+            failed || timedOut
+              ? `${label} build ${timedOut ? 'timed out' : 'failed'}`
+              : `${label} build completed successfully`,
           )
           scheduleFaviconReset()
         }
       } else {
         // Other builds still running - keep the in-progress favicon.
-        applyDesiredFavicon(buildInProgressFavicon())
+        applyDesiredFavicon(
+          buildInProgressFavicon(),
+          `${builds.size} build(s) still in progress after another finished`,
+        )
       }
     }
 
@@ -684,7 +786,10 @@ export function BuildNotificationsProvider({
 
       if (activeBuildsRef.current.size > 0) {
         clearResetTimer()
-        applyDesiredFavicon(buildInProgressFavicon())
+        applyDesiredFavicon(
+          buildInProgressFavicon(),
+          `${activeBuildsRef.current.size} build(s) in progress (seeded from cache)`,
+        )
       }
     }
 
@@ -694,7 +799,9 @@ export function BuildNotificationsProvider({
       // so the favicon doesn't keep nagging once they've seen the result.
       if (activeBuildsRef.current.size === 0 && originalFaviconRef.current) {
         clearResetTimer()
-        restoreOriginalFavicon()
+        restoreOriginalFavicon(
+          'Restored when tab became visible after builds settled',
+        )
       }
     }
 
@@ -731,7 +838,7 @@ export function BuildNotificationsProvider({
       clearResetTimer()
       // If we tweaked the favicon, make sure we leave it as the user found it.
       if (originalFaviconRef.current) {
-        restoreOriginalFavicon()
+        restoreOriginalFavicon('Restored on build-notifications provider unmount')
       }
       activeBuildsRef.current.clear()
       trackedRef.current.clear()
@@ -771,14 +878,53 @@ export function BuildNotificationsProvider({
     if (ctx.type !== null && hasRelevantActive) {
       if (!originalFaviconRef.current) {
         const current = getCurrentFaviconRef.current()
-        originalFaviconRef.current = current ?? getDefaultFaviconVariant()
+        const resolved = current ?? getDefaultFaviconVariant()
+        originalFaviconRef.current = isStatusFaviconVariant(resolved)
+          ? getDefaultFaviconVariant()
+          : resolved
       }
-      setFaviconRef.current(buildInProgressFavicon())
+      const cached = queryClientRef.current.getQueryData<{
+        name?: string
+        teamId?: string
+      }>(['project', projectIdRef.current])
+      const builds = Array.from(activeBuildsRef.current.values())
+      setFaviconRef.current(
+        buildInProgressFavicon(),
+        buildMeta(
+          `Relevant ${ctx.type} build(s) in progress on this route`,
+          builds,
+          {
+            projectId: projectIdRef.current,
+            projectName: cached?.name?.trim() || undefined,
+            organizationId: cached?.teamId?.trim() || undefined,
+            pathname: location.pathname,
+          },
+        ),
+      )
     } else if (originalFaviconRef.current) {
       // Either we walked away from Sites/Functions entirely, or there's
       // nothing on this specific page that's still building - put the favicon
       // back so the user isn't visually pinged about something they can't see.
-      setFaviconRef.current(originalFaviconRef.current)
+      const cached = queryClientRef.current.getQueryData<{
+        name?: string
+        teamId?: string
+      }>(['project', projectIdRef.current])
+      setFaviconRef.current(
+        originalFaviconRef.current,
+        buildMeta(
+          ctx.type === null
+            ? 'Restored after leaving Sites/Functions route'
+            : 'Restored because no relevant builds on this route',
+          activeBuildsRef.current.values(),
+          {
+            projectId: projectIdRef.current,
+            projectName: cached?.name?.trim() || undefined,
+            organizationId: cached?.teamId?.trim() || undefined,
+            pathname: location.pathname,
+          },
+        ),
+      )
+      originalFaviconRef.current = null
     }
   }, [relevanceKey])
 
