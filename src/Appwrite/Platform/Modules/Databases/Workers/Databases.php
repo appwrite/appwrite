@@ -214,7 +214,7 @@ class Databases extends Action
                 default:
                     if (!$dbForDatabases->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), new Attribute(
                         key: $key,
-                        type: ColumnType::from($type),
+                        type: Attribute::normalizeType($type),
                         size: $size,
                         required: $required,
                         default: $default,

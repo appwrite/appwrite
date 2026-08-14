@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
+use Utopia\Database\Attribute;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -372,7 +373,7 @@ abstract class Action extends DatabasesAction
         }
 
         if (!empty($format)) {
-            if (!Structure::hasFormat($format, ColumnType::from($type))) {
+            if (!Structure::hasFormat($format, Attribute::normalizeType($type))) {
                 throw new Exception($this->getFormatUnsupportedException(), "Format $format not available for $type columns.");
             }
         }

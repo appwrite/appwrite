@@ -54,6 +54,7 @@ class Attribute
             ColumnType::LongText->value,
             ColumnType::Integer->value,
             ColumnType::BigInteger->value,
+            'bigint',
             ColumnType::Float->value,
             ColumnType::Boolean->value,
             ColumnType::Datetime->value,
@@ -76,6 +77,10 @@ class Attribute
     {
         $type = $attribute['type'] ?? '';
         $format = $attribute['format'] ?? '';
+
+        if ($type === ColumnType::BigInteger->value) {
+            $type = 'bigint';
+        }
 
         if (isset(self::FORMAT_SIZES[$type])) {
             $format = $type;

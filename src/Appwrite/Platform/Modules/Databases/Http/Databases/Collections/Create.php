@@ -303,13 +303,14 @@ class Create extends Action
         if (isset($attribute['min']) || isset($attribute['max'])) {
             $format = match($type) {
                 ColumnType::Integer->value => APP_DATABASE_ATTRIBUTE_INT_RANGE,
-                ColumnType::BigInteger->value => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
+                ColumnType::BigInteger->value, 'bigint' => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
                 default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             };
 
+            $isInteger = $type === ColumnType::Integer->value || $type === ColumnType::BigInteger->value || $type === 'bigint';
             $formatOptions = [
-                'min' => $attribute['min'] ?? ($type === ColumnType::Integer->value || $type === ColumnType::BigInteger->value ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
-                'max' => $attribute['max'] ?? ($type === ColumnType::Integer->value || $type === ColumnType::BigInteger->value ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
+                'min' => $attribute['min'] ?? ($isInteger ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
+                'max' => $attribute['max'] ?? ($isInteger ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
             ];
         }
 

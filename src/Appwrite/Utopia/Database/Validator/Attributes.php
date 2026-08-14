@@ -181,7 +181,7 @@ class Attributes extends Validator
             }
 
             // Validate signed only for integer/bigint/float types
-            if (isset($attribute['signed']) && !in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, ColumnType::Float->value])) {
+            if (isset($attribute['signed']) && !in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, 'bigint', ColumnType::Float->value])) {
                 $this->message = "Attribute '" . $attribute['key'] . "': 'signed' can only be used with integer, bigint or float types";
                 return false;
             }
@@ -200,7 +200,7 @@ class Attributes extends Validator
 
             // Validate min/max range for integer/bigint/float
             if (isset($attribute['min']) || isset($attribute['max'])) {
-                if (!in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, ColumnType::Float->value])) {
+                if (!in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, 'bigint', ColumnType::Float->value])) {
                     $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer, bigint or float types";
                     return false;
                 }
@@ -274,6 +274,7 @@ class Attributes extends Validator
                         break;
 
                     case ColumnType::BigInteger->value:
+                    case 'bigint':
                         if (!is_int($attribute['default'])) {
                             $this->message = "Default value for bigint attribute '" . $attribute['key'] . "' must be an integer";
                             return false;
