@@ -27,7 +27,8 @@
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
             "Utopia\\Bus\\": "src/Utopia/Bus",
-            "Utopia\\Queue\\": "src/Utopia/Queue"
+            "Utopia\\Queue\\": "src/Utopia/Queue",
+            "Utopia\\Platform\\": "src/Utopia/Platform"
         }
     },
     "autoload-dev": {

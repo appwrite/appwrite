@@ -2,6 +2,11 @@
 
 namespace Utopia\Queue\Adapter;
 
+/**
+ * In-tree override of utopia-php/queue Swoole adapter until per-queue
+ * consume loops land in utopia-php/monorepo `packages/queue`.
+ */
+
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\WaitGroup;

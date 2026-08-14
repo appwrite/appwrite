@@ -32,6 +32,7 @@ _Note: When running `composer check` or `composer analyze`, be aware that runnin
 
 ## Project layout
 
+- **src/Utopia/** -- Composer PSR-4 overrides of Utopia libraries (same pattern as `Bus`). `Queue` and `Platform` currently carry the combined-worker APIs until they land in [utopia-php/monorepo](https://github.com/utopia-php/monorepo) `packages/queue` and `packages/platform`.
 - **src/Appwrite/Platform/Modules/** -- feature modules (Account, Avatars, Compute, Console, Databases, Functions, Health, Project, Projects, Proxy, Sites, Storage, Teams, Tokens, Users, VCS, Webhooks)
 - **src/Appwrite/Platform/Workers/** -- background job workers
 - **src/Appwrite/Platform/Tasks/** -- CLI tasks

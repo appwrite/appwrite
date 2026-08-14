@@ -2,6 +2,15 @@
 
 namespace Utopia\Queue;
 
+/**
+ * In-tree override of utopia-php/queue until this API lands in
+ * utopia-php/monorepo `packages/queue`. Composer PSR-4 maps
+ * `Utopia\Queue\` here so these classes win over vendor.
+ *
+ * Adds named jobs, an independent consume loop per queue, and a required
+ * per-job maxCoroutines (default 1 — never a shared cap).
+ */
+
 use Exception;
 use Throwable;
 use Utopia\DI\Container;

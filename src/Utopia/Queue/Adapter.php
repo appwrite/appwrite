@@ -2,6 +2,11 @@
 
 namespace Utopia\Queue;
 
+/**
+ * In-tree override of utopia-php/queue Adapter until consumeQueue /
+ * consumeMany land in utopia-php/monorepo `packages/queue`.
+ */
+
 use Utopia\DI\Container;
 
 abstract class Adapter
