@@ -271,7 +271,7 @@ final class FormatTest extends TestCase
         $get = $openApi['paths']['/tests/{testId}']['get'];
         $post = $openApi['paths']['/tests/{testId}']['post'];
 
-        $this->assertSame('testGetOrUpdateTestGet', $get['operationId']);
+        $this->assertSame('testGetOrUpdateTest', $get['operationId']);
         $this->assertSame('testGetOrUpdateTestPost', $post['operationId']);
         $this->assertSame('getOrUpdateTest', $get['x-appwrite']['method']);
         $this->assertSame('getOrUpdateTestPost', $post['x-appwrite']['method']);
