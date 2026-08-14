@@ -18,6 +18,9 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Exception as QueryLibException;
+use Utopia\Query\Exception\UnsupportedException;
+use Utopia\Query\Exception\ValidationException;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -96,8 +99,8 @@ class Get extends Action
 
         try {
             $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+            $this->mapQueryFailure($e);
         }
 
         $queries = $this->resolveJoinCollections(
@@ -123,8 +126,8 @@ class Get extends Action
                 // has no selects, disable relationship looping on documents!
                 $document = $dbForDatabases->skipRelationships(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, $queries));
             }
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+            $this->mapQueryFailure($e);
         }
 
         if ($document->isEmpty()) {

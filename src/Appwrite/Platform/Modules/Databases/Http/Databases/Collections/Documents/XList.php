@@ -24,6 +24,9 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Http\Http;
+use Utopia\Query\Exception as QueryLibException;
+use Utopia\Query\Exception\UnsupportedException;
+use Utopia\Query\Exception\ValidationException;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -104,8 +107,8 @@ class XList extends Action
 
         try {
             $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+            $this->mapQueryFailure($e);
         }
 
         $queries = $this->resolveJoinCollections(
@@ -227,8 +230,8 @@ class XList extends Action
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
             $message = "The order $attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all $documents order $attribute values are non-null.";
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+            $this->mapQueryFailure($e);
         } catch (Timeout) {
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
