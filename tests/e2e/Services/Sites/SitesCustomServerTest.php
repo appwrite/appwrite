@@ -11,6 +11,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -857,8 +858,13 @@ final class SitesCustomServerTest extends Scope
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $payload = $jwt->decode(\substr($key, \strlen($prefix)));
 
+        // Editions force extra grants onto every site key through computeScopes
+        // (empty here, cloud adds proxy.invalidations.write), so a key must carry
+        // the user-granted scopes plus those grants and nothing else.
+        $granted = Config::getParam('computeScopes', [])['sites'] ?? [];
+
         $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
-        $this->assertEquals($scopes, $payload['scopes']);
+        $this->assertEquals(\array_values(\array_unique(\array_merge($scopes, $granted))), $payload['scopes']);
     }
 
     public function testListSites(): void
