@@ -429,6 +429,14 @@ final class FunctionsCustomServerTest extends Scope
          */
         $functions = $this->listFunctions([
             'queries' => [
+                Query::search('name', 'Test')->toString(),
+            ],
+        ]);
+        $this->assertEquals(400, $functions['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $functions['body']['type']);
+
+        $functions = $this->listFunctions([
+            'queries' => [
                 Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
             ],
         ]);
