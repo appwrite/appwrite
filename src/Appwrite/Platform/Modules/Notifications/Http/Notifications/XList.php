@@ -102,7 +102,7 @@ class XList extends Action
         $queries[] = Query::equal('resourceType', [RESOURCE_TYPE_USERS]);
         $queries[] = Query::equal('resourceId', [$user->getId()]);
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         try {
             $results = $dbForPlatform->find('notifications', $queries);

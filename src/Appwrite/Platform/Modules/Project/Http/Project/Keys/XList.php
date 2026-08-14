@@ -18,8 +18,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Boolean;
 use Utopia\Query\Method as QueryMethod;
+use Utopia\Validator\Boolean;
 
 class XList extends Base
 {
@@ -111,7 +111,7 @@ class XList extends Base
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         try {
             $keys = $authorization->skip(fn () => $dbForPlatform->find('keys', $queries));
