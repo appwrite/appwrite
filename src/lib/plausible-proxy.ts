@@ -6,6 +6,10 @@
  * block them. See https://plausible.io/docs/proxy/introduction
  */
 
+import { getClientIpFromRequest } from './client-ip'
+
+export { getClientIpFromRequest }
+
 /** First-party script URL served by the app (proxies upstream Plausible JS). */
 export const PLAUSIBLE_PROXY_SCRIPT_PATH = '/r/v.js'
 
@@ -20,16 +24,6 @@ export function resolvePlausibleEventUrl(scriptSrc: string): string {
   } catch {
     return `${PLAUSIBLE_ORIGIN_FALLBACK}/api/event`
   }
-}
-
-/**
- * Visitor IP from Cloudflare Transform Rule header `X-CDN-Client-IP` (`ip.src`).
- * Do not fall back to `cf-connecting-ip` / `x-real-ip` / `x-forwarded-for`:
- * those can carry the wrong hop and pollute Plausible country stats (e.g. our
- * German origin). If this header is missing, callers must skip the event.
- */
-export function getClientIpFromRequest(request: Request): string | null {
-  return request.headers.get('x-cdn-client-ip')?.trim() || null
 }
 
 export async function proxyPlausibleScript(

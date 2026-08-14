@@ -41,6 +41,7 @@ import {
   MonitorSmartphone,
   ExternalLink,
   Link2,
+  Network,
 } from 'lucide-react'
 import {
   Popover,
@@ -131,6 +132,7 @@ import { DebugMenuRecentResourcesPanel } from '@/components/global/providers/Deb
 import { DebugMenuCommunityShareExamplesPanel } from '@/components/global/providers/DebugMenuCommunityShareExamplesPanel'
 import { DebugMenuEnvPanel } from '@/components/global/providers/DebugMenuEnvPanel'
 import { DebugMenuFaviconPanel } from '@/components/global/providers/DebugMenuFaviconPanel'
+import { DebugMenuIpPanel } from '@/components/global/providers/DebugMenuIpPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -223,6 +225,7 @@ interface MenuItem {
     | 'recentResources'
     | 'envStatus'
     | 'faviconStatus'
+    | 'clientIp'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
@@ -594,7 +597,8 @@ function isDebugPanelSubmenuVariant(
     variant === 'terminalSettings' ||
     variant === 'recentResources' ||
     variant === 'envStatus' ||
-    variant === 'faviconStatus'
+    variant === 'faviconStatus' ||
+    variant === 'clientIp'
   )
 }
 
@@ -674,7 +678,8 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'terminalSettings' ||
     item.submenuVariant === 'recentResources' ||
     item.submenuVariant === 'envStatus' ||
-    item.submenuVariant === 'faviconStatus'
+    item.submenuVariant === 'faviconStatus' ||
+    item.submenuVariant === 'clientIp'
   )
 }
 
@@ -1878,6 +1883,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenuVariant: 'envStatus',
           },
           {
+            label: 'IP',
+            description: 'Compare browser IP with the IP SSR saw.',
+            icon: <Network className="h-3 w-3" />,
+            submenuVariant: 'clientIp',
+          },
+          {
             label: 'Terminal',
             description: 'View and clear the browser CLI cache.',
             icon: <Terminal className="h-3 w-3" />,
@@ -2842,7 +2853,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'terminalSettings' ||
               currentSubmenu?.submenuVariant === 'recentResources' ||
               currentSubmenu?.submenuVariant === 'envStatus' ||
-              currentSubmenu?.submenuVariant === 'faviconStatus'
+              currentSubmenu?.submenuVariant === 'faviconStatus' ||
+              currentSubmenu?.submenuVariant === 'clientIp'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -2978,6 +2990,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuEnvPanel />
               ) : currentSubmenu.submenuVariant === 'faviconStatus' ? (
                 <DebugMenuFaviconPanel />
+              ) : currentSubmenu.submenuVariant === 'clientIp' ? (
+                <DebugMenuIpPanel />
               ) : (
                 <div className="space-y-0.5">
                   {currentSubmenu.note ? (

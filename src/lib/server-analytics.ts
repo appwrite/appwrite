@@ -13,10 +13,8 @@
  * Vite-only constructs (`import.meta.env`, `?url` imports, path aliases).
  */
 import { getAnalyticsArea, getAnalyticsSurface } from './analytics-route.ts'
-import {
-  getClientIpFromRequest,
-  resolvePlausibleEventUrl,
-} from './plausible-proxy.ts'
+import { getClientIpFromRequest } from './client-ip.ts'
+import { resolvePlausibleEventUrl } from './plausible-proxy.ts'
 import { readRuntimeConfigFromEnv } from './runtime-config-shared.ts'
 
 export type ServerPageviewFormat = 'markdown' | 'text' | 'json'

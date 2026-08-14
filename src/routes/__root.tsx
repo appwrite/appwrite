@@ -9,6 +9,7 @@ import {
   getRuntimeConfig,
   getRuntimeConfigScript,
 } from '@/lib/runtime-config'
+import { getSsrClientIpScript } from '@/lib/ssr-client-ip'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
@@ -444,6 +445,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {/* Publish runtime config to the browser before the app bundle runs.
             Must precede <Scripts /> so module-level config reads see it. */}
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
+        <ScriptOnce>{getSsrClientIpScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <ScriptOnce>{WEBSITE_ACCESS_BOOT_SCRIPT}</ScriptOnce>
         {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can

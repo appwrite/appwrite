@@ -110,6 +110,7 @@ import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
+import { Route as ApiDebugIpRouteImport } from './routes/_api/debug.ip'
 import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changelog/rss[.]xml'
 import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
@@ -907,6 +908,11 @@ const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
 const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
   id: '/_api/generator/cover',
   path: '/generator/cover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDebugIpRoute = ApiDebugIpRouteImport.update({
+  id: '/_api/debug/ip',
+  path: '/debug/ip',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChangelogRssDotxmlRoute = ApiChangelogRssDotxmlRouteImport.update({
@@ -2848,6 +2854,7 @@ export interface FileRoutesByFullPath {
   '/generator/': typeof GeneratorIndexRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
+  '/debug/ip': typeof ApiDebugIpRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
@@ -3226,6 +3233,7 @@ export interface FileRoutesByTo {
   '/generator': typeof GeneratorIndexRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
+  '/debug/ip': typeof ApiDebugIpRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
@@ -3569,6 +3577,7 @@ export interface FileRoutesById {
   '/generator/': typeof GeneratorIndexRoute
   '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/_api/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
+  '/_api/debug/ip': typeof ApiDebugIpRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
@@ -3953,6 +3962,7 @@ export interface FileRouteTypes {
     | '/generator/'
     | '/blog/rss.xml'
     | '/changelog/rss.xml'
+    | '/debug/ip'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
@@ -4331,6 +4341,7 @@ export interface FileRouteTypes {
     | '/generator'
     | '/blog/rss.xml'
     | '/changelog/rss.xml'
+    | '/debug/ip'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
@@ -4673,6 +4684,7 @@ export interface FileRouteTypes {
     | '/generator/'
     | '/_api/blog/rss.xml'
     | '/_api/changelog/rss.xml'
+    | '/_api/debug/ip'
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
@@ -5021,6 +5033,7 @@ export interface RootRouteChildren {
   LlmsTxtRoute: typeof LlmsTxtRoute
   ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
   ApiChangelogRssDotxmlRoute: typeof ApiChangelogRssDotxmlRoute
+  ApiDebugIpRoute: typeof ApiDebugIpRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
@@ -5739,6 +5752,13 @@ declare module '@tanstack/react-router' {
       path: '/generator/cover'
       fullPath: '/generator/cover'
       preLoaderRoute: typeof ApiGeneratorCoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/debug/ip': {
+      id: '/_api/debug/ip'
+      path: '/debug/ip'
+      fullPath: '/debug/ip'
+      preLoaderRoute: typeof ApiDebugIpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/changelog/rss.xml': {
@@ -9454,6 +9474,7 @@ const rootRouteChildren: RootRouteChildren = {
   LlmsTxtRoute: LlmsTxtRoute,
   ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,
   ApiChangelogRssDotxmlRoute: ApiChangelogRssDotxmlRoute,
+  ApiDebugIpRoute: ApiDebugIpRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
