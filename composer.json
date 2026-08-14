@@ -62,6 +62,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/abuse"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/migration"
         }
     ],
     "require": {
@@ -103,7 +107,7 @@
         "utopia-php/lock": "0.3.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.1",
-        "utopia-php/migration": "^2.0.0",
+        "utopia-php/migration": "dev-feat-query-lib as 2.0.0",
         "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "3.0.*",
