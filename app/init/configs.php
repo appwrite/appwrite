@@ -26,7 +26,6 @@ Config::load('roles', __DIR__ . '/../config/roles.php', $configAdapter);  // Use
 Config::load('projectScopes', __DIR__ . '/../config/scopes/project.php', $configAdapter);
 Config::load('organizationScopes', __DIR__ . '/../config/scopes/organization.php', $configAdapter);
 Config::load('accountScopes', __DIR__ . '/../config/scopes/account.php', $configAdapter);
-Config::load('computeScopes', __DIR__ . '/../config/scopes/compute.php', $configAdapter);  // Scopes always granted to compute ephemeral API keys
 Config::load('services', __DIR__ . '/../config/services.php', $configAdapter);  // List of services
 Config::load('onboarding', __DIR__ . '/../config/onboarding.php', $configAdapter);  // Project onboarding stages → routes
 Config::load('variables', __DIR__ . '/../config/variables.php', $configAdapter);  // List of env variables

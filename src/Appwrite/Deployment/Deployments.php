@@ -502,20 +502,6 @@ readonly class Deployments
         return $resource->getCollection() === 'sites' ? 'v5' : $resource->getAttribute('version', 'v2');
     }
 
-    /**
-     * Scopes encoded into the resource's auto-generated ephemeral API key, for
-     * both builds and executions: the resource's own scopes plus the scopes
-     * the platform always grants to that resource type (computeScopes config).
-     *
-     * @return array<string>
-     */
-    public static function scopes(Document $resource): array
-    {
-        $granted = Config::getParam('computeScopes', [])[$resource->getCollection()] ?? [];
-
-        return \array_values(\array_unique(\array_merge($resource->getAttribute('scopes', []), $granted)));
-    }
-
     protected static function runtime(Document $resource, string $version): array
     {
         $key = $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime');
@@ -548,7 +534,7 @@ readonly class Deployments
 
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
             'projectId' => $project->getId(),
-            'scopes' => static::scopes($resource),
+            'scopes' => $resource->getAttribute('scopes', []),
         ]);
 
         $prefix = $resource->getCollection() === 'sites' ? 'SITE' : 'FUNCTION';

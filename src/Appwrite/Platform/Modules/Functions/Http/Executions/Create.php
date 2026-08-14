@@ -229,7 +229,7 @@ class Create extends Base
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
             'projectId' => $project->getId(),
-            'scopes' => Deployments::scopes($function)
+            'scopes' => $function->getAttribute('scopes', [])
         ]);
 
         $executionId = ID::unique();

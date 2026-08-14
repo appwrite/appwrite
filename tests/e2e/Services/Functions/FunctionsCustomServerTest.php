@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Functions;
 
-use Ahc\Jwt\JWT;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -18,7 +17,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\System\System;
 
 final class FunctionsCustomServerTest extends Scope
 {
@@ -2442,17 +2440,6 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsStringIgnoringCase('"total":', $deployment['body']['buildLogs']);
         $this->assertStringContainsStringIgnoringCase('"users":', $deployment['body']['buildLogs']);
 
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
-
-        // Build-time key carries the function's scopes plus the always-granted ones,
-        // and health.read authorizes a real call to a health.read gated endpoint
-        $this->assertEquals(1, \preg_match('/KEY_FOR_TESTS=ephemeral_(\S+)/', $deployment['body']['buildLogs'], $matches));
-        $payload = $jwtObj->decode($matches[1]);
-        $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
-        $this->assertContains('users.read', $payload['scopes']);
-        $this->assertContains('health.read', $payload['scopes']);
-        $this->assertStringContainsString('HEALTH_STATUS_FOR_TESTS=200', $deployment['body']['buildLogs']);
-
         $execution = $this->createExecution($functionId, [
             'async' => 'false',
         ]);
@@ -2464,52 +2451,12 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($execution['body']['responseBody']);
         $this->assertStringContainsString("total", (string) $execution['body']['responseBody']);
 
-        // Sync execution key carries the function's scopes plus the always-granted
-        // ones, and health.read authorizes a real health call from the runtime
-        $responseBody = \json_decode((string) $execution['body']['responseBody'], true);
-        $this->assertStringStartsWith('ephemeral_', $responseBody['apiKey']);
-        $payload = $jwtObj->decode(\substr($responseBody['apiKey'], \strlen('ephemeral_')));
-        $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
-        $this->assertContains('users.read', $payload['scopes']);
-        $this->assertContains('health.read', $payload['scopes']);
-        $this->assertEquals(200, $responseBody['healthStatus']);
-
         $execution = $this->createExecution($functionId, [
             'async' => true,
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
-
-        // The async worker mints its own key, so assert that path separately.
-        // There is no endpoint to read an execution back, so the completed run
-        // is observed through the project webhook instead.
-        $executionId = $execution['body']['$id'];
-        $projectId = $this->getProject()['$id'];
-
-        $webhook = $this->getLastRequestForProject(
-            $projectId,
-            self::REQUEST_TYPE_WEBHOOK,
-            [],
-            30,
-            1000,
-            probe: function (array $request) use ($executionId, $projectId) {
-                $this->assertEquals($projectId, $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '');
-                $this->assertEquals($executionId, $request['data']['$id'] ?? '');
-                $this->assertEquals('completed', $request['data']['status'] ?? '');
-            }
-        );
-
-        $this->assertNotEmpty($webhook, 'No completed execution webhook received for ' . $executionId);
-
-        $logs = (string) ($webhook['data']['logs'] ?? '');
-
-        $this->assertEquals(1, \preg_match('/KEY_FOR_TESTS=ephemeral_(\S+)/', $logs, $matches));
-        $payload = $jwtObj->decode($matches[1]);
-        $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
-        $this->assertContains('users.read', $payload['scopes']);
-        $this->assertContains('health.read', $payload['scopes']);
-        $this->assertStringContainsString('HEALTH_STATUS_FOR_TESTS=200', $logs);
 
         $this->cleanupFunction($functionId);
     }
