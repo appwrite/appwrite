@@ -123,6 +123,15 @@ class ConsoleVariables extends Model
                 ]
             )
             ->addRule(
+                'supportForAttributes',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter enforces defined attributes.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
                 'supportForRelationships',
                 [
                     'type' => self::TYPE_BOOLEAN,
