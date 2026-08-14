@@ -138,7 +138,6 @@ import {
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip'
 import {
-  Fragment,
   useState,
   useEffect,
   useMemo,
@@ -3553,8 +3552,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         const canManageMembers =
                                           canInviteOrgMember(access, features)
                                         return (
-                                          <Fragment key={member.$id}>
                                           <OrgMemberContextMenu
+                                            key={member.$id}
                                             orgId={orgId!}
                                             member={member}
                                             canManageMembers={canManageMembers}
@@ -3920,7 +3919,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             </TableCell>
                                             </TableRow>
                                           </OrgMemberContextMenu>
-                                          </Fragment>
                                         )
                                       })}
                                     </TableBody>
