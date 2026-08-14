@@ -10,6 +10,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Throwable;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -19,9 +20,9 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\PermissionType;
 
 class State
 {
@@ -90,7 +91,7 @@ class State
         $presenceCreated = false;
 
         try {
-            if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
+            if ($dbForProject->getAdapter()->supports(Capability::UpsertOnUniqueIndex)) {
                 $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
                 if ($existingPresence->isEmpty()) {
                     $presenceCreated = true;
@@ -137,10 +138,10 @@ class State
 
     private function checkPermissions(array $permissions, Authorization $authorization): void
     {
-        foreach (Database::PERMISSIONS as $type) {
+        foreach (PermissionType::cases() as $type) {
             foreach ($permissions as $permission) {
                 $permission = Permission::parse($permission);
-                if ($permission->getPermission() != $type) {
+                if ($permission->getPermission() != $type->value) {
                     continue;
                 }
 
