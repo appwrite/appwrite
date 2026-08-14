@@ -8,6 +8,7 @@ use Appwrite\Network\Platform;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request\Validator\NonBlank;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -53,8 +54,8 @@ class Update extends Action
                 ]
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
-            ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('bundleIdentifier', '', new Text(256), 'Apple bundle identifier. Max length: 256 chars.')
+            ->param('name', null, new NonBlank(new Text(128)), 'Platform name. Max length: 128 chars.')
+            ->param('bundleIdentifier', '', new NonBlank(new Text(256)), 'Apple bundle identifier. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
