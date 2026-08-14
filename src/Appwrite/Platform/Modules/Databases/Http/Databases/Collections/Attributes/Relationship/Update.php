@@ -11,7 +11,6 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
@@ -94,7 +93,7 @@ class Update extends Action
         Event          $queueForEvents,
         Authorization  $authorization
     ): void {
-        if (!$dbForProject->getAdapter() instanceof FeatureRelationships) {
+        if (!$this->supportsRelationships($dbForProject->getAdapter())) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
         }
 
