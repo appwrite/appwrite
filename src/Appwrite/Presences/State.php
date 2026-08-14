@@ -96,7 +96,9 @@ class State
 
         try {
             if ($dbForProject->getAdapter()->supports(Capability::UpsertOnUniqueIndex)) {
-                $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, $existingQuery);
+                $existingPresence = $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
+                );
                 if ($existingPresence->isEmpty()) {
                     $presenceCreated = true;
                 } else {
@@ -105,7 +107,9 @@ class State
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
             } else {
                 $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $existingQuery, &$presenceCreated) {
-                    $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, $existingQuery);
+                    $existingPresence = $dbForProject->getAuthorization()->skip(
+                        fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
+                    );
 
                     if ($existingPresence->isEmpty()) {
                         $presenceCreated = true;
