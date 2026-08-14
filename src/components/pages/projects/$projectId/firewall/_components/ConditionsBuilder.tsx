@@ -102,6 +102,8 @@ interface ConditionsBuilderProps {
   onActionChange?: (action: FirewallCreatableAction) => void
   /** When true, shows the Then action but does not allow changing it. */
   actionReadOnly?: boolean
+  /** Field rendered beside the Then action selector, on the same row. */
+  actionInline?: ReactNode
   /** Extra fields under the Then action (rate limit / redirect). */
   actionExtras?: ReactNode
   className?: string
@@ -390,6 +392,7 @@ export function ConditionsBuilder({
   action,
   onActionChange,
   actionReadOnly = false,
+  actionInline,
   actionExtras,
   className,
 }: ConditionsBuilderProps) {
@@ -648,46 +651,60 @@ export function ConditionsBuilder({
                 <RailLabel>{t('Then')}</RailLabel>
               </div>
               <div className="space-y-3 rounded-xl border border-border bg-background p-2.5">
-                {actionReadOnly ? (
-                  <div className="flex h-9 w-full items-center gap-2 rounded-md border border-input bg-muted/40 px-3 text-[13px] text-muted-foreground sm:max-w-xs">
-                    <span
+                <div
+                  className={cn(
+                    actionInline && 'grid gap-3 sm:grid-cols-2 sm:items-end',
+                  )}
+                >
+                  {actionReadOnly ? (
+                    <div
                       className={cn(
-                        'h-2 w-2 shrink-0 rounded-full',
-                        getFirewallActionDotClass(String(action)),
+                        'flex h-9 w-full items-center gap-2 rounded-md border border-input bg-muted/40 px-3 text-[13px] text-muted-foreground',
+                        !actionInline && 'sm:max-w-xs',
                       )}
-                    />
-                    <span className="truncate">
-                      {t(getFirewallActionLabel(String(action)))}
-                    </span>
-                  </div>
-                ) : (
-                  <Select
-                    value={action}
-                    disabled={disabled || !onActionChange}
-                    onValueChange={(value) =>
-                      onActionChange?.(value as FirewallCreatableAction)
-                    }
-                  >
-                    <SelectTrigger className="h-9 w-full sm:max-w-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FIREWALL_CREATABLE_ACTIONS.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          <span className="flex items-center gap-2">
-                            <span
-                              className={cn(
-                                'h-2 w-2 shrink-0 rounded-full',
-                                getFirewallActionDotClass(item),
-                              )}
-                            />
-                            {t(getFirewallActionLabel(item))}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                    >
+                      <span
+                        className={cn(
+                          'h-2 w-2 shrink-0 rounded-full',
+                          getFirewallActionDotClass(String(action)),
+                        )}
+                      />
+                      <span className="truncate">
+                        {t(getFirewallActionLabel(String(action)))}
+                      </span>
+                    </div>
+                  ) : (
+                    <Select
+                      value={action}
+                      disabled={disabled || !onActionChange}
+                      onValueChange={(value) =>
+                        onActionChange?.(value as FirewallCreatableAction)
+                      }
+                    >
+                      <SelectTrigger
+                        className={cn('h-9 w-full', !actionInline && 'sm:max-w-xs')}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FIREWALL_CREATABLE_ACTIONS.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            <span className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  'h-2 w-2 shrink-0 rounded-full',
+                                  getFirewallActionDotClass(item),
+                                )}
+                              />
+                              {t(getFirewallActionLabel(item))}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {actionInline}
+                </div>
                 {actionExtras ? (
                   <div className="border-t border-border pt-3">
                     {actionExtras}
