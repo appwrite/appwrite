@@ -19,13 +19,13 @@ use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
-use Appwrite\Sandbox\Client as SandboxClient;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
+use OpenRuntimes\Orchestrator\Sandboxes;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
@@ -102,7 +102,7 @@ $container->set('sandboxes', function () {
         $client = $client->withBaseUri($host);
     }
 
-    return new SandboxClient($client);
+    return new Sandboxes($client);
 }, []);
 
 $container->set('screenshots', function () {

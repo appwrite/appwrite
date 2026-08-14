@@ -2,12 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Sandbox\Http;
 
-use Appwrite\Sandbox\Client;
-use Appwrite\Sandbox\Exception as SandboxException;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use OpenRuntimes\Orchestrator\Exception\ApiException;
+use OpenRuntimes\Orchestrator\Sandboxes;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -52,11 +52,11 @@ class Delete extends Base
             ->callback($this->action(...));
     }
 
-    public function action(string $sandboxId, Response $response, Document $project, Client $sandboxes): void
+    public function action(string $sandboxId, Response $response, Document $project, Sandboxes $sandboxes): void
     {
         try {
             $sandboxes->delete($this->prefix($project) . $sandboxId);
-        } catch (SandboxException $e) {
+        } catch (ApiException $e) {
             throw $this->mapError($e);
         }
 

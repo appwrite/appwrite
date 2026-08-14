@@ -4,12 +4,12 @@ namespace Appwrite\Platform\Modules\Sandbox\Http;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
-use Appwrite\Sandbox\Client;
-use Appwrite\Sandbox\Exception as SandboxException;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use OpenRuntimes\Orchestrator\Exception\ApiException;
+use OpenRuntimes\Orchestrator\Sandboxes;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -87,7 +87,7 @@ class Create extends Base
         int $idleTimeout,
         Response $response,
         Document $project,
-        Client $sandboxes,
+        Sandboxes $sandboxes,
     ): void {
         $sandboxId = $sandboxId === 'unique()' ? ID::unique() : $sandboxId;
         if (!\preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/', $sandboxId)) {
@@ -110,7 +110,7 @@ class Create extends Base
                 timeoutSeconds: $timeout,
                 idleTimeoutSeconds: $idleTimeout,
             );
-        } catch (SandboxException $e) {
+        } catch (ApiException $e) {
             throw $this->mapError($e);
         }
 

@@ -2,12 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Sandbox\Http;
 
-use Appwrite\Sandbox\Client;
-use Appwrite\Sandbox\Exception as SandboxException;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use OpenRuntimes\Orchestrator\Exception\ApiException;
+use OpenRuntimes\Orchestrator\Sandboxes;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -50,19 +50,19 @@ class XList extends Base
             ->callback($this->action(...));
     }
 
-    public function action(Response $response, Document $project, Client $sandboxes): void
+    public function action(Response $response, Document $project, Sandboxes $sandboxes): void
     {
         $prefix = $this->prefix($project);
 
         try {
-            $statuses = $sandboxes->list();
-        } catch (SandboxException $e) {
+            $list = $sandboxes->list();
+        } catch (ApiException $e) {
             throw $this->mapError($e);
         }
 
         $documents = [];
-        foreach ($statuses as $status) {
-            if (\str_starts_with((string)($status['id'] ?? ''), $prefix)) {
+        foreach ($list->sandboxes as $status) {
+            if (\str_starts_with($status->id, $prefix)) {
                 $documents[] = $this->document($status, $prefix);
             }
         }

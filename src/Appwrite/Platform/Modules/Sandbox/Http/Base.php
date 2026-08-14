@@ -4,7 +4,8 @@ namespace Appwrite\Platform\Modules\Sandbox\Http;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base as ComputeBase;
-use Appwrite\Sandbox\Exception as SandboxException;
+use OpenRuntimes\Orchestrator\Exception\ApiException;
+use OpenRuntimes\Orchestrator\Model\SandboxStatus;
 use Utopia\Database\Document;
 
 abstract class Base extends ComputeBase
@@ -18,23 +19,20 @@ abstract class Base extends ComputeBase
         return 'p' . $project->getSequence() . '-';
     }
 
-    /**
-     * @param array<string, mixed> $status An orchestrator sandbox status.
-     */
-    protected function document(array $status, string $prefix): Document
+    protected function document(SandboxStatus $status, string $prefix): Document
     {
         return new Document([
-            '$id' => \substr((string)($status['id'] ?? ''), \strlen($prefix)),
-            'status' => $status['status'] ?? '',
-            'url' => $status['url'] ?? '',
-            'urls' => $status['urls'] ?? [],
-            'error' => $status['error'] ?? '',
+            '$id' => \substr($status->id, \strlen($prefix)),
+            'status' => $status->status->value,
+            'url' => $status->url ?? '',
+            'urls' => $status->urls,
+            'error' => $status->error ?? '',
         ]);
     }
 
-    protected function mapError(SandboxException $error): Exception
+    protected function mapError(ApiException $error): Exception
     {
-        return match ($error->getCode()) {
+        return match ($error->statusCode) {
             404 => new Exception(Exception::SANDBOX_NOT_FOUND),
             409 => new Exception(Exception::SANDBOX_ALREADY_EXISTS),
             429 => new Exception(Exception::SANDBOX_LIMIT_EXCEEDED),
