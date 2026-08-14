@@ -113,6 +113,25 @@ class ConsoleVariables extends Model
                     'example' => 'ns1.example.com,ns2.example.com',
                 ]
             )
+            ->addRule('_APP_REGION', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Current server region.',
+                'default' => 'default',
+                'example' => 'fra',
+            ])
+            ->addRule('_APP_PROJECT_REGIONS', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Comma-separated list of allowed project regions.',
+                'default' => '',
+                'example' => 'fra,nyc',
+            ])
+            ->addRule('_APP_REGIONS', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Available region catalog.',
+                'default' => [],
+                'example' => '[{"$id":"fra","name":"Frankfurt"},{"$id":"nyc","name":"New York"}]',
+                'array' => true,
+            ])
             ->addRule(
                 '_APP_DB_ADAPTER',
                 [

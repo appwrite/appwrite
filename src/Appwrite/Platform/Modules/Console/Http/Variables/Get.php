@@ -9,6 +9,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -77,6 +78,14 @@ class Get extends Action
 
         $adapter = $dbForProject->getAdapter();
 
+        $regions = Config::getParam('regions', []);
+        $regionList = array_map(fn (array $config) => [
+            '$id' => $config['$id'] ?? '',
+            'name' => $config['name'] ?? '',
+            'disabled' => $config['disabled'] ?? false,
+            'default' => $config['default'] ?? false,
+        ], $regions);
+
         $variables = new Document([
             '_APP_DOMAIN_TARGET_CNAME' => System::getEnv('_APP_DOMAIN_TARGET_CNAME'),
             '_APP_DOMAIN_TARGET_AAAA' => System::getEnv('_APP_DOMAIN_TARGET_AAAA'),
@@ -95,6 +104,9 @@ class Get extends Action
             '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),
             '_APP_DOMAINS_NAMESERVERS' => System::getEnv('_APP_DOMAINS_NAMESERVERS'),
             '_APP_DB_ADAPTER' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
+            '_APP_REGION' => System::getEnv('_APP_REGION', 'default'),
+            '_APP_PROJECT_REGIONS' => System::getEnv('_APP_PROJECT_REGIONS', ''),
+            '_APP_REGIONS' => $regionList,
             'supportForRelationships' => $adapter->getSupportForRelationships(),
             'supportForOperators' => $adapter->getSupportForOperators(),
             'supportForSpatials' => $adapter->getSupportForSpatialAttributes(),
