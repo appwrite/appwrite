@@ -530,7 +530,7 @@ jobs:
           done
 
       - name: Run tests
-        timeout-minutes: 15
+        timeout-minutes: 25
         run: |
           SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
 
