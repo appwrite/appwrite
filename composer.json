@@ -41,10 +41,6 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/utopia-php/openapi"
-        },
-        {
-            "type": "vcs",
             "url": "https://github.com/utopia-php/auth"
         },
         {
