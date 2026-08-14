@@ -387,8 +387,8 @@ async function updateFirewallRule(
         limit: input.limit,
         interval: input.interval,
         key: input.key,
-        strategy: input.strategy,
-        // Only meaningful for tokenBucket; ignored by the API otherwise.
+        // strategy is immutable after creation, so it is never sent here.
+        // maxBucketSize is only forwarded for existing token-bucket rules.
         maxBucketSize:
           input.strategy === 'tokenBucket' ? input.maxBucketSize : undefined,
       })

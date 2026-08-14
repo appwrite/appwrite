@@ -179,27 +179,14 @@ export function UpdateRule({
     action === WafRuleAction.RateLimit ? (
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="update-firewall-strategy" className="text-[12px]">
-            {t('Strategy')}
-          </Label>
-          <Select
-            value={strategy}
-            disabled={updateMutation.isPending}
-            onValueChange={(value) =>
-              setStrategy(value as FirewallRateLimitStrategy)
-            }
-          >
-            <SelectTrigger id="update-firewall-strategy" className="h-9 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FIREWALL_RATE_LIMIT_STRATEGIES.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  {t(s.label)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label className="text-[12px]">{t('Strategy')}</Label>
+          {/* Strategy is fixed at creation and cannot be changed on update. */}
+          <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted/40 px-3 text-[13px] text-muted-foreground">
+            {t(
+              FIREWALL_RATE_LIMIT_STRATEGIES.find((s) => s.value === strategy)
+                ?.label ?? strategy,
+            )}
+          </div>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="update-firewall-key" className="text-[12px]">
