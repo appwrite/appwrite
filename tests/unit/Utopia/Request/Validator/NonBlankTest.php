@@ -19,11 +19,15 @@ final class NonBlankTest extends TestCase
         $this->assertFalse($validator->isValid(' '));
         $this->assertFalse($validator->isValid("\t"));
         $this->assertFalse($validator->isValid(" \n "));
+        $this->assertFalse($validator->isValid("\u{00A0}")); // NBSP
+        $this->assertFalse($validator->isValid("\u{3000}")); // ideographic space
+        $this->assertFalse($validator->isValid("\u{00A0}\u{3000}"));
         $this->assertFalse($validator->isValid(null));
         $this->assertFalse($validator->isValid([]));
 
         $this->assertTrue($validator->isValid('My App'));
         $this->assertTrue($validator->isValid(' a '));
+        $this->assertTrue($validator->isValid("a\u{00A0}b"));
     }
 
     public function testRejectsWhitespaceOnlyHostname(): void

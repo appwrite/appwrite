@@ -32,7 +32,9 @@ class NonBlank extends Validator
 
     public function isValid(mixed $value): bool
     {
-        if (!\is_string($value) || \trim($value) === '') {
+        // \s with the u modifier covers Unicode whitespace (NBSP, ideographic space, etc.),
+        // which PHP's ASCII-only trim() would leave in place.
+        if (!\is_string($value) || \preg_match('/^\s*$/u', $value) === 1) {
             return false;
         }
 
