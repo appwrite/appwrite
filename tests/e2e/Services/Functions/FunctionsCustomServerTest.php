@@ -1848,12 +1848,12 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals($execution['body']['$id'], $executionIdHeader);
 
         $this->assertNotEmpty($execution['body']['$id']);
-        $this->assertNotEmpty($execution['body']['functionId']);
+        $this->assertNotEmpty($execution['body']['resourceId']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
-        $this->assertEquals($data['functionId'], $execution['body']['functionId']);
+        $this->assertEquals($data['functionId'], $execution['body']['resourceId']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertStringContainsString($execution['body']['functionId'], (string) $execution['body']['responseBody']);
+        $this->assertStringContainsString($execution['body']['resourceId'], (string) $execution['body']['responseBody']);
         $this->assertStringContainsString($data['deploymentId'], (string) $execution['body']['responseBody']);
         $this->assertStringContainsString('Test1', (string) $execution['body']['responseBody']);
         $this->assertStringContainsString('http', (string) $execution['body']['responseBody']);
