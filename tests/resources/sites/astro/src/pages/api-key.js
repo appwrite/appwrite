@@ -1,20 +1,23 @@
 export async function GET({ request }) {
   const key = request.headers.get("x-appwrite-key") ?? "";
+  const endpoint = process.env.APPWRITE_SITE_API_ENDPOINT;
+  const projectId = process.env.APPWRITE_SITE_PROJECT_ID;
 
-  const response = await fetch(
-    `${process.env.APPWRITE_SITE_API_ENDPOINT}/users`,
-    {
-      headers: {
-        "x-appwrite-project": process.env.APPWRITE_SITE_PROJECT_ID,
-        "x-appwrite-key": key,
-      },
-    },
-  );
+  const headers = {
+    "x-appwrite-project": projectId,
+    "x-appwrite-key": key,
+  };
+
+  const users = await fetch(`${endpoint}/users`, { headers });
+
+  // Proves the always-granted health.read scope authorizes a health call
+  const health = await fetch(`${endpoint}/health`, { headers });
 
   return new Response(
     JSON.stringify({
       apiKey: key,
-      users: await response.json(),
+      healthStatus: health.status,
+      users: await users.json(),
     }),
     {
       headers: {

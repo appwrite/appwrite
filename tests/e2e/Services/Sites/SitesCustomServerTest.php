@@ -779,12 +779,14 @@ final class SitesCustomServerTest extends Scope
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
 
-        // Build-time key carries the site's scopes plus the always-granted ones
+        // Build-time key carries the site's scopes plus the always-granted ones,
+        // and health.read authorizes a real call to a health.read gated endpoint
         $this->assertEquals(1, \preg_match('/KEY_FOR_TESTS=ephemeral_(\S+)/', $deployment['body']['buildLogs'], $matches));
         $payload = $jwtObj->decode($matches[1]);
         $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
         $this->assertContains('users.read', $payload['scopes']);
         $this->assertContains('health.read', $payload['scopes']);
+        $this->assertStringContainsString('HEALTH_STATUS_FOR_TESTS=200', $deployment['body']['buildLogs']);
 
         // Runtime key (x-appwrite-key header) can call the API with granted scopes
         $domain = $this->getSiteDomain($siteId);
@@ -799,12 +801,14 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('total', $body['users']);
         $this->assertArrayHasKey('users', $body['users']);
 
-        // Runtime key carries the site's scopes plus the always-granted ones
+        // SSR runtime key carries the site's scopes plus the always-granted ones,
+        // and health.read authorizes a real health call from the running site
         $this->assertStringStartsWith('ephemeral_', $body['apiKey']);
         $payload = $jwtObj->decode(\substr($body['apiKey'], \strlen('ephemeral_')));
         $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
         $this->assertContains('users.read', $payload['scopes']);
         $this->assertContains('health.read', $payload['scopes']);
+        $this->assertEquals(200, $body['healthStatus']);
 
         $site = $this->updateSite([
             '$id' => $siteId,
