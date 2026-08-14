@@ -12,8 +12,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 

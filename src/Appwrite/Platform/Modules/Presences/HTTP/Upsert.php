@@ -17,6 +17,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Permissions;
@@ -25,7 +26,6 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Text;
-use Utopia\Database\PermissionType;
 
 class Upsert extends PlatformAction
 {

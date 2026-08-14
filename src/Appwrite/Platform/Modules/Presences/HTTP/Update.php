@@ -18,6 +18,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Permissions;
@@ -26,7 +27,6 @@ use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Text;
-use Utopia\Database\PermissionType;
 
 class Update extends PlatformAction
 {

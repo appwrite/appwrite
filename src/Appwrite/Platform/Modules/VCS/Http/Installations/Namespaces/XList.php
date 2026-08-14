@@ -17,8 +17,8 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Text;
 use Utopia\Query\Method as QueryMethod;
+use Utopia\Validator\Text;
 
 class XList extends Action
 {

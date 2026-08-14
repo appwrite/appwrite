@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Databases\Workers;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Realtime;
 use Exception;
-use Utopia\Console;
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

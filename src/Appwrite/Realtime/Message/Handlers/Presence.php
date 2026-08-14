@@ -13,12 +13,12 @@ use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Platform\Action;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Text;
-use Utopia\Database\PermissionType;
 
 class Presence extends Action
 {
