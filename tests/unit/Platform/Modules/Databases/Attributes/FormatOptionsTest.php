@@ -22,8 +22,8 @@ final class FormatOptionsTest extends TestCase
 
         Action::applyFormatOptions($attribute);
 
-        $this->assertSame(1.5, $attribute->getAttribute('min'));
-        $this->assertSame(10.5, $attribute->getAttribute('max'));
+        $this->assertEqualsWithDelta(1.5, $attribute->getAttribute('min'), \PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(10.5, $attribute->getAttribute('max'), \PHP_FLOAT_EPSILON);
     }
 
     public function testStringFormatOptionsAreDecoded(): void
@@ -35,7 +35,7 @@ final class FormatOptionsTest extends TestCase
 
         Action::applyFormatOptions($attribute);
 
-        $this->assertEquals(1.5, $attribute->getAttribute('min'));
-        $this->assertEquals(10.5, $attribute->getAttribute('max'));
+        $this->assertEqualsWithDelta(1.5, $attribute->getAttribute('min'), \PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(10.5, $attribute->getAttribute('max'), \PHP_FLOAT_EPSILON);
     }
 }

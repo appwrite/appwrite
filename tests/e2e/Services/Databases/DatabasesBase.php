@@ -11753,6 +11753,10 @@ trait DatabasesBase
 
     public function testAggregateCount(): void
     {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -11771,6 +11775,10 @@ trait DatabasesBase
 
     public function testAggregateSum(): void
     {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -11790,6 +11798,10 @@ trait DatabasesBase
 
     public function testAggregateAvg(): void
     {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -11809,6 +11821,10 @@ trait DatabasesBase
 
     public function testAggregateMinMax(): void
     {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -11830,6 +11846,10 @@ trait DatabasesBase
 
     public function testGroupBy(): void
     {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -11856,6 +11876,10 @@ trait DatabasesBase
 
     public function testGroupByWithHaving(): void
     {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -11882,6 +11906,10 @@ trait DatabasesBase
 
     public function testDistinct(): void
     {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -11903,6 +11931,10 @@ trait DatabasesBase
 
     public function testJoin(): void
     {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
         $data = $this->setupOneToOneRelationship();
         $databaseId = $data['databaseId'];
         $personId = $data['personCollection'];
@@ -11926,6 +11958,10 @@ trait DatabasesBase
 
     public function testLeftJoin(): void
     {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
         $data = $this->setupOneToOneRelationship();
         $databaseId = $data['databaseId'];
         $personId = $data['personCollection'];
@@ -11949,6 +11985,10 @@ trait DatabasesBase
 
     public function testJoinWithAggregation(): void
     {
+        if (!$this->getSupportForJoins() || !$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support join or aggregation queries');
+        }
+
         $data = $this->setupOneToManyRelationship();
         $databaseId = $data['databaseId'];
         $personId = $data['personCollection'];
@@ -11978,6 +12018,10 @@ trait DatabasesBase
 
     public function testCountDistinct(): void
     {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -11998,6 +12042,10 @@ trait DatabasesBase
 
     public function testAggregateWithFilter(): void
     {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -12023,6 +12071,10 @@ trait DatabasesBase
      */
     public function testJoinDeniedWithoutCollectionPermission(): void
     {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
         $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 
@@ -12111,6 +12163,10 @@ trait DatabasesBase
      */
     public function testJoinRespectsDocumentPermissions(): void
     {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
         $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 
@@ -12220,6 +12276,10 @@ trait DatabasesBase
      */
     public function testJoinWithApiKeyBypassesDocumentPermissions(): void
     {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
         $data = $this->setupOneToOneRelationship();
         $databaseId = $data['databaseId'];
         $personId = $data['personCollection'];
@@ -12246,6 +12306,10 @@ trait DatabasesBase
      */
     public function testJoinToNonexistentCollection(): void
     {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 

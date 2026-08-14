@@ -252,7 +252,8 @@ abstract class Action extends DatabasesAction
                 ? UtopiaResponse::MODEL_ATTRIBUTE_BIGINT
                 : UtopiaResponse::MODEL_COLUMN_BIGINT,
 
-            ColumnType::Float->value => $isCollections
+            ColumnType::Float->value,
+            ColumnType::Double->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_FLOAT
                 : UtopiaResponse::MODEL_COLUMN_FLOAT,
 

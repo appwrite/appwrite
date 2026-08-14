@@ -150,6 +150,24 @@ class ConsoleVariables extends Model
                 ]
             )
             ->addRule(
+                'supportForAggregations',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports aggregation queries.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForJoins',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports join queries.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
                 'supportForSpatialIndexNull',
                 [
                     'type' => self::TYPE_BOOLEAN,

@@ -103,6 +103,8 @@ class Get extends Action
                 || $adapter->supports(Capability::SpatialIndexOrder)
                 || $adapter->supports(Capability::OptionalSpatial)
                 || $adapter->supports(Capability::SpatialAxisOrder),
+            'supportForAggregations' => $adapter->supports(Capability::Aggregations),
+            'supportForJoins' => $adapter->supports(Capability::Joins),
             'supportForSpatialIndexNull' => $adapter->supports(Capability::SpatialIndexNull),
             'supportForFulltextWildcard' => $adapter->supports(Capability::FulltextWildcard),
             'supportForMultipleFulltextIndexes' => $adapter->supports(Capability::MultipleFulltextIndexes),

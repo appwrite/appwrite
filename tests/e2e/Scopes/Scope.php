@@ -106,6 +106,16 @@ abstract class Scope extends TestCase
         return $this->getConsoleVariables()['supportForSpatials'] ?? true;
     }
 
+    protected function getSupportForAggregations(): bool
+    {
+        return $this->getConsoleVariables()['supportForAggregations'] ?? true;
+    }
+
+    protected function getSupportForJoins(): bool
+    {
+        return $this->getConsoleVariables()['supportForJoins'] ?? true;
+    }
+
     /**
      * Check if the database adapter supports spatial indexes on nullable columns
      */
