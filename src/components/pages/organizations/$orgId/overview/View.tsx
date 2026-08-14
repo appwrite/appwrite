@@ -73,8 +73,7 @@ import {
   mapProjectToListItem,
   useProjectListPlatforms,
   useProjectListRequestsUsage,
-  formatProjectNameForDisplay,
-  PROJECT_NAME_DISPLAY_MAX_COMPACT} from '@/lib/react-query/hooks'
+  formatProjectNameForDisplay} from '@/lib/react-query/hooks'
 import {
   parsePinnedProjectIds,
   buildPinnedProjectIdsPrefs,
@@ -139,6 +138,7 @@ import {
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip'
 import {
+  Fragment,
   useState,
   useEffect,
   useMemo,
@@ -187,7 +187,6 @@ import {
   buildProjectRole,
   parseProjectAccess,
   projectIdsFromRoles,
-  PROJECT_ROLE_VALUES,
   type ProjectAccessEntry,
 } from '@/lib/console-project-roles'
 import { CreateOrganizationDialog } from './CreateOrganization'
@@ -1182,6 +1181,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Get team ID from URL param (orgId) - no need to wait for selectedOrg state
   // In Appwrite, organizations ARE teams, so we use the organization ID directly as the team ID
   const orgTeamId = orgId || null
+
 
   // Pinned projects: stored in team prefs, excluded from main list
   const { data: consoleTeam } = useConsoleTeam(orgTeamId)
@@ -3545,38 +3545,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             : []
                                         const isProjectScoped =
                                           memberProjectAccess.length > 0
-                                        // Distinct roles held across their
-                                        // projects, ordered by privilege so the
-                                        // column reads the same way row to row.
-                                        // Usually one, which makes the cell look
-                                        // like every other member's.
-                                        const memberRoleNames =
-                                          PROJECT_ROLE_VALUES.filter((role) =>
-                                            memberProjectAccess.some(
-                                              (row) => row.roleName === role,
-                                            ),
-                                          )
                                         const projectLabel = (
                                           projectId: string,
                                         ) =>
                                           memberProjectNameById.get(projectId) ??
                                           projectId
-                                        // Middle-truncated by character, as
-                                        // project names are shown everywhere
-                                        // else: the distinctive part of a name
-                                        // is usually its tail.
-                                        const shortProjectLabel = (
-                                          projectId: string,
-                                        ) =>
-                                          formatProjectNameForDisplay(
-                                            projectLabel(projectId),
-                                            PROJECT_NAME_DISPLAY_MAX_COMPACT,
-                                          )
                                         const canManageMembers =
                                           canInviteOrgMember(access, features)
                                         return (
+                                          <Fragment key={member.$id}>
                                           <OrgMemberContextMenu
-                                            key={member.$id}
                                             orgId={orgId!}
                                             member={member}
                                             canManageMembers={canManageMembers}
@@ -3631,8 +3609,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   className="shrink-0"
                                                 />
                                                 <div className="flex-1 min-w-0">
-                                                  <div className="flex items-center gap-2 flex-wrap">
-                                                    <p className="truncate text-[13px] font-medium text-foreground">
+                                                  <div className="flex min-w-0 items-center gap-2">
+                                                    <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
                                                       {member.userName ||
                                                         member.userEmail}
                                                     </p>
@@ -3658,57 +3636,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               <TableCell className="px-4 py-3">
                                                 <div className="flex flex-nowrap items-center justify-center gap-1 whitespace-nowrap">
                                                   {isProjectScoped ? (
-                                                    // Highest role plus a count,
-                                                    // mirroring the Projects
-                                                    // cell: a row has to stay
-                                                    // one line, and listing every
-                                                    // role wrapped onto a second.
-                                                    // Highest rather than first
-                                                    // so an access review never
-                                                    // understates what someone
-                                                    // holds.
-                                                    <Tooltip>
-                                                      <TooltipTrigger asChild>
-                                                        <span className="inline-flex cursor-default items-center gap-1">
-                                                          <OrgRoleBadge
-                                                            role={
-                                                              memberRoleNames[0]
-                                                            }
-                                                          />
-                                                          {memberRoleNames.length >
-                                                            1 && (
-                                                            <Badge
-                                                              variant="secondary"
-                                                              className="border px-1.5 py-0.5 text-[11px] font-medium"
-                                                            >
-                                                              {`+${memberRoleNames.length - 1}`}
-                                                            </Badge>
-                                                          )}
-                                                        </span>
-                                                      </TooltipTrigger>
-                                                      {/* Answers "which roles",
-                                                          the question this column
-                                                          asks. The mapping to
-                                                          projects belongs to the
-                                                          Projects cell. Plain
-                                                          text, not badges: the
-                                                          tooltip surface is light
-                                                          and the badges are built
-                                                          for the dark table. */}
-                                                      <TooltipContent>
-                                                        <span className="text-[11px]">
-                                                          {memberRoleNames
-                                                            .map((roleName) =>
-                                                              t(
-                                                                orgMembershipRoleDisplay(
-                                                                  roleName,
-                                                                ).label,
-                                                              ),
-                                                            )
-                                                            .join(', ')}
-                                                        </span>
-                                                      </TooltipContent>
-                                                    </Tooltip>
+                                                    // Roles are per project for
+                                                    // this member; the Projects
+                                                    // cell names them.
+                                                    <span className="text-[12px] text-muted-foreground">
+                                                      {t('Per project')}
+                                                    </span>
                                                   ) : (
                                                     <OrgRoleBadge
                                                       role={member.role}
@@ -3725,53 +3658,65 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       {t('All projects')}
                                                     </span>
                                                   ) : (
-                                                    // The whole summary is the
-                                                    // hover target, not just the
-                                                    // overflow badge: the roles
-                                                    // are only listed here, and
-                                                    // a member with two projects
-                                                    // has no badge to aim at.
-                                                    <Tooltip>
-                                                      <TooltipTrigger asChild>
-                                                        <span className="inline-flex cursor-default items-center gap-1 text-[12px]">
-                                                          <span>
-                                                            {memberProjectAccess
-                                                              .slice(0, 2)
-                                                              .map((row) =>
-                                                                shortProjectLabel(
-                                                                  row.projectId,
-                                                                ),
-                                                              )
-                                                              .join(', ')}
-                                                          </span>
-                                                          {memberProjectAccess.length >
-                                                            2 && (
-                                                            <Badge
-                                                              variant="secondary"
-                                                              className="text-[11px] font-medium border px-1.5 py-0.5"
-                                                            >
-                                                              {`+${memberProjectAccess.length - 2}`}
-                                                            </Badge>
-                                                          )}
-                                                        </span>
-                                                      </TooltipTrigger>
-                                                      <TooltipContent>
-                                                        <div className="flex flex-col gap-0.5">
+                                                    // Popover, not an expanded
+                                                    // row: the detail is a small
+                                                    // table of its own and must
+                                                    // not grow the member row or
+                                                    // borrow the Member column,
+                                                    // where a project name reads
+                                                    // as the member's name.
+                                                    <Popover>
+                                                      <PopoverTrigger asChild>
+                                                        <button
+                                                          type="button"
+                                                          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] text-foreground hover:bg-muted/60"
+                                                        >
+                                                          {`${memberProjectAccess.length} ${t('projects')}`}
+                                                          <ChevronDown
+                                                            className="h-3.5 w-3.5 text-muted-foreground"
+                                                            aria-hidden
+                                                          />
+                                                        </button>
+                                                      </PopoverTrigger>
+                                                      <PopoverContent
+                                                        align="center"
+                                                        className="w-64 p-0"
+                                                      >
+                                                        <p className="border-b border-border px-3 py-2 text-[11px] font-medium text-muted-foreground">
+                                                          {t('Project access')}
+                                                        </p>
+                                                        <div className="max-h-64 overflow-y-auto py-1">
                                                           {memberProjectAccess.map(
                                                             (row) => (
-                                                              <span
+                                                              <div
                                                                 key={
                                                                   row.projectId
                                                                 }
-                                                                className="text-[11px]"
+                                                                className="flex items-center justify-between gap-3 px-3 py-1.5"
                                                               >
-                                                                {`${projectLabel(row.projectId)} — ${t(orgMembershipRoleDisplay(row.roleName).label)}`}
-                                                              </span>
+                                                                <span
+                                                                  className="min-w-0 truncate text-[12px] text-foreground"
+                                                                  title={projectLabel(
+                                                                    row.projectId,
+                                                                  )}
+                                                                >
+                                                                  {projectLabel(
+                                                                    row.projectId,
+                                                                  )}
+                                                                </span>
+                                                                <span className="shrink-0 text-[11px] text-muted-foreground">
+                                                                  {t(
+                                                                    orgMembershipRoleDisplay(
+                                                                      row.roleName,
+                                                                    ).label,
+                                                                  )}
+                                                                </span>
+                                                              </div>
                                                             ),
                                                           )}
                                                         </div>
-                                                      </TooltipContent>
-                                                    </Tooltip>
+                                                      </PopoverContent>
+                                                    </Popover>
                                                   )}
                                                 </div>
                                               </TableCell>
@@ -3975,6 +3920,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             </TableCell>
                                             </TableRow>
                                           </OrgMemberContextMenu>
+                                          </Fragment>
                                         )
                                       })}
                                     </TableBody>
