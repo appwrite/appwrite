@@ -1528,10 +1528,31 @@ services:
       # Sidecars ship with the service and move with it, so they share its tag.
       - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:1.3.0
       - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.3.0
-      # Sandbox URLs are minted under this domain and served on DATA_PORT
-      # (8081). One listener carries both serving planes, so this must differ
-      # from DEPLOYMENTS_DOMAIN or the service refuses to start.
-      - SANDBOX_DOMAIN=sandboxes.test
+      # Sandbox URLs are minted under this domain. One listener carries both
+      # serving planes, so it must differ from DEPLOYMENTS_DOMAIN or the
+      # service refuses to start.
+      - SANDBOX_DOMAIN=${_APP_DOMAIN_SANDBOXES}
+      # Serving the data plane on 80 keeps the port out of the minted URLs, so
+      # Traefik can front them like any other domain.
+      - DATA_PORT=80
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      - traefik.http.services.appwrite_sandboxes.loadbalancer.server.port=80
+      # One wildcard route for every sandbox, matched on the s-{token} grammar
+      # the orchestrator mints. Sandboxes need no per-sandbox proxy rule: the
+      # capability token in the host is what resolves them, inside the
+      # orchestrator, so nothing here is created or torn down per sandbox.
+      - traefik.http.routers.appwrite_sandboxes_http.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_sandboxes_http.rule=HostRegexp(`^s-.+\.${_APP_DOMAIN_SANDBOXES}$$`)
+      - traefik.http.routers.appwrite_sandboxes_http.service=appwrite_sandboxes
+      - traefik.http.routers.appwrite_sandboxes_http.priority=100
+      - traefik.http.routers.appwrite_sandboxes_https.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_sandboxes_https.rule=HostRegexp(`^s-.+\.${_APP_DOMAIN_SANDBOXES}$$`)
+      - traefik.http.routers.appwrite_sandboxes_https.service=appwrite_sandboxes
+      - traefik.http.routers.appwrite_sandboxes_https.priority=100
+      - traefik.http.routers.appwrite_sandboxes_https.tls=true
 
   mariadb:
     image: mariadb:10.11

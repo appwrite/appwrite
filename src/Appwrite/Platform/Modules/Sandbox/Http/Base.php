@@ -11,6 +11,13 @@ use Utopia\Database\Document;
 abstract class Base extends ComputeBase
 {
     /**
+     * Where every sandbox serves the contract. Reserved rather than a
+     * parameter: a caller overriding `command` serves it here too, so nothing
+     * downstream has to ask which port the contract is on.
+     */
+    public const int CONTRACT_PORT = 3000;
+
+    /**
      * Sandboxes share one orchestrator across all projects, so ids are
      * namespaced by the project's internal id before they leave Appwrite.
      */

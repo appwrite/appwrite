@@ -1054,6 +1054,16 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_SANDBOXES',
+                'description' => 'Wildcard domain sandbox URLs are minted under, as s-{token}.{domain}. Needs a DNS record for *.{domain} pointing at this install, and must differ from the domain deployments use.',
+                'introduction' => '1.10.0',
+                'default' => 'sandboxes.localhost',
+                'required' => false,
+                'overwrite' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_SANDBOX_HOST',
                 'description' => 'The host used by Appwrite to communicate with the open-runtimes orchestrator that serves the sandbox API.',
                 'introduction' => '1.10.0',

@@ -43,7 +43,7 @@ class Create extends Base
                 group: 'sandbox',
                 name: 'create',
                 description: <<<EOT
-                Create a new sandbox: a live, isolated workspace to run commands in and read and write files from, started from a container image. The returned URL serves the sandbox contract (`POST /execute`, `GET|PUT|DELETE /files/{path}`) and should be treated as a secret.
+                Create a new sandbox: a live, isolated workspace to run commands in and read and write files from, started from a container image. The returned URL serves the sandbox contract (`POST /execute`, `GET|PUT|DELETE /files/{path}`) and should be treated as a secret. Declare `ports` for anything else the sandbox serves, such as a dev server.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -63,10 +63,9 @@ class Create extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Compute specification sizing the sandbox.', true, ['plan'])
-            ->param('port', 3000, new Range(1, 65535), 'Port the sandbox contract is served on.', true)
-            ->param('command', '', new Text(2048), 'Command to run instead of the installed sandbox agent.', true)
+            ->param('command', '', new Text(2048), 'Command to run instead of the installed sandbox agent. It must serve the sandbox contract on port ' . self::CONTRACT_PORT . '.', true)
             ->param('variables', [], new Assoc(), 'Environment variables key-value JSON object.', true)
-            ->param('ports', [], new ArrayList(new Range(1, 65535), 16), 'Extra ports the sandbox serves, each addressable at its own hostname in `urls`.', true)
+            ->param('ports', [], new ArrayList(new Range(1, 65535), 16), 'Extra ports the sandbox serves beyond the contract, each addressable at its own hostname in `urls`.', true)
             ->param('timeout', 300, new Range(0, 3600), 'Request timeout in seconds for calls to the sandbox URL. 0 removes the bound, for long-lived connections.', true)
             ->param('idleTimeout', 900, new Range(0, 86400), 'Seconds without traffic before the sandbox is torn down. 0 keeps it live until deleted.', true)
             ->inject('response')
@@ -79,7 +78,6 @@ class Create extends Base
         string $sandboxId,
         string $image,
         string $specification,
-        int $port,
         string $command,
         array $variables,
         array $ports,
@@ -101,7 +99,7 @@ class Create extends Base
             $status = $sandboxes->create(
                 id: $prefix . $sandboxId,
                 image: $image,
-                port: $port,
+                port: self::CONTRACT_PORT,
                 command: $command,
                 cpu: (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT),
                 memory: (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT),
