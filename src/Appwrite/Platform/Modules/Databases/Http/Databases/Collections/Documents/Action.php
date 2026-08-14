@@ -11,8 +11,13 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
+use Utopia\Database\RelationType;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Query\Schema\ColumnType;
 
 abstract class Action extends DatabasesAction
 {
@@ -360,9 +365,16 @@ abstract class Action extends DatabasesAction
      * @param array<Query> $queries
      * @return array<Query>
      */
-    protected function resolveJoinCollections(array $queries, Database $dbForProject, Document $database): array
-    {
+    protected function resolveJoinCollections(
+        array $queries,
+        Database $dbForProject,
+        Document $database,
+        Document $collection,
+        Authorization $authorization,
+        bool $privileged = false,
+    ): array {
         $prefix = 'database_' . $database->getSequence() . '_collection_';
+        $relationships = $this->relationshipAttributes($collection);
 
         foreach ($queries as $query) {
             if (!$query->getMethod()->isJoin()) {
@@ -370,19 +382,70 @@ abstract class Action extends DatabasesAction
             }
 
             $externalId = $query->getAttribute();
-            if ($externalId === '' || \str_starts_with($externalId, $prefix)) {
-                continue;
+            if ($externalId !== '' && !\str_starts_with($externalId, $prefix)) {
+                $related = $dbForProject->getDocument('database_' . $database->getSequence(), $externalId);
+                if ($related->isEmpty() || (!$related->getAttribute('enabled', false) && !$privileged)) {
+                    throw new Exception($this->getParentNotFoundException(), params: [$externalId]);
+                }
+
+                if (!$privileged && !$authorization->isValid(new Input(PermissionType::Read, $related->getRead()))) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+
+                $query->setAttribute($prefix . $related->getSequence());
             }
 
-            $related = $dbForProject->getDocument('database_' . $database->getSequence(), $externalId);
-            if ($related->isEmpty()) {
-                throw new Exception($this->getParentNotFoundException(), params: [$externalId]);
-            }
-
-            $query->setAttribute($prefix . $related->getSequence());
+            $this->resolveJoinColumns($query, $relationships);
         }
 
         return $queries;
+    }
+
+    /**
+     * @return array<string, Document>
+     */
+    private function relationshipAttributes(Document $collection): array
+    {
+        $relationships = [];
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if (!$attribute instanceof Document) {
+                continue;
+            }
+            if ($attribute->getAttribute('type') !== ColumnType::Relationship->value) {
+                continue;
+            }
+            $relationships[$attribute->getAttribute('key')] = $attribute;
+        }
+
+        return $relationships;
+    }
+
+    /**
+     * @param array<string, Document> $relationships
+     */
+    private function resolveJoinColumns(Query $query, array $relationships): void
+    {
+        $values = $query->getValues();
+        if (\count($values) < 3 || !\is_string($values[0]) || !isset($relationships[$values[0]])) {
+            return;
+        }
+
+        $relationship = $relationships[$values[0]];
+        $options = $relationship->getAttribute('options', []);
+        $relationType = $options['relationType'] ?? $relationship->getAttribute('relationType');
+        $twoWayKey = $options['twoWayKey'] ?? $relationship->getAttribute('twoWayKey');
+
+        if ($relationType !== RelationType::OneToMany->value) {
+            return;
+        }
+
+        if (!\is_string($twoWayKey) || $twoWayKey === '') {
+            return;
+        }
+
+        $values[0] = Document::ID;
+        $values[2] = $twoWayKey;
+        $query->setValues($values);
     }
 
     /**

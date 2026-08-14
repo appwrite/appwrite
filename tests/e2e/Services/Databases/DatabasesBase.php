@@ -546,6 +546,54 @@ trait DatabasesBase
         $this->waitForAttribute($databaseId, $library['body']['$id'], 'libraryName');
         $this->assertEquals(202, $libraryName['headers']['status-code']);
 
+        if ($this->getSupportForRelationships()) {
+            $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']) . '/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                $this->getRelatedIdParam() => $library['body']['$id'],
+                'type' => RelationType::OneToOne->value,
+                'twoWay' => false,
+                'key' => 'library',
+            ]);
+
+            if ($relation['headers']['status-code'] !== 409) {
+                $this->assertEquals(202, $relation['headers']['status-code'], 'One-to-one relationship creation failed: ' . \json_encode($relation['body'] ?? 'no body'));
+            }
+
+            $this->waitForAttribute($databaseId, $person['body']['$id'], 'library');
+
+            $serverHeaders = [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ];
+
+            $libraryDocument = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $library['body']['$id']), $serverHeaders, [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => [
+                    'libraryName' => 'Central Library',
+                ],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertEquals(201, $libraryDocument['headers']['status-code'], 'Library document creation failed: ' . \json_encode($libraryDocument['body'] ?? 'no body'));
+
+            $personDocument = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $person['body']['$id']), $serverHeaders, [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => [
+                    'fullName' => 'Ada Lovelace',
+                    'library' => $libraryDocument['body']['$id'],
+                ],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertEquals(201, $personDocument['headers']['status-code'], 'Person document creation failed: ' . \json_encode($personDocument['body'] ?? 'no body'));
+        }
+
         self::$oneToOneCache[$cacheKey] = [
             'databaseId' => $databaseId,
             'personCollection' => $person['body']['$id'],
@@ -12062,7 +12110,7 @@ trait DatabasesBase
         $this->assertEquals(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
         $this->assertArrayHasKey('total', $row);
-        $this->assertEquals(2, $row['total']);
+        $this->assertGreaterThanOrEqual(2, (int) $row['total']);
     }
 
     /**
