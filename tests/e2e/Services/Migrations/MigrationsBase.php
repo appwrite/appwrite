@@ -9,14 +9,15 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\RelationType;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Query\Schema\IndexType;
 
 trait MigrationsBase
@@ -1474,11 +1475,11 @@ trait MigrationsBase
         // Two-way: parents.kids ↔ children.parent. Required to hit the in-place path.
         $createRel = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationType::OneToMany->value,
             'twoWay' => true,
             'key' => 'kids',
             'twoWayKey' => 'parent',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => ForeignKeyAction::Cascade->value,
         ]);
         $this->assertEquals(202, $createRel['headers']['status-code']);
 
@@ -1486,7 +1487,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $r['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Cascade->value, $r['body']['onDelete']);
         }, 10000, 500);
 
         $resources = [
@@ -1508,19 +1509,19 @@ trait MigrationsBase
             $parent = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $parent['headers']['status-code']);
             $this->assertEquals('available', $parent['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $parent['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Cascade->value, $parent['body']['onDelete']);
 
             $child = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/children/columns/parent', $destHeaders);
             $this->assertEquals(200, $child['headers']['status-code']);
             $this->assertEquals('available', $child['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $child['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Cascade->value, $child['body']['onDelete']);
         }, 10000, 500);
 
         sleep(1);
 
         // SDK-reachable: PATCH /columns/:key/relationship accepts onDelete.
         $patch = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids/relationship', $sourceHeaders, [
-            'onDelete' => Database::RELATION_MUTATE_RESTRICT,
+            'onDelete' => ForeignKeyAction::Restrict->value,
         ]);
         $this->assertEquals(200, $patch['headers']['status-code']);
 
@@ -1528,7 +1529,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Restrict->value, $r['body']['onDelete']);
         }, 5000, 500);
 
         $overwriteResult = $this->performMigrationSync([
@@ -1547,14 +1548,14 @@ trait MigrationsBase
             $parent = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $parent['headers']['status-code']);
             $this->assertEquals('available', $parent['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $parent['body']['onDelete'], 'parent-side onDelete must reflect source');
-            $this->assertEquals(Database::RELATION_ONE_TO_MANY, $parent['body']['relationType'], 'In-place update must not change relationType');
+            $this->assertSame(ForeignKeyAction::Restrict->value, $parent['body']['onDelete'], 'parent-side onDelete must reflect source');
+            $this->assertSame(RelationType::OneToMany->value, $parent['body']['relationType'], 'In-place update must not change relationType');
             $this->assertTrue($parent['body']['twoWay'], 'In-place update must not change twoWay');
 
             $child = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/children/columns/parent', $destHeaders);
             $this->assertEquals(200, $child['headers']['status-code']);
             $this->assertEquals('available', $child['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $child['body']['onDelete'], 'partner-side onDelete must reflect source after in-place update');
+            $this->assertSame(ForeignKeyAction::Restrict->value, $child['body']['onDelete'], 'partner-side onDelete must reflect source after in-place update');
         }, 10000, 500);
 
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
@@ -1617,11 +1618,11 @@ trait MigrationsBase
 
         $createRel = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationType::OneToMany->value,
             'twoWay' => true,
             'key' => 'kids',
             'twoWayKey' => 'parent',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => ForeignKeyAction::Cascade->value,
         ]);
         $this->assertEquals(202, $createRel['headers']['status-code']);
 
@@ -1672,11 +1673,11 @@ trait MigrationsBase
         sleep(1);
         $recreate = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationType::OneToMany->value,
             'twoWay' => true,
             'key' => 'kids',
             'twoWayKey' => 'parent',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => ForeignKeyAction::Cascade->value,
         ]);
         $this->assertEquals(202, $recreate['headers']['status-code']);
 
@@ -1756,10 +1757,10 @@ trait MigrationsBase
 
         $createRel = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationType::OneToMany->value,
             'twoWay' => false,
             'key' => 'kids',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => ForeignKeyAction::Cascade->value,
         ]);
         $this->assertEquals(202, $createRel['headers']['status-code']);
 
@@ -1787,20 +1788,20 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $r['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Cascade->value, $r['body']['onDelete']);
         }, 10000, 500);
 
         sleep(1);
 
         $patch = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids/relationship', $sourceHeaders, [
-            'onDelete' => Database::RELATION_MUTATE_RESTRICT,
+            'onDelete' => ForeignKeyAction::Restrict->value,
         ]);
         $this->assertEquals(200, $patch['headers']['status-code']);
 
         $this->assertEventually(function () use ($databaseId, $sourceHeaders) {
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete']);
+            $this->assertSame(ForeignKeyAction::Restrict->value, $r['body']['onDelete']);
         }, 5000, 500);
 
         $overwriteResult = $this->performMigrationSync([
@@ -1816,8 +1817,8 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete'], 'one-way DropAndRecreate must propagate source onDelete');
-            $this->assertEquals(Database::RELATION_ONE_TO_MANY, $r['body']['relationType'], 'DropAndRecreate must preserve relationType');
+            $this->assertSame(ForeignKeyAction::Restrict->value, $r['body']['onDelete'], 'one-way DropAndRecreate must propagate source onDelete');
+            $this->assertSame(RelationType::OneToMany->value, $r['body']['relationType'], 'DropAndRecreate must preserve relationType');
             $this->assertFalse($r['body']['twoWay'], 'DropAndRecreate must preserve twoWay=false');
         }, 10000, 500);
 

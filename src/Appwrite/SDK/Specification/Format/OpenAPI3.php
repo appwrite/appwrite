@@ -17,8 +17,8 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Spatial;
-use Utopia\Query\Schema\ColumnType;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
@@ -488,7 +488,7 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\BigInt::class:
-                        // BigInt validator reports Database::VAR_BIGINT, but OpenAPI expects scalar types.
+                        // BigInt validator reports ColumnType::BigInteger, but OpenAPI expects scalar types.
                         // We expose it as int64 to keep schema consistent with Column/Attribute models.
                         $node['schema']['type'] = 'integer';
                         $node['schema']['format'] = 'int64';

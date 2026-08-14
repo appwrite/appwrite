@@ -8,11 +8,13 @@ use Appwrite\Platform\Workers\Messaging;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Response;
+use Utopia\Query\Method;
 use Utopia\Storage\Device\Local;
 
 /**
@@ -474,7 +476,7 @@ final class MessagingFanoutTest extends TestCase
     private function selectFields(array $queries): array
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_SELECT) {
+            if ($query->getMethod() === Method::Select) {
                 return $query->getValues();
             }
         }
@@ -488,7 +490,7 @@ final class MessagingFanoutTest extends TestCase
     private function limitOf(array $queries): int
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_LIMIT) {
+            if ($query->getMethod() === Method::Limit) {
                 return (int) ($query->getValues()[0] ?? 0);
             }
         }
@@ -502,7 +504,7 @@ final class MessagingFanoutTest extends TestCase
     private function hasCursor(array $queries): bool
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_CURSOR_AFTER) {
+            if ($query->getMethod() === Method::CursorAfter) {
                 return true;
             }
         }
@@ -516,7 +518,7 @@ final class MessagingFanoutTest extends TestCase
     private function topicInternalIdOf(array $queries): ?string
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'topicInternalId') {
+            if ($query->getMethod() === Method::Equal && $query->getAttribute() === 'topicInternalId') {
                 return (string) ($query->getValues()[0] ?? null);
             }
         }
@@ -645,7 +647,8 @@ class InMemoryDatabase extends Database
         return $document;
     }
 
-    public function find(string $collection, array $queries = [], string $forPermission = Database::PERMISSION_READ): array
+    #[\Override]
+    public function find(string $collection, array $queries = [], PermissionType $forPermission = PermissionType::Read): array
     {
         return [];
     }
@@ -721,7 +724,8 @@ class RecordingDatabase extends Database
         return $callback();
     }
 
-    public function find(string $collection, array $queries = [], string $forPermission = Database::PERMISSION_READ): array
+    #[\Override]
+    public function find(string $collection, array $queries = [], PermissionType $forPermission = PermissionType::Read): array
     {
         $this->findCalls[] = ['collection' => $collection, 'queries' => $queries];
 
@@ -762,7 +766,7 @@ class RecordingDatabase extends Database
     private function resolveTargets(array $queries): array
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === '$sequence') {
+            if ($query->getMethod() === Method::Equal && $query->getAttribute() === '$sequence') {
                 $sequences = $query->getValues();
 
                 return \array_values(\array_map(
@@ -771,7 +775,7 @@ class RecordingDatabase extends Database
                 ));
             }
 
-            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'userId') {
+            if ($query->getMethod() === Method::Equal && $query->getAttribute() === 'userId') {
                 return $this->paginate($this->userTargets, $queries);
             }
         }
@@ -785,7 +789,7 @@ class RecordingDatabase extends Database
     private function limitOf(array $queries): int
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_LIMIT) {
+            if ($query->getMethod() === Method::Limit) {
                 return (int) ($query->getValues()[0] ?? 0);
             }
         }
@@ -799,7 +803,7 @@ class RecordingDatabase extends Database
     private function cursorOf(array $queries): ?Document
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_CURSOR_AFTER) {
+            if ($query->getMethod() === Method::CursorAfter) {
                 $value = $query->getValues()[0] ?? null;
 
                 return $value instanceof Document ? $value : null;

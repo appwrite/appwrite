@@ -13,6 +13,7 @@ use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 use Utopia\Storage\Device;
 
 require_once __DIR__ . '/../../../../app/init.php';
@@ -80,14 +81,14 @@ final class DeletesTest extends TestCase
         $this->assertArrayHasKey('notifications', $worker->groups);
 
         $queries = $worker->groups['notifications'];
-        $this->assertSame(Query::TYPE_EQUAL, $queries[0]->getMethod());
+        $this->assertSame(Method::Equal, $queries[0]->getMethod());
         $this->assertSame('projectId', $queries[0]->getAttribute());
         $this->assertSame(['project-1'], $queries[0]->getValues());
 
-        $this->assertSame(Query::TYPE_EQUAL, $queries[1]->getMethod());
+        $this->assertSame(Method::Equal, $queries[1]->getMethod());
         $this->assertSame('projectInternalId', $queries[1]->getAttribute());
         $this->assertSame(['project-internal-1'], $queries[1]->getValues());
 
-        $this->assertSame(Query::TYPE_ORDER_ASC, $queries[2]->getMethod());
+        $this->assertSame(Method::OrderAsc, $queries[2]->getMethod());
     }
 }

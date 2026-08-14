@@ -12,12 +12,14 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Query\Schema\ColumnType;
 
 require_once __DIR__ . '/../../../../../app/init.php';
 
@@ -64,8 +66,8 @@ final class SchedulesTest extends TestCase
         $this->database->create();
         $this->database->createCollection('projects', [], [], $permissions, false);
         $this->database->createCollection('schedules', [], [], $permissions, false);
-        $this->database->createAttribute('schedules', 'projectId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('schedules', 'projectInternalId', Database::VAR_ID, 0, false);
+        $this->database->createAttribute('schedules', new Attribute(key: 'projectId', type: ColumnType::String, size: 255, required: true));
+        $this->database->createAttribute('schedules', new Attribute(key: 'projectInternalId', type: ColumnType::Id));
 
         $this->project = $this->database->createDocument('projects', new Document([
             '$id' => 'project-a',

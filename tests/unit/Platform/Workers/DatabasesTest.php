@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Message;
 
 require_once __DIR__ . '/../../../../app/init.php';
@@ -29,7 +30,7 @@ final class DatabasesTest extends TestCase
         $attribute = new Document([
             '$id' => 'attr1',
             'key' => 'note',
-            'type' => Database::VAR_STRING,
+            'type' => ColumnType::String->value,
             'size' => 64,
             'required' => false,
             'default' => null,

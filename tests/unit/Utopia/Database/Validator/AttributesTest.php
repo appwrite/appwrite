@@ -8,6 +8,7 @@ use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Validator\Attributes;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
+use Utopia\Query\Schema\ColumnType;
 
 final class AttributesTest extends TestCase
 {
@@ -21,33 +22,33 @@ final class AttributesTest extends TestCase
     public function testStringTypes(): void
     {
         $this->assertTrue($this->object->isValid([
-            ['key' => 'title', 'type' => Database::VAR_STRING, 'size' => 128],
-            ['key' => 'slug', 'type' => Database::VAR_VARCHAR, 'size' => 128],
-            ['key' => 'body', 'type' => Database::VAR_TEXT],
-            ['key' => 'summary', 'type' => Database::VAR_MEDIUMTEXT],
-            ['key' => 'archive', 'type' => Database::VAR_LONGTEXT],
+            ['key' => 'title', 'type' => ColumnType::String->value, 'size' => 128],
+            ['key' => 'slug', 'type' => ColumnType::Varchar->value, 'size' => 128],
+            ['key' => 'body', 'type' => ColumnType::Text->value],
+            ['key' => 'summary', 'type' => ColumnType::MediumText->value],
+            ['key' => 'archive', 'type' => ColumnType::LongText->value],
         ]), $this->object->getDescription());
     }
 
     public function testStringTypeDefaults(): void
     {
         $this->assertTrue($this->object->isValid([
-            ['key' => 'body', 'type' => Database::VAR_TEXT, 'default' => 'hello'],
+            ['key' => 'body', 'type' => ColumnType::Text->value, 'default' => 'hello'],
         ]), $this->object->getDescription());
 
         $this->assertFalse($this->object->isValid([
-            ['key' => 'body', 'type' => Database::VAR_TEXT, 'default' => 1],
+            ['key' => 'body', 'type' => ColumnType::Text->value, 'default' => 1],
         ]));
 
         $this->assertFalse($this->object->isValid([
-            ['key' => 'slug', 'type' => Database::VAR_VARCHAR, 'size' => 4, 'default' => 'toolong'],
+            ['key' => 'slug', 'type' => ColumnType::Varchar->value, 'size' => 4, 'default' => 'toolong'],
         ]));
     }
 
     public function testVarcharRequiresSize(): void
     {
         $this->assertFalse($this->object->isValid([
-            ['key' => 'slug', 'type' => Database::VAR_VARCHAR],
+            ['key' => 'slug', 'type' => ColumnType::Varchar->value],
         ]));
     }
 
@@ -72,66 +73,66 @@ final class AttributesTest extends TestCase
     public function testEmailWithoutSize(): void
     {
         $this->assertTrue($this->object->isValid([
-            ['key' => 'email', 'type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL],
+            ['key' => 'email', 'type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL],
         ]), $this->object->getDescription());
     }
 
     public function testUnsupportedType(): void
     {
         $this->assertFalse($this->object->isValid([
-            ['key' => 'rel', 'type' => Database::VAR_RELATIONSHIP],
+            ['key' => 'rel', 'type' => ColumnType::Relationship->value],
         ]));
         $this->assertSame("Invalid type for attribute 'rel': relationship", $this->object->getDescription());
     }
 
     public function testResolveMatchesDedicatedEndpoints(): void
     {
-        $this->assertEquals(
-            ['type' => Database::VAR_TEXT, 'format' => '', 'size' => 65535],
-            Attribute::resolve(['key' => 'body', 'type' => Database::VAR_TEXT])
+        $this->assertSame(
+            ['type' => ColumnType::Text->value, 'format' => '', 'size' => 65535],
+            Attribute::resolve(['key' => 'body', 'type' => ColumnType::Text->value])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_MEDIUMTEXT, 'format' => '', 'size' => 16777215],
-            Attribute::resolve(['key' => 'body', 'type' => Database::VAR_MEDIUMTEXT])
+        $this->assertSame(
+            ['type' => ColumnType::MediumText->value, 'format' => '', 'size' => 16777215],
+            Attribute::resolve(['key' => 'body', 'type' => ColumnType::MediumText->value])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_LONGTEXT, 'format' => '', 'size' => 2147483647],
-            Attribute::resolve(['key' => 'body', 'type' => Database::VAR_LONGTEXT])
+        $this->assertSame(
+            ['type' => ColumnType::LongText->value, 'format' => '', 'size' => 2147483647],
+            Attribute::resolve(['key' => 'body', 'type' => ColumnType::LongText->value])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 254],
+        $this->assertSame(
+            ['type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 254],
             Attribute::resolve(['key' => 'email', 'type' => APP_DATABASE_ATTRIBUTE_EMAIL])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_IP, 'size' => 39],
+        $this->assertSame(
+            ['type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_IP, 'size' => 39],
             Attribute::resolve(['key' => 'ip', 'type' => APP_DATABASE_ATTRIBUTE_IP])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_URL, 'size' => 2000],
+        $this->assertSame(
+            ['type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_URL, 'size' => 2000],
             Attribute::resolve(['key' => 'url', 'type' => APP_DATABASE_ATTRIBUTE_URL])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_ENUM, 'size' => Database::LENGTH_KEY],
+        $this->assertSame(
+            ['type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_ENUM, 'size' => Database::LENGTH_KEY],
             Attribute::resolve(['key' => 'enum', 'type' => APP_DATABASE_ATTRIBUTE_ENUM])
         );
     }
 
     public function testResolveKeepsExplicitSize(): void
     {
-        $this->assertEquals(
-            ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 512],
+        $this->assertSame(
+            ['type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 512],
             Attribute::resolve(['key' => 'email', 'type' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 512])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_VARCHAR, 'format' => '', 'size' => 128],
-            Attribute::resolve(['key' => 'slug', 'type' => Database::VAR_VARCHAR, 'size' => 128])
+        $this->assertSame(
+            ['type' => ColumnType::Varchar->value, 'format' => '', 'size' => 128],
+            Attribute::resolve(['key' => 'slug', 'type' => ColumnType::Varchar->value, 'size' => 128])
         );
     }
 }

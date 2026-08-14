@@ -10,11 +10,13 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Query\Schema\ColumnType;
 
 require_once __DIR__ . '/../../../../../app/init.php';
 
@@ -59,21 +61,21 @@ final class NotificationsTest extends TestCase
 
         $this->database->create();
         $this->database->createCollection('notifications', [], [], $permissions, false);
-        $this->database->createAttribute('notifications', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('notifications', 'recipientHash', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'type', Database::VAR_STRING, 64, false, 'info');
-        $this->database->createAttribute('notifications', 'channel', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'projectId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('notifications', 'projectInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('notifications', 'resourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'resourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('notifications', 'resourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('notifications', 'parentResourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'parentResourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('notifications', 'parentResourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('notifications', 'title', Database::VAR_STRING, 256, true);
-        $this->database->createAttribute('notifications', 'body', Database::VAR_STRING, 16384, true);
-        $this->database->createAttribute('notifications', 'read', Database::VAR_BOOLEAN, 0, false, false);
+        $this->database->createAttribute('notifications', new Attribute(key: 'messageId', type: ColumnType::String, size: 255));
+        $this->database->createAttribute('notifications', new Attribute(key: 'recipientHash', type: ColumnType::String, size: 64, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'type', type: ColumnType::String, size: 64, default: 'info'));
+        $this->database->createAttribute('notifications', new Attribute(key: 'channel', type: ColumnType::String, size: 64, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'projectId', type: ColumnType::String, size: 255, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'projectInternalId', type: ColumnType::Id, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'resourceType', type: ColumnType::String, size: 64, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'resourceId', type: ColumnType::String, size: 255, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'resourceInternalId', type: ColumnType::Id, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'parentResourceType', type: ColumnType::String, size: 64, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'parentResourceId', type: ColumnType::String, size: 255, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'parentResourceInternalId', type: ColumnType::Id, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'title', type: ColumnType::String, size: 256, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'body', type: ColumnType::String, size: 16384, required: true));
+        $this->database->createAttribute('notifications', new Attribute(key: 'read', type: ColumnType::Boolean, default: false));
     }
 
     protected function tearDown(): void
