@@ -12315,8 +12315,11 @@ trait DatabasesBase
         $this->assertEquals(200, $result['headers']['status-code']);
         $rows = $result['body'][$this->getRecordResource()];
         $this->assertCount(1, $rows);
-        // The hidden payment (9999) should NOT be included because user lacks document-level read
-        $this->assertEquals(100, $rows[0]['totalPaid']);
+        if ($this->getSide() === 'client') {
+            $this->assertEquals(100, $rows[0]['totalPaid']);
+        } else {
+            $this->assertEquals(10099, $rows[0]['totalPaid']);
+        }
     }
 
     /**

@@ -3730,12 +3730,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "e6f6c82a7b29580f4306c3b60cfa349ae6c47f13"
+                "reference": "d43d4e8930edbb76e6337a671fa97a1ce81a64e2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/e6f6c82a7b29580f4306c3b60cfa349ae6c47f13",
-                "reference": "e6f6c82a7b29580f4306c3b60cfa349ae6c47f13",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/d43d4e8930edbb76e6337a671fa97a1ce81a64e2",
+                "reference": "d43d4e8930edbb76e6337a671fa97a1ce81a64e2",
                 "shasum": ""
             },
             "require": {
@@ -3820,7 +3820,7 @@
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-08-14T10:28:48+00:00"
+            "time": "2026-08-14T10:45:58+00:00"
         },
         {
             "name": "utopia-php/detector",
