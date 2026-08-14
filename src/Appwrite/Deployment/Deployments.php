@@ -502,6 +502,19 @@ readonly class Deployments
         return $resource->getCollection() === 'sites' ? 'v5' : $resource->getAttribute('version', 'v2');
     }
 
+    /**
+     * Scopes encoded into the resource's auto-generated ephemeral API key, for
+     * both builds and executions. Environments may extend these with
+     * platform-specific scopes. Public because the HTTP router resolves it
+     * through the deployments factory when signing execution keys.
+     *
+     * @return array<string>
+     */
+    public static function scopes(Document $resource): array
+    {
+        return $resource->getAttribute('scopes', []);
+    }
+
     protected static function runtime(Document $resource, string $version): array
     {
         $key = $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime');
@@ -534,7 +547,7 @@ readonly class Deployments
 
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
             'projectId' => $project->getId(),
-            'scopes' => $resource->getAttribute('scopes', []),
+            'scopes' => static::scopes($resource),
         ]);
 
         $prefix = $resource->getCollection() === 'sites' ? 'SITE' : 'FUNCTION';

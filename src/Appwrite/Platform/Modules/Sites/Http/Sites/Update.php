@@ -105,6 +105,7 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the SSR executions.', true, ['plan'])
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ->param('scopes', [], new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -145,6 +146,7 @@ class Update extends Base
         ?string $buildSpecification,
         string $runtimeSpecification,
         int $deploymentRetention,
+        array $scopes,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -337,6 +339,7 @@ class Update extends Base
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
             'fallbackFile' => $fallbackFile,
+            'scopes' => $scopes,
         ])));
 
         // Redeploy logic

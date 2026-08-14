@@ -85,4 +85,40 @@ final class V27Test extends TestCase
             ]],
         ], $result);
     }
+
+    public function testRemovesSiteScopes(): void
+    {
+        $filter = new V27();
+
+        $result = $filter->parse([
+            '$id' => 'site',
+            'name' => 'My site',
+            'scopes' => ['users.read'],
+        ], Response::MODEL_SITE);
+
+        $this->assertSame([
+            '$id' => 'site',
+            'name' => 'My site',
+        ], $result);
+    }
+
+    public function testRemovesSiteScopesFromList(): void
+    {
+        $filter = new V27();
+
+        $result = $filter->parse([
+            'total' => 1,
+            'sites' => [[
+                '$id' => 'site',
+                'scopes' => ['users.read'],
+            ]],
+        ], Response::MODEL_SITE_LIST);
+
+        $this->assertSame([
+            'total' => 1,
+            'sites' => [[
+                '$id' => 'site',
+            ]],
+        ], $result);
+    }
 }
