@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Request\Validator;
 
 use Appwrite\Utopia\Request\Validator\NonBlank;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\Text;
 
-class NonBlankTest extends TestCase
+final class NonBlankTest extends TestCase
 {
     public function testRejectsWhitespaceOnly(): void
     {

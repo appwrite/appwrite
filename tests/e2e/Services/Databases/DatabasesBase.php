@@ -7599,6 +7599,7 @@ trait DatabasesBase
         ]);
 
         $this->waitForAttribute($databaseId, $collection1, 'collection2');
+        $this->waitForAttribute($databaseId, $collection2, $collection1);
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collection1), array_merge([
             'content-type' => 'application/json',
@@ -7614,6 +7615,7 @@ trait DatabasesBase
                 ],
             ],
         ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
 
         $update = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collection1, $document['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -12201,8 +12203,11 @@ trait DatabasesBase
             ],
         ]);
 
-        // Should be denied - user has no read permission on target collection
-        $this->assertContains($result['headers']['status-code'], [401, 403]);
+        if ($this->getSide() === 'client') {
+            $this->assertContains($result['headers']['status-code'], [401, 403]);
+        } else {
+            $this->assertEquals(200, $result['headers']['status-code']);
+        }
     }
 
     /**

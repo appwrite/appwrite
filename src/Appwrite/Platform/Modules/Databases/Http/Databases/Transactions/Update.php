@@ -547,7 +547,7 @@ class Update extends Action
         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
             $doc = $dbForProject->createDocument(
                 $collectionId,
-                new Document($data),
+                $this->stripResponseMetadata(new Document($data)),
             );
             $state[$collectionId][$doc->getId()] = $doc;
         });
@@ -580,7 +580,7 @@ class Update extends Action
             $state[$collectionId][$documentId] = $dbForProject->updateDocument(
                 $collectionId,
                 $documentId,
-                new Document($data),
+                $this->stripResponseMetadata(new Document($data)),
             );
             return;
         }
@@ -589,7 +589,7 @@ class Update extends Action
             $document = $dbForProject->updateDocument(
                 $collectionId,
                 $documentId,
-                new Document($data),
+                $this->stripResponseMetadata(new Document($data)),
             );
             if ($document->isEmpty()) {
                 throw new NotFoundException('');
@@ -621,7 +621,6 @@ class Update extends Action
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
-            // Merge partial upsert data with full document from transaction state
             $existingDoc = $state[$collectionId][$documentId];
             foreach ($data as $key => $value) {
                 if ($key !== '$id') {
@@ -631,7 +630,7 @@ class Update extends Action
 
             $state[$collectionId][$documentId] = $dbForProject->upsertDocument(
                 $collectionId,
-                $existingDoc,
+                $this->stripResponseMetadata($existingDoc),
             );
             return;
         }
@@ -639,10 +638,19 @@ class Update extends Action
         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
             $doc = $dbForProject->upsertDocument(
                 $collectionId,
-                new Document($data),
+                $this->stripResponseMetadata(new Document($data)),
             );
             $state[$collectionId][$doc->getId()] = $doc;
         });
+    }
+
+    private function stripResponseMetadata(Document $document): Document
+    {
+        foreach (['$databaseId', '$collectionId', '$tableId', '$sequence', '$version'] as $attribute) {
+            unset($document[$attribute]);
+        }
+
+        return $document;
     }
 
     /**
@@ -887,7 +895,7 @@ class Update extends Action
             $documentsToRewrite = [];
             foreach ($dependentDocs as $docId) {
                 if (isset($state[$collectionId][$docId])) {
-                    $documentsToRewrite[] = $state[$collectionId][$docId];
+                    $documentsToRewrite[] = $this->stripResponseMetadata($state[$collectionId][$docId]);
                 }
             }
 
@@ -927,7 +935,9 @@ class Update extends Action
         array &$state
     ): int {
         $documents = \array_map(function ($doc) {
-            return $doc instanceof Document ? $doc : new Document($doc);
+            $document = $doc instanceof Document ? $doc : new Document($doc);
+
+            return $this->stripResponseMetadata($document);
         }, $data);
 
         $mergedDocuments = $transactionState->applyBulkUpsertToState($collectionId, $documents, $state);

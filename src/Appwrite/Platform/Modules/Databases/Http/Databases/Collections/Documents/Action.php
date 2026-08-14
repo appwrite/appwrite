@@ -383,8 +383,10 @@ abstract class Action extends DatabasesAction
 
             $externalId = $query->getAttribute();
             if ($externalId !== '' && !\str_starts_with($externalId, $prefix)) {
-                $related = $dbForProject->getDocument('database_' . $database->getSequence(), $externalId);
-                if ($related->isEmpty() || (!$related->getAttribute('enabled', false) && !$privileged)) {
+                $related = $authorization->skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $externalId)
+                );
+                if ($related->isEmpty() || (!$related->getAttribute('enabled', true) && !$privileged)) {
                     throw new Exception($this->getParentNotFoundException(), params: [$externalId]);
                 }
 
