@@ -31,7 +31,7 @@ trait PlatformsBase
         $this->assertSame('web', $platform['body']['type']);
         $this->assertSame('app.example.com', $platform['body']['hostname']);
 
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$createdAt']));
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$updatedAt']));
 
@@ -82,6 +82,28 @@ trait PlatformsBase
             ID::unique(),
             null,
             'missing.example.com',
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateWebPlatformWhitespaceName(): void
+    {
+        $response = $this->createWebPlatform(
+            ID::unique(),
+            ' ',
+            'whitespace.example.com',
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateWebPlatformWhitespaceHostname(): void
+    {
+        $response = $this->createWebPlatform(
+            ID::unique(),
+            'Whitespace Hostname',
+            ' ',
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -164,7 +186,7 @@ trait PlatformsBase
         $this->assertSame('apple', $platform['body']['type']);
         $this->assertSame('com.example.myapp', $platform['body']['bundleIdentifier']);
 
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$createdAt']));
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$updatedAt']));
 
@@ -226,6 +248,28 @@ trait PlatformsBase
             ID::unique(),
             'Missing Identifier',
             null,
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateApplePlatformWhitespaceName(): void
+    {
+        $response = $this->createApplePlatform(
+            ID::unique(),
+            ' ',
+            'com.example.whitespacename',
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateApplePlatformWhitespaceIdentifier(): void
+    {
+        $response = $this->createApplePlatform(
+            ID::unique(),
+            'Whitespace Identifier',
+            ' ',
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -296,7 +340,7 @@ trait PlatformsBase
         $this->assertSame('android', $platform['body']['type']);
         $this->assertSame('com.example.android', $platform['body']['applicationId']);
 
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$createdAt']));
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$updatedAt']));
 
@@ -355,6 +399,28 @@ trait PlatformsBase
             ID::unique(),
             'Missing Identifier',
             null,
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateAndroidPlatformWhitespaceName(): void
+    {
+        $response = $this->createAndroidPlatform(
+            ID::unique(),
+            ' ',
+            'com.example.whitespacename',
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateAndroidPlatformWhitespaceIdentifier(): void
+    {
+        $response = $this->createAndroidPlatform(
+            ID::unique(),
+            'Whitespace Identifier',
+            ' ',
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -425,7 +491,7 @@ trait PlatformsBase
         $this->assertSame('windows', $platform['body']['type']);
         $this->assertSame('com.example.windows', $platform['body']['packageIdentifierName']);
 
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$createdAt']));
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$updatedAt']));
 
@@ -554,7 +620,7 @@ trait PlatformsBase
         $this->assertSame('linux', $platform['body']['type']);
         $this->assertSame('com.example.linux', $platform['body']['packageName']);
 
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$createdAt']));
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$updatedAt']));
 
@@ -885,6 +951,19 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
+    public function testUpdateAndroidPlatformWhitespaceName(): void
+    {
+        $platform = $this->createAndroidPlatform(ID::unique(), 'Original Android', 'com.example.original');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $updated = $this->updateAndroidPlatform($platformId, ' ', 'com.example.original');
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+
+        $this->deletePlatform($platformId);
+    }
+
     // =========================================================================
     // Update Windows platform tests
     // =========================================================================
@@ -1059,7 +1138,7 @@ trait PlatformsBase
         $this->assertSame('web', $get['body']['type']);
         $this->assertSame('gettest.example.com', $get['body']['hostname']);
 
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertSame(true, $dateValidator->isValid($get['body']['$createdAt']));
         $this->assertSame(true, $dateValidator->isValid($get['body']['$updatedAt']));
 
@@ -1081,7 +1160,7 @@ trait PlatformsBase
         $this->assertSame('apple', $get['body']['type']);
         $this->assertSame('com.example.gettest', $get['body']['bundleIdentifier']);
 
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertSame(true, $dateValidator->isValid($get['body']['$createdAt']));
         $this->assertSame(true, $dateValidator->isValid($get['body']['$updatedAt']));
 
@@ -1103,7 +1182,7 @@ trait PlatformsBase
         $this->assertSame('android', $get['body']['type']);
         $this->assertSame('com.example.gettest', $get['body']['applicationId']);
 
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertSame(true, $dateValidator->isValid($get['body']['$createdAt']));
         $this->assertSame(true, $dateValidator->isValid($get['body']['$updatedAt']));
 
@@ -1125,7 +1204,7 @@ trait PlatformsBase
         $this->assertSame('windows', $get['body']['type']);
         $this->assertSame('com.example.gettest', $get['body']['packageIdentifierName']);
 
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertSame(true, $dateValidator->isValid($get['body']['$createdAt']));
         $this->assertSame(true, $dateValidator->isValid($get['body']['$updatedAt']));
 
@@ -1147,7 +1226,7 @@ trait PlatformsBase
         $this->assertSame('linux', $get['body']['type']);
         $this->assertSame('com.example.gettest', $get['body']['packageName']);
 
-        $dateValidator = new DatetimeValidator();
+        $dateValidator = new DatetimeValidator;
         $this->assertSame(true, $dateValidator->isValid($get['body']['$createdAt']));
         $this->assertSame(true, $dateValidator->isValid($get['body']['$updatedAt']));
 
@@ -1640,7 +1719,7 @@ trait PlatformsBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_PUT, '/project/platforms/web/' . $platformId, $headers, $params);
+        return $this->client->call(Client::METHOD_PUT, '/project/platforms/web/'.$platformId, $headers, $params);
     }
 
     protected function updateApplePlatform(string $platformId, ?string $name = null, ?string $bundleIdentifier = null, bool $authenticated = true): mixed
@@ -1664,7 +1743,7 @@ trait PlatformsBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_PUT, '/project/platforms/apple/' . $platformId, $headers, $params);
+        return $this->client->call(Client::METHOD_PUT, '/project/platforms/apple/'.$platformId, $headers, $params);
     }
 
     protected function updateAndroidPlatform(string $platformId, ?string $name = null, ?string $applicationId = null, bool $authenticated = true): mixed
@@ -1688,7 +1767,7 @@ trait PlatformsBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_PUT, '/project/platforms/android/' . $platformId, $headers, $params);
+        return $this->client->call(Client::METHOD_PUT, '/project/platforms/android/'.$platformId, $headers, $params);
     }
 
     protected function updateWindowsPlatform(string $platformId, ?string $name = null, ?string $packageIdentifierName = null, bool $authenticated = true): mixed
@@ -1712,7 +1791,7 @@ trait PlatformsBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_PUT, '/project/platforms/windows/' . $platformId, $headers, $params);
+        return $this->client->call(Client::METHOD_PUT, '/project/platforms/windows/'.$platformId, $headers, $params);
     }
 
     protected function updateLinuxPlatform(string $platformId, ?string $name = null, ?string $packageName = null, bool $authenticated = true): mixed
@@ -1736,7 +1815,7 @@ trait PlatformsBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_PUT, '/project/platforms/linux/' . $platformId, $headers, $params);
+        return $this->client->call(Client::METHOD_PUT, '/project/platforms/linux/'.$platformId, $headers, $params);
     }
 
     protected function getPlatform(string $platformId, bool $authenticated = true): mixed
@@ -1750,11 +1829,11 @@ trait PlatformsBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_GET, '/project/platforms/' . $platformId, $headers);
+        return $this->client->call(Client::METHOD_GET, '/project/platforms/'.$platformId, $headers);
     }
 
     /**
-     * @param array<string>|null $queries
+     * @param  array<string>|null  $queries
      */
     protected function listPlatforms(?array $queries, ?bool $total, bool $authenticated = true): mixed
     {
@@ -1784,6 +1863,6 @@ trait PlatformsBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_DELETE, '/project/platforms/' . $platformId, $headers);
+        return $this->client->call(Client::METHOD_DELETE, '/project/platforms/'.$platformId, $headers);
     }
 }

@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Validator\Text;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -16,7 +17,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -41,7 +41,7 @@ class Update extends Action
                 namespace: 'project',
                 group: 'platforms',
                 name: 'updateApplePlatform',
-                description: <<<EOT
+                description: <<<'EOT'
                 Update an Apple platform by its unique ID. Use this endpoint to update the platform's name or bundle identifier.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -49,7 +49,7 @@ class Update extends Action
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_PLATFORM_APPLE,
-                    )
+                    ),
                 ]
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])

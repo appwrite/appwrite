@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Validator\Text;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -16,8 +17,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator;
+use Utopia\Validator\AllOf;
 use Utopia\Validator\Hostname;
-use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -43,7 +45,7 @@ class Update extends Action
                 namespace: 'project',
                 group: 'platforms',
                 name: 'updateWebPlatform',
-                description: <<<EOT
+                description: <<<'EOT'
                 Update a web platform by its unique ID. Use this endpoint to update the platform's name or hostname.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -51,12 +53,12 @@ class Update extends Action
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_PLATFORM_WEB,
-                    )
+                    ),
                 ]
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.', optional: true, example: 'app.example.com') // Optional for backwards compatibility
+            ->param('hostname', '', new AllOf([new Hostname, new Text(253)], Validator::TYPE_STRING), 'Platform web hostname. Max length: 256 chars.', optional: true, example: 'app.example.com') // Optional for backwards compatibility
             ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', optional: true, deprecated: true) // Exists for backwards compatibility
             ->inject('response')
             ->inject('queueForEvents')
@@ -81,11 +83,11 @@ class Update extends Action
 
         // Backwards compatibility
         // Used to have: type, name, key, hostname
-        if (!empty($key)) {
+        if (! empty($key)) {
             // Validate deprecated app id (key)
             $keyValidator = new Text(256);
-            if (!$keyValidator->isValid($key)) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "key" is invalid: ' . $keyValidator->getDescription());
+            if (! $keyValidator->isValid($key)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "key" is invalid: '.$keyValidator->getDescription());
             }
         }
 
@@ -99,7 +101,7 @@ class Update extends Action
         }
 
         // Wrapped in if, for backwards compatibility
-        if (!empty($hostname)) {
+        if (! empty($hostname)) {
             $supportedTypes = [
                 Platform::TYPE_WEB,
                 // Backwards compatibility
@@ -117,7 +119,7 @@ class Update extends Action
                 'flutter-windows',
                 'flutter-linux',
             ];
-            if (!in_array($platform->getAttribute('type', ''), $supportedTypes)) {
+            if (! in_array($platform->getAttribute('type', ''), $supportedTypes)) {
                 throw new Exception(Exception::PLATFORM_METHOD_UNSUPPORTED);
             }
         }
@@ -127,12 +129,12 @@ class Update extends Action
         ]);
 
         // Wrapped in if, for backwards compatibility
-        if (!empty($hostname)) {
+        if (! empty($hostname)) {
             $updates->setAttribute('hostname', $hostname);
         }
 
         // Backwards compatibility
-        if (!empty($key)) {
+        if (! empty($key)) {
             $updates->setAttribute('key', $key);
         }
 
