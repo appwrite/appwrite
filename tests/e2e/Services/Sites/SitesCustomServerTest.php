@@ -804,16 +804,6 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
         $this->assertContains('users.read', $payload['scopes']);
 
-        // Clients pinned to older response formats do not receive scopes
-        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-response-format' => '1.9.5',
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $site['headers']['status-code']);
-        $this->assertArrayNotHasKey('scopes', $site['body']);
-
         $site = $this->updateSite([
             '$id' => $siteId,
             'name' => 'Astro site',

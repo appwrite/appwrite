@@ -13,17 +13,8 @@ class V27 extends Filter
         return match ($model) {
             Response::MODEL_MIGRATION => $this->parseMigration($content),
             Response::MODEL_MIGRATION_LIST => $this->handleList($content, 'migrations', fn ($item) => $this->parseMigration($item)),
-            Response::MODEL_SITE => $this->parseSite($content),
-            Response::MODEL_SITE_LIST => $this->handleList($content, 'sites', fn ($item) => $this->parseSite($item)),
             default => $content,
         };
-    }
-
-    protected function parseSite(array $content): array
-    {
-        unset($content['scopes']);
-
-        return $content;
     }
 
     protected function parseMigration(array $content): array
