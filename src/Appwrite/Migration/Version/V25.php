@@ -10,6 +10,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
+use Utopia\Query\Schema\ColumnType;
 
 class V25 extends Migration
 {
@@ -74,7 +75,7 @@ class V25 extends Migration
                     if ($collectionType === 'console') {
                         foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {
                             try {
-                                $this->dbForProject->updateAttribute($id, $attribute, type: Database::VAR_TEXT, size: Database::MAX_TEXT_BYTES);
+                                $this->dbForProject->updateAttribute($id, $attribute, type: ColumnType::Text, size: Database::MAX_TEXT_BYTES);
                             } catch (Throwable $th) {
                                 Console::warning("Failed to convert attribute \"{$attribute}\" to text in collection {$id}: {$th->getMessage()}");
                             }

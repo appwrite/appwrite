@@ -354,19 +354,10 @@ abstract class Migration
                 try {
                     $database->createAttribute(
                         collection: $collectionId,
-                        id: $attribute['$id'],
-                        type: $attribute['type'],
-                        size: $attribute['size'],
-                        required: $attribute['required'],
-                        default: $attribute['default'],
-                        signed: $attribute['signed'] ?? true,
-                        array: $attribute['array'] ?? false,
-                        format: $attribute['format'] ?? '',
-                        formatOptions: $attribute['formatOptions'] ?? [],
-                        filters: $attribute['filters'],
+                        attribute: $attribute,
                     );
                 } catch (Duplicate) {
-                    Console::warning("Skipping attribute \"{$attribute['$id']}\" in collection {$collectionId}: Attribute already exists");
+                    Console::warning("Skipping attribute \"{$attribute->key}\" in collection {$collectionId}: Attribute already exists");
                 }
             }
         }
