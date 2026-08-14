@@ -319,6 +319,26 @@ abstract class Action extends DatabasesAction
         };
     }
 
+    public static function applyFormatOptions(Document $attribute): Document
+    {
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        if (\is_string($formatOptions)) {
+            $formatOptions = \json_decode($formatOptions, true) ?? [];
+        }
+        if (!\is_array($formatOptions)) {
+            return $attribute;
+        }
+        if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+            $attribute->setAttribute('min', $formatOptions['min']);
+            $attribute->setAttribute('max', $formatOptions['max']);
+        }
+        if (isset($formatOptions['elements'])) {
+            $attribute->setAttribute('elements', $formatOptions['elements']);
+        }
+
+        return $attribute;
+    }
+
     protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): Document
     {
         $key = $attribute->getAttribute('key');

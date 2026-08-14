@@ -32,8 +32,11 @@ Database::addFilter(
         return $value;
     },
     function (mixed $value, Document $attribute) {
-        $formatOptions = \json_decode($attribute->getAttribute('formatOptions', '[]'), true);
-        if (isset($formatOptions['elements'])) {
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        if (\is_string($formatOptions)) {
+            $formatOptions = \json_decode($formatOptions, true) ?? [];
+        }
+        if (\is_array($formatOptions) && isset($formatOptions['elements'])) {
             $attribute->setAttribute('elements', $formatOptions['elements']);
         }
 
@@ -54,8 +57,11 @@ Database::addFilter(
         return $value;
     },
     function (mixed $value, Document $attribute) {
-        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
-        if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        if (\is_string($formatOptions)) {
+            $formatOptions = \json_decode($formatOptions, true) ?? [];
+        }
+        if (\is_array($formatOptions) && (isset($formatOptions['min']) || isset($formatOptions['max']))) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])
                 ->setAttribute('max', $formatOptions['max']);
