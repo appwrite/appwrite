@@ -504,15 +504,16 @@ readonly class Deployments
 
     /**
      * Scopes encoded into the resource's auto-generated ephemeral API key, for
-     * both builds and executions. Environments may extend these with
-     * platform-specific scopes. Public because the HTTP router resolves it
-     * through the deployments factory when signing execution keys.
+     * both builds and executions: the resource's own scopes plus the scopes
+     * the platform always grants to that resource type (computeScopes config).
      *
      * @return array<string>
      */
     public static function scopes(Document $resource): array
     {
-        return $resource->getAttribute('scopes', []);
+        $granted = Config::getParam('computeScopes', [])[$resource->getCollection()] ?? [];
+
+        return \array_values(\array_unique(\array_merge($resource->getAttribute('scopes', []), $granted)));
     }
 
     protected static function runtime(Document $resource, string $version): array

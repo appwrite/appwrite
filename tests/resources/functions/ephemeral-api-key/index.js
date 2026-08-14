@@ -10,6 +10,9 @@ module.exports = async(context) => {
   
   const response = await users.list();
   context.log(JSON.stringify(response));
-  
-  return context.res.json(response);
+
+  return context.res.json({
+    apiKey: context.req.headers['x-appwrite-key'],
+    ...response,
+  });
 };

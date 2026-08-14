@@ -779,11 +779,12 @@ final class SitesCustomServerTest extends Scope
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
 
-        // Build-time key carries the site's scopes
+        // Build-time key carries the site's scopes plus the always-granted ones
         $this->assertEquals(1, \preg_match('/KEY_FOR_TESTS=ephemeral_(\S+)/', $deployment['body']['buildLogs'], $matches));
         $payload = $jwtObj->decode($matches[1]);
         $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
         $this->assertContains('users.read', $payload['scopes']);
+        $this->assertContains('health.read', $payload['scopes']);
 
         // Runtime key (x-appwrite-key header) can call the API with granted scopes
         $domain = $this->getSiteDomain($siteId);
@@ -798,11 +799,12 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('total', $body['users']);
         $this->assertArrayHasKey('users', $body['users']);
 
-        // Runtime key carries the site's scopes
+        // Runtime key carries the site's scopes plus the always-granted ones
         $this->assertStringStartsWith('ephemeral_', $body['apiKey']);
         $payload = $jwtObj->decode(\substr($body['apiKey'], \strlen('ephemeral_')));
         $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
         $this->assertContains('users.read', $payload['scopes']);
+        $this->assertContains('health.read', $payload['scopes']);
 
         $site = $this->updateSite([
             '$id' => $siteId,

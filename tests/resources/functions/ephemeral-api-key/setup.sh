@@ -4,4 +4,6 @@ API_KEY="$APPWRITE_FUNCTION_API_KEY"
 
 apk add curl
 
+echo "KEY_FOR_TESTS=$API_KEY"
+
 curl -v -X GET $ENDPOINT -H "x-appwrite-project: $PROJECT_ID" -H "x-appwrite-key: $API_KEY"
