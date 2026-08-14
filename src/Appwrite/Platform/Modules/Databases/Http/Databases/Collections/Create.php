@@ -226,7 +226,6 @@ class Create extends Action
                 indexes: $collectionIndexes,
                 permissions: $permissions,
                 documentSecurity: $documentSecurity,
-                metadata: ['externalId' => $collectionId],
             );
         } catch (DuplicateException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());

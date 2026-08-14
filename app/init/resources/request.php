@@ -1028,9 +1028,9 @@ return function (Container $context): void {
         return new Document([]);
     }, ['project', 'dbForProject', 'request', 'authorization']);
 
-    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request) {
+    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject) {
 
-        return function (Document $database) use ($databaseFactory, $project, $request): Database {
+        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject): Database {
             $originalDatabase = $database;
             $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
 
@@ -1050,16 +1050,13 @@ return function (Container $context): void {
             $database->addHook(new Metadata(
                 database: $originalDatabase,
                 context: $context,
-                resolveExternalId: function (string $internalId) use ($database): string {
-                    $metadata = $database->silent(fn () => $database->getCollection($internalId));
-                    return $metadata->getAttribute('externalId', $internalId);
-                },
+                resolvePublicId: fn (string $internalId): string => Metadata::resolvePublicId($dbForProject, $internalId),
             ));
 
             return $database;
         };
 
-    }, ['databaseFactory', 'project', 'request']);
+    }, ['databaseFactory', 'project', 'request', 'dbForProject']);
 
     $context->set(
         'transactionState',

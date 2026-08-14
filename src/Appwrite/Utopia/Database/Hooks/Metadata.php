@@ -6,16 +6,12 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
 use Utopia\Database\Hook\Decorator;
+use Utopia\Database\Query;
 use Utopia\Query\Schema\ColumnType;
 
 /**
  * Stamps database/collection metadata onto every document returned from the database,
  * and recursively decorates nested relationship documents.
- *
- * Uses the 'externalId' attribute stored on the collection metadata document
- * to resolve internal collection names to user-facing collection IDs.
- * Related documents store the internal collection id; resolveExternalId maps
- * that back to the user-facing collection id.
  */
 class Metadata implements Decorator
 {
@@ -23,17 +19,17 @@ class Metadata implements Decorator
     private array $relationshipCache = [];
 
     /** @var array<string, string> */
-    private array $externalIds = [];
+    private array $publicIds = [];
 
     private int $operations = 0;
 
     /**
-     * @param  callable(string): string|null  $resolveExternalId
+     * @param  callable(string): string|null  $resolvePublicId
      */
     public function __construct(
         private Document $database,
         private string $context = 'collection',
-        private $resolveExternalId = null,
+        private $resolvePublicId = null,
     ) {
     }
 
@@ -45,8 +41,7 @@ class Metadata implements Decorator
 
         $this->operations++;
 
-        $collectionId = $collection->getAttribute('externalId', $collection->getId());
-        $this->externalIds[$collection->getId()] = $collectionId;
+        $collectionId = $this->publicId($collection->getId());
         $document->setAttribute('$databaseId', $this->database->getId());
         $document->setAttribute('$' . $this->context . 'Id', $collectionId);
 
@@ -65,13 +60,33 @@ class Metadata implements Decorator
         $this->operations = 0;
     }
 
+    public static function resolvePublicId(Database $dbForProject, string $internalId): string
+    {
+        $parts = \explode('_', $internalId);
+        if (count($parts) !== 4 || $parts[0] !== 'database' || $parts[2] !== 'collection' || $parts[1] === '' || $parts[3] === '') {
+            return $internalId;
+        }
+        $document = $dbForProject->silent(
+            fn () => $dbForProject->getAuthorization()->skip(
+                fn () => $dbForProject->findOne('database_'.$parts[1], [
+                    Query::equal('$sequence', [$parts[3]]),
+                ])
+            )
+        );
+        if ($document->isEmpty()) {
+            return $internalId;
+        }
+        $id = $document->getId();
+        return $id !== '' ? $id : $internalId;
+    }
+
     private function decorateRelationships(Document $collection, Document $document, int $depth = 0): void
     {
         if ($depth >= Database::RELATION_MAX_DEPTH) {
             return;
         }
 
-        $parentExternalId = $collection->getAttribute('externalId', $collection->getId());
+        $parentPublicId = $this->publicId($collection->getId());
         $relationships = $this->getRelationships($collection->getId(), $collection);
 
         foreach ($relationships as $relationship) {
@@ -95,8 +110,8 @@ class Metadata implements Decorator
                     $relation->setAttribute(
                         '$' . $this->context . 'Id',
                         $relatedInternalId !== ''
-                            ? $this->externalId($relatedInternalId)
-                            : $parentExternalId
+                            ? $this->publicId($relatedInternalId)
+                            : $parentPublicId
                     );
                 }
             }
@@ -118,15 +133,15 @@ class Metadata implements Decorator
         return $this->relationshipCache[$collectionId];
     }
 
-    private function externalId(string $internalId): string
+    private function publicId(string $internalId): string
     {
-        if (!isset($this->externalIds[$internalId])) {
-            $resolver = $this->resolveExternalId;
-            $this->externalIds[$internalId] = $resolver !== null
+        if (!isset($this->publicIds[$internalId])) {
+            $resolver = $this->resolvePublicId;
+            $this->publicIds[$internalId] = $resolver !== null
                 ? $resolver($internalId)
                 : $internalId;
         }
 
-        return $this->externalIds[$internalId];
+        return $this->publicIds[$internalId];
     }
 }

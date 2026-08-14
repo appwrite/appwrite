@@ -162,7 +162,6 @@ class Create extends CollectionAction
                 documentSecurity: $documentSecurity,
                 attributes: $attributes,
                 indexes: $indexes,
-                metadata: ['externalId' => $collectionId],
             );
             // Create attribute and indexes metadata documents in the attributes and indexes collections
             // needed for the get and list calls
