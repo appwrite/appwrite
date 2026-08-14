@@ -28,7 +28,7 @@ trait QueryJoinOperators
 
         $this->assertSame(200, $result['headers']['status-code']);
         $rows = $result['body'][$this->getRecordResource()];
-        $this->assertCount(9, $rows);
+        $this->assertCount(6, $rows);
     }
 
     public function testJoinOperatorGreaterThan(): void

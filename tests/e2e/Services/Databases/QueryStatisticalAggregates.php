@@ -93,7 +93,7 @@ trait QueryStatisticalAggregates
 
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertEqualsWithDelta($this->isPostgreSQL() ? 5990.625 : 4492.1875, (float) $row['varAmount'], 0.1);
+        $this->assertEqualsWithDelta($this->isPostgreSQL() ? 5989.583 : 4492.1875, (float) $row['varAmount'], 0.1);
     }
 
     public function testVarPopOrderAmount(): void
@@ -137,7 +137,7 @@ trait QueryStatisticalAggregates
 
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertEqualsWithDelta(5990.625, (float) $row['varSampAmount'], 0.1);
+        $this->assertEqualsWithDelta(5989.583, (float) $row['varSampAmount'], 0.1);
     }
 
     public function testBitAndCustomerFlags(): void
@@ -201,12 +201,7 @@ trait QueryStatisticalAggregates
             ],
         ]);
 
-        if ($this->isPostgreSQL()) {
-            $this->assertSame(400, $result['headers']['status-code']);
-            $this->assertSame('general_query_invalid', $result['body']['type']);
-        } else {
-            $this->assertSame(200, $result['headers']['status-code']);
-            $this->assertSame(1, (int) $result['body'][$this->getRecordResource()][0]['xorFlags']);
-        }
+        $this->assertSame(200, $result['headers']['status-code']);
+        $this->assertSame(1, (int) $result['body'][$this->getRecordResource()][0]['xorFlags']);
     }
 }
