@@ -97,6 +97,7 @@ class Get extends Action
             '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),
             '_APP_DOMAINS_NAMESERVERS' => System::getEnv('_APP_DOMAINS_NAMESERVERS'),
             '_APP_DB_ADAPTER' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
+            'supportForAttributes' => $adapter->supports(Capability::DefinedAttributes),
             'supportForRelationships' => $adapter->hasFeature(FeatureRelationships::class),
             'supportForOperators' => $adapter->supports(Capability::Operators),
             'supportForSpatials' => $adapter->supports(Capability::SpatialIndexNull)
