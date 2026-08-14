@@ -41,6 +41,10 @@
     "repositories": [
         {
             "type": "vcs",
+            "url": "https://github.com/utopia-php/openapi"
+        },
+        {
+            "type": "vcs",
             "url": "https://github.com/utopia-php/auth"
         },
         {
@@ -113,7 +117,7 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "^2.0",
+        "appwrite/sdk-generator": "dev-refactor/use-utopia-openapi",
         "brianium/paratest": "7.*",
         "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",
