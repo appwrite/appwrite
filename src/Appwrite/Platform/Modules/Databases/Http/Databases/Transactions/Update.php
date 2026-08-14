@@ -940,7 +940,10 @@ class Update extends Action
             return $this->stripResponseMetadata($document);
         }, $data);
 
-        $mergedDocuments = $transactionState->applyBulkUpsertToState($collectionId, $documents, $state);
+        $mergedDocuments = \array_map(
+            $this->stripResponseMetadata(...),
+            $transactionState->applyBulkUpsertToState($collectionId, $documents, $state),
+        );
 
         $count = $dbForProject->upsertDocuments(
             $collectionId,
