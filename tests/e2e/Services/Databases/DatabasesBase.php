@@ -11898,7 +11898,7 @@ trait DatabasesBase
         $this->assertEquals(200, $result['headers']['status-code']);
         $rows = $result['body'][$this->getRecordResource()];
         $years = array_column($rows, 'releaseYear');
-        $this->assertEquals(count($years), count(array_unique($years)));
+        $this->assertSame(count($years), count(array_unique($years)));
     }
 
     public function testJoin(): void
