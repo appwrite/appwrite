@@ -117,7 +117,7 @@ class XList extends Base
 
         $grouped = Query::groupByType($queries);
         $filterQueries = $grouped->filters;
-        $selectQueries = $grouped->selections ?? [];
+        $selectQueries = $grouped->selections;
 
         try {
             $results = $dbForProject->find('deployments', $queries);

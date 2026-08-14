@@ -1369,7 +1369,7 @@ Http::error()
                         }
 
                         // logical queries - recursively format nested queries
-                        if (in_array($method, [QueryMethod::And, QueryMethod::Or], true)) {
+                        if (in_array($method, [QueryMethod::And->value, QueryMethod::Or->value], true)) {
                             $nested = [];
                             foreach ($values as $nestedArray) {
                                 if (is_array($nestedArray)) {
@@ -1383,26 +1383,26 @@ Http::error()
                         }
 
                         // select - show selected attributes
-                        if ($method === QueryMethod::Select) {
+                        if ($method === QueryMethod::Select->value) {
                             $attributes = array_values(array_filter($values, 'is_string'));
                             return [$method => $attributes];
                         }
 
                         // pagination
                         if (in_array($method, [
-                            QueryMethod::Limit,
-                            QueryMethod::Offset,
-                            QueryMethod::CursorAfter,
-                            QueryMethod::CursorBefore
+                            QueryMethod::Limit->value,
+                            QueryMethod::Offset->value,
+                            QueryMethod::CursorAfter->value,
+                            QueryMethod::CursorBefore->value,
                         ], true)) {
                             return [$method => []];
                         }
 
                         // orders
                         if (in_array($method, [
-                            QueryMethod::OrderDesc,
-                            QueryMethod::OrderAsc,
-                            QueryMethod::OrderRandom
+                            QueryMethod::OrderDesc->value,
+                            QueryMethod::OrderAsc->value,
+                            QueryMethod::OrderRandom->value,
                         ], true)) {
                             return [$method => !empty($attribute) ? [$attribute] : []];
                         }

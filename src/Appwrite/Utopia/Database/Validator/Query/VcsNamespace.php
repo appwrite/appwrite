@@ -4,8 +4,8 @@ namespace Appwrite\Utopia\Database\Validator\Query;
 
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Base;
-use Utopia\Validator\Text;
 use Utopia\Query\Method;
+use Utopia\Validator\Text;
 
 class VcsNamespace extends Base
 {

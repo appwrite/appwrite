@@ -140,11 +140,11 @@ class XList extends Action
         $dbStart = \microtime(true);
 
         try {
-            $selectQueries = Query::groupByType($queries)->selections ?? [];
+            $selectQueries = Query::groupByType($queries)->selections;
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
             // When there are no select queries, relationship loading is skipped on the
             // underlying find() to avoid pulling related documents the caller did not ask for.
-            $find = $hasSelects
+            $find = $selectQueries !== []
                 ? fn () => $dbForDatabases->find($collectionTableId, $queries)
                 : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
 

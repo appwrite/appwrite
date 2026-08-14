@@ -29,9 +29,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
-use Utopia\Query\Schema\ColumnType;
 
 class Upsert extends Action
 {
@@ -274,18 +274,15 @@ class Upsert extends Action
         }
 
         if (empty($upserted[0])) {
-            if ($transactionId !== null) {
-                $upserted[0] = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
-            } else {
-                $upserted[0] = $dbForDatabases->getDocument($collectionTableId, $documentId);
-            }
+            $upserted[0] = $dbForDatabases->getDocument($collectionTableId, $documentId);
         }
 
         $document = $upserted[0];
 
         $usage
-            ->addMetric($this->getDatabasesOperationWriteMetric(), 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), 1);
+            ->setResource('database')
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), 1);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),

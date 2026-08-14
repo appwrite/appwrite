@@ -1,12 +1,12 @@
 <?php
 
+use Utopia\Config\Config;
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Index;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\IndexType;
-use Utopia\Config\Config;
 
 $providers = Config::getParam('oAuthProviders', []);
 

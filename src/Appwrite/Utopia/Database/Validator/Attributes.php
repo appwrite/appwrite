@@ -4,10 +4,10 @@ namespace Appwrite\Utopia\Database\Validator;
 
 use Appwrite\Utopia\Database\Attribute;
 use Utopia\Database\Database;
-use Utopia\Query\Schema\ColumnType;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Emails\Validator\Email;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator;
 use Utopia\Validator\IP;
 use Utopia\Validator\Range;

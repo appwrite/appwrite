@@ -8,8 +8,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
-use Utopia\Locale\Locale;
-use Utopia\Query\Method as QueryMethod;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;

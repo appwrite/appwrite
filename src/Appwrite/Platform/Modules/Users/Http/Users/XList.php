@@ -16,9 +16,9 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
-use Utopia\Query\Method as QueryMethod;
 
 class XList extends Action
 {

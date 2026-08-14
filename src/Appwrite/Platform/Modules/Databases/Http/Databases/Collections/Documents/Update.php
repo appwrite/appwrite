@@ -28,9 +28,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
-use Utopia\Query\Schema\ColumnType;
 
 class Update extends Action
 {
@@ -266,8 +266,9 @@ class Update extends Action
         }
 
         $usage
-            ->addMetric($this->getDatabasesOperationWriteMetric(), 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), 1);
+            ->setResource('database')
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), 1);
 
         $response->dynamic($document, $this->getResponseModel());
 

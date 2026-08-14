@@ -4,8 +4,10 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Operator;
+use Utopia\Database\Query;
 use Utopia\Query\Schema\ColumnType;
 
 class Action extends AppwriteAction

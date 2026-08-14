@@ -101,8 +101,7 @@ class Get extends Action
         }
 
         try {
-            $selects = Query::groupByType($queries)->selections ?? [];
-            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            $selects = Query::groupByType($queries)->selections;
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
             // Use transaction-aware document retrieval if transactionId is provided

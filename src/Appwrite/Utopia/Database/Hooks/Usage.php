@@ -59,7 +59,7 @@ class Usage implements Lifecycle
                 => $this->trackCollections($event, $data, $value),
 
             str_starts_with($collection, 'database_') && str_contains($collection, '_collection_')
-                => $this->trackDocuments($data, $value),
+                => $this->trackDocuments($value),
 
             $collection === 'buckets'
                 => $this->trackBuckets($event, $data, $value),
@@ -111,30 +111,16 @@ class Usage implements Lifecycle
 
     private function trackCollections(Event $event, Document $document, int $value): void
     {
-        $parts = explode('_', $document->getCollection());
-        $databaseInternalId = $parts[1] ?? 0;
-        $this->usage
-            ->addMetric($this->metric(METRIC_COLLECTIONS), $value)
-            ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $this->metric(METRIC_DATABASE_ID_COLLECTIONS)), $value);
+        $this->usage->addMetric($this->metric(METRIC_COLLECTIONS), $value);
 
         if ($event === Event::DocumentDelete) {
             $this->usage->addReduce($document);
         }
     }
 
-    private function trackDocuments(Document $document, int $value): void
+    private function trackDocuments(int $value): void
     {
-        $parts = explode('_', $document->getCollection());
-        $databaseInternalId = $parts[1] ?? 0;
-        $collectionInternalId = $parts[3] ?? 0;
-        $this->usage
-            ->addMetric($this->metric(METRIC_DOCUMENTS), $value)
-            ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $this->metric(METRIC_DATABASE_ID_DOCUMENTS)), $value)
-            ->addMetric(str_replace(
-                ['{databaseInternalId}', '{collectionInternalId}'],
-                [$databaseInternalId, $collectionInternalId],
-                $this->metric(METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS)
-            ), $value);
+        $this->usage->addMetric($this->metric(METRIC_DOCUMENTS), $value);
     }
 
     private function trackBuckets(Event $event, Document $document, int $value): void
@@ -147,13 +133,9 @@ class Usage implements Lifecycle
 
     private function trackFiles(Document $document, int $value): void
     {
-        $parts = explode('_', $document->getCollection());
-        $bucketInternalId = $parts[1];
         $this->usage
             ->addMetric(METRIC_FILES, $value)
-            ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value)
-            ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES), $value)
-            ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value);
+            ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value);
     }
 
     private function trackFunctions(Event $event, Document $document, int $value): void
@@ -178,16 +160,6 @@ class Usage implements Lifecycle
             ->addMetric(METRIC_DEPLOYMENTS, $value)
             ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value)
             ->addMetric(str_replace('{resourceType}', $document->getAttribute('resourceType'), METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value)
-            ->addMetric(str_replace('{resourceType}', $document->getAttribute('resourceType'), METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value)
-            ->addMetric(str_replace(
-                ['{resourceType}', '{resourceInternalId}'],
-                [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')],
-                METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS
-            ), $value)
-            ->addMetric(str_replace(
-                ['{resourceType}', '{resourceInternalId}'],
-                [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')],
-                METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE
-            ), $document->getAttribute('size') * $value);
+            ->addMetric(str_replace('{resourceType}', $document->getAttribute('resourceType'), METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
     }
 }
