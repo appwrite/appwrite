@@ -528,9 +528,14 @@ Http::init()
                     ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
                 foreach ($request->getParams() as $key => $value) {
-                    if (! empty($value)) {
-                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                    if ($value === null || $value === '' || $value === []) {
+                        continue;
                     }
+                    $encoded = \is_scalar($value) ? (string) $value : \json_encode($value);
+                    if ($encoded === false || $encoded === '') {
+                        continue;
+                    }
+                    $timeLimit->setParam('{param-' . $key . '}', $encoded);
                 }
 
                 $abuse = new Abuse($timeLimit);
@@ -907,10 +912,15 @@ Http::shutdown()
                 ->setParam('{method}', $request->getMethod())
                 ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
-            foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                if (! empty($value)) {
-                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+            foreach ($request->getParams() as $key => $value) {
+                if ($value === null || $value === '' || $value === []) {
+                    continue;
                 }
+                $encoded = \is_scalar($value) ? (string) $value : \json_encode($value);
+                if ($encoded === false || $encoded === '') {
+                    continue;
+                }
+                $timeLimit->setParam('{param-' . $key . '}', $encoded);
             }
 
             $abuse = new Abuse($timeLimit);
