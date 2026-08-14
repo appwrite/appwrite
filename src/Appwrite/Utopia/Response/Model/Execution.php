@@ -5,7 +5,6 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\DateTime;
-use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 
 class Execution extends Model
@@ -43,6 +42,13 @@ class Execution extends Model
                 'description' => 'Function or site ID.',
                 'default' => '',
                 'example' => '5e5ea6g16897e',
+            ])
+            ->addRule('resourceType', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Execution resource type.',
+                'default' => 'functions',
+                'example' => 'functions',
+                'enum' => ['functions', 'sites'],
             ])
             ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
@@ -149,18 +155,5 @@ class Execution extends Model
     public function getType(): string
     {
         return Response::MODEL_EXECUTION;
-    }
-
-
-    /**
-     * Convert DB structure to response model
-     *
-     * @return Document
-     */
-    public function filter(Document $document): Document
-    {
-        $document->removeAttribute('resourceType');
-
-        return $document;
     }
 }

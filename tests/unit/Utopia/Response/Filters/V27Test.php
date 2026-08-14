@@ -17,6 +17,7 @@ final class V27Test extends TestCase
         $result = $filter->parse([
             '$id' => 'execution',
             'resourceId' => 'function',
+            'resourceType' => 'functions',
         ], Response::MODEL_EXECUTION);
 
         $this->assertSame([
@@ -34,6 +35,7 @@ final class V27Test extends TestCase
             'executions' => [[
                 '$id' => 'execution',
                 'resourceId' => 'function',
+                'resourceType' => 'functions',
             ]],
         ], Response::MODEL_EXECUTION_LIST);
 

@@ -10,7 +10,7 @@ use Utopia\Database\Document;
 
 final class ExecutionTest extends TestCase
 {
-    public function testPreservesResourceId(): void
+    public function testPreservesResourceIdentity(): void
     {
         $execution = (new Execution())->filter(new Document([
             'resourceType' => 'sites',
@@ -18,13 +18,14 @@ final class ExecutionTest extends TestCase
         ]));
 
         $this->assertSame('site-id', $execution->getAttribute('resourceId'));
-        $this->assertFalse($execution->isSet('resourceType'));
+        $this->assertSame('sites', $execution->getAttribute('resourceType'));
     }
 
-    public function testResourceIdIsRequired(): void
+    public function testResourceIdentityIsRequired(): void
     {
         $rules = (new Execution())->getRules();
 
         $this->assertTrue($rules['resourceId']['required']);
+        $this->assertTrue($rules['resourceType']['required']);
     }
 }

@@ -2255,6 +2255,7 @@ trait Base
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
                         _id
                         resourceId
+                        resourceType
                         status
                         logs
                         errors
@@ -2267,6 +2268,7 @@ trait Base
                         executions {
                             _id
                             resourceId
+                            resourceType
                             status
                             logs
                             errors
@@ -2278,6 +2280,7 @@ trait Base
                     functionsCreateExecution(functionId: $functionId, body: $body, async: $async) {
                         _id
                         resourceId
+                        resourceType
                         status
                         logs
                         errors

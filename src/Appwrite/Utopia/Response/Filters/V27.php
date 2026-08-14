@@ -26,6 +26,8 @@ class V27 extends Filter
             unset($content['resourceId']);
         }
 
+        unset($content['resourceType']);
+
         return $content;
     }
 

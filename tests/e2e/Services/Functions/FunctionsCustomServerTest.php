@@ -1851,6 +1851,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($execution['body']['resourceId']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['resourceId']);
+        $this->assertEquals('functions', $execution['body']['resourceType']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertStringContainsString($execution['body']['resourceId'], (string) $execution['body']['responseBody']);
