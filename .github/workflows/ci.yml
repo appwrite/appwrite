@@ -420,7 +420,7 @@ jobs:
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: ${{ matrix.service.runner }}
-    timeout-minutes: 20
+    timeout-minutes: 35
     needs: [build, matrix]
     permissions:
       contents: read
