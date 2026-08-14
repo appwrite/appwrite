@@ -123,7 +123,6 @@ class V25 extends Migration
                     if ($collectionType === 'projects') {
                         $attributes = ['providerBranches', 'providerPaths'];
                         if ($id === 'sites') {
-                            // Functions have had scopes since 1.6; sites gain them now.
                             $attributes[] = 'scopes';
                         }
                         try {
