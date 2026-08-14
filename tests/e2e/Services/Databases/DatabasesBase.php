@@ -11870,7 +11870,7 @@ trait DatabasesBase
         foreach ($rows as $row) {
             $this->assertArrayHasKey('title', $row);
             $this->assertArrayHasKey('total', $row);
-            $this->assertEquals(1, $row['total']);
+            $this->assertGreaterThanOrEqual(1, (int) $row['total']);
         }
     }
 

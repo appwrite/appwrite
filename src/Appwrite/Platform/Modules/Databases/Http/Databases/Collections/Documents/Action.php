@@ -11,6 +11,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 abstract class Action extends DatabasesAction
@@ -338,7 +339,50 @@ abstract class Action extends DatabasesAction
                 unset($document[$attribute]);
             }
         }
+
+        foreach ($document as $key => $value) {
+            if ($value instanceof Document || (\is_array($value) && !\array_is_list($value) && isset($value['$id']))) {
+                $document[$key] = $this->removeReadonlyAttributes($value, $privileged);
+            } elseif (\is_array($value) && \array_is_list($value)) {
+                foreach ($value as $index => $child) {
+                    if ($child instanceof Document || (\is_array($child) && isset($child['$id']))) {
+                        $value[$index] = $this->removeReadonlyAttributes($child, $privileged);
+                    }
+                }
+                $document[$key] = $value;
+            }
+        }
+
         return $document;
+    }
+
+    /**
+     * @param array<Query> $queries
+     * @return array<Query>
+     */
+    protected function resolveJoinCollections(array $queries, Database $dbForProject, Document $database): array
+    {
+        $prefix = 'database_' . $database->getSequence() . '_collection_';
+
+        foreach ($queries as $query) {
+            if (!$query->getMethod()->isJoin()) {
+                continue;
+            }
+
+            $externalId = $query->getAttribute();
+            if ($externalId === '' || \str_starts_with($externalId, $prefix)) {
+                continue;
+            }
+
+            $related = $dbForProject->getDocument('database_' . $database->getSequence(), $externalId);
+            if ($related->isEmpty()) {
+                throw new Exception($this->getParentNotFoundException(), params: [$externalId]);
+            }
+
+            $query->setAttribute($prefix . $related->getSequence());
+        }
+
+        return $queries;
     }
 
     /**

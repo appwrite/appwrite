@@ -100,6 +100,8 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $queries = $this->resolveJoinCollections($queries, $dbForProject, $database);
+
         try {
             $selects = Query::groupByType($queries)->selections;
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();

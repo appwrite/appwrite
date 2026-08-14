@@ -108,6 +108,8 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $queries = $this->resolveJoinCollections($queries, $dbForProject, $database);
+
         $dbForDatabases = $getDatabasesDB($database, $collection);
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
