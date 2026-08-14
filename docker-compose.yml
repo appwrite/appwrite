@@ -1528,28 +1528,9 @@ services:
       # Sidecars ship with the service and move with it, so they share its tag.
       - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:1.3.0
       - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.3.0
-
-  orchestrator-sandboxes:
-    container_name: orchestrator-sandboxes
-    hostname: orchestrator-sandboxes
-    logging:
-      driver: json-file
-      options:
-        max-file: "5"
-        max-size: 10m
-    image: ghcr.io/open-runtimes/orchestrator/sandbox-service:1.1.0
-    restart: unless-stopped
-    user: root
-    networks:
-      - appwrite
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - ORCHESTRATOR_BACKEND=docker
-      - DOCKER_NETWORK=appwrite
-      - ARTIFACT_ENDPOINT=http://orchestrator-sandboxes:8080
-      - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.1.0
-      # Sandbox URLs are minted under this domain and served on DATA_PORT (8081).
+      # Sandbox URLs are minted under this domain and served on DATA_PORT
+      # (8081). One listener carries both serving planes, so this must differ
+      # from DEPLOYMENTS_DOMAIN or the service refuses to start.
       - SANDBOX_DOMAIN=sandboxes.test
 
   mariadb:

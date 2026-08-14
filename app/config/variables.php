@@ -1055,9 +1055,9 @@ return [
             ],
             [
                 'name' => '_APP_SANDBOX_HOST',
-                'description' => 'The host used by Appwrite to communicate with the open-runtimes deployments-service that serves the sandbox API.',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes orchestrator that serves the sandbox API.',
                 'introduction' => '1.10.0',
-                'default' => 'http://orchestrator-sandboxes:8080',
+                'default' => 'http://orchestrator:8080',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
