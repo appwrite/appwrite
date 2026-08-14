@@ -24,7 +24,7 @@ class Webhook extends Event
     public function trimPayload(): array
     {
         $trimmed = parent::trimPayload();
-        if (isset($this->context)) {
+        if (!empty($this->context)) {
             $trimmed['context'] = [];
         }
         return $trimmed;

@@ -1,17 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Storage;
 
+use CURLFile;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
-class StorageCustomServerTest extends Scope
+final class StorageCustomServerTest extends Scope
 {
     use StorageBase;
     use ProjectCustom;
@@ -362,5 +369,92 @@ class StorageCustomServerTest extends Scope
             )
         );
         $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    /**
+     * Regression for chunked uploads under the antivirus size limit.
+     *
+     * Requires ClamAV (compose profile `antivirus`) and
+     * `_APP_STORAGE_ANTIVIRUS=enabled`. File must be >5MB (chunked) and
+     * ≤20MB (`APP_LIMIT_ANTIVIRUS`) so the last chunk triggers a scan.
+     */
+    #[Group('antivirus')]
+    public function testCreateBucketFileChunkedUploadWithAntivirus(): void
+    {
+        if (System::getEnv('_APP_STORAGE_ANTIVIRUS', 'disabled') === 'disabled') {
+            $this->markTestSkipped('Antivirus is disabled.');
+        }
+
+        $health = $this->client->call(Client::METHOD_GET, '/health/anti-virus', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $health['headers']['status-code']);
+        $this->assertEquals('pass', $health['body']['status'], 'ClamAV must be reachable when antivirus is enabled.');
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Antivirus Chunked Upload Bucket',
+            'fileSecurity' => true,
+            'antivirus' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $source = __DIR__ . '/../../../resources/functions/large/blue.mp4';
+        $totalSize = \filesize($source);
+        $this->assertGreaterThan(5 * 1024 * 1024, $totalSize, 'Fixture must be large enough to chunk.');
+        $this->assertLessThanOrEqual(20_000_000, $totalSize, 'Fixture must stay under APP_LIMIT_ANTIVIRUS.');
+
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = \fopen($source, 'rb');
+        $this->assertNotFalse($handle);
+
+        $fileId = 'unique()';
+        $mimeType = \mime_content_type($source);
+        $counter = 0;
+        $id = '';
+        $file = null;
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        while (!\feof($handle)) {
+            $curlFile = new CURLFile(
+                'data://' . $mimeType . ';base64,' . \base64_encode(\fread($handle, $chunkSize)),
+                $mimeType,
+                'blue.mp4'
+            );
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . \min(((($counter * $chunkSize) + $chunkSize) - 1), $totalSize - 1) . '/' . $totalSize;
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', \array_merge($headers, $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => $curlFile,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $counter++;
+            $id = $file['body']['$id'] ?? $id;
+        }
+        \fclose($handle);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+        $this->assertEquals('blue.mp4', $file['body']['name']);
+        $this->assertEquals($totalSize, $file['body']['sizeOriginal']);
+        $this->assertEquals($file['body']['chunksTotal'], $file['body']['chunksUploaded']);
+        $this->assertNotEmpty($file['body']['mimeType']);
     }
 }

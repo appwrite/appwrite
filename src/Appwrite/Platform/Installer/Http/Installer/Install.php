@@ -40,9 +40,16 @@ class Install extends Action
             ->param('assistantOpenAIKey', '', new Text(256, 0), 'OpenAI API key for assistant', true)
             ->param('accountEmail', '', new Email(allowEmpty: true), 'Account email address', true)
             ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
-            ->param('database', '', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database adapter', true)
+            ->param('database', '', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database adapter', true)
             ->param('installId', '', new Text(64, 0), 'Installation ID', true)
-            ->param('retryStep', null, new Nullable(new WhiteList([Server::STEP_DOCKER_COMPOSE, Server::STEP_ENV_VARS, Server::STEP_DOCKER_CONTAINERS], true)), 'Retry from step', true)
+            ->param('retryStep', null, new Nullable(new WhiteList([
+                Server::STEP_CONFIG_FILES,
+                Server::STEP_DOCKER_COMPOSE,
+                Server::STEP_ENV_VARS,
+                Server::STEP_DOCKER_CONTAINERS,
+                Server::STEP_ACCOUNT_SETUP,
+                Server::STEP_MIGRATION,
+            ], true)), 'Retry from step', true)
             ->param('migrate', false, new \Utopia\Validator\Boolean(true), 'Run database migration after upgrade', true)
             ->inject('request')
             ->inject('response')
@@ -73,7 +80,7 @@ class Install extends Action
         Config $config,
         array $paths
     ): void {
-        $acceptHeader = $request->getHeader('accept');
+        $acceptHeader = $request->getHeaderLine('accept');
         $wantsStream = stripos($acceptHeader, 'text/event-stream') !== false;
 
         if ($wantsStream) {
@@ -218,7 +225,7 @@ class Install extends Action
                 '_APP_DOMAIN' => $appDomain ?: 'localhost',
                 '_APP_DOMAIN_TARGET' => $appDomain ?: 'localhost',
                 '_APP_EMAIL_CERTIFICATES' => $emailCertificates,
-                '_APP_DB_ADAPTER' => $lockedDatabase ?? ($database ?: 'mongodb'),
+                '_APP_DB_ADAPTER' => $lockedDatabase ?? ($database ?: 'postgresql'),
                 '_APP_ASSISTANT_OPENAI_API_KEY' => $assistantOpenAIKey,
             ];
 
@@ -240,9 +247,7 @@ class Install extends Action
                             $inputValue = trim($inputValue);
                         }
                         if ($storedValue !== $inputValue) {
-                            if ($installId !== '') {
-                                $state->updateGlobalLock($installId, Server::STATUS_ERROR);
-                            }
+                            $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                             $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                             return;
                         }
@@ -262,16 +267,12 @@ class Install extends Action
                     $incomingHash = $state->hashSensitiveValue($incomingValue);
                     if (isset($stored[$hashField])) {
                         if (!hash_equals((string) $stored[$hashField], $incomingHash)) {
-                            if ($installId !== '') {
-                                $state->updateGlobalLock($installId, Server::STATUS_ERROR);
-                            }
+                            $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                             $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                             return;
                         }
                     } elseif (isset($stored[$field]) && $incomingValue !== '' && (string) $stored[$field] !== $incomingValue) {
-                        if ($installId !== '') {
-                            $state->updateGlobalLock($installId, Server::STATUS_ERROR);
-                        }
+                        $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                         $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                         return;
                     }
@@ -293,7 +294,7 @@ class Install extends Action
                 'payload' => [
                     'httpPort' => $httpPort ?: $config->getDefaultHttpPort(),
                     'httpsPort' => $httpsPort ?: $config->getDefaultHttpsPort(),
-                    'database' => $lockedDatabase ?? ($database ?: 'mongodb'),
+                    'database' => $lockedDatabase ?? ($database ?: 'postgresql'),
                     'appDomain' => $appDomain ?: 'localhost',
                     'emailCertificates' => $emailCertificates,
                     'opensslKeyHash' => $state->hashSensitiveValue($opensslKey),
@@ -430,7 +431,7 @@ class Install extends Action
     private function deriveNameFromEmail(string $email): string
     {
         $parts = explode('@', $email);
-        $username = $parts[0] ?? '';
+        $username = $parts[0];
         $cleaned = preg_replace('/[^a-zA-Z0-9]/', '', $username);
         return ucfirst($cleaned);
     }

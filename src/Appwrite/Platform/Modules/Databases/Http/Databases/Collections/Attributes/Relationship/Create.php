@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Relationship;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
@@ -21,6 +21,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\ForeignKeyAction;
+use Utopia\Platform\Enum;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
@@ -49,6 +50,7 @@ class Create extends Action
             ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
             ->label('audits.event', 'attribute.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -74,7 +76,7 @@ class Create extends Action
                 RelationType::ManyToOne->value,
                 RelationType::ManyToMany->value,
                 RelationType::OneToMany->value
-            ], true), 'Relation type')
+            ], true), 'Relationship type. Possible values are: oneToOne, oneToMany, manyToOne, manyToMany.', enum: new Enum(name: 'RelationshipType'))
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
             ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Attribute Key.', true, ['dbForProject'])
             ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Attribute Key.', true, ['dbForProject'])
@@ -82,16 +84,16 @@ class Create extends Action
                 ForeignKeyAction::Cascade->value,
                 ForeignKeyAction::Restrict->value,
                 ForeignKeyAction::SetNull->value
-            ], true), 'Constraints option', true)
+            ], true), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         if (!$dbForProject->getAdapter() instanceof FeatureRelationships) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
@@ -102,7 +104,7 @@ class Create extends Action
         $twoWayKey ??= $collectionId;
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -163,7 +165,7 @@ class Create extends Action
                 'twoWayKey' => $twoWayKey,
                 'onDelete' => $onDelete,
             ]
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
+        ]), $response, $dbForProject, $publisherForDatabase, $queueForEvents, $authorization);
 
         foreach ($attribute->getAttribute('options', []) as $k => $option) {
             $attribute->setAttribute($k, $option);

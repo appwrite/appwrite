@@ -39,7 +39,7 @@ Http::init()
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+            && !($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -54,7 +54,8 @@ Http::get('/v1/graphql')
         group: 'graphql',
         name: 'get',
         auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
-        hide: true,
+        // Preview SDK builds show the whole surface, so they do not hide.
+        hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
         description: '/docs/references/graphql/get.md',
         responses: [
             new SDKResponse(
@@ -122,11 +123,11 @@ Http::post('/v1/graphql/mutation')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
 
-        if ($request->getHeader('x-sdk-graphql') == 'true') {
+        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = $request->getHeader('content-type');
+        $type = $request->getHeaderLine('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -173,11 +174,11 @@ Http::post('/v1/graphql')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
 
-        if ($request->getHeader('x-sdk-graphql') == 'true') {
+        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = $request->getHeader('content-type');
+        $type = $request->getHeaderLine('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -231,7 +232,7 @@ function execute(
     $validations = GraphQL::getStandardValidationRules();
 
     if (System::getEnv('_APP_GRAPHQL_INTROSPECTION', 'enabled') === 'disabled') {
-        $validations[] = new DisableIntrospection();
+        $validations[] = new DisableIntrospection(DisableIntrospection::ENABLED);
     }
 
     if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {

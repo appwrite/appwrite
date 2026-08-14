@@ -173,6 +173,20 @@ class Site extends Model
                 'default' => false,
                 'example' => false,
             ])
+            ->addRule('providerBranches', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of branch name patterns that trigger automatic deployments. Supports glob wildcards. Empty list deploys on all branches.',
+                'default' => [],
+                'example' => ['main', 'feat/*'],
+                'array' => true,
+            ])
+            ->addRule('providerPaths', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of file path patterns that trigger automatic deployments. Supports glob wildcards. Empty list deploys on all file changes.',
+                'default' => [],
+                'example' => ['src/**', '!docs/**'],
+                'array' => true,
+            ])
             ->addRule('buildSpecification', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Machine specification for deployment builds.',

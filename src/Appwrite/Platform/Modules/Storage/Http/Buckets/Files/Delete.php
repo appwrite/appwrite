@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -42,6 +43,7 @@ class Delete extends Action
             ->label('event', 'buckets.[bucketId].files.[fileId].delete')
             ->label('audits.event', 'file.delete')
             ->label('audits.resource', 'file/{request.fileId}')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -65,7 +67,7 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('deviceForFiles')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('authorization')
             ->inject('user')
             ->callback($this->action(...));
@@ -78,13 +80,13 @@ class Delete extends Action
         Database $dbForProject,
         Event $queueForEvents,
         Device $deviceForFiles,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Authorization $authorization,
-        User $user
+        User $user,
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
@@ -111,20 +113,28 @@ class Delete extends Action
 
         $deviceDeleted = false;
         if ($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
-            $deviceDeleted = $deviceForFiles->abort(
-                $file->getAttribute('path'),
-                ($file->getAttribute('metadata', [])['uploadId'] ?? '')
-            );
+            try {
+                $deviceDeleted = $deviceForFiles->abort(
+                    $file->getAttribute('path'),
+                    ($file->getAttribute('metadata', [])['uploadId'] ?? '')
+                );
+            } catch (\Exception $e) {
+                // If the partial upload chunks are already gone from the device
+                // (e.g. the upload never wrote anything to disk), treat it as deleted
+                // so the pending file document can still be removed from the database.
+                $deviceDeleted = true;
+            }
         } else {
             $deviceDeleted = $deviceForFiles->delete($file->getAttribute('path'));
         }
 
         if ($deviceDeleted) {
-            $queueForDeletes
-                ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
-                ->setResourceType('bucket/' . $bucket->getId())
-                ->setResource('file/' . $fileId)
-            ;
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $queueForEvents->getProject(),
+                type: DELETE_TYPE_CACHE_BY_RESOURCE,
+                resource: 'file/' . $fileId,
+                resourceType: 'bucket/' . $bucket->getId(),
+            ));
 
             try {
                 if ($fileSecurity && !$valid) {
@@ -137,7 +147,11 @@ class Delete extends Action
             }
 
             if (!$deleted) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                $exists = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+                if (!$exists->isEmpty()) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                }
+                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
             }
         } else {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to delete file from device');

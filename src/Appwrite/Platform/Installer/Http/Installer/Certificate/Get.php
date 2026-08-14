@@ -62,7 +62,6 @@ class Get extends Action
         curl_setopt_array($ch, $options);
         curl_exec($ch);
         $errno = curl_errno($ch);
-        curl_close($ch);
 
         return $errno === 0;
     }

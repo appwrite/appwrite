@@ -25,19 +25,6 @@ class Certificate extends Event
     }
 
     /**
-     * Set domain for this certificates event.
-     *
-     * @param Document $domain
-     * @return self
-     */
-    public function setDomain(Document $domain): self
-    {
-        $this->domain = $domain;
-
-        return $this;
-    }
-
-    /**
      * Returns the set domain for this certificate event.
      *
      * @return null|Document
@@ -45,53 +32,6 @@ class Certificate extends Event
     public function getDomain(): ?Document
     {
         return $this->domain;
-    }
-
-    /**
-     * Set if the certificate needs to be validated.
-     *
-     * @param bool $skipRenewCheck
-     * @return self
-     */
-    public function setSkipRenewCheck(bool $skipRenewCheck): self
-    {
-        $this->skipRenewCheck = $skipRenewCheck;
-
-        return $this;
-    }
-
-
-    /**
-     * Set override for main domain used for validation
-     *
-     * @param string|null $validationDomain
-     * @return self
-     */
-    public function setValidationDomain(?string $validationDomain): self
-    {
-        $this->validationDomain = $validationDomain;
-
-        return $this;
-    }
-
-    /**
-     * Get validation domain
-     *
-     * @return string|null
-     */
-    public function getValidationDomain(): ?string
-    {
-        return $this->validationDomain;
-    }
-
-    /**
-     * Return if the certificate needs be validated.
-     *
-     * @return bool
-     */
-    public function getSkipRenewCheck(): bool
-    {
-        return $this->skipRenewCheck;
     }
 
     /**

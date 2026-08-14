@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Certificate;
-use Appwrite\Event\Delete;
+use Appwrite\Certificates\Certificates;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Certificate;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use DateInterval;
 use DateTime;
 use Utopia\Console;
@@ -29,12 +31,13 @@ class Maintenance extends Action
             ->param('type', 'loop', new WhiteList(['loop', 'trigger']), 'How to run task. "loop" is meant for container entrypoint, and "trigger" for manual execution.')
             ->inject('dbForPlatform')
             ->inject('console')
-            ->inject('queueForCertificates')
-            ->inject('queueForDeletes')
+            ->inject('publisherForCertificates')
+            ->inject('certificateIssuer')
+            ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
-    public function action(string $type, Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
+    public function action(string $type, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, Certificates $certificateIssuer, DeletePublisher $publisherForDeletes): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
@@ -59,7 +62,7 @@ class Maintenance extends Action
             $delay = $next->getTimestamp() - $now->getTimestamp();
         }
 
-        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
+        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
             $time = DatabaseDateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -70,12 +73,12 @@ class Maintenance extends Action
 
             $dbForPlatform->foreach(
                 'projects',
-                function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
-                    $queueForDeletes
-                        ->setType(DELETE_TYPE_MAINTENANCE)
-                        ->setProject($project)
-                        ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-                        ->trigger();
+                function (Document $project) use ($publisherForDeletes, $usageStatsRetentionHourly) {
+                    $publisherForDeletes->enqueue(new DeleteMessage(
+                        project: $project,
+                        type: DELETE_TYPE_MAINTENANCE,
+                        hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
+                    ));
                 },
                 [
                     Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
@@ -85,17 +88,17 @@ class Maintenance extends Action
                 ]
             );
 
-            $queueForDeletes
-                ->setType(DELETE_TYPE_MAINTENANCE)
-                ->setProject($console)
-                ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-                ->trigger();
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $console,
+                type: DELETE_TYPE_MAINTENANCE,
+                hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
+            ));
 
-            $this->notifyDeleteConnections($queueForDeletes);
-            $this->renewCertificates($dbForPlatform, $queueForCertificates);
-            $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
-            $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
-            $this->notifyDeleteCSVExports($queueForDeletes);
+            $this->notifyDeleteConnections($publisherForDeletes);
+            $this->renewCertificates($dbForPlatform, $publisherForCertificates, $certificateIssuer);
+            $this->notifyDeleteCache($cacheRetention, $publisherForDeletes);
+            $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
+            $this->notifyDeleteCSVExports($publisherForDeletes);
         };
 
         if ($type === 'loop') {
@@ -109,43 +112,41 @@ class Maintenance extends Action
         }
     }
 
-    private function notifyDeleteConnections(Delete $queueForDeletes): void
+    private function notifyDeleteConnections(DeletePublisher $publisherForDeletes): void
     {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_REALTIME)
-            ->setDatetime(DatabaseDateTime::addSeconds(new \DateTime(), -60))
-            ->trigger();
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            type: DELETE_TYPE_REALTIME,
+            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -60),
+        ));
     }
 
-    private function notifyDeleteCSVExports(Delete $queueForDeletes): void
+    private function notifyDeleteCSVExports(DeletePublisher $publisherForDeletes): void
     {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_CSV_EXPORTS)
-            ->trigger();
+        $publisherForDeletes->enqueue(new DeleteMessage(type: DELETE_TYPE_CSV_EXPORTS));
     }
 
-    private function renewCertificates(Database $dbForPlatform, Certificate $queueForCertificate): void
+    private function renewCertificates(Database $dbForPlatform, Certificate $publisherForCertificate, Certificates $certificateIssuer): void
     {
         $time = DatabaseDateTime::now();
 
-        $certificates = $dbForPlatform->find('certificates', [
+        $documents = $dbForPlatform->find('certificates', [
             Query::lessThan('attempts', 5), // Maximum 5 attempts
             Query::isNotNull('renewDate'),
             Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
             Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
         ]);
 
-        if (\count($certificates) === 0) {
+        if (\count($documents) === 0) {
             Console::info("[{$time}] No certificates for renewal.");
             return;
         }
 
-        Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
+        Console::info("[{$time}] Found " . \count($documents) . " certificates for renewal, scheduling jobs.");
 
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $appRegion = System::getEnv('_APP_REGION', 'default');
 
-        foreach ($certificates as $certificate) {
+        foreach ($documents as $certificate) {
             $domain = $certificate->getAttribute('domain');
             $rule = $isMd5 ?
                 $dbForPlatform->getDocument('rules', md5($domain)) :
@@ -158,29 +159,40 @@ class Maintenance extends Action
                 continue;
             }
 
-            $queueForCertificate
-                ->setDomain(new Document([
+            // Respect the operator opt-out. If Appwrite would not auto-issue this
+            // subdomain today, it must not auto-renew it either. Keep the owner
+            // gate so custom-domain renewals are never skipped.
+            if ($rule->getAttribute('owner') === 'Appwrite' && !$certificateIssuer->isAutoIssueEnabled($rule)) {
+                continue;
+            }
+
+            $publisherForCertificate->enqueue(new \Appwrite\Event\Message\Certificate(
+                project: new Document([
+                    '$id' => $rule->getAttribute('projectId', ''),
+                    '$sequence' => $rule->getAttribute('projectInternalId', 0),
+                ]),
+                domain: new Document([
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                ]))
-                ->setAction(Certificate::ACTION_GENERATION)
-                ->trigger();
+                ]),
+                action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+            ));
         }
     }
 
-    private function notifyDeleteCache($interval, Delete $queueForDeletes): void
+    private function notifyDeleteCache($interval, DeletePublisher $publisherForDeletes): void
     {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
-            ->setDatetime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval))
-            ->trigger();
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            type: DELETE_TYPE_CACHE_BY_TIMESTAMP,
+            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
+        ));
     }
 
-    private function notifyDeleteSchedules($interval, Delete $queueForDeletes): void
+    private function notifyDeleteSchedules($interval, DeletePublisher $publisherForDeletes): void
     {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_SCHEDULES)
-            ->setDatetime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval))
-            ->trigger();
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            type: DELETE_TYPE_SCHEDULES,
+            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
+        ));
     }
 }

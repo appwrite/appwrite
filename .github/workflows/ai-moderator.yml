@@ -25,6 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: AI Moderator
-        uses: github/ai-moderator@v1
+        uses: github/ai-moderator@81159c370785e295c97461ade67d7c33576e9319 # v1.1.4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

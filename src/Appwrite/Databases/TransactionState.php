@@ -224,25 +224,6 @@ class TransactionState
     }
 
     /**
-     * Check if a document exists with transaction-aware logic
-     *
-     * @param Document $database Target database document
-     * @param string $collectionId Collection ID
-     * @param string $documentId Document ID
-     * @param string|null $transactionId Optional transaction ID
-     * @return bool True if document exists
-     */
-    public function documentExists(
-        Document $database,
-        string $collectionId,
-        string $documentId,
-        ?string $transactionId = null
-    ): bool {
-        $doc = $this->getDocument($database, $collectionId, $documentId, $transactionId);
-        return !$doc->isEmpty();
-    }
-
-    /**
      * Apply bulk update to documents in transaction state that match queries
      *
      * This allows bulk operations within a transaction to see each other's changes.

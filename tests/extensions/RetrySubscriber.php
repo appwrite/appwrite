@@ -16,13 +16,6 @@ class RetrySubscriber implements FailedSubscriber
      */
     private static array $retryCounts = [];
 
-    /**
-     * Track tests that should be retried
-     *
-     * @var array<string, array{test: TestMethod, remainingRetries: int, lastError: \Throwable|null}>
-     */
-    private static array $pendingRetries = [];
-
     public function notify(Failed $event): void
     {
         $this->handleTestFailure($event->test(), $event->throwable()->asString());
@@ -90,14 +83,5 @@ class RetrySubscriber implements FailedSubscriber
         } catch (\Throwable) {
             return 0;
         }
-    }
-
-    /**
-     * Reset retry counts between test runs (useful for testing)
-     */
-    public static function reset(): void
-    {
-        self::$retryCounts = [];
-        self::$pendingRetries = [];
     }
 }

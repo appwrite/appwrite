@@ -254,7 +254,7 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertFalse($response['body']['mfa']);
-        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertArrayHasKey('userId', $response['body']);
         $this->assertArrayHasKey('userName', $response['body']);
         $this->assertArrayHasKey('userEmail', $response['body']);
         $this->assertNotEmpty($response['body']['teamId']);

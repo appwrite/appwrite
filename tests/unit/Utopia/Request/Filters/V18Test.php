@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
@@ -7,7 +9,7 @@ use Appwrite\Utopia\Request\Filters\V18;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class V18Test extends TestCase
+final class V18Test extends TestCase
 {
     /**
      * @var Filter
@@ -23,17 +25,15 @@ class V18Test extends TestCase
     {
     }
 
-    public static function deleteMfaAuthenticatorProvider(): array
+    public static function deleteMfaAuthenticatorProvider(): \Iterator
     {
-        return [
-            'remove otp' => [
-                [
-                    'type' => 'totp',
-                    'otp' => 1230
-                ],
-                [
-                    'type' => 'totp'
-                ]
+        yield 'remove otp' => [
+            [
+                'type' => 'totp',
+                'otp' => 1230
+            ],
+            [
+                'type' => 'totp'
             ]
         ];
     }

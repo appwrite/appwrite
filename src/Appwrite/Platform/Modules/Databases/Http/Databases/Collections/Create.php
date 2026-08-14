@@ -9,6 +9,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Validator\Attributes as AttributesValidator;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Indexes as IndexesValidator;
@@ -32,7 +33,7 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
@@ -60,6 +61,7 @@ class Create extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'collection.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: $this->getSDKGroup(),
@@ -84,8 +86,8 @@ class Create extends Action
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
-            ->param('attributes', [], new ArrayList(new JSON(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, integer, float, boolean, datetime), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
-            ->param('indexes', [], new ArrayList(new JSON(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of attribute keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
+            ->param('attributes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
+            ->param('indexes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of attribute keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -98,7 +100,7 @@ class Create extends Action
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -106,6 +108,15 @@ class Create extends Action
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
+
+        // Resolve the data-plane database BEFORE writing the metadata row. For a
+        // dedicated product database this throws while provisioning (no DSN yet);
+        // writing the row first would leave an orphaned collection with no backing
+        // collection, which lists fine but fails every document operation.
+        /**
+         * @var Database $dbForDatabases
+         */
+        $dbForDatabases = $getDatabasesDB($database);
 
         try {
             $collection = $dbForProject->createDocument('database_' . $database->getSequence(), new Document([
@@ -125,11 +136,6 @@ class Create extends Action
         } catch (NotFoundException) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
-
-        /**
-         * @var Database $dbForDatabases
-         */
-        $dbForDatabases = $getDatabasesDB($database, $collection);
 
         $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $databaseKey = 'database_' . $database->getSequence();
@@ -176,7 +182,7 @@ class Create extends Action
         $indexDocuments = [];
         try {
             foreach ($indexes as $indexDef) {
-                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes);
+                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes, $dbForDatabases);
                 $collectionIndexes[] = $idxDoc['collection'];
                 $indexDocuments[] = $idxDoc['document'];
             }
@@ -257,6 +263,9 @@ class Create extends Action
         $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
         $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
+        // Reload the collection so its subquery filters include the schema created above.
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument($databaseKey, $collection->getId()));
+
         $queueForEvents
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
@@ -279,15 +288,12 @@ class Create extends Action
         Document $collection,
         array $attribute,
     ): array {
+        ['type' => $type, 'format' => $format, 'size' => $size] = Attribute::resolve($attribute);
+
         $key = $attribute['key'];
-        $type = $attribute['type'] === ColumnType::Float->value
-            ? ColumnType::Double->value
-            : $attribute['type'];
-        $size = $attribute['size'] ?? 0;
         $required = $attribute['required'] ?? false;
         $signed = $attribute['signed'] ?? true;
         $array = $attribute['array'] ?? false;
-        $format = $attribute['format'] ?? '';
         $formatOptions = [];
         $filters = $attribute['filters'] ?? [];
         $default = $attribute['default'] ?? null;
@@ -297,13 +303,15 @@ class Create extends Action
         }
 
         if (isset($attribute['min']) || isset($attribute['max'])) {
-            $format = $type === ColumnType::Integer->value
-                ? APP_DATABASE_ATTRIBUTE_INT_RANGE
-                : APP_DATABASE_ATTRIBUTE_FLOAT_RANGE;
+            $format = match($type) {
+                ColumnType::Integer->value => APP_DATABASE_ATTRIBUTE_INT_RANGE,
+                ColumnType::BigInteger->value => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
+                default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
+            };
 
             $formatOptions = [
-                'min' => $attribute['min'] ?? ($type === ColumnType::Integer->value ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
-                'max' => $attribute['max'] ?? ($type === ColumnType::Integer->value ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
+                'min' => $attribute['min'] ?? ($type === ColumnType::Integer->value || $type === ColumnType::BigInteger->value ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
+                'max' => $attribute['max'] ?? ($type === ColumnType::Integer->value || $type === ColumnType::BigInteger->value ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
             ];
         }
 
@@ -351,7 +359,7 @@ class Create extends Action
      *
      * @return array{collection: Document, document: Document}
      */
-    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments): array
+    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments, Database $dbForDatabases): array
     {
         $key = $indexDef['key'];
         $type = $indexDef['type'];
@@ -375,6 +383,11 @@ class Create extends Action
                 if ($attrArray === true) {
                     $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
                     $orders[$i] = null;
+
+                    if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
+                        // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
+                        throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
+                    }
                 }
             } else {
                 if (empty($lengths[$i])) {

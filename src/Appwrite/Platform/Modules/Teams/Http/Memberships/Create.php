@@ -4,8 +4,10 @@ namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
+use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Message\Messaging as MessagingMessage;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -15,8 +17,6 @@ use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -33,7 +33,9 @@ use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Locale\Locale;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -87,21 +89,24 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('locale')
-            ->inject('queueForMails')
-            ->inject('queueForMessaging')
+            ->inject('publisherForMails')
+            ->inject('publisherForMessaging')
             ->inject('queueForEvents')
             ->inject('timelimit')
             ->inject('usage')
             ->inject('plan')
+            ->inject('platform')
             ->inject('proofForPassword')
             ->inject('proofForToken')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, Password $proofForPassword, Token $proofForToken)
+    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
     {
-        $isAppUser = $user->isApp($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $invitee = new Document();
+        $hash = '';
 
         if (empty($url)) {
             if (! $isAppUser && ! $isPrivilegedUser) {
@@ -145,9 +150,6 @@ class Create extends Action
             }
         } elseif (! empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if (! $invitee->isEmpty() && ! empty($email) && $invitee->getAttribute('email', '') !== $email) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
-            }
         }
 
         if ($invitee->isEmpty()) { // Create new user if no user with same email found
@@ -169,13 +171,44 @@ class Create extends Action
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
+            $emailMetadata = [
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
+            ];
+
             try {
-                $userId = ID::unique();
-                $hash = $proofForPassword->hash($proofForPassword->generate());
-                $emailCanonical = new Email($email);
-            } catch (Throwable) {
-                $emailCanonical = null;
+                $parsedEmail = new Email($email);
+                $canonical = $parsedEmail->getCanonical();
+                $emailMetadata = [
+                    'emailCanonical' => $canonical,
+                    'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                    'emailIsCorporate' => $parsedEmail->isCorporate(),
+                    'emailIsDisposable' => $parsedEmail->isDisposable(),
+                    'emailIsFree' => $parsedEmail->isFree(),
+                ];
+            } catch (\Throwable) {
             }
+
+            if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+                throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+                throw new Exception(Exception::USER_EMAIL_FREE);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
+            }
+
+            $hash = $proofForPassword->hash($proofForPassword->generate());
 
             $userId = ID::unique();
 
@@ -209,11 +242,11 @@ class Create extends Action
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
-                'emailCanonical' => $emailCanonical?->getCanonical(),
-                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                'emailIsFree' => $emailCanonical?->isFree(),
+                'emailCanonical' => $emailMetadata['emailCanonical'],
+                'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
+                'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
+                'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
+                'emailIsFree' => $emailMetadata['emailIsFree'],
             ]);
 
             try {
@@ -294,11 +327,26 @@ class Create extends Action
             $url = Template::unParseURL($url);
             if (! empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+                if ($project->getId() === 'console') {
+                    $projectName = $platform['platformName'];
+                }
+
+                $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+                if (! (new FileName())->isValid($smtpBaseTemplate)) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+                }
+                $bodyTemplate = APP_CE_CONFIG_DIR . '/locale/templates/' . $smtpBaseTemplate . '.tpl';
+                if (! \is_readable($bodyTemplate)) {
+                    $smtpBaseTemplate = 'email-base';
+                    $bodyTemplate = APP_CE_CONFIG_DIR . '/locale/templates/email-base.tpl';
+                }
 
                 $body = $locale->getText('emails.invitation.body');
                 $preview = $locale->getText('emails.invitation.preview');
                 $subject = $locale->getText('emails.invitation.subject');
-                $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
+                $customTemplate =
+                    $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ??
+                    $project->getAttribute('templates', [])['email.invitation-' . $locale->fallback] ?? [];
 
                 $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/email-inner-base.tpl');
                 $message
@@ -315,7 +363,9 @@ class Create extends Action
 
                 $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
                 $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-                $replyTo = '';
+                $replyToEmail = '';
+                $replyToName = '';
+                $smtpConfig = [];
 
                 if ($smtpEnabled) {
                     if (! empty($smtp['senderEmail'])) {
@@ -324,16 +374,14 @@ class Create extends Action
                     if (! empty($smtp['senderName'])) {
                         $senderName = $smtp['senderName'];
                     }
-                    if (! empty($smtp['replyTo'])) {
-                        $replyTo = $smtp['replyTo'];
+                    // Includes backwards compatibility: fall back to legacy `replyTo` key
+                    $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+                    if (! empty($smtpReplyToEmail)) {
+                        $replyToEmail = $smtpReplyToEmail;
                     }
-
-                    $queueForMails
-                        ->setSmtpHost($smtp['host'] ?? '')
-                        ->setSmtpPort($smtp['port'] ?? '')
-                        ->setSmtpUsername($smtp['username'] ?? '')
-                        ->setSmtpPassword($smtp['password'] ?? '')
-                        ->setSmtpSecure($smtp['secure'] ?? '');
+                    if (! empty($smtp['replyToName'])) {
+                        $replyToName = $smtp['replyToName'];
+                    }
 
                     if (! empty($customTemplate)) {
                         if (! empty($customTemplate['senderEmail'])) {
@@ -342,18 +390,30 @@ class Create extends Action
                         if (! empty($customTemplate['senderName'])) {
                             $senderName = $customTemplate['senderName'];
                         }
-                        if (! empty($customTemplate['replyTo'])) {
-                            $replyTo = $customTemplate['replyTo'];
+                        // Includes backwards compatibility: fall back to legacy `replyTo` key
+                        $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                        if (! empty($customReplyToEmail)) {
+                            $replyToEmail = $customReplyToEmail;
+                        }
+                        if (! empty($customTemplate['replyToName'])) {
+                            $replyToName = $customTemplate['replyToName'];
                         }
 
                         $body = $customTemplate['message'] ?? '';
                         $subject = $customTemplate['subject'] ?? $subject;
                     }
 
-                    $queueForMails
-                        ->setSmtpReplyTo($replyTo)
-                        ->setSmtpSenderEmail($senderEmail)
-                        ->setSmtpSenderName($senderName);
+                    $smtpConfig = [
+                        'host' => $smtp['host'] ?? '',
+                        'port' => $smtp['port'] ?? '',
+                        'username' => $smtp['username'] ?? '',
+                        'password' => $smtp['password'] ?? '',
+                        'secure' => $smtp['secure'] ?? '',
+                        'replyToEmail' => $replyToEmail,
+                        'replyToName' => $replyToName,
+                        'senderEmail' => $senderEmail,
+                        'senderName' => $senderName,
+                    ];
                 }
 
                 $emailVariables = [
@@ -366,25 +426,40 @@ class Create extends Action
                     'project' => $projectName,
                 ];
 
-                $queueForMails
-                    ->setSubject($subject)
-                    ->setBody($body)
-                    ->setPreview($preview)
-                    ->setRecipient($invitee->getAttribute('email'))
-                    ->setName($invitee->getAttribute('name', ''))
-                    ->appendVariables($emailVariables)
-                    ->trigger();
+                if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+                    $emailVariables = [
+                        ...$emailVariables,
+                        'accentColor' => $platform['accentColor'],
+                        'logoUrl' => $platform['logoUrl'],
+                        'twitter' => $platform['twitterUrl'],
+                        'discord' => $platform['discordUrl'],
+                        'github' => $platform['githubUrl'],
+                        'terms' => $platform['termsUrl'],
+                        'privacy' => $platform['privacyUrl'],
+                        'platform' => $platform['platformName'],
+                    ];
+                }
+
+                $publisherForMails->enqueue(new MailMessage(
+                    project: $project,
+                    recipient: $invitee->getAttribute('email'),
+                    name: $invitee->getAttribute('name', ''),
+                    subject: $subject,
+                    template: MAIL_TEMPLATE_INVITATION,
+                    bodyTemplate: $bodyTemplate,
+                    body: $body,
+                    preview: $preview,
+                    smtp: $smtpConfig,
+                    variables: $emailVariables,
+                    customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
+                    platform: $platform,
+                ));
             } elseif (! empty($phone)) {
                 if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
 
                 $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/sms-base.tpl');
-
-                $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
-                if (! empty($customTemplate)) {
-                    $message = $customTemplate['message'];
-                }
 
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
@@ -396,21 +471,17 @@ class Create extends Action
                     ],
                 ]);
 
-                $queueForMessaging
-                    ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-                    ->setMessage($messageDoc)
-                    ->setRecipients([$phone])
-                    ->setProviderType('SMS');
+                $publisherForMessaging->enqueue(new MessagingMessage(
+                    type: MESSAGE_SEND_TYPE_INTERNAL,
+                    project: $project,
+                    message: $messageDoc,
+                    recipients: [$phone],
+                    providerType: 'SMS',
+                ));
 
-                $helper = PhoneNumberUtil::getInstance();
-                try {
-                    $countryCode = $helper->parse($phone)->getCountryCode();
-
-                    if (! empty($countryCode)) {
-                        $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                    }
-                } catch (NumberParseException $e) {
-                    // Ignore invalid phone number for country code stats
+                $countryCode = CallingCode::fromPhoneNumber($phone);
+                if (! empty($countryCode)) {
+                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
                 $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
             }

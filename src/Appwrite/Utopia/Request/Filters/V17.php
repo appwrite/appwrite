@@ -15,8 +15,6 @@ class V17 extends Filter
     protected const CHAR_SPACE = ' ';
     protected const CHAR_BRACKET_START = '[';
     protected const CHAR_BRACKET_END = ']';
-    protected const CHAR_PARENTHESES_START = '(';
-    protected const CHAR_PARENTHESES_END = ')';
     protected const CHAR_BACKSLASH = '\\';
 
     // Convert 1.4 params to 1.5

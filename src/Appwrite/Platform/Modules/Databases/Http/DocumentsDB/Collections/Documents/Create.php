@@ -15,7 +15,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 
 class Create extends DocumentCreate
 {
@@ -34,6 +34,12 @@ class Create extends DocumentCreate
         return UtopiaResponse::MODEL_DOCUMENT_LIST;
     }
 
+    protected function getSupportForEmptyDocument()
+    {
+        return true;
+    }
+
+
     public function __construct()
     {
         $this
@@ -45,6 +51,7 @@ class Create extends DocumentCreate
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -95,9 +102,9 @@ class Create extends DocumentCreate
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
-            ->param('data', [], new JSON(), 'Document data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
+            ->param('data', [], new JSONObject(), 'Document data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
+            ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -106,7 +113,7 @@ class Create extends DocumentCreate
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('authorization')

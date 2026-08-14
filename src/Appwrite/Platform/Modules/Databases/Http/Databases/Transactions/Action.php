@@ -9,8 +9,8 @@ abstract class Action extends DatabasesAction
     /**
      * The current API context (either 'table' or 'collection').
      */
-    private ?string $context = COLLECTIONS;
-    private ?string $databaseType = LEGACY;
+    private string $context = COLLECTIONS;
+    private string $databaseType = LEGACY;
 
     public function getDatabaseType(): string
     {
@@ -25,15 +25,8 @@ abstract class Action extends DatabasesAction
         return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_WRITES;
 
     }
-    protected function getDatabasesIdOperationWriteMetric(): string
-    {
-        if ($this->databaseType === LEGACY || $this->databaseType === TABLESDB) {
-            return METRIC_DATABASE_ID_OPERATIONS_WRITES;
-        }
-        return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_WRITES;
-    }
 
-    public function setHttpPath(string $path): DatabasesAction
+    public function setHttpPath(string $path): self
     {
         switch (true) {
             case str_contains($path, '/tablesdb'):
@@ -50,7 +43,8 @@ abstract class Action extends DatabasesAction
                 $this->databaseType = VECTORSDB;
                 break;
         }
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+        return $this;
     }
 
     /**

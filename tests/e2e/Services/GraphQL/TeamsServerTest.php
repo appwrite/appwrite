@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use PHPUnit\Framework\Attributes\Group;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 
-class TeamsServerTest extends Scope
+final class TeamsServerTest extends Scope
 {
     use ProjectCustom;
     use Base;
@@ -199,7 +201,7 @@ class TeamsServerTest extends Scope
     public function testUpdateTeamPrefs()
     {
         $team = $this->setupTeamWithPrefs();
-        $this->assertIsArray($team);
+        $this->assertNotEmpty($team);
     }
 
     public function testGetTeamPreferences()

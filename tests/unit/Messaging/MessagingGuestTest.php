@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
@@ -7,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
-class MessagingGuestTest extends TestCase
+final class MessagingGuestTest extends TestCase
 {
     public function testGuest(): void
     {
@@ -36,14 +38,14 @@ class MessagingGuestTest extends TestCase
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::guests()->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['roles'] = [Role::users()->toString()];
 
@@ -111,7 +113,7 @@ class MessagingGuestTest extends TestCase
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
+        $this->assertSame(1, $receivers[0]);
 
         $event['project'] = '2';
 

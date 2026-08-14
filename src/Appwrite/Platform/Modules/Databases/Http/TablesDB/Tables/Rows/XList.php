@@ -37,6 +37,7 @@ class XList extends DocumentXList
             ->desc('List rows')
             ->groups(['api', 'database'])
             ->label('scope', ['rows.read', 'documents.read'])
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
@@ -57,7 +58,7 @@ class XList extends DocumentXList
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID to read uncommitted changes within the transaction.', true, ['dbForProject'])
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-            ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for cached responses when caching is enabled for select queries. Must be between 0 and 86400 (24 hours).', true)
+            ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for caching list responses. Responses are stored in an in-memory key-value cache, keyed per project, table, schema version (columns and indexes), caller authorization roles, and the exact query — so users with different permissions never share cached entries. Schema changes invalidate cached entries automatically; row writes do not, so choose a TTL you are comfortable serving as stale data. Set to 0 to disable caching. Must be between 0 and 86400 (24 hours).', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -65,6 +66,7 @@ class XList extends DocumentXList
             ->inject('usage')
             ->inject('transactionState')
             ->inject('authorization')
+            ->inject('utopia')
             ->callback($this->action(...));
     }
 }

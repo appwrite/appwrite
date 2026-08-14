@@ -432,11 +432,11 @@
                 const secretKey = root?.querySelector('#secret-key');
                 const secretValue = secretKey?.value.trim() || '';
                 if (!secretKey || !secretValue) {
-                    setFieldError?.(secretKey, 'Please enter or generate a secret API key');
+                    setFieldError?.(secretKey, 'Please enter or generate a secret key');
                     return false;
                 }
                 if (secretValue.length > 64) {
-                    setFieldError?.(secretKey, 'Secret API key must be 1-64 characters');
+                    setFieldError?.(secretKey, 'Secret key must be 1-64 characters');
                     return false;
                 }
             }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Console;
 
 use Tests\E2E\Client;
@@ -7,7 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
-class ConsoleCustomServerTest extends Scope
+final class ConsoleCustomServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -23,5 +25,86 @@ class ConsoleCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    public function testListOAuth2Providers(): void
+    {
+        // Public endpoint: must succeed without admin authentication. Drop the
+        // headers from getHeaders() and only pass project + content-type.
+        $response = $this->client->call(Client::METHOD_GET, '/console/oauth2-providers', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertIsArray($response['body']['oAuth2Providers']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+
+        $providerIds = \array_column($response['body']['oAuth2Providers'], '$id');
+        $this->assertContains('github', $providerIds);
+        $this->assertNotContains('mock', $providerIds);
+    }
+
+    public function testListKeyScopes(): void
+    {
+        // Public endpoint: must succeed without admin authentication. Drop the
+        // headers from getHeaders() and only pass project + content-type.
+        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/project', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertIsArray($response['body']['scopes']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+
+        $scopeIds = \array_column($response['body']['scopes'], '$id');
+        $this->assertContains('users.read', $scopeIds);
+
+        $usersRead = null;
+        foreach ($response['body']['scopes'] as $scope) {
+            if ($scope['$id'] === 'users.read') {
+                $usersRead = $scope;
+                break;
+            }
+        }
+        $this->assertNotNull($usersRead);
+        $this->assertIsString($usersRead['description']);
+        $this->assertNotEmpty($usersRead['description']);
+        $this->assertArrayHasKey('deprecated', $usersRead);
+        $this->assertIsBool($usersRead['deprecated']);
+    }
+
+    public function testListOrganizationScopes(): void
+    {
+        // Public endpoint: must succeed without admin authentication. Drop the
+        // headers from getHeaders() and only pass project + content-type.
+        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/organization', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertIsArray($response['body']['scopes']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+
+        $scopeIds = \array_column($response['body']['scopes'], '$id');
+        $this->assertContains('projects.read', $scopeIds);
+
+        $projectsRead = null;
+        foreach ($response['body']['scopes'] as $scope) {
+            if ($scope['$id'] === 'projects.read') {
+                $projectsRead = $scope;
+                break;
+            }
+        }
+        $this->assertNotNull($projectsRead);
+        $this->assertIsString($projectsRead['description']);
+        $this->assertNotEmpty($projectsRead['description']);
+        $this->assertArrayHasKey('deprecated', $projectsRead);
+        $this->assertIsBool($projectsRead['deprecated']);
     }
 }

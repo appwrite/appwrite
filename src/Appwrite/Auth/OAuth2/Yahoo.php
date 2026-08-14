@@ -23,8 +23,9 @@ class Yahoo extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'sdct-r',
-        'sdpp-w',
+        'openid',
+        'profile',
+        'email',
     ];
 
     /**
@@ -155,7 +156,9 @@ class Yahoo extends OAuth2
     /**
      * Check if the OAuth email is verified
      *
-     * If present, the email is verified. This was verfied through a manual Yahoo sign up process
+     * Yahoo is an OpenID Connect provider and advertises the `email_verified`
+     * claim on its userinfo endpoint, so use that instead of merely assuming a
+     * returned address is confirmed.
      *
      * @param string $accessToken
      *
@@ -163,9 +166,9 @@ class Yahoo extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $email = $this->getUserEmail($accessToken);
+        $user = $this->getUser($accessToken);
 
-        return !empty($email);
+        return $user['email_verified'] ?? false;
     }
 
     /**

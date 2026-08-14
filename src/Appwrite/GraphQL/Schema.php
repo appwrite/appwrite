@@ -32,10 +32,6 @@ class Schema
         array $urls,
         array $params,
     ): GQLSchema {
-        Http::setResource('utopia:graphql', static function () use ($utopia) {
-            return $utopia;
-        });
-
         if (!empty(self::$schema)) {
             return self::$schema;
         }
@@ -88,13 +84,13 @@ class Schema
     protected static function api(Http $utopia, callable $complexity): array
     {
         Mapper::init($utopia
-            ->getResource('response')
+            ->context()->get('response')
             ->getModels());
 
         $queries = [];
         $mutations = [];
 
-        foreach ($utopia->getRoutes() as $routes) {
+        foreach ($utopia->getRoutes() as $httpMethod => $routes) {
             foreach ($routes as $route) {
                 /** @var Route $route */
 
@@ -113,8 +109,8 @@ class Schema
                     $methodName = $method->getMethodName();
                     $name = $namespace . \ucfirst($methodName);
 
-                    foreach (Mapper::route($utopia, $route, $method, $complexity) as $field) {
-                        switch ($route->getMethod()) {
+                    foreach (Mapper::route($utopia, $route, $method, $httpMethod, $complexity) as $field) {
+                        switch ($httpMethod) {
                             case 'GET':
                                 $queries[$name] = $field;
                                 break;
@@ -125,7 +121,7 @@ class Schema
                                 $mutations[$name] = $field;
                                 break;
                             default:
-                                throw new \Exception("Unsupported method: {$route->getMethod()}");
+                                throw new \Exception("Unsupported method: {$httpMethod}");
                         }
                     }
                 }

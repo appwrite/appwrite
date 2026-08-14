@@ -44,6 +44,7 @@ class Update extends CollectionAction
             ->label('event', 'databases.[databaseId].collections.[collectionId].update')
             ->label('audits.event', 'collection.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: 'collections',
@@ -76,7 +77,7 @@ class Update extends CollectionAction
     public function action(string $databaseId, string $collectionId, ?string $name, ?int $dimensions, ?array $permissions, bool $documentSecurity, ?bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 

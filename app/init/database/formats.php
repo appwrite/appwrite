@@ -36,6 +36,13 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function ($attribute) {
     return new Range($min, $max, Range::TYPE_INTEGER);
 }, ColumnType::Integer);
 
+// BigInt uses a dedicated bigintRange format name to avoid clobbering `intRange`.
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_BIGINT_RANGE, function ($attribute) {
+    $min = $attribute['formatOptions']['min'] ?? -INF;
+    $max = $attribute['formatOptions']['max'] ?? INF;
+    return new Range($min, $max, Range::TYPE_INTEGER);
+}, ColumnType::BigInteger);
+
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
     $min = \floatval($attribute['formatOptions']['min'] ?? $attribute['min'] ?? -INF);
     $max = \floatval($attribute['formatOptions']['max'] ?? $attribute['max'] ?? INF);

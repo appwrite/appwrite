@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Webhooks\Http\Webhooks;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -16,7 +15,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Get extends Base
+class Get extends Action
 {
     use HTTP;
 
@@ -72,6 +71,8 @@ class Get extends Base
         if ($webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
+
+        $webhook->removeAttribute('signatureKey');
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     }

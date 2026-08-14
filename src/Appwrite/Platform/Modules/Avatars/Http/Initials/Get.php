@@ -44,6 +44,7 @@ class Get extends Action
                 description: '/docs/references/avatars/get-initials.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -90,7 +91,7 @@ class Get extends Action
             }
         }
 
-        $rand = \substr($code, -1);
+        $rand = (int) \substr((string) $code, -1);
 
         $rand = ($rand > \count($themes) - 1) ? $rand % \count($themes) : $rand;
 

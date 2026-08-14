@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
@@ -7,7 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
-class AvatarsTest extends Scope
+final class AvatarsTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -31,7 +33,7 @@ class AvatarsTest extends Scope
 
         $this->assertEquals(200, $creditCardIcon['headers']['status-code']);
         $this->assertNotEmpty($creditCardIcon['body']);
-        $this->assertStringContainsString('image/', $creditCardIcon['headers']['content-type']);
+        $this->assertStringContainsString('image/', (string) $creditCardIcon['headers']['content-type']);
 
         return $creditCardIcon['body'];
     }
@@ -54,7 +56,7 @@ class AvatarsTest extends Scope
 
         $this->assertEquals(200, $browserIcon['headers']['status-code']);
         $this->assertNotEmpty($browserIcon['body']);
-        $this->assertStringContainsString('image/', $browserIcon['headers']['content-type']);
+        $this->assertStringContainsString('image/', (string) $browserIcon['headers']['content-type']);
 
         return $browserIcon['body'];
     }
@@ -77,7 +79,7 @@ class AvatarsTest extends Scope
 
         $this->assertEquals(200, $countryFlag['headers']['status-code']);
         $this->assertNotEmpty($countryFlag['body']);
-        $this->assertStringContainsString('image/', $countryFlag['headers']['content-type']);
+        $this->assertStringContainsString('image/', (string) $countryFlag['headers']['content-type']);
 
         return $countryFlag['body'];
     }
@@ -89,18 +91,25 @@ class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
+                // Same URL as REST AvatarsBase::testGetImage (Google logo fetches flake in CI)
+                'url' => 'https://appwrite.io/images/open-graph/website.avif',
             ],
         ];
 
-        $image = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
+        /**
+         * Wrapped in assertEventually to handle transient external URL failures
+         */
+        $image = null;
+        $this->assertEventually(function () use ($projectId, $graphQLPayload, &$image) {
+            $image = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(200, $image['headers']['status-code']);
-        $this->assertNotEmpty($image['body']);
-        $this->assertStringContainsString('image/', $image['headers']['content-type']);
+            $this->assertEquals(200, $image['headers']['status-code']);
+            $this->assertNotEmpty($image['body']);
+            $this->assertStringContainsString('image/', (string) $image['headers']['content-type']);
+        }, 30_000, 2_000);
 
         return $image['body'];
     }
@@ -123,7 +132,7 @@ class AvatarsTest extends Scope
 
         $this->assertEquals(200, $favicon['headers']['status-code']);
         $this->assertNotEmpty($favicon['body']);
-        $this->assertStringContainsString('image/', $favicon['headers']['content-type']);
+        $this->assertStringContainsString('image/', (string) $favicon['headers']['content-type']);
 
         return $favicon['body'];
     }
@@ -146,7 +155,7 @@ class AvatarsTest extends Scope
 
         $this->assertEquals(200, $qrCode['headers']['status-code']);
         $this->assertNotEmpty($qrCode['body']);
-        $this->assertStringContainsString('image/', $qrCode['headers']['content-type']);
+        $this->assertStringContainsString('image/', (string) $qrCode['headers']['content-type']);
 
         return $qrCode['body'];
     }
@@ -169,7 +178,7 @@ class AvatarsTest extends Scope
 
         $this->assertEquals(200, $initials['headers']['status-code']);
         $this->assertNotEmpty($initials['body']);
-        $this->assertStringContainsString('image/', $initials['headers']['content-type']);
+        $this->assertStringContainsString('image/', (string) $initials['headers']['content-type']);
 
         return $initials['body'];
     }
@@ -201,7 +210,7 @@ class AvatarsTest extends Scope
             echo "Response body: " . print_r($screenshot['body'], true) . "\n";
         }
 
-        $this->assertStringContainsString('image/', $screenshot['headers']['content-type']);
+        $this->assertStringContainsString('image/', (string) $screenshot['headers']['content-type']);
 
         return $screenshot['body'];
     }
@@ -232,7 +241,7 @@ class AvatarsTest extends Scope
             echo "Response body: " . print_r($screenshot['body'], true) . "\n";
         }
 
-        $this->assertStringContainsString('image/', $screenshot['headers']['content-type']);
+        $this->assertStringContainsString('image/', (string) $screenshot['headers']['content-type']);
 
         return $screenshot['body'];
     }
@@ -284,7 +293,7 @@ class AvatarsTest extends Scope
             echo "Response body: " . print_r($screenshot['body'], true) . "\n";
         }
 
-        $this->assertStringContainsString('image/', $screenshot['headers']['content-type']);
+        $this->assertStringContainsString('image/', (string) $screenshot['headers']['content-type']);
 
         return $screenshot['body'];
     }
@@ -311,7 +320,7 @@ class AvatarsTest extends Scope
 
         $this->assertEquals(200, $screenshot['headers']['status-code']);
         $this->assertNotEmpty($screenshot['body']);
-        $this->assertStringContainsString('image/', $screenshot['headers']['content-type']);
+        $this->assertStringContainsString('image/', (string) $screenshot['headers']['content-type']);
 
         return $screenshot['body'];
     }
@@ -350,7 +359,7 @@ class AvatarsTest extends Scope
         }
 
         // If not an image, verify it's a known error (avatar_remote_url_failed)
-        $this->assertStringContainsString('application/json', $screenshot['headers']['content-type']);
+        $this->assertStringContainsString('application/json', (string) $screenshot['headers']['content-type']);
 
         return '';
     }
@@ -381,7 +390,7 @@ class AvatarsTest extends Scope
         $this->assertEquals(200, $screenshot['headers']['status-code']);
         $this->assertArrayHasKey('errors', $screenshot['body']);
         $this->assertNotEmpty($screenshot['body']['errors']);
-        $this->assertStringContainsString('Invalid `permissions` param', $screenshot['body']['errors'][0]['message']);
+        $this->assertStringContainsString('Invalid `permissions` param', (string) $screenshot['body']['errors'][0]['message']);
 
         return $screenshot['body'];
     }

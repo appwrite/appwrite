@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL\TablesDB;
 
 use Exception;
@@ -16,7 +18,7 @@ use Utopia\Database\Query;
 use Utopia\Database\RelationType;
 use Utopia\Query\Schema\ForeignKeyAction;
 
-class DatabaseServerTest extends Scope
+final class DatabaseServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -651,42 +653,6 @@ class DatabaseServerTest extends Scope
         return self::$cachedRelationshipColumnData[$cacheKey];
     }
 
-    protected function setupUpdatedRelationshipColumn(): array
-    {
-        $data = $this->setupRelationshipColumn();
-        $projectId = $this->getProject()['$id'];
-
-        $databaseId = $data['database']['_id'];
-        $tableId = $data['table2']['_id'];
-
-        $this->assertEventually(function () use ($databaseId, $tableId) {
-            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/actors', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals('available', $response['body']['status']);
-        }, 240000, 500);
-
-        $query = $this->getQuery(self::UPDATE_RELATIONSHIP_COLUMN);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $databaseId,
-                'tableId' => $tableId,
-                'key' => 'actors',
-                'onDelete' => ForeignKeyAction::Cascade->value,
-            ]
-        ];
-
-        $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        return $data;
-    }
-
     protected function setupIPColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -717,43 +683,6 @@ class DatabaseServerTest extends Scope
         return self::$cachedIPColumnData[$cacheKey];
     }
 
-    protected function setupUpdatedIPColumn(): array
-    {
-        $data = $this->setupIPColumn();
-        $projectId = $this->getProject()['$id'];
-
-        $databaseId = $data['database']['_id'];
-        $tableId = $data['table']['_id'];
-
-        $this->assertEventually(function () use ($databaseId, $tableId) {
-            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/ip', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals('available', $response['body']['status']);
-        }, 240000, 500);
-
-        $query = $this->getQuery(self::UPDATE_IP_COLUMN);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $databaseId,
-                'tableId' => $tableId,
-                'key' => 'ip',
-                'required' => false,
-                'default' => '127.0.0.1'
-            ]
-        ];
-
-        $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        return $data;
-    }
-
     protected function setupURLColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -782,43 +711,6 @@ class DatabaseServerTest extends Scope
 
         self::$cachedURLColumnData[$cacheKey] = $data;
         return self::$cachedURLColumnData[$cacheKey];
-    }
-
-    protected function setupUpdatedURLColumn(): array
-    {
-        $data = $this->setupURLColumn();
-        $projectId = $this->getProject()['$id'];
-
-        $databaseId = $data['database']['_id'];
-        $tableId = $data['table']['_id'];
-
-        $this->assertEventually(function () use ($databaseId, $tableId) {
-            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/url', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals('available', $response['body']['status']);
-        }, 240000, 500);
-
-        $query = $this->getQuery(self::UPDATE_URL_COLUMN);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $databaseId,
-                'tableId' => $tableId,
-                'key' => 'url',
-                'required' => false,
-                'default' => 'https://cloud.appwrite.io'
-            ]
-        ];
-
-        $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        return $data;
     }
 
     protected function setupIndex(): array
@@ -1372,9 +1264,9 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($column['body']['data']);
         $this->assertIsArray($column['body']['data']['tablesDBUpdateFloatColumn']);
         $this->assertFalse($column['body']['data']['tablesDBUpdateFloatColumn']['required']);
-        $this->assertEquals(100.0, $column['body']['data']['tablesDBUpdateFloatColumn']['min']);
-        $this->assertEquals(1000000.0, $column['body']['data']['tablesDBUpdateFloatColumn']['max']);
-        $this->assertEquals(2500.0, $column['body']['data']['tablesDBUpdateFloatColumn']['default']);
+        $this->assertEqualsWithDelta(100.0, $column['body']['data']['tablesDBUpdateFloatColumn']['min'], PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(1000000.0, $column['body']['data']['tablesDBUpdateFloatColumn']['max'], PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(2500.0, $column['body']['data']['tablesDBUpdateFloatColumn']['default'], PHP_FLOAT_EPSILON);
         $this->assertEquals(200, $column['headers']['status-code']);
     }
 
@@ -2392,7 +2284,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($row['body']['data']);
         $row = $row['body']['data']['tablesDBUpdateRow'];
         $this->assertIsArray($row);
-        $this->assertStringContainsString('New Row Name', $row['data']);
+        $this->assertStringContainsString('New Row Name', (string) $row['data']);
     }
 
     //    /**

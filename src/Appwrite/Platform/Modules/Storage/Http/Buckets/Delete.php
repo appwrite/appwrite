@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets;
 
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -36,6 +37,7 @@ class Delete extends Action
             ->label('audits.event', 'bucket.delete')
             ->label('event', 'buckets.[bucketId].delete')
             ->label('audits.resource', 'bucket/{request.bucketId}')
+            ->label('usage.resource', 'bucket/{request.bucketId}')
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'buckets',
@@ -53,7 +55,7 @@ class Delete extends Action
             ->param('bucketId', '', new UID(), 'Bucket unique ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
@@ -62,7 +64,7 @@ class Delete extends Action
         string $bucketId,
         Response $response,
         Database $dbForProject,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Event $queueForEvents
     ) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
@@ -75,9 +77,11 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove bucket from DB');
         }
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($bucket);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_DOCUMENT,
+            document: $bucket,
+        ));
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())

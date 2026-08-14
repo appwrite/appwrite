@@ -7,11 +7,6 @@ use Appwrite\Utopia\Response\Model;
 
 class Key extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = true; // Public because reused for more key types
-
     public function __construct()
     {
         $this

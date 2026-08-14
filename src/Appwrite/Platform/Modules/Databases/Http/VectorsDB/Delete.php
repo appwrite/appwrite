@@ -30,6 +30,7 @@ class Delete extends DatabaseDelete
             ->label('event', 'databases.[databaseId].delete')
             ->label('audits.event', 'database.delete')
             ->label('audits.resource', 'database/{request.databaseId}')
+            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: 'vectorsdb',
@@ -47,7 +48,7 @@ class Delete extends DatabaseDelete
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('usage')
             ->callback($this->action(...));

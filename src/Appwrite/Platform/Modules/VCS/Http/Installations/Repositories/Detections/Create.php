@@ -8,6 +8,8 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
@@ -46,11 +48,10 @@ use Utopia\Detector\Detector\Framework;
 use Utopia\Detector\Detector\Packager;
 use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -91,9 +92,10 @@ class Create extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
-            ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
+            ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
             ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
-            ->inject('gitHub')
+            ->inject('vcsFactory')
+            ->inject('installationTokens')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -104,7 +106,8 @@ class Create extends Action
         string $providerRepositoryId,
         string $type,
         string $providerRootDirectory,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -114,14 +117,13 @@ class Create extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $vcs = $vcsFactory->fromInstallation($installation);
 
-        $owner = $github->getOwnerName($providerInstallationId);
+        $owner = $vcs->getOwnerName($providerInstallationId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -129,9 +131,9 @@ class Create extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $files = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
+        $files = $vcs->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
         $files = \array_column($files, 'name');
-        $languages = $github->listRepositoryLanguages($owner, $repositoryName);
+        $languages = $vcs->listRepositoryLanguages($owner, $repositoryName);
 
         $detector = new Packager();
         foreach ($files as $file) {
@@ -148,7 +150,7 @@ class Create extends Action
         if ($type === 'framework') {
             $packages = '';
             try {
-                $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
+                $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
                 $packages = $contentResponse['content'] ?? '';
             } catch (FileNotFound $e) {
                 // Continue detection without package.json
@@ -278,9 +280,9 @@ class Create extends Action
             }
 
             $wg->add();
-            go(function () use ($github, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
+            go(function () use ($vcs, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
                 try {
-                    $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
+                    $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
                     $envFile = $contentResponse['content'] ?? '';
 
                     $configAdapter = new ConfigDotenv();
@@ -307,6 +309,7 @@ class Create extends Action
             ];
         }
 
+        $output->setAttribute('type', $type);
         $output->setAttribute('variables', $variables);
 
         $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);

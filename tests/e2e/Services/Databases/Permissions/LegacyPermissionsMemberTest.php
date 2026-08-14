@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Databases\Permissions;
 
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -13,7 +15,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class LegacyPermissionsMemberTest extends Scope
+final class LegacyPermissionsMemberTest extends Scope
 {
     use DatabasesPermissionsBase;
     use ProjectCustom;
@@ -31,22 +33,20 @@ class LegacyPermissionsMemberTest extends Scope
         ];
     }
 
-    public static function permissionsProvider(): array
+    public static function permissionsProvider(): \Iterator
     {
-        return [
-            [[Permission::read(Role::any())], 1, 1, 1],
-            [[Permission::read(Role::users())], 1, 1, 1],
-            [[Permission::read(Role::user(ID::custom('random')))], 1, 1, 0],
-            [[Permission::read(Role::user(ID::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))], 1, 1, 0],
-            [[Permission::read(Role::user(ID::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 1, 1, 0],
-            [[Permission::read(Role::user(ID::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 1, 1, 0],
-            [[Permission::update(Role::any()), Permission::delete(Role::any())], 1, 1, 0],
-            [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], 1, 1, 1],
-            [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())], 1, 1, 1],
-            [[Permission::read(Role::user(ID::custom('user1')))], 1, 1, 1],
-            [[Permission::read(Role::user(ID::custom('user1'))), Permission::read(Role::user(ID::custom('user1')))], 1, 1, 1],
-            [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())], 1, 1, 1],
-        ];
+        yield [[Permission::read(Role::any())], 1, 1, 1];
+        yield [[Permission::read(Role::users())], 1, 1, 1];
+        yield [[Permission::read(Role::user(ID::custom('random')))], 1, 1, 0];
+        yield [[Permission::read(Role::user(ID::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))], 1, 1, 0];
+        yield [[Permission::read(Role::user(ID::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 1, 1, 0];
+        yield [[Permission::read(Role::user(ID::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 1, 1, 0];
+        yield [[Permission::update(Role::any()), Permission::delete(Role::any())], 1, 1, 0];
+        yield [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], 1, 1, 1];
+        yield [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())], 1, 1, 1];
+        yield [[Permission::read(Role::user(ID::custom('user1')))], 1, 1, 1];
+        yield [[Permission::read(Role::user(ID::custom('user1'))), Permission::read(Role::user(ID::custom('user1')))], 1, 1, 1];
+        yield [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())], 1, 1, 1];
     }
 
     /**

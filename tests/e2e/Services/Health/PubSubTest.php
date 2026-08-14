@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Health;
 
-class PubSubTest extends HealthBase
+final class PubSubTest extends HealthBase
 {
     public function testPubSubSuccess(): void
     {

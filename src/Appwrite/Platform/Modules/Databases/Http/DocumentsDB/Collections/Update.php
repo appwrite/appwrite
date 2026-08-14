@@ -38,6 +38,7 @@ class Update extends CollectionUpdate
             ->label('event', 'databases.[databaseId].collections.[collectionId].update')
             ->label('audits.event', 'collection.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'collections',
@@ -58,6 +59,7 @@ class Update extends CollectionUpdate
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
+            ->param('purge', false, new Boolean(true), 'When true, purge all cached list responses for this collection as part of the update. Use this to force readers to see fresh data immediately instead of waiting for the cache TTL to expire.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

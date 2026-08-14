@@ -40,9 +40,6 @@ class Screenshot extends Action
                 throw new \Exception('Invalid JSON in --variables flag');
             }
         }
-        if ($variables === null) {
-            throw new \Exception('Invalid JSON in --variables flag');
-        }
 
         $templates = Config::getParam('templates-site', []);
 

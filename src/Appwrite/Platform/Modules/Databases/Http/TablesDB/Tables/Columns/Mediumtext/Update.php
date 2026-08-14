@@ -34,11 +34,12 @@ class Update extends MediumtextUpdate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/mediumtext/:key')
             ->desc('Update mediumtext column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),

@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Health;
 
-class StorageTest extends HealthBase
+final class StorageTest extends HealthBase
 {
     public function testStorage(): void
     {

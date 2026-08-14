@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Pool;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -19,9 +20,7 @@ use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
-use Utopia\DSN\DSN;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -36,108 +35,7 @@ class Create extends Action
     {
         // TODO: use database worker for for creating the v2 schema if not present
         // it is considered that the v2 metadata schema is already created during server start in the http.php
-        return $this->constructDatabaseDSNFromProjectDatabase($this->getDatabaseType(), $project->getAttribute('region'), $project->getAttribute('database'));
-    }
-
-    private function constructDatabaseDSNFromProjectDatabase(string $databasetype, $region, ?string $dsn = null): string
-    {
-        $databases = [];
-        $databaseKeys = [];
-        /**
-         * @var string|null $databaseOverride
-        */
-        $databaseOverride = '';
-        $dbScheme = '';
-        $databaseSharedTables = [];
-        $databaseSharedTablesV1 = [];
-        $databaseSharedTablesV2 = [];
-        $projectSharedTables = [];
-        $projectSharedTablesV1 = [];
-        $projectSharedTablesV2 = [];
-
-        switch ($databasetype) {
-            case DOCUMENTSDB:
-                $databases = Config::getParam('pools-documentsdb', []);
-                $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
-                $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
-                $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
-                $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
-                $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
-                break;
-            case VECTORSDB:
-                $databases = Config::getParam('pools-vectorsdb', []);
-                $databaseKeys = System::getEnv('_APP_DATABASE_VECTORSDB_KEYS', '');
-                $databaseOverride = System::getEnv('_APP_DATABASE_VECTORSDB_OVERRIDE');
-                $dbScheme = System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql');
-                $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
-                $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', ''));
-                break;
-            default:
-                // legacy/tablesdb
-                // it is already created during create project
-                return $dsn;
-        }
-
-        $isSharedTablesV1 = false;
-        $isSharedTablesV2 = false;
-
-        if (!empty($dsn)) {
-            try {
-                $parsedDsn = new DSN($dsn);
-                $dsnHost = $parsedDsn->getHost();
-            } catch (\InvalidArgumentException) {
-                $dsnHost = $dsn;
-            }
-
-            $projectSharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-            $projectSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-            $projectSharedTablesV2 = \array_diff($projectSharedTables, $projectSharedTablesV1);
-            $isSharedTablesV1 = \in_array($dsnHost, $projectSharedTablesV1);
-            $isSharedTablesV2 = \in_array($dsnHost, $projectSharedTablesV2);
-        }
-
-        if ($region !== 'default') {
-            $keys = explode(',', $databaseKeys);
-            $databases = array_filter($keys, function ($value) use ($region) {
-                return str_contains($value, $region);
-            });
-        }
-        $databaseSharedTablesV2 = \array_diff($databaseSharedTables, $databaseSharedTablesV1);
-
-        $index = \array_search($databaseOverride, $databases);
-        if ($index !== false) {
-            $selectedDsn = $databases[$index];
-        } else {
-            if (!empty($dsn)) {
-                $beforeFilter = \array_values($databases);
-                if ($isSharedTablesV1) {
-                    $databases = array_filter($databases, fn ($value) => \in_array($value, $databaseSharedTablesV1));
-                } elseif ($isSharedTablesV2) {
-                    $databases = array_filter($databases, fn ($value) => \in_array($value, $databaseSharedTablesV2));
-                } else {
-                    $databases = array_filter($databases, fn ($value) => !\in_array($value, $databaseSharedTables));
-                }
-            }
-            $selectedDsn = !empty($databases) ? $databases[array_rand($databases)] : '';
-        }
-
-        if (\in_array($selectedDsn, $databaseSharedTables)) {
-            $schema = 'appwrite';
-            $database = 'appwrite';
-            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $selectedDsn = $schema . '://' . $selectedDsn . '?database=' . $database;
-
-            if (!empty($namespace)) {
-                $selectedDsn .= '&namespace=' . $namespace;
-            }
-        }
-        try {
-            new DSN($selectedDsn);
-        } catch (\InvalidArgumentException) {
-            $selectedDsn = $dbScheme.'://' . $selectedDsn;
-        }
-
-        return $selectedDsn;
+        return Pool::dsn($this->getDatabaseType(), (string) $project->getAttribute('region', 'default'), $project->getAttribute('database'));
     }
 
     protected function getDatabaseCollection()
@@ -159,6 +57,7 @@ class Create extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'database.create')
             ->label('audits.resource', 'database/{response.$id}')
+            ->label('usage.resource', 'database/{response.$id}')
             ->label('sdk', [
                 new Method(
                     namespace: 'databases',
@@ -201,7 +100,8 @@ class Create extends Action
                 'enabled' => $enabled,
                 'search' => implode(' ', [$databaseId, $name]),
                 'type' => $this->getDatabaseType(),
-                'database' => $this->getDatabaseDSN($project)
+                'database' => $this->getDatabaseDSN($project),
+                'status' => 'ready',
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$databaseId]);
@@ -211,6 +111,24 @@ class Create extends Action
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
+        $this->createMetadataCollection($dbForProject, $database);
+
+        $queueForEvents->setParam('databaseId', $database->getId());
+
+        $response
+            ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
+            ->dynamic($database, UtopiaResponse::MODEL_DATABASE);
+    }
+
+    /**
+     * Create the per-database metadata collection (`database_{internalId}`) that holds
+     * the database's collection definitions. Extracted so product overrides that
+     * provision a backend asynchronously (e.g. documentsdb, vectorsdb) can initialise
+     * the metadata exactly like a standard database create instead of leaving it
+     * uninitialised, which makes the first collection create fail.
+     */
+    protected function createMetadataCollection(Database $dbForProject, Document $database): void
+    {
         $collections = $this->getDatabaseCollection();
         if (empty($collections)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
@@ -222,19 +140,11 @@ class Create extends Action
         try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
         } catch (DuplicateException) {
-            throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$databaseId]);
+            throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$database->getId()]);
         } catch (IndexException $e) {
             throw new Exception(Exception::INDEX_INVALID);
         } catch (LimitException) {
-            // TODO: @Jake, how do we handle this collection/table?
-            // there's no context awareness at this level on what the api is.
-            throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED, params: [$databaseId]);
+            throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED, params: [$database->getId()]);
         }
-
-        $queueForEvents->setParam('databaseId', $database->getId());
-
-        $response
-            ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
-            ->dynamic($database, UtopiaResponse::MODEL_DATABASE);
     }
 }

@@ -8,7 +8,11 @@ class DetectionRuntime extends Detection
 {
     public function __construct()
     {
-        parent::__construct();
+        $this->conditions = [
+            'type' => 'runtime',
+        ];
+
+        parent::__construct('runtime');
 
         $this
             ->addRule('runtime', [

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Point;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
@@ -47,6 +47,7 @@ class Create extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'attribute.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -71,13 +72,13 @@ class Create extends Action
             ->param('default', null, new Nullable(new Spatial(ColumnType::Point->value)), 'Default value for attribute when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when attribute is required.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         if (!$dbForProject->getAdapter() instanceof SpatialFeature) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Spatial columns are not supported by this database.');
@@ -88,7 +89,7 @@ class Create extends Action
             'type' => ColumnType::Point->value,
             'required' => $required,
             'default' => $default,
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
+        ]), $response, $dbForProject, $publisherForDatabase, $queueForEvents, $authorization);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)

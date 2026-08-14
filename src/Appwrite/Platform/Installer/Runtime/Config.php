@@ -27,7 +27,7 @@ final class Config
     private bool $isLocal = false;
     private ?string $hostPath = null;
     private ?string $lockedDatabase = null;
-    private array $enabledDatabases = ['mongodb', 'mariadb'];
+    private array $enabledDatabases = ['postgresql', 'mariadb', 'mongodb'];
     private array $vars = [];
 
     public function __construct(array $values = [])
@@ -218,7 +218,7 @@ final class Config
     }
 
     /**
-     * @param string[] $value
+     * @param array<mixed> $value
      */
     public function setEnabledDatabases(array $value): void
     {

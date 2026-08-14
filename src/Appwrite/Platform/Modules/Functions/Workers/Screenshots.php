@@ -3,24 +3,26 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
+use Appwrite\Screenshots\Client;
 use Exception;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\Fetch\Client as FetchClient;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
-
-use function Swoole\Coroutine\batch;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Counter;
 
 class Screenshots extends Action
 {
@@ -43,6 +45,8 @@ class Screenshots extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('deviceForFiles')
+            ->inject('telemetry')
+            ->inject('screenshots')
             ->callback($this->action(...));
     }
 
@@ -52,19 +56,23 @@ class Screenshots extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         Document $project,
-        Device $deviceForFiles
+        Device $deviceForFiles,
+        Telemetry $telemetry,
+        Client $screenshots
     ): void {
-        Console::log('Screenshot action started');
+        Span::add('project.id', $project->getId());
 
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new \Exception('Missing payload');
         }
 
-        Console::log('Site screenshot started');
+        $screenshotMessage = Screenshot::fromArray($payload);
+        $counter = $telemetry->createCounter('worker.screenshots.capture');
 
-        $deploymentId = $payload['deploymentId'] ?? null;
+        $deploymentId = $screenshotMessage->deploymentId;
+        Span::add('deployment.id', $deploymentId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->isEmpty()) {
@@ -72,11 +80,14 @@ class Screenshots extends Action
         }
 
         $siteId = $deployment->getAttribute('resourceId');
+        Span::add('site.id', $siteId);
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {
             throw new \Exception('Site not found');
         }
+
+        Span::add('site.framework', $site->getAttribute('framework', ''));
 
         // Realtime preparation
         $event = "sites.[siteId].deployments.[deploymentId].update";
@@ -101,10 +112,6 @@ class Screenshots extends Action
                 throw new \Exception("Rule for deployment not found");
             }
 
-            $client = new FetchClient();
-            $client->setTimeout(\intval($site->getAttribute('timeout', '15')) * 1000);
-            $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
-
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
             if ($bucket->isEmpty()) {
@@ -116,19 +123,6 @@ class Screenshots extends Action
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                 $routerHost = "$protocol://{$rule->getAttribute('domain')}";
             }
-
-            $configs = [
-                'screenshotLight' => [
-                    'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                    'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=light',
-                    'theme' => 'light'
-                ],
-                'screenshotDark' => [
-                    'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                    'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=dark',
-                    'theme' => 'dark'
-                ],
-            ];
 
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
             $apiKey = $jwtObj->encode([
@@ -143,9 +137,6 @@ class Screenshots extends Action
                     str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS),
                     str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
                     str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
-                    str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
-                    str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
-                    str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
                 ],
                 'bannerDisabled' => true,
                 'projectCheckDisabled' => true,
@@ -153,60 +144,35 @@ class Screenshots extends Action
                 'deploymentStatusIgnored' => true
             ]);
 
-            $screenshotError = null;
-            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $client, &$screenshotError) {
-                return function () use ($key, $configs, $apiKey, $site, $client, &$screenshotError) {
-                    try {
-                        $config = $configs[$key];
+            $headers = [
+                'x-appwrite-hostname' => $rule->getAttribute('domain'),
+                'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            ];
 
-                        $config['headers'] = \array_merge($config['headers'] ?? [], [
-                            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
-                        ]);
-                        $config['sleep'] = 3000;
+            $framework = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')] ?? null;
+            $sleep = $framework['screenshotSleep'] ?? 3000;
 
-                        $frameworks = Config::getParam('frameworks', []);
-                        $framework = $frameworks[$site->getAttribute('framework', '')] ?? null;
-                        if (!is_null($framework)) {
-                            $config['sleep'] = $framework['screenshotSleep'];
-                        }
-
-                        $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
-                        $fetchResponse = $client->fetch(
-                            url: $browserEndpoint . '/screenshots',
-                            method: 'POST',
-                            body: $config
-                        );
-
-                        if ($fetchResponse->getStatusCode() >= 400) {
-                            throw new \Exception($fetchResponse->getBody());
-                        }
-
-                        $screenshot = $fetchResponse->getBody();
-
-                        return ['key' => $key, 'screenshot' => $screenshot];
-                    } catch (\Throwable $th) {
-                        $screenshotError = $th->getMessage();
-                        return;
-                    }
-                };
-            }, \array_keys($configs)));
-
-            if (!\is_null($screenshotError)) {
-                throw new \Exception($screenshotError);
+            $captures = [];
+            foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
+                $captures[$key] = $screenshots->create(
+                    url: $routerHost . '/?appwrite-preview=1&appwrite-theme=' . $theme,
+                    theme: $theme,
+                    headers: $headers,
+                    sleep: $sleep,
+                );
             }
+
+            Span::add('screenshot.count', \count($captures));
 
             $mimeType = "image/png";
             $updates = new Document([]);
 
-            foreach ($screenshots as $data) {
-                $key = $data['key'];
-                $screenshot = $data['screenshot'];
-
+            foreach ($captures as $key => $screenshot) {
                 $fileId = ID::unique();
                 $fileName = $fileId . '.png';
                 $path = $deviceForFiles->getPath($fileName);
                 $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                $success = $deviceForFiles->write($path, $screenshot, $mimeType);
+                $success = $deviceForFiles->write($path, new Stream($screenshot), $mimeType);
 
                 if (!$success) {
                     throw new \Exception("Screenshot failed to save");
@@ -258,14 +224,26 @@ class Screenshots extends Action
                 'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
             ]));
         } catch (\Throwable $th) {
-            Console::warning("Screenshot failed to generate:");
-            Console::warning($th->getMessage());
-            Console::warning($th->getTraceAsString());
-
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
 
+            $this->recordTelemetry($counter, 'failure');
+
             throw $th;
+        }
+
+        $this->recordTelemetry($counter, 'success');
+    }
+
+    protected function recordTelemetry(Counter $counter, string $result): void
+    {
+        try {
+            $counter->add(1, [
+                'resourceType' => RESOURCE_TYPE_SITES,
+                'result' => $result,
+            ]);
+        } catch (\Throwable) {
+            // Telemetry should never affect screenshot processing.
         }
     }
 

@@ -13,6 +13,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\IndexType;
+use Utopia\Platform\Enum;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
@@ -41,7 +42,8 @@ class Create extends IndexCreate
             ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'index.create')
-            ->label('audits.resource', 'database/{request.databaseId}/collection/{request.tableId}')
+            ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: $this->getSdkGroup(),
@@ -59,14 +61,14 @@ class Create extends IndexCreate
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('key', null, new Key(), 'Index Key.')
-            ->param('type', null, new WhiteList([IndexType::HnswEuclidean->value,IndexType::HnswDot->value, IndexType::HnswCosine->value, IndexType::Object->value, IndexType::Key->value, IndexType::Unique->value]), 'Index type.')
+            ->param('type', null, new WhiteList([IndexType::HnswEuclidean->value,IndexType::HnswDot->value, IndexType::HnswCosine->value, IndexType::Object->value, IndexType::Key->value, IndexType::Unique->value]), 'Index type.', enum: new Enum(name: 'VectorsDBIndexType'))
             ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
-            ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, ColumnType::String->value), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
+            ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, ColumnType::String->value), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));

@@ -3,7 +3,8 @@
 namespace Appwrite\Utopia\Database\Hooks;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Utopia\Response;
@@ -23,7 +24,7 @@ class UserEvents implements Lifecycle
         private Response $response,
         private Event $source,
         private Event $events,
-        private Func $functions,
+        private FunctionPublisher $functions,
         private Webhook $webhooks,
         private Realtime $realtime,
     ) {
@@ -46,9 +47,15 @@ class UserEvents implements Lifecycle
             ->setParam('userId', $data->getId())
             ->setPayload($this->response->output($data, Response::MODEL_USER));
 
-        $this->functions
-            ->from($this->events)
-            ->trigger();
+        $this->functions->enqueue(FunctionMessage::fromEvent(
+            event: $this->events->getEvent(),
+            params: $this->events->getParams(),
+            project: $this->events->getProject(),
+            user: $this->events->getUser(),
+            userId: $this->events->getUserId(),
+            payload: $this->events->getPayload(),
+            platform: $this->events->getPlatform(),
+        ));
 
         if (!empty($this->project->getAttribute('webhooks'))) {
             $this->webhooks

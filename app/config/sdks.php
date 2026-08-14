@@ -1,6 +1,8 @@
 <?php
 
-return [
+use Utopia\System\System;
+
+$platforms = [
     APP_SDK_PLATFORM_CLIENT => [
         'key' => APP_SDK_PLATFORM_CLIENT,
         'name' => 'Client',
@@ -96,24 +98,6 @@ return [
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/apple/CHANGELOG.md'),
             ],
             [
-                'key' => 'objective-c',
-                'name' => 'Objective C',
-                'url' => '',
-                'package' => '',
-                'enabled' => false,
-                'beta' => false,
-                'dev' => false,
-                'hidden' => false,
-                'family' => APP_SDK_PLATFORM_CLIENT,
-                'prism' => '',
-                'source' => false,
-                'gitUrl' => 'git@github.com:appwrite/sdk-for-objective-c.git',
-                'gitRepoName' => 'sdk-for-objective-c',
-                'gitUserName' => 'appwrite',
-                'gitBranch' => 'dev',
-                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/objective-c/CHANGELOG.md'),
-            ],
-            [
                 'key' => 'android',
                 'name' => 'Android',
                 'namespace' => 'io.appwrite',
@@ -155,6 +139,25 @@ return [
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/react-native/CHANGELOG.md'),
+            ],
+            [
+                'key' => 'unity',
+                'name' => 'Unity',
+                'version' => '0.1.0',
+                'url' => 'https://github.com/appwrite/sdk-for-unity',
+                'package' => 'https://github.com/appwrite/sdk-for-unity',
+                'enabled' => true,
+                'beta' => true,
+                'dev' => true,
+                'hidden' => false,
+                'family' => APP_SDK_PLATFORM_CLIENT,
+                'prism' => 'csharp',
+                'source' => \realpath(__DIR__ . '/../sdks/client-unity'),
+                'gitUrl' => 'git@github.com:appwrite/sdk-for-unity.git',
+                'gitRepoName' => 'sdk-for-unity',
+                'gitUserName' => 'appwrite',
+                'gitBranch' => 'dev',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/unity/CHANGELOG.md'),
             ],
             [
                 'key' => 'graphql',
@@ -299,6 +302,46 @@ return [
                 'gitBranch' => 'dev',
                 'repoBranch' => 'main',
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/cursor-plugin/CHANGELOG.md'),
+            ],
+            [
+                'key' => 'claude-plugin',
+                'name' => 'ClaudePlugin',
+                'version' => '0.1.0',
+                'url' => 'https://github.com/appwrite/claude-plugin.git',
+                'enabled' => true,
+                'beta' => false,
+                'dev' => false,
+                'hidden' => false,
+                'spec' => 'static',
+                'family' => APP_SDK_PLATFORM_STATIC,
+                'prism' => 'claude-plugin',
+                'source' => \realpath(__DIR__ . '/../sdks/static-claude-plugin'),
+                'gitUrl' => 'git@github.com:appwrite/claude-plugin.git',
+                'gitRepoName' => 'claude-plugin',
+                'gitUserName' => 'appwrite',
+                'gitBranch' => 'dev',
+                'repoBranch' => 'main',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/claude-plugin/CHANGELOG.md'),
+            ],
+            [
+                'key' => 'codex-plugin',
+                'name' => 'CodexPlugin',
+                'version' => '0.1.1',
+                'url' => 'https://github.com/appwrite/codex-plugin.git',
+                'enabled' => true,
+                'beta' => false,
+                'dev' => false,
+                'hidden' => false,
+                'spec' => 'static',
+                'family' => APP_SDK_PLATFORM_STATIC,
+                'prism' => 'codex-plugin',
+                'source' => \realpath(__DIR__ . '/../sdks/static-codex-plugin'),
+                'gitUrl' => 'git@github.com:appwrite/codex-plugin.git',
+                'gitRepoName' => 'codex-plugin',
+                'gitUserName' => 'appwrite',
+                'gitBranch' => 'dev',
+                'repoBranch' => 'main',
+                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/codex-plugin/CHANGELOG.md'),
             ],
         ],
     ],
@@ -548,3 +591,18 @@ return [
         ],
     ],
 ];
+
+// A preview SDK is built from a PR to show the whole API surface that PR produces
+// and publishes nothing, so none of the exclusions above apply to it. Only the
+// preview workflow sets _APP_SDK_PREVIEW; every other run, releases included,
+// leaves it unset and keeps every rule. The per-endpoint counterpart is the `hide`
+// argument on Appwrite\SDK\Method, lifted under the same flag at its call sites.
+if (System::getEnv('_APP_SDK_PREVIEW', 'disabled') === 'enabled') {
+    foreach ($platforms as $platformKey => $platform) {
+        foreach (\array_keys($platform['sdks']) as $index) {
+            unset($platforms[$platformKey]['sdks'][$index]['exclude']);
+        }
+    }
+}
+
+return $platforms;

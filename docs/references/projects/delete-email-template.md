@@ -1,1 +1,0 @@
-Reset a custom email template to its default value. This endpoint removes any custom content and restores the template to its original state. 

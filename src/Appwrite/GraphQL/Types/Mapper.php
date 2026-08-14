@@ -83,6 +83,7 @@ class Mapper
         Http $utopia,
         Route $route,
         Method $method,
+        string $httpMethod,
         callable $complexity
     ): iterable {
         foreach (self::$blacklist as $blacklist) {
@@ -91,26 +92,30 @@ class Mapper
             }
         }
 
-        $responses = $method->getResponses() ?? [];
+        $responses = $method->getResponses();
 
-        // If responses is an array, map each response to its model
-        if (\is_array($responses)) {
-            $models = [];
-            foreach ($responses as $response) {
-                $modelName = $response->getModel();
+        // Map each response to its model
+        $models = [];
+        foreach ($responses as $response) {
+            $modelName = $response->getModel();
 
-                if (\is_array($modelName)) {
-                    foreach ($modelName as $name) {
-                        $models[] = self::$models[$name];
-                    }
-                } else {
-                    $models[] = self::$models[$modelName];
+            if (\is_array($modelName)) {
+                foreach ($modelName as $name) {
+                    $models[] = self::$models[$name];
                 }
+            } else {
+                $models[] = self::$models[$modelName];
             }
-        } else {
-            // If single response, get its model and wrap in array
-            $modelName = $responses->getModel();
-            $models = [self::$models[$modelName]];
+        }
+
+        $hidden = [];
+        $overrides = [];
+        foreach ($method->getParameters() as $sdkParameter) {
+            if ($sdkParameter->getHide()) {
+                $hidden[$sdkParameter->getName()] = true;
+                continue;
+            }
+            $overrides[$sdkParameter->getName()] = $sdkParameter;
         }
 
         foreach ($models as $model) {
@@ -120,36 +125,33 @@ class Mapper
             $list = false;
 
             foreach ($route->getParams() as $name => $parameter) {
-                $sdkParameters = $method->getParameters();
+                if (isset($hidden[$name])) {
+                    continue;
+                }
 
-                if (!empty($sdkParameters)) {
-                    $sdkMethodParameters = [];
-                    foreach ($sdkParameters as $sdkParameter) {
-                        $sdkMethodParameters[$sdkParameter->getName()] = $sdkParameter;
-                    }
+                $override = $overrides[$name] ?? null;
 
-                    if (!\array_key_exists($name, $sdkMethodParameters)) {
-                        continue;
-                    }
-
-                    $optional = $sdkMethodParameters[$name]->getOptional();
-                } else {
-                    $optional = $parameter['optional'];
+                if (!empty($overrides) && $override === null) {
+                    continue;
                 }
 
                 if ($name === 'queries') {
                     $list = true;
                 }
 
+                $optional = $override !== null && $override->hasOptional()
+                    ? $override->getOptional()
+                    : $parameter['optional'];
+
                 $parameterType = Mapper::param(
                     $utopia,
-                    $parameter['validator'],
+                    $override?->getValidator() ?? $parameter['validator'],
                     !$optional,
                     $parameter['injections']
                 );
                 $params[$name] = [
                     'type' => $parameterType,
-                    'description' => $parameter['description'],
+                    'description' => $override?->getDescription() ?: $parameter['description'],
                 ];
             }
 
@@ -157,7 +159,7 @@ class Mapper
                 'type' => $type,
                 'description' => $description,
                 'args' => $params,
-                'resolve' => Resolvers::api($utopia, $route)
+                'resolve' => Resolvers::api($utopia, $route, $httpMethod)
             ];
 
             if ($list) {
@@ -260,7 +262,7 @@ class Mapper
         array $injections
     ): Type {
         $validator = \is_callable($validator)
-            ? \call_user_func_array($validator, $utopia->getResources($injections))
+            ? \call_user_func_array($validator, \array_map($utopia->context()->get(...), $injections))
             : $validator;
 
         $isNullable = $validator instanceof Nullable;
@@ -347,9 +349,13 @@ class Mapper
                 $type = Types::assoc();
                 break;
             case \Utopia\Validator\JSON::class:
+            case \Utopia\Validator\JSON\ObjectValidator::class:
                 $type = Types::json();
                 break;
-            case \Utopia\Storage\Validator\File::class:
+            case \Utopia\Validator\JSON\ArrayValidator::class:
+                $type = Type::listOf(Types::json());
+                break;
+            case \Appwrite\Utopia\Request\Validator\File::class:
                 $type = Types::inputFile();
                 break;
         }

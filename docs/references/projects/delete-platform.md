@@ -1,1 +1,0 @@
-Delete a platform by its unique ID. This endpoint removes the platform and all its configurations from the project. 

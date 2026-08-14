@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
-use Appwrite\Event\Build;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -10,20 +10,18 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
@@ -53,6 +51,7 @@ class Create extends Action
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'deployments',
@@ -87,9 +86,10 @@ class Create extends Action
             ->inject('project')
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
-            ->inject('queueForBuilds')
+            ->inject('deployments')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -106,9 +106,10 @@ class Create extends Action
         Document $project,
         Device $deviceForFunctions,
         Device $deviceForLocal,
-        Build $queueForBuilds,
+        Deployments $deployments,
         array $plan,
-        Authorization $authorization
+        Authorization $authorization,
+        callable $locks
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -160,7 +161,7 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
         }
 
-        $contentRange = $request->getHeader('content-range');
+        $contentRange = $request->getHeaderLine('content-range');
         $deploymentId = ID::unique();
         $chunk = 1;
         $chunks = 1;
@@ -169,21 +170,14 @@ class Create extends Action
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
-            $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
+            $deploymentId = $request->getHeaderLine('x-appwrite-id', $deploymentId);
             // TODO make `end >= $fileSize` in next breaking version
             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
-            // TODO remove the condition that checks `$end === $fileSize` in next breaking version
-            if ($end === $fileSize - 1 || $end === $fileSize) {
-                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
-                $chunks = $chunk = -1;
-            } else {
-                // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
-                $chunks = (int) ceil($fileSize / ($end + 1 - $start));
-                $chunk = (int) ($start / ($end + 1 - $start)) + 1;
-            }
+            $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
+            $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
         }
 
         if (!$fileSizeValidator->isValid($fileSize) && $functionSizeLimit !== 0) { // Check if file size is exceeding allowed limit
@@ -197,131 +191,174 @@ class Create extends Action
         // Save to storage
         $fileSize ??= $deviceForLocal->getFileSize($fileTmpName);
         $path = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        $lockKey = 'functions:deployment:' . $project->getId() . ':' . $functionId . ':' . $deploymentId;
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
-        if (!$deployment->isEmpty()) {
-            $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
-            $metadata = $deployment->getAttribute('sourceMetadata', []);
-            if ($chunk === -1) {
-                $chunk = $chunks;
+        $completed = false;
+
+        $mergeUploadMetadata = function (array $stored, array $current): array {
+            $merged = \array_merge($stored, $current);
+
+            if (isset($stored['parts']) || isset($current['parts'])) {
+                $parts = $stored['parts'] ?? [];
+                foreach (($current['parts'] ?? []) as $part => $value) {
+                    $parts[(int) $part] = $value;
+                }
+                \ksort($parts);
+
+                $merged['parts'] = $parts;
+                $merged['chunks'] = \count($parts);
             }
+
+            return $merged;
+        };
+
+        $type = $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual';
+
+        try {
+            $locks($lockKey, 600, function () use ($activate, &$chunks, $commands, $contentRange, $dbForProject, $deploymentId, $deployments, $deviceForFunctions, $entrypoint, $fileSize, &$function, &$metadata, $path, $type, &$completed, $response): void {
+                $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+                if (!$deployment->isEmpty()) {
+                    if (
+                        $deployment->getAttribute('resourceId') !== $function->getId()
+                        || $deployment->getAttribute('resourceType') !== 'functions'
+                    ) {
+                        throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                    }
+
+                    $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
+                    $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
+                    $metadata = $deployment->getAttribute('sourceMetadata', []);
+
+                    if ($uploaded === $chunks) {
+                        $response
+                            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+
+                        $completed = true;
+                        return;
+                    }
+                }
+
+                if ($deployment->isEmpty()) {
+                    $deviceForFunctions->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
+
+                    if (!empty($contentRange)) {
+                        $deployment = $deployments->upload($function, $deployment->setAttributes([
+                            '$id' => $deploymentId,
+                            'entrypoint' => $entrypoint,
+                            'buildCommands' => $commands,
+                            'startCommand' => $function->getAttribute('startCommand', ''),
+                            'sourcePath' => $path,
+                            'sourceSize' => $fileSize,
+                            'totalSize' => $fileSize,
+                            'sourceChunksTotal' => $chunks,
+                            'sourceChunksUploaded' => 0,
+                            'activate' => $activate,
+                            'sourceMetadata' => $metadata,
+                            'type' => $type,
+                        ]));
+                    }
+                }
+            }, timeout: 120.0);
+        } catch (LockContention) {
+            $response->addHeader('Retry-After', '5');
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment upload is busy. Try again.');
         }
 
-        $chunksUploaded = $deviceForFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+        if ($completed) {
+            $queueForEvents->reset();
+            return;
+        }
+
+        $chunksUploaded = $deviceForFunctions->upload(
+            $deviceForLocal->read($fileTmpName),
+            $path,
+            $metadata['content_type'] ?? '',
+            $chunk,
+            $chunks,
+            $metadata
+        );
 
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
         }
 
-        $type = $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual';
+        try {
+            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
+                $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+                $uploaded = 0;
 
-        if ($chunksUploaded === $chunks) {
-            if ($activate) {
-                // Remove deploy for all other deployments.
-                $activeDeployments = $dbForProject->find('deployments', [
-                    Query::equal('activate', [true]),
-                    Query::equal('resourceId', [$functionId]),
-                    Query::equal('resourceType', ['functions'])
-                ]);
+                if (!$deployment->isEmpty()) {
+                    if (
+                        $deployment->getAttribute('resourceId') !== $function->getId()
+                        || $deployment->getAttribute('resourceType') !== 'functions'
+                    ) {
+                        throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                    }
 
-                foreach ($activeDeployments as $activeDeployment) {
-                    $activeDeployment->setAttribute('activate', false);
-                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), new Document([
-                        'activate' => false,
+                    $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
+                    $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
+                    $metadata = $mergeUploadMetadata($deployment->getAttribute('sourceMetadata', []), $metadata);
+
+                    if ($uploaded === $chunks) {
+                        $queueForEvents->reset();
+
+                        $response
+                            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+                        return;
+                    }
+                }
+
+                $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
+
+                if ($chunksUploaded === $chunks && $uploaded < $chunks) {
+                    $deviceForFunctions->finalize($path, $chunks, $metadata);
+
+                    $fileSize = $deviceForFunctions->getFileSize($path);
+
+                    $deployment = $deployments->createFromUpload($function, $deployment->setAttributes([
+                        '$id' => $deploymentId,
+                        'entrypoint' => $entrypoint,
+                        'buildCommands' => $commands,
+                        'startCommand' => $function->getAttribute('startCommand', ''),
+                        'sourcePath' => $path,
+                        'sourceSize' => $fileSize,
+                        'totalSize' => $fileSize,
+                        'sourceChunksTotal' => $chunks,
+                        'sourceChunksUploaded' => $chunksUploaded,
+                        'activate' => $activate,
+                        'sourceMetadata' => $metadata,
+                        'type' => $type,
+                    ]));
+                } else {
+                    $deployment = $deployments->upload($function, $deployment->setAttributes([
+                        'sourceChunksUploaded' => $chunksUploaded,
+                        'sourceMetadata' => $metadata,
                     ]));
                 }
-            }
 
-            $fileSize = $deviceForFunctions->getFileSize($path);
+                $metadata = null;
 
-            if ($deployment->isEmpty()) {
-                $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                    'resourceInternalId' => $function->getSequence(),
-                    'resourceId' => $function->getId(),
-                    'resourceType' => 'functions',
-                    'entrypoint' => $entrypoint,
-                    'buildCommands' => $commands,
-                    'startCommand' => $function->getAttribute('startCommand', ''),
-                    'sourcePath' => $path,
-                    'sourceSize' => $fileSize,
-                    'totalSize' => $fileSize,
-                    'activate' => $activate,
-                    'sourceMetadata' => $metadata,
-                    'type' => $type
-                ]));
+                if ($chunksUploaded === $chunks) {
+                    $queueForEvents
+                        ->setParam('functionId', $function->getId())
+                        ->setParam('deploymentId', $deployment->getId());
+                } else {
+                    $queueForEvents->reset();
+                }
 
-                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                    'latestDeploymentId' => $deployment->getId(),
-                    'latestDeploymentInternalId' => $deployment->getSequence(),
-                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                ]));
-            } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
-                    'sourceSize' => $fileSize,
-                    'sourceMetadata' => $metadata,
-                ]));
-            }
-
-            // Start the build
-            $queueForBuilds
-                ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
-                ->setDeployment($deployment);
-        } else {
-            if ($deployment->isEmpty()) {
-                $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                    'resourceInternalId' => $function->getSequence(),
-                    'resourceId' => $function->getId(),
-                    'resourceType' => 'functions',
-                    'entrypoint' => $entrypoint,
-                    'buildCommands' => $commands,
-                    'startCommand' => $function->getAttribute('startCommand', ''),
-                    'sourcePath' => $path,
-                    'sourceSize' => $fileSize,
-                    'totalSize' => $fileSize,
-                    'sourceChunksTotal' => $chunks,
-                    'sourceChunksUploaded' => $chunksUploaded,
-                    'activate' => $activate,
-                    'sourceMetadata' => $metadata,
-                    'type' => $type
-                ]));
-
-                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                    'latestDeploymentId' => $deployment->getId(),
-                    'latestDeploymentInternalId' => $deployment->getSequence(),
-                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                ]));
-            } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
-                    'sourceChunksUploaded' => $chunksUploaded,
-                    'sourceMetadata' => $metadata,
-                ]));
-            }
+                $response
+                    ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                    ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+            }, timeout: 120.0);
+        } catch (LockContention) {
+            $response->addHeader('Retry-After', '5');
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment upload is busy. Try again.');
         }
-
-        $metadata = null;
-
-        $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     }
+
 }

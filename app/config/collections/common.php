@@ -2,30 +2,33 @@
 
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Index;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\IndexType;
+use Utopia\Auth\Hashes\Argon2;
 
 return [
     'cache' => [
-        '$collection' => '_metadata',
+        '$collection' => Database::METADATA,
         '$id' => 'cache',
         'name' => 'Cache',
         'attributes' => [
             new Attribute(
                 key: 'resource',
                 type: ColumnType::String,
-                size: Database::LENGTH_KEY,
+                size: 255,
             ),
             new Attribute(
                 key: 'resourceType',
                 type: ColumnType::String,
-                size: Database::LENGTH_KEY,
+                size: 255,
             ),
+            // https://tools.ietf.org/html/rfc4288#section-4.2
             new Attribute(
                 key: 'mimeType',
                 type: ColumnType::String,
-                size: Database::LENGTH_KEY,
+                size: 255,
             ),
             new Attribute(
                 key: 'accessedAt',
@@ -36,7 +39,7 @@ return [
             new Attribute(
                 key: 'signature',
                 type: ColumnType::String,
-                size: Database::LENGTH_KEY,
+                size: 255,
             ),
         ],
         'indexes' => [
@@ -52,9 +55,10 @@ return [
             ),
         ],
     ],
+
     'users' => [
-        '$collection' => '_metadata',
-        '$id' => 'users',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('users'),
         'name' => 'Users',
         'attributes' => [
             new Attribute(
@@ -67,6 +71,7 @@ return [
                 type: ColumnType::String,
                 size: 320,
             ),
+            // leading '+' and 15 digitts maximum by E.164 format
             new Attribute(
                 key: 'phone',
                 type: ColumnType::String,
@@ -94,17 +99,19 @@ return [
                 size: 16384,
                 filters: ['encrypt'],
             ),
+            // Hashing algorithm used to hash the password
             new Attribute(
                 key: 'hash',
                 type: ColumnType::String,
                 size: 256,
-                default: 'argon2',
+                default: (new Argon2())->getName(),
             ),
+            // Configuration of hashing algorithm
             new Attribute(
                 key: 'hashOptions',
                 type: ColumnType::String,
                 size: 65535,
-                default: ['type' => 'argon2', 'memory_cost' => 65536, 'time_cost' => 4, 'threads' => 3],
+                default: (new Argon2())->getOptions(),
                 filters: ['json'],
             ),
             new Attribute(
@@ -117,8 +124,7 @@ return [
                 key: 'prefs',
                 type: ColumnType::String,
                 size: 65535,
-                default: (object) array(
-                ),
+                default: new \stdClass(),
                 filters: ['json'],
             ),
             new Attribute(
@@ -291,13 +297,14 @@ return [
             new Index(
                 key: 'impersonator',
                 type: IndexType::Key,
-                attributes: ['impersonator'],
+                attributes: [ID::custom('impersonator')],
             ),
         ],
     ],
+
     'tokens' => [
-        '$collection' => '_metadata',
-        '$id' => 'tokens',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('tokens'),
         'name' => 'Tokens',
         'attributes' => [
             new Attribute(
@@ -316,6 +323,7 @@ return [
                 type: ColumnType::Integer,
                 required: true,
             ),
+            // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql (512 for encryption)
             new Attribute(
                 key: 'secret',
                 type: ColumnType::String,
@@ -333,6 +341,7 @@ return [
                 type: ColumnType::String,
                 size: 16384,
             ),
+            // https://stackoverflow.com/a/166157/2299554
             new Attribute(
                 key: 'ip',
                 type: ColumnType::String,
@@ -344,14 +353,21 @@ return [
                 key: '_key_user',
                 type: IndexType::Key,
                 attributes: ['userInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_type_expire',
+                type: IndexType::Key,
+                attributes: ['type', 'expire'],
+                orders: ['ASC', 'ASC'],
             ),
         ],
     ],
+
     'authenticators' => [
-        '$collection' => '_metadata',
-        '$id' => 'authenticators',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('authenticators'),
         'name' => 'Authenticators',
         'attributes' => [
             new Attribute(
@@ -387,14 +403,15 @@ return [
                 key: '_key_userInternalId',
                 type: IndexType::Key,
                 attributes: ['userInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
         ],
     ],
+
     'challenges' => [
-        '$collection' => '_metadata',
-        '$id' => 'challenges',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('challenges'),
         'name' => 'Challenges',
         'attributes' => [
             new Attribute(
@@ -412,6 +429,7 @@ return [
                 type: ColumnType::String,
                 size: Database::LENGTH_KEY,
             ),
+            // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql (512 for encryption)
             new Attribute(
                 key: 'token',
                 type: ColumnType::String,
@@ -436,14 +454,21 @@ return [
                 key: '_key_user',
                 type: IndexType::Key,
                 attributes: ['userInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_expire',
+                type: IndexType::Key,
+                attributes: ['expire'],
                 orders: ['ASC'],
             ),
         ],
     ],
+
     'sessions' => [
-        '$collection' => '_metadata',
-        '$id' => 'sessions',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('sessions'),
         'name' => 'Sessions',
         'attributes' => [
             new Attribute(
@@ -485,6 +510,7 @@ return [
                 size: 16384,
                 filters: ['encrypt'],
             ),
+            // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql (512 for encryption)
             new Attribute(
                 key: 'secret',
                 type: ColumnType::String,
@@ -496,6 +522,7 @@ return [
                 type: ColumnType::String,
                 size: 16384,
             ),
+            // https://stackoverflow.com/a/166157/2299554
             new Attribute(
                 key: 'ip',
                 type: ColumnType::String,
@@ -505,6 +532,66 @@ return [
                 key: 'countryCode',
                 type: ColumnType::String,
                 size: 2,
+            ),
+            new Attribute(
+                key: 'continentCode',
+                type: ColumnType::String,
+                size: 2,
+            ),
+            new Attribute(
+                key: 'latitude',
+                type: ColumnType::Float,
+                size: 8,
+            ),
+            new Attribute(
+                key: 'longitude',
+                type: ColumnType::Float,
+                size: 8,
+            ),
+            new Attribute(
+                key: 'timeZone',
+                type: ColumnType::String,
+                size: 255,
+            ),
+            new Attribute(
+                key: 'weatherCode',
+                type: ColumnType::String,
+                size: 255,
+            ),
+            new Attribute(
+                key: 'postalCode',
+                type: ColumnType::String,
+                size: 255,
+            ),
+            new Attribute(
+                key: 'autonomousSystemNumber',
+                type: ColumnType::String,
+                size: 255,
+            ),
+            new Attribute(
+                key: 'autonomousSystemOrganization',
+                type: ColumnType::String,
+                size: 255,
+            ),
+            new Attribute(
+                key: 'connectionType',
+                type: ColumnType::String,
+                size: 255,
+            ),
+            new Attribute(
+                key: 'connectionUsageType',
+                type: ColumnType::String,
+                size: 255,
+            ),
+            new Attribute(
+                key: 'connectionOrganization',
+                type: ColumnType::String,
+                size: 255,
+            ),
+            new Attribute(
+                key: 'isp',
+                type: ColumnType::String,
+                size: 255,
             ),
             new Attribute(
                 key: 'osCode',
@@ -599,14 +686,15 @@ return [
                 key: '_key_user',
                 type: IndexType::Key,
                 attributes: ['userInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
         ],
     ],
+
     'identities' => [
-        '$collection' => '_metadata',
-        '$id' => 'identities',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('identities'),
         'name' => 'Identities',
         'attributes' => [
             new Attribute(
@@ -624,6 +712,7 @@ return [
                 type: ColumnType::String,
                 size: 128,
             ),
+            // Decrease to 128 as in index length?
             new Attribute(
                 key: 'providerUid',
                 type: ColumnType::String,
@@ -652,6 +741,7 @@ return [
                 size: 16384,
                 filters: ['encrypt'],
             ),
+            // Used to store data from provider that may or may not be sensitive
             new Attribute(
                 key: 'secrets',
                 type: ColumnType::String,
@@ -673,6 +763,7 @@ return [
             ),
         ],
         'indexes' => [
+            // providerUid is length 2000!
             new Index(
                 key: '_key_userInternalId_provider_providerUid',
                 type: IndexType::Unique,
@@ -680,6 +771,7 @@ return [
                 lengths: [11, 128, 128],
                 orders: ['ASC', 'ASC'],
             ),
+            // providerUid is length 2000!
             new Index(
                 key: '_key_provider_providerUid',
                 type: IndexType::Unique,
@@ -691,14 +783,14 @@ return [
                 key: '_key_userId',
                 type: IndexType::Key,
                 attributes: ['userId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_userInternalId',
                 type: IndexType::Key,
                 attributes: ['userInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -712,14 +804,14 @@ return [
                 key: '_key_providerUid',
                 type: IndexType::Key,
                 attributes: ['providerUid'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_providerEmail',
                 type: IndexType::Key,
                 attributes: ['providerEmail'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -730,9 +822,10 @@ return [
             ),
         ],
     ],
+
     'teams' => [
-        '$collection' => '_metadata',
-        '$id' => 'teams',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('teams'),
         'name' => 'Teams',
         'attributes' => [
             new Attribute(
@@ -753,8 +846,7 @@ return [
                 key: 'prefs',
                 type: ColumnType::String,
                 size: 65535,
-                default: (object) array(
-                ),
+                default: new \stdClass(),
                 filters: ['json'],
             ),
             new Attribute(
@@ -785,9 +877,10 @@ return [
             ),
         ],
     ],
+
     'memberships' => [
-        '$collection' => '_metadata',
-        '$id' => 'memberships',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('memberships'),
         'name' => 'Memberships',
         'attributes' => [
             new Attribute(
@@ -851,21 +944,21 @@ return [
                 key: '_key_unique',
                 type: IndexType::Unique,
                 attributes: ['teamInternalId', 'userInternalId'],
-                lengths: [255, 255],
+                lengths: [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 orders: ['ASC', 'ASC'],
             ),
             new Index(
                 key: '_key_user',
                 type: IndexType::Key,
                 attributes: ['userInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_team',
                 type: IndexType::Key,
                 attributes: ['teamInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -877,14 +970,14 @@ return [
                 key: '_key_userId',
                 type: IndexType::Key,
                 attributes: ['userId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_teamId',
                 type: IndexType::Key,
                 attributes: ['teamId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -905,11 +998,17 @@ return [
                 attributes: ['confirm'],
                 orders: ['ASC'],
             ),
+            new Index(
+                key: '_key_team_confirm',
+                type: IndexType::Key,
+                attributes: ['teamInternalId', 'confirm'],
+            ),
         ],
     ],
+
     'buckets' => [
-        '$collection' => '_metadata',
-        '$id' => 'buckets',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('buckets'),
         'name' => 'Buckets',
         'attributes' => [
             new Attribute(
@@ -1011,23 +1110,24 @@ return [
                 attributes: ['antivirus'],
                 orders: ['ASC'],
             ),
-        ],
+        ]
     ],
+
     'stats' => [
-        '$collection' => '_metadata',
-        '$id' => 'stats',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('stats'),
         'name' => 'Stats',
         'attributes' => [
             new Attribute(
                 key: 'metric',
                 type: ColumnType::String,
-                size: Database::LENGTH_KEY,
+                size: 255,
                 required: true,
             ),
             new Attribute(
                 key: 'region',
                 type: ColumnType::String,
-                size: Database::LENGTH_KEY,
+                size: 255,
                 required: true,
             ),
             new Attribute(
@@ -1070,9 +1170,10 @@ return [
             ),
         ],
     ],
+
     'providers' => [
-        '$collection' => '_metadata',
-        '$id' => 'providers',
+        '$collection' => ID::custom(DATABASE::METADATA),
+        '$id' => ID::custom('providers'),
         'name' => 'Providers',
         'attributes' => [
             new Attribute(
@@ -1147,9 +1248,10 @@ return [
             ),
         ],
     ],
+
     'messages' => [
-        '$collection' => '_metadata',
-        '$id' => 'messages',
+        '$collection' => ID::custom(DATABASE::METADATA),
+        '$id' => ID::custom('messages'),
         'name' => 'Messages',
         'attributes' => [
             new Attribute(
@@ -1242,9 +1344,10 @@ return [
             ),
         ],
     ],
+
     'topics' => [
-        '$collection' => '_metadata',
-        '$id' => 'topics',
+        '$collection' => ID::custom(DATABASE::METADATA),
+        '$id' => ID::custom('topics'),
         'name' => 'Topics',
         'attributes' => [
             new Attribute(
@@ -1288,6 +1391,7 @@ return [
                 filters: ['topicSearch'],
             ),
         ],
+
         'indexes' => [
             new Index(
                 key: '_key_search',
@@ -1297,9 +1401,10 @@ return [
             ),
         ],
     ],
+
     'subscribers' => [
-        '$collection' => '_metadata',
-        '$id' => 'subscribers',
+        '$collection' => ID::custom(DATABASE::METADATA),
+        '$id' => ID::custom('subscribers'),
         'name' => 'Subscribers',
         'attributes' => [
             new Attribute(
@@ -1393,9 +1498,10 @@ return [
             ),
         ],
     ],
+
     'targets' => [
-        '$collection' => '_metadata',
-        '$id' => 'targets',
+        '$collection' => ID::custom(DATABASE::METADATA),
+        '$id' => ID::custom('targets'),
         'name' => 'Targets',
         'attributes' => [
             new Attribute(
@@ -1493,9 +1599,11 @@ return [
             ),
         ],
     ],
+
+    // note that this is not required for console & projects.
     'files' => [
-        '$collection' => 'buckets',
-        '$id' => 'files',
+        '$collection' => ID::custom('buckets'),
+        '$id' => ID::custom('files'),
         '$name' => 'Files',
         'attributes' => [
             new Attribute(
@@ -1520,15 +1628,23 @@ return [
                 size: 2048,
             ),
             new Attribute(
+                key: 'folder',
+                type: ColumnType::String,
+                size: 2048,
+                default: '',
+            ),
+            new Attribute(
                 key: 'signature',
                 type: ColumnType::String,
                 size: 2048,
             ),
+            // https://tools.ietf.org/html/rfc4288#section-4.2
             new Attribute(
                 key: 'mimeType',
                 type: ColumnType::String,
-                size: Database::LENGTH_KEY,
+                size: 255,
             ),
+            // https://tools.ietf.org/html/rfc4288#section-4.2
             new Attribute(
                 key: 'metadata',
                 type: ColumnType::String,
@@ -1550,7 +1666,7 @@ return [
             new Attribute(
                 key: 'algorithm',
                 type: ColumnType::String,
-                size: Database::LENGTH_KEY,
+                size: 255,
             ),
             new Attribute(
                 key: 'comment',
@@ -1609,13 +1725,20 @@ return [
                 key: '_key_bucket',
                 type: IndexType::Key,
                 attributes: ['bucketId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_name',
                 type: IndexType::Key,
                 attributes: ['name'],
+                lengths: [256],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_folder',
+                type: IndexType::Key,
+                attributes: ['folder'],
                 lengths: [256],
                 orders: ['ASC'],
             ),
@@ -1655,6 +1778,105 @@ return [
                 type: IndexType::Key,
                 attributes: ['transformedAt'],
             ),
+        ]
+    ],
+
+    // Naming it presenceLogs as later it might be only be used as a presence events table only and not for the actual presence
+    'presenceLogs' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('presenceLogs'),
+        'name' => 'Presence Logs',
+        'attributes' => [
+            new Attribute(
+                key: 'userInternalId',
+                type: ColumnType::Id,
+                size: Database::LENGTH_KEY,
+                required: true,
+            ),
+            new Attribute(
+                key: 'userId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'expiresAt',
+                type: ColumnType::Datetime,
+                signed: false,
+                filters: ['datetime'],
+            ),
+            new Attribute(
+                key: 'status',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'source',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                required: true,
+            ),
+            new Attribute(
+                key: 'hostname',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'metadata',
+                type: ColumnType::Text,
+                size: 65535,
+                default: new \stdClass(),
+                filters: ['json'],
+            ),
+            new Attribute(
+                key: 'permissionsHash',
+                type: ColumnType::String,
+                size: 32,
+            ),
         ],
+        'indexes' => [
+            new Index(
+                key: '_unique_userId',
+                type: IndexType::Unique,
+                attributes: ['userId'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_userInternal',
+                type: IndexType::Key,
+                attributes: ['userInternalId'],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_expiresAt',
+                type: IndexType::Key,
+                attributes: ['expiresAt'],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_status',
+                type: IndexType::Key,
+                attributes: ['status'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_source',
+                type: IndexType::Key,
+                attributes: ['source'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_source_status',
+                type: IndexType::Key,
+                attributes: ['source', 'status'],
+            ),
+            new Index(
+                key: '_key_permissionsHash',
+                type: IndexType::Key,
+                attributes: ['permissionsHash'],
+            ),
+        ]
     ],
 ];

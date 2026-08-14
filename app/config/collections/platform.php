@@ -2,14 +2,18 @@
 
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Index;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\IndexType;
+use Utopia\Config\Config;
 
-return [
+$providers = Config::getParam('oAuthProviders', []);
+
+$platformCollections = [
     'projects' => [
-        '$collection' => '_metadata',
-        '$id' => 'projects',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('projects'),
         'name' => 'Projects',
         'attributes' => [
             new Attribute(
@@ -116,10 +120,11 @@ return [
                 default: [],
                 filters: ['json', 'encrypt'],
             ),
+            // TODO make sure size fits
             new Attribute(
                 key: 'templates',
                 type: ColumnType::String,
-                size: 1000000,
+                size: 1_000_000,
                 default: [],
                 filters: ['json'],
             ),
@@ -186,6 +191,13 @@ return [
                 array: true,
             ),
             new Attribute(
+                key: 'onboarding',
+                type: ColumnType::String,
+                size: 65536,
+                default: [],
+                filters: ['json'],
+            ),
+            new Attribute(
                 key: 'status',
                 type: ColumnType::String,
                 size: 100,
@@ -209,7 +221,7 @@ return [
                 key: '_key_team',
                 type: IndexType::Key,
                 attributes: ['teamId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -232,11 +244,24 @@ return [
                 type: IndexType::Key,
                 attributes: ['region', 'accessedAt'],
             ),
+            new Index(
+                key: '_key_accessedAt',
+                type: IndexType::Key,
+                attributes: ['accessedAt'],
+            ),
+            new Index(
+                key: '_key_teamInternalId',
+                type: IndexType::Key,
+                attributes: ['teamInternalId'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
         ],
     ],
+
     'schedules' => [
-        '$collection' => '_metadata',
-        '$id' => 'schedules',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('schedules'),
         'name' => 'schedules',
         'attributes' => [
             new Attribute(
@@ -266,6 +291,10 @@ return [
                 size: Database::LENGTH_KEY,
             ),
             new Attribute(
+                key: 'projectInternalId',
+                type: ColumnType::Id,
+            ),
+            new Attribute(
                 key: 'schedule',
                 type: ColumnType::String,
                 size: 100,
@@ -274,8 +303,7 @@ return [
                 key: 'data',
                 type: ColumnType::String,
                 size: 65535,
-                default: (object) array(
-                ),
+                default: new \stdClass(),
                 filters: ['json', 'encrypt'],
             ),
             new Attribute(
@@ -301,9 +329,19 @@ return [
                 attributes: ['region', 'resourceType', 'projectId', 'resourceId'],
             ),
             new Index(
+                key: '_key_region_resourceType_projectInternalId_resourceId',
+                type: IndexType::Key,
+                attributes: ['region', 'resourceType', 'projectInternalId', 'resourceId'],
+            ),
+            new Index(
                 key: '_key_project_id_region',
                 type: IndexType::Key,
                 attributes: ['projectId', 'region'],
+            ),
+            new Index(
+                key: '_key_project_internal_id_region',
+                type: IndexType::Key,
+                attributes: ['projectInternalId', 'region'],
             ),
             new Index(
                 key: '_key_region_rt_active',
@@ -312,9 +350,10 @@ return [
             ),
         ],
     ],
+
     'platforms' => [
-        '$collection' => '_metadata',
-        '$id' => 'platforms',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('platforms'),
         'name' => 'platforms',
         'attributes' => [
             new Attribute(
@@ -339,16 +378,19 @@ return [
                 size: 256,
                 required: true,
             ),
+            // For app platforms
             new Attribute(
                 key: 'key',
                 type: ColumnType::String,
                 size: Database::LENGTH_KEY,
             ),
+            // Unused at the moment
             new Attribute(
                 key: 'store',
                 type: ColumnType::String,
                 size: 256,
             ),
+            // For web platforms
             new Attribute(
                 key: 'hostname',
                 type: ColumnType::String,
@@ -360,14 +402,22 @@ return [
                 key: '_key_project',
                 type: IndexType::Key,
                 attributes: ['projectInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_project_id',
+                type: IndexType::Key,
+                attributes: ['projectId'],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
         ],
     ],
+
     'keys' => [
-        '$collection' => '_metadata',
-        '$id' => 'keys',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('keys'),
         'name' => 'keys',
         'attributes' => [
             new Attribute(
@@ -398,6 +448,7 @@ return [
                 required: true,
                 array: true,
             ),
+            // var_dump of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
             new Attribute(
                 key: 'secret',
                 type: ColumnType::String,
@@ -438,9 +489,10 @@ return [
             ),
         ],
     ],
+
     'devKeys' => [
-        '$collection' => '_metadata',
-        '$id' => 'devKeys',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('devKeys'),
         'name' => 'Dev keys',
         'attributes' => [
             new Attribute(
@@ -462,6 +514,7 @@ return [
                 size: Database::LENGTH_KEY,
                 required: true,
             ),
+            // var_dump of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
             new Attribute(
                 key: 'secret',
                 type: ColumnType::String,
@@ -494,7 +547,7 @@ return [
                 key: '_key_project',
                 type: IndexType::Key,
                 attributes: ['projectInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -504,9 +557,10 @@ return [
             ),
         ],
     ],
+
     'webhooks' => [
-        '$collection' => '_metadata',
-        '$id' => 'webhooks',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('webhooks'),
         'name' => 'webhooks',
         'attributes' => [
             new Attribute(
@@ -537,6 +591,7 @@ return [
                 type: ColumnType::String,
                 size: Database::LENGTH_KEY,
             ),
+            // TODO will the length suffice after encryption?
             new Attribute(
                 key: 'httpPass',
                 type: ColumnType::String,
@@ -582,20 +637,173 @@ return [
                 key: '_key_project',
                 type: IndexType::Key,
                 attributes: ['projectInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_project_id',
+                type: IndexType::Key,
+                attributes: ['projectId'],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
         ],
     ],
+
+    'notifications' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('notifications'),
+        'name' => 'Notifications',
+        'attributes' => [
+            new Attribute(
+                key: 'messageId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'recipientHash',
+                type: ColumnType::String,
+                size: 64,
+                required: true,
+            ),
+            new Attribute(
+                key: 'type',
+                type: ColumnType::String,
+                size: 100,
+                default: 'info',
+            ),
+            new Attribute(
+                key: 'channel',
+                type: ColumnType::String,
+                size: 64,
+                required: true,
+            ),
+            new Attribute(
+                key: 'resourceType',
+                type: ColumnType::String,
+                size: 64,
+                required: true,
+            ),
+            new Attribute(
+                key: 'resourceId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                required: true,
+            ),
+            new Attribute(
+                key: 'projectId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                required: true,
+            ),
+            new Attribute(
+                key: 'projectInternalId',
+                type: ColumnType::Id,
+                required: true,
+            ),
+            new Attribute(
+                key: 'resourceInternalId',
+                type: ColumnType::Id,
+                required: true,
+            ),
+            new Attribute(
+                key: 'parentResourceType',
+                type: ColumnType::String,
+                size: 64,
+                required: true,
+            ),
+            new Attribute(
+                key: 'parentResourceId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                required: true,
+            ),
+            new Attribute(
+                key: 'parentResourceInternalId',
+                type: ColumnType::Id,
+                required: true,
+            ),
+            new Attribute(
+                key: 'title',
+                type: ColumnType::String,
+                size: 256,
+                required: true,
+            ),
+            new Attribute(
+                key: 'body',
+                type: ColumnType::String,
+                size: 65535,
+                required: true,
+            ),
+            new Attribute(
+                key: 'read',
+                type: ColumnType::Boolean,
+                default: false,
+            ),
+            new Attribute(
+                key: 'firstSeen',
+                type: ColumnType::Datetime,
+                signed: false,
+                filters: ['datetime'],
+            ),
+            new Attribute(
+                key: 'lastSeen',
+                type: ColumnType::Datetime,
+                signed: false,
+                filters: ['datetime'],
+            ),
+        ],
+        'indexes' => [
+            new Index(
+                key: '_key_messageId',
+                type: IndexType::Key,
+                attributes: ['messageId'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_recipient',
+                type: IndexType::Unique,
+                attributes: ['messageId', 'channel', 'recipientHash'],
+                lengths: [Database::LENGTH_KEY, 64, 64],
+                orders: ['ASC', 'ASC', 'ASC'],
+            ),
+            new Index(
+                key: '_key_project',
+                type: IndexType::Key,
+                attributes: ['projectId', 'projectInternalId'],
+                lengths: [Database::LENGTH_KEY, 0],
+                orders: ['ASC', 'ASC'],
+            ),
+            new Index(
+                key: '_key_project_resource',
+                type: IndexType::Key,
+                attributes: ['projectId', 'projectInternalId', 'resourceType', 'resourceId', 'resourceInternalId'],
+                lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0],
+                orders: ['ASC', 'ASC', 'ASC', 'ASC', 'ASC'],
+            ),
+            new Index(
+                key: '_key_project_parent_resource',
+                type: IndexType::Key,
+                attributes: ['projectId', 'projectInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'],
+                lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0],
+                orders: ['ASC', 'ASC', 'ASC', 'ASC', 'ASC'],
+            ),
+        ],
+    ],
+
     'certificates' => [
-        '$collection' => '_metadata',
-        '$id' => 'certificates',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('certificates'),
         'name' => 'Certificates',
         'attributes' => [
+            // The maximum total length of a domain name or number is 255 characters.
+            // https://datatracker.ietf.org/doc/html/rfc2821#section-4.5.3.1
+            // https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.2
             new Attribute(
                 key: 'domain',
                 type: ColumnType::String,
-                size: Database::LENGTH_KEY,
+                size: 255,
             ),
             new Attribute(
                 key: 'issueDate',
@@ -635,9 +843,10 @@ return [
             ),
         ],
     ],
+
     'realtime' => [
-        '$collection' => '_metadata',
-        '$id' => 'realtime',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('realtime'),
         'name' => 'Realtime Connections',
         'attributes' => [
             new Attribute(
@@ -666,11 +875,12 @@ return [
                 attributes: ['timestamp'],
                 orders: ['DESC'],
             ),
-        ],
+        ]
     ],
+
     'rules' => [
-        '$collection' => '_metadata',
-        '$id' => 'rules',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('rules'),
         'name' => 'Rules',
         'attributes' => [
             new Attribute(
@@ -691,11 +901,13 @@ return [
                 size: Database::LENGTH_KEY,
                 required: true,
             ),
+            // 'api', 'redirect', 'deployment' (site or function)
             new Attribute(
                 key: 'type',
                 type: ColumnType::String,
                 size: 32,
             ),
+            // 'manual', 'deployment', '' (empty)
             new Attribute(
                 key: 'trigger',
                 type: ColumnType::String,
@@ -763,6 +975,7 @@ return [
                 type: ColumnType::String,
                 size: 16384,
             ),
+            // "Appwrite" or empty string
             new Attribute(
                 key: 'owner',
                 type: ColumnType::String,
@@ -792,21 +1005,21 @@ return [
                 key: '_key_domain',
                 type: IndexType::Unique,
                 attributes: ['domain'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_projectInternalId',
                 type: IndexType::Key,
                 attributes: ['projectInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_projectId',
                 type: IndexType::Key,
                 attributes: ['projectId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -831,35 +1044,35 @@ return [
                 key: '_key_deploymentResourceId',
                 type: IndexType::Key,
                 attributes: ['deploymentResourceId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_deploymentResourceInternalId',
                 type: IndexType::Key,
                 attributes: ['deploymentResourceInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_deploymentId',
                 type: IndexType::Key,
                 attributes: ['deploymentId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_deploymentInternalId',
                 type: IndexType::Key,
                 attributes: ['deploymentInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_deploymentVcsProviderBranch',
                 type: IndexType::Key,
                 attributes: ['deploymentVcsProviderBranch'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -880,9 +1093,10 @@ return [
             ),
         ],
     ],
+
     'installations' => [
-        '$collection' => '_metadata',
-        '$id' => 'installations',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('installations'),
         'name' => 'installations',
         'attributes' => [
             new Attribute(
@@ -922,8 +1136,8 @@ return [
             ),
             new Attribute(
                 key: 'personalAccessToken',
-                type: ColumnType::String,
-                size: 256,
+                type: ColumnType::Text,
+                size: 65535,
                 filters: ['encrypt'],
             ),
             new Attribute(
@@ -934,8 +1148,8 @@ return [
             ),
             new Attribute(
                 key: 'personalRefreshToken',
-                type: ColumnType::String,
-                size: 256,
+                type: ColumnType::Text,
+                size: 65535,
                 filters: ['encrypt'],
             ),
         ],
@@ -944,28 +1158,29 @@ return [
                 key: '_key_projectInternalId',
                 type: IndexType::Key,
                 attributes: ['projectInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_projectId',
                 type: IndexType::Key,
                 attributes: ['projectId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_providerInstallationId',
                 type: IndexType::Key,
                 attributes: ['providerInstallationId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
         ],
     ],
+
     'repositories' => [
-        '$collection' => '_metadata',
-        '$id' => 'repositories',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('repositories'),
         'name' => 'repositories',
         'attributes' => [
             new Attribute(
@@ -1026,56 +1241,56 @@ return [
                 key: '_key_installationId',
                 type: IndexType::Key,
                 attributes: ['installationId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_installationInternalId',
                 type: IndexType::Key,
                 attributes: ['installationInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_projectInternalId',
                 type: IndexType::Key,
                 attributes: ['projectInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_projectId',
                 type: IndexType::Key,
                 attributes: ['projectId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_providerRepositoryId',
                 type: IndexType::Key,
                 attributes: ['providerRepositoryId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_resourceId',
                 type: IndexType::Key,
                 attributes: ['resourceId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_resourceInternalId',
                 type: IndexType::Key,
                 attributes: ['resourceInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_resourceType',
                 type: IndexType::Key,
                 attributes: ['resourceType'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -1085,9 +1300,10 @@ return [
             ),
         ],
     ],
+
     'vcsComments' => [
-        '$collection' => '_metadata',
-        '$id' => 'vcsComments',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('vcsComments'),
         'name' => 'vcsComments',
         'attributes' => [
             new Attribute(
@@ -1143,49 +1359,49 @@ return [
                 key: '_key_installationId',
                 type: IndexType::Key,
                 attributes: ['installationId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_installationInternalId',
                 type: IndexType::Key,
                 attributes: ['installationInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_projectInternalId',
                 type: IndexType::Key,
                 attributes: ['projectInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_projectId',
                 type: IndexType::Key,
                 attributes: ['projectId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_providerRepositoryId',
                 type: IndexType::Key,
                 attributes: ['providerRepositoryId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_providerPullRequestId',
                 type: IndexType::Key,
                 attributes: ['providerPullRequestId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_providerBranch',
                 type: IndexType::Key,
                 attributes: ['providerBranch'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -1195,33 +1411,285 @@ return [
             ),
         ],
     ],
+
     'vcsCommentLocks' => [
-        '$collection' => '_metadata',
-        '$id' => 'vcsCommentLocks',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('vcsCommentLocks'),
         'name' => 'vcsCommentLocks',
+        'attributes' => [],
+        'indexes' => []
+    ],
+
+    'reports' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('reports'),
+        'name' => 'Reports',
         'attributes' => [
+            new Attribute(
+                key: 'projectInternalId',
+                type: ColumnType::Id,
+                required: true,
+            ),
+            new Attribute(
+                key: 'projectId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                required: true,
+            ),
+            new Attribute(
+                key: 'appInternalId',
+                type: ColumnType::Id,
+            ),
+            new Attribute(
+                key: 'appId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'type',
+                type: ColumnType::String,
+                size: 64,
+                required: true,
+            ),
+            new Attribute(
+                key: 'title',
+                type: ColumnType::String,
+                size: 256,
+                required: true,
+            ),
+            new Attribute(
+                key: 'summary',
+                type: ColumnType::Text,
+                size: 65535,
+                default: '',
+            ),
+            // Resource type the report is about. Plural noun, e.g. databases, sites, urls.
+            new Attribute(
+                key: 'targetType',
+                type: ColumnType::String,
+                size: 64,
+                required: true,
+            ),
+            // Free-form target identifier (URL for lighthouse, resource ID for db).
+            // Indexed by `_key_project_target` with an explicit prefix length.
+            new Attribute(
+                key: 'target',
+                type: ColumnType::Text,
+                size: 65535,
+                required: true,
+            ),
+            // Category strings, e.g. 'performance', 'accessibility'. Native array
+            // column — we never query on individual entries (MySQL JSON-array
+            // indexes are weak), this is read+rewrite only.
+            new Attribute(
+                key: 'categories',
+                type: ColumnType::String,
+                size: 64,
+                array: true,
+            ),
+            // Virtual attribute — insights live in the `insights` collection
+            // back-referenced by `reportInternalId`. The subQuery filter joins
+            // them at read time.
+            new Attribute(
+                key: 'insights',
+                type: ColumnType::Text,
+                size: 65535,
+                filters: ['subQueryReportInsights'],
+            ),
+            new Attribute(
+                key: 'analyzedAt',
+                type: ColumnType::Datetime,
+                signed: false,
+                filters: ['datetime'],
+            ),
         ],
         'indexes' => [
-        ],
-    ],
-    'teams' => [
-        'attributes' => [
-            new Attribute(
-                key: 'keys',
-                type: ColumnType::String,
-                size: 16384,
-                filters: ['subQueryOrganizationKeys'],
+            new Index(
+                key: '_key_project_app_type',
+                type: IndexType::Key,
+                attributes: ['projectInternalId', 'appInternalId', 'type'],
+            ),
+            new Index(
+                key: '_key_project_target',
+                type: IndexType::Key,
+                attributes: ['projectInternalId', 'appInternalId', 'targetType', 'target'],
+                lengths: [null, null, null, 700],
             ),
         ],
     ],
-    'users' => [
+
+    'insights' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('insights'),
+        'name' => 'Insights',
         'attributes' => [
             new Attribute(
-                key: 'keys',
+                key: 'projectInternalId',
+                type: ColumnType::Id,
+                required: true,
+            ),
+            new Attribute(
+                key: 'projectId',
                 type: ColumnType::String,
-                size: 16384,
-                filters: ['subQueryAccountKeys'],
+                size: Database::LENGTH_KEY,
+                required: true,
+            ),
+            new Attribute(
+                key: 'reportInternalId',
+                type: ColumnType::Id,
+                required: true,
+            ),
+            new Attribute(
+                key: 'reportId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                default: '',
+            ),
+            new Attribute(
+                key: 'type',
+                type: ColumnType::String,
+                size: 64,
+                required: true,
+            ),
+            new Attribute(
+                key: 'severity',
+                type: ColumnType::String,
+                size: 16,
+                required: true,
+            ),
+            new Attribute(
+                key: 'status',
+                type: ColumnType::String,
+                size: 16,
+                required: true,
+                default: 'active',
+            ),
+            new Attribute(
+                key: 'resourceType',
+                type: ColumnType::String,
+                size: 64,
+                required: true,
+            ),
+            new Attribute(
+                key: 'resourceId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                required: true,
+            ),
+            new Attribute(
+                key: 'resourceInternalId',
+                type: ColumnType::Id,
+                required: true,
+            ),
+            new Attribute(
+                key: 'parentResourceType',
+                type: ColumnType::String,
+                size: 64,
+                default: '',
+            ),
+            new Attribute(
+                key: 'parentResourceId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                default: '',
+            ),
+            new Attribute(
+                key: 'parentResourceInternalId',
+                type: ColumnType::Id,
+            ),
+            new Attribute(
+                key: 'title',
+                type: ColumnType::String,
+                size: 256,
+                required: true,
+            ),
+            new Attribute(
+                key: 'summary',
+                type: ColumnType::Text,
+                size: 65535,
+                default: '',
+            ),
+            new Attribute(
+                key: 'ctas',
+                type: ColumnType::Text,
+                size: 65535,
+                filters: ['json'],
+            ),
+            new Attribute(
+                key: 'analyzedAt',
+                type: ColumnType::Datetime,
+                signed: false,
+                filters: ['datetime'],
+            ),
+            new Attribute(
+                key: 'dismissedAt',
+                type: ColumnType::Datetime,
+                signed: false,
+                filters: ['datetime'],
+            ),
+            new Attribute(
+                key: 'dismissedBy',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                default: '',
+            ),
+        ],
+        'indexes' => [
+            new Index(
+                key: '_key_project_report',
+                type: IndexType::Key,
+                attributes: ['projectInternalId', 'reportInternalId'],
+            ),
+            new Index(
+                key: '_key_project_resource',
+                type: IndexType::Key,
+                attributes: ['projectInternalId', 'resourceType', 'resourceId'],
+            ),
+            new Index(
+                key: '_key_project_parent_resource',
+                type: IndexType::Key,
+                attributes: ['projectInternalId', 'parentResourceType', 'parentResourceId'],
+            ),
+            new Index(
+                key: '_key_project_type',
+                type: IndexType::Key,
+                attributes: ['projectInternalId', 'type'],
+            ),
+            new Index(
+                key: '_key_project_severity',
+                type: IndexType::Key,
+                attributes: ['projectInternalId', 'severity'],
+            ),
+            new Index(
+                key: '_key_project_status',
+                type: IndexType::Key,
+                attributes: ['projectInternalId', 'status'],
+            ),
+            new Index(
+                key: '_key_project_dismissedAt',
+                type: IndexType::Key,
+                attributes: ['projectInternalId', 'dismissedAt'],
+                orders: ['ASC', 'DESC'],
             ),
         ],
     ],
+
 ];
+
+// Organization API keys subquery
+$platformCollections['teams']['attributes'][] = new Attribute(
+    key: 'keys',
+    type: ColumnType::String,
+    size: 16384,
+    filters: ['subQueryOrganizationKeys'],
+);
+
+// Account API keys subquery
+$platformCollections['users']['attributes'][] = new Attribute(
+    key: 'keys',
+    type: ColumnType::String,
+    size: 16384,
+    filters: ['subQueryAccountKeys'],
+);
+
+return $platformCollections;

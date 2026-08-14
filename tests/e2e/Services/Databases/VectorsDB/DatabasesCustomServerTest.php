@@ -15,7 +15,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Query\Schema\IndexType;
 
-class DatabasesCustomServerTest extends Scope
+final class DatabasesCustomServerTest extends Scope
 {
     use DatabasesBase;
     use ProjectCustom;
@@ -578,12 +578,12 @@ class DatabasesCustomServerTest extends Scope
 
         // Success: two embeddings
         $this->assertEventually(function () {
-            $ok = $this->client->call(Client::METHOD_POST, "/vectorsdb/embeddings/text", [
+            $ok = $this->client->call(Client::METHOD_POST, "/embeddings/text", [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ], [
-                'model' => 'embeddinggemma',
+                'model' => 'nomic-embed-text',
                 'texts' => [
                     'hello world',
                     'second sentence',
@@ -604,7 +604,7 @@ class DatabasesCustomServerTest extends Scope
         }, 3000, 100);
 
         // Error: missing texts payload
-        $missingTexts = $this->client->call(Client::METHOD_POST, "/vectorsdb/embeddings/text", [
+        $missingTexts = $this->client->call(Client::METHOD_POST, "/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -612,12 +612,12 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $missingTexts['headers']['status-code']);
 
         // Error: invalid texts item type (must be strings)
-        $invalidItem = $this->client->call(Client::METHOD_POST, "/vectorsdb/embeddings/text", [
+        $invalidItem = $this->client->call(Client::METHOD_POST, "/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'model' => 'embeddinggemma',
+            'model' => 'nomic-embed-text',
             'texts' => [
                 'valid text',
                 123, // invalid, not a string
@@ -626,7 +626,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $invalidItem['headers']['status-code']);
 
         // Error: unknown embedding model
-        $unknownModel = $this->client->call(Client::METHOD_POST, "/vectorsdb/embeddings/text", [
+        $unknownModel = $this->client->call(Client::METHOD_POST, "/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']

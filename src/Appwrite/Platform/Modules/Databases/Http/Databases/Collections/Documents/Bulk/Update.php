@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -26,7 +27,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
@@ -53,6 +54,7 @@ class Update extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -76,7 +78,7 @@ class Update extends Action
             ))
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
+            ->param('data', [], new JSONObject(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
@@ -85,25 +87,23 @@ class Update extends Action
             ->inject('usage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('eventProcessor')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, string $collectionId, string|array|\stdClass $data, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, Event $queueForEvents, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
     {
-        $data = \is_string($data)
-            ? \json_decode($data, true)
-            : $data;
+        $data = $this->normalizeData($data);
 
         if (empty($data)) {
             throw new Exception($this->getMissingPayloadException());
         }
 
         $database = $dbForProject->getDocument('databases', $databaseId);
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -223,8 +223,9 @@ class Update extends Action
         }
 
         $usage
-            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $modified))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), \max(1, $modified));
+            ->setResource('database')
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $modified));
 
         $response->dynamic(new Document([
             'total' => $modified,
@@ -238,7 +239,7 @@ class Update extends Action
             $documents,
             $queueForEvents,
             $queueForRealtime,
-            $queueForFunctions,
+            $publisherForFunctions,
             $queueForWebhooks,
             $dbForProject,
             $eventProcessor

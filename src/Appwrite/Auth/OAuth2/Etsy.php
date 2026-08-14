@@ -6,15 +6,12 @@ use Appwrite\Auth\OAuth2;
 
 class Etsy extends OAuth2
 {
-    /**
-     * @var string
-     */
-    private string $endpoint = 'https://api.etsy.com/v3/public';
+    use PKCE;
 
     /**
      * @var string
      */
-    private string $version = '2022-07-14';
+    private string $endpoint = 'https://api.etsy.com/v3/public';
 
     /**
      * @var array
@@ -35,23 +32,6 @@ class Etsy extends OAuth2
     ];
 
     /**
-     * @var string
-     */
-    private string $pkce = '';
-
-    /**
-     * @return string
-     */
-    private function getPKCE(): string
-    {
-        if (empty($this->pkce)) {
-            $this->pkce = \bin2hex(\random_bytes(rand(43, 128)));
-        }
-
-        return $this->pkce;
-    }
-
-    /**
      * @return string
      */
     public function getName(): string
@@ -68,11 +48,27 @@ class Etsy extends OAuth2
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
-            'state' => \json_encode($this->state),
+            'state' => \json_encode($this->withPKCEState($this->state)),
             'scope' => $this->scopes,
-            'code_challenge' => $this->getPKCE(),
+            'code_challenge' => $this->getPKCEChallenge(),
             'code_challenge_method' => 'S256',
         ]);
+    }
+
+    /**
+     * @param string $state
+     *
+     * @return array<string, mixed>|null
+     */
+    public function parseState(string $state): ?array
+    {
+        $parsed = \json_decode($state, true);
+
+        if (!\is_array($parsed)) {
+            return null;
+        }
+
+        return $this->restorePKCEState($parsed);
     }
 
     /**
@@ -94,7 +90,7 @@ class Etsy extends OAuth2
                     'client_id' => $this->appID,
                     'redirect_uri' => $this->callback,
                     'code' => $code,
-                    'code_verifier' => $this->getPKCE(),
+                    'code_verifier' => $this->getPKCEVerifier(),
                 ])
             ), true);
         }
@@ -162,9 +158,8 @@ class Etsy extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $email = $this->getUserEmail($accessToken);
-
-        return !empty($email);
+        // Provider exposes no email verification signal, so treat as unverified until one is confirmed
+        return false;
     }
 
     /**
@@ -193,6 +188,7 @@ class Etsy extends OAuth2
         $this->user = \json_decode($this->request(
             'GET',
             'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
+            $headers
         ), true);
 
         return $this->user;

@@ -24,16 +24,6 @@ class Context
     }
 
     /**
-     * Add a document to reduce
-     */
-    public function addReduce(Document $document): self
-    {
-        $this->reduce[] = $document;
-
-        return $this;
-    }
-
-    /**
      * Get all metrics
      *
      * @return array<array{key: string, value: int}>
@@ -59,6 +49,46 @@ class Context
     public function isEmpty(): bool
     {
         return empty($this->metrics) && empty($this->reduce);
+    }
+
+    public function setResourcePath(string $path): self
+    {
+        return $this;
+    }
+
+    public function getResourcePath(): string
+    {
+        return '';
+    }
+
+    public function setService(string $service): self
+    {
+        return $this;
+    }
+
+    public function getService(): string
+    {
+        return '';
+    }
+
+    public function setResource(string $resource): self
+    {
+        return $this;
+    }
+
+    public function setResourceId(string $resourceId): self
+    {
+        return $this;
+    }
+
+    public function getResourceId(): string
+    {
+        return '';
+    }
+
+    public function setResourceInternalId(string $resourceInternalId): self
+    {
+        return $this;
     }
 
     /**

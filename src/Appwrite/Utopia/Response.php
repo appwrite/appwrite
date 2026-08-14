@@ -29,21 +29,14 @@ class Response extends SwooleResponse
     public const MODEL_METRIC_LIST = 'metricList';
     public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
-    public const MODEL_BASE_LIST = 'baseList';
-    public const MODEL_USAGE_DATABASES = 'usageDatabases';
-    public const MODEL_USAGE_DATABASE = 'usageDatabase';
     public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
     public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
     public const MODEL_USAGE_VECTORSDBS = 'usageVectorsDBs';
     public const MODEL_USAGE_VECTORSDB = 'usageVectorsDB';
-    public const MODEL_USAGE_TABLE = 'usageTable';
-    public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
-    public const MODEL_USAGE_BUCKETS = 'usageBuckets';
-    public const MODEL_USAGE_STORAGE = 'usageStorage';
+    public const MODEL_USAGE_PRESENCE = 'usagePresence';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
     public const MODEL_USAGE_FUNCTION = 'usageFunction';
-    public const MODEL_USAGE_SITES = 'usageSites';
     public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
@@ -64,14 +57,21 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_INDEX_LIST = 'columnIndexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_PRESENCE = 'presence';
+    public const MODEL_PRESENCE_LIST = 'presenceList';
     public const MODEL_ROW = 'row';
     public const MODEL_ROW_LIST = 'rowList';
+
+    // Notifications
+    public const MODEL_NOTIFICATION = 'notification';
+    public const MODEL_NOTIFICATION_LIST = 'notificationList';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
     public const MODEL_ATTRIBUTE_LIST = 'attributeList';
     public const MODEL_ATTRIBUTE_STRING = 'attributeString';
     public const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    public const MODEL_ATTRIBUTE_BIGINT = 'attributeBigint';
     public const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
     public const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
     public const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
@@ -95,6 +95,7 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_LIST = 'columnList';
     public const MODEL_COLUMN_STRING = 'columnString';
     public const MODEL_COLUMN_INTEGER = 'columnInteger';
+    public const MODEL_COLUMN_BIGINT = 'columnBigint';
     public const MODEL_COLUMN_FLOAT = 'columnFloat';
     public const MODEL_COLUMN_BOOLEAN = 'columnBoolean';
     public const MODEL_COLUMN_EMAIL = 'columnEmail';
@@ -130,8 +131,8 @@ class Response extends SwooleResponse
     // MFA
     public const MODEL_MFA_TYPE = 'mfaType';
     public const MODEL_MFA_FACTORS = 'mfaFactors';
-    public const MODEL_MFA_OTP = 'mfaTotp';
     public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
+    public const MODEL_MFA_CHALLENGE_SECRET = 'mfaChallengeSecret';
     public const MODEL_MFA_RECOVERY_CODES = 'mfaRecoveryCodes';
 
     // Users password algos
@@ -188,11 +189,12 @@ class Response extends SwooleResponse
     public const MODEL_INSTALLATION = 'installation';
     public const MODEL_INSTALLATION_LIST = 'installationList';
     public const MODEL_PROVIDER_REPOSITORY = 'providerRepository';
-    public const MODEL_PROVIDER_REPOSITORY_LIST = 'providerRepositoryList';
     public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK = 'providerRepositoryFramework';
     public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST = 'providerRepositoryFrameworkList';
     public const MODEL_PROVIDER_REPOSITORY_RUNTIME = 'providerRepositoryRuntime';
     public const MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST = 'providerRepositoryRuntimeList';
+    public const MODEL_VCS_NAMESPACE = 'vcsNamespace';
+    public const MODEL_VCS_NAMESPACE_LIST = 'vcsNamespaceList';
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
     public const MODEL_DETECTION_FRAMEWORK = 'detectionFramework';
@@ -220,7 +222,6 @@ class Response extends SwooleResponse
     public const MODEL_DEPLOYMENT_LIST = 'deploymentList';
     public const MODEL_EXECUTION = 'execution';
     public const MODEL_EXECUTION_LIST = 'executionList';
-    public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
     public const MODEL_SPECIFICATION = 'specification';
     public const MODEL_SPECIFICATION_LIST = 'specificationList';
@@ -247,22 +248,86 @@ class Response extends SwooleResponse
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
+    public const MODEL_STAGE = 'stage';
+    public const MODEL_STAGE_LIST = 'stageList';
+    public const MODEL_PROJECT_AUTH_METHOD = 'projectAuthMethod';
+    public const MODEL_PROJECT_SERVICE = 'projectService';
+    public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
+    public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
     public const MODEL_DEV_KEY = 'devKey';
     public const MODEL_DEV_KEY_LIST = 'devKeyList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
+    public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
+    public const MODEL_POLICY_LIST = 'policyList';
+    public const MODEL_POLICY_PASSWORD_DICTIONARY = 'policyPasswordDictionary';
+    public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
+    public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
+    public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
+    public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
+    public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
+    public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';
+    public const MODEL_POLICY_SESSION_LIMIT = 'policySessionLimit';
+    public const MODEL_POLICY_USER_LIMIT = 'policyUserLimit';
+    public const MODEL_POLICY_MEMBERSHIP_PRIVACY = 'policyMembershipPrivacy';
+    public const MODEL_POLICY_MFA_FACTORS = 'policyMfaFactors';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
-    public const MODEL_PLATFORM = 'platform';
+    public const MODEL_PLATFORM_APPLE = 'platformApple';
+    public const MODEL_PLATFORM_ANDROID = 'platformAndroid';
+    public const MODEL_PLATFORM_WINDOWS = 'platformWindows';
+    public const MODEL_PLATFORM_LINUX = 'platformLinux';
+    public const MODEL_PLATFORM_WEB = 'platformWeb';
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
-    public const MODEL_VCS = 'vcs';
-    public const MODEL_SMS_TEMPLATE = 'smsTemplate';
     public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
+    public const MODEL_EMAIL_TEMPLATE_LIST = 'emailTemplateList';
+    public const MODEL_OAUTH2_GITHUB = 'oAuth2Github';
+    public const MODEL_OAUTH2_DISCORD = 'oAuth2Discord';
+    public const MODEL_OAUTH2_FIGMA = 'oAuth2Figma';
+    public const MODEL_OAUTH2_DROPBOX = 'oAuth2Dropbox';
+    public const MODEL_OAUTH2_DAILYMOTION = 'oAuth2Dailymotion';
+    public const MODEL_OAUTH2_BITBUCKET = 'oAuth2Bitbucket';
+    public const MODEL_OAUTH2_BITLY = 'oAuth2Bitly';
+    public const MODEL_OAUTH2_BOX = 'oAuth2Box';
+    public const MODEL_OAUTH2_AUTODESK = 'oAuth2Autodesk';
+    public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
+    public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
+    public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
+    public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
+    public const MODEL_OAUTH2_X = 'oAuth2X';
+    public const MODEL_OAUTH2_WORDPRESS = 'oAuth2WordPress';
+    public const MODEL_OAUTH2_TWITCH = 'oAuth2Twitch';
+    public const MODEL_OAUTH2_STRIPE = 'oAuth2Stripe';
+    public const MODEL_OAUTH2_SPOTIFY = 'oAuth2Spotify';
+    public const MODEL_OAUTH2_SLACK = 'oAuth2Slack';
+    public const MODEL_OAUTH2_PODIO = 'oAuth2Podio';
+    public const MODEL_OAUTH2_NOTION = 'oAuth2Notion';
+    public const MODEL_OAUTH2_SALESFORCE = 'oAuth2Salesforce';
+    public const MODEL_OAUTH2_YAHOO = 'oAuth2Yahoo';
+    public const MODEL_OAUTH2_LINKEDIN = 'oAuth2Linkedin';
+    public const MODEL_OAUTH2_DISQUS = 'oAuth2Disqus';
+    public const MODEL_OAUTH2_AMAZON = 'oAuth2Amazon';
+    public const MODEL_OAUTH2_ETSY = 'oAuth2Etsy';
+    public const MODEL_OAUTH2_FACEBOOK = 'oAuth2Facebook';
+    public const MODEL_OAUTH2_TRADESHIFT = 'oAuth2Tradeshift';
+    public const MODEL_OAUTH2_PAYPAL = 'oAuth2Paypal';
+    public const MODEL_OAUTH2_GITLAB = 'oAuth2Gitlab';
+    public const MODEL_OAUTH2_APPWRITE = 'oAuth2Appwrite';
+    public const MODEL_OAUTH2_AUTHENTIK = 'oAuth2Authentik';
+    public const MODEL_OAUTH2_AUTH0 = 'oAuth2Auth0';
+    public const MODEL_OAUTH2_FUSIONAUTH = 'oAuth2FusionAuth';
+    public const MODEL_OAUTH2_KEYCLOAK = 'oAuth2Keycloak';
+    public const MODEL_OAUTH2_OIDC = 'oAuth2Oidc';
+    public const MODEL_OAUTH2_APPLE = 'oAuth2Apple';
+    public const MODEL_OAUTH2_OKTA = 'oAuth2Okta';
+    public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
+    public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
+    public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -273,15 +338,20 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_CERTIFICATE = 'healthCertificate';
     public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
 
+    // Advisor
+    public const MODEL_INSIGHT = 'insight';
+    public const MODEL_INSIGHT_LIST = 'insightList';
+    public const MODEL_INSIGHT_CTA = 'insightCTA';
+    public const MODEL_REPORT = 'report';
+    public const MODEL_REPORT_LIST = 'reportList';
+
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
-
-    // Deprecated
-    public const MODEL_PERMISSIONS = 'permissions';
-    public const MODEL_RULE = 'rule';
-    public const MODEL_TASK = 'task';
-    public const MODEL_DOMAIN = 'domain';
-    public const MODEL_DOMAIN_LIST = 'domainList';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER_PARAMETER = 'consoleOAuth2ProviderParameter';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER = 'consoleOAuth2Provider';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER_LIST = 'consoleOAuth2ProviderList';
+    public const MODEL_CONSOLE_KEY_SCOPE = 'consoleKeyScope';
+    public const MODEL_CONSOLE_KEY_SCOPE_LIST = 'consoleKeyScopeList';
 
     // Tests (keep last)
     public const MODEL_MOCK = 'mock';
@@ -299,7 +369,7 @@ class Response extends SwooleResponse
     /**
      * @var bool
      */
-    protected static bool $showSensitive = false;
+    protected bool $showSensitive = false;
 
     /**
      * @var array<string, Model>
@@ -371,9 +441,10 @@ class Response extends SwooleResponse
         return isset(self::$models[$key]);
     }
 
-    public function applyFilters(array $data, string $model): array
+    public function applyFilters(array $data, string $model, Document $raw): array
     {
         foreach ($this->filters as $filter) {
+            $filter->setRawContent($raw);
             $data = $filter->parse($data, $model);
         }
 
@@ -392,8 +463,18 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
+        if (
+            $this->impersonatorUser !== null
+            && $model === self::MODEL_ACCOUNT
+            && $this->user !== null
+            && $document->getId() === $this->user->getId()
+        ) {
+            $document = clone $document;
+            $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
+        }
+
         $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model);
+        $output = $this->applyFilters($output, $model, raw: clone $document);
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
@@ -469,6 +550,10 @@ class Response extends SwooleResponse
                 }
 
                 foreach ($data[$key] as $index => $item) {
+                    if (\is_array($item) && !\is_array($rule['type']) && self::hasModel($rule['type'])) {
+                        $item = new Document($item);
+                    }
+
                     if ($item instanceof Document) {
                         $ruleType = null;
 
@@ -476,7 +561,13 @@ class Response extends SwooleResponse
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
                                 foreach ($this->getModel($type)->conditions as $attribute => $val) {
-                                    $condition = $item->getAttribute($attribute) === $val;
+
+                                    if (\is_array($val)) {
+                                        $condition = \in_array($item->getAttribute($attribute), $val);
+                                    } else {
+                                        $condition = $item->getAttribute($attribute) === $val;
+                                    }
+
                                     if (!$condition) {
                                         break;
                                     }
@@ -507,9 +598,9 @@ class Response extends SwooleResponse
                 $roles = $this->authorization->getRoles();
                 $user = $this->user ?? new DBUser();
                 $isPrivilegedUser = $user->isPrivileged($roles);
-                $isAppUser = $user->isApp($roles);
+                $isAppUser = $user->isKey($roles);
 
-                if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
+                if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');
                 }
             }
@@ -603,6 +694,8 @@ class Response extends SwooleResponse
             throw new \Exception('Response body is not a valid JSON object.');
         }
 
+        $this->payload = \is_array($data) ? $data : (array) $data;
+
         $this
             ->setContentType(Response::CONTENT_TYPE_JSON, self::CHARSET_UTF8)
             ->send(\json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -614,6 +707,16 @@ class Response extends SwooleResponse
     public function getPayload(): array
     {
         return $this->payload;
+    }
+
+    /**
+     * Set the sent flag on the response. Pass false to allow reuse
+     * (e.g. batched GraphQL queries), true to prevent further writes.
+     */
+    public function setSent(bool $sent): static
+    {
+        $this->sent = $sent;
+        return $this;
     }
 
     /**
@@ -639,16 +742,6 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Reset filters
-     *
-     * @return void
-     */
-    public function resetFilters(): void
-    {
-        $this->filters = [];
-    }
-
-    /**
      * Check if a filter has been set
      *
      * @return bool
@@ -659,23 +752,26 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Static wrapper to show sensitive data in response
+     * Wrapper to show sensitive data in response
      *
      * @param callable(): array $callback The callback to show sensitive information for
      * @return array
      */
-    public static function showSensitive(callable $callback): array
+    public function showSensitive(callable $callback): array
     {
+        $previous = $this->showSensitive;
+
         try {
-            self::$showSensitive = true;
+            $this->showSensitive = true;
             return $callback();
         } finally {
-            self::$showSensitive = false;
+            $this->showSensitive = $previous;
         }
     }
 
     private ?Authorization $authorization = null;
     private ?DBUser $user = null;
+    private ?Document $impersonatorUser = null;
 
     public function setAuthorization(Authorization $authorization): void
     {
@@ -685,5 +781,10 @@ class Response extends SwooleResponse
     public function setUser(DBUser $user): void
     {
         $this->user = $user;
+    }
+
+    public function setImpersonatorUser(Document $impersonatorUser): void
+    {
+        $this->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
     }
 }

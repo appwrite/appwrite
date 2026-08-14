@@ -90,10 +90,10 @@ class Get extends Action
             }
 
             if (!$isEmployee && !empty($githubName)) {
-                $employeeGitHub = \array_search(\strtolower($githubName), \array_map(fn ($employee) => \strtolower($employee['gitHub']) ?? '', $employees));
+                $employeeGitHub = \array_search(\strtolower($githubName), \array_map(fn ($employee) => \strtolower($employee['gitHub'] ?? ''), $employees));
                 if (!empty($employeeGitHub)) {
                     $isEmployee = true;
-                    $employeeNumber = $isEmployee ? $employees[$employeeGitHub]['spot'] : '';
+                    $employeeNumber = $employees[$employeeGitHub]['spot'];
                     $createdAt = new \DateTime($employees[$employeeGitHub]['memberSince'] ?? '');
                 }
             }

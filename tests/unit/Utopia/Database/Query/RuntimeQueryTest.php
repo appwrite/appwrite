@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Database\Query;
 
 use Appwrite\Utopia\Database\RuntimeQuery;
@@ -7,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Database\Query;
 use Utopia\Query\Method;
 
-class RuntimeQueryTest extends TestCase
+final class RuntimeQueryTest extends TestCase
 {
     public function setUp(): void
     {
@@ -30,7 +32,7 @@ class RuntimeQueryTest extends TestCase
     {
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter([], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testFilterWithNoMatchingQuery(): void
@@ -46,7 +48,7 @@ class RuntimeQueryTest extends TestCase
         $queries = [Query::equal('name', ['John'])];
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter($queries, $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     // TYPE_EQUAL tests
@@ -55,7 +57,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('name', ['John']);
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testEqualNoMatch(): void
@@ -71,7 +73,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('status', ['active', 'pending', 'approved']);
         $payload = ['status' => 'active'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testEqualMultipleValuesNoMatch(): void
@@ -87,7 +89,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('age', [30, 25, 35]);
         $payload = ['age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testEqualBooleanValues(): void
@@ -112,7 +114,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::notEqual('name', ['Jane']);
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testNotEqualNoMatch(): void
@@ -130,7 +132,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::notEqual('status', ['rejected', 'cancelled']);
         $payload = ['status' => 'active'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
 
         $query = Query::notEqual('status', ['active', 'pending']);
         $payload = ['status' => 'active'];
@@ -144,7 +146,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::lessThan('age', 30);
         $payload = ['age' => 25];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testLesserNoMatch(): void
@@ -170,7 +172,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::lessThan('age', 30);
         $payload = ['age' => 25];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testLesserStringComparison(): void
@@ -178,7 +180,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::lessThan('name', 'M');
         $payload = ['name' => 'A'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     // TYPE_LESSER_EQUAL tests
@@ -187,7 +189,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::lessThanEqual('age', 30);
         $payload = ['age' => 25];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testLesserEqualExactMatch(): void
@@ -195,7 +197,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::lessThanEqual('age', 30);
         $payload = ['age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testLesserEqualNoMatch(): void
@@ -212,7 +214,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::lessThanEqual('age', 30);
         $payload = ['age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     // TYPE_GREATER tests
@@ -221,7 +223,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::greaterThan('age', 30);
         $payload = ['age' => 35];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testGreaterNoMatch(): void
@@ -246,7 +248,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::greaterThan('age', 20);
         $payload = ['age' => 35];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     // TYPE_GREATER_EQUAL tests
@@ -255,7 +257,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::greaterThanEqual('age', 30);
         $payload = ['age' => 35];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testGreaterEqualExactMatch(): void
@@ -263,7 +265,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::greaterThanEqual('age', 30);
         $payload = ['age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testGreaterEqualNoMatch(): void
@@ -280,7 +282,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::greaterThanEqual('age', 20);
         $payload = ['age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     // TYPE_IS_NULL tests
@@ -314,7 +316,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::isNotNull('description');
         $payload = ['description' => 'Some text'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testIsNotNullNoMatch(): void
@@ -342,7 +344,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testAndOneFails(): void
@@ -376,7 +378,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['status' => 'active', 'age' => 25, 'email' => 'test@example.com'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testAndNestedAnd(): void
@@ -390,7 +392,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['name' => 'John', 'age' => 30, 'status' => 'active'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     // TYPE_OR tests
@@ -402,7 +404,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testOrAllMatch(): void
@@ -413,7 +415,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['status' => 'active'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testOrAllFail(): void
@@ -436,7 +438,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['status' => 'pending'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testOrNestedOr(): void
@@ -450,7 +452,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['name' => 'Bob'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testOrWithDifferentAttributes(): void
@@ -461,7 +463,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['name' => 'Jane', 'email' => 'john@example.com'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testOrWithMissingAttributeInOneBranch(): void
@@ -474,7 +476,7 @@ class RuntimeQueryTest extends TestCase
         // Payload only has email, not name - should still match via email branch
         $payload = ['email' => 'john@example.com'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testOrWithMissingAttributeNoMatch(): void
@@ -502,7 +504,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['type' => 'user', 'status' => 'active'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testOrAndCombination(): void
@@ -519,7 +521,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     // Edge cases
@@ -531,7 +533,7 @@ class RuntimeQueryTest extends TestCase
         ];
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter($queries, $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testMultipleQueriesFirstMatches(): void
@@ -583,7 +585,7 @@ class RuntimeQueryTest extends TestCase
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
         // Empty AND should return true (all conditions pass vacuously)
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testEmptyOrQuery(): void
@@ -601,7 +603,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('count', [0]);
         $payload = ['count' => 0];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testEqualWithEmptyString(): void
@@ -609,7 +611,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('name', ['']);
         $payload = ['name' => ''];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testEqualWithFalse(): void
@@ -625,7 +627,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::greaterThan('score', 8.5);
         $payload = ['score' => 9.2];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testComparisonWithStringNumbers(): void
@@ -633,7 +635,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::lessThan('version', '10');
         $payload = ['version' => '9'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     // TYPE_SELECT tests - select("*") means "listen to all events"
@@ -660,7 +662,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::select(['*']);
         // Should not throw
         RuntimeQuery::validateSelectQuery($query);
-        $this->assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     public function testValidateSelectQueryWithSpecificFields(): void
@@ -695,7 +697,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('name', ['John']);
         // Should not throw for non-select queries
         RuntimeQuery::validateSelectQuery($query);
-        $this->assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     // Filter tests with select("*")
@@ -704,7 +706,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::select(['*']);
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testFilterWithSelectAllAndOtherQueriesReturnsPayload(): void
@@ -717,7 +719,7 @@ class RuntimeQueryTest extends TestCase
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter($queries, $payload);
         // select("*") takes precedence - returns payload
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 
     public function testFilterWithSelectAllOnEmptyPayload(): void
@@ -725,6 +727,6 @@ class RuntimeQueryTest extends TestCase
         $query = Query::select(['*']);
         $payload = [];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals($payload, $result);
+        $this->assertSame($payload, $result);
     }
 }

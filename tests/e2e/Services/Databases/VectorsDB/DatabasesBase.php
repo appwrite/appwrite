@@ -188,7 +188,7 @@ trait DatabasesBase
             ]
         ]);
         $this->assertEquals(200, $page1['headers']['status-code']);
-        $this->assertEquals(1, \count($page1['body']['documents'] ?? []));
+        $this->assertSame(1, \count($page1['body']['documents'] ?? []));
 
         $page2 = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',
@@ -202,7 +202,7 @@ trait DatabasesBase
             ]
         ]);
         $this->assertEquals(200, $page2['headers']['status-code']);
-        $this->assertEquals(1, \count($page2['body']['documents'] ?? []));
+        $this->assertSame(1, \count($page2['body']['documents'] ?? []));
 
         return $data;
     }

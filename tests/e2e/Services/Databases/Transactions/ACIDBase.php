@@ -179,7 +179,6 @@ trait ACIDBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('This adapter does not support attributes; schema constraint consistency cannot be tested.');
-            return;
         }
 
         // Create database

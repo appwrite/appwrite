@@ -13,6 +13,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Query\Schema\ForeignKeyAction;
+use Utopia\Platform\Enum;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
@@ -36,11 +37,12 @@ class Create extends RelationshipCreate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/relationship')
             ->desc('Create relationship column')
             ->groups(['api', 'database'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
             ->label('audits.event', 'column.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -62,7 +64,7 @@ class Create extends RelationshipCreate
                 RelationType::ManyToOne->value,
                 RelationType::ManyToMany->value,
                 RelationType::OneToMany->value
-            ], true), 'Relation type')
+            ], true), 'Relationship type. Possible values are: oneToOne, oneToMany, manyToOne, manyToMany.', enum: new Enum(name: 'RelationshipType'))
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
             ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Column Key.', true, ['dbForProject'])
             ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Column Key.', true, ['dbForProject'])
@@ -70,10 +72,10 @@ class Create extends RelationshipCreate
                 ForeignKeyAction::Cascade->value,
                 ForeignKeyAction::Restrict->value,
                 ForeignKeyAction::SetNull->value
-            ], true), 'Constraints option', true)
+            ], true), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));

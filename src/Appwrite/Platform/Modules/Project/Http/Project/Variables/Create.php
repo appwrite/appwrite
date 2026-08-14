@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\Variables;
 
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -19,7 +18,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
-class Create extends Base
+class Create extends Action
 {
     use HTTP;
 
@@ -54,7 +53,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('variableId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Variable ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.')
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.')
             ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
@@ -73,7 +72,7 @@ class Create extends Base
         QueueEvent $queueForEvents,
         Database $dbForProject,
     ) {
-        $variableId = ($variableId == 'unique()') ? ID::unique() : $variableId;
+        $variableId = ($variableId === 'unique()') ? ID::unique() : $variableId;
 
         $variable = new Document([
             '$id' => $variableId,

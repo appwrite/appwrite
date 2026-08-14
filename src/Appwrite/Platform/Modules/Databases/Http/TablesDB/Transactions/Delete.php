@@ -19,11 +19,6 @@ class Delete extends TransactionsDelete
         return 'deleteTransaction';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_NONE;
-    }
-
     public function __construct()
     {
         $this
@@ -50,7 +45,8 @@ class Delete extends TransactionsDelete
             ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
+            ->inject('project')
             ->callback($this->action(...));
     }
 }

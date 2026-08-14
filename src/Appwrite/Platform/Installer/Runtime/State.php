@@ -19,13 +19,11 @@ class State
     private const int PORT_MIN = 1;
     private const int PORT_MAX = 65535;
 
-    private array $paths;
     private bool $bootstrapped = false;
     private int $lastStaleLockClearAt = 0;
 
-    public function __construct(array $paths)
+    public function __construct()
     {
-        $this->paths = $paths;
     }
 
     public function buildConfig(array $overrides = [], bool $useEnv = true): Config
@@ -180,7 +178,7 @@ class State
             if (!preg_match(self::PATTERN_IPV6_WITH_PORT, $value, $matches)) {
                 return false;
             }
-            $host = $matches[1] ?? '';
+            $host = $matches[1];
             $port = $matches[2] ?? null;
         } else {
             $parts = explode(':', $value);
@@ -188,11 +186,15 @@ class State
                 return false;
             }
             if (count($parts) === 2) {
+                // Trailing colon with no digits is an explicit but empty port.
+                if ($parts[1] === '') {
+                    return false;
+                }
                 [$host, $port] = $parts;
             }
         }
 
-        if ($port !== null && $port !== '' && !$this->isValidPort($port)) {
+        if ($port !== null && !$this->isValidPort($port)) {
             return false;
         }
 
@@ -201,7 +203,7 @@ class State
 
     public function isValidDatabaseAdapter(string $value): bool
     {
-        return in_array($value, ['mongodb', 'mariadb', 'postgresql'], true);
+        return in_array($value, ['postgresql', 'mariadb', 'mongodb'], true);
     }
 
     public function progressFilePath(string $installId): string

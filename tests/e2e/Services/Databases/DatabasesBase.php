@@ -779,6 +779,45 @@ trait DatabasesBase
         $this->assertEquals($this->getDatabaseType(), $database['body']['type']);
     }
 
+    public function testDatabaseStatus(): void
+    {
+        if ($this->getSide() === 'client') {
+            // Databases are created and read with a server API key.
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         * A newly created database defaults to the "ready" status.
+         */
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Status Database',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertArrayHasKey('status', $database['body']);
+        $this->assertEquals('ready', $database['body']['status']);
+
+        $databaseId = $database['body']['$id'];
+
+        /**
+         * The status is persisted and returned on read.
+         */
+        $response = $this->client->call(Client::METHOD_GET, $this->getApiBasePath() . '/' . $databaseId, $headers);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('status', $response['body']);
+        $this->assertEquals('ready', $response['body']['status']);
+    }
+
     public function testCreateCollection(): void
     {
         $data = $this->setupDatabase();
@@ -939,7 +978,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         // Use dedicated collections for this test to avoid conflicts with setupAttributes()
         $data = $this->setupDatabase();
@@ -1192,7 +1230,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
@@ -1208,7 +1245,7 @@ trait DatabasesBase
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, \count($response['body'][$this->getSchemaResource()]));
+        $this->assertSame(2, \count($response['body'][$this->getSchemaResource()]));
         $response = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1224,7 +1261,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
@@ -1293,7 +1329,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
@@ -1354,7 +1389,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
@@ -2496,7 +2530,7 @@ trait DatabasesBase
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, \count($response['body']['indexes']));
+        $this->assertSame(2, \count($response['body']['indexes']));
         $response = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2659,6 +2693,103 @@ trait DatabasesBase
         } else {
             $this->assertEquals(201, $document4['headers']['status-code']);
         }
+    }
+
+    public function testCreateDocumentInvalidData(): void
+    {
+        $data = $this->setupIndexes();
+        $databaseId = $data['databaseId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $documentId = ID::unique();
+        $invalid = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordIdParam() => $documentId,
+                'data' => \json_encode('not-an-object'),
+            ]
+        );
+
+        $this->assertEquals(400, $invalid['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $invalid['body']['type']);
+        $this->assertStringContainsString('Invalid `data` param', $invalid['body']['message']);
+        $this->assertStringContainsString('Value must be a valid JSON object', $invalid['body']['message']);
+
+        $notCreated = $this->client->call(
+            Client::METHOD_GET,
+            $this->getRecordUrl($databaseId, $data['moviesId'], $documentId),
+            $headers
+        );
+
+        $this->assertEquals(404, $notCreated['headers']['status-code']);
+
+        $invalidList = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => \json_encode([]),
+            ]
+        );
+
+        $this->assertEquals(400, $invalidList['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $invalidList['body']['type']);
+
+        $encodedDocument = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => \json_encode([
+                    'title' => 'Encoded object',
+                    'releaseYear' => 2000,
+                ]),
+            ]
+        );
+
+        $this->assertEquals(201, $encodedDocument['headers']['status-code']);
+        $this->assertEquals('Encoded object', $encodedDocument['body']['title']);
+
+        if ($this->getSide() !== 'server') {
+            return;
+        }
+
+        $bulkDocumentId = ID::unique();
+        $invalidBulk = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordResource() => [
+                    [
+                        '$id' => $bulkDocumentId,
+                        'title' => 'Must not be created',
+                        'releaseYear' => 2000,
+                    ],
+                    \json_encode('not-an-object'),
+                ],
+            ]
+        );
+
+        $this->assertEquals(400, $invalidBulk['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $invalidBulk['body']['type']);
+        $this->assertStringContainsString('Invalid `' . $this->getRecordResource() . '` param', $invalidBulk['body']['message']);
+        $this->assertStringContainsString('Value must be a valid JSON object', $invalidBulk['body']['message']);
+
+        $bulkNotCreated = $this->client->call(
+            Client::METHOD_GET,
+            $this->getRecordUrl($databaseId, $data['moviesId'], $bulkDocumentId),
+            $headers
+        );
+
+        $this->assertEquals(404, $bulkNotCreated['headers']['status-code']);
     }
 
     public function testUpsertDocument(): void
@@ -3327,7 +3458,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
@@ -3371,7 +3501,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $documents2['headers']['status-code']);
-        $this->assertEquals(3, $documents2['body']['total']);
+        $this->assertSame(3, $documents2['body']['total']);
         $this->assertCount(3, $documents2['body'][$this->getRecordResource()]);
         $this->assertEquals($documents1['body'][$this->getRecordResource()][0]['$id'], $documents2['body'][$this->getRecordResource()][0]['$id']);
         $this->assertEquals($documents1['body'][$this->getRecordResource()][0]['title'], $documents2['body'][$this->getRecordResource()][0]['title']);
@@ -3461,7 +3591,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
@@ -3530,6 +3659,155 @@ trait DatabasesBase
         $this->assertEquals('miss', $documents3['headers']['x-appwrite-cache']);
     }
 
+    public function testListDocumentsCachedWithoutSelectQuery(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $docIds = $data['documentIds'];
+
+        // No Query::select(...) at all — ttl alone should enable caching.
+        $queries = [
+            Query::equal('$id', $docIds)->toString(),
+            Query::orderAsc('releaseYear')->toString(),
+        ];
+
+        // 1. First request populates the cache.
+        $documents1 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries,
+            'ttl' => 60,
+        ]);
+
+        $this->assertEquals(200, $documents1['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $documents1['headers']);
+        $this->assertEquals('miss', $documents1['headers']['x-appwrite-cache']);
+
+        // 2. Same request hits cache — proves the gate is ttl > 0, not the presence of a select query.
+        $documents2 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries,
+            'ttl' => 60,
+        ]);
+
+        $this->assertEquals(200, $documents2['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $documents2['headers']);
+        $this->assertEquals('hit', $documents2['headers']['x-appwrite-cache']);
+        $this->assertSame(
+            $documents1['body'][$this->getRecordResource()],
+            $documents2['body'][$this->getRecordResource()]
+        );
+    }
+
+    public function testListDocumentsCachePurgedByUpdate(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $docIds = $data['documentIds'];
+
+        // Use different select queries from other cache tests to avoid cache key collision.
+        $queries = [
+            Query::equal('$id', $docIds)->toString(),
+            Query::select(['title', 'tagline', '$id'])->toString(),
+            Query::orderAsc('$createdAt')->toString(),
+        ];
+
+        // 1. First request populates the cache.
+        $documents1 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries,
+            'ttl' => 300,
+        ]);
+
+        $this->assertEquals(200, $documents1['headers']['status-code']);
+        $this->assertEquals('miss', $documents1['headers']['x-appwrite-cache']);
+
+        // 2. Same request hits cache.
+        $documents2 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries,
+            'ttl' => 300,
+        ]);
+
+        $this->assertEquals(200, $documents2['headers']['status-code']);
+        $this->assertEquals('hit', $documents2['headers']['x-appwrite-cache']);
+
+        // 3. Update the collection/table with purge=true to invalidate all cached list responses.
+        $update = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'name' => 'Movies',
+            'enabled' => true,
+            $this->getSecurityParam() => true,
+            'purge' => true,
+        ]);
+
+        $this->assertEquals(200, $update['headers']['status-code']);
+
+        // 4. Same request should now miss cache because purge=true cleared the hash.
+        $documents3 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries,
+            'ttl' => 300,
+        ]);
+
+        $this->assertEquals(200, $documents3['headers']['status-code']);
+        $this->assertEquals('miss', $documents3['headers']['x-appwrite-cache']);
+
+        // 5. Re-reading without purge should hit the freshly populated cache.
+        $documents4 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries,
+            'ttl' => 300,
+        ]);
+
+        $this->assertEquals(200, $documents4['headers']['status-code']);
+        $this->assertEquals('hit', $documents4['headers']['x-appwrite-cache']);
+
+        // 6. Update without purge=true must NOT invalidate the cache.
+        $update2 = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'name' => 'Movies',
+            'enabled' => true,
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertEquals(200, $update2['headers']['status-code']);
+
+        $documents5 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries,
+            'ttl' => 300,
+        ]);
+
+        $this->assertEquals(200, $documents5['headers']['status-code']);
+        $this->assertEquals('hit', $documents5['headers']['x-appwrite-cache']);
+    }
+
     public function testGetDocument(): void
     {
         $data = $this->getDocumentsList();
@@ -3552,6 +3830,76 @@ trait DatabasesBase
             $this->assertTrue(array_key_exists('$sequence', $response['body']));
             $this->assertFalse(array_key_exists('$tenant', $response['body']));
         }
+    }
+
+    public function testGetDocumentCacheEmpty(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+
+        // Dedicated collection so the inserted document cannot change the
+        // document counts asserted by the shared movies-collection tests.
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'CacheEmpty',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $containerId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->createAttribute($databaseId, $containerId, 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => false,
+            ]);
+            $this->waitForAttribute($databaseId, $containerId, 'title');
+        }
+
+        $documentId = ID::unique();
+
+        // Read a document that does not exist yet -> negatively caches the miss.
+        $missing = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $missing['headers']['status-code']);
+
+        // Create that same id. This must purge the cached "not found".
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => $documentId,
+            'data' => [
+                'title' => 'Cached Empty',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $this->assertEquals($documentId, $created['body']['$id']);
+
+        // The freshly created document must be visible right away. Without cache
+        // invalidation on create this would still return 404 from the marker.
+        $fetched = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals($documentId, $fetched['body']['$id']);
+        $this->assertEquals('Cached Empty', $fetched['body']['title']);
     }
 
     public function testGetDocumentWithQueries(): void
@@ -4781,7 +5129,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
             'content-type' => 'application/json',
@@ -5918,6 +6265,8 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals($this->getUniqueConstraintException(), $duplicate['body']['type']);
+        $this->assertStringNotContainsString('requested ID', $duplicate['body']['message']);
 
         // Test for exception when inserting new doc and then updating to conflict
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -5954,6 +6303,16 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals($this->getUniqueConstraintException(), $duplicate['body']['type']);
+        $this->assertStringNotContainsString('requested ID', $duplicate['body']['message']);
+
+    }
+
+    private function getUniqueConstraintException(): string
+    {
+        return $this->getRecordResource() === 'rows'
+            ? Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION
+            : Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION;
     }
 
     public function testPersistentCreatedAt(): void
@@ -6519,7 +6878,7 @@ trait DatabasesBase
 
         $this->assertEquals(201, $person2['headers']['status-code']);
         $this->assertArrayHasKey('libraries', $person2['body']);
-        $this->assertEquals(2, count($person2['body']['libraries']));
+        $this->assertSame(2, count($person2['body']['libraries']));
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $personCollection, $person2['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -6533,7 +6892,7 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('$collection', $response['body']);
         $this->assertArrayHasKey('libraries', $response['body']);
-        $this->assertEquals(2, count($response['body']['libraries']));
+        $this->assertSame(2, count($response['body']['libraries']));
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $libraryCollection, $libraryDoc11Id), array_merge([
             'content-type' => 'application/json',
@@ -6718,7 +7077,7 @@ trait DatabasesBase
         $this->assertEquals(200, $artist['headers']['status-code']);
         $this->assertEquals('Artist 1', $artist['body']['name']);
         $this->assertEquals($permissions, $artist['body']['$permissions']);
-        $this->assertEquals(1, count($artist['body']['albums']));
+        $this->assertSame(1, count($artist['body']['albums']));
         $this->assertEquals('album1', $artist['body']['albums'][0]['$id']);
         $this->assertEquals('Album 1', $artist['body']['albums'][0]['name']);
         $this->assertEquals($permissions, $artist['body']['albums'][0]['$permissions']);
@@ -6878,7 +7237,7 @@ trait DatabasesBase
         $this->assertEquals(200, $player['headers']['status-code']);
         $this->assertEquals('Player 1', $player['body']['name']);
         $this->assertEquals($permissions, $player['body']['$permissions']);
-        $this->assertEquals(1, count($player['body']['sports']));
+        $this->assertSame(1, count($player['body']['sports']));
         $this->assertEquals('sport1', $player['body']['sports'][0]['$id']);
         $this->assertEquals('Sport 1', $player['body']['sports'][0]['name']);
         $this->assertEquals($permissions, $player['body']['sports'][0]['$permissions']);
@@ -6907,10 +7266,10 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, count($response['body'][$this->getRecordResource()]));
+        $this->assertSame(1, count($response['body'][$this->getRecordResource()]));
         $this->assertNotEmpty($response['body'][$this->getRecordResource()][0]['$id']);
         $this->assertEquals('Stevie Wonder', $response['body'][$this->getRecordResource()][0]['fullName']);
-        $this->assertEquals(2, count($response['body'][$this->getRecordResource()][0]['libraries']));
+        $this->assertSame(2, count($response['body'][$this->getRecordResource()][0]['libraries']));
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['personCollection']), array_merge([
             'content-type' => 'application/json',
@@ -11900,5 +12259,164 @@ trait DatabasesBase
         ]);
 
         $this->assertGreaterThanOrEqual(400, $result['headers']['status-code']);
+    }
+
+    public function testDocumentWithEmptyPayload(): void
+    {
+        $data = $this->setupCollection();
+        $databaseId = $data['databaseId'];
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->assertEquals(400, $document['headers']['status-code']);
+        } else {
+            $this->assertEquals(201, $document['headers']['status-code']);
+            $this->assertEquals($data['moviesId'], $document['body'][$this->getContainerIdResponseKey()]);
+            $this->assertArrayNotHasKey('$collection', $document['body']);
+            $this->assertEquals($databaseId, $document['body']['$databaseId']);
+            $this->assertTrue(array_key_exists('$sequence', $document['body']));
+            $this->assertIsString($document['body']['$sequence']);
+
+            $documentId = $document['body']['$id'];
+
+            $fetched = $this->client->call(
+                Client::METHOD_GET,
+                $this->getRecordUrl($databaseId, $data['moviesId'], $documentId),
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders())
+            );
+
+            $this->assertEquals(200, $fetched['headers']['status-code']);
+            $this->assertEqualsCanonicalizing([
+                '$id',
+                '$databaseId',
+                '$createdAt',
+                '$updatedAt',
+                '$permissions',
+                '$sequence',
+                $this->getContainerIdResponseKey(),
+            ], \array_keys($fetched['body']));
+            $this->assertFalse(array_key_exists('$tenant', $fetched['body']));
+
+            $updated = $this->client->call(
+                Client::METHOD_PATCH,
+                $this->getRecordUrl($databaseId, $data['moviesId'], $documentId),
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()),
+                [
+                    'data' => [
+                        'status' => 'draft',
+                    ],
+                ]
+            );
+
+            $this->assertEquals(200, $updated['headers']['status-code']);
+            $this->assertEquals('draft', $updated['body']['status']);
+
+            $refetched = $this->client->call(
+                Client::METHOD_GET,
+                $this->getRecordUrl($databaseId, $data['moviesId'], $documentId),
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders())
+            );
+
+            $this->assertEquals(200, $refetched['headers']['status-code']);
+            $this->assertEquals('draft', $refetched['body']['status']);
+        }
+    }
+
+    /**
+     * API keys may set $createdAt / $updatedAt; invalid strings must return 400, not 500.
+     * Assertions are HTTP status codes only (no error body matching).
+     */
+    public function testInvalidDate(): void
+    {
+        $data = $this->setupAttributes();
+        $databaseId = $data['databaseId'];
+        $invalidDatetime = '1dfs:12:55+sdf:00';
+        $validUpdatedAt = '2024-01-01T00:00:00Z';
+
+        $apiKeyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $documentPayload = [
+            'title' => 'Captain America',
+            'releaseYear' => 1944,
+            'actors' => [
+                'Chris Evans',
+                'Samuel Jackson',
+            ],
+        ];
+        $permissions = [
+            Permission::read(Role::user($this->getUser()['$id'])),
+            Permission::update(Role::user($this->getUser()['$id'])),
+            Permission::delete(Role::user($this->getUser()['$id'])),
+        ];
+
+        $invalidCreate = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), $apiKeyHeaders, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => \array_merge($documentPayload, ['$updatedAt' => $invalidDatetime]),
+            'permissions' => $permissions,
+        ]);
+        $this->assertEquals(400, $invalidCreate['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), $apiKeyHeaders, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => $documentPayload,
+            'permissions' => $permissions,
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+        $this->assertNotEmpty($documentId);
+
+        $invalidPatch = $this->client->call(
+            Client::METHOD_PATCH,
+            $this->getRecordUrl($databaseId, $data['moviesId'], $documentId),
+            $apiKeyHeaders,
+            [
+                'data' => [
+                    '$updatedAt' => $invalidDatetime,
+                ],
+            ]
+        );
+        $this->assertEquals(400, $invalidPatch['headers']['status-code']);
+
+        $updated = $this->client->call(
+            Client::METHOD_PATCH,
+            $this->getRecordUrl($databaseId, $data['moviesId'], $documentId),
+            $apiKeyHeaders,
+            [
+                'data' => [
+                    '$updatedAt' => $validUpdatedAt,
+                ],
+            ]
+        );
+        $this->assertEquals(200, $updated['headers']['status-code']);
+
+        $refetched = $this->client->call(
+            Client::METHOD_GET,
+            $this->getRecordUrl($databaseId, $data['moviesId'], $documentId),
+            $apiKeyHeaders
+        );
+        $this->assertEquals(200, $refetched['headers']['status-code']);
     }
 }

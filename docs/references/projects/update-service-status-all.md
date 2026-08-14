@@ -1,1 +1,0 @@
-Update the status of all services. Use this endpoint to enable or disable all optional services at once. 

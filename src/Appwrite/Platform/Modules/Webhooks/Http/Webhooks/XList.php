@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Webhooks\Http\Webhooks;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -20,7 +19,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 
-class XList extends Base
+class XList extends Action
 {
     use HTTP;
 
@@ -79,6 +78,15 @@ class XList extends Base
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        foreach ($queries as $query) {
+            $attribute = $query->getAttribute();
+            if ($attribute === 'authUsername') {
+                $query->setAttribute('httpUser');
+            } elseif ($attribute === 'tls') {
+                $query->setAttribute('security');
+            }
+        }
+
         $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);
 
         $cursor = Query::getCursorQueries($queries, false);
@@ -110,6 +118,10 @@ class XList extends Base
             $total = $includeTotal ? $authorization->skip(fn () => $dbForPlatform->count('webhooks', $filterQueries, APP_LIMIT_COUNT)) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
+
+        foreach ($webhooks as $webhook) {
+            $webhook->removeAttribute('signatureKey');
         }
 
         $response->dynamic(new Document([

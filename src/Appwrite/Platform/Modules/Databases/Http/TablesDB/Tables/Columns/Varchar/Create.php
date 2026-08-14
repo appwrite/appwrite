@@ -35,11 +35,12 @@ class Create extends VarcharCreate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/varchar')
             ->desc('Create varchar column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
             ->label('audits.event', 'column.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -63,7 +64,7 @@ class Create extends VarcharCreate
             ->param('encrypt', false, new Boolean(), 'Toggle encryption for the column. Encryption enhances security by not storing any plain text values in the database. However, encrypted columns cannot be queried.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('plan')
             ->inject('authorization')

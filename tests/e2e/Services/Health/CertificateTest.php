@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Health;
 
-class CertificateTest extends HealthBase
+final class CertificateTest extends HealthBase
 {
     public function testCertificateValidity(): void
     {

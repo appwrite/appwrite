@@ -2,11 +2,14 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Cron\CronExpression;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Span\Span;
+use Utopia\System\System;
 
 /**
  * ScheduleFunctions
@@ -18,8 +21,6 @@ class ScheduleFunctions extends ScheduleBase
 {
     public const UPDATE_TIMER = 10; // seconds
     public const ENQUEUE_TIMER = 60; // seconds
-
-    private ?float $lastEnqueueUpdate = null;
 
     public static function getName(): string
     {
@@ -36,15 +37,30 @@ class ScheduleFunctions extends ScheduleBase
         return RESOURCE_TYPE_FUNCTIONS;
     }
 
+    /**
+     * Spread window, in seconds, for a given schedule. The default applies
+     * _APP_FUNCTIONS_SCHEDULE_SPREAD to every schedule; override to scope
+     * or vary the window per schedule (e.g. by project or plan).
+     */
+    protected function spreadWindow(array $schedule, Database $dbForPlatform): int
+    {
+        return (int) System::getEnv('_APP_FUNCTIONS_SCHEDULE_SPREAD', '0');
+    }
+
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();
 
-        $enqueueDiff = $this->lastEnqueueUpdate === null ? 0 : $timerStart - $this->lastEnqueueUpdate;
+        $spread = (int) System::getEnv('_APP_FUNCTIONS_SCHEDULE_SPREAD', '0');
+
+        // TODO: Track the last enqueue timestamp to subtract ENQUEUE_TIMER drift from
+        // the time frame. Previously this used $this->lastEnqueueUpdate as a property
+        // but enabling the assignment broke scheduling, so the diff stays 0.
+        $enqueueDiff = 0;
         $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER - $enqueueDiff);
 
-        Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff)");
+        Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff, spread {$spread}s)");
 
         $total = 0;
 
@@ -53,12 +69,15 @@ class ScheduleFunctions extends ScheduleBase
         foreach ($this->schedules as $key => $schedule) {
             try {
                 $cron = new CronExpression($schedule['schedule']);
+                $nextDate = $cron->getNextRunDate();
             } catch (\InvalidArgumentException) {
                 // ignore invalid cron expressions
                 continue;
+            } catch (\RuntimeException) {
+                // ignore impossible cron expressions
+                continue;
             }
 
-            $nextDate = $cron->getNextRunDate();
             $next = DateTime::format($nextDate);
 
             $currentTick = $next < $timeFrame;
@@ -71,13 +90,16 @@ class ScheduleFunctions extends ScheduleBase
 
             $promiseStart = \time(); // in seconds
             $executionStart = $nextDate->getTimestamp(); // in seconds
-            $delay = $executionStart - $promiseStart; // Time to wait from now until execution needs to be queued
+            $offset = self::spreadOffset($schedule['resourceId'], $this->spreadWindow($schedule, $dbForPlatform));
+            $delay = $executionStart - $promiseStart + $offset; // Time to wait from now until execution needs to be queued
 
             if (!isset($delayedExecutions[$delay])) {
                 $delayedExecutions[$delay] = [];
             }
 
-            $delayedExecutions[$delay][] = ['key' => $key, 'nextDate' => $nextDate];
+            // nextDate carries the offset so enqueue-delay telemetry measures
+            // lateness against the intended (spread) enqueue time.
+            $delayedExecutions[$delay][] = ['key' => $key, 'nextDate' => $nextDate->modify("+{$offset} seconds")];
         }
 
         foreach ($delayedExecutions as $delay => $schedules) {
@@ -88,32 +110,41 @@ class ScheduleFunctions extends ScheduleBase
                     $scheduleKey = $delayConfig['key'];
                     // Ensure schedule was not deleted
                     if (!\array_key_exists($scheduleKey, $this->schedules)) {
-                        return;
+                        continue;
                     }
 
                     $schedule = $this->schedules[$scheduleKey];
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = new Func($this->publisherFunctions);
+                    $publisherForFunctions = new FunctionPublisher(
+                        $this->publisherFunctions,
+                        new \Utopia\Queue\Queue(\Utopia\System\System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', \Appwrite\Event\Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', \Appwrite\Event\Event::FUNCTIONS_QUEUE_TTL)
+                    );
 
-                    $queueForFunctions
-                        ->setType('schedule')
-                        ->setFunction($schedule['resource'])
-                        ->setMethod('POST')
-                        ->setPath('/')
-                        ->setProject($schedule['project'])
-                        ->trigger();
+                    Span::init('schedule.functions.enqueue');
+                    try {
+                        Span::add('project.id', $schedule['project']->getId());
+                        Span::add('function.id', $schedule['resource']->getId());
+                        Span::add('schedule.id', $schedule['$id'] ?? '');
 
-                    $this->recordEnqueueDelay($delayConfig['nextDate']);
+                        $publisherForFunctions->enqueue(new FunctionMessage(
+                            project: $schedule['project'],
+                            function: $schedule['resource'],
+                            type: 'schedule',
+                            method: 'POST',
+                            path: '/',
+                        ));
+
+                        $this->recordEnqueueDelay($delayConfig['nextDate']);
+                    } finally {
+                        Span::current()?->finish();
+                    }
                 }
             });
         }
 
         $timerEnd = \microtime(true);
-
-        // TODO: This was a bug before because it wasn't passed by reference, enabling it breaks scheduling
-        //$this->lastEnqueueUpdate = $timerStart;
 
         Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
     }

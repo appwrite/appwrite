@@ -92,11 +92,6 @@ trait ApiDocumentsDB
     {
         return false;
     }
-
-    protected function getSupportForIntegerIds(): bool
-    {
-        return false;
-    }
     protected function getSupportForOperators(): bool
     {
         return false;

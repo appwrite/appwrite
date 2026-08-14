@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
@@ -13,17 +15,17 @@ use Utopia\Database\Document;
 abstract class Action extends DatabasesAction
 {
     /**
-     * @var string|null The current context (either 'row' or 'document')
+     * @var string The current context (either 'row' or 'document')
      */
-    private ?string $context = DOCUMENTS;
-    private ?string $databaseType = DATABASE_TYPE_LEGACY;
+    private string $context = DOCUMENTS;
+    private string $databaseType = DATABASE_TYPE_LEGACY;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): DatabasesAction
+    public function setHttpPath(string $path): self
     {
         if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;
@@ -46,7 +48,8 @@ abstract class Action extends DatabasesAction
             ],
         ];
 
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+        return $this;
     }
 
     protected function getDatabasesOperationReadMetric(): string
@@ -57,14 +60,6 @@ abstract class Action extends DatabasesAction
         return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_READS;
     }
 
-    protected function getDatabasesIdOperationReadMetric(): string
-    {
-        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
-            return METRIC_DATABASE_ID_OPERATIONS_READS;
-        }
-        return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_READS;
-    }
-
     protected function getDatabasesOperationWriteMetric(): string
     {
         if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
@@ -72,14 +67,6 @@ abstract class Action extends DatabasesAction
         }
         return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_WRITES;
 
-    }
-
-    protected function getDatabasesIdOperationWriteMetric(): string
-    {
-        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
-            return METRIC_DATABASE_ID_OPERATIONS_WRITES;
-        }
-        return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_WRITES;
     }
 
     /**
@@ -177,6 +164,16 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * Get the appropriate unique constraint exception.
+     */
+    protected function getUniqueConstraintException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION
+            : Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION;
+    }
+
+    /**
      * Get the appropriate conflict exception.
      */
     protected function getConflictException(): string
@@ -270,6 +267,45 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * Convert a request object to the associative shape Document expects while
+     * retaining empty objects at any nested depth.
+     *
+     * @return array<string, mixed>
+     */
+    protected function normalizeData(string|array|\stdClass $data): array
+    {
+        if (\is_string($data)) {
+            $data = \json_decode($data);
+            if (!$data instanceof \stdClass && !\is_array($data)) {
+                return [];
+            }
+        }
+
+        if ($data instanceof \stdClass) {
+            $data = (array) $data;
+        }
+
+        return \array_map($this->normalizeValue(...), $data);
+    }
+
+    private function normalizeValue(mixed $value): mixed
+    {
+        if ($value instanceof \stdClass) {
+            $properties = (array) $value;
+
+            return $properties === []
+                ? $value
+                : \array_map($this->normalizeValue(...), $properties);
+        }
+
+        if (\is_array($value)) {
+            return \array_map($this->normalizeValue(...), $value);
+        }
+
+        return $value;
+    }
+
+    /**
      * Remove configured removable attributes from a document.
      * Used for relationship path handling to remove API-specific attributes.
      */
@@ -325,7 +361,7 @@ abstract class Action extends DatabasesAction
      * @param Document[] $documents
      * @param Event $queueForEvents
      * @param Event $queueForRealtime
-     * @param Event $queueForFunctions
+     * @param FunctionPublisher $publisherForFunctions
      * @param Event $queueForWebhooks
      * @param Database $dbForProject
      * @param EventProcessor $eventProcessor
@@ -338,7 +374,7 @@ abstract class Action extends DatabasesAction
         array $documents,
         Event $queueForEvents,
         Event $queueForRealtime,
-        Event $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Event $queueForWebhooks,
         Database $dbForProject,
         EventProcessor $eventProcessor
@@ -376,9 +412,15 @@ abstract class Action extends DatabasesAction
             if (!empty($functionsEvents)) {
                 foreach ($generatedEvents as $event) {
                     if (isset($functionsEvents[$event])) {
-                        $queueForFunctions
-                            ->from($queueForEvents)
-                            ->trigger();
+                        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                            event: $queueForEvents->getEvent(),
+                            params: $queueForEvents->getParams(),
+                            project: $queueForEvents->getProject(),
+                            user: $queueForEvents->getUser(),
+                            userId: $queueForEvents->getUserId(),
+                            payload: $queueForEvents->getPayload(),
+                            platform: $queueForEvents->getPlatform(),
+                        ));
                         break;
                     }
                 }
@@ -398,7 +440,6 @@ abstract class Action extends DatabasesAction
 
         $queueForEvents->reset();
         $queueForRealtime->reset();
-        $queueForFunctions->reset();
         $queueForWebhooks->reset();
     }
 

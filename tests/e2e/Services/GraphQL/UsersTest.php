@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 
-class UsersTest extends Scope
+final class UsersTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -230,27 +232,6 @@ class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersListMemberships']);
-    }
-
-    public function testGetUserLogs()
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::GET_USER_LOGS);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'userId' => $this->getUser()['$id'],
-            ]
-        ];
-
-        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertIsArray($user['body']['data']);
-        $this->assertArrayNotHasKey('errors', $user['body']);
-        $this->assertIsArray($user['body']['data']['usersListLogs']);
     }
 
     public function testListUserTargets()

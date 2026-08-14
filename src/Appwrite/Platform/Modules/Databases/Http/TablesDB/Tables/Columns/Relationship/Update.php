@@ -13,6 +13,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Query\Schema\ForeignKeyAction;
+use Utopia\Platform\Enum;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
@@ -35,11 +36,12 @@ class Update extends RelationshipUpdate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/:key/relationship')
             ->desc('Update relationship column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -61,7 +63,7 @@ class Update extends RelationshipUpdate
                 ForeignKeyAction::Cascade->value,
                 ForeignKeyAction::Restrict->value,
                 ForeignKeyAction::SetNull->value
-            ], true)), 'Constraints option', true)
+            ], true)), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')

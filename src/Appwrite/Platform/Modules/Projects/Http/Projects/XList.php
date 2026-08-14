@@ -4,10 +4,6 @@ namespace Appwrite\Platform\Modules\Projects\Http\Projects;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\ListSelection;
@@ -48,22 +44,6 @@ class XList extends Action
             ->desc('List projects')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.read')
-            ->label('sdk', new Method(
-                namespace: 'projects',
-                group: 'projects',
-                name: 'list',
-                description: <<<EOT
-                Get a list of all projects. You can use the query params to filter your results. 
-                EOT,
-                auth: [AuthType::ADMIN],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PROJECT_LIST
-                    )
-                ],
-                contentType: ContentType::JSON
-            ))
             ->param('queries', [], $this->getQueriesValidator(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)

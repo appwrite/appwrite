@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Filter;
 
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use PHPUnit\Framework\TestCase;
 
-class BranchDomainTest extends TestCase
+final class BranchDomainTest extends TestCase
 {
     public function testBranchDomain(): void
     {
@@ -18,7 +20,7 @@ class BranchDomainTest extends TestCase
             'projectId' => 'proj456',
             'sitesDomain' => 'appwrite.network'
         ]);
-        $this->assertStringNotContainsString('/', $domain);
+        $this->assertStringNotContainsString('/', (string) $domain);
         $this->assertStringStartsWith('branch-feature-test-', $domain);
         $this->assertStringEndsWith('.appwrite.network', $domain);
 

@@ -19,6 +19,9 @@ class ColumnList extends Model
             ->addRule('columns', [
                 'type' => [
                     Response::MODEL_COLUMN_BOOLEAN,
+                    // BigInt must come before Integer: response model dispatch is "first match wins",
+                    // and Integer matches all int types (including bigint), while BigInt is more specific (size=8).
+                    Response::MODEL_COLUMN_BIGINT,
                     Response::MODEL_COLUMN_INTEGER,
                     Response::MODEL_COLUMN_FLOAT,
                     Response::MODEL_COLUMN_EMAIL,

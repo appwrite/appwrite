@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Modules\Installer\Runtime;
 
 use Appwrite\Platform\Installer\Runtime\Config;
 use PHPUnit\Framework\TestCase;
 
-class ConfigTest extends TestCase
+final class ConfigTest extends TestCase
 {
     public function testDefaultValues(): void
     {
@@ -13,14 +15,14 @@ class ConfigTest extends TestCase
 
         $this->assertEquals('80', $config->getDefaultHttpPort());
         $this->assertEquals('443', $config->getDefaultHttpsPort());
-        $this->assertEquals('appwrite', $config->getOrganization());
-        $this->assertEquals('appwrite', $config->getImage());
+        $this->assertSame('appwrite', $config->getOrganization());
+        $this->assertSame('appwrite', $config->getImage());
         $this->assertFalse($config->getNoStart());
         $this->assertFalse($config->isUpgrade());
         $this->assertFalse($config->isLocal());
         $this->assertNull($config->getHostPath());
         $this->assertNull($config->getLockedDatabase());
-        $this->assertEquals(['mongodb', 'mariadb'], $config->getEnabledDatabases());
+        $this->assertSame(['postgresql', 'mariadb', 'mongodb'], $config->getEnabledDatabases());
         $this->assertEmpty($config->getVars());
     }
 
@@ -34,7 +36,7 @@ class ConfigTest extends TestCase
 
         $this->assertEquals('8080', $config->getDefaultHttpPort());
         $this->assertTrue($config->isUpgrade());
-        $this->assertEquals('myorg', $config->getOrganization());
+        $this->assertSame('myorg', $config->getOrganization());
     }
 
     public function testConstructorWithUnknownKeysTreatsAsVars(): void
@@ -45,7 +47,7 @@ class ConfigTest extends TestCase
         ];
         $config = new Config($vars);
 
-        $this->assertEquals($vars, $config->getVars());
+        $this->assertSame($vars, $config->getVars());
         // Defaults should remain
         $this->assertEquals('80', $config->getDefaultHttpPort());
     }
@@ -68,13 +70,13 @@ class ConfigTest extends TestCase
 
         $this->assertEquals('3000', $config->getDefaultHttpPort());
         $this->assertEquals('3443', $config->getDefaultHttpsPort());
-        $this->assertEquals('testorg', $config->getOrganization());
-        $this->assertEquals('testimage', $config->getImage());
+        $this->assertSame('testorg', $config->getOrganization());
+        $this->assertSame('testimage', $config->getImage());
         $this->assertTrue($config->getNoStart());
         $this->assertTrue($config->isUpgrade());
         $this->assertTrue($config->isLocal());
-        $this->assertEquals('/home/user', $config->getHostPath());
-        $this->assertEquals('mariadb', $config->getLockedDatabase());
+        $this->assertSame('/home/user', $config->getHostPath());
+        $this->assertSame('mariadb', $config->getLockedDatabase());
         $this->assertCount(1, $config->getVars());
     }
 
@@ -93,7 +95,7 @@ class ConfigTest extends TestCase
     {
         $config = new Config();
         $config->setHostPath('/some/path');
-        $this->assertEquals('/some/path', $config->getHostPath());
+        $this->assertSame('/some/path', $config->getHostPath());
 
         $config->apply(['hostPath' => null]);
         $this->assertNull($config->getHostPath());
@@ -111,7 +113,7 @@ class ConfigTest extends TestCase
 
         $this->assertEquals('8080', $config->getDefaultHttpPort());
         $this->assertEquals('8443', $config->getDefaultHttpsPort());
-        $this->assertEquals('updated', $config->getOrganization());
+        $this->assertSame('updated', $config->getOrganization());
     }
 
     public function testToArrayRoundTrip(): void
@@ -154,8 +156,8 @@ class ConfigTest extends TestCase
 
         $rebuilt = new Config($original->toArray());
 
-        $this->assertEquals($original->getDefaultHttpPort(), $rebuilt->getDefaultHttpPort());
-        $this->assertEquals($original->isLocal(), $rebuilt->isLocal());
+        $this->assertSame($original->getDefaultHttpPort(), $rebuilt->getDefaultHttpPort());
+        $this->assertSame($original->isLocal(), $rebuilt->isLocal());
         $this->assertEquals($original->getLockedDatabase(), $rebuilt->getLockedDatabase());
         $this->assertEquals($original->toArray(), $rebuilt->toArray());
     }
@@ -178,14 +180,14 @@ class ConfigTest extends TestCase
     {
         $config = new Config();
         $config->setOrganization('myorg');
-        $this->assertEquals('myorg', $config->getOrganization());
+        $this->assertSame('myorg', $config->getOrganization());
     }
 
     public function testSetAndGetImage(): void
     {
         $config = new Config();
         $config->setImage('myimage');
-        $this->assertEquals('myimage', $config->getImage());
+        $this->assertSame('myimage', $config->getImage());
     }
 
     public function testSetAndGetNoStart(): void
@@ -219,7 +221,7 @@ class ConfigTest extends TestCase
     {
         $config = new Config();
         $config->setHostPath('/some/path');
-        $this->assertEquals('/some/path', $config->getHostPath());
+        $this->assertSame('/some/path', $config->getHostPath());
         $config->setHostPath(null);
         $this->assertNull($config->getHostPath());
     }
@@ -228,7 +230,7 @@ class ConfigTest extends TestCase
     {
         $config = new Config();
         $config->setLockedDatabase('mariadb');
-        $this->assertEquals('mariadb', $config->getLockedDatabase());
+        $this->assertSame('mariadb', $config->getLockedDatabase());
         $config->setLockedDatabase(null);
         $this->assertNull($config->getLockedDatabase());
     }
@@ -241,7 +243,7 @@ class ConfigTest extends TestCase
             ['name' => '_APP_DOMAIN', 'default' => 'localhost'],
         ];
         $config->setVars($vars);
-        $this->assertEquals($vars, $config->getVars());
+        $this->assertSame($vars, $config->getVars());
     }
 
     public function testJsonRoundTrip(): void
@@ -376,7 +378,7 @@ class ConfigTest extends TestCase
 
         $config->apply(['lockedDatabase' => '']);
         // hasValidStringValue returns false for empty string
-        $this->assertEquals('mariadb', $config->getLockedDatabase());
+        $this->assertSame('mariadb', $config->getLockedDatabase());
     }
 
     public function testApplyLockedDatabaseIgnoresNull(): void
@@ -386,7 +388,7 @@ class ConfigTest extends TestCase
 
         $config->apply(['lockedDatabase' => null]);
         // hasValidStringValue returns false for null
-        $this->assertEquals('mongodb', $config->getLockedDatabase());
+        $this->assertSame('mongodb', $config->getLockedDatabase());
     }
 
     public function testApplyPortWithIntegerValue(): void
@@ -437,7 +439,7 @@ class ConfigTest extends TestCase
         $this->assertFalse($array['isLocal']);
         $this->assertNull($array['hostPath']);
         $this->assertNull($array['lockedDatabase']);
-        $this->assertEquals(['mongodb', 'mariadb'], $array['enabledDatabases']);
+        $this->assertEquals(['postgresql', 'mariadb', 'mongodb'], $array['enabledDatabases']);
     }
 
     public function testMultipleApplyCallsAccumulate(): void
@@ -451,7 +453,7 @@ class ConfigTest extends TestCase
 
         $this->assertEquals('1111', $config->getDefaultHttpPort());
         $this->assertEquals('2222', $config->getDefaultHttpsPort());
-        $this->assertEquals('org', $config->getOrganization());
+        $this->assertSame('org', $config->getOrganization());
         $this->assertTrue($config->isLocal());
     }
 
@@ -492,17 +494,17 @@ class ConfigTest extends TestCase
     public function testDefaultEnabledDatabases(): void
     {
         $config = new Config();
-        $this->assertEquals(['mongodb', 'mariadb'], $config->getEnabledDatabases());
+        $this->assertSame(['postgresql', 'mariadb', 'mongodb'], $config->getEnabledDatabases());
         $this->assertTrue($config->isDatabaseEnabled('mongodb'));
         $this->assertTrue($config->isDatabaseEnabled('mariadb'));
-        $this->assertFalse($config->isDatabaseEnabled('postgresql'));
+        $this->assertTrue($config->isDatabaseEnabled('postgresql'));
     }
 
     public function testSetEnabledDatabases(): void
     {
         $config = new Config();
         $config->setEnabledDatabases(['mongodb', 'mariadb', 'postgresql']);
-        $this->assertEquals(['mongodb', 'mariadb', 'postgresql'], $config->getEnabledDatabases());
+        $this->assertSame(['mongodb', 'mariadb', 'postgresql'], $config->getEnabledDatabases());
         $this->assertTrue($config->isDatabaseEnabled('postgresql'));
     }
 
@@ -510,7 +512,7 @@ class ConfigTest extends TestCase
     {
         $config = new Config();
         $config->setEnabledDatabases(['mongodb', '', null, 42, 'mariadb']);
-        $this->assertEquals(['mongodb', 'mariadb'], $config->getEnabledDatabases());
+        $this->assertSame(['mongodb', 'mariadb'], $config->getEnabledDatabases());
     }
 
     public function testSetEnabledDatabasesEmptyArrayPreservesExisting(): void
@@ -518,14 +520,14 @@ class ConfigTest extends TestCase
         $config = new Config();
         $config->setEnabledDatabases(['mongodb', 'postgresql']);
         $config->setEnabledDatabases([]);
-        $this->assertEquals(['mongodb', 'postgresql'], $config->getEnabledDatabases());
+        $this->assertSame(['mongodb', 'postgresql'], $config->getEnabledDatabases());
     }
 
     public function testApplyEnabledDatabases(): void
     {
         $config = new Config();
         $config->apply(['enabledDatabases' => ['mongodb', 'mariadb', 'postgresql']]);
-        $this->assertEquals(['mongodb', 'mariadb', 'postgresql'], $config->getEnabledDatabases());
+        $this->assertSame(['mongodb', 'mariadb', 'postgresql'], $config->getEnabledDatabases());
         $this->assertTrue($config->isDatabaseEnabled('postgresql'));
     }
 
@@ -533,7 +535,7 @@ class ConfigTest extends TestCase
     {
         $config = new Config();
         $config->apply(['enabledDatabases' => 'mongodb']);
-        $this->assertEquals(['mongodb', 'mariadb'], $config->getEnabledDatabases());
+        $this->assertSame(['postgresql', 'mariadb', 'mongodb'], $config->getEnabledDatabases());
     }
 
     public function testEnabledDatabasesInToArray(): void
@@ -549,6 +551,6 @@ class ConfigTest extends TestCase
         $config = new Config();
         $config->setEnabledDatabases(['mongodb', 'postgresql']);
         $rebuilt = new Config($config->toArray());
-        $this->assertEquals(['mongodb', 'postgresql'], $rebuilt->getEnabledDatabases());
+        $this->assertSame(['mongodb', 'postgresql'], $rebuilt->getEnabledDatabases());
     }
 }

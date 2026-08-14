@@ -54,6 +54,11 @@ return [
         'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
         'code' => 429,
     ],
+    Exception::GENERAL_RESOURCE_LOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_LOCKED,
+        'description' => 'The requested resource is currently being modified by another request. Please retry after a brief delay.',
+        'code' => 409,
+    ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
         'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',
@@ -226,6 +231,26 @@ return [
         'description' => 'A user with the same email already exists in the current project.',
         'code' => 409,
     ],
+    Exception::USER_EMAIL_DISPOSABLE => [
+        'name' => Exception::USER_EMAIL_DISPOSABLE,
+        'description' => 'Disposable email addresses are not allowed. Please use a permanent email address.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_FREE => [
+        'name' => Exception::USER_EMAIL_FREE,
+        'description' => 'Free email addresses are not allowed. Please use a business or custom-domain email address.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_NOT_CANONICAL => [
+        'name' => Exception::USER_EMAIL_NOT_CANONICAL,
+        'description' => 'This email address must already be in its canonical form. Please remove aliases, tags, or provider-specific variations and try again.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_NOT_CORPORATE => [
+        'name' => Exception::USER_EMAIL_NOT_CORPORATE,
+        'description' => 'Only corporate email addresses are allowed. Please use a work email address and try again.',
+        'code' => 400,
+    ],
     Exception::USER_PASSWORD_MISMATCH => [
         'name' => Exception::USER_PASSWORD_MISMATCH,
         'description' => 'Passwords do not match. Please check the password and confirm password.',
@@ -322,6 +347,11 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_OAUTH2_PROVIDER_FAILURE => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_FAILURE,
+        'description' => '%s couldn\'t complete sign-in (%s). Please try again.',
+        'code' => 424,
+    ],
     Exception::USER_EMAIL_NOT_VERIFIED => [
         'name' => Exception::USER_EMAIL_NOT_VERIFIED,
         'description' => 'User email is not verified',
@@ -367,9 +397,14 @@ return [
         'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
+    Exception::USER_JWT_CREATION_DENIED => [
+        'name' => Exception::USER_JWT_CREATION_DENIED,
+        'description' => 'A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead.',
+        'code' => 403,
+    ],
     Exception::API_KEY_EXPIRED => [
         'name' => Exception::API_KEY_EXPIRED,
-        'description' => 'The dynamic API key has expired. Please don\'t use dynamic API keys for more than duration of the execution.',
+        'description' => 'The ephemeral API key has expired. Please don\'t use ephemeral API keys for more than duration of the execution.',
         'code' => 401,
     ],
 
@@ -492,6 +527,11 @@ return [
         'description' => 'The given file extension is not supported.',
         'code' => 400,
     ],
+    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED => [
+        'name' => Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+        'description' => 'The image resolution exceeds the maximum allowed for processing.',
+        'code' => 400,
+    ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
         'name' => Exception::STORAGE_INVALID_FILE_SIZE,
         'description' => 'The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_STORAGE_LIMIT environment variable.',
@@ -608,6 +648,11 @@ return [
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
     ],
+    Exception::FUNCTION_ASYNCHRONOUS_TIMEOUT => [
+        'name' => Exception::FUNCTION_ASYNCHRONOUS_TIMEOUT,
+        'description' => 'Asynchronous function execution timed out. Ensure the execution duration doesn\'t exceed the configured function timeout.',
+        'code' => 408,
+    ],
     Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
         'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
         'description' => 'Function Template with the requested ID could not be found.',
@@ -672,6 +717,11 @@ return [
         'description' => 'Build with the requested ID failed. Please check the logs for more information.',
         'code' => 400,
     ],
+    Exception::BUILD_TIMEOUT => [
+        'name' => Exception::BUILD_TIMEOUT,
+        'description' => 'Build timed out. Increase the build timeout via the `_APP_COMPUTE_BUILD_TIMEOUT` environment variable, or simplify the build to complete within the limit.',
+        'code' => 408,
+    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
@@ -698,6 +748,18 @@ return [
         'name' => Exception::LOG_NOT_FOUND,
         'description' => 'Log with the requested ID could not be found.',
         'code' => 404,
+    ],
+
+    /** Presence */
+    Exception::PRESENCE_NOT_FOUND => [
+        'name' => Exception::PRESENCE_NOT_FOUND,
+        'description' => 'Presence with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PRESENCE_ALREADY_EXISTS => [
+        'name' => Exception::PRESENCE_ALREADY_EXISTS,
+        'description' => 'Presence with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
 
     /** Databases */
@@ -782,6 +844,11 @@ return [
         'description' => 'Document with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
+    Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION => [
+        'name' => Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION,
+        'description' => 'Document violates a unique attribute constraint. Try again with different value(s).',
+        'code' => 409,
+    ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
         'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
         'description' => 'Remote document is newer than local.',
@@ -817,6 +884,11 @@ return [
     Exception::ROW_ALREADY_EXISTS => [
         'name' => Exception::ROW_ALREADY_EXISTS,
         'description' => 'Row with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION => [
+        'name' => Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION,
+        'description' => 'Row violates a unique column constraint. Try again with different value(s).',
         'code' => 409,
     ],
     Exception::ROW_UPDATE_CONFLICT => [
@@ -1159,10 +1231,30 @@ return [
         'description' => 'Key with the same ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
+    Exception::KEY_CREATION_DENIED => [
+        'name' => Exception::KEY_CREATION_DENIED,
+        'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
+        'code' => 403,
+    ],
+    Exception::DEV_KEY_GONE => [
+        'name' => Exception::DEV_KEY_GONE,
+        'description' => 'Dev key creation is no longer available.',
+        'code' => 410,
+    ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
         'description' => 'Platform with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::PLATFORM_METHOD_UNSUPPORTED => [
+        'name' => Exception::PLATFORM_METHOD_UNSUPPORTED,
+        'description' => 'The requested platform has invalid type. Please use corresponding update method for the platform type.',
+        'code' => 400,
+    ],
+    Exception::PLATFORM_ALREADY_EXISTS => [
+        'name' => Exception::PLATFORM_ALREADY_EXISTS,
+        'description' => 'Platform with the same ID already exists in this project. Try again with a different ID.',
+        'code' => 409,
     ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
@@ -1209,6 +1301,26 @@ return [
     Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
         'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
         'description' => 'The specified database type is not supported for CSV import or export operations.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED => [
+        'name' => Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED,
+        'description' => 'A source projectId is required for Appwrite migrations. Provide it in the migration credentials.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND => [
+        'name' => Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND,
+        'description' => 'The source project for the provided projectId was not found. Verify the projectId and the API key has access to it.',
+        'code' => 404,
+    ],
+    Exception::MIGRATION_SOURCE_TYPE_INVALID => [
+        'name' => Exception::MIGRATION_SOURCE_TYPE_INVALID,
+        'description' => 'The migration source type is invalid. Use one of the supported source types.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_DESTINATION_TYPE_INVALID => [
+        'name' => Exception::MIGRATION_DESTINATION_TYPE_INVALID,
+        'description' => 'The migration destination type is invalid. Use one of the supported destination types.',
         'code' => 400,
     ],
 
@@ -1382,5 +1494,44 @@ return [
         'name' => Exception::PROJECT_ID_MISSING,
         'description' => 'When using project API key, make sure to pass x-appwrite-project header with your project ID.',
         'code' => 403,
+    ],
+    Exception::MOCK_NUMBER_ALREADY_EXISTS => [
+        'name' => Exception::MOCK_NUMBER_ALREADY_EXISTS,
+        'description' => 'Mock number with the requested number already exists. Try again with a different number. or update OTP of existing mock number.',
+        'code' => 409,
+    ],
+    Exception::MOCK_NUMBER_NOT_FOUND => [
+        'name' => Exception::MOCK_NUMBER_NOT_FOUND,
+        'description' => 'Mock number with the requested number could not be found.',
+        'code' => 404,
+    ],
+    Exception::MOCK_NUMBER_LIMIT_EXCEEDED => [
+        'name' => Exception::MOCK_NUMBER_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of mock phones for this project has been reached.',
+        'code' => 400,
+    ],
+
+    /** Advisor */
+    Exception::INSIGHT_NOT_FOUND => [
+        'name' => Exception::INSIGHT_NOT_FOUND,
+        'description' => 'Insight with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::INSIGHT_ALREADY_EXISTS => [
+        'name' => Exception::INSIGHT_ALREADY_EXISTS,
+        'description' => 'Insight with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
+    /** Reports */
+    Exception::REPORT_NOT_FOUND => [
+        'name' => Exception::REPORT_NOT_FOUND,
+        'description' => 'Report with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REPORT_ALREADY_EXISTS => [
+        'name' => Exception::REPORT_ALREADY_EXISTS,
+        'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
 ];

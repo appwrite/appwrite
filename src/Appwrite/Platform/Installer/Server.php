@@ -30,7 +30,6 @@ class Server
     public const string STEP_DOCKER_CONTAINERS = 'docker-containers';
     public const string STEP_ACCOUNT_SETUP = 'account-setup';
     public const string STEP_MIGRATION = 'migration';
-    public const string STEP_SSL_CERTIFICATE = 'ssl-certificate';
 
     public const string STATUS_IN_PROGRESS = 'in-progress';
     public const string STATUS_COMPLETED = 'completed';
@@ -52,6 +51,10 @@ class Server
 
     private const string DEFAULT_IMAGE = 'appwrite-dev';
     public const string DEFAULT_CONTAINER = 'appwrite-installer';
+    private const string COMPOSE_FILE = 'docker-compose.yml';
+    private const string ENV_FILE = '.env';
+    private const string LOCAL_COMPOSE_FILE = 'docker-compose.web-installer.yml';
+    private const string LOCAL_ENV_FILE = '.env.web-installer';
 
     private State $state;
     private array $paths = [];
@@ -60,7 +63,7 @@ class Server
     {
         $this->initPaths();
 
-        $this->state = new State($this->paths);
+        $this->state = new State();
 
         if (PHP_SAPI === 'cli') {
             $this->runCli();
@@ -114,7 +117,6 @@ class Server
         }
 
         if (isset($opts['docker'])) {
-            $this->printInstallerUrl($host, $port);
             $this->startDockerInstaller($opts);
         }
 
@@ -145,9 +147,20 @@ class Server
         $paths = $this->paths;
         $state = $this->state;
 
-        Http::setResource('installerState', fn () => $state);
-        Http::setResource('installerConfig', fn () => $config);
-        Http::setResource('installerPaths', fn () => $paths);
+        $adapter = new class ($host, $port, ['worker_num' => 1]) extends SwooleAdapter {
+            public function getNativeServer(): SwooleServer
+            {
+                return $this->server;
+            }
+        };
+
+        $nativeServer = $adapter->getNativeServer();
+
+        $container = $adapter->resources();
+        $container->set('installerState', fn () => $state);
+        $container->set('installerConfig', fn () => $config);
+        $container->set('installerPaths', fn () => $paths);
+        $container->set('swooleServer', fn () => $nativeServer);
 
         // Register routes via Utopia Platform
         $platform = new Installer();
@@ -160,17 +173,6 @@ class Server
             ->inject('response')
             ->action($errorHandler->action(...));
 
-        $adapter = new class ($host, $port, ['worker_num' => 1]) extends SwooleAdapter {
-            public function getNativeServer(): SwooleServer
-            {
-                return $this->server;
-            }
-        };
-
-        $nativeServer = $adapter->getNativeServer();
-
-        Http::setResource('swooleServer', fn () => $nativeServer);
-
         $nativeServer->on('start', function () use ($nativeServer, $port, $readyFile) {
             \Swoole\Process::signal(SIGTERM, fn () => $nativeServer->shutdown());
             \Swoole\Process::signal(SIGINT, fn () => $nativeServer->shutdown());
@@ -180,7 +182,7 @@ class Server
             }
         });
 
-        $adapter->onRequest(function (Request $request, Response $response) use ($files) {
+        $adapter->onRequest(function (Request $request, Response $response) use ($adapter, $files) {
             // Serve static files from memory
             $uri = $request->getURI();
             if ($files->isFileLoaded($uri)) {
@@ -190,7 +192,7 @@ class Server
                 return;
             }
 
-            $app = new Http('UTC');
+            $app = new Http($adapter, 'UTC');
             $app->run($request, $response);
         });
 
@@ -209,8 +211,13 @@ class Server
         }
 
         $basePath = $config->isLocal() ? '/usr/src/code' : (getcwd() ?: '.');
-        $composePath = $basePath . '/docker-compose.yml';
-        $envPath = $basePath . '/.env';
+        if ($config->isLocal()) {
+            $composePath = $basePath . '/' . self::LOCAL_COMPOSE_FILE;
+            $envPath = $basePath . '/' . self::LOCAL_ENV_FILE;
+        } else {
+            $composePath = $basePath . '/' . self::COMPOSE_FILE;
+            $envPath = $basePath . '/' . self::ENV_FILE;
+        }
 
         if (!file_exists($composePath) && !file_exists($envPath)) {
             return;
@@ -365,9 +372,13 @@ class Server
             '-i',
             '--rm',
             '--name', $container,
+            '--label', 'com.docker.compose.project=appwrite-installer',
+            '--label', 'com.docker.compose.service=appwrite-installer',
+            '--add-host', 'host.docker.internal:host-gateway',
             '-p', "127.0.0.1:$port:" . self::INSTALLER_WEB_PORT,
             '--volume', '/var/run/docker.sock:/var/run/docker.sock',
             '--volume', "$volumePath:/usr/src/code:rw",
+            '--volume', "$volumePath:$volumePath:rw",
         ];
         $args[] = '-e';
         $args[] = 'APPWRITE_INSTALLER_CONFIG=' . $configJson;

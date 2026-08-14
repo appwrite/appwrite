@@ -3,32 +3,24 @@
 // List of scopes for organization (teams) API keys
 
 return [
-    "platforms.read" => [
-        "description" => 'Access to read project\'s platforms',
-    ],
-    "platforms.write" => [
-        "description" =>
-            'Access to create, update, and delete project\'s platforms',
-    ],
     "projects.read" => [
-        "description" => 'Access to read organization\'s projects',
+        "description" => 'Access to read organization projects',
+        "category" => "Projects",
     ],
     "projects.write" => [
         "description" =>
-            "Access to create, update, and delete projects in organization",
-    ],
-    "keys.read" => [
-        "description" => 'Access to read project\'s API keys',
-    ],
-    "keys.write" => [
-        "description" =>
-            "Access to create, update, and delete project\'s API keys",
+            "Access to create, update, and delete organization projects",
+        "category" => "Projects",
     ],
     "devKeys.read" => [
         "description" => 'Access to read project\'s development keys',
+        "category" => "Other",
+        "deprecated" => true,
     ],
     "devKeys.write" => [
         "description" =>
             "Access to create, update, and delete project\'s development keys",
+        "category" => "Other",
+        "deprecated" => true,
     ],
 ];

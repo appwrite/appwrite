@@ -1,1 +1,0 @@
-Delete a key by its unique ID. Once deleted, the key can no longer be used to authenticate API calls. 

@@ -35,6 +35,7 @@ class XList extends DocumentXList
             ->desc('List documents')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.read')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
@@ -63,6 +64,7 @@ class XList extends DocumentXList
             ->inject('usage')
             ->inject('transactionState')
             ->inject('authorization')
+            ->inject('utopia')
             ->callback($this->action(...));
     }
 }

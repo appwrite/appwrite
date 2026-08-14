@@ -46,6 +46,12 @@ class Membership extends Model
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
+            ->addRule('userPhone', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User phone number. Hide this attribute by toggling membership privacy in the Console.',
+                'default' => '',
+                'example' => '+1 555 555 5555',
+            ])
             ->addRule('teamId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Team ID.',
@@ -81,6 +87,12 @@ class Membership extends Model
                 'description' => 'Multi factor authentication status, true if the user has MFA enabled or false otherwise. Hide this attribute by toggling membership privacy in the Console.',
                 'default' => false,
                 'example' => false,
+            ])
+            ->addRule('userAccessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent access date in ISO 8601 format. Show this attribute by toggling membership privacy in the Console.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('roles', [
                 'type' => self::TYPE_STRING,

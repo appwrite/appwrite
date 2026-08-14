@@ -19,6 +19,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\ForeignKeyAction;
+use Utopia\Platform\Enum;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
@@ -47,6 +48,7 @@ class Update extends Action
             ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
             ->label('audits.event', 'attribute.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -72,7 +74,7 @@ class Update extends Action
                 ForeignKeyAction::Cascade->value,
                 ForeignKeyAction::Restrict->value,
                 ForeignKeyAction::SetNull->value
-            ], true), 'Constraints option', true)
+            ], true), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Attribute Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')

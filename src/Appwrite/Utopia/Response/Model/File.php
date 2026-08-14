@@ -49,6 +49,18 @@ class File extends Model
                 'default' => '',
                 'example' => 'Pink.png',
             ])
+            ->addRule('folder', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Virtual folder containing the file, with a trailing slash. Empty for the bucket root.',
+                'default' => '',
+                'example' => 'photos/2026/',
+            ])
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Full virtual path of the file: the folder followed by the file name.',
+                'default' => '',
+                'example' => 'photos/2026/Pink.png',
+            ])
             ->addRule('signature', [
                 'type' => self::TYPE_STRING,
                 'description' => 'File MD5 signature.',
@@ -66,6 +78,12 @@ class File extends Model
                 'description' => 'File original size in bytes.',
                 'default' => 0,
                 'example' => 17890,
+            ])
+            ->addRule('sizeActual', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'File actual stored size in bytes after compression and/or encryption.',
+                'default' => 0,
+                'example' => 12345,
             ])
             ->addRule('chunksTotal', [
                 'type' => self::TYPE_INTEGER,
@@ -120,6 +138,9 @@ class File extends Model
 
         $encryption = !empty($document->getAttribute('openSSLCipher', ''));
         $document->setAttribute('encryption', $encryption);
+
+        $folder = $document->getAttribute('folder') ?? '';
+        $document->setAttribute('key', $folder . $document->getAttribute('name', ''));
 
         return $document;
     }

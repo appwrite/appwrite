@@ -204,7 +204,7 @@ trait AvatarsBase
             $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'url' => 'https://appwrite.io/images/open-graph/website.png',
+                'url' => 'https://appwrite.io/images/open-graph/website.avif',
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
@@ -216,7 +216,7 @@ trait AvatarsBase
             $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'url' => 'https://appwrite.io/images/open-graph/website.png',
+                'url' => 'https://appwrite.io/images/open-graph/website.avif',
                 'width' => 200,
                 'height' => 200,
             ]);
@@ -230,7 +230,7 @@ trait AvatarsBase
             $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'url' => 'https://appwrite.io/images/open-graph/website.png',
+                'url' => 'https://appwrite.io/images/open-graph/website.avif',
                 'width' => 300,
                 'height' => 300,
                 'quality' => 30,
@@ -258,7 +258,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io/images/open-graph/website.png',
+            'url' => 'https://appwrite.io/images/open-graph/website.avif',
             'width' => 2001,
             'height' => 300,
             'quality' => 30,
@@ -351,9 +351,9 @@ trait AvatarsBase
 
         $image = new \Imagick();
         $image->readImageBlob($response['body']);
-        $this->assertEquals(400, $image->getImageWidth());
-        $this->assertEquals(400, $image->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame(400, $image->getImageWidth());
+        $this->assertSame(400, $image->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-default.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -369,9 +369,9 @@ trait AvatarsBase
 
         $image = new \Imagick();
         $image->readImageBlob($response['body']);
-        $this->assertEquals(200, $image->getImageWidth());
-        $this->assertEquals(200, $image->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame(200, $image->getImageWidth());
+        $this->assertSame(200, $image->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -388,9 +388,9 @@ trait AvatarsBase
 
         $image = new \Imagick();
         $image->readImageBlob($response['body']);
-        $this->assertEquals(200, $image->getImageWidth());
-        $this->assertEquals(200, $image->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame(200, $image->getImageWidth());
+        $this->assertSame(200, $image->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -404,9 +404,9 @@ trait AvatarsBase
 
         $image = new \Imagick();
         $image->readImageBlob($response['body']);
-        $this->assertEquals(200, $image->getImageWidth());
-        $this->assertEquals(200, $image->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame(200, $image->getImageWidth());
+        $this->assertSame(200, $image->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png', $response['body']);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -536,9 +536,9 @@ trait AvatarsBase
         $image->readImageBlob($response['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/initials.png');
 
-        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
+        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
     }
 
     public function testSpecialCharsInitalImage()
@@ -559,9 +559,9 @@ trait AvatarsBase
         $image->readImageBlob($response['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/initials.png');
 
-        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
+        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
     }
 
     public function testGetScreenshot(): array

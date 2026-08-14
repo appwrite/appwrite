@@ -892,7 +892,7 @@
 * Unset index length by @fogelito in https://github.com/appwrite/appwrite/pull/8978
 * Update base to 0.9.5 by @basert in https://github.com/appwrite/appwrite/pull/9005
 * Sync main into 1.6.x by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/9011
-* Improved shared tables V2 by @abnegate in https://github.com/appwrite/appwrite/pull/9013
+* Improved shared tables by @abnegate in https://github.com/appwrite/appwrite/pull/9013
 * Ensure backwards compatibility for 1.6.x by @christyjacob4 in https://github.com/appwrite/appwrite/pull/9018
 
 # Version 1.6.0

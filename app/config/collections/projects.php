@@ -2,14 +2,15 @@
 
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Index;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\IndexType;
 
 return [
     'databases' => [
-        '$collection' => '_metadata',
-        '$id' => 'databases',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('databases'),
         'name' => 'Databases',
         'attributes' => [
             new Attribute(
@@ -44,6 +45,11 @@ return [
                 type: ColumnType::String,
                 size: 2000,
             ),
+            new Attribute(
+                key: 'status',
+                type: ColumnType::String,
+                size: 16,
+            ),
         ],
         'indexes' => [
             new Index(
@@ -60,9 +66,10 @@ return [
             ),
         ],
     ],
+
     'attributes' => [
-        '$collection' => '_metadata',
-        '$id' => 'attributes',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('attributes'),
         'name' => 'Attributes',
         'attributes' => [
             new Attribute(
@@ -141,8 +148,7 @@ return [
                 key: 'formatOptions',
                 type: ColumnType::String,
                 size: 16384,
-                default: (object) array(
-                ),
+                default: new stdClass(),
                 filters: ['json', 'range', 'enum'],
             ),
             new Attribute(
@@ -164,14 +170,15 @@ return [
                 key: '_key_db_collection',
                 type: IndexType::Key,
                 attributes: ['databaseInternalId', 'collectionInternalId'],
-                lengths: [255, 255],
+                lengths: [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 orders: ['ASC', 'ASC'],
             ),
         ],
     ],
+
     'indexes' => [
-        '$collection' => '_metadata',
-        '$id' => 'indexes',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('indexes'),
         'name' => 'Indexes',
         'attributes' => [
             new Attribute(
@@ -242,14 +249,15 @@ return [
                 key: '_key_db_collection',
                 type: IndexType::Key,
                 attributes: ['databaseInternalId', 'collectionInternalId'],
-                lengths: [255, 255],
+                lengths: [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 orders: ['ASC', 'ASC'],
             ),
         ],
     ],
+
     'functions' => [
-        '$collection' => '_metadata',
-        '$id' => 'functions',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('functions'),
         'name' => 'Functions',
         'attributes' => [
             new Attribute(
@@ -424,6 +432,7 @@ return [
                 type: ColumnType::String,
                 size: 16384,
             ),
+            // At the moment, always empty (no runtime supports it yet)
             new Attribute(
                 key: 'startCommand',
                 type: ColumnType::String,
@@ -433,27 +442,41 @@ return [
                 key: 'specification',
                 type: ColumnType::String,
                 size: 128,
-                default: 's-1vcpu-512mb',
+                default: APP_COMPUTE_SPECIFICATION_DEFAULT,
                 signed: false,
             ),
             new Attribute(
                 key: 'buildSpecification',
                 type: ColumnType::String,
                 size: 128,
-                default: 's-1vcpu-512mb',
+                default: APP_COMPUTE_SPECIFICATION_DEFAULT,
                 signed: false,
             ),
             new Attribute(
                 key: 'runtimeSpecification',
                 type: ColumnType::String,
                 size: 128,
-                default: 's-1vcpu-512mb',
+                default: APP_COMPUTE_SPECIFICATION_DEFAULT,
                 signed: false,
             ),
             new Attribute(
                 key: 'scopes',
                 type: ColumnType::String,
                 size: Database::LENGTH_KEY,
+                default: [],
+                array: true,
+            ),
+            new Attribute(
+                key: 'providerBranches',
+                type: ColumnType::String,
+                size: 128,
+                default: [],
+                array: true,
+            ),
+            new Attribute(
+                key: 'providerPaths',
+                type: ColumnType::String,
+                size: 128,
                 default: [],
                 array: true,
             ),
@@ -481,35 +504,35 @@ return [
                 key: '_key_installationId',
                 type: IndexType::Key,
                 attributes: ['installationId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_installationInternalId',
                 type: IndexType::Key,
                 attributes: ['installationInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_providerRepositoryId',
                 type: IndexType::Key,
                 attributes: ['providerRepositoryId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_repositoryId',
                 type: IndexType::Key,
                 attributes: ['repositoryId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_repositoryInternalId',
                 type: IndexType::Key,
                 attributes: ['repositoryInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -527,9 +550,10 @@ return [
             ),
         ],
     ],
+
     'sites' => [
-        '$collection' => '_metadata',
-        '$id' => 'sites',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('sites'),
         'name' => 'Sites',
         'attributes' => [
             new Attribute(
@@ -643,12 +667,14 @@ return [
                 signed: false,
                 filters: ['datetime'],
             ),
+            // File ID from 'screenshots' Console bucket
             new Attribute(
                 key: 'deploymentScreenshotLight',
                 type: ColumnType::String,
                 size: 32,
                 signed: false,
             ),
+            // File ID from 'screenshots' Console bucket
             new Attribute(
                 key: 'deploymentScreenshotDark',
                 type: ColumnType::String,
@@ -702,21 +728,21 @@ return [
                 key: 'specification',
                 type: ColumnType::String,
                 size: 128,
-                default: 's-1vcpu-512mb',
+                default: APP_COMPUTE_SPECIFICATION_DEFAULT,
                 signed: false,
             ),
             new Attribute(
                 key: 'buildSpecification',
                 type: ColumnType::String,
                 size: 128,
-                default: 's-1vcpu-512mb',
+                default: APP_SITES_BUILD_SPECIFICATION_DEFAULT,
                 signed: false,
             ),
             new Attribute(
                 key: 'runtimeSpecification',
                 type: ColumnType::String,
                 size: 128,
-                default: 's-1vcpu-512mb',
+                default: APP_COMPUTE_SPECIFICATION_DEFAULT,
                 signed: false,
             ),
             new Attribute(
@@ -726,11 +752,26 @@ return [
                 required: true,
                 default: '',
             ),
+            // ssr or static; named this way as it's a term in SSR frameworks
             new Attribute(
                 key: 'adapter',
                 type: ColumnType::String,
                 size: 16,
                 default: '',
+            ),
+            new Attribute(
+                key: 'providerBranches',
+                type: ColumnType::String,
+                size: 128,
+                default: [],
+                array: true,
+            ),
+            new Attribute(
+                key: 'providerPaths',
+                type: ColumnType::String,
+                size: 128,
+                default: [],
+                array: true,
             ),
         ],
         'indexes' => [
@@ -756,35 +797,35 @@ return [
                 key: '_key_installationId',
                 type: IndexType::Key,
                 attributes: ['installationId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_installationInternalId',
                 type: IndexType::Key,
                 attributes: ['installationInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_providerRepositoryId',
                 type: IndexType::Key,
                 attributes: ['providerRepositoryId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_repositoryId',
                 type: IndexType::Key,
                 attributes: ['repositoryId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_repositoryInternalId',
                 type: IndexType::Key,
                 attributes: ['repositoryInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -802,9 +843,10 @@ return [
             ),
         ],
     ],
+
     'deployments' => [
-        '$collection' => '_metadata',
-        '$id' => 'deployments',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('deployments'),
         'name' => 'Deployments',
         'attributes' => [
             new Attribute(
@@ -944,6 +986,7 @@ return [
                 size: 8,
                 signed: false,
             ),
+            // https://tools.ietf.org/html/rfc4288#section-4.2
             new Attribute(
                 key: 'sourceMetadata',
                 type: ColumnType::String,
@@ -965,12 +1008,14 @@ return [
                 type: ColumnType::Boolean,
                 default: false,
             ),
+            // File ID from 'screenshots' Console bucket
             new Attribute(
                 key: 'screenshotLight',
                 type: ColumnType::String,
                 size: 32,
                 signed: false,
             ),
+            // File ID from 'screenshots' Console bucket
             new Attribute(
                 key: 'screenshotDark',
                 type: ColumnType::String,
@@ -1021,9 +1066,10 @@ return [
             new Attribute(
                 key: 'buildLogs',
                 type: ColumnType::String,
-                size: 1000000,
+                size: APP_LOG_LENGTH_LIMIT,
                 default: '',
             ),
+            // ssr or static; named this way as it's a term in SSR frameworks
             new Attribute(
                 key: 'adapter',
                 type: ColumnType::String,
@@ -1105,168 +1151,9 @@ return [
             ),
         ],
     ],
-    'executions' => [
-        '$collection' => '_metadata',
-        '$id' => 'executions',
-        'name' => 'Executions',
-        'attributes' => [
-            new Attribute(
-                key: 'resourceInternalId',
-                type: ColumnType::String,
-                size: Database::LENGTH_KEY,
-            ),
-            new Attribute(
-                key: 'resourceId',
-                type: ColumnType::String,
-                size: Database::LENGTH_KEY,
-            ),
-            new Attribute(
-                key: 'resourceType',
-                type: ColumnType::String,
-                size: Database::LENGTH_KEY,
-            ),
-            new Attribute(
-                key: 'deploymentInternalId',
-                type: ColumnType::String,
-                size: Database::LENGTH_KEY,
-            ),
-            new Attribute(
-                key: 'deploymentId',
-                type: ColumnType::String,
-                size: Database::LENGTH_KEY,
-            ),
-            new Attribute(
-                key: 'trigger',
-                type: ColumnType::String,
-                size: 128,
-            ),
-            new Attribute(
-                key: 'status',
-                type: ColumnType::String,
-                size: 128,
-            ),
-            new Attribute(
-                key: 'duration',
-                type: ColumnType::Float,
-            ),
-            new Attribute(
-                key: 'errors',
-                type: ColumnType::String,
-                size: 1000000,
-            ),
-            new Attribute(
-                key: 'logs',
-                type: ColumnType::String,
-                size: 1000000,
-            ),
-            new Attribute(
-                key: 'requestMethod',
-                type: ColumnType::String,
-                size: 128,
-            ),
-            new Attribute(
-                key: 'requestPath',
-                type: ColumnType::String,
-                size: 2048,
-            ),
-            new Attribute(
-                key: 'requestHeaders',
-                type: ColumnType::String,
-                size: 16384,
-                filters: ['json'],
-            ),
-            new Attribute(
-                key: 'responseStatusCode',
-                type: ColumnType::Integer,
-            ),
-            new Attribute(
-                key: 'responseHeaders',
-                type: ColumnType::String,
-                size: 16384,
-                filters: ['json'],
-            ),
-            new Attribute(
-                key: 'scheduledAt',
-                type: ColumnType::Datetime,
-                signed: false,
-                filters: ['datetime'],
-            ),
-            new Attribute(
-                key: 'scheduleInternalId',
-                type: ColumnType::String,
-                size: Database::LENGTH_KEY,
-            ),
-            new Attribute(
-                key: 'scheduleId',
-                type: ColumnType::String,
-                size: Database::LENGTH_KEY,
-            ),
-        ],
-        'indexes' => [
-            new Index(
-                key: '_key_resource',
-                type: IndexType::Key,
-                attributes: ['resourceInternalId', 'resourceType', 'resourceId'],
-                lengths: [255],
-                orders: ['ASC'],
-            ),
-            new Index(
-                key: '_key_trigger',
-                type: IndexType::Key,
-                attributes: ['trigger'],
-                lengths: [32],
-                orders: ['ASC'],
-            ),
-            new Index(
-                key: '_key_status',
-                type: IndexType::Key,
-                attributes: ['status'],
-                lengths: [32],
-                orders: ['ASC'],
-            ),
-            new Index(
-                key: '_key_requestMethod',
-                type: IndexType::Key,
-                attributes: ['requestMethod'],
-                lengths: [128],
-                orders: ['ASC'],
-            ),
-            new Index(
-                key: '_key_requestPath',
-                type: IndexType::Key,
-                attributes: ['requestPath'],
-                lengths: [255],
-                orders: ['ASC'],
-            ),
-            new Index(
-                key: '_key_deployment',
-                type: IndexType::Key,
-                attributes: ['deploymentId'],
-                lengths: [255],
-                orders: ['ASC'],
-            ),
-            new Index(
-                key: '_key_responseStatusCode',
-                type: IndexType::Key,
-                attributes: ['responseStatusCode'],
-                orders: ['ASC'],
-            ),
-            new Index(
-                key: '_key_duration',
-                type: IndexType::Key,
-                attributes: ['duration'],
-                orders: ['ASC'],
-            ),
-            new Index(
-                key: '_key_resourceType',
-                type: IndexType::Key,
-                attributes: ['resourceType'],
-                orders: ['ASC'],
-            ),
-        ],
-    ],
+
     'variables' => [
-        '$collection' => '_metadata',
+        '$collection' => Database::METADATA,
         '$id' => 'variables',
         'name' => 'variables',
         'attributes' => [
@@ -1314,7 +1201,7 @@ return [
                 key: '_key_resourceInternalId',
                 type: IndexType::Key,
                 attributes: ['resourceInternalId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
             ),
             new Index(
                 key: '_key_resourceType',
@@ -1326,21 +1213,21 @@ return [
                 key: '_key_resourceId_resourceType',
                 type: IndexType::Key,
                 attributes: ['resourceId', 'resourceType'],
-                lengths: [255, 100],
+                lengths: [Database::LENGTH_KEY, 100],
                 orders: ['ASC', 'ASC'],
             ),
             new Index(
                 key: '_key_uniqueKey',
                 type: IndexType::Unique,
                 attributes: ['resourceId', 'key', 'resourceType'],
-                lengths: [255, 255, 100],
+                lengths: [Database::LENGTH_KEY, Database::LENGTH_KEY, 100],
                 orders: ['ASC', 'ASC', 'ASC'],
             ),
             new Index(
                 key: '_key_key',
                 type: IndexType::Key,
                 attributes: ['key'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
@@ -1355,9 +1242,10 @@ return [
             ),
         ],
     ],
+
     'migrations' => [
-        '$collection' => '_metadata',
-        '$id' => 'migrations',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('migrations'),
         'name' => 'Migrations',
         'attributes' => [
             new Attribute(
@@ -1372,12 +1260,14 @@ return [
                 size: Database::LENGTH_KEY,
                 required: true,
             ),
+            // reduce size
             new Attribute(
                 key: 'source',
                 type: ColumnType::String,
                 size: 8192,
                 required: true,
             ),
+            // make true after patch script
             new Attribute(
                 key: 'destination',
                 type: ColumnType::String,
@@ -1422,7 +1312,7 @@ return [
             new Attribute(
                 key: 'errors',
                 type: ColumnType::String,
-                size: 1000000,
+                size: 1_000_000,
                 required: true,
                 array: true,
             ),
@@ -1437,7 +1327,42 @@ return [
                 size: Database::LENGTH_KEY,
             ),
             new Attribute(
+                key: 'resourceInternalId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
                 key: 'resourceType',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'parentResourceId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'parentResourceInternalId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'parentResourceType',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'destinationResourceId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'destinationResourceInternalId',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+            ),
+            new Attribute(
+                key: 'destinationResourceType',
                 type: ColumnType::String,
                 size: Database::LENGTH_KEY,
             ),
@@ -1447,29 +1372,85 @@ return [
                 key: '_key_status',
                 type: IndexType::Key,
                 attributes: ['status'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_stage',
                 type: IndexType::Key,
                 attributes: ['stage'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_source',
                 type: IndexType::Key,
                 attributes: ['source'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['ASC'],
             ),
             new Index(
                 key: '_key_resource_id',
                 type: IndexType::Key,
                 attributes: ['resourceId'],
-                lengths: [255],
+                lengths: [Database::LENGTH_KEY],
                 orders: ['DESC'],
+            ),
+            new Index(
+                key: '_key_resourceType',
+                type: IndexType::Key,
+                attributes: ['resourceType'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_resourceInternalId',
+                type: IndexType::Key,
+                attributes: ['resourceInternalId'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_parentResourceId',
+                type: IndexType::Key,
+                attributes: ['parentResourceId'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_parentResourceType',
+                type: IndexType::Key,
+                attributes: ['parentResourceType'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_parentResourceInternalId',
+                type: IndexType::Key,
+                attributes: ['parentResourceInternalId'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_destinationResourceId',
+                type: IndexType::Key,
+                attributes: ['destinationResourceId'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_destinationResourceInternalId',
+                type: IndexType::Key,
+                attributes: ['destinationResourceInternalId'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_destinationResourceType',
+                type: IndexType::Key,
+                attributes: ['destinationResourceType'],
+                lengths: [Database::LENGTH_KEY],
+                orders: ['ASC'],
             ),
             new Index(
                 key: '_fulltext_search',
@@ -1478,9 +1459,10 @@ return [
             ),
         ],
     ],
+
     'resourceTokens' => [
-        '$collection' => '_metadata',
-        '$id' => 'resourceTokens',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('resourceTokens'),
         'name' => 'Resource Tokens',
         'attributes' => [
             new Attribute(
@@ -1511,7 +1493,7 @@ return [
             new Attribute(
                 key: 'expire',
                 type: ColumnType::Datetime,
-                size: Database::LENGTH_KEY,
+                size: 255,
                 filters: ['datetime'],
             ),
             new Attribute(
@@ -1540,11 +1522,13 @@ return [
             ),
         ],
     ],
+
     'transactions' => [
-        '$collection' => '_metadata',
-        '$id' => 'transactions',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('transactions'),
         'name' => 'Transactions',
         'attributes' => [
+            // pending | committing | committed | failed
             new Attribute(
                 key: 'status',
                 type: ColumnType::String,
@@ -1574,9 +1558,10 @@ return [
             ),
         ],
     ],
+
     'transactionLogs' => [
-        '$collection' => '_metadata',
-        '$id' => 'transactionLogs',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('transactionLogs'),
         'name' => 'Transaction Logs',
         'attributes' => [
             new Attribute(
@@ -1602,16 +1587,18 @@ return [
                 type: ColumnType::String,
                 size: Database::LENGTH_KEY,
             ),
+            // create | update | upsert | increment | decrement | delete | bulkCreate | bulkUpdate | bulkUpsert | bulkDelete
             new Attribute(
                 key: 'action',
                 type: ColumnType::String,
                 size: 32,
                 required: true,
             ),
+            // Allow large payloads for bulk operations
             new Attribute(
                 key: 'data',
                 type: ColumnType::String,
-                size: 5000000,
+                size: 5_000_000,
                 required: true,
                 signed: false,
                 filters: ['json'],

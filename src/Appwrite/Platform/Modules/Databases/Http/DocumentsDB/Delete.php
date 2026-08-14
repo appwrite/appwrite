@@ -31,6 +31,7 @@ class Delete extends DatabaseDelete
             ->label('event', 'databases.[databaseId].delete')
             ->label('audits.event', 'database.delete')
             ->label('audits.resource', 'database/{request.databaseId}')
+            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'documentsdb',
@@ -48,7 +49,7 @@ class Delete extends DatabaseDelete
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('usage')
             ->callback($this->action(...));

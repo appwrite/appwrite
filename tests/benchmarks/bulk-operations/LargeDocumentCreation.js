@@ -1,6 +1,6 @@
 import { check, sleep } from "k6";
 import http from "k6/http";
-import { provisionProject, provisionDatabase, cleanup, unique } from "./utils.js";
+import { provisionProject, provisionDatabase, cleanup, unique, ENDPOINT } from "./utils.js";
 
 const millionRecords = 1_000_000;
 const batchSize = 10_000;
@@ -8,7 +8,7 @@ const numBatches = millionRecords / batchSize;
 
 export function setup() {
     const resources = provisionProject({
-        endpoint: 'http://localhost/v1',
+        endpoint: ENDPOINT,
         email: 'test@test.com',
         password: 'password123',
         name: 'Test User',
@@ -16,7 +16,7 @@ export function setup() {
     });
 
     const { databaseId, collectionId } = provisionDatabase({
-        endpoint: 'http://localhost/v1',
+        endpoint: ENDPOINT,
         apiHeaders: resources.apiHeaders
     });
 
@@ -31,7 +31,7 @@ export function setup() {
         attributes: ["name", "email"]
     };
 
-    const indexRes = http.post(`http://localhost/v1/databases/${databaseId}/collections/${collectionId}/indexes`,
+    const indexRes = http.post(`${ENDPOINT}/databases/${databaseId}/collections/${collectionId}/indexes`,
         JSON.stringify(index), {
         headers: resources.apiHeaders
     });
@@ -57,7 +57,7 @@ export function setup() {
         }));
         requests.push({
             method: "POST",
-            url: `http://localhost/v1/databases/${databaseId}/collections/${collectionId}/documents`,
+            url: `${ENDPOINT}/databases/${databaseId}/collections/${collectionId}/documents`,
             body: JSON.stringify({ documents: docs }),
             params: {
                 headers: resources.apiHeaders,
@@ -96,7 +96,7 @@ export default function (data) {
 
     const payload = JSON.stringify({ documents: docs });
     const res = http.post(
-        `http://localhost/v1/databases/${data.databaseId}/collections/${data.collectionId}/documents`,
+        `${ENDPOINT}/databases/${data.databaseId}/collections/${data.collectionId}/documents`,
         payload,
         {
             headers: data.apiHeaders,

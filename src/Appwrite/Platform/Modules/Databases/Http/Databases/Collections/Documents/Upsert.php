@@ -20,6 +20,7 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -28,9 +29,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Query\Schema\ColumnType;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
+use Utopia\Query\Schema\ColumnType;
 
 class Upsert extends Action
 {
@@ -56,6 +57,7 @@ class Upsert extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.upsert')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -82,7 +84,7 @@ class Upsert extends Action
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
-            ->param('data', [], new JSON(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
+            ->param('data', [], new JSONObject(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')
@@ -98,23 +100,19 @@ class Upsert extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, User $user, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Context $usage, TransactionState $transactionState, array $plan, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array|\stdClass $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, User $user, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Context $usage, TransactionState $transactionState, array $plan, Authorization $authorization): void
     {
-        $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
+        $data = $this->normalizeData($data);
 
         if (empty($data) && \is_null($permissions)) {
             throw new Exception($this->getMissingPayloadException());
         }
 
-        if (\array_is_list($data) && \count($data) > 1) { // Allow 1 associated array
-            throw new Exception($this->getMissingPayloadException());
-        }
-
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database) || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -254,9 +252,9 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $database, $collection, $newDocument) {
+            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $collectionTableId, $newDocument) {
                 return $dbForDatabases->upsertDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    $collectionTableId,
                     [$newDocument],
                     onNext: function (Document $document) use (&$upserted) {
                         $upserted[] = $document;
@@ -265,8 +263,10 @@ class Upsert extends Action
             });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
-        } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException(), params: [$documentId]);
+        } catch (UniqueException $e) {
+            throw new Exception($this->getUniqueConstraintException(), previous: $e);
+        } catch (DuplicateException $e) {
+            throw new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
