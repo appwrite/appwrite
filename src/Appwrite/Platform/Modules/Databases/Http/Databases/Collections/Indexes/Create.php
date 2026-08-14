@@ -12,8 +12,6 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Adapter\Feature\SchemaAttributes;
-use Utopia\Database\Adapter\Feature\Spatial;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -156,7 +154,7 @@ class Create extends Action
         ];
 
         $contextType = $this->getParentContext();
-        if ($dbForDatabases->getAdapter() instanceof SchemaAttributes) {
+        if ($this->supportsDefinedAttributes($dbForDatabases->getAdapter())) {
             foreach ($attributes as $i => $attribute) {
                 // find attribute metadata in collection document
                 $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
@@ -211,12 +209,12 @@ class Create extends Action
             $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexNull),
             $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexOrder),
             $dbForDatabases->getAdapter()->supports(Capability::Vectors),
-            $dbForDatabases->getAdapter() instanceof SchemaAttributes,
+            $this->supportsDefinedAttributes($dbForDatabases->getAdapter()),
             $dbForDatabases->getAdapter()->supports(Capability::MultipleFulltextIndexes),
             $dbForDatabases->getAdapter()->supports(Capability::IdenticalIndexes),
             $dbForDatabases->getAdapter()->supports(Capability::ObjectIndexes),
             $dbForDatabases->getAdapter()->supports(Capability::TrigramIndex),
-            $dbForDatabases->getAdapter() instanceof Spatial,
+            $this->supportsSpatial($dbForDatabases->getAdapter()),
             $dbForDatabases->getAdapter()->supports(Capability::Index),
             $dbForDatabases->getAdapter()->supports(Capability::UniqueIndex),
             $dbForDatabases->getAdapter()->supports(Capability::Fulltext),

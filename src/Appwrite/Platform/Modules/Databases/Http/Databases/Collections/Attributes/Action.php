@@ -10,7 +10,6 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
-use Utopia\Database\Adapter\Feature\Spatial;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -334,7 +333,7 @@ abstract class Action extends DatabasesAction
         $default = $attribute->getAttribute('default');
         $options = $attribute->getAttribute('options', []);
 
-        if (in_array($type, [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) && !$dbForProject->getAdapter() instanceof Spatial) {
+        if (in_array($type, [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) && !$this->supportsSpatial($dbForProject->getAdapter())) {
             throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
         }
 

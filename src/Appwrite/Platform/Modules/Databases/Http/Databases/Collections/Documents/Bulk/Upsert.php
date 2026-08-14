@@ -120,6 +120,7 @@ class Upsert extends Action
                 $document = $this->parseOperators($document, $collection);
             }
             $document = $this->removeReadonlyAttributes($document, privileged: true);
+            $this->validateTimestamps($document);
             $documents[$key] = new Document($document);
         }
 

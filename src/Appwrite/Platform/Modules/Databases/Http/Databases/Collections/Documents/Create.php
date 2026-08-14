@@ -307,6 +307,7 @@ class Create extends Action
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
+            $this->validateTimestamps($document);
             $document = new Document($document);
             $setPermissions($document, $permissions);
 

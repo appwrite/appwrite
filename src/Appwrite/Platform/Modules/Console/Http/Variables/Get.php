@@ -8,7 +8,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
-use Utopia\Database\Adapter\Feature\Spatial;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -100,7 +99,10 @@ class Get extends Action
             '_APP_DB_ADAPTER' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
             'supportForRelationships' => $adapter instanceof FeatureRelationships,
             'supportForOperators' => $adapter->supports(Capability::Operators),
-            'supportForSpatials' => $adapter instanceof Spatial,
+            'supportForSpatials' => $adapter->supports(Capability::SpatialIndexNull)
+                || $adapter->supports(Capability::SpatialIndexOrder)
+                || $adapter->supports(Capability::OptionalSpatial)
+                || $adapter->supports(Capability::SpatialAxisOrder),
             'supportForSpatialIndexNull' => $adapter->supports(Capability::SpatialIndexNull),
             'supportForFulltextWildcard' => $adapter->supports(Capability::FulltextWildcard),
             'supportForMultipleFulltextIndexes' => $adapter->supports(Capability::MultipleFulltextIndexes),

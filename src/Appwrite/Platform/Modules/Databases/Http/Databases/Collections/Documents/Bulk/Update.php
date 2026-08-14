@@ -141,6 +141,7 @@ class Update extends Action
         }
 
         $data = $this->removeReadonlyAttributes($data, privileged: true);
+        $this->validateTimestamps($data);
 
         // Handle transaction staging
         if ($transactionId !== null) {

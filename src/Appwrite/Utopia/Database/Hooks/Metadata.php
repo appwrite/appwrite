@@ -14,18 +14,26 @@ use Utopia\Query\Schema\ColumnType;
  *
  * Uses the 'externalId' attribute stored on the collection metadata document
  * to resolve internal collection names to user-facing collection IDs.
- * Zero queries — externalId is set during createCollection.
+ * Related documents store the internal collection id; resolveExternalId maps
+ * that back to the user-facing collection id.
  */
 class Metadata implements Decorator
 {
     /** @var array<string, array<Document>> */
     private array $relationshipCache = [];
 
+    /** @var array<string, string> */
+    private array $externalIds = [];
+
     private int $operations = 0;
 
+    /**
+     * @param  callable(string): string|null  $resolveExternalId
+     */
     public function __construct(
         private Document $database,
         private string $context = 'collection',
+        private $resolveExternalId = null,
     ) {
     }
 
@@ -38,6 +46,7 @@ class Metadata implements Decorator
         $this->operations++;
 
         $collectionId = $collection->getAttribute('externalId', $collection->getId());
+        $this->externalIds[$collection->getId()] = $collectionId;
         $document->setAttribute('$databaseId', $this->database->getId());
         $document->setAttribute('$' . $this->context . 'Id', $collectionId);
 
@@ -62,8 +71,8 @@ class Metadata implements Decorator
             return;
         }
 
-        $collectionId = $collection->getId();
-        $relationships = $this->getRelationships($collectionId, $collection);
+        $parentExternalId = $collection->getAttribute('externalId', $collection->getId());
+        $relationships = $this->getRelationships($collection->getId(), $collection);
 
         foreach ($relationships as $relationship) {
             $key = $relationship->getAttribute('key');
@@ -82,10 +91,13 @@ class Metadata implements Decorator
                 if ($relation instanceof Document) {
                     $this->operations++;
                     $relation->setAttribute('$databaseId', $this->database->getId());
-                    // Related documents get their $collection set by the database library
-                    // which points to the related collection's metadata — read its externalId
-                    $relCollection = $relation->getCollection();
-                    $relation->setAttribute('$' . $this->context . 'Id', $relCollection ?: $collectionId);
+                    $relatedInternalId = $relation->getCollection();
+                    $relation->setAttribute(
+                        '$' . $this->context . 'Id',
+                        $relatedInternalId !== ''
+                            ? $this->externalId($relatedInternalId)
+                            : $parentExternalId
+                    );
                 }
             }
         }
@@ -104,5 +116,17 @@ class Metadata implements Decorator
         }
 
         return $this->relationshipCache[$collectionId];
+    }
+
+    private function externalId(string $internalId): string
+    {
+        if (!isset($this->externalIds[$internalId])) {
+            $resolver = $this->resolveExternalId;
+            $this->externalIds[$internalId] = $resolver !== null
+                ? $resolver($internalId)
+                : $internalId;
+        }
+
+        return $this->externalIds[$internalId];
     }
 }

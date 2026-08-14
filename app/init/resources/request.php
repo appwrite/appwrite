@@ -1050,6 +1050,10 @@ return function (Container $context): void {
             $database->addHook(new Metadata(
                 database: $originalDatabase,
                 context: $context,
+                resolveExternalId: function (string $internalId) use ($database): string {
+                    $metadata = $database->silent(fn () => $database->getCollection($internalId));
+                    return $metadata->getAttribute('externalId', $internalId);
+                },
             ));
 
             return $database;

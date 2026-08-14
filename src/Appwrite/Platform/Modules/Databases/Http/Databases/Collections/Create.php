@@ -14,8 +14,6 @@ use Appwrite\Utopia\Database\Validator\Attributes as AttributesValidator;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Indexes as IndexesValidator;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Adapter\Feature\SchemaAttributes;
-use Utopia\Database\Adapter\Feature\Spatial;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -142,8 +140,8 @@ class Create extends Action
 
         $attributesValidator = new AttributesValidator(
             APP_LIMIT_ARRAY_PARAMS_SIZE,
-            $dbForDatabases->getAdapter() instanceof Spatial,
-            $dbForDatabases->getAdapter() instanceof SchemaAttributes
+            $this->supportsSpatial($dbForDatabases->getAdapter()),
+            $this->supportsDefinedAttributes($dbForDatabases->getAdapter())
         );
 
         if (!$attributesValidator->isValid($attributes)) {
@@ -201,12 +199,12 @@ class Create extends Action
             $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexNull),
             $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexOrder),
             $dbForDatabases->getAdapter()->supports(Capability::Vectors),
-            $dbForDatabases->getAdapter() instanceof SchemaAttributes,
+            $this->supportsDefinedAttributes($dbForDatabases->getAdapter()),
             $dbForDatabases->getAdapter()->supports(Capability::MultipleFulltextIndexes),
             $dbForDatabases->getAdapter()->supports(Capability::IdenticalIndexes),
             $dbForDatabases->getAdapter()->supports(Capability::ObjectIndexes),
             $dbForDatabases->getAdapter()->supports(Capability::TrigramIndex),
-            $dbForDatabases->getAdapter() instanceof Spatial,
+            $this->supportsSpatial($dbForDatabases->getAdapter()),
             $dbForDatabases->getAdapter()->supports(Capability::Index),
             $dbForDatabases->getAdapter()->supports(Capability::UniqueIndex),
             $dbForDatabases->getAdapter()->supports(Capability::Fulltext),

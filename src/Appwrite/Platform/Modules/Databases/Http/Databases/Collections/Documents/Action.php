@@ -11,6 +11,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 abstract class Action extends DatabasesAction
 {
@@ -201,6 +202,22 @@ abstract class Action extends DatabasesAction
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_INVALID_STRUCTURE
             : Exception::ROW_INVALID_STRUCTURE;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    protected function validateTimestamps(array $data): void
+    {
+        $validator = new DatetimeValidator();
+        foreach (['$createdAt', '$updatedAt'] as $attribute) {
+            if (!isset($data[$attribute]) || $data[$attribute] === '') {
+                continue;
+            }
+            if (!\is_string($data[$attribute]) || !$validator->isValid($data[$attribute])) {
+                throw new Exception($this->getStructureException(), $validator->getDescription());
+            }
+        }
     }
 
     /**

@@ -174,6 +174,7 @@ class Update extends Action
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
+        $this->validateTimestamps($data);
         $newDocument = new Document($data);
 
         // Handle transaction staging
