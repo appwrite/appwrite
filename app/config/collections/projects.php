@@ -1354,6 +1354,17 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('scopes'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => true,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('providerBranches'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

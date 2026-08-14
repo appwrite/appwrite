@@ -739,6 +739,128 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testScopes(): void
+    {
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertEquals(['users.read'], $site['body']['scopes']);
+
+        $siteId = $site['body']['$id'];
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['users.read'], $site['body']['scopes']);
+
+        $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        // Build-time key (APPWRITE_SITE_API_KEY) can call the API with granted scopes
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertStringContainsStringIgnoringCase('200 OK', $deployment['body']['buildLogs']);
+        $this->assertStringContainsStringIgnoringCase('"total":', $deployment['body']['buildLogs']);
+        $this->assertStringContainsStringIgnoringCase('"users":', $deployment['body']['buildLogs']);
+
+        $this->assertEquals(1, \preg_match('/KEY_FOR_TESTS=(\S+)/', $deployment['body']['buildLogs'], $matches));
+        $this->assertEphemeralKey($matches[1], ['users.read']);
+
+        // Runtime key (x-appwrite-key header) can call the API with granted scopes
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/api-key');
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $body = $response['body'];
+        $this->assertIsArray($body);
+        $this->assertArrayHasKey('total', $body['users']);
+        $this->assertArrayHasKey('users', $body['users']);
+        $this->assertEphemeralKey($body['apiKey'], ['users.read']);
+
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+            'scopes' => ['users.read', 'teams.read'],
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['users.read', 'teams.read'], $site['body']['scopes']);
+
+        // Update omitting scopes preserves them
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['users.read', 'teams.read'], $site['body']['scopes']);
+
+        // Update with empty scopes clears them
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+            'scopes' => [],
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals([], $site['body']['scopes']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    /**
+     * @param array<string> $scopes
+     */
+    private function assertEphemeralKey(string $key, array $scopes): void
+    {
+        $prefix = API_KEY_EPHEMERAL . '_';
+        $this->assertStringStartsWith($prefix, $key);
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $payload = $jwt->decode(\substr($key, \strlen($prefix)));
+
+        $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
+        $this->assertEquals($scopes, $payload['scopes']);
+    }
+
     public function testListSites(): void
     {
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
