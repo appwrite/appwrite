@@ -810,6 +810,39 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertEquals(['users.read', 'teams.read'], $site['body']['scopes']);
 
+        // Update omitting scopes preserves them
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['users.read', 'teams.read'], $site['body']['scopes']);
+
+        // Update with empty scopes clears them
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+            'scopes' => [],
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals([], $site['body']['scopes']);
+
         $this->cleanupSite($siteId);
     }
 
