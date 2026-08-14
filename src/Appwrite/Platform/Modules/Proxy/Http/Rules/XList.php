@@ -105,7 +105,13 @@ class XList extends Action
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', $queries));
+        try {
+            $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', $queries));
+            $total = $total ? $authorization->skip(fn () => $dbForPlatform->count('rules', $filterQueries, APP_LIMIT_COUNT)) : 0;
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         foreach ($rules as $rule) {
             $certificate = $authorization->skip(fn () => $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', '')));
 
@@ -126,7 +132,7 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'rules' => $rules,
-            'total' => $total ? $authorization->skip(fn () => $dbForPlatform->count('rules', $filterQueries, APP_LIMIT_COUNT)) : 0,
+            'total' => $total,
         ]), Response::MODEL_PROXY_RULE_LIST);
     }
 }
