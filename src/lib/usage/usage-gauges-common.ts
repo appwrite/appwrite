@@ -32,6 +32,16 @@ export interface ProjectUsageGaugeOverview {
   topConsumers: UsageTopEndpoint[]
 }
 
+/**
+ * How samples inside a bucket combine.
+ *
+ * `last` is the gauge default - the latest reading, which is the answer for a
+ * snapshot like storage. `max` is for a sampled *level* series, where the
+ * bucket's highest reading is what matters: realtime concurrency is sampled
+ * every few minutes, so its peak is the max of those samples.
+ */
+export type UsageGaugeAggregate = 'last' | 'max'
+
 interface ListUsageGaugeGroupsParams {
   metrics: readonly string[]
   interval?: UsageChartInterval
@@ -49,6 +59,12 @@ interface ListUsageGaugeGroupsParams {
    * with value-desc ordering; charts omit this and use USAGE_API_MAX_LIMIT.
    */
   limit?: number
+  /**
+   * How samples in a bucket combine. `last` (default) is the latest reading,
+   * right for a snapshot such as storage. `max` is the highest, which a
+   * sampled level series needs - see UsageGaugeAggregate.
+   */
+  aggregate?: UsageGaugeAggregate
 }
 
 async function listUsageGaugeGroupsByMetric(
@@ -89,6 +105,7 @@ async function listUsageGaugeGroupsByMetric(
     orderBy?: string
     orderDir?: string
     limit?: number
+    aggregate?: string
   } = {
     metrics: [...params.metrics],
     startAt: params.startAt,
@@ -106,6 +123,9 @@ async function listUsageGaugeGroupsByMetric(
   }
   if (queries.length > 0) {
     request.queries = queries
+  }
+  if (params.aggregate) {
+    request.aggregate = params.aggregate
   }
 
   const response = await projectSdk.usage.listGauges(request)
@@ -483,6 +503,7 @@ export async function fetchProjectUsageGaugeChartSeries(
   resourceId?: string,
   resourceType?: string,
   ordinal?: number,
+  aggregate?: UsageGaugeAggregate,
 ): Promise<{
   chartPoints: ProjectUsageChartOverview['chartPoints']
   previousChartPoints: ProjectUsageChartOverview['chartPoints']
@@ -530,6 +551,7 @@ export async function fetchProjectUsageGaugeChartSeries(
     resourceId,
     resourceType,
     ordinal,
+    aggregate,
   })
 
   // First-half comparison reuses the current series; a second fetch would
@@ -544,6 +566,7 @@ export async function fetchProjectUsageGaugeChartSeries(
           resourceId,
           resourceType,
           ordinal,
+          aggregate,
         })
       : []
 
