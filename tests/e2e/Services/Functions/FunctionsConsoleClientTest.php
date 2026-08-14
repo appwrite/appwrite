@@ -281,6 +281,17 @@ final class FunctionsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::search('key', 'APP_TEST')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $response['body']['type']);
     }
 
     public function testListVariablesWithLimit(): void

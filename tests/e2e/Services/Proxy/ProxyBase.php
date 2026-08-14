@@ -621,6 +621,14 @@ trait ProxyBase
         $ruleDomains = \array_column($rules['body']['rules'], 'domain');
         $this->assertContains($rule2Domain, $ruleDomains);
 
+        $rules = $this->listRules([
+            'queries' => [
+                Query::search('domain', $rule1Domain)->toString(),
+            ],
+        ]);
+        $this->assertEquals(400, $rules['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $rules['body']['type']);
+
         $rules = $this->listRules();
         $this->assertEquals(200, $rules['headers']['status-code']);
         foreach ($rules['body']['rules'] as $rule) {
