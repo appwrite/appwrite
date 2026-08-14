@@ -21,6 +21,8 @@ import {
   useProjectsForTeamInfinite,
   useConsoleTeam,
   fetchActiveProjects,
+  projectsForTeamInfiniteQueryKey,
+  organizationProjectScopeQueryOptions,
   pinnedProjectsQueryOptions,
   consoleTeamQueryOptions,
   useOrganizationFailedInvoicePresence,
@@ -367,6 +369,11 @@ export function ProjectSelector({
   const projectSearchActive = Boolean(projectSearch.trim())
   const listExcludePinnedIds = projectSearchActive ? undefined : pinnedIds
 
+  const { data: switcherProjectScopeData } = useQuery(
+    organizationProjectScopeQueryOptions(resolvedTeam?.$id),
+  )
+  const switcherProjectScope = switcherProjectScopeData ?? null
+
   // Fetch projects for selected team with infinite scroll (exclude pinned only when not searching)
   const {
     projects: paginatedProjects,
@@ -380,6 +387,7 @@ export function ProjectSelector({
     projectsPageSize,
     projectSearch,
     listExcludePinnedIds,
+    switcherProjectScope,
   )
 
   const queryClient = useQueryClient()
@@ -401,17 +409,17 @@ export function ProjectSelector({
         } catch {
           return
         }
-        const excludeKey =
-          excludeIds.length > 0 ? excludeIds.slice().sort().join(',') : ''
-        const infiniteQueryKey = [
-          'projects',
-          'team',
-          'infinite',
+        // Scope belongs to the team being prefetched, not the current one.
+        const prefetchScope = await queryClient
+          .ensureQueryData(organizationProjectScopeQueryOptions(teamId))
+          .catch(() => null)
+        const infiniteQueryKey = projectsForTeamInfiniteQueryKey(
           teamId,
           projectsPageSize,
           '',
-          excludeKey,
-        ]
+          excludeIds,
+          prefetchScope ?? null,
+        )
         const pinnedOptions = pinnedProjectsQueryOptions(teamId, excludeIds)
 
         try {
@@ -429,6 +437,7 @@ export function ProjectSelector({
                   projectsPageSize,
                   '',
                   excludeIds,
+                  prefetchScope ?? null,
                 ),
               initialPageParam: 0,
               staleTime: TEAM_PROJECTS_PREFETCH_STALE_MS,
@@ -460,17 +469,17 @@ export function ProjectSelector({
       } catch {
         // use empty exclude if team prefs fail
       }
-      const excludeKey =
-        excludeIds.length > 0 ? excludeIds.slice().sort().join(',') : ''
-      const infiniteQueryKey = [
-        'projects',
-        'team',
-        'infinite',
+      // Scope belongs to the team being switched to, not the current one.
+      const switchScope = await queryClient
+        .ensureQueryData(organizationProjectScopeQueryOptions(team.$id))
+        .catch(() => null)
+      const infiniteQueryKey = projectsForTeamInfiniteQueryKey(
         team.$id,
         projectsPageSize,
         '',
-        excludeKey,
-      ]
+        excludeIds,
+        switchScope ?? null,
+      )
       const pinnedOptions = pinnedProjectsQueryOptions(team.$id, excludeIds)
       const hasInfiniteCache = queryClient.getQueryData(infiniteQueryKey)
       const hasPinnedCache = queryClient.getQueryData(pinnedOptions.queryKey)
@@ -496,6 +505,7 @@ export function ProjectSelector({
                     projectsPageSize,
                     '',
                     excludeIds,
+                    switchScope ?? null,
                   ),
                 initialPageParam: 0,
                 staleTime: TEAM_PROJECTS_PREFETCH_STALE_MS,

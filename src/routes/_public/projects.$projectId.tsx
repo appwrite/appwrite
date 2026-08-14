@@ -384,7 +384,9 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
         }
         if (features.orgRoles) {
           await queryClient
-            .ensureQueryData(organizationScopesQueryOptions(projectData.teamId))
+            .ensureQueryData(
+              organizationScopesQueryOptions(projectData.teamId, projectId),
+            )
             .catch(() => {})
         }
       }

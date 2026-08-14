@@ -46,7 +46,9 @@ import {
   organizationPlanQueryOptions,
   prefetchOrganizationInvoiceDataIfAllowed,
   organizationScopesQueryOptions,
+  organizationProjectScopeQueryOptions,
   activeProjectsQueryOptions,
+  projectsByIdsQueryOptions,
   deleteOrganization,
   organizationMembershipsQueryOptions,
   mapOrganizationMembershipsToTeamMembers,
@@ -176,6 +178,16 @@ import { OrganizationBillingHeaderBanners } from '@/components/global/shared/Org
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { InviteMembersDialog } from './InviteMembers'
+import {
+  ProjectAccessSelector,
+  DEFAULT_PROJECT_ROLE,
+} from './_components/ProjectAccessSelector'
+import {
+  buildProjectRole,
+  parseProjectAccess,
+  projectIdsFromRoles,
+  type ProjectAccessEntry,
+} from '@/lib/console-project-roles'
 import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
@@ -265,6 +277,23 @@ function orgMembershipRoleDisplay(role: string): {
   return {
     Icon: Users,
     label: role.charAt(0).toUpperCase() + role.slice(1)}
+}
+
+/** Single source for role badges, so the table and its tooltips cannot drift. */
+function OrgRoleBadge({ role }: { role: string }) {
+  const t = useT()
+  const { Icon, label } = orgMembershipRoleDisplay(role)
+  return (
+    <Badge
+      variant="secondary"
+      className={cn(
+        'inline-flex items-center gap-1 border px-2 py-0.5 text-[11px] font-medium',
+      )}
+    >
+      <Icon className="h-3 w-3 shrink-0" aria-hidden />
+      {t(label)}
+    </Badge>
+  )
 }
 
 /** Header avatar stack beside Invite: fixed width fits this many md avatars. */
@@ -655,6 +684,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [selectedRole, setSelectedRole] = useState<
     'owner' | 'developer' | 'editor' | 'analyst' | 'billing'
   >('developer')
+  const [editAccessType, setEditAccessType] = useState<'all' | 'specific'>(
+    'all',
+  )
+  const [editProjectAccess, setEditProjectAccess] = useState<
+    ProjectAccessEntry[]
+  >([])
   const [createOrgDialogOpen, setCreateOrgDialogOpen] = useState(false)
 
   const handleOpenCreateOrganization = useCallback(() => {
@@ -1146,11 +1181,30 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // In Appwrite, organizations ARE teams, so we use the organization ID directly as the team ID
   const orgTeamId = orgId || null
 
+
   // Pinned projects: stored in team prefs, excluded from main list
   const { data: consoleTeam } = useConsoleTeam(orgTeamId)
   const teamPrefs = (consoleTeam as { prefs?: Record<string, unknown> } | null)
     ?.prefs
-  const pinnedIds = useMemo(() => parsePinnedProjectIds(teamPrefs), [teamPrefs])
+  const allPinnedIds = useMemo(
+    () => parsePinnedProjectIds(teamPrefs),
+    [teamPrefs],
+  )
+  const { data: orgProjectScope } = useQuery(
+    organizationProjectScopeQueryOptions(orgTeamId),
+  )
+  const restrictToProjectIds = orgProjectScope ?? null
+
+  // Pins live in org-level team prefs and are shared by every member, so a
+  // project-scoped member would otherwise see pinned cards for projects they
+  // cannot open. Filtering here also keeps them out of the exclude list and
+  // the project count.
+  const pinnedIds = useMemo(() => {
+    if (!restrictToProjectIds) return allPinnedIds
+    const allowed = new Set(restrictToProjectIds)
+    return allPinnedIds.filter((id) => allowed.has(id))
+  }, [allPinnedIds, restrictToProjectIds])
+
   const updateTeamPrefsMutation = useUpdateConsoleTeamPrefs(orgTeamId)
 
   /** While searching, list API must include pinned rows if they match; pinned section is hidden in the UI. */
@@ -1179,6 +1233,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       urlProjectsLimit,
       searchQuery,
       listExcludePinnedIds,
+      restrictToProjectIds,
     ),
     placeholderData: keepPreviousData})
 
@@ -1191,6 +1246,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         urlProjectsLimit,
         searchQuery,
         listExcludePinnedIds,
+        restrictToProjectIds,
       ),
       placeholderData: keepPreviousData})
 
@@ -1506,6 +1562,19 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return organizationPlan?.addons?.seats?.supported !== false
   }, [organizationPlan])
 
+  // Per-project access is a paid capability; without it members are org-wide only.
+  const supportsProjectRoles = Boolean(
+    features.orgRoles && organizationPlan?.supportsProjectSpecificRoles,
+  )
+
+  // Name lookup for project-scoped role badges. A member may hold a role on a
+  // project outside the current page or search, so callers fall back to the id.
+  const orgProjectNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const project of activeProjects) map.set(project.$id, project.name)
+    return map
+  }, [activeProjects])
+
   const canInviteMembers = canInviteOrgMember(access, features)
   const inviteDisabled =
     !supportsAdditionalMembers || !canInviteMembers || !orgId
@@ -1619,6 +1688,32 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       mapOrganizationMembershipsToTeamMembers(displayedMembershipsRaw, orgId),
     [displayedMembershipsRaw, orgId],
   )
+  // Projects named by any member's project-specific roles on this page.
+  // Resolved by id rather than read off the org's project list, which is
+  // paginated and searched and so will not contain most of them.
+  const memberProjectIds = useMemo(() => {
+    if (!supportsProjectRoles) return []
+    const ids = new Set<string>()
+    for (const member of memberships) {
+      for (const id of projectIdsFromRoles(member.roles)) ids.add(id)
+    }
+    return Array.from(ids)
+  }, [memberships, supportsProjectRoles])
+
+  const { data: memberProjectsData } = useQuery(
+    projectsByIdsQueryOptions(orgTeamId, memberProjectIds),
+  )
+
+  const memberProjectNameById = useMemo(() => {
+    const map = new Map<string, string>(orgProjectNameById)
+    const resolved = (memberProjectsData?.projects ?? []) as Array<{
+      $id: string
+      name: string
+    }>
+    for (const project of resolved) map.set(project.$id, project.name)
+    return map
+  }, [memberProjectsData, orgProjectNameById])
+
   const membershipsTotal = displayedMembershipsRaw?.total ?? 0
 
   const membershipsLoading =
@@ -1828,6 +1923,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       const projectPages = Array.from(
         new Set([0, Math.max(0, requestedPage - 1)]),
       )
+      // Resolved first so the prefetch lands on the key the overview reads.
+      const nextProjectScope = await queryClient
+        .ensureQueryData(organizationProjectScopeQueryOptions(nextOrgId))
+        .catch(() => null)
 
       await Promise.all([
         queryClient.ensureQueryData(
@@ -1846,6 +1945,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               urlProjectsLimit,
               searchQuery,
               searchQuery.trim() ? undefined : nextPinnedIds,
+              nextProjectScope,
             ),
           ),
         ),
@@ -3420,6 +3520,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             {t('Role')}
                                           </TableHead>
                                         )}
+                                        {supportsProjectRoles && (
+                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden md:table-cell">
+                                            {t('Projects')}
+                                          </TableHead>
+                                        )}
                                         {features.accountMfa && (
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
                                             {t('MFA')}
@@ -3433,11 +3538,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     </TableHeader>
                                     <TableBody>
                                       {memberships.map((member: TeamMember) => {
-                                        const {
-                                          Icon: RoleIcon,
-                                          label: roleLabel} = orgMembershipRoleDisplay(
-                                          member.role,
-                                        )
+                                        const memberProjectAccess =
+                                          supportsProjectRoles
+                                            ? parseProjectAccess(member.roles)
+                                            : []
+                                        const isProjectScoped =
+                                          memberProjectAccess.length > 0
+                                        const projectLabel = (
+                                          projectId: string,
+                                        ) =>
+                                          memberProjectNameById.get(projectId) ??
+                                          projectId
                                         const canManageMembers =
                                           canInviteOrgMember(access, features)
                                         return (
@@ -3458,6 +3569,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         | 'editor'
                                                         | 'analyst'
                                                         | 'billing',
+                                                    )
+                                                    setEditAccessType(
+                                                      memberProjectAccess.length >
+                                                        0
+                                                        ? 'specific'
+                                                        : 'all',
+                                                    )
+                                                    setEditProjectAccess(
+                                                      memberProjectAccess,
                                                     )
                                                     setUpdateRoleDialogOpen(
                                                       true,
@@ -3488,8 +3608,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   className="shrink-0"
                                                 />
                                                 <div className="flex-1 min-w-0">
-                                                  <div className="flex items-center gap-2 flex-wrap">
-                                                    <p className="truncate text-[13px] font-medium text-foreground">
+                                                  <div className="flex min-w-0 items-center gap-2">
+                                                    <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
                                                       {member.userName ||
                                                         member.userEmail}
                                                     </p>
@@ -3513,19 +3633,90 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             </TableCell>
                                             {features.orgRoles && (
                                               <TableCell className="px-4 py-3">
-                                                <div className="flex items-center justify-center">
-                                                  <Badge
-                                                    variant="secondary"
-                                                    className={cn(
-                                                      'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
-                                                    )}
-                                                  >
-                                                    <RoleIcon
-                                                      className="h-3 w-3 shrink-0"
-                                                      aria-hidden
+                                                <div className="flex flex-nowrap items-center justify-center gap-1 whitespace-nowrap">
+                                                  {isProjectScoped ? (
+                                                    // Roles are per project for
+                                                    // this member; the Projects
+                                                    // cell names them.
+                                                    <span className="text-[12px] text-muted-foreground">
+                                                      {t('Per project')}
+                                                    </span>
+                                                  ) : (
+                                                    <OrgRoleBadge
+                                                      role={member.role}
                                                     />
-                                                    {t(roleLabel)}
-                                                  </Badge>
+                                                  )}
+                                                </div>
+                                              </TableCell>
+                                            )}
+                                            {supportsProjectRoles && (
+                                              <TableCell className="px-4 py-3 hidden md:table-cell">
+                                                <div className="flex items-center justify-center">
+                                                  {!isProjectScoped ? (
+                                                    <span className="text-[12px] text-muted-foreground">
+                                                      {t('All projects')}
+                                                    </span>
+                                                  ) : (
+                                                    // Popover, not an expanded
+                                                    // row: the detail is a small
+                                                    // table of its own and must
+                                                    // not grow the member row or
+                                                    // borrow the Member column,
+                                                    // where a project name reads
+                                                    // as the member's name.
+                                                    <Popover>
+                                                      <PopoverTrigger asChild>
+                                                        <button
+                                                          type="button"
+                                                          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] text-foreground hover:bg-muted/60"
+                                                        >
+                                                          {`${memberProjectAccess.length} ${t('projects')}`}
+                                                          <ChevronDown
+                                                            className="h-3.5 w-3.5 text-muted-foreground"
+                                                            aria-hidden
+                                                          />
+                                                        </button>
+                                                      </PopoverTrigger>
+                                                      <PopoverContent
+                                                        align="center"
+                                                        className="w-64 p-0"
+                                                      >
+                                                        <p className="border-b border-border px-3 py-2 text-[11px] font-medium text-muted-foreground">
+                                                          {t('Project access')}
+                                                        </p>
+                                                        <div className="max-h-64 overflow-y-auto py-1">
+                                                          {memberProjectAccess.map(
+                                                            (row) => (
+                                                              <div
+                                                                key={
+                                                                  row.projectId
+                                                                }
+                                                                className="flex items-center justify-between gap-3 px-3 py-1.5"
+                                                              >
+                                                                <span
+                                                                  className="min-w-0 truncate text-[12px] text-foreground"
+                                                                  title={projectLabel(
+                                                                    row.projectId,
+                                                                  )}
+                                                                >
+                                                                  {projectLabel(
+                                                                    row.projectId,
+                                                                  )}
+                                                                </span>
+                                                                <span className="shrink-0 text-[11px] text-muted-foreground">
+                                                                  {t(
+                                                                    orgMembershipRoleDisplay(
+                                                                      row.roleName,
+                                                                    ).label,
+                                                                  )}
+                                                                </span>
+                                                              </div>
+                                                            ),
+                                                          )}
+                                                        </div>
+                                                      </PopoverContent>
+                                                    </Popover>
+                                                  )}
                                                 </div>
                                               </TableCell>
                                             )}
@@ -4215,6 +4406,59 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           </DialogHeader>
           <div className="border-t border-border" />
           <div className="px-6 pb-4 pt-0">
+            {supportsProjectRoles && (
+              <div className="mb-4 space-y-1.5">
+                <label className="text-[13px] font-medium text-foreground mb-1.5 block">
+                  {t('Access')}
+                </label>
+                <RadioGroup
+                  value={editAccessType}
+                  onValueChange={(value: 'all' | 'specific') => {
+                    setEditAccessType(value)
+                    if (value === 'specific' && editProjectAccess.length === 0) {
+                      setEditProjectAccess([
+                        { projectId: '', roleName: DEFAULT_PROJECT_ROLE },
+                      ])
+                    }
+                  }}
+                  className="flex flex-row gap-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem id="edit-access-all" value="all" />
+                    <Label
+                      htmlFor="edit-access-all"
+                      className="cursor-pointer text-[13px] font-normal"
+                    >
+                      {t('All projects')}
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem id="edit-access-specific" value="specific" />
+                    <Label
+                      htmlFor="edit-access-specific"
+                      className="cursor-pointer text-[13px] font-normal"
+                    >
+                      {t('Specific projects')}
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+
+            {supportsProjectRoles && editAccessType === 'specific' ? (
+              <div>
+                <ProjectAccessSelector
+                  orgId={orgId!}
+                  value={editProjectAccess}
+                  onChange={setEditProjectAccess}
+                />
+                {!editProjectAccess.some((row) => row.projectId) && (
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    {t('Add at least one project to grant access.')}
+                  </p>
+                )}
+              </div>
+            ) : (
             <div className="space-y-1.5">
               <label className="text-[13px] font-medium text-foreground mb-1.5 block">
                 {t('Role')}
@@ -4281,6 +4525,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 })}
               </RadioGroup>
             </div>
+            )}
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
@@ -4297,18 +4542,33 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             <Button
               size="sm"
               className="h-9 text-[13px]"
-              disabled={
-                !selectedMember ||
-                selectedRole === selectedMember.role ||
-                updateRoleMutation.isPending
-              }
+              disabled={(() => {
+                if (!selectedMember || updateRoleMutation.isPending) return true
+                if (supportsProjectRoles && editAccessType === 'specific') {
+                  return !editProjectAccess.some((row) => row.projectId)
+                }
+                // Moving a project-scoped member back to org-wide is a real
+                // change even when the org role itself looks unchanged.
+                if (parseProjectAccess(selectedMember.roles).length > 0) {
+                  return false
+                }
+                return selectedRole === selectedMember.role
+              })()}
               onClick={async () => {
                 if (!selectedMember) return
+                const roles =
+                  supportsProjectRoles && editAccessType === 'specific'
+                    ? editProjectAccess
+                        .filter((row) => row.projectId && row.roleName)
+                        .map((row) =>
+                          buildProjectRole(row.projectId, row.roleName),
+                        )
+                    : [selectedRole]
                 try {
                   await updateRoleMutation.mutateAsync({
                     membershipId:
                       selectedMember.membershipId || selectedMember.$id,
-                    roles: [selectedRole]})
+                    roles})
                   toast.success(t('Role updated successfully'))
                   setUpdateRoleDialogOpen(false)
                   setSelectedMember(null)

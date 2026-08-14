@@ -184,10 +184,32 @@ export async function fetchActiveProjects(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   excludeProjectIds?: string[],
+  restrictToProjectIds?: string[] | null,
 ) {
   if (!teamId) {
     return { projects: [], total: 0 }
   }
+
+  // A member with project-specific roles can only reach the listed projects.
+  // `null` means org-wide access; an empty array means access to none, which is
+  // why it short-circuits instead of falling through to an unfiltered list.
+  const isRestricted = Array.isArray(restrictToProjectIds)
+  const allowedIds = isRestricted
+    ? restrictToProjectIds!.filter(
+        (id) => typeof id === 'string' && id.length > 0,
+      )
+    : []
+  if (isRestricted && allowedIds.length === 0) {
+    return { projects: [], total: 0 }
+  }
+  const allowedIdSet = new Set(allowedIds)
+  const restrictQueries = isRestricted
+    ? [
+        allowedIds.length === 1
+          ? Query.equal('$id', allowedIds[0])
+          : Query.or(allowedIds.map((id) => Query.equal('$id', id))),
+      ]
+    : []
 
   const statusQueries = getProjectStatusQueries()
   const trimmedSearch = search?.trim() ?? ''
@@ -197,6 +219,7 @@ export async function fetchActiveProjects(
     Query.select([...PROJECT_LIST_SELECT]),
     Query.equal('teamId', teamId),
     ...statusQueries,
+    ...restrictQueries,
     ...searchQueries,
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
@@ -217,6 +240,8 @@ export async function fetchActiveProjects(
       if (
         !excludeIds.includes(direct.$id) &&
         direct.teamId === teamId &&
+        // Pasting an id must not reveal a project outside the member's scope.
+        (!isRestricted || allowedIdSet.has(direct.$id)) &&
         projectMatchesActiveListStatus(direct)
       ) {
         return {
@@ -235,6 +260,7 @@ export async function fetchActiveProjects(
           Query.select([...PROJECT_LIST_SELECT]),
           Query.equal('teamId', teamId),
           ...statusQueries,
+          ...restrictQueries,
           ...searchQueries,
           ...excludeIds.map((id) => Query.notEqual('$id', id)),
           Query.orderDesc('$createdAt'),
@@ -544,21 +570,77 @@ export async function fetchProjectVariables(projectId: string) {
  * Query options for fetching active projects for an organization.
  * Pass excludeProjectIds so pinned (or other) projects are omitted from the list.
  */
+/**
+ * Cache-key fragment for a project-scope restriction.
+ *
+ * `null` (org-wide access) and `[]` (access to no project) are different
+ * results, so they must not collapse to the same key.
+ */
+function projectRestrictionKey(
+  restrictToProjectIds?: string[] | null,
+): string {
+  return Array.isArray(restrictToProjectIds)
+    ? `ids:${restrictToProjectIds.slice().sort().join(',')}`
+    : 'all'
+}
+
+/** Shared so the hook and its prefetchers cannot drift apart. */
+export function projectsForTeamInfiniteQueryKey(
+  teamId: string | null | undefined,
+  limit: number,
+  search: string,
+  excludeProjectIds?: string[],
+  restrictToProjectIds?: string[] | null,
+) {
+  const excludeKey =
+    (excludeProjectIds?.length ?? 0) > 0
+      ? excludeProjectIds!.slice().sort().join(',')
+      : ''
+  return [
+    'projects',
+    'team',
+    'infinite',
+    teamId,
+    limit,
+    search,
+    excludeKey,
+    projectRestrictionKey(restrictToProjectIds),
+  ]
+}
+
 export function activeProjectsQueryOptions(
   orgId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search: string = '',
   excludeProjectIds?: string[],
+  restrictToProjectIds?: string[] | null,
 ) {
   const excludeKey =
     (excludeProjectIds?.length ?? 0) > 0
       ? excludeProjectIds!.slice().sort().join(',')
       : ''
+  const restrictKey = projectRestrictionKey(restrictToProjectIds)
   return queryOptions({
-    queryKey: ['projects', 'active', orgId, page, limit, search, excludeKey],
+    queryKey: [
+      'projects',
+      'active',
+      orgId,
+      page,
+      limit,
+      search,
+      excludeKey,
+      restrictKey,
+    ],
     queryFn: () =>
-      fetchActiveProjects(orgId!, page, limit, search, excludeProjectIds),
+      fetchActiveProjects(
+        orgId!,
+        page,
+        limit,
+        search,
+        excludeProjectIds,
+        restrictToProjectIds,
+      ),
     enabled: !!orgId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -585,6 +667,30 @@ export function pinnedProjectsQueryOptions(
     queryKey: ['projects', 'pinned', orgId, idsKey],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    gcTime: orgId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Resolve a specific set of projects by id.
+ *
+ * Use where ids are known but the projects may sit outside whatever page or
+ * search is currently loaded — e.g. naming the projects a member has
+ * project-specific roles on. Disabled for an empty set so no request is made.
+ */
+export function projectsByIdsQueryOptions(
+  orgId: string | null | undefined,
+  projectIds: string[],
+) {
+  const idsKey =
+    projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
+  return queryOptions({
+    queryKey: ['projects', 'by-ids', orgId, idsKey],
+    queryFn: () => fetchProjectsByIds(orgId!, projectIds),
+    enabled: !!orgId && projectIds.length > 0,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -849,11 +955,8 @@ export function useProjectsForTeamInfinite(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   excludeProjectIds?: string[],
+  restrictToProjectIds?: string[] | null,
 ) {
-  const excludeKey =
-    (excludeProjectIds?.length ?? 0) > 0
-      ? excludeProjectIds!.slice().sort().join(',')
-      : ''
   const {
     data,
     isLoading,
@@ -865,17 +968,22 @@ export function useProjectsForTeamInfinite(
     refetch,
     isPlaceholderData,
   } = useInfiniteQuery({
-    queryKey: [
-      'projects',
-      'team',
-      'infinite',
+    queryKey: projectsForTeamInfiniteQueryKey(
       teamId,
       limit,
       search ?? '',
-      excludeKey,
-    ],
+      excludeProjectIds,
+      restrictToProjectIds,
+    ),
     queryFn: ({ pageParam = 0 }) =>
-      fetchActiveProjects(teamId!, pageParam, limit, search, excludeProjectIds),
+      fetchActiveProjects(
+        teamId!,
+        pageParam,
+        limit,
+        search,
+        excludeProjectIds,
+        restrictToProjectIds,
+      ),
     enabled: !!teamId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
