@@ -175,36 +175,55 @@ export function UpdateRule({
     }
   }
 
-  const actionInline =
-    action === WafRuleAction.RateLimit ? (
-      <div className="space-y-1.5">
-        <Label htmlFor="update-firewall-strategy" className="text-[12px]">
-          {t('Strategy')}
-        </Label>
-        <Select
-          value={strategy}
-          disabled={updateMutation.isPending}
-          onValueChange={(value) =>
-            setStrategy(value as FirewallRateLimitStrategy)
-          }
-        >
-          <SelectTrigger id="update-firewall-strategy" className="h-9 w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {FIREWALL_RATE_LIMIT_STRATEGIES.map((s) => (
-              <SelectItem key={s.value} value={s.value}>
-                {t(s.label)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    ) : null
-
   const actionExtras =
     action === WafRuleAction.RateLimit ? (
       <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="update-firewall-strategy" className="text-[12px]">
+            {t('Strategy')}
+          </Label>
+          <Select
+            value={strategy}
+            disabled={updateMutation.isPending}
+            onValueChange={(value) =>
+              setStrategy(value as FirewallRateLimitStrategy)
+            }
+          >
+            <SelectTrigger id="update-firewall-strategy" className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FIREWALL_RATE_LIMIT_STRATEGIES.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {t(s.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="update-firewall-key" className="text-[12px]">
+            {t('Limit by')}
+          </Label>
+          <Select
+            value={rateLimitKey}
+            disabled={updateMutation.isPending}
+            onValueChange={(value) =>
+              setRateLimitKey(value as FirewallRateLimitKey)
+            }
+          >
+            <SelectTrigger id="update-firewall-key" className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FIREWALL_RATE_LIMIT_KEYS.map((k) => (
+                <SelectItem key={k.value} value={k.value}>
+                  {t(k.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="space-y-1.5">
           <Label htmlFor="update-firewall-limit" className="text-[12px]">
             {t('Request limit')}
@@ -232,7 +251,7 @@ export function UpdateRule({
           />
         </div>
         {strategy === 'tokenBucket' ? (
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-2">
             <Label
               htmlFor="update-firewall-max-bucket-size"
               className="text-[12px]"
@@ -251,36 +270,12 @@ export function UpdateRule({
               disabled={updateMutation.isPending}
             />
             <p className="text-[12px] text-muted-foreground">
-              {t('The largest burst allowed.')}
+              {t(
+                'The largest burst allowed. Defaults to the request limit when left unset.',
+              )}
             </p>
           </div>
         ) : null}
-        <div className="space-y-1.5">
-          <Label htmlFor="update-firewall-key" className="text-[12px]">
-            {t('Limit by')}
-          </Label>
-          <Select
-            value={rateLimitKey}
-            disabled={updateMutation.isPending}
-            onValueChange={(value) =>
-              setRateLimitKey(value as FirewallRateLimitKey)
-            }
-          >
-            <SelectTrigger id="update-firewall-key" className="h-9 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FIREWALL_RATE_LIMIT_KEYS.map((k) => (
-                <SelectItem key={k.value} value={k.value}>
-                  {t(k.label)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-[12px] text-muted-foreground">
-            {t('Track the request quota per client IP or per user.')}
-          </p>
-        </div>
       </div>
     ) : action === WafRuleAction.Challenge ? (
       <div className="grid gap-3 sm:grid-cols-2">
@@ -449,7 +444,6 @@ export function UpdateRule({
                 resourceType={resourceType}
                 action={action}
                 actionReadOnly
-                actionInline={actionInline}
                 actionExtras={actionExtras}
                 disabled={updateMutation.isPending}
               />
