@@ -89,10 +89,14 @@ class State
         $presenceDocument->setAttribute('$id', $presenceId);
 
         $presenceCreated = false;
+        $userId = $presenceDocument->getAttribute('userId');
+        $existingQuery = \is_string($userId) && $userId !== ''
+            ? [Query::equal('userId', [$userId])]
+            : [Query::equal('userInternalId', [$userInternalId])];
 
         try {
             if ($dbForProject->getAdapter()->supports(Capability::UpsertOnUniqueIndex)) {
-                $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+                $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, $existingQuery);
                 if ($existingPresence->isEmpty()) {
                     $presenceCreated = true;
                 } else {
@@ -100,8 +104,8 @@ class State
                 }
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
             } else {
-                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userInternalId, &$presenceCreated) {
-                    $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $existingQuery, &$presenceCreated) {
+                    $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, $existingQuery);
 
                     if ($existingPresence->isEmpty()) {
                         $presenceCreated = true;
