@@ -248,7 +248,8 @@ abstract class Action extends DatabasesAction
                 ? UtopiaResponse::MODEL_ATTRIBUTE_INTEGER
                 : UtopiaResponse::MODEL_COLUMN_INTEGER,
 
-            ColumnType::BigInteger->value => $isCollections
+            ColumnType::BigInteger->value,
+            'bigint' => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_BIGINT
                 : UtopiaResponse::MODEL_COLUMN_BIGINT,
 
