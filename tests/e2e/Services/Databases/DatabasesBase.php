@@ -23,6 +23,11 @@ trait DatabasesBase
 {
     use DatabasesUrlHelpers;
     use SchemaPolling;
+    use QueryJoinTypes;
+    use QueryJoinOperators;
+    use QueryJoinProjection;
+    use QueryStatisticalAggregates;
+    use QueryRejectedMethods;
 
     /**
      * Static caches for test data - keyed by project ID to support parallel test runs
@@ -35,6 +40,7 @@ trait DatabasesBase
     private static array $oneToOneCache = [];
     private static array $oneToManyCache = [];
     private static array $fulltextDocsCache = [];
+    private static array $analyticsCache = [];
 
     /**
      * Get cache key for current test instance (based on project ID)
@@ -42,6 +48,21 @@ trait DatabasesBase
     protected function getCacheKey(): string
     {
         return $this->getProject()['$id'] ?? 'default';
+    }
+
+    protected function getDatabaseAdapter(): string
+    {
+        return (string) ($this->getConsoleVariables()['_APP_DB_ADAPTER'] ?? 'mariadb');
+    }
+
+    protected function isPostgreSQL(): bool
+    {
+        return $this->getDatabaseAdapter() === 'postgresql';
+    }
+
+    protected function isMariaDB(): bool
+    {
+        return $this->getDatabaseAdapter() === 'mariadb';
     }
 
     /**
@@ -785,6 +806,269 @@ trait DatabasesBase
 
         self::$fulltextDocsCache[$cacheKey] = $data;
         return self::$fulltextDocsCache[$cacheKey];
+    }
+
+    /**
+     * Setup: Isolated customers/orders/payments fixture for join and aggregate queries
+     * Uses static caching to avoid recreating resources
+     */
+    protected function setupAnalyticsFixture(): array
+    {
+        $cacheKey = $this->getCacheKey();
+        if (!empty(self::$analyticsCache[$cacheKey])) {
+            return self::$analyticsCache[$cacheKey];
+        }
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Analytics Database'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+
+        $databaseId = $database['body']['$id'];
+
+        $customers = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'customers',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertEquals(201, $customers['headers']['status-code']);
+
+        $orders = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'orders',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertEquals(201, $orders['headers']['status-code']);
+
+        $payments = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'payments',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertEquals(201, $payments['headers']['status-code']);
+
+        $customersId = $customers['body']['$id'];
+        $ordersId = $orders['body']['$id'];
+        $paymentsId = $payments['body']['$id'];
+
+        $customerName = $this->createAttribute($databaseId, $customersId, 'string', [
+            'key' => 'name',
+            'size' => 64,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $customerName['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $customersId, 'name');
+
+        $customerFlags = $this->createAttribute($databaseId, $customersId, 'integer', [
+            'key' => 'flags',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $customerFlags['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $customersId, 'flags');
+
+        $orderCustomerId = $this->createAttribute($databaseId, $ordersId, 'string', [
+            'key' => 'customerId',
+            'size' => 36,
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $orderCustomerId['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $ordersId, 'customerId');
+
+        $orderAmount = $this->createAttribute($databaseId, $ordersId, 'integer', [
+            'key' => 'amount',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $orderAmount['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $ordersId, 'amount');
+
+        $orderStatus = $this->createAttribute($databaseId, $ordersId, 'string', [
+            'key' => 'status',
+            'size' => 16,
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $orderStatus['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $ordersId, 'status');
+
+        $paymentOrderId = $this->createAttribute($databaseId, $paymentsId, 'string', [
+            'key' => 'orderId',
+            'size' => 36,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $paymentOrderId['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $paymentsId, 'orderId');
+
+        $paymentAmount = $this->createAttribute($databaseId, $paymentsId, 'integer', [
+            'key' => 'amount',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $paymentAmount['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $paymentsId, 'amount');
+
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $alice = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $customersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'alice',
+            'data' => [
+                'name' => 'Alice',
+                'flags' => 7,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $alice['headers']['status-code']);
+
+        $bob = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $customersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'bob',
+            'data' => [
+                'name' => 'Bob',
+                'flags' => 3,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bob['headers']['status-code']);
+
+        $carol = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $customersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'carol',
+            'data' => [
+                'name' => 'Carol',
+                'flags' => 5,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $carol['headers']['status-code']);
+
+        $order1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $ordersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'o1',
+            'data' => [
+                'customerId' => 'alice',
+                'amount' => 100,
+                'status' => 'paid',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $order1['headers']['status-code']);
+
+        $order2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $ordersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'o2',
+            'data' => [
+                'customerId' => 'alice',
+                'amount' => 50,
+                'status' => 'pending',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $order2['headers']['status-code']);
+
+        $order3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $ordersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'o3',
+            'data' => [
+                'customerId' => 'bob',
+                'amount' => 200,
+                'status' => 'paid',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $order3['headers']['status-code']);
+
+        $order4 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $ordersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'o4',
+            'data' => [
+                'amount' => 25,
+                'status' => 'paid',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $order4['headers']['status-code']);
+
+        $payment1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $paymentsId), $serverHeaders, [
+            $this->getRecordIdParam() => 'p1',
+            'data' => [
+                'orderId' => 'o1',
+                'amount' => 100,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $payment1['headers']['status-code']);
+
+        $payment2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $paymentsId), $serverHeaders, [
+            $this->getRecordIdParam() => 'p2',
+            'data' => [
+                'orderId' => 'o3',
+                'amount' => 200,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $payment2['headers']['status-code']);
+
+        self::$analyticsCache[$cacheKey] = [
+            'databaseId' => $databaseId,
+            'customersId' => $customersId,
+            'ordersId' => $ordersId,
+            'paymentsId' => $paymentsId,
+        ];
+
+        return self::$analyticsCache[$cacheKey];
     }
 
     /**
