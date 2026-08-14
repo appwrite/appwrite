@@ -368,6 +368,7 @@
             httpPort: normalizedHttpPort,
             httpsPort: normalizedHttpsPort,
             database: formState?.database || 'postgresql',
+            background: formState?.background || 'combined',
             appDomain: normalizedDomain,
             emailCertificates: normalizedEmail,
             opensslKey: (formState?.opensslKey || '').trim(),

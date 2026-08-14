@@ -44,6 +44,7 @@ class Install extends Action
     protected ?bool $isLocalInstall = null;
     protected ?array $installerConfig = null;
     protected string $path = '/usr/src/code/appwrite';
+    protected string $background = 'combined';
 
     public static function getName(): string
     {
@@ -61,6 +62,7 @@ class Install extends Action
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
+            ->param('background', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
             ->callback($this->action(...));
     }
 
@@ -71,7 +73,8 @@ class Install extends Action
         string $image,
         string $interactive,
         bool $noStart,
-        string $database
+        string $database,
+        string $background
     ): void {
         $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
@@ -113,6 +116,12 @@ class Install extends Action
             Console::info('Compose file found, creating backup: ' . $composeFileName . '.' . $time . '.backup');
             file_put_contents($this->path . '/' . $composeFileName . '.' . $time . '.backup', $data);
             $compose = new Compose($data);
+            if (!$this->hasExplicitBackgroundParam()) {
+                $detected = $this->detectBackgroundFromCompose($compose);
+                if ($detected !== null) {
+                    $background = $detected;
+                }
+            }
             $appwrite = $compose->getService('appwrite');
             $oldVersion = $appwrite->getImageVersion();
             try {
@@ -209,6 +218,8 @@ class Install extends Action
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
             Console::exit(1);
         }
+
+        $this->setBackground($background);
 
         // If interactive and web mode enabled, start web server
         // Skip the web installer when explicit CLI params are provided
@@ -574,6 +585,7 @@ class Install extends Action
             'database' => $database,
             'hostPath' => $this->hostPath,
             'enableAssistant' => $enableAssistant,
+            'background' => $this->background,
         ]);
 
         $templateForEnv->setParam('vars', $input);
@@ -1534,6 +1546,37 @@ class Install extends Action
             if ($host !== null && in_array($host, $dbServices, true)) {
                 return $host;
             }
+        }
+
+        return null;
+    }
+
+    public function setBackground(string $background): void
+    {
+        $this->background = \in_array($background, ['combined', 'separate'], true)
+            ? $background
+            : 'combined';
+    }
+
+    private function hasExplicitBackgroundParam(): bool
+    {
+        foreach ($_SERVER['argv'] ?? [] as $arg) {
+            if (\str_starts_with((string) $arg, '--background')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function detectBackgroundFromCompose(Compose $compose): ?string
+    {
+        $names = array_keys($compose->getServices());
+        if (\in_array('appwrite-worker', $names, true)) {
+            return 'combined';
+        }
+        if (\in_array('appwrite-worker-functions', $names, true)) {
+            return 'separate';
         }
 
         return null;

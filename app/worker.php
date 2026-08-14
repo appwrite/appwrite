@@ -5,6 +5,7 @@ $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Worker\Config as WorkerConfig;
 use Swoole\Runtime;
 use Utopia\Console;
 use Utopia\Database\Document;
@@ -51,42 +52,67 @@ $container->set('certificates', function () {
 $platform = new Appwrite();
 $args = $_SERVER['argv'] ?? [];
 
-if (! isset($args[1])) {
-    Console::error('Missing worker name');
-    Console::exit(1);
-}
-
 \array_shift($args);
-$workerName = $args[0];
-
-if (\str_starts_with($workerName, 'databases')) {
-    $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main');
-} else {
-    $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
+$requested = [];
+foreach ($args as $arg) {
+    if (!\is_string($arg) || $arg === '' || \str_starts_with($arg, '-')) {
+        continue;
+    }
+    foreach (\preg_split('/[,\s]+/', strtolower($arg), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $name) {
+        $requested[] = $name;
+    }
 }
+
+if ($requested === [] || \in_array('all', $requested, true)) {
+    $workerNames = WorkerConfig::NAMES;
+    $workerName = 'all';
+} else {
+    $unknown = \array_values(\array_diff($requested, WorkerConfig::NAMES));
+    if ($unknown !== []) {
+        Console::error('Unknown worker: ' . \implode(', ', $unknown) . '. Valid: ' . \implode(', ', WorkerConfig::NAMES));
+        Console::exit(1);
+    }
+    $workerNames = $requested;
+    $workerName = $workerNames[0];
+}
+
+$workerJobs = WorkerConfig::jobs($workerNames, allowEnvOverride: $workerName !== 'all');
+$firstJob = \reset($workerJobs);
+$queueName = $firstJob['queue'] ?? WorkerConfig::queueName($workerName);
+$adapterMaxCoroutines = $workerName === 'all'
+    ? 1
+    : ($firstJob['maxCoroutines'] ?? 1);
 
 $redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
 $redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);
+$commands = new Locking(new RedisConnection($redisHost, $redisPort));
+
+$createConsumer = static function () use ($redisHost, $redisPort, $commands): BrokerRedis {
+    return new BrokerRedis(
+        receive: new RedisConnection($redisHost, $redisPort),
+        commands: $commands,
+    );
+};
 
 // A dedicated connection drives the blocking receive loop; a lock-guarded one
 // serializes acks/publishes from the per-message coroutines.
 $adapter = new Swoole(
-    new BrokerRedis(
-        receive: new RedisConnection($redisHost, $redisPort),
-        commands: new Locking(new RedisConnection($redisHost, $redisPort)),
-    ),
+    $createConsumer(),
     System::getEnv('_APP_WORKERS_NUM', 1),
     $queueName,
-    maxCoroutines: (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1),
+    maxCoroutines: $adapterMaxCoroutines,
     resources: $container,
 );
 
 $worker = new Server($adapter);
+$worker->setConsumerFactory(fn (string $name) => $createConsumer());
 
 try {
-    $worker->init()->action(function () use ($worker, $registerWorkerMessageResources, $queueName) {
+    $worker->init()->action(function () use ($worker, $registerWorkerMessageResources) {
         $registerWorkerMessageResources($worker->context());
-        Span::init("worker.{$queueName}");
+        $message = $worker->context()->get('message');
+        $spanQueue = $message instanceof \Utopia\Queue\Message ? $message->getQueue() : 'worker';
+        Span::init("worker.{$spanQueue}");
     });
 
     $worker->shutdown()->action(function () {
@@ -101,7 +127,9 @@ try {
 
     $platform->setWorker($worker);
     $platform->init(Service::TYPE_WORKER, [
-        'workerName' => strtolower($workerName),
+        'workerName' => $workerName,
+        'workerNames' => $workerName === 'all' ? ['all'] : $workerNames,
+        'workerJobs' => $workerJobs,
     ]);
 } catch (\Throwable $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() . ', Line: ' . $e->getLine());
@@ -115,7 +143,7 @@ $worker
     ->inject('log')
     ->inject('project')
     ->inject('authorization')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Document $project, Authorization $authorization) use ($queueName) {
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Document $project, Authorization $authorization) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         Span::current()?->setError($error);
@@ -126,7 +154,7 @@ $worker
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-' . $queueName);
+            $log->setAction('appwrite-queue-worker');
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addTag('projectId', $project->getId());

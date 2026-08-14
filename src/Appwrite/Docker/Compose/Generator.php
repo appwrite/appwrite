@@ -29,6 +29,35 @@ class Generator
         'enableAssistant' => 'appwrite-assistant',
     ];
 
+    private const array BACKGROUND_SERVICE_GROUPS = [
+        'background' => [
+            'default' => 'combined',
+            'modes' => [
+                'combined' => [
+                    'appwrite-worker',
+                    'appwrite-task-scheduler',
+                ],
+                'separate' => [
+                    'appwrite-worker-webhooks',
+                    'appwrite-worker-deletes',
+                    'appwrite-worker-databases',
+                    'appwrite-worker-builds',
+                    'appwrite-worker-jobs',
+                    'appwrite-worker-screenshots',
+                    'appwrite-worker-certificates',
+                    'appwrite-worker-functions',
+                    'appwrite-worker-mails',
+                    'appwrite-worker-notifications',
+                    'appwrite-worker-messaging',
+                    'appwrite-worker-migrations',
+                    'appwrite-task-scheduler-functions',
+                    'appwrite-task-scheduler-executions',
+                    'appwrite-task-scheduler-messages',
+                ],
+            ],
+        ],
+    ];
+
     private const array LOCAL_VOLUME_PREPENDS = [
         'appwrite' => [
             'param' => 'hostPath',
@@ -46,6 +75,7 @@ class Generator
         'database' => 'postgresql',
         'hostPath' => '',
         'enableAssistant' => false,
+        'background' => 'combined',
     ];
 
     private const array DEPENDENCY_SELECTORS = [
@@ -132,6 +162,12 @@ class Generator
             }
         }
 
+        foreach (self::BACKGROUND_SERVICE_GROUPS as $param => $config) {
+            if (!\array_key_exists($params[$param], $config['modes'])) {
+                $params[$param] = $config['default'];
+            }
+        }
+
         $params['hostPath'] = \rtrim((string)$params['hostPath'], '/');
 
         return $params;
@@ -170,6 +206,25 @@ class Generator
                 unset($services[$service]);
             }
         }
+
+        foreach (self::BACKGROUND_SERVICE_GROUPS as $param => $config) {
+            $selected = $this->params[$param];
+            foreach ($config['modes'] as $mode => $names) {
+                if ($mode === $selected) {
+                    continue;
+                }
+                foreach ($names as $name) {
+                    unset($services[$name]);
+                }
+            }
+        }
+
+        foreach ($services as &$service) {
+            if (\is_array($service)) {
+                unset($service['profiles']);
+            }
+        }
+        unset($service);
 
         return $services;
     }

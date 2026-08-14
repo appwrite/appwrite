@@ -41,6 +41,7 @@ class Install extends Action
             ->param('accountEmail', '', new Email(allowEmpty: true), 'Account email address', true)
             ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
             ->param('database', '', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database adapter', true)
+            ->param('background', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology', true)
             ->param('installId', '', new Text(64, 0), 'Installation ID', true)
             ->param('retryStep', null, new Nullable(new WhiteList([
                 Server::STEP_CONFIG_FILES,
@@ -70,6 +71,7 @@ class Install extends Action
         string $accountEmail,
         string $accountPassword,
         string $database,
+        string $background,
         string $installId,
         ?string $retryStep,
         bool $migrate,
@@ -212,6 +214,7 @@ class Install extends Action
         try {
             $state->ensureBootstrapped();
             $installer = new \Appwrite\Platform\Tasks\Install();
+            $installer->setBackground($background);
 
             if ($wantsStream) {
                 $this->writeSseEvent($swooleResponse, 'install-id', ['installId' => $installId]);

@@ -90,7 +90,8 @@
 
     const updateDatabaseSelection = (radio, root) => {
         if (!radio || !root) return;
-        const allOptions = root.querySelectorAll('.selector-card');
+        const group = radio.closest('.selector-group') || root;
+        const allOptions = group.querySelectorAll('.selector-card');
         allOptions.forEach((option) => option.classList.remove('selected'));
         const selectedOption = radio.closest('.selector-card');
         if (selectedOption) {

@@ -18,6 +18,7 @@
         emailCertificates: null,
         opensslKey: null,
         assistantOpenAIKey: null,
+        background: 'combined',
         accountEmail: null,
         accountPassword: null
     };

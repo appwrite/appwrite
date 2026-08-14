@@ -119,15 +119,23 @@ abstract class ScheduleBase extends Action
             $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $getIsResourceBlocked);
         });
 
+        $this->listen($dbForPlatform, $getProjectDB);
+    }
+
+    /**
+     * Blocking enqueue loop. Extracted so a combined scheduler can run each
+     * resource type's action() (including this loop) in its own coroutine.
+     */
+    protected function listen(Database $dbForPlatform, callable $getProjectDB): never
+    {
         while (true) {
             try {
                 go(fn () => $this->enqueueResources($dbForPlatform, $getProjectDB));
-                $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
+                $this->scheduleTelemetryCount?->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
                 sleep(static::ENQUEUE_TIMER);
             } catch (\Throwable $th) {
                 Console::error('Failed to enqueue resources: ' . $th->getMessage());
             }
-
         }
     }
 

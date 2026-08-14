@@ -106,6 +106,7 @@
     const hydrateStep1State = (root) => {
         State.setStateIfEmpty?.('appDomain', root.querySelector('#hostname')?.value);
         State.setStateIfEmpty?.('database', root.querySelector('input[name="database"]:checked')?.value);
+        State.setStateIfEmpty?.('background', root.querySelector('input[name="background"]:checked')?.value || 'combined');
         State.setStateIfEmpty?.('httpPort', root.querySelector('#http-port')?.value);
         State.setStateIfEmpty?.('httpsPort', root.querySelector('#https-port')?.value);
         State.setStateIfEmpty?.('emailCertificates', root.querySelector('#ssl-email')?.value);
@@ -137,6 +138,16 @@
                 updateDatabaseSelection?.(radio, root);
             }
         }
+
+        if (formState.background) {
+            const radio = root.querySelector(`input[name="background"][value="${formState.background}"]`);
+            if (radio) {
+                radio.checked = true;
+                const group = radio.closest('.selector-group');
+                group?.querySelectorAll('.selector-card').forEach((card) => card.classList.remove('selected'));
+                radio.closest('.selector-card')?.classList.add('selected');
+            }
+        }
     };
 
     const initStep1 = (root) => {
@@ -161,6 +172,16 @@
         } else {
             bindDatabaseSelection(root);
         }
+
+        const backgroundRadios = root.querySelectorAll('input[name="background"]');
+        backgroundRadios.forEach((radio) => {
+            radio.addEventListener('change', () => {
+                formState.background = radio.value;
+                const group = radio.closest('.selector-group');
+                group?.querySelectorAll('.selector-card').forEach((card) => card.classList.remove('selected'));
+                radio.closest('.selector-card')?.classList.add('selected');
+            });
+        });
 
         const hostname = root.querySelector('#hostname');
         const httpPort = root.querySelector('#http-port');

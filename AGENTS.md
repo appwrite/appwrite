@@ -6,7 +6,8 @@ Self-hosted Backend-as-a-Service platform. Hybrid monolithic-microservice archit
 
 | Command | Purpose |
 |---------|---------|
-| `docker compose up -d --force-recreate --build` | Build and start all services |
+| `docker compose up -d --force-recreate --build` | Build and start all services (combined worker + scheduler by default) |
+| `docker compose -f docker-compose.yml -f docker-compose.separate.yml --profile separate up -d` | Start per-queue worker and scheduler containers instead |
 | `docker compose exec appwrite test tests/e2e/Services/[Service]` | Run E2E tests for a service |
 | `docker compose exec appwrite test tests/e2e/Services/[Service] --filter=[Method]` | Run a single test method |
 | `docker compose exec appwrite test tests/unit/` | Run unit tests |
@@ -36,7 +37,7 @@ _Note: When running `composer check` or `composer analyze`, be aware that runnin
 - **src/Appwrite/Platform/Tasks/** -- CLI tasks
 - **app/init.php** -- bootstrap (registers services, resources, listeners)
 - **app/init/** -- configs, constants, locales, models, registers, resources, span, database filters/formats
-- **bin/** -- CLI entry points: `worker-*` (14 workers), `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, `upgrade`, `ssl`, `vars`, `maintenance`, `interval`, `specs`, `sdks`, etc.
+- **bin/** -- CLI entry points: `worker` (combined), `worker-*` (per-queue), `schedule` (combined), `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, `upgrade`, `ssl`, `vars`, `maintenance`, `interval`, `specs`, `sdks`, etc.
 - **tests/e2e/** -- end-to-end tests per service
 - **tests/unit/** -- unit tests
 - **public/** -- static assets and generated SDKs
