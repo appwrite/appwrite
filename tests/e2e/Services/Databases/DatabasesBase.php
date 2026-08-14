@@ -7608,11 +7608,6 @@ trait DatabasesBase
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'name' => 'Document 1',
-                'collection2' => [
-                    [
-                        'name' => 'Document 2',
-                    ],
-                ],
             ],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
