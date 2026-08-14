@@ -808,15 +808,10 @@ class OpenAPI3 extends Format
             $methods = \array_values($route->getMethods());
             foreach ($methods as $index => $method) {
                 $methodTemp = $temp;
-                if (\count($methods) > 1) {
+                if (\count($methods) > 1 && $index > 0) {
                     $suffix = \ucfirst(\strtolower($method));
                     $methodTemp['operationId'] .= $suffix;
-
-                    // Keep the first method's SDK name stable while ensuring
-                    // additional HTTP methods generate unique SDK methods.
-                    if ($index > 0) {
-                        $methodTemp['x-appwrite']['method'] .= $suffix;
-                    }
+                    $methodTemp['x-appwrite']['method'] .= $suffix;
                 }
                 $body = [
                     'content' => [
