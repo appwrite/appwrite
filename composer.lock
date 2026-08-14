@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a09624e00c32904563af366e73687200",
+    "content-hash": "a659874ee101f4e69bad038bc3449175",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5287,16 +5287,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-refactor/use-utopia-openapi",
+            "version": "3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "2c165902a8b18740a2bdae554e6c525d8f059983"
+                "reference": "31c03de12bd01bff37795f8bbbae836d6f622fae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2c165902a8b18740a2bdae554e6c525d8f059983",
-                "reference": "2c165902a8b18740a2bdae554e6c525d8f059983",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/31c03de12bd01bff37795f8bbbae836d6f622fae",
+                "reference": "31c03de12bd01bff37795f8bbbae836d6f622fae",
                 "shasum": ""
             },
             "require": {
@@ -5333,9 +5333,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/refactor/use-utopia-openapi"
+                "source": "https://github.com/appwrite/sdk-generator/tree/3.0.0"
             },
-            "time": "2026-08-14T07:25:59+00:00"
+            "time": "2026-08-14T08:18:40+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -8400,7 +8400,6 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "appwrite/sdk-generator": 20,
         "utopia-php/http": 5,
         "utopia-php/platform": 5
     },
