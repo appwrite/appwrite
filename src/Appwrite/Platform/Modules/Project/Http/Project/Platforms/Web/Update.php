@@ -8,7 +8,6 @@ use Appwrite\Network\Platform;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Request\Validator\NonBlank;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -56,9 +55,9 @@ class Update extends Action
                 ]
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
-            ->param('name', null, new NonBlank(new Text(128)), 'Platform name. Max length: 128 chars.')
-            ->param('hostname', '', new NonBlank(new Hostname()), 'Platform web hostname. Max length: 256 chars.', optional: true, example: 'app.example.com') // Optional for backwards compatibility
-            ->param('key', '', new NonBlank(new Text(256)), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', optional: true, deprecated: true) // Exists for backwards compatibility
+            ->param('name', null, new Text(128, requireNonBlank: true), 'Platform name. Max length: 128 chars.')
+            ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.', optional: true, example: 'app.example.com') // Optional for backwards compatibility
+            ->param('key', '', new Text(256, requireNonBlank: true), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', optional: true, deprecated: true) // Exists for backwards compatibility
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -84,9 +83,16 @@ class Update extends Action
         // Used to have: type, name, key, hostname
         if (!empty($key)) {
             // Validate deprecated app id (key)
-            $keyValidator = new NonBlank(new Text(256));
+            $keyValidator = new Text(256, requireNonBlank: true);
             if (!$keyValidator->isValid($key)) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "key" is invalid: ' . $keyValidator->getDescription());
+            }
+        }
+
+        if ($hostname !== '') {
+            $hostnameValidator = new Text(253, requireNonBlank: true);
+            if (!$hostnameValidator->isValid($hostname)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "hostname" is invalid: ' . $hostnameValidator->getDescription());
             }
         }
 
