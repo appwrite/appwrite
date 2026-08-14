@@ -45,6 +45,10 @@ export type CreateFirewallRuleInput = {
   interval?: number
   /** Rate-limit bucket key: `ip` or `userId`. */
   key?: string
+  /** Rate-limit algorithm: `fixedWindow`, `slidingWindow`, or `tokenBucket`. */
+  strategy?: string
+  /** Token-bucket burst capacity. */
+  maxBucketSize?: number
   location?: string
   statusCode?: number
   challengeType?: string
@@ -66,6 +70,10 @@ export type UpdateFirewallRuleInput = {
   interval?: number
   /** Rate-limit bucket key: `ip` or `userId`. */
   key?: string
+  /** Rate-limit algorithm: `fixedWindow`, `slidingWindow`, or `tokenBucket`. */
+  strategy?: string
+  /** Token-bucket burst capacity. */
+  maxBucketSize?: number
   location?: string
   statusCode?: number
   challengeType?: string
@@ -329,6 +337,10 @@ async function createFirewallRule(
         limit: input.limit ?? 100,
         interval: input.interval ?? 60,
         key: input.key,
+        strategy: input.strategy,
+        // Only meaningful for tokenBucket; ignored by the API otherwise.
+        maxBucketSize:
+          input.strategy === 'tokenBucket' ? input.maxBucketSize : undefined,
       })
     case WafRuleAction.Redirect:
       return waf.createRedirectRule({
@@ -375,6 +387,10 @@ async function updateFirewallRule(
         limit: input.limit,
         interval: input.interval,
         key: input.key,
+        // strategy is immutable after creation, so it is never sent here.
+        // maxBucketSize is only forwarded for existing token-bucket rules.
+        maxBucketSize:
+          input.strategy === 'tokenBucket' ? input.maxBucketSize : undefined,
       })
     case WafRuleAction.Redirect:
       return waf.updateRedirectRule({
