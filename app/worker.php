@@ -5,8 +5,8 @@ $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
-use Appwrite\Worker\Config as WorkerConfig;
 use Swoole\Runtime;
+use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -63,20 +63,45 @@ foreach ($args as $arg) {
     }
 }
 
+/** @var array<string, array{queue: string, queueEnv?: string, maxCoroutines?: int}> $workersConfig */
+$workersConfig = Config::getParam('workers', []);
+$known = \array_keys($workersConfig);
+
 if ($requested === [] || \in_array('all', $requested, true)) {
-    $workers = WorkerConfig::NAMES;
+    $workers = $known;
     $workerName = 'all';
 } else {
-    $unknown = \array_values(\array_diff($requested, WorkerConfig::NAMES));
+    $unknown = \array_values(\array_diff($requested, $known));
     if ($unknown !== []) {
-        Console::error('Unknown worker: ' . \implode(', ', $unknown) . '. Valid: ' . \implode(', ', WorkerConfig::NAMES));
+        Console::error('Unknown worker: ' . \implode(', ', $unknown) . '. Valid: ' . \implode(', ', $known));
         Console::exit(1);
     }
     $workers = $requested;
     $workerName = $workers[0];
 }
 
-$jobs = WorkerConfig::jobs($workers, env: $workerName !== 'all');
+// Same as a single worker: resolve queue + concurrency from config/env.
+// For one worker, `_APP_WORKER_MAX_COROUTINES` still overrides (except databases).
+// For many, each queue keeps its own cap so databases stays at 1.
+$jobs = [];
+$single = \count($workers) === 1;
+foreach ($workers as $name) {
+    $spec = $workersConfig[$name];
+    $queue = System::getEnv($spec['queueEnv'] ?? '_APP_QUEUE_NAME', $spec['queue']);
+    $maxCoroutines = max(1, (int) ($spec['maxCoroutines'] ?? 1));
+
+    if ($single && $name !== 'databases') {
+        $env = System::getEnv('_APP_WORKER_MAX_COROUTINES');
+        if ($env !== false && $env !== null && $env !== '') {
+            $maxCoroutines = max(1, (int) $env);
+        }
+    }
+
+    $jobs[$name] = [
+        'queue' => $queue,
+        'maxCoroutines' => $maxCoroutines,
+    ];
+}
 
 $redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
 $redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);

@@ -9,8 +9,8 @@ use Appwrite\Platform\Modules\Functions\Services\Workers as FunctionsWorkers;
 use Appwrite\Platform\Services\Workers;
 use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Notifications;
-use Appwrite\Worker\Config as WorkerConfig;
 use PHPUnit\Framework\TestCase;
+use Utopia\Config\Config;
 
 final class RegistrationTest extends TestCase
 {
@@ -29,7 +29,7 @@ final class RegistrationTest extends TestCase
         $this->assertIsString($contents);
         $this->assertStringNotContainsString("mails' ? 'notifications'", $contents);
         $this->assertStringContainsString("'workers'", $contents);
-        $this->assertStringContainsString('WorkerConfig', $contents);
+        $this->assertStringContainsString("Config::getParam('workers'", $contents);
     }
 
     public function testRegisteredWorkerNamesMatchConfigWithoutDuplicates(): void
@@ -45,10 +45,10 @@ final class RegistrationTest extends TestCase
 
         $registered = \array_keys($names);
         \sort($registered);
-        $expected = WorkerConfig::NAMES;
+        $expected = \array_keys(Config::getParam('workers'));
         \sort($expected);
 
         $this->assertSame($expected, $registered);
-        $this->assertSame(1, WorkerConfig::maxCoroutines('databases'));
+        $this->assertSame(1, Config::getParam('workers')['databases']['maxCoroutines']);
     }
 }
