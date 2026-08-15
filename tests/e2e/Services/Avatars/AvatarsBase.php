@@ -261,7 +261,7 @@ trait AvatarsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
                 'url' => 'https://appwrite.io/robots.txt',
-            ]);
+            ], timeout: 5);
 
             $this->assertEquals(404, $response['headers']['status-code']);
             $this->assertEquals(Exception::AVATAR_IMAGE_NOT_FOUND, $response['body']['type']);
