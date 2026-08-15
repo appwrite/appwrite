@@ -10,6 +10,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\StartCommand;
 use Appwrite\Utopia\Response\Model\Execution;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -539,11 +540,10 @@ class Functions extends Action
 
         try {
             $version = $function->getAttribute('version', 'v2');
-            $command = $runtime['startCommand'];
-
-            if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $command = 'cd /usr/local/server/src/function/ && ' . str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $deployment->getAttribute('startCommand', ''));
-            }
+            $command = StartCommand::resolve(
+                $runtime['startCommand'],
+                $deployment->getAttribute('startCommand', '')
+            );
 
             $source = $deployment->getAttribute('buildPath', '');
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
