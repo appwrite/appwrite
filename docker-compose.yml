@@ -471,6 +471,9 @@ services:
     environment:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
+      # Combined mode runs functions/executions/messages timers + enqueue coroutines
+      # against shared console/cache pools; floor must cover concurrent ticks.
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1

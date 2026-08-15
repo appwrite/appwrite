@@ -153,6 +153,23 @@ try {
     Console::exit(1);
 }
 
+$combined = $workerName === 'all';
+Console::title($combined ? 'Worker V1 (combined)' : 'Worker V1 (' . $workerName . ')');
+Console::success(APP_NAME . ' worker v1 has started');
+Console::info('Mode: ' . ($combined ? 'combined — all queues in one process' : 'dedicated — single queue'));
+Console::info('Workers: ' . \count($jobs) . '  |  processes: ' . System::getEnv('_APP_WORKERS_NUM', 1));
+Console::info(str_pad('queue', 16) . str_pad('redis key', 28) . 'coroutines');
+Console::info(str_repeat('-', 56));
+foreach ($jobs as $name => $job) {
+    Console::info(
+        str_pad($name, 16)
+        . str_pad($job['queue'], 28)
+        . (string) $job['maxCoroutines']
+    );
+}
+Console::info(str_repeat('-', 56));
+Console::success('Listening for jobs…');
+
 $worker
     ->error()
     ->inject('error')

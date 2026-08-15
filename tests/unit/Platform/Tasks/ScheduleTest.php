@@ -22,4 +22,15 @@ final class ScheduleTest extends TestCase
         $this->assertInstanceOf(ScheduleExecutions::class, $service->getAction('schedule-executions'));
         $this->assertInstanceOf(ScheduleMessages::class, $service->getAction('schedule-messages'));
     }
+
+    public function testScheduleBaseExposesBootstrapHooksForCombinedMode(): void
+    {
+        $task = new ScheduleFunctions();
+
+        $this->assertTrue(\method_exists($task, 'setup'));
+        $this->assertTrue(\method_exists($task, 'start'));
+        $this->assertTrue(\method_exists($task, 'listen'));
+        $this->assertTrue(\method_exists($task, 'getSchedules'));
+        $this->assertSame([], $task->getSchedules());
+    }
 }
