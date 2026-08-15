@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2;
 
+use Appwrite\Auth\OAuth2Client;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -407,7 +408,7 @@ abstract class Base extends Action
                 }
 
                 $providerClass = static::getProviderClass();
-                $providerInstance = new $providerClass(appId: $oAuthProviders[$appIdKey], appSecret: $oAuthProviders[$appSecretKey], callback: '', state: [], scopes: []);
+                $providerInstance = OAuth2Client::create($providerClass, $oAuthProviders[$appIdKey], $oAuthProviders[$appSecretKey], '');
 
                 // E2E integration check
                 if (\method_exists($providerInstance, 'verifyCredentials')) {

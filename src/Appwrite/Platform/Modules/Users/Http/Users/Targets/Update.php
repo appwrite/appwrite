@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\Targets;
 
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -15,6 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Phone;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -90,7 +90,7 @@ class Update extends Action
                     }
                     break;
                 case MESSAGE_TYPE_SMS:
-                    $validator = new Phone();
+                    $validator = new Phone(knownCallingCode: true);
                     if (!$validator->isValid($identifier)) {
                         throw new Exception(Exception::GENERAL_INVALID_PHONE);
                     }

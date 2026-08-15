@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\MockPhone;
 
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -15,6 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Phone;
 
 class Delete extends Action
 {
@@ -52,7 +52,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('number', null, new Phone(normalize: true), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
+            ->param('number', null, new Phone(normalize: true, knownCallingCode: true), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Authorize;
 
-use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -11,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\OAuth2\Provider;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -39,7 +39,7 @@ abstract class Base extends Action
      * endpoint (which may differ from the server-side API endpoint in
      * containerized setups) since the login URL is opened by the browser.
      */
-    abstract protected function createOAuth2(string $callback, array $state): OAuth2;
+    abstract protected function createOAuth2(string $callback, array $state): Provider;
 
     public function __construct()
     {

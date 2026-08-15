@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Users;
 
-use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Platform\Action;
 use Utopia\Auth\Hash;
 use Utopia\Auth\Hashes\Plaintext;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
+use Utopia\Auth\Validator\PersonalData;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

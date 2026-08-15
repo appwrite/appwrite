@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2\PaypalSandbox;
 
-use Appwrite\Auth\OAuth2\PaypalSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Paypal\Update as PaypalUpdate;
+use Utopia\Auth\OAuth2\Providers\PaypalSandbox;
 
 class Update extends PaypalUpdate
 {

@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Discord;
 
-use Appwrite\Auth\OAuth2\Discord;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Base;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\OAuth2\Providers\Discord;
 
 class Update extends Base
 {

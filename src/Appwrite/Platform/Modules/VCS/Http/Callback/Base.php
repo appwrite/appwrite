@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Callback;
 
-use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\OAuth2\Provider;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -41,7 +41,7 @@ abstract class Base extends Action
      * endpoint (token exchange is a server-to-server call, unlike Authorize's
      * browser-facing endpoint).
      */
-    abstract protected function createOAuth2(string $callback): OAuth2;
+    abstract protected function createOAuth2(string $callback): Provider;
 
     public function __construct()
     {

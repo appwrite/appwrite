@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Zoho;
 
-use Appwrite\Auth\OAuth2\Zoho;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Base;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\OAuth2\Providers\Zoho;
 
 class Update extends Base
 {

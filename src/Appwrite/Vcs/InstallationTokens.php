@@ -2,9 +2,9 @@
 
 namespace Appwrite\Vcs;
 
-use Appwrite\Auth\OAuth2;
-use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Extend\Exception;
+use Utopia\Auth\OAuth2\Exception as OAuth2Exception;
+use Utopia\Auth\OAuth2\Provider;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -22,7 +22,7 @@ class InstallationTokens
         return $this->refresh($installation, $dbForPlatform, $vcsFactory->oauth2FromProvider($provider));
     }
 
-    public function refresh(Document $installation, Database $dbForPlatform, OAuth2 $oauth2, ?Document $identity = null): Document
+    public function refresh(Document $installation, Database $dbForPlatform, Provider $oauth2, ?Document $identity = null): Document
     {
         $accessToken = $installation->getAttribute('personalAccessToken');
         $refreshToken = $installation->getAttribute('personalRefreshToken');
@@ -96,7 +96,7 @@ class InstallationTokens
         }
     }
 
-    protected function exchange(Document $installation, Database $dbForPlatform, OAuth2 $oauth2): Document
+    protected function exchange(Document $installation, Database $dbForPlatform, Provider $oauth2): Document
     {
         try {
             $tokens = $oauth2->refreshTokens($installation->getAttribute('personalRefreshToken'));

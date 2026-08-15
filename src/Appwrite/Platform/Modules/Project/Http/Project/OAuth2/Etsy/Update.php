@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Etsy;
 
-use Appwrite\Auth\OAuth2\Etsy;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Base;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\OAuth2\Providers\Etsy;
 
 class Update extends Base
 {

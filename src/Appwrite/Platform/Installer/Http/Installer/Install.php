@@ -2,12 +2,12 @@
 
 namespace Appwrite\Platform\Installer\Http\Installer;
 
-use Appwrite\Auth\Validator\Password;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
 use Appwrite\Platform\Installer\Validator\AppDomain;
 use Swoole\Http\Response as SwooleResponse;
+use Utopia\Auth\Validator\Password;
 use Utopia\Emails\Validator\Email;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;

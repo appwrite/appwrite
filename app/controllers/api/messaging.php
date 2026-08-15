@@ -1,7 +1,6 @@
 <?php
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
@@ -48,6 +47,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Phone;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -626,7 +626,7 @@ Http::post('/v1/messaging/providers/telesign')
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('from', '', new Phone(knownCallingCode: true), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
     ->param('apiKey', '', new Text(0), 'Telesign API key.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
@@ -710,7 +710,7 @@ Http::post('/v1/messaging/providers/textmagic')
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('from', '', new Phone(knownCallingCode: true), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
@@ -794,7 +794,7 @@ Http::post('/v1/messaging/providers/twilio')
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('from', '', new Phone(knownCallingCode: true), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', '', new Text(0), 'Twilio authentication token.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
@@ -878,7 +878,7 @@ Http::post('/v1/messaging/providers/vonage')
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('from', '', new Phone(knownCallingCode: true), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
@@ -38,6 +37,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Phone;
 use Utopia\Validator\Text;
 
 class Create extends Action
@@ -79,7 +79,7 @@ class Create extends Action
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
             ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
-            ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+            ->param('phone', '', new Phone(knownCallingCode: true), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
             ->param('roles', [], new ArrayList(new Key(maxLength: 81), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 81 characters long.', false, ['project']) // For project-specific permissions, roles will be in the format `project-<projectId>-<role>`. Template takes 9 characters, `projectId` and `role` can be upto 36 characters. In total, 81 characters.
             ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator']) // TODO add our own built-in confirm page
             ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)

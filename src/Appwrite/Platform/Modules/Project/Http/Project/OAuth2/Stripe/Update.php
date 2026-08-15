@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Stripe;
 
-use Appwrite\Auth\OAuth2\Stripe;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Base;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\OAuth2\Providers\Stripe;
 
 class Update extends Base
 {

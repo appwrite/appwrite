@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\MockPhone;
 
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -15,6 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Phone;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -52,7 +52,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('number', null, new Phone(normalize: true), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
+            ->param('number', null, new Phone(normalize: true, knownCallingCode: true), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
             ->param('otp', '', new Text(6, 6, Text::NUMBERS), 'One-time password (OTP) to associate with the mock phone. Must be a 6-digit numeric code.')
             ->inject('response')
             ->inject('queueForEvents')

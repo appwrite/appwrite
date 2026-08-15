@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\Phone;
 
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -18,6 +17,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Phone;
 
 class Update extends Action
 {
@@ -53,7 +53,7 @@ class Update extends Action
                 ]
             ))
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-            ->param('number', '', new Phone(allowEmpty: true), 'User phone number.')
+            ->param('number', '', new Phone(allowEmpty: true, knownCallingCode: true), 'User phone number.')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

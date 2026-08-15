@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Auth\Validator;
 
-use Appwrite\Auth\Validator\Phone;
 use PHPUnit\Framework\TestCase;
+use Utopia\Validator\Phone;
 
 final class PhoneTest extends TestCase
 {
@@ -13,7 +13,7 @@ final class PhoneTest extends TestCase
 
     public function setUp(): void
     {
-        $this->object = new Phone();
+        $this->object = new Phone(knownCallingCode: true);
     }
 
     public function testValues(): void
@@ -57,7 +57,7 @@ final class PhoneTest extends TestCase
 
     public function testNormalizeFlagAcceptsPathEncoding(): void
     {
-        $phone = new Phone(normalize: true);
+        $phone = new Phone(normalize: true, knownCallingCode: true);
 
         $this->assertTrue($phone->isValid('%2B15550102680'));
         $this->assertTrue($phone->isValid(' 15550102680'));

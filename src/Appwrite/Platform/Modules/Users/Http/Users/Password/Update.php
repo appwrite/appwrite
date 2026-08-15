@@ -2,10 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\Password;
 
-use Appwrite\Auth\Validator\PasswordDictionary;
-use Appwrite\Auth\Validator\PasswordHistory;
-use Appwrite\Auth\Validator\PasswordStrength;
-use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
@@ -17,6 +13,10 @@ use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
+use Utopia\Auth\Validator\PasswordDictionary;
+use Utopia\Auth\Validator\PasswordHistory;
+use Utopia\Auth\Validator\PasswordStrength;
+use Utopia\Auth\Validator\PersonalData;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

@@ -32,10 +32,11 @@ $ git clone COPIED_URL
 
 Finally, you will need to create a `feat-XXX-YYY-oauth` branch based on the `main` branch and switch to it. The `XXX` should represent the issue ID and `YYY` the OAuth provider name.
 
-Adding a provider usually spans **two repositories**:
+Adding a provider usually spans **three repositories**:
 
-1. **[appwrite/appwrite](https://github.com/appwrite/appwrite)** — backend adapter, config, Project OAuth2 API, response models, and tests
-2. **[appwrite/console](https://github.com/appwrite/console)** — Console UI list, update switch, and icons
+1. **[utopia-php/monorepo](https://github.com/utopia-php/monorepo)** — OAuth2 adapter under `packages/auth` (mirrored to [utopia-php/auth](https://github.com/utopia-php/auth))
+2. **[appwrite/appwrite](https://github.com/appwrite/appwrite)** — config, Project OAuth2 API, response models, and tests
+3. **[appwrite/console](https://github.com/appwrite/console)** — Console UI list, update switch, and icons
 
 The Console served by `docker compose` in this repository is a **prebuilt image** (`appwrite-console`). Local Console source changes are not picked up until you run the Console repo locally (or build and point compose at your own image).
 
@@ -48,7 +49,7 @@ Throughout this guide, replace `XXX` / `Xxx` / `xxx` with your provider name in 
 | Step | File / location |
 |------|-----------------|
 | Config | `app/config/oAuthProviders.php` |
-| Adapter | `src/Appwrite/Auth/OAuth2/Xxx.php` |
+| Adapter | utopia-php/auth `packages/auth/src/Auth/OAuth2/Providers/Xxx.php` |
 | Update action | `src/Appwrite/Platform/Modules/Project/Http/Project/OAuth2/Xxx/Update.php` |
 | Provider registry | `src/Appwrite/Platform/Modules/Project/Http/Project/OAuth2/Base.php` (`getProviderActions()`) |
 | HTTP registration | `src/Appwrite/Platform/Modules/Project/Services/Http.php` |
@@ -90,7 +91,7 @@ Example shape:
     'form' => false,
     'beta' => false,
     'mock' => false,
-    'class' => 'Appwrite\\Auth\\OAuth2\\Yahoo',
+    'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Yahoo',
 ],
 ```
 
@@ -98,27 +99,27 @@ The `icon` value is metadata for the backend. Console icons live in the Console 
 
 ### 2.3 Add Provider Class
 
-Create a new file `Xxx.php` where `Xxx` is the name of the OAuth provider in [`PascalCase`](https://stackoverflow.com/a/41769355/7659504) in this location:
+Create a new file `Xxx.php` where `Xxx` is the name of the OAuth provider in [`PascalCase`](https://stackoverflow.com/a/41769355/7659504) in the Utopia Auth package:
 
 ```bash
-src/Appwrite/Auth/OAuth2/Xxx.php
+packages/auth/src/Auth/OAuth2/Providers/Xxx.php
 ```
 
-Inside this file, create a new class that extends the basic OAuth2 provider abstract class. Note that the class name should start with a capital letter, as PHP FIG standards suggest.
+Inside this file, create a new class that extends `Utopia\Auth\OAuth2\Provider`. Note that the class name should start with a capital letter, as PHP FIG standards suggest.
 
 Once a new class is created, you can start to implement your new provider's login flow. We have prepared a starting point for Oauth provider class below, but you should also consider looking at other provider's implementation and try to follow the same standards.
 
 ```php
 <?php
 
-namespace Appwrite\Auth\OAuth2;
+namespace Utopia\Auth\OAuth2\Providers;
 
-use Appwrite\Auth\OAuth2;
+use Utopia\Auth\OAuth2\Provider;
 
 // Reference Material
 // [DOCS FROM OAUTH PROVIDER]
 
-class [PROVIDER NAME] extends OAuth2
+class [PROVIDER NAME] extends Provider
 {
     private string $endpoint = '[ENDPOINT API URL]';
     protected array $user = [];

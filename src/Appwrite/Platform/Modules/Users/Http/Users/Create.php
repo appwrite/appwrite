@@ -2,9 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users;
 
-use Appwrite\Auth\Validator\PasswordDictionary;
-use Appwrite\Auth\Validator\PasswordStrength;
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Users\Base;
@@ -15,6 +12,8 @@ use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Plaintext;
+use Utopia\Auth\Validator\PasswordDictionary;
+use Utopia\Auth\Validator\PasswordStrength;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -22,6 +21,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator;
 use Utopia\Validator\AllOf;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Phone;
 use Utopia\Validator\Text;
 
 class Create extends Base
@@ -58,7 +58,7 @@ class Create extends Base
             ))
             ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('email', null, new Nullable(new EmailValidator()), 'User email.', true)
-            ->param('phone', null, new Nullable(new Phone()), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+            ->param('phone', null, new Nullable(new Phone(knownCallingCode: true)), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
             ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
             ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
             ->inject('response')

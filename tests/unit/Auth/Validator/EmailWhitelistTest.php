@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Auth\Validator;
 
-use Appwrite\Auth\Validator\EmailWhitelist;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Auth\Validator\EmailWhitelist;
 
 final class EmailWhitelistTest extends TestCase
 {

@@ -272,7 +272,7 @@ class Mapper
         }
 
         switch ((!empty($validator)) ? $validator::class : '') {
-            case \Appwrite\Auth\Validator\Password::class:
+            case \Utopia\Auth\Validator\Password::class:
             case \Appwrite\Event\Validator\Event::class:
             case \Appwrite\Event\Validator\FunctionEvent::class:
             case \Utopia\Emails\Validator\Email::class:

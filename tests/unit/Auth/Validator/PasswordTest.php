@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Auth\Validator;
 
-use Appwrite\Auth\Validator\Password;
 use PHPUnit\Framework\TestCase;
+use Utopia\Auth\Validator\Password;
 
 final class PasswordTest extends TestCase
 {
