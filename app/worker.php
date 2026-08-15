@@ -64,7 +64,7 @@ foreach ($args as $arg) {
 }
 
 if ($requested === [] || \in_array('all', $requested, true)) {
-    $workerNames = WorkerConfig::NAMES;
+    $workers = WorkerConfig::NAMES;
     $workerName = 'all';
 } else {
     $unknown = \array_values(\array_diff($requested, WorkerConfig::NAMES));
@@ -72,16 +72,16 @@ if ($requested === [] || \in_array('all', $requested, true)) {
         Console::error('Unknown worker: ' . \implode(', ', $unknown) . '. Valid: ' . \implode(', ', WorkerConfig::NAMES));
         Console::exit(1);
     }
-    $workerNames = $requested;
-    $workerName = $workerNames[0];
+    $workers = $requested;
+    $workerName = $workers[0];
 }
 
-$workerJobs = WorkerConfig::jobs($workerNames, allowEnvOverride: $workerName !== 'all');
-$firstJob = \reset($workerJobs);
-$queueName = $firstJob['queue'] ?? WorkerConfig::queueName($workerName);
+$jobs = WorkerConfig::jobs($workers, env: $workerName !== 'all');
+$first = \reset($jobs);
+$queue = $first['queue'] ?? WorkerConfig::queue($workerName);
 $adapterMaxCoroutines = $workerName === 'all'
     ? 1
-    : ($firstJob['maxCoroutines'] ?? 1);
+    : ($first['maxCoroutines'] ?? 1);
 
 $redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
 $redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);
@@ -99,13 +99,13 @@ $createConsumer = static function () use ($redisHost, $redisPort, $commands): Br
 $adapter = new Swoole(
     $createConsumer(),
     System::getEnv('_APP_WORKERS_NUM', 1),
-    $queueName,
+    $queue,
     maxCoroutines: $adapterMaxCoroutines,
     resources: $container,
 );
 
 $worker = new Server($adapter);
-$worker->setConsumerFactory(fn (string $name) => $createConsumer());
+$worker->consumer(fn (string $name) => $createConsumer());
 
 try {
     $worker->init()->action(function () use ($worker, $registerWorkerMessageResources) {
@@ -128,8 +128,8 @@ try {
     $platform->setWorker($worker);
     $platform->init(Service::TYPE_WORKER, [
         'workerName' => $workerName,
-        'workerNames' => $workerName === 'all' ? ['all'] : $workerNames,
-        'workerJobs' => $workerJobs,
+        'workers' => $workerName === 'all' ? ['all'] : $workers,
+        'jobs' => $jobs,
     ]);
 } catch (\Throwable $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() . ', Line: ' . $e->getLine());

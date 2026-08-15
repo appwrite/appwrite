@@ -21,7 +21,7 @@ final class ConfigTest extends TestCase
         \putenv('_APP_WORKER_MAX_COROUTINES=8');
 
         try {
-            $this->assertSame(1, Config::maxCoroutines('databases', allowEnvOverride: true));
+            $this->assertSame(1, Config::maxCoroutines('databases', env: true));
         } finally {
             \putenv($previous === false ? '_APP_WORKER_MAX_COROUTINES' : '_APP_WORKER_MAX_COROUTINES=' . $previous);
         }
@@ -39,15 +39,15 @@ final class ConfigTest extends TestCase
 
     public function testCombinedTotalIsSumOfPerQueueCaps(): void
     {
-        $this->assertSame(61, Config::totalMaxCoroutines(Config::NAMES));
+        $this->assertSame(61, Config::total(Config::NAMES));
     }
 
     public function testQueueNamesMatchPublishers(): void
     {
-        $this->assertSame(Event::FUNCTIONS_QUEUE_NAME, Config::queueName('functions'));
-        $this->assertSame(Event::MAILS_QUEUE_NAME, Config::queueName('mails'));
-        $this->assertSame(Event::DELETE_QUEUE_NAME, Config::queueName('deletes'));
-        $this->assertSame('database_db_main', Config::queueName('databases'));
+        $this->assertSame(Event::FUNCTIONS_QUEUE_NAME, Config::queue('functions'));
+        $this->assertSame(Event::MAILS_QUEUE_NAME, Config::queue('mails'));
+        $this->assertSame(Event::DELETE_QUEUE_NAME, Config::queue('deletes'));
+        $this->assertSame('database_db_main', Config::queue('databases'));
     }
 
     public function testJobsAttachPerQueueCaps(): void

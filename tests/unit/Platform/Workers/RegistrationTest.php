@@ -28,7 +28,7 @@ final class RegistrationTest extends TestCase
 
         $this->assertIsString($contents);
         $this->assertStringNotContainsString("mails' ? 'notifications'", $contents);
-        $this->assertStringContainsString("'workerNames'", $contents);
+        $this->assertStringContainsString("'workers'", $contents);
         $this->assertStringContainsString('WorkerConfig', $contents);
     }
 
