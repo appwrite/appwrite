@@ -77,7 +77,6 @@ if ($requested === [] || \in_array('all', $requested, true)) {
 }
 
 $jobs = WorkerConfig::jobs($workers, env: $workerName !== 'all');
-$single = \count($jobs) === 1 ? \reset($jobs) : null;
 
 $redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
 $redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);
@@ -90,14 +89,10 @@ $createConsumer = static function () use ($redisHost, $redisPort, $commands): Br
     );
 };
 
-// Jobs own queue names and concurrency. A single-worker process may still set
-// the adapter default so bare Platform hooks can inherit; combined workers
-// leave both unset and register every queue via job().
+// Adapter is transport only — queue names and concurrency come from job().
 $adapter = new Swoole(
     $createConsumer(),
     System::getEnv('_APP_WORKERS_NUM', 1),
-    queue: $single['queue'] ?? null,
-    maxCoroutines: $single['maxCoroutines'] ?? 1,
     resources: $container,
 );
 
