@@ -129,6 +129,7 @@ trait QueryJoinTypes
         ]);
 
         $this->assertSame(200, $result['headers']['status-code']);
+        $this->assertSame('alice', $result['body']['$id']);
         $this->assertSame('Alice', $result['body']['name']);
     }
 
@@ -154,6 +155,7 @@ trait QueryJoinTypes
         ]);
 
         $this->assertSame(200, $result['headers']['status-code']);
+        $this->assertSame('carol', $result['body']['$id']);
         $this->assertSame('Carol', $result['body']['name']);
         $amount = $result['body']['ord.amount'] ?? $result['body']['amount'] ?? null;
         $this->assertTrue($amount === null || $amount === '', 'unmatched order amount must be nullish, not 0');
@@ -226,6 +228,7 @@ trait QueryJoinTypes
         ]);
 
         $this->assertSame(200, $result['headers']['status-code']);
+        $this->assertSame('alice', $result['body']['$id']);
         $amount = $result['body']['ord.amount'] ?? $result['body']['amount'] ?? null;
         $this->assertContains((int) $amount, [100, 50]);
     }
@@ -251,6 +254,7 @@ trait QueryJoinTypes
         ]);
 
         $this->assertSame(200, $result['headers']['status-code']);
+        $this->assertSame('carol', $result['body']['$id']);
         $amount = $result['body']['ord.amount'] ?? $result['body']['amount'] ?? null;
         $this->assertTrue($amount === null || $amount === '', 'unmatched order amount must be nullish, not 0');
     }

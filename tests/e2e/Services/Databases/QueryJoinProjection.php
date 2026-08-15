@@ -141,6 +141,7 @@ trait QueryJoinProjection
         ]);
 
         $this->assertSame(200, $result['headers']['status-code']);
+        $this->assertSame('alice', $result['body']['$id']);
         $amount = $result['body']['ord.amount'] ?? $result['body']['amount'] ?? null;
         $this->assertContains((int) $amount, [100, 50]);
     }
