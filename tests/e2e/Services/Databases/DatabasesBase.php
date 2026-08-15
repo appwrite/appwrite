@@ -2701,6 +2701,22 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders());
 
+        $missingId = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordIdParam() => null,
+                'data' => ['title' => 'Missing ID'],
+            ]
+        );
+
+        $this->assertEquals(400, $missingId['headers']['status-code']);
+        $this->assertEquals(
+            $this->getRecordIdParam() === 'documentId' ? Exception::DOCUMENT_MISSING_DATA : Exception::ROW_MISSING_DATA,
+            $missingId['body']['type']
+        );
+
         $documentId = ID::unique();
         $invalid = $this->client->call(
             Client::METHOD_POST,
