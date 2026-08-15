@@ -122,4 +122,26 @@ trait QueryJoinProjection
         $this->assertSame(400, $result['headers']['status-code']);
         $this->assertSame('general_query_invalid', $result['body']['type']);
     }
+
+    public function testGetRowSelectJoinedColumnByAlias(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+        $data = $this->setupAnalyticsFixture();
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['customersId'], 'alice'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::join($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+                Query::select(['name', 'ord.amount'])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $result['headers']['status-code']);
+        $amount = $result['body']['ord.amount'] ?? $result['body']['amount'] ?? null;
+        $this->assertContains((int) $amount, [100, 50]);
+    }
 }
