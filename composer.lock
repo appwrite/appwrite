@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9c078590044c76e96a511d220a852b1a",
+    "content-hash": "934a7a0eb8d94a844561ab8017b282f9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4350,17 +4350,11 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "1.0.0-rc17",
+            "version": "1.0.999",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/platform.git",
-                "reference": "d05e530794fdc655ed940fa8ab518a66e5cd0924"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/d05e530794fdc655ed940fa8ab518a66e5cd0924",
-                "reference": "d05e530794fdc655ed940fa8ab518a66e5cd0924",
-                "shasum": ""
+                "url": "https://github.com/utopia-php/monorepo.git",
+                "reference": "cursor/multi-job-queue-platform-f0c8"
             },
             "require": {
                 "ext-json": "*",
@@ -4374,26 +4368,9 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\Platform\\": "src/Platform"
+                    "Utopia\\Platform\\": "packages/platform/src/Platform"
                 }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Light and Fast Platform Library",
-            "keywords": [
-                "framework",
-                "php",
-                "platform",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc17"
-            },
-            "time": "2026-08-04T06:47:02+00:00"
+            }
         },
         {
             "name": "utopia-php/pools",
@@ -4545,17 +4522,11 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "1.2.0",
+            "version": "1.2.999",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/queue.git",
-                "reference": "081e3d147bad4befa5b124bb4538584ba0a73ea7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/081e3d147bad4befa5b124bb4538584ba0a73ea7",
-                "reference": "081e3d147bad4befa5b124bb4538584ba0a73ea7",
-                "shasum": ""
+                "url": "https://github.com/utopia-php/monorepo.git",
+                "reference": "cursor/multi-job-queue-platform-f0c8"
             },
             "require": {
                 "php": ">=8.5",
@@ -4564,50 +4535,14 @@
                 "utopia-php/pools": "^2.0",
                 "utopia-php/servers": "^0.4",
                 "utopia-php/telemetry": "^0.4",
-                "utopia-php/validators": "^0.4"
-            },
-            "require-dev": {
-                "ext-redis": "*",
-                "swoole/ide-helper": "4.8.8",
-                "utopia-php/nats": "^1.0.0",
-                "workerman/workerman": "^4.0"
-            },
-            "suggest": {
-                "ext-pcntl": "Fallback for Adapter\\KubernetesJob graceful shutdown when Swoole is unavailable.",
-                "ext-swoole": "Needed to support Swoole.",
-                "utopia-php/nats": "Needed to support the NATS JetStream broker (Broker\\Nats).",
-                "workerman/workerman": "Needed to support Workerman."
+                "utopia-php/validators": "^0.4 || ^0.5"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\Queue\\": "src/Queue"
+                    "Utopia\\Queue\\": "packages/queue/src/Queue"
                 }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Torsten Dittmann",
-                    "email": "torsten@appwrite.io"
-                }
-            ],
-            "description": "A powerful task queue.",
-            "keywords": [
-                "Tasks",
-                "framework",
-                "php",
-                "queue",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/1.2.0"
-            },
-            "time": "2026-08-13T11:06:09+00:00"
+            }
         },
         {
             "name": "utopia-php/registry",
@@ -8360,8 +8295,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5,
-        "utopia-php/platform": 5
+        "utopia-php/http": 5
     },
     "prefer-stable": true,
     "prefer-lowest": false,

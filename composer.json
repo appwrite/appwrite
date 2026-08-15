@@ -26,9 +26,7 @@
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
-            "Utopia\\Bus\\": "src/Utopia/Bus",
-            "Utopia\\Queue\\": "src/Utopia/Queue",
-            "Utopia\\Platform\\": "src/Utopia/Platform"
+            "Utopia\\Bus\\": "src/Utopia/Bus"
         }
     },
     "autoload-dev": {
@@ -41,6 +39,58 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "utopia-php/queue",
+                "version": "1.2.999",
+                "source": {
+                    "url": "https://github.com/utopia-php/monorepo.git",
+                    "type": "git",
+                    "reference": "cursor/multi-job-queue-platform-f0c8"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Utopia\\Queue\\": "packages/queue/src/Queue"
+                    }
+                },
+                "require": {
+                    "php": ">=8.5",
+                    "utopia-php/di": "^0.3",
+                    "utopia-php/lock": "^0.3",
+                    "utopia-php/servers": "^0.4",
+                    "utopia-php/pools": "^2.0",
+                    "utopia-php/telemetry": "^0.4",
+                    "utopia-php/validators": "^0.4 || ^0.5"
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "utopia-php/platform",
+                "version": "1.0.999",
+                "source": {
+                    "url": "https://github.com/utopia-php/monorepo.git",
+                    "type": "git",
+                    "reference": "cursor/multi-job-queue-platform-f0c8"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Utopia\\Platform\\": "packages/platform/src/Platform"
+                    }
+                },
+                "require": {
+                    "php": ">=8.5",
+                    "ext-json": "*",
+                    "ext-redis": "*",
+                    "utopia-php/cli": "^0.24",
+                    "utopia-php/http": "^2.0@RC",
+                    "utopia-php/queue": "0.23.* || 0.24.* || ^1.0.0",
+                    "utopia-php/servers": "^0.4"
+                }
+            }
+        },
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/auth"
@@ -90,10 +140,10 @@
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.1",
         "utopia-php/migration": "^2.0.0",
-        "utopia-php/platform": "^1.0@RC",
+        "utopia-php/platform": "1.0.999",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "3.0.*",
-        "utopia-php/queue": "^1.0.0",
+        "utopia-php/queue": "1.2.999",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "^4.0",
