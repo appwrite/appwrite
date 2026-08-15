@@ -692,6 +692,8 @@ Http::delete('/v1/account/sessions')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $currentSession->getId());
+        } else {
+            $queueForEvents->reset();
         }
 
         $response->noContent();
