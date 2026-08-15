@@ -123,6 +123,9 @@ class V25 extends Migration
                 case 'sites':
                     if ($collectionType === 'projects') {
                         $attributes = ['providerBranches', 'providerPaths'];
+                        if ($id === 'sites') {
+                            $attributes[] = 'scopes';
+                        }
                         try {
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                         } catch (Throwable $th) {

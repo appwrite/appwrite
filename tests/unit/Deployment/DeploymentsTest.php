@@ -91,4 +91,39 @@ final class DeploymentsTest extends TestCase
             )
         );
     }
+
+    public function testScopesMergeGrantsForResourceType(): void
+    {
+        Config::setParam('computeScopes', [
+            'functions' => ['health.read'],
+            'sites' => ['proxy.invalidations.write'],
+        ]);
+
+        $function = new Document([
+            '$collection' => 'functions',
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertSame(['users.read', 'health.read'], Deployments::scopes($function));
+
+        // Deduplicates when the resource already holds a granted scope
+        $site = new Document([
+            '$collection' => 'sites',
+            'scopes' => ['users.read', 'proxy.invalidations.write'],
+        ]);
+
+        $this->assertSame(['users.read', 'proxy.invalidations.write'], Deployments::scopes($site));
+    }
+
+    public function testScopesEmptyGrantsKeepResourceScopes(): void
+    {
+        Config::setParam('computeScopes', ['functions' => [], 'sites' => []]);
+
+        $site = new Document([
+            '$collection' => 'sites',
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertSame(['users.read'], Deployments::scopes($site));
+    }
 }

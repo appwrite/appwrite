@@ -760,6 +760,13 @@ return [
                 default: '',
             ),
             new Attribute(
+                key: 'scopes',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                default: [],
+                array: true,
+            ),
+            new Attribute(
                 key: 'providerBranches',
                 type: ColumnType::String,
                 size: 128,
