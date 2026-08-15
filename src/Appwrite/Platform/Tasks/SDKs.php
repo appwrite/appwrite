@@ -5,13 +5,13 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\ClaudePlugin;
+use Appwrite\SDK\Language\CLI;
 use Appwrite\SDK\Language\CodexPlugin;
 use Appwrite\SDK\Language\CursorPlugin;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
-use Appwrite\SDK\Language\GoCLI;
 use Appwrite\SDK\Language\GraphQL;
 use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Node;
@@ -358,7 +358,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         }
                         break;
                     case 'cli':
-                        $config = new GoCLI();
+                        $config = new CLI();
                         $config->setNPMPackage('appwrite-cli');
                         $config->setExecutableName('appwrite');
                         $config->setLogo("
