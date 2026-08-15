@@ -77,11 +77,7 @@ if ($requested === [] || \in_array('all', $requested, true)) {
 }
 
 $jobs = WorkerConfig::jobs($workers, env: $workerName !== 'all');
-$first = \reset($jobs);
-$queue = $first['queue'] ?? WorkerConfig::queue($workerName);
-$adapterMaxCoroutines = $workerName === 'all'
-    ? 1
-    : ($first['maxCoroutines'] ?? 1);
+$single = \count($jobs) === 1 ? \reset($jobs) : null;
 
 $redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
 $redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);
@@ -94,13 +90,14 @@ $createConsumer = static function () use ($redisHost, $redisPort, $commands): Br
     );
 };
 
-// A dedicated connection drives the blocking receive loop; a lock-guarded one
-// serializes acks/publishes from the per-message coroutines.
+// Jobs own queue names and concurrency. A single-worker process may still set
+// the adapter default so bare Platform hooks can inherit; combined workers
+// leave both unset and register every queue via job().
 $adapter = new Swoole(
     $createConsumer(),
     System::getEnv('_APP_WORKERS_NUM', 1),
-    $queue,
-    maxCoroutines: $adapterMaxCoroutines,
+    queue: $single['queue'] ?? null,
+    maxCoroutines: $single['maxCoroutines'] ?? 1,
     resources: $container,
 );
 
