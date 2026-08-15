@@ -1995,6 +1995,16 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('sourceSize', $deployments['body']['deployments'][0]);
         $this->assertArrayHasKey('buildSize', $deployments['body']['deployments'][0]);
 
+        /**
+         * Test for FAILURE
+         */
+        $deployments = $this->listDeployments($siteId, [
+            'search' => 'deployment',
+        ]);
+
+        $this->assertEquals(400, $deployments['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $deployments['body']['type']);
+
         $deployments = $this->listDeployments($siteId, [
             'queries' => [
                 Query::limit(1)->toString(),
