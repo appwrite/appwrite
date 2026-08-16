@@ -55,11 +55,7 @@ class Executions extends Action
             Span::add('execution.id', $execution->getId());
             Span::add('execution.cancelled', true);
 
-            try {
-                $dbForProject->deleteDocument('executions', $execution->getId());
-            } catch (\Throwable) {
-                // Nothing to remove: the document was never persisted.
-            }
+            $dbForProject->deleteDocument('executions', $execution->getId());
 
             return;
         }

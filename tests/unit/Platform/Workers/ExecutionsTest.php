@@ -105,6 +105,26 @@ final class ExecutionsTest extends TestCase
         );
     }
 
+    public function testPropagatesCancelledExecutionDeletionFailure(): void
+    {
+        $error = new \RuntimeException('Database unavailable');
+        $dbForProject = $this->createMock(Database::class);
+        $dbForProject->expects($this->once())
+            ->method('deleteDocument')
+            ->with('executions', 'execution')
+            ->willThrowException($error);
+
+        $this->expectExceptionObject($error);
+
+        (new Executions())->action(
+            $this->message((new ExecutionCancelled(
+                project: new Document(['$id' => 'project']),
+                execution: new Document(['$id' => 'execution']),
+            ))->toArray()),
+            $dbForProject,
+        );
+    }
+
     private function message(array $payload): Message
     {
         return new Message([
