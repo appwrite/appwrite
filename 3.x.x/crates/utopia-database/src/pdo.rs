@@ -602,13 +602,116 @@ impl postgres::types::ToSql for PgFlexible {
     postgres::types::to_sql_checked!();
 }
 
+/// A bound integer. `i64`'s own `ToSql` accepts `INT8` only, so binding one
+/// to a narrower column (`tokens.type` is `INT4`) fails with "error
+/// serializing parameter N". Widen/narrow against the column type the way the
+/// PHP driver's untyped bind does.
+#[cfg(feature = "postgres")]
+#[derive(Debug)]
+struct PgInt(i64);
+
+#[cfg(feature = "postgres")]
+impl postgres::types::ToSql for PgInt {
+    fn to_sql(
+        &self,
+        ty: &postgres::types::Type,
+        out: &mut bytes::BytesMut,
+    ) -> Result<postgres::types::IsNull, Box<dyn std::error::Error + Sync + Send>> {
+        use postgres::types::{Json, Type};
+        match *ty {
+            Type::INT2 => i16::try_from(self.0)?.to_sql(ty, out),
+            Type::INT4 => i32::try_from(self.0)?.to_sql(ty, out),
+            Type::INT8 => self.0.to_sql(ty, out),
+            #[allow(clippy::cast_precision_loss)]
+            Type::FLOAT4 => (self.0 as f32).to_sql(ty, out),
+            #[allow(clippy::cast_precision_loss)]
+            Type::FLOAT8 => (self.0 as f64).to_sql(ty, out),
+            Type::BOOL => (self.0 != 0).to_sql(ty, out),
+            Type::JSON | Type::JSONB => Json(serde_json::json!(self.0)).to_sql(ty, out),
+            _ => self.0.to_string().to_sql(ty, out),
+        }
+    }
+
+    fn accepts(_ty: &postgres::types::Type) -> bool {
+        true
+    }
+
+    postgres::types::to_sql_checked!();
+}
+
+/// A bound float, widened/narrowed like [`PgInt`] (`f64` accepts `FLOAT8`
+/// only, so a `real` column would otherwise fail).
+#[cfg(feature = "postgres")]
+#[derive(Debug)]
+struct PgFloat(f64);
+
+#[cfg(feature = "postgres")]
+impl postgres::types::ToSql for PgFloat {
+    fn to_sql(
+        &self,
+        ty: &postgres::types::Type,
+        out: &mut bytes::BytesMut,
+    ) -> Result<postgres::types::IsNull, Box<dyn std::error::Error + Sync + Send>> {
+        use postgres::types::{Json, Type};
+        #[allow(clippy::cast_possible_truncation)]
+        match *ty {
+            Type::FLOAT4 => (self.0 as f32).to_sql(ty, out),
+            Type::FLOAT8 => self.0.to_sql(ty, out),
+            Type::INT2 => (self.0 as i16).to_sql(ty, out),
+            Type::INT4 => (self.0 as i32).to_sql(ty, out),
+            Type::INT8 => (self.0 as i64).to_sql(ty, out),
+            Type::BOOL => (self.0 != 0.0).to_sql(ty, out),
+            Type::JSON | Type::JSONB => Json(serde_json::json!(self.0)).to_sql(ty, out),
+            _ => self.0.to_string().to_sql(ty, out),
+        }
+    }
+
+    fn accepts(_ty: &postgres::types::Type) -> bool {
+        true
+    }
+
+    postgres::types::to_sql_checked!();
+}
+
+/// A bound boolean, which Appwrite also stores in `INT`-typed columns
+/// (`Database::VAR_BOOLEAN` maps to `TINYINT` on MySQL) and in JSON.
+#[cfg(feature = "postgres")]
+#[derive(Debug)]
+struct PgBool(bool);
+
+#[cfg(feature = "postgres")]
+impl postgres::types::ToSql for PgBool {
+    fn to_sql(
+        &self,
+        ty: &postgres::types::Type,
+        out: &mut bytes::BytesMut,
+    ) -> Result<postgres::types::IsNull, Box<dyn std::error::Error + Sync + Send>> {
+        use postgres::types::{Json, Type};
+        let as_int = i64::from(self.0);
+        match *ty {
+            Type::BOOL => self.0.to_sql(ty, out),
+            Type::INT2 => (as_int as i16).to_sql(ty, out),
+            Type::INT4 => (as_int as i32).to_sql(ty, out),
+            Type::INT8 => as_int.to_sql(ty, out),
+            Type::JSON | Type::JSONB => Json(serde_json::json!(self.0)).to_sql(ty, out),
+            _ => self.0.to_string().to_sql(ty, out),
+        }
+    }
+
+    fn accepts(_ty: &postgres::types::Type) -> bool {
+        true
+    }
+
+    postgres::types::to_sql_checked!();
+}
+
 #[cfg(feature = "postgres")]
 #[derive(Debug)]
 enum PgOwned {
     Null,
-    Bool(bool),
-    I64(i64),
-    F64(f64),
+    Bool(PgBool),
+    I64(PgInt),
+    F64(PgFloat),
     Text(PgFlexible),
 }
 
@@ -619,9 +722,9 @@ fn rewrite_postgres(sql: &str, params: &[(&str, SqlParam)]) -> (String, Vec<PgOw
         .into_iter()
         .map(|v| match v {
             SqlParam::Null => PgOwned::Null,
-            SqlParam::Bool(b) => PgOwned::Bool(b),
-            SqlParam::I64(i) => PgOwned::I64(i),
-            SqlParam::F64(f) => PgOwned::F64(f),
+            SqlParam::Bool(b) => PgOwned::Bool(PgBool(b)),
+            SqlParam::I64(i) => PgOwned::I64(PgInt(i)),
+            SqlParam::F64(f) => PgOwned::F64(PgFloat(f)),
             SqlParam::Text(s) => PgOwned::Text(PgFlexible(s)),
         })
         .collect();
@@ -672,6 +775,20 @@ fn postgres_cell(row: &postgres::Row, column: &postgres::Column) -> AttrValue {
     }
     if let Ok(v) = row.try_get::<_, Option<String>>(idx) {
         return v.map_or(AttrValue::Null, AttrValue::from);
+    }
+    // `datetime`-filtered attributes are real `TIMESTAMP` columns in Postgres
+    // (MySQL/MariaDB hand them back as strings). Render them in the same
+    // `Y-m-d H:i:s.v` shape the `datetime` filter's decode side expects, so
+    // `$createdAt`, `registration`, `accessedAt`, ... do not read back as null.
+    if let Ok(v) = row.try_get::<_, Option<chrono::NaiveDateTime>>(idx) {
+        return v.map_or(AttrValue::Null, |naive| {
+            AttrValue::from(crate::datetime::DateTime::format(naive))
+        });
+    }
+    if let Ok(v) = row.try_get::<_, Option<chrono::DateTime<chrono::Utc>>>(idx) {
+        return v.map_or(AttrValue::Null, |utc| {
+            AttrValue::from(crate::datetime::DateTime::format(utc.naive_utc()))
+        });
     }
     // `array`-typed attributes (`postgres_type`) store as JSON/JSONB, which
     // `postgres`'s `FromSql for String` does not accept -- only
