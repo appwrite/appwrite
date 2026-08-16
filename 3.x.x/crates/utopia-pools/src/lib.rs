@@ -10,7 +10,7 @@ mod pool;
 mod recover;
 
 pub use adapter::{Adapter, Stack, Swoole};
-pub use connection::Connection;
+pub use connection::{Connection, ResourceGuard};
 pub use error::{BoxError, PoolError, TypeError};
 pub use group::Group;
 pub use pool::Pool;
@@ -20,6 +20,6 @@ pub use recover::{Recover, RecoverCall};
 pub mod prelude {
     pub use crate::{
         adapter::{Stack, Swoole},
-        Adapter, Connection, Group, Pool, PoolError, Recover, RecoverCall,
+        Adapter, Connection, Group, Pool, PoolError, Recover, RecoverCall, ResourceGuard,
     };
 }

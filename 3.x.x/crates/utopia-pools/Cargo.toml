@@ -13,7 +13,10 @@ categories = ["asynchronous", "web-programming"]
 
 [dependencies]
 async-trait = { workspace = true }
-parking_lot = { workspace = true }
+# `arc_lock` backs `Connection::resource_owned()`: an owned guard (no borrow
+# back into a local `Connection`) for callers that check a connection out
+# once and hold it across several operations.
+parking_lot = { workspace = true, features = ["arc_lock"] }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["sync", "time", "rt", "rt-multi-thread"] }
 utopia-telemetry = { workspace = true }
