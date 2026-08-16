@@ -192,12 +192,6 @@ export function mysqlNav(params: MysqlNavBase) {
         base,
       )
     },
-    settingsExtensions() {
-      return mysqlDatabaseTabRoute(
-        '/projects/$projectId/databases/mysql/$databaseId/settings/extensions' as const,
-        base,
-      )
-    },
   }
 }
 

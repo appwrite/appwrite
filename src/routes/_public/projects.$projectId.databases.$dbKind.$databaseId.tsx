@@ -6,7 +6,7 @@ import {
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
+import { throwRedirectPostgresDbKind, throwRedirectMysqlDbKind } from '@/lib/database-route-redirects'
 import { DatabaseOperationsLockProvider } from '@/components/pages/projects/$projectId/databases/_components/DatabaseOperationsLockContext'
 import { DedicatedDatabaseStatusHeaderAlert } from '@/components/pages/projects/$projectId/databases/_components/DedicatedDatabaseStatusHeaderAlert'
 import { DatabaseTypeUnavailable } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeUnavailable'
@@ -26,7 +26,8 @@ export const Route = createFileRoute(
   beforeLoad: async ({ params, context }) => {
     if (typeof window === 'undefined') return
     const { projectId, dbKind, databaseId } = params
-    throwRedirectPostgresDbKind(dbKind, { projectId, databaseId })
+        throwRedirectPostgresDbKind(dbKind, { projectId, databaseId })
+    throwRedirectMysqlDbKind(dbKind, { projectId, databaseId })
     if (!isDatabaseRouteKind(dbKind)) {
       throw redirect({
         to: '/projects/$projectId/databases',

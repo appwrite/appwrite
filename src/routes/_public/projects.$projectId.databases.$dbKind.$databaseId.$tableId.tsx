@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import { pageTitle } from '@/lib/utils/page-title'
 import { dbNavLink, type DatabaseRouteKind } from '@/lib/database-routes'
-import { throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
+import { throwRedirectPostgresDbKind, throwRedirectMysqlDbKind } from '@/lib/database-route-redirects'
 
 const tableSearchSchema = z.object({
   tab: z
@@ -16,7 +16,12 @@ export const Route = createFileRoute(
   head: () => ({ meta: [{ title: pageTitle('Database', 'Databases') }] }),
   validateSearch: tableSearchSchema,
   beforeLoad: ({ params }) => {
-    throwRedirectPostgresDbKind(params.dbKind, {
+        throwRedirectPostgresDbKind(params.dbKind, {
+      projectId: params.projectId,
+      databaseId: params.databaseId,
+      tableId: params.tableId,
+    })
+    throwRedirectMysqlDbKind(params.dbKind, {
       projectId: params.projectId,
       databaseId: params.databaseId,
       tableId: params.tableId,

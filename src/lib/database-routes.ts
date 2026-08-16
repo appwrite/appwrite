@@ -5,6 +5,8 @@ import {
 } from '@/lib/databases/database-type'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
+import { mysqlDatabaseHome } from '@/lib/mysql-database-routes'
+import { isMysqlEngine } from '@/lib/databases/native-database-engines'
 
 /**
  * URL / route-file segment for the three database products.
@@ -350,6 +352,14 @@ export function dedicatedDatabaseHomeLink(
 
   if (isPostgresDedicatedEngine(db.engine)) {
     return postgresDatabaseHome({
+      projectId,
+      databaseId: db.$id,
+      tableId: '-',
+    })
+  }
+
+  if (isMysqlEngine(db.engine)) {
+    return mysqlDatabaseHome({
       projectId,
       databaseId: db.$id,
       tableId: '-',
