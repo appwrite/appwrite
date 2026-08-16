@@ -231,40 +231,96 @@ fn parse_urlencoded_map(input: &str) -> HashMap<String, Value> {
         let mut it = pair.splitn(2, '=');
         let k = urlencoding_decode(it.next().unwrap_or(""));
         let v = urlencoding_decode(it.next().unwrap_or(""));
-        map.insert(k, Value::String(v));
+        match split_bracket_key(&k) {
+            Some((name, index)) => insert_indexed(&mut map, name, index, v),
+            None => {
+                map.insert(k, Value::String(v));
+            }
+        }
     }
     map
 }
 
+/// Split PHP's `name[index]` bracket syntax (as emitted by `http_build_query`)
+/// into its parts. `name[]` yields an empty index, meaning "append".
+fn split_bracket_key(key: &str) -> Option<(&str, &str)> {
+    let rest = key.strip_suffix(']')?;
+    let (name, index) = rest.split_once('[')?;
+    if name.is_empty() || index.contains('[') {
+        return None;
+    }
+    Some((name, index))
+}
+
+/// PHP `parse_str`'s bracket handling, limited to one level: a numeric or
+/// empty index builds an array (`queries[0]=..&queries[1]=..`), any other
+/// index builds an object (`filter[name]=..`).
+fn insert_indexed(map: &mut HashMap<String, Value>, name: &str, index: &str, value: String) {
+    if !index.is_empty() && index.parse::<usize>().is_err() {
+        let entry = map
+            .entry(name.to_string())
+            .or_insert_with(|| Value::Object(serde_json::Map::new()));
+        if !entry.is_object() {
+            *entry = Value::Object(serde_json::Map::new());
+        }
+        if let Some(object) = entry.as_object_mut() {
+            object.insert(index.to_string(), Value::String(value));
+        }
+        return;
+    }
+
+    let entry = map
+        .entry(name.to_string())
+        .or_insert_with(|| Value::Array(Vec::new()));
+    if !entry.is_array() {
+        *entry = Value::Array(Vec::new());
+    }
+    let Some(array) = entry.as_array_mut() else {
+        return;
+    };
+    match index.parse::<usize>() {
+        Ok(at) => {
+            if array.len() <= at {
+                array.resize(at + 1, Value::Null);
+            }
+            array[at] = Value::String(value);
+        }
+        Err(_) => array.push(Value::String(value)),
+    }
+}
+
 fn urlencoding_decode(s: &str) -> String {
-    let mut out = String::new();
+    let mut out: Vec<u8> = Vec::with_capacity(s.len());
     let bytes = s.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
         match bytes[i] {
             b'+' => {
-                out.push(' ');
+                out.push(b' ');
                 i += 1;
             }
             b'%' if i + 2 < bytes.len() => {
                 if let Ok(v) = u8::from_str_radix(
-                    std::str::from_utf8(&bytes[i + 1..i + 3]).unwrap_or("00"),
+                    std::str::from_utf8(&bytes[i + 1..i + 3]).unwrap_or("zz"),
                     16,
                 ) {
-                    out.push(v as char);
+                    // Collect raw bytes rather than `char`s so a percent-encoded
+                    // multi-byte UTF-8 sequence round-trips instead of being
+                    // widened one byte at a time into Latin-1 code points.
+                    out.push(v);
                     i += 3;
                 } else {
-                    out.push('%');
+                    out.push(b'%');
                     i += 1;
                 }
             }
             c => {
-                out.push(c as char);
+                out.push(c);
                 i += 1;
             }
         }
     }
-    out
+    String::from_utf8_lossy(&out).into_owned()
 }
 
 #[cfg(test)]
@@ -280,5 +336,34 @@ mod payload_parse_tests {
         req.parse_payload_from_raw();
         assert_eq!(req.param_ref("userId"), Some(&json!("u1")));
         assert_eq!(req.param_ref("email"), Some(&json!("a@b.c")));
+    }
+
+    #[test]
+    fn parse_query_collects_php_style_indexed_arrays() {
+        let mut req = Request::new("GET", "/v1/users?queries%5B0%5D=a&queries%5B1%5D=b&total=0");
+        req.parse_query_from_uri();
+        assert_eq!(req.param_ref("queries"), Some(&json!(["a", "b"])));
+        assert_eq!(req.param_ref("total"), Some(&json!("0")));
+    }
+
+    #[test]
+    fn parse_query_appends_empty_bracket_arrays() {
+        let mut req = Request::new("GET", "/v1/users?queries%5B%5D=a&queries%5B%5D=b");
+        req.parse_query_from_uri();
+        assert_eq!(req.param_ref("queries"), Some(&json!(["a", "b"])));
+    }
+
+    #[test]
+    fn parse_query_builds_objects_for_named_indexes() {
+        let mut req = Request::new("GET", "/v1/users?filter%5Bname%5D=bob");
+        req.parse_query_from_uri();
+        assert_eq!(req.param_ref("filter"), Some(&json!({ "name": "bob" })));
+    }
+
+    #[test]
+    fn parse_query_decodes_multibyte_utf8() {
+        let mut req = Request::new("GET", "/v1/users?search=caf%C3%A9");
+        req.parse_query_from_uri();
+        assert_eq!(req.param_ref("search"), Some(&json!("café")));
     }
 }
