@@ -32,7 +32,7 @@ pub fn delete() -> Action {
     .http_action(|ctx| async move {
         let result = (|| -> Result<(), Exception> {
             let db_handle = base::get_db(&ctx)?;
-            let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
+            let mut db = db_handle.lock();
             let identity_id = base::param_str(&ctx, "identityId")?;
             let identity = db
                 .get_document("identities", &identity_id, &[], false)

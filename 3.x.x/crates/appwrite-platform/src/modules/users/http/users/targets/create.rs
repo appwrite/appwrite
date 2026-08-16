@@ -64,7 +64,7 @@ pub fn create() -> Action {
     .http_action(|ctx| async move {
         let result = (|| -> Result<Value, Exception> {
             let db_handle = base::get_db(&ctx)?;
-            let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
+            let mut db = db_handle.lock();
             let target_id = base::param_str(&ctx, "targetId")?;
             let user_id = base::param_str(&ctx, "userId")?;
             let provider_type = base::param_str(&ctx, "providerType")?;

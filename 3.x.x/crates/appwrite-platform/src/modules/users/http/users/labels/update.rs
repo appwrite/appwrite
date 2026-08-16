@@ -50,7 +50,7 @@ pub fn update() -> Action {
     .http_action(|ctx| async move {
         let result = (|| -> Result<Value, Exception> {
             let db_handle = base::get_db(&ctx)?;
-            let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
+            let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
             let labels = ctx
                 .param_value("labels")
