@@ -1744,7 +1744,9 @@ final class AccountCustomClientTest extends Scope
 
     public function testDeleteAccountSessions(): void
     {
-        $data = $this->setupAccountWithVerifiedEmail();
+        // Deleting every session invalidates the account setupAccountWithVerifiedEmail()
+        // caches, so this owns one rather than emptying the one its siblings share.
+        $data = $this->createFreshAccountWithSession();
         $session = $data['session'];
 
         /**
@@ -1774,7 +1776,7 @@ final class AccountCustomClientTest extends Scope
 
     public function testDeleteAccountSessionsWithJWT(): void
     {
-        $data = $this->setupAccountWithVerifiedEmail();
+        $data = $this->createFreshAccountWithSession();
 
         $response = $this->client->call(Client::METHOD_POST, '/account/jwt', [
             'origin' => 'http://localhost',
