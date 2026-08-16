@@ -245,5 +245,15 @@
     "emails.otpSession.clientInfo": "ఈ సైన్ ఇన్‌ను {{agentClient}} ఉపయోగించి {{agentDevice}} {{agentOs}}పై అభ్యర్థించారు. మీరు ఈ సైన్ ఇన్‌ను అభ్యర్థించకపోతే, ఈ ఈమెయిల్‌ను సురక్షితంగా ఉపేక్షించవచ్చు.",
     "emails.otpSession.securityPhrase": "ఈ ఇమెయిల్‌కు భద్రతా పదం {{phrase}}. మీరు సైన్ ఇన్ సమయంలో చూపించబడిన పదంతో ఈ పదం సరిపోలుస్తుంటే ఈ ఇమెయిల్‌ను నమ్మవచ్చు.",
     "emails.otpSession.thanks": "ధన్యవాదాలు,",
-    "emails.otpSession.signature": "ప్రాజెక్టు బృందం"
+    "emails.otpSession.signature": "ప్రాజెక్టు బృందం",
+    "emails.sessionAlert.subject": "Security alert: new session on your {{project}} account",
+    "emails.sessionAlert.preview": "New login detected on {{project}} at {{time}} UTC.",
+    "emails.sessionAlert.hello": "Hello {{user}},",
+    "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, {{b}}on {{date}}, {{year}} at {{time}} UTC{{/b}}.\nHere are the details of the new session: ",
+    "emails.sessionAlert.listDevice": "Device: {{b}}{{device}}{{/b}}",
+    "emails.sessionAlert.listIpAddress": "IP Address: {{b}}{{ipAddress}}{{/b}}",
+    "emails.sessionAlert.listCountry": "Country: {{b}}{{country}}{{/b}}",
+    "emails.sessionAlert.footer": "If this was you, there's nothing more you need to do.\nIf you didn't initiate this session or suspect any unauthorized activity, please secure your account.",
+    "emails.sessionAlert.thanks": "Thanks,",
+    "emails.sessionAlert.signature": "{{project}} team"
 }
