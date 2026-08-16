@@ -53,7 +53,7 @@ class Update extends Action
                 ]
             ))
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-            ->param('number', '', new Phone(allowEmpty: true, knownCallingCode: true), 'User phone number.')
+            ->param('number', '', new Phone(allowEmpty: true), 'User phone number.')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

@@ -44,7 +44,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('number', null, new Phone(normalize: true, knownCallingCode: true), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
+            ->param('number', null, new Phone(normalize: true), 'Phone number associated with the mock phone. Must be a valid E.164 formatted phone number.')
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));

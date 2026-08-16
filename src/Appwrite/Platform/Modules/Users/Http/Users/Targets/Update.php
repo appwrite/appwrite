@@ -90,7 +90,7 @@ class Update extends Action
                     }
                     break;
                 case MESSAGE_TYPE_SMS:
-                    $validator = new Phone(knownCallingCode: true);
+                    $validator = new Phone();
                     if (!$validator->isValid($identifier)) {
                         throw new Exception(Exception::GENERAL_INVALID_PHONE);
                     }

@@ -52,7 +52,7 @@ class Create extends Action
                     )
                 ],
             ))
-            ->param('number', null, new Phone(knownCallingCode: true), 'Phone number to associate with the mock phone. Must be a valid E.164 formatted phone number.')
+            ->param('number', null, new Phone(), 'Phone number to associate with the mock phone. Must be a valid E.164 formatted phone number.')
             ->param('otp', '', new Text(6, 6, Text::NUMBERS), 'One-time password (OTP) to associate with the mock phone. Must be a 6-digit numeric code.')
             ->inject('response')
             ->inject('queueForEvents')
