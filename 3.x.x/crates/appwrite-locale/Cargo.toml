@@ -1,0 +1,22 @@
+[package]
+name = "appwrite-locale"
+description = "Appwrite locale strings and helpers"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["appwrite", "locale", "i18n"]
+categories = ["internationalization"]
+
+[dependencies]
+serde = { workspace = true }
+
+[[bench]]
+name = "smoke"
+harness = false
+
+[lints]
+workspace = true

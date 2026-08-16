@@ -1,0 +1,24 @@
+[package]
+name = "appwrite-auth"
+description = "Appwrite authentication helpers"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["appwrite", "auth"]
+categories = ["authentication"]
+
+[dependencies]
+utopia-auth = { workspace = true }
+utopia-validators = { workspace = true }
+appwrite-exception = { workspace = true }
+
+[[bench]]
+name = "smoke"
+harness = false
+
+[lints]
+workspace = true

@@ -1,0 +1,31 @@
+[package]
+name = "appwrite-platform"
+description = "Appwrite platform composition layer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["appwrite", "platform"]
+categories = ["web-programming"]
+
+[dependencies]
+utopia-platform = { workspace = true }
+utopia-http = { workspace = true }
+utopia-di = { workspace = true }
+appwrite-exception = { workspace = true }
+appwrite-hooks = { workspace = true }
+appwrite-locale = { workspace = true }
+appwrite-auth = { workspace = true }
+appwrite-event = { workspace = true }
+appwrite-response = { workspace = true }
+appwrite-database = { workspace = true }
+
+[[bench]]
+name = "smoke"
+harness = false
+
+[lints]
+workspace = true

@@ -1,0 +1,311 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/utopia-di",
+    "crates/utopia-validators",
+    "crates/utopia-servers",
+    "crates/utopia-compression",
+    "crates/utopia-telemetry",
+    "crates/utopia-span",
+    "crates/utopia-system",
+    "crates/utopia-http",
+    "crates/utopia-image",
+    "crates/utopia-config",
+    "crates/utopia-console",
+    "crates/utopia-cli",
+    "crates/utopia-user-agent",
+    "crates/utopia-auth",
+    "crates/utopia-storage",
+    "crates/utopia-platform",
+    "crates/utopia-pools",
+    "crates/utopia-ab",
+    "crates/utopia-abuse",
+    "crates/utopia-dsn",
+    "crates/utopia-view",
+    "crates/utopia-locale",
+    "crates/utopia-logger",
+    "crates/utopia-waf",
+    "crates/utopia-domains",
+    "crates/utopia-emails",
+    "crates/utopia-cache",
+    "crates/utopia-queue",
+    "crates/utopia-dns",
+    "crates/utopia-messaging",
+    "crates/utopia-vcs",
+    "crates/utopia-lock",
+    "crates/utopia-circuit-breaker",
+    "crates/utopia-cloudevents",
+    "crates/utopia-replication",
+    "crates/utopia-pay",
+    "crates/utopia-cdn",
+    "crates/utopia-feed",
+    "crates/utopia-openapi",
+    "crates/utopia-nats",
+    "crates/utopia-proxy",
+    "crates/utopia-query",
+    "crates/utopia-database",
+    "crates/utopia-audit",
+    "crates/utopia-usage",
+    "crates/utopia-migration",
+    "crates/utopia-detector",
+    "crates/utopia-websocket",
+    "crates/utopia-orchestration",
+    "crates/utopia-client",
+    "crates/utopia-test-wiremock",
+    "crates/appwrite-exception",
+    "crates/appwrite-hooks",
+    "crates/appwrite-locale",
+    "crates/appwrite-auth",
+    "crates/appwrite-event",
+    "crates/appwrite-response",
+    "crates/appwrite-database",
+    "crates/appwrite-platform",
+    "apps/server",
+]
+exclude = [
+    "benchmarks/http/load",
+    "benchmarks/http/rust-server",
+]
+default-members = ["apps/server"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/appwrite/appwrite"
+authors = ["Appwrite Team"]
+rust-version = "1.97"
+
+[workspace.dependencies]
+appwrite-exception = { path = "crates/appwrite-exception", version = "0.1.0" }
+appwrite-hooks = { path = "crates/appwrite-hooks", version = "0.1.0" }
+appwrite-locale = { path = "crates/appwrite-locale", version = "0.1.0" }
+appwrite-auth = { path = "crates/appwrite-auth", version = "0.1.0" }
+appwrite-event = { path = "crates/appwrite-event", version = "0.1.0" }
+appwrite-response = { path = "crates/appwrite-response", version = "0.1.0" }
+appwrite-database = { path = "crates/appwrite-database", version = "0.1.0" }
+appwrite-platform = { path = "crates/appwrite-platform", version = "0.1.0" }
+utopia-abuse = { path = "crates/utopia-abuse", version = "0.1.0" }
+utopia-di = { path = "crates/utopia-di", version = "0.1.0" }
+utopia-validators = { path = "crates/utopia-validators", version = "0.1.0" }
+utopia-servers = { path = "crates/utopia-servers", version = "0.1.0" }
+utopia-compression = { path = "crates/utopia-compression", version = "0.1.0" }
+utopia-telemetry = { path = "crates/utopia-telemetry", version = "0.1.0" }
+utopia-span = { path = "crates/utopia-span", version = "0.1.0" }
+utopia-system = { path = "crates/utopia-system", version = "0.1.0" }
+utopia-http = { path = "crates/utopia-http", version = "0.1.0" }
+utopia-image = { path = "crates/utopia-image", version = "0.1.0" }
+utopia-config = { path = "crates/utopia-config", version = "0.1.0" }
+utopia-console = { path = "crates/utopia-console", version = "0.1.0" }
+utopia-cli = { path = "crates/utopia-cli", version = "0.1.0" }
+utopia-user-agent = { path = "crates/utopia-user-agent", version = "0.1.0" }
+utopia-auth = { path = "crates/utopia-auth", version = "0.1.0" }
+utopia-storage = { path = "crates/utopia-storage", version = "0.1.0" }
+utopia-platform = { path = "crates/utopia-platform", version = "0.1.0" }
+utopia-pools = { path = "crates/utopia-pools", version = "0.1.0" }
+utopia-ab = { path = "crates/utopia-ab", version = "0.1.0" }
+utopia-dsn = { path = "crates/utopia-dsn", version = "0.1.0" }
+utopia-view = { path = "crates/utopia-view", version = "0.1.0" }
+utopia-locale = { path = "crates/utopia-locale", version = "0.1.0" }
+utopia-logger = { path = "crates/utopia-logger", version = "0.1.0" }
+utopia-waf = { path = "crates/utopia-waf", version = "0.1.0" }
+utopia-domains = { path = "crates/utopia-domains", version = "0.1.0" }
+utopia-emails = { path = "crates/utopia-emails", version = "0.1.0" }
+utopia-cache = { path = "crates/utopia-cache", version = "0.1.0", default-features = false }
+utopia-queue = { path = "crates/utopia-queue", version = "0.1.0" }
+utopia-dns = { path = "crates/utopia-dns", version = "0.1.0" }
+utopia-messaging = { path = "crates/utopia-messaging", version = "0.1.0" }
+utopia-vcs = { path = "crates/utopia-vcs", version = "0.1.0" }
+utopia-client = { path = "crates/utopia-client", version = "0.1.0" }
+utopia-test-wiremock = { path = "crates/utopia-test-wiremock", version = "0.1.0" }
+utopia-lock = { path = "crates/utopia-lock", version = "0.1.0" }
+utopia-circuit-breaker = { path = "crates/utopia-circuit-breaker", version = "0.1.0" }
+utopia-detector = { path = "crates/utopia-detector", version = "0.1.0" }
+utopia-websocket = { path = "crates/utopia-websocket", version = "0.1.0" }
+utopia-orchestration = { path = "crates/utopia-orchestration", version = "0.1.0" }
+utopia-audit = { path = "crates/utopia-audit", version = "0.1.0" }
+utopia-usage = { path = "crates/utopia-usage", version = "0.1.0" }
+utopia-migration = { path = "crates/utopia-migration", version = "0.1.0" }
+utopia-database = { path = "crates/utopia-database", version = "0.1.0" }
+utopia-query = { path = "crates/utopia-query", version = "0.1.0" }
+utopia-nats = { path = "crates/utopia-nats", version = "0.1.0" }
+utopia-openapi = { path = "crates/utopia-openapi", version = "0.1.0" }
+utopia-proxy = { path = "crates/utopia-proxy", version = "0.1.0" }
+utopia-cloudevents = { path = "crates/utopia-cloudevents", version = "0.1.0" }
+utopia-replication = { path = "crates/utopia-replication", version = "0.1.0" }
+utopia-pay = { path = "crates/utopia-pay", version = "0.1.0" }
+utopia-cdn = { path = "crates/utopia-cdn", version = "0.1.0" }
+utopia-feed = { path = "crates/utopia-feed", version = "0.1.0" }
+
+bytes = "1"
+http = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio", "server-auto", "http1"] }
+http-body-util = "0.1"
+flate2 = "1"
+brotli = "7"
+zstd = "0.13"
+sha1 = "0.10"
+sha2 = "0.10"
+md-5 = "0.10"
+md5 = "0.7"
+hex = "0.4"
+mime_guess = "2"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
+quick-xml = "0.36"
+fs2 = "0.4"
+parking_lot = "0.12"
+once_cell = "1"
+url = "2"
+regex = "1"
+async-trait = "0.1"
+futures = "0.3"
+pin-project-lite = "0.2"
+tracing = "0.1"
+anyhow = "1"
+tempfile = "3"
+tikv-jemallocator = "0.6"
+socket2 = { version = "0.5", features = ["all"] }
+# Pinned for workspace CI toolchain / MSRV 1.97.
+image = { version = "=0.25.6", default-features = false, features = ["jpeg", "png", "gif", "webp", "rayon"] }
+fast_image_resize = { version = "=4.2.1", features = ["image"] }
+kamadak-exif = "=0.5.5"
+webp = { version = "=0.2.6", default-features = false }
+# libheif-rs 0.22 matches system libheif 1.17 (Ubuntu 24.04); 1.x needs libheif ≥1.18.
+# default-features off avoids bindgen (uses packaged bindings + pkg-config).
+libheif-rs = { version = "=0.22.0", default-features = false }
+turbojpeg = "1.1.1"
+rayon = "1"
+rand = "0.8"
+subtle = "2"
+base64 = "0.22"
+hmac = "0.12"
+argon2 = "0.5"
+bcrypt = "0.16"
+jsonwebtoken = "9"
+rsa = { version = "0.9", features = ["sha2", "pem"] }
+time = "0.3"
+redis = { version = "0.27", features = ["script", "cluster"] }
+crc32fast = "1"
+async-nats = "0.38"
+indexmap = { version = "2.2", features = ["serde"] }
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+tokio-tungstenite = { version = "0.26", default-features = false, features = [
+    "connect",
+    "rustls-tls-webpki-roots",
+] }
+rustls = { version = "0.23", default-features = false, features = [
+    "std",
+    "tls12",
+    "ring",
+] }
+tokio-rustls = { version = "0.26", default-features = false, features = [
+    "tls12",
+    "ring",
+] }
+rustls-pemfile = "2"
+rustls-pki-types = "1"
+idna = "1"
+hickory-resolver = "0.24"
+moka = { version = "0.12", features = ["future", "sync"] }
+ipnet = "2"
+dashmap = "6"
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+lettre = { version = "0.11", default-features = false, features = [
+    "smtp-transport",
+    "hostname",
+    "rustls-tls",
+] }
+# psm 0.1.31+ build-depends on ar_archive_writer; keep pin for MSRV 1.97.
+psm = "=0.1.21"
+chrono = { version = "0.4.38", default-features = false, features = ["clock", "std"] }
+# Optional SQL / Mongo drivers. Pinned for workspace CI / MSRV 1.97.
+rusqlite = { version = "0.31", features = ["bundled"] }
+mysql = "24"
+postgres = { version = "0.19", features = ["with-serde_json-1", "with-chrono-0_4"] }
+mongodb = { version = "2.8", default-features = false, features = ["sync"] }
+# OpenTelemetry 0.31 matches workspace MSRV 1.97 and reqwest 0.12 (0.32 pulls reqwest 0.13).
+opentelemetry = { version = "0.31", default-features = false, features = ["metrics"] }
+opentelemetry_sdk = { version = "0.31", default-features = false, features = ["metrics"] }
+opentelemetry-otlp = { version = "0.31", default-features = false, features = ["http-proto", "metrics"] }
+opentelemetry-http = { version = "0.31", default-features = false }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+
+# Inherited by every crate via `[lints] workspace = true`.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+# Private modules often expose `pub` items for sibling modules - idiomatic Rust.
+unreachable_pub = "allow"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# Noisy / stylistic pedantic lints we intentionally allow.
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+return_self_not_must_use = "allow"
+wildcard_imports = "allow"
+struct_excessive_bools = "allow"
+similar_names = "allow"
+items_after_statements = "allow"
+redundant_closure_for_method_calls = "allow"
+unused_self = "allow"
+# Numeric casts are common and intentional in validators / system helpers.
+cast_precision_loss = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+cast_possible_wrap = "allow"
+# Keep PHP-port APIs free to evolve without false-positive churn.
+manual_let_else = "allow"
+option_if_let_else = "allow"
+needless_pass_by_value = "allow"
+# Newly noisy on Clippy 1.97 (current stable). Mechanical rewrites, not behavior bugs.
+map_unwrap_or = "allow"
+struct_field_names = "allow"
+io_other_error = "allow"
+unnested_or_patterns = "allow"
+result_large_err = "allow"
+ignore_without_reason = "allow"
+duration_suboptimal_units = "allow"
+unnecessary_sort_by = "allow"
+derivable_impls = "allow"
+manual_contains = "allow"
+collapsible_match = "allow"
+explicit_counter_loop = "allow"
+question_mark = "allow"
+doc_markdown = "allow"
+useless_borrows_in_formatting = "allow"
+unchecked_time_subtraction = "allow"
+implicit_clone = "allow"
+self_only_used_in_recursion = "allow"
+if_not_else = "allow"
+large_enum_variant = "allow"
+manual_checked_ops = "allow"
+decimal_bitwise_operands = "allow"
+cloned_ref_to_slice_refs = "allow"
+manual_is_multiple_of = "allow"
+incompatible_msrv = "allow"
+non_std_lazy_statics = "allow"
+unnecessary_map_or = "allow"
+borrow_as_ptr = "allow"
+manual_repeat_n = "allow"
+ptr_as_ptr = "allow"
+nonminimal_bool = "allow"
+manual_is_variant_and = "allow"
