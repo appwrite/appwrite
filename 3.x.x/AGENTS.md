@@ -9,11 +9,34 @@ Port Appwrite services to Rust under this workspace. Match PHP **product behavio
 - Adapter selection via `_APP_DB_*` and shared cache keys with PHP where both run
 - Traefik split routing (`/v1/users*` → Rust, everything else → PHP) until more services move
 
+## Module and HTTP file layout (parity with PHP)
+
+Mirror `src/Appwrite/Platform/Modules/{Name}/` in `crates/appwrite-platform/src/modules/{name}/`:
+
+| PHP | Rust |
+|-----|------|
+| `Module.php` | `mod.rs` (module registration) |
+| `Base.php` | `base.rs` |
+| `Services/Http.php` | `services/http.rs` |
+| `Http/{Service}/Create.php` | `http/{service}/create.rs` |
+| `Http/.../XList.php` | `http/.../xlist.rs` |
+| Nested resources (`Targets/`, `MFA/RecoveryCodes/`, …) | Same nesting under `http/` |
+
+Rules:
+
+- **One PHP action class → one Rust action file.** Do not combine Create/Get/Update/Delete/XList (or sibling resources) into a single `crud.rs` / `properties.rs`.
+- Action files are only `create.rs`, `get.rs`, `update.rs`, `delete.rs`, `xlist.rs`, each exporting a fn of the same name that returns `Action`.
+- Shared helpers that are **not** PHP action classes may live in small helper modules (`hash_create.rs`, `helpers.rs`, `shared.rs`) and must be documented as such.
+- Directory names are snake_case versions of the PHP path (`recovery_codes`, `jwts`, `md5`).
+
+Reference layout: `crates/appwrite-platform/src/modules/users/http/users/` ↔ `Modules/Users/Http/Users/`.
+
 ## Drop / avoid
 
 - PHP-specific surfaces: PDO, `PDOStatement`, PHP DSNs as a public API, reflection patterns copied for their own sake
 - Re-implementing C extensions or PHP stdlib when Rust crates already cover the need
 - Catch-all “utils” crates that blur Utopia domain boundaries
+- Collapsing PHP's HTTP directory tree into a few mega-files for convenience
 
 ## Database
 
