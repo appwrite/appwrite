@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Avatars;
 
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 
 trait AvatarsBase
@@ -254,6 +255,17 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
+
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'url' => 'https://appwrite.io/robots.txt',
+            ], timeout: 5);
+
+            $this->assertEquals(404, $response['headers']['status-code']);
+            $this->assertEquals(Exception::AVATAR_IMAGE_NOT_FOUND, $response['body']['type']);
+        }, 30_000, 2_000);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],

@@ -858,6 +858,19 @@ trait UsersBase
         $this->assertNotEmpty($response['body']['phone']);
     }
 
+    public function testListIdentitiesInvalidSearch(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users/identities', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'identity',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $response['body']['type']);
+    }
+
     public function testListUsers(): void
     {
         $data = $this->setupUser();

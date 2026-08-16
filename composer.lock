@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dd1aca3569be0a1f31cee199a2cd9dcd",
+    "content-hash": "8475c169f0b7cfd22d3f8aed329b5ecf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5561,16 +5561,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "3.0.0",
+            "version": "4.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "31c03de12bd01bff37795f8bbbae836d6f622fae"
+                "reference": "b02a0c070acd096978bd6bd05eb8d799e1cf9a2f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/31c03de12bd01bff37795f8bbbae836d6f622fae",
-                "reference": "31c03de12bd01bff37795f8bbbae836d6f622fae",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b02a0c070acd096978bd6bd05eb8d799e1cf9a2f",
+                "reference": "b02a0c070acd096978bd6bd05eb8d799e1cf9a2f",
                 "shasum": ""
             },
             "require": {
@@ -5607,9 +5607,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/3.0.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/4.0.1"
             },
-            "time": "2026-08-14T08:18:40+00:00"
+            "time": "2026-08-15T17:04:18+00:00"
         },
         {
             "name": "brianium/paratest",

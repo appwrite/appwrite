@@ -3,7 +3,6 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
-use Appwrite\Auth\Phrase;
 use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
@@ -43,6 +42,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
+use Utopia\Auth\Proofs\Phrase;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
@@ -693,6 +693,8 @@ Http::delete('/v1/account/sessions')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $currentSession->getId());
+        } else {
+            $queueForEvents->reset();
         }
 
         $response->noContent();
@@ -2271,7 +2273,7 @@ Http::post('/v1/account/tokens/magic-url')
 
 
         if ($phrase === true) {
-            $phrase = Phrase::generate();
+            $phrase = (new Phrase())->generate();
         }
 
 
@@ -2599,7 +2601,7 @@ Http::post('/v1/account/tokens/email')
         }
 
         if ($phrase === true) {
-            $phrase = Phrase::generate();
+            $phrase = (new Phrase())->generate();
         }
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);

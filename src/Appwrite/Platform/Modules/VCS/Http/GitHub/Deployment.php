@@ -181,7 +181,7 @@ trait Deployment
 
                     $commentStatus = $existingDeployment->getAttribute('status', 'waiting');
 
-                    if ($resource->getCollection() === 'sites') {
+                    if ($resource->getCollection() === 'sites' && !$existingDeployment->isEmpty()) {
                         $previewRule = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
                             Query::equal('projectInternalId', [$project->getSequence()]),
                             Query::equal('type', ['deployment']), // Not redirect
