@@ -19,7 +19,10 @@ import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  getActiveProfileId,
+} from '@/lib/console-profiles'
 import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
 import { SERVERLESS_DATABASE_SPEC_ID, isServerlessDatabaseSpecId } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
@@ -71,6 +74,14 @@ import {
 } from './constants'
 
 const MERGED_DATABASE_LIST_LIMIT = 500
+
+/**
+ * Cloud exposes `console.listDatabases` (unified list across products).
+ * Self-hosted does not have that endpoint; use TablesDB `list` instead.
+ */
+function hasConsoleUnifiedDatabaseList(): boolean {
+  return getActiveProfileId() !== 'self-hosted'
+}
 
 /**
  * DocumentsDB/VectorsDB endpoints only exist on deployments with the matching
@@ -806,7 +817,8 @@ export async function fetchProjectProductDatabases(
 /**
  * Fetch paginated databases via the Console unified list API
  * (`projectSdk.console.listDatabases`), which returns every database across
- * product APIs in a single call.
+ * product APIs in a single call. Self-hosted has no console/databases
+ * endpoint, so the TablesDB list is used instead.
  */
 export async function fetchProjectConsoleDatabases(
   projectId: string,
@@ -817,6 +829,17 @@ export async function fetchProjectConsoleDatabases(
 ) {
   if (!projectId) {
     return { databases: [], total: 0 }
+  }
+
+  if (!hasConsoleUnifiedDatabaseList()) {
+    return fetchProjectProductDatabases(
+      projectId,
+      DatabaseType.Tablesdb,
+      page,
+      limit,
+      search,
+      filterQueries,
+    )
   }
 
   const projectSdk = sdk.forProject(projectId)
@@ -4080,8 +4103,8 @@ export function productDatabasesQueryOptions(
 }
 
 /**
- * Query options for the Console unified database list
- * (`projectSdk.console.listDatabases`).
+ * Query options for the unified database list. Cloud uses
+ * `projectSdk.console.listDatabases`; self-hosted uses TablesDB `list`.
  */
 export function consoleDatabasesQueryOptions(
   projectId: string | null | undefined,
@@ -4672,7 +4695,8 @@ export function useProjectProductDatabases(
 }
 
 /**
- * Hook to fetch the Console unified database list for a project.
+ * Hook to fetch the unified database list for a project (console.listDatabases
+ * on cloud, TablesDB list on self-hosted).
  */
 export function useProjectConsoleDatabases(
   projectId: string | null | undefined,

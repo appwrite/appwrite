@@ -87,10 +87,9 @@ function isDedicatedDbFeatureEnabled(
   dbKind: DatabaseRouteKind | undefined,
   features: ReturnType<typeof useConsoleProfile>['features'],
 ): boolean {
-  if (!dbKind) return true
   if (dbKind === 'documentsdb') return features.dedicatedDbsDocumentsDB
   if (dbKind === 'vectorsdb') return features.dedicatedDbsVectorsDB
-  return true
+  return features.dedicatedDbsSupport
 }
 
 export function DatabaseSidebarComputeSpec({
