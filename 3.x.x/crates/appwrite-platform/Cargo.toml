@@ -26,7 +26,7 @@ utopia-http = { workspace = true }
 utopia-di = { workspace = true }
 utopia-validators = { workspace = true }
 utopia-database = { workspace = true, features = ["postgres", "mysql", "mongo"] }
-utopia-cache = { workspace = true }
+utopia-cache = { workspace = true, features = ["redis"] }
 utopia-auth = { workspace = true }
 utopia-emails = { workspace = true }
 utopia-servers = { workspace = true }

@@ -100,7 +100,8 @@ pub fn create() -> Action {
                 _ => return Err(Exception::new(Exception::GENERAL_ARGUMENT_INVALID)),
             }
 
-            base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
+            let user =
+                base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
             let resolved_id = appwrite_database::resolve_id(&target_id);
             let existing = db
@@ -116,6 +117,7 @@ pub fn create() -> Action {
                 "providerId": if provider_id.is_empty() { Value::Null } else { json!(provider_id) },
                 "providerType": provider_type,
                 "userId": user_id,
+                "userInternalId": base::sequence_of(&user),
                 "identifier": identifier,
                 "name": if name.is_empty() { Value::Null } else { json!(name) },
                 "expired": false,
@@ -123,6 +125,7 @@ pub fn create() -> Action {
             let created = db
                 .create_document("targets", document_from_json(target_json))
                 .map_err(base::db_error)?;
+            base::purge_user(&mut db, &user_id);
 
             Ok(document_to_json(&created))
         })();
@@ -317,6 +320,7 @@ pub fn update() -> Action {
                     document_from_json(Value::Object(fields)),
                 )
                 .map_err(base::db_error)?;
+            base::purge_user(&mut db, &user_id);
             Ok(document_to_json(&updated))
         })();
         base::finish(&ctx, 200, appwrite_response::MODEL_TARGET, result)
@@ -362,6 +366,7 @@ pub fn delete() -> Action {
 
             db.delete_document("targets", &target_id)
                 .map_err(base::db_error)?;
+            base::purge_user(&mut db, &user_id);
 
             let message = DeleteMessage::new(appwrite_event::DELETE_TYPE_TARGET)
                 .with_document(document_to_json(&target));

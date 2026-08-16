@@ -91,6 +91,7 @@ pub fn create() -> Action {
             let created = db
                 .create_document("sessions", document_from_json(session_json))
                 .map_err(base::db_error)?;
+            base::purge_user(&mut db, &user_id);
 
             // PHP returns the Store-encoded `{id, secret}` pair, not the raw
             // token: `x-appwrite-session` / the session cookie carry that
@@ -200,6 +201,7 @@ pub fn delete() -> Action {
             }
             db.delete_document("sessions", &session_id)
                 .map_err(base::db_error)?;
+            base::purge_user(&mut db, &user_id);
             Ok(())
         })();
         base::finish_no_content(&ctx, result)
@@ -301,6 +303,7 @@ pub fn create_token() -> Action {
             let created = db
                 .create_document("tokens", document_from_json(token_json))
                 .map_err(base::db_error)?;
+            base::purge_user(&mut db, &user_id);
             let mut token_out = document_to_json(&created);
             token_out["secret"] = json!(secret);
             Ok(token_out)

@@ -169,14 +169,14 @@ pub fn update_email() -> Action {
             let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
             let user_id = base::param_str(&ctx, "userId")?;
             let email = base::param_str(&ctx, "email")?.to_lowercase();
-            let user = base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
+            let user =
+                base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
             if !email.is_empty() {
                 // PHP checks unconditionally (not scoped to this user), so an
                 // update to an email already used by *any* target -- including
                 // this user's own current target -- fails the same way.
-                if base::find_one(&mut db, "identities", "providerEmail", email.as_str())?
-                    .is_some()
+                if base::find_one(&mut db, "identities", "providerEmail", email.as_str())?.is_some()
                 {
                     return Err(Exception::new(Exception::USER_EMAIL_ALREADY_EXISTS));
                 }
@@ -214,6 +214,7 @@ pub fn update_email() -> Action {
                 }
                 None => {}
             }
+            base::purge_user(&mut db, &user_id);
 
             let final_user =
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
@@ -301,6 +302,7 @@ pub fn update_phone() -> Action {
                 }
                 None => {}
             }
+            base::purge_user(&mut db, &user_id);
 
             let final_user =
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
@@ -373,6 +375,7 @@ pub fn update_password() -> Action {
             if auths_flag(&project, "invalidateSessions") {
                 base::delete_user_sessions(&mut db, &user_id)?;
             }
+            base::purge_user(&mut db, &user_id);
 
             Ok(updated)
         })();

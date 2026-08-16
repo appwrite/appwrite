@@ -543,8 +543,19 @@ pub fn create_user(
         targets.push(create_target(db, &created, "sms", phone)?);
     }
     user_json["targets"] = Value::Array(targets);
+    purge_user(db, &created.get_id());
 
     Ok(user_json)
+}
+
+/// PHP `$dbForProject->purgeCachedDocument('users', $user->getId())`.
+///
+/// Writing a session, target or token leaves the user document's cached
+/// relationships stale, and that cache is shared with the PHP server, so the
+/// handlers that write one purge the other. Failures are ignored for the same
+/// reason PHP's is not checked: a cold cache is correct, just slower.
+pub fn purge_user(db: &mut crate::state::ProjectDb, user_id: &str) {
+    let _ = db.purge_cached_document("users", user_id);
 }
 
 /// PHP's `foreach ($sessions as $session) { $dbForProject->deleteDocument(
@@ -568,6 +579,7 @@ pub fn delete_user_sessions(
         db.delete_document("sessions", &session.get_id())
             .map_err(db_error)?;
     }
+    purge_user(db, user_id);
     Ok(())
 }
 
