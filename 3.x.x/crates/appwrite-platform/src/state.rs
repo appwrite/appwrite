@@ -105,8 +105,10 @@ pub struct AppwriteState {
     pub audits: Arc<dyn AuditPublisher>,
     pub passwords_dictionary: Arc<Vec<String>>,
     /// Live `dbForPlatform` when [`AppwriteState::connect_from_env`] connected
-    /// successfully; `None` in Memory mode.
-    platform: Option<Mutex<ProjectDb>>,
+    /// successfully; `None` in Memory mode. Pooled the same way `dbForProject`
+    /// is -- the console project's requests (Console UI, admin-mode API
+    /// keys) no longer serialize behind one shared `dbForPlatform` socket.
+    platform: Option<ProjectDatabase>,
 }
 
 impl std::fmt::Debug for AppwriteState {
@@ -184,12 +186,14 @@ impl AppwriteState {
             return (Self::default(), AdapterKind::Memory.as_str());
         };
 
-        match crate::db::new_platform_database(&config) {
+        let pool_size = crate::db::pool_size_from_env();
+        let pool_timeout = crate::db::pool_timeout_from_env();
+        match crate::db::new_platform_database_pool(&config, pool_size, pool_timeout) {
             Ok(platform_db) => {
                 let name = kind.as_str();
                 let state = Self {
-                    databases: DatabasePool::live(config),
-                    platform: Some(Mutex::new(platform_db)),
+                    databases: DatabasePool::live_with_pool(config, pool_size, pool_timeout),
+                    platform: Some(platform_db),
                     ..Self::default()
                 };
                 (state, name)
@@ -231,7 +235,7 @@ impl AppwriteState {
         let Some(platform) = &self.platform else {
             return self.projects.get(project_id);
         };
-        let mut db = platform.lock().unwrap_or_else(|e| e.into_inner());
+        let mut db = platform.lock();
         let project = db.get_document("projects", project_id, &[], false).ok()?;
         if project.is_empty() {
             return None;
@@ -259,7 +263,7 @@ impl AppwriteState {
     /// PHP `inject('dbForPlatform')`. `None` in Memory mode, where there is
     /// no separate platform database to consult.
     #[must_use]
-    pub fn platform_db(&self) -> Option<&Mutex<ProjectDb>> {
+    pub fn platform_db(&self) -> Option<&ProjectDatabase> {
         self.platform.as_ref()
     }
 
@@ -418,7 +422,7 @@ mod postgres_wiring_tests {
             .databases
             .get_or_create(&project_id, Some(&resolved_sequence))
             .expect("dbForProject should connect");
-        let mut db_project = db_project.lock().unwrap();
+        let mut db_project = db_project.lock();
         let _ = db_project.create(None);
         let _ = db_project.create_collection(
             "users",

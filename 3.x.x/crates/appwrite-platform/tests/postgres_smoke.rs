@@ -84,7 +84,7 @@ fn resolves_a_real_php_created_project_and_its_keys() {
         .databases
         .get_or_create(&project_id, Some(&sequence))
         .expect("dbForProject should connect using the project's namespace");
-    let mut db = db.lock().unwrap();
+    let mut db = db.lock();
     let users = db
         .find("users", &[], "read")
         .expect("users collection should already exist (PHP provisions it on project create)");

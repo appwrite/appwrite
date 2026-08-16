@@ -206,9 +206,9 @@ pub fn resolve(
     let is_admin = mode == MODE_ADMIN || project_id == CONSOLE;
     let platform = if is_admin { state.platform_db() } else { None };
     let mut guard = match &platform {
-        Some(platform) => platform.lock().unwrap_or_else(|error| error.into_inner()),
+        Some(platform) => platform.lock(),
         None if is_admin => return None,
-        None => project_db.lock().unwrap_or_else(|error| error.into_inner()),
+        None => project_db.lock(),
     };
     let db = &mut *guard;
 

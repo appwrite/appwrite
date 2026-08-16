@@ -18,6 +18,7 @@ use utopia_database::adapter::postgres::Postgres;
 pub use utopia_database::adapter::Memory;
 use utopia_database::helpers::{Permission, Role};
 use utopia_database::{Database, DatabaseError, Document, Query};
+use utopia_pools::{BoxError, Connection, Pool, PoolError, Recover, RecoverCall, ResourceGuard, Swoole};
 
 use crate::state::{COLLECTIONS, PLATFORM_NAMESPACE};
 
@@ -253,16 +254,250 @@ impl ProjectDb {
             db.create_collection(id, attributes, indexes, permissions, document_security)
         })
     }
+
+    /// `Database::ping` across every adapter variant -- the health probe
+    /// [`Recover`] uses to decide whether a checked-out connection is still
+    /// good before it goes back to the pool.
+    pub fn ping(&mut self) -> bool {
+        with_db!(self, db => db.ping())
+    }
 }
 
-/// Shared `dbForProject` handle.
-pub type ProjectDatabase = Arc<Mutex<ProjectDb>>;
+/// PHP pooled resources implement `reset()`/`reconnect()`; the SQL/Mongo
+/// adapters behind [`ProjectDb`] only expose a `ping()` probe (there is no
+/// "drop and open a new socket in place" primitive at this layer), so both
+/// hooks reduce to it. A failed ping destroys the connection instead of
+/// handing it to the next checkout, matching what a real `reconnect()`
+/// failure would do.
+impl Recover for ProjectDb {
+    fn reset(&mut self) -> RecoverCall {
+        if self.ping() {
+            RecoverCall::Succeeded
+        } else {
+            RecoverCall::Failed
+        }
+    }
+
+    fn reconnect(&mut self) -> RecoverCall {
+        if self.ping() {
+            RecoverCall::Succeeded
+        } else {
+            RecoverCall::Failed
+        }
+    }
+}
+
+/// PHP `Utopia\Pools\Pool` sizing (`app/init/registers.php`): connection
+/// budget divided across workers, floored by the coroutine/concurrency
+/// count. PHP's "worker" is one of many Swoole *processes*, each often
+/// ending up with a size-1 pool because concurrency within a worker comes
+/// from coroutines sharing that one process's slice of the budget. This
+/// server is a single multi-threaded process handling every request
+/// (`std::thread::available_parallelism` stands in for the worker count),
+/// so reproducing PHP's occasional size-1 result would reintroduce the
+/// single-connection bottleneck this module exists to fix. Clamping to
+/// `[2, 32]` keeps a real floor under that math while still respecting an
+/// operator's `_APP_CONNECTIONS_MAX` / `_APP_POOL_CLIENTS` budget.
+#[must_use]
+pub fn pool_size_from_env() -> usize {
+    compute_pool_size(
+        env_usize("_APP_CONNECTIONS_MAX", 151),
+        env_usize("_APP_POOL_CLIENTS", 14),
+        std::thread::available_parallelism()
+            .map(std::num::NonZeroUsize::get)
+            .unwrap_or(4),
+        env_usize("_APP_WORKER_MAX_COROUTINES", 4),
+    )
+}
+
+fn compute_pool_size(max_connections: usize, pool_clients: usize, workers: usize, coroutines: usize) -> usize {
+    let instance_connections = max_connections / pool_clients.max(1);
+    let size = instance_connections / workers.max(1);
+    size.max(coroutines).clamp(2, 32)
+}
+
+/// PHP `_APP_CONNECTIONS_TIMEOUT`: seconds a `Pool::pop()` waits for an idle
+/// connection before raising.
+#[must_use]
+pub fn pool_timeout_from_env() -> f64 {
+    std::env::var("_APP_CONNECTIONS_TIMEOUT")
+        .ok()
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(10.0)
+}
+
+fn env_usize(name: &str, default: usize) -> usize {
+    std::env::var(name)
+        .ok()
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(default)
+}
+
+/// Shared `dbForProject` / `dbForPlatform` handle.
+///
+/// Live adapters (Postgres/MySQL/MariaDB/Mongo) are backed by a real
+/// [`utopia_pools::Pool`] of independent connections: every [`lock`](Self::lock)
+/// checks a connection **out** of the pool instead of contending for one
+/// shared mutex, so concurrent requests against the same project no longer
+/// serialize behind each other's I/O.
+///
+/// Memory mode keeps a single shared connection: a `Pool<Memory>` of size >1
+/// would be N independent, out-of-sync in-process stores instead of one
+/// logical database, and the in-process adapter has no I/O latency to hide
+/// behind pooling anyway.
+#[derive(Clone)]
+pub struct ProjectDatabase {
+    inner: ProjectDatabaseInner,
+}
+
+#[derive(Clone)]
+enum ProjectDatabaseInner {
+    Memory(Arc<Mutex<ProjectDb>>),
+    Pooled(Arc<Pool<ProjectDb>>),
+}
+
+impl std::fmt::Debug for ProjectDatabase {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.inner {
+            ProjectDatabaseInner::Memory(_) => f.write_str("ProjectDatabase(memory)"),
+            ProjectDatabaseInner::Pooled(pool) => f
+                .debug_struct("ProjectDatabase")
+                .field("pool_size", &pool.size())
+                .field("idle", &pool.count())
+                .finish(),
+        }
+    }
+}
+
+impl ProjectDatabase {
+    fn memory(db: ProjectDb) -> Self {
+        Self {
+            inner: ProjectDatabaseInner::Memory(Arc::new(Mutex::new(db))),
+        }
+    }
+
+    fn pooled(pool: Pool<ProjectDb>) -> Self {
+        Self {
+            inner: ProjectDatabaseInner::Pooled(Arc::new(pool)),
+        }
+    }
+
+    /// Check a connection out for the duration of the returned guard.
+    /// Existing call sites keep `let mut db = db_handle.lock();` and now get
+    /// an exclusively-owned connection instead of contending for one shared
+    /// mutex; dropping the guard returns the connection to the pool.
+    ///
+    /// Panics if a live pool cannot hand back a connection within
+    /// `_APP_CONNECTIONS_TIMEOUT` (default 10s) -- the same "no capacity"
+    /// failure PHP's `Pool::pop()` raises as an uncaught exception under
+    /// sustained overload, surfaced here as a failed request rather than a
+    /// JSON error body (see `3.x.x/AGENTS.md`).
+    #[must_use]
+    pub fn lock(&self) -> ProjectDbGuard<'_> {
+        match &self.inner {
+            ProjectDatabaseInner::Memory(mutex) => {
+                ProjectDbGuard::Memory(mutex.lock().unwrap_or_else(std::sync::PoisonError::into_inner))
+            }
+            ProjectDatabaseInner::Pooled(pool) => {
+                let connection = pop_sync(pool)
+                    .unwrap_or_else(|err| panic!("dbForProject pool exhausted: {err}"));
+                let resource = connection.resource_owned();
+                ProjectDbGuard::Pooled {
+                    connection,
+                    resource: Some(resource),
+                }
+            }
+        }
+    }
+}
+
+/// PHP `Pool::pop()`, blocking for sync callers.
+///
+/// On a multi-thread Tokio runtime (`apps/server`'s), `block_in_place` hands
+/// the worker thread back to the scheduler for the checkout's duration.
+/// Without an ambient runtime (`AppwriteState::connect_from_env` warming a
+/// pool up before `main` ever enters one, plain `#[test]`s, CLI-style call
+/// sites), a throwaway runtime drives `pool.pop()` instead - and that
+/// runtime must itself be multi-thread, not current-thread like
+/// [`utopia_pools::Pool::use_sync`]'s fallback: the pool's `init` closure
+/// opens a live SQL connection, which calls `postgres`/`mysql`'s own
+/// `block_in_place` wrapper (`sql_client.rs`), and `block_in_place` panics
+/// outright on a current-thread runtime.
+fn pop_sync(pool: &Pool<ProjectDb>) -> Result<Connection<ProjectDb>, PoolError> {
+    match tokio::runtime::Handle::try_current() {
+        Ok(handle) => tokio::task::block_in_place(move || handle.block_on(pool.pop())),
+        Err(_) => tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(1)
+            .enable_all()
+            .build()
+            .expect("blocking pool runtime")
+            .block_on(pool.pop()),
+    }
+}
+
+/// [`ProjectDatabase::lock`]'s guard: `Deref`/`DerefMut`s to [`ProjectDb`]
+/// exactly like the `Arc<Mutex<ProjectDb>>` guard it replaces. Dropping a
+/// `Pooled` guard returns the connection to the pool; callers never call
+/// `reclaim()` themselves.
+pub enum ProjectDbGuard<'a> {
+    Memory(std::sync::MutexGuard<'a, ProjectDb>),
+    Pooled {
+        connection: Connection<ProjectDb>,
+        /// `Some` until `Drop`, which takes it so the resource unlocks
+        /// *before* the connection is reclaimed -- a racing `pop()` must
+        /// not block on us finishing our own teardown.
+        resource: Option<ResourceGuard<ProjectDb>>,
+    },
+}
+
+impl std::fmt::Debug for ProjectDbGuard<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Memory(_) => f.write_str("ProjectDbGuard::Memory"),
+            Self::Pooled { .. } => f.write_str("ProjectDbGuard::Pooled"),
+        }
+    }
+}
+
+impl std::ops::Deref for ProjectDbGuard<'_> {
+    type Target = ProjectDb;
+    fn deref(&self) -> &ProjectDb {
+        match self {
+            Self::Memory(guard) => guard,
+            Self::Pooled { resource, .. } => {
+                resource.as_ref().expect("resource present until Drop")
+            }
+        }
+    }
+}
+
+impl std::ops::DerefMut for ProjectDbGuard<'_> {
+    fn deref_mut(&mut self) -> &mut ProjectDb {
+        match self {
+            Self::Memory(guard) => guard,
+            Self::Pooled { resource, .. } => {
+                resource.as_mut().expect("resource present until Drop")
+            }
+        }
+    }
+}
+
+impl Drop for ProjectDbGuard<'_> {
+    fn drop(&mut self) {
+        if let Self::Pooled { connection, resource } = self {
+            drop(resource.take());
+            connection.reclaim();
+        }
+    }
+}
 
 /// Per-project `dbForProject` pool.
 #[derive(Default)]
 pub struct DatabasePool {
     projects: Mutex<HashMap<String, ProjectDatabase>>,
     live: Option<DatabaseConfig>,
+    pool_size: usize,
+    pool_timeout: f64,
 }
 
 impl std::fmt::Debug for DatabasePool {
@@ -273,6 +508,8 @@ impl std::fmt::Debug for DatabasePool {
                 &self.projects.lock().map(|p| p.len()).unwrap_or_default(),
             )
             .field("live", &self.live.as_ref().map(|c| c.kind.as_str()))
+            .field("pool_size", &self.pool_size)
+            .field("pool_timeout", &self.pool_timeout)
             .finish()
     }
 }
@@ -283,11 +520,23 @@ impl DatabasePool {
         Self::default()
     }
 
+    /// Pool size/timeout from `_APP_CONNECTIONS_MAX` / `_APP_POOL_CLIENTS` /
+    /// `_APP_WORKER_MAX_COROUTINES` / `_APP_CONNECTIONS_TIMEOUT`. Use
+    /// [`DatabasePool::live_with_pool`] to pin an explicit size (tests).
     #[must_use]
     pub fn live(config: DatabaseConfig) -> Self {
+        Self::live_with_pool(config, pool_size_from_env(), pool_timeout_from_env())
+    }
+
+    /// [`DatabasePool::live`] with an explicit pool size/timeout instead of
+    /// reading them from the environment.
+    #[must_use]
+    pub fn live_with_pool(config: DatabaseConfig, pool_size: usize, pool_timeout: f64) -> Self {
         Self {
             projects: Mutex::default(),
             live: Some(config),
+            pool_size: pool_size.max(1),
+            pool_timeout,
         }
     }
 
@@ -295,6 +544,13 @@ impl DatabasePool {
     #[must_use]
     pub fn postgres(config: DatabaseConfig) -> Self {
         Self::live(config)
+    }
+
+    /// The connection pool size live-adapter projects/`dbForPlatform` use
+    /// (`apps/server` logs this at boot).
+    #[must_use]
+    pub fn pool_size(&self) -> usize {
+        self.pool_size
     }
 
     pub fn get_or_create(
@@ -311,11 +567,11 @@ impl DatabasePool {
                 let sequence = sequence.ok_or_else(|| {
                     DatabaseError::database("project sequence required to open a live dbForProject")
                 })?;
-                Arc::new(Mutex::new(new_project_database_live(config, sequence)?))
+                new_project_database_pool(config, project_id, sequence, self.pool_size, self.pool_timeout)?
             }
-            None => Arc::new(Mutex::new(ProjectDb::Memory(new_memory_project_database(
+            None => ProjectDatabase::memory(ProjectDb::Memory(new_memory_project_database(
                 project_id,
-            )))),
+            ))),
         };
         projects.insert(project_id.to_string(), db.clone());
         Ok(db)
@@ -409,6 +665,69 @@ fn new_project_database_live(
 /// `dbForPlatform`: namespace `_console`.
 pub fn new_platform_database(config: &DatabaseConfig) -> Result<ProjectDb, DatabaseError> {
     open_database(config, PLATFORM_NAMESPACE)
+}
+
+/// Build the size-`pool_size` [`Pool`] behind a live `dbForProject`, one
+/// independent connection per slot (`init` reruns `new_project_database_live`
+/// for every connection the pool opens, not once).
+fn new_project_database_pool(
+    config: &DatabaseConfig,
+    project_id: &str,
+    sequence: &str,
+    pool_size: usize,
+    pool_timeout: f64,
+) -> Result<ProjectDatabase, DatabaseError> {
+    let init_config = config.clone();
+    let init_sequence = sequence.to_string();
+    let pool = Pool::try_new(
+        Swoole::new(),
+        format!("project-{project_id}"),
+        pool_size,
+        move || {
+            new_project_database_live(&init_config, &init_sequence)
+                .map_err(|err| -> BoxError { Box::new(err) })
+        },
+        pool_timeout,
+        None,
+    )
+    .map_err(|err| DatabaseError::database(format!("dbForProject pool init failed: {err}")))?;
+
+    warm_up_pool(&pool, project_id)?;
+    Ok(ProjectDatabase::pooled(pool))
+}
+
+/// Build the size-`pool_size` [`Pool`] behind `dbForPlatform`.
+pub fn new_platform_database_pool(
+    config: &DatabaseConfig,
+    pool_size: usize,
+    pool_timeout: f64,
+) -> Result<ProjectDatabase, DatabaseError> {
+    let init_config = config.clone();
+    let pool = Pool::try_new(
+        Swoole::new(),
+        "console",
+        pool_size,
+        move || new_platform_database(&init_config).map_err(|err| -> BoxError { Box::new(err) }),
+        pool_timeout,
+        None,
+    )
+    .map_err(|err| DatabaseError::database(format!("dbForPlatform pool init failed: {err}")))?;
+
+    warm_up_pool(&pool, "console")?;
+    Ok(ProjectDatabase::pooled(pool))
+}
+
+/// Eagerly pop-and-reclaim one connection right after construction so an
+/// unreachable database fails loudly at boot / first `get_or_create`
+/// instead of on some later request's first checkout. `Pool::try_new` only
+/// validates `size`/`timeout`; the `init` closure that actually opens a
+/// socket does not run until the first `pop()`.
+fn warm_up_pool(pool: &Pool<ProjectDb>, name: &str) -> Result<(), DatabaseError> {
+    let connection = pop_sync(pool).map_err(|err| {
+        DatabaseError::database(format!("dbForProject pool warm-up failed for {name}: {err}"))
+    })?;
+    connection.reclaim();
+    Ok(())
 }
 
 fn open_database(config: &DatabaseConfig, namespace: &str) -> Result<ProjectDb, DatabaseError> {

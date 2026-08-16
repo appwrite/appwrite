@@ -199,6 +199,7 @@ dependencies = [
  "utopia-emails",
  "utopia-http",
  "utopia-platform",
+ "utopia-pools",
  "utopia-servers",
  "utopia-validators",
 ]
