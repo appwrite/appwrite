@@ -19,9 +19,11 @@ use utopia_di::{Container, Resource};
 use utopia_platform::{Module, Platform};
 use utopia_validators::Validator;
 
+pub mod db;
 pub mod modules;
 pub mod state;
 
+pub use db::{AdapterKind, DatabaseConfig};
 pub use state::AppwriteState;
 
 /// Appwrite platform facade.

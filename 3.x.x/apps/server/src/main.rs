@@ -16,11 +16,10 @@ use utopia_http::prelude::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Mirrors PHP's `_APP_DB_ADAPTER`-driven `Appwrite\Database\Factory`:
-    // connects to the same Postgres PHP Appwrite runs against when
-    // `_APP_DB_ADAPTER=postgresql`/`postgres`, falling back to the
-    // in-memory `dbForPlatform`/`dbForProject` stand-in (task 4) when the
-    // adapter is `memory`/unset or the connection attempt fails.
+    // Mirrors PHP's `_APP_DB_ADAPTER`-driven adapter choice
+    // (`postgresql` / `mysql` / `mariadb` / `mongodb`), falling back to the
+    // in-memory `dbForPlatform`/`dbForProject` stand-in when the adapter is
+    // `memory`/unset, the matching Cargo feature is missing, or connect fails.
     let (state, adapter) = AppwriteState::connect_from_env();
     println!("appwrite-server: dbForPlatform/dbForProject adapter = {adapter}");
     let state = Arc::new(state);
@@ -29,8 +28,8 @@ async fn main() -> Result<()> {
     // `standard` key scoped to `users.read`/`users.write` so `apps/server`
     // (or a test) can exercise `/v1/users*` without a real platform
     // database. Only takes effect when the Memory path above is active
-    // (see `AppwriteState::seed_dev_project`); Postgres mode resolves
-    // projects/keys from the live platform connection instead.
+    // (see `AppwriteState::seed_dev_project`); live adapters resolve
+    // projects/keys from the platform connection instead.
     // `_APP_RUST_SEED_PROJECT`/`_APP_RUST_SEED_KEY` override the defaults.
     if adapter == "memory" && std::env::var("_APP_RUST_SEED").as_deref() == Ok("1") {
         let project_id =

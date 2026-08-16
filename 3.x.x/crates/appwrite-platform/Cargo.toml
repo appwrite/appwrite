@@ -12,9 +12,11 @@ keywords = ["appwrite", "platform"]
 categories = ["web-programming"]
 
 [features]
-default = ["memory", "postgres"]
+default = ["memory", "postgres", "mysql", "mongo"]
 memory = []
 postgres = ["utopia-database/postgres"]
+mysql = ["utopia-database/mysql"]
+mongo = ["utopia-database/mongo"]
 
 [dependencies]
 serde = { workspace = true }
@@ -23,7 +25,7 @@ utopia-platform = { workspace = true, features = ["http"] }
 utopia-http = { workspace = true }
 utopia-di = { workspace = true }
 utopia-validators = { workspace = true }
-utopia-database = { workspace = true, features = ["postgres"] }
+utopia-database = { workspace = true, features = ["postgres", "mysql", "mongo"] }
 utopia-cache = { workspace = true }
 utopia-auth = { workspace = true }
 utopia-servers = { workspace = true }

@@ -26,6 +26,20 @@ Naming makes ownership obvious: `cargo test -p utopia-http` vs `cargo test -p ap
 | `appwrite-database` | `CustomId`, encrypt filter, query helpers |
 | `appwrite-platform` | Shared `api` hooks + Users HTTP module |
 
+## Database adapters
+
+`apps/server` follows PHP's `_APP_DB_ADAPTER` (see `app/init/registers.php`):
+
+| `_APP_DB_ADAPTER` | Rust adapter | Default port |
+|-------------------|--------------|--------------|
+| `postgresql` / `postgres` | `utopia-database` Postgres | 5432 |
+| `mysql` | MySQL | 3306 |
+| `mariadb` | MariaDB | 3306 |
+| `mongodb` / `mongo` | MongoDB | 27017 |
+| `memory` / unset / connect failure | in-process Memory | — |
+
+Shared env with PHP: `_APP_DB_HOST`, `_APP_DB_PORT`, `_APP_DB_USER`, `_APP_DB_PASS`, `_APP_DB_SCHEMA`, `_APP_OPENSSL_KEY_V1`.
+
 ## Build and test
 
 From this directory (`3.x.x/`):
