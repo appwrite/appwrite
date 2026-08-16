@@ -14,6 +14,9 @@ categories = ["internationalization"]
 [dependencies]
 serde = { workspace = true }
 
+[dev-dependencies]
+serde_json = { workspace = true }
+
 [[bench]]
 name = "smoke"
 harness = false

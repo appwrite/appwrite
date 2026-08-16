@@ -6,7 +6,7 @@ use utopia_http::prelude::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let _platform = appwrite_platform::stub();
+    let _platform = appwrite_platform::AppwritePlatform::new();
     let _ = utopia_platform::Module::new();
 
     let bind = std::env::var("APPWRITE_BIND").unwrap_or_else(|_| "0.0.0.0:80".into());

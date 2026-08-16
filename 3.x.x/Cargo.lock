@@ -96,6 +96,8 @@ name = "appwrite-auth"
 version = "0.1.0"
 dependencies = [
  "appwrite-exception",
+ "chrono",
+ "serde_json",
  "utopia-auth",
  "utopia-validators",
 ]
@@ -105,6 +107,7 @@ name = "appwrite-database"
 version = "0.1.0"
 dependencies = [
  "appwrite-exception",
+ "serde_json",
  "utopia-database",
  "utopia-validators",
 ]
@@ -122,18 +125,23 @@ dependencies = [
 name = "appwrite-exception"
 version = "0.1.0"
 dependencies = [
- "thiserror 2.0.20",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
 name = "appwrite-hooks"
 version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
 
 [[package]]
 name = "appwrite-locale"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -147,9 +155,11 @@ dependencies = [
  "appwrite-hooks",
  "appwrite-locale",
  "appwrite-response",
+ "serde_json",
  "utopia-di",
  "utopia-http",
  "utopia-platform",
+ "utopia-validators",
 ]
 
 [[package]]

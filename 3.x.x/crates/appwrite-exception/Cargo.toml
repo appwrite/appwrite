@@ -12,7 +12,8 @@ keywords = ["appwrite", "exception", "error"]
 categories = ["rust-patterns"]
 
 [dependencies]
-thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 [[bench]]
 name = "smoke"

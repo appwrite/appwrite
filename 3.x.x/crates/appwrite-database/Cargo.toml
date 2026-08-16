@@ -12,6 +12,7 @@ keywords = ["appwrite", "database"]
 categories = ["database"]
 
 [dependencies]
+serde_json = { workspace = true }
 utopia-validators = { workspace = true }
 utopia-database = { workspace = true }
 appwrite-exception = { workspace = true }

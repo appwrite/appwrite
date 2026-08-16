@@ -1,23 +1,60 @@
-//! Appwrite platform composition layer (stub).
+//! Appwrite platform composition layer.
+//!
+//! Wires together the Users-API foundation crates (`appwrite-exception`,
+//! `appwrite-hooks`, `appwrite-locale`, `appwrite-auth`, `appwrite-event`,
+//! `appwrite-response`, `appwrite-database`) on top of `utopia-platform`'s
+//! `Module`/DI composition, mirroring how `app/init.php` wires
+//! `Appwrite\*` services (`$hooks`, `$publisherForDeletes`,
+//! `$publisherForAudits`, ...) into the Utopia `App`/`Platform` at boot.
 
+use appwrite_auth::Password;
+use appwrite_event::{
+    AuditPublisher, DeletePublisher, MemoryAuditPublisher, MemoryDeletePublisher,
+};
 use appwrite_exception::Exception;
+use appwrite_hooks::Hooks;
 use utopia_di::Container;
 use utopia_platform::{Module, Platform};
+use utopia_validators::Validator;
 
 /// Appwrite platform facade.
-#[derive(Debug)]
 pub struct AppwritePlatform {
     inner: Platform,
     di: Container,
+    hooks: Hooks,
+    deletes: MemoryDeletePublisher,
+    audits: MemoryAuditPublisher,
+}
+
+impl std::fmt::Debug for AppwritePlatform {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AppwritePlatform")
+            .field("platform", &self.inner)
+            .field("hooks", &self.hooks)
+            .finish_non_exhaustive()
+    }
 }
 
 impl AppwritePlatform {
-    /// Create an empty platform with a root DI container.
+    /// Create an empty platform with a root DI container, delete/audit
+    /// queue publishers, and the default `passwordValidator` hook
+    /// registered -- mirroring `app/init.php`'s baseline `Hooks::add()`
+    /// call before project-specific policy (strength/dictionary/history)
+    /// is layered on top.
     #[must_use]
     pub fn new() -> Self {
+        let mut hooks = Hooks::new();
+        hooks.add(appwrite_hooks::PASSWORD_VALIDATOR, |params| {
+            let password = params.first().and_then(|v| v.as_str()).unwrap_or_default();
+            serde_json::json!(Password::new(false).is_valid(&serde_json::json!(password)))
+        });
+
         Self {
             inner: Platform::new(Module::new()),
             di: Container::new(),
+            hooks,
+            deletes: MemoryDeletePublisher::new(),
+            audits: MemoryAuditPublisher::new(),
         }
     }
 
@@ -33,14 +70,48 @@ impl AppwritePlatform {
         &self.di
     }
 
-    /// Stub readiness check that touches sibling appwrite crates.
+    /// Access the hook registry (e.g. `appwrite_hooks::PASSWORD_VALIDATOR`).
+    #[must_use]
+    pub fn hooks(&self) -> &Hooks {
+        &self.hooks
+    }
+
+    /// Mutable access to the hook registry, for registering project-level
+    /// validators at boot.
+    #[must_use]
+    pub fn hooks_mut(&mut self) -> &mut Hooks {
+        &mut self.hooks
+    }
+
+    /// The `v1-deletes` queue publisher. In-memory for now; `apps/server`
+    /// wires a Redis-backed `DeletePublisher` in its place.
+    #[must_use]
+    pub fn deletes(&self) -> &MemoryDeletePublisher {
+        &self.deletes
+    }
+
+    /// The `v1-audits` queue publisher. In-memory for now; `apps/server`
+    /// wires a Redis-backed `AuditPublisher` in its place.
+    #[must_use]
+    pub fn audits(&self) -> &MemoryAuditPublisher {
+        &self.audits
+    }
+
+    /// Readiness check that touches every foundation crate this platform
+    /// composes: the hook registry, the delete/audit publishers, the
+    /// response model catalog, the database `unique()` sentinel, and the
+    /// `utopia-http` mode constant it will boot with.
     pub fn ensure_ready(&self) -> Result<(), Exception> {
-        let _ = appwrite_hooks::stub();
-        let _ = appwrite_locale::stub();
-        let _ = appwrite_auth::stub();
-        let _ = appwrite_event::stub();
-        let _ = appwrite_response::stub();
-        let _ = appwrite_database::stub();
+        if !self.hooks.has(appwrite_hooks::PASSWORD_VALIDATOR) {
+            return Err(Exception::with_message(
+                Exception::GENERAL_SERVER_ERROR,
+                "default password validator hook missing",
+            ));
+        }
+        let _ = self.deletes.size();
+        let _ = self.audits.size();
+        let _ = appwrite_response::MODEL_USER;
+        let _ = appwrite_database::UNIQUE_SENTINEL;
         let _ = utopia_http::Mode::Development;
         Ok(())
     }
@@ -50,10 +121,4 @@ impl Default for AppwritePlatform {
     fn default() -> Self {
         Self::new()
     }
-}
-
-/// Placeholder used by early stubs.
-#[must_use]
-pub fn stub() -> AppwritePlatform {
-    AppwritePlatform::new()
 }

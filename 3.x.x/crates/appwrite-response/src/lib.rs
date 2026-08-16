@@ -1,40 +1,35 @@
-//! Appwrite API response models (stub).
+//! Appwrite API response models.
+//!
+//! Rust port of the Users-API subset of `Appwrite\Utopia\Response` /
+//! `Appwrite\Utopia\Response\Model\*` (`src/Appwrite/Utopia/Response.php`,
+//! `src/Appwrite/Utopia/Response/Model/*.php`).
+//!
+//! ```
+//! use appwrite_response::{dynamic, MODEL_USER};
+//! use serde_json::json;
+//!
+//! let doc = json!({
+//!     "$id": "u1",
+//!     "$createdAt": "2024-01-01T00:00:00.000+00:00",
+//!     "$updatedAt": "2024-01-01T00:00:00.000+00:00",
+//!     "name": "Ada",
+//!     "email": "ada@appwrite.io",
+//!     "extraInternalField": "not part of the model",
+//! });
+//!
+//! let filtered = dynamic(&doc, MODEL_USER);
+//! assert_eq!(filtered["name"], "Ada");
+//! assert!(filtered.get("extraInternalField").is_none());
+//! ```
 
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+mod dynamic;
+mod model;
 
-/// Generic JSON response model placeholder.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Model {
-    name: String,
-    data: Value,
-}
-
-impl Model {
-    /// Create a named model wrapping arbitrary JSON.
-    #[must_use]
-    pub fn new(name: impl Into<String>, data: Value) -> Self {
-        Self {
-            name: name.into(),
-            data,
-        }
-    }
-
-    /// Model name (e.g. `user`, `teamList`).
-    #[must_use]
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    /// Underlying JSON payload.
-    #[must_use]
-    pub fn data(&self) -> &Value {
-        &self.data
-    }
-}
-
-/// Placeholder used by early stubs.
-#[must_use]
-pub fn stub() -> Model {
-    Model::new("stub", serde_json::json!({}))
-}
+pub use dynamic::dynamic;
+pub use model::{list_spec, spec, ListSpec, ModelDef, ModelSpec, Rule, RuleType};
+pub use model::{
+    MODEL_ERROR, MODEL_IDENTITY, MODEL_IDENTITY_LIST, MODEL_JWT, MODEL_MEMBERSHIP,
+    MODEL_MEMBERSHIP_LIST, MODEL_MFA_CHALLENGE_SECRET, MODEL_MFA_FACTORS, MODEL_MFA_RECOVERY_CODES,
+    MODEL_NONE, MODEL_PREFERENCES, MODEL_SESSION, MODEL_SESSION_LIST, MODEL_TARGET,
+    MODEL_TARGET_LIST, MODEL_TOKEN, MODEL_USER, MODEL_USER_LIST,
+};

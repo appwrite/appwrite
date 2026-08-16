@@ -11,6 +11,9 @@ readme = "README.md"
 keywords = ["appwrite", "hooks"]
 categories = ["rust-patterns"]
 
+[dependencies]
+serde_json = { workspace = true }
+
 [[bench]]
 name = "smoke"
 harness = false

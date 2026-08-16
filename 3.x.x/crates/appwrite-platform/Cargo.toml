@@ -12,9 +12,11 @@ keywords = ["appwrite", "platform"]
 categories = ["web-programming"]
 
 [dependencies]
+serde_json = { workspace = true }
 utopia-platform = { workspace = true }
 utopia-http = { workspace = true }
 utopia-di = { workspace = true }
+utopia-validators = { workspace = true }
 appwrite-exception = { workspace = true }
 appwrite-hooks = { workspace = true }
 appwrite-locale = { workspace = true }

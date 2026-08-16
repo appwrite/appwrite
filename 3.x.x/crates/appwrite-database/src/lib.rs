@@ -1,28 +1,31 @@
-//! Appwrite database helpers (stub).
+//! Appwrite database helpers on `utopia-database`.
+//!
+//! Ports the pieces of `Appwrite\Utopia\Database\*` the Users API
+//! foundation needs: the [`CustomId`] validator
+//! (`Appwrite\Utopia\Database\Validator\CustomId`) plus the
+//! `unique()`-sentinel resolution pattern used throughout Users/Targets/
+//! Sessions creation ([`resolve_id`]), and a handful of [`queries`] helpers
+//! for the `Query::equal`/`Query::search` calls those endpoints repeat.
+//!
+//! ```
+//! use appwrite_database::{resolve_id, CustomId, UNIQUE_SENTINEL};
+//! use utopia_validators::Validator;
+//! use serde_json::json;
+//!
+//! let validator = CustomId::default();
+//! assert!(validator.is_valid(&json!(UNIQUE_SENTINEL)));
+//! assert!(validator.is_valid(&json!("my-custom-id")));
+//! assert!(!validator.is_valid(&json!(".starts-with-dot")));
+//!
+//! assert_eq!(resolve_id("my-custom-id"), "my-custom-id");
+//! assert_ne!(resolve_id(UNIQUE_SENTINEL), UNIQUE_SENTINEL);
+//! ```
 
-use appwrite_exception::Exception;
-use utopia_database::Document;
+mod custom_id;
+pub mod queries;
 
-/// Thin wrapper around utopia-database for Appwrite-specific helpers.
-#[derive(Debug, Clone, Default)]
-pub struct DatabaseService;
+pub use custom_id::{resolve_id, CustomId, UNIQUE_SENTINEL};
 
-impl DatabaseService {
-    /// Create a service placeholder.
-    #[must_use]
-    pub fn new() -> Self {
-        Self
-    }
-
-    /// Stub that constructs an empty utopia document and validates text length rules exist.
-    pub fn ping(&self) -> Result<Document, Exception> {
-        let _ = utopia_validators::Text::new(1);
-        Ok(Document::new())
-    }
-}
-
-/// Placeholder used by early stubs.
-#[must_use]
-pub fn stub() -> DatabaseService {
-    DatabaseService::new()
-}
+// Re-exported so callers building on the query helpers in `queries` don't
+// need a direct `utopia-database` dependency of their own.
+pub use utopia_database::{AttrValue, Query};

@@ -11,7 +11,14 @@ readme = "README.md"
 keywords = ["appwrite", "auth"]
 categories = ["authentication"]
 
+[features]
+default = ["argon2", "bcrypt"]
+argon2 = ["utopia-auth/argon2"]
+bcrypt = ["utopia-auth/bcrypt"]
+
 [dependencies]
+chrono = { workspace = true }
+serde_json = { workspace = true }
 utopia-auth = { workspace = true }
 utopia-validators = { workspace = true }
 appwrite-exception = { workspace = true }
