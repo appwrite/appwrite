@@ -232,7 +232,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:0.3.32
+    image: appwrite/new:0.5.5
     restart: unless-stopped
     networks:
       - appwrite
