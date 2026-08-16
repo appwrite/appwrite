@@ -20,7 +20,8 @@ path = "src/main.rs"
 utopia-http = { workspace = true }
 utopia-platform = { workspace = true }
 utopia-di = { workspace = true }
-appwrite-platform = { workspace = true }
+utopia-database = { workspace = true, features = ["postgres"] }
+appwrite-platform = { workspace = true, features = ["postgres"] }
 tokio = { workspace = true }
 serde_json = { workspace = true }
 

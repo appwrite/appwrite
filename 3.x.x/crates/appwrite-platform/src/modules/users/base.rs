@@ -22,10 +22,10 @@ use chrono::Utc;
 use serde_json::{json, Value};
 use utopia_auth::{Hash, Password};
 use utopia_database::helpers::{Permission, Role};
-use utopia_database::{AttrValue, Database, DatabaseError, Query};
+use utopia_database::{AttrValue, DatabaseError, Query};
 use utopia_http::ActionContext;
 
-use crate::state::{document_from_json, document_to_json, Memory, ProjectDatabase};
+use crate::state::{document_from_json, document_to_json, ProjectDatabase};
 
 /// Write a filtered [`appwrite_response::dynamic`] JSON body plus status
 /// code. Rust equivalent of PHP's `$response->setStatusCode(...)
@@ -130,7 +130,7 @@ fn param_error(err: utopia_http::HttpError) -> Exception {
 /// `if ($user->isEmpty()) throw USER_NOT_FOUND` guard every Users endpoint
 /// repeats.
 pub fn require_document(
-    db: &mut Database<Memory>,
+    db: &mut crate::state::ProjectDb,
     collection: &str,
     id: &str,
     not_found: &str,
@@ -149,7 +149,7 @@ pub fn require_document(
 /// property-update endpoints share once their own validation/business logic
 /// has produced the sparse `fields` update.
 pub fn update_user_fields(
-    db: &mut Database<Memory>,
+    db: &mut crate::state::ProjectDb,
     user_id: &str,
     fields: Value,
 ) -> Result<Value, Exception> {
@@ -166,7 +166,7 @@ pub fn update_user_fields(
 /// directly by `userId` + `identifier` rather than scanning an
 /// already-populated in-memory array.
 pub fn find_target_by_identifier(
-    db: &mut Database<Memory>,
+    db: &mut crate::state::ProjectDb,
     user_id: &str,
     identifier: &str,
 ) -> Result<Option<utopia_database::Document>, Exception> {
@@ -193,7 +193,7 @@ pub fn find_target_by_identifier(
 
 /// PHP `$dbForProject->findOne($collection, [Query::equal($attribute, [$value])])`.
 pub fn find_one(
-    db: &mut Database<Memory>,
+    db: &mut crate::state::ProjectDb,
     collection: &str,
     attribute: &str,
     value: impl Into<AttrValue>,
@@ -275,7 +275,7 @@ pub struct CreateUserParams {
 /// bcrypt, md5, sha, phpass, scrypt, scrypt-modified}` endpoints where
 /// `password` is assumed already hashed by the caller).
 pub fn create_user(
-    db: &mut Database<Memory>,
+    db: &mut crate::state::ProjectDb,
     hooks: &Hooks,
     hasher: Arc<dyn Hash>,
     params: CreateUserParams,
@@ -387,7 +387,10 @@ pub fn create_user(
 /// Memory adapter has no relationship attributes, so this is a direct query
 /// rather than an already-populated `$user->getAttribute('targets')`).
 #[must_use]
-pub fn user_with_targets(db: &mut Database<Memory>, user: &utopia_database::Document) -> Value {
+pub fn user_with_targets(
+    db: &mut crate::state::ProjectDb,
+    user: &utopia_database::Document,
+) -> Value {
     let mut user_json = document_to_json(user);
     let user_id = user.get_id();
     let targets = db
@@ -408,7 +411,7 @@ pub fn user_with_targets(db: &mut Database<Memory>, user: &utopia_database::Docu
 /// `Base::createUser()`. Not de-duplicated against an existing target (see
 /// module docs).
 pub fn create_target(
-    db: &mut Database<Memory>,
+    db: &mut crate::state::ProjectDb,
     user: &utopia_database::Document,
     provider_type: &str,
     identifier: &str,

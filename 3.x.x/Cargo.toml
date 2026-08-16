@@ -187,6 +187,7 @@ base64 = "0.22"
 hmac = "0.12"
 argon2 = "0.5"
 bcrypt = "0.16"
+aes-gcm = "0.10"
 jsonwebtoken = "9"
 rsa = { version = "0.9", features = ["sha2", "pem"] }
 time = "0.3"

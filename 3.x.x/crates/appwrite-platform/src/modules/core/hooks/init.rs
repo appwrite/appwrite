@@ -44,7 +44,7 @@ pub fn action() -> Action {
                 return send_error(&ctx, &Exception::new(Exception::PROJECT_NOT_FOUND));
             }
 
-            let Some(project) = state.projects.get(&project_id) else {
+            let Some(project) = state.resolve_project(&project_id) else {
                 return send_error(&ctx, &Exception::new(Exception::PROJECT_NOT_FOUND));
             };
 
@@ -68,7 +68,16 @@ pub fn action() -> Action {
                 }
             }
 
-            let db = state.databases.get_or_create(&project_id);
+            let sequence = state.project_sequence(&project);
+            let db = match state
+                .databases
+                .get_or_create(&project_id, sequence.as_deref())
+            {
+                Ok(db) => db,
+                Err(_) => {
+                    return send_error(&ctx, &Exception::new(Exception::GENERAL_SERVER_ERROR));
+                }
+            };
 
             ctx.container.set_cached("project", Resource::new(project));
             ctx.container.set_cached("apiKey", Resource::new(key));

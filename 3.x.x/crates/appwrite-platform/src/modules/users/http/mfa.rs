@@ -10,19 +10,19 @@
 use appwrite_exception::Exception;
 use serde_json::{json, Value};
 use utopia_auth::Proof;
-use utopia_database::{AttrValue, Database, Query};
+use utopia_database::{AttrValue, Query};
 use utopia_platform::{Action, HttpMethod};
 use utopia_validators::{Boolean, Text, WhiteList};
 
 use crate::modules::users::base::{self, inject};
-use crate::state::{document_from_json, document_to_json, Memory};
+use crate::state::{document_from_json, document_to_json};
 
 /// PHP `TOTP::getAuthenticatorFromUser()`: the Memory adapter has no
 /// relationship attributes, so this queries `authenticators` directly by
 /// `userId` + `type` rather than scanning an already-populated
 /// `$user->getAttribute('authenticators')`.
 fn totp_authenticator(
-    db: &mut Database<Memory>,
+    db: &mut crate::state::ProjectDb,
     user_id: &str,
 ) -> Result<Option<utopia_database::Document>, Exception> {
     let mut matches = db

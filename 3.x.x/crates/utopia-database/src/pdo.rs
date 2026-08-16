@@ -663,6 +663,14 @@ fn postgres_cell(row: &postgres::Row, column: &postgres::Column) -> AttrValue {
     if let Ok(v) = row.try_get::<_, Option<String>>(idx) {
         return v.map_or(AttrValue::Null, AttrValue::from);
     }
+    // `array`-typed attributes (`postgres_type`) store as JSON/JSONB, which
+    // `postgres`'s `FromSql for String` does not accept -- only
+    // `serde_json::Value` (via the `with-serde_json-1` crate feature) reads
+    // those OIDs. Without this, every array attribute (`keys.scopes`,
+    // `users.labels`, ...) silently decoded as `Null` on read.
+    if let Ok(v) = row.try_get::<_, Option<serde_json::Value>>(idx) {
+        return v.map_or(AttrValue::Null, AttrValue::from);
+    }
     AttrValue::Null
 }
 

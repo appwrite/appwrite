@@ -22,6 +22,7 @@
 //! ```
 
 mod custom_id;
+pub mod filters;
 pub mod queries;
 
 pub use custom_id::{resolve_id, CustomId, UNIQUE_SENTINEL};

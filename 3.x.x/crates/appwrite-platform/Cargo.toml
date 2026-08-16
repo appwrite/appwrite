@@ -12,7 +12,7 @@ keywords = ["appwrite", "platform"]
 categories = ["web-programming"]
 
 [features]
-default = ["memory"]
+default = ["memory", "postgres"]
 memory = []
 postgres = ["utopia-database/postgres"]
 
@@ -23,7 +23,7 @@ utopia-platform = { workspace = true, features = ["http"] }
 utopia-http = { workspace = true }
 utopia-di = { workspace = true }
 utopia-validators = { workspace = true }
-utopia-database = { workspace = true }
+utopia-database = { workspace = true, features = ["postgres"] }
 utopia-cache = { workspace = true }
 utopia-auth = { workspace = true }
 utopia-servers = { workspace = true }
