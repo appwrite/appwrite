@@ -6,8 +6,10 @@ namespace Tests\Unit\Utopia\Database\Hooks;
 
 use Appwrite\Utopia\Database\Hooks\Metadata;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Adapter;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Event;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
@@ -90,13 +92,71 @@ final class PublicIdTest extends TestCase
         $this->assertTrue($skip);
     }
 
-    private function database(?Document $catalog = null, ?callable $assertFindOne = null): Database
+    public function testResolverDoesNotQueryCatalogDuringTenantTransaction(): void
+    {
+        $tenant = $this->database(new Document(['$id' => 'movies']), inTransaction: true);
+        $catalog = $this->database();
+
+        $this->assertSame(
+            'movies',
+            (Metadata::resolver($tenant, $catalog))('database_2_collection_17'),
+        );
+    }
+
+    public function testResolverUsesCatalogWhenTenantIsIdle(): void
+    {
+        $tenant = $this->database();
+        $catalog = $this->database(new Document(['$id' => 'movies']));
+
+        $this->assertSame(
+            'movies',
+            (Metadata::resolver($tenant, $catalog))('database_2_collection_17'),
+        );
+    }
+
+    public function testResolverUsesSeededCatalogWithoutCheckout(): void
+    {
+        $tenant = $this->database();
+        $catalog = $this->database();
+
+        $this->assertSame(
+            'movies',
+            (Metadata::resolver($tenant, $catalog, [
+                'database_2_collection_17' => 'movies',
+            ]))('database_2_collection_17'),
+        );
+    }
+
+    public function testDecorateDuringTenantTransactionDoesNotQueryCatalog(): void
+    {
+        $tenant = $this->database(new Document(['$id' => 'movies']), inTransaction: true);
+        $catalog = $this->database();
+
+        $result = (new Metadata(
+            database: new Document(['$id' => 'db1']),
+            context: 'table',
+            resolvePublicId: Metadata::resolver($tenant, $catalog),
+        ))->decorate(
+            Event::DocumentCreate,
+            new Document(['$id' => 'database_2_collection_17']),
+            new Document(['$id' => 'row1']),
+        );
+
+        $this->assertSame('movies', $result->getAttribute('$tableId'));
+        $this->assertSame('db1', $result->getAttribute('$databaseId'));
+    }
+
+    private function database(?Document $catalog = null, ?callable $assertFindOne = null, bool $inTransaction = false): Database
     {
         $authorization = $this->createStub(Authorization::class);
         $authorization->method('skip')->willReturnCallback(fn (callable $callback): mixed => $callback());
 
+        $adapter = $this->createStub(Adapter::class);
+        $adapter->method('inTransaction')->willReturn($inTransaction);
+
         $database = $this->createMock(Database::class);
         $database->method('getAuthorization')->willReturn($authorization);
+        $database->method('getAdapter')->willReturn($adapter);
         $database->method('silent')->willReturnCallback(fn (callable $callback): mixed => $callback());
 
         if ($catalog === null) {

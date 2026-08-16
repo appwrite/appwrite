@@ -1050,7 +1050,7 @@ return function (Container $context): void {
             $database->addHook(new Metadata(
                 database: $originalDatabase,
                 context: $context,
-                resolvePublicId: fn (string $internalId): string => Metadata::resolvePublicId($dbForProject, $internalId),
+                resolvePublicId: Metadata::resolver($database, $dbForProject),
             ));
 
             return $database;

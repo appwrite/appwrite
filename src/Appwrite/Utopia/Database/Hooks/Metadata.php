@@ -80,6 +80,25 @@ class Metadata implements Decorator
         return $id !== '' ? $id : $internalId;
     }
 
+    /**
+     * @param  array<string, string>  $publicIds
+     * @return \Closure(string): string
+     */
+    public static function resolver(Database $tenant, ?Database $catalog = null, array $publicIds = []): \Closure
+    {
+        return function (string $internalId) use ($tenant, $catalog, $publicIds): string {
+            if (isset($publicIds[$internalId])) {
+                return $publicIds[$internalId];
+            }
+
+            $database = $catalog !== null && ! $tenant->getAdapter()->inTransaction()
+                ? $catalog
+                : $tenant;
+
+            return self::resolvePublicId($database, $internalId);
+        };
+    }
+
     private function decorateRelationships(Document $collection, Document $document, int $depth = 0): void
     {
         if ($depth >= Database::RELATION_MAX_DEPTH) {
