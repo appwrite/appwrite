@@ -133,8 +133,6 @@ function FunctionLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSecuritySettings = canShowFunctionSecuritySettings(access, features)
-  // Execution documents are only persisted on Appwrite Cloud; hide list toolbar controls on self-hosted
-  const executionLogsEnabled = features.executionLogs
 
   // Get search value from URL (location.search may be string or parsed object in TanStack Router)
   const domainsSearchValue = (() => {
@@ -517,13 +515,9 @@ function FunctionLayoutContent() {
           onSearchChange={
             activeTab === 'domains' ? handleDomainsSearchChange : undefined
           }
-          showFilters={
-            (activeTab === 'executions' && executionLogsEnabled) ||
-            activeTab === 'domains'
-          }
+          showFilters={activeTab === 'executions' || activeTab === 'domains'}
           filterTrigger={
-            (activeTab === 'executions' && executionLogsEnabled) ||
-            activeTab === 'domains' ? (
+            activeTab === 'executions' || activeTab === 'domains' ? (
               <FiltersPopover
                 open={filtersOpen}
                 onOpenChange={setFiltersOpen}

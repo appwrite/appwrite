@@ -51,8 +51,6 @@ export type ConsoleProfileFeatures = {
   agent: boolean
   /** Console notifications center (header bell and inbox popover) */
   notifications: boolean
-  /** Stored execution history: function execution logs and site request logs. Self-hosted no longer persists execution documents. */
-  executionLogs: boolean
   /** Database backup policies and archives */
   databaseBackups: boolean
   /** Global: dedicated DBs support (wizard + specs). When true, use fullscreen create wizard and show spec upgrade for supported DB types. */
@@ -118,7 +116,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   orgApiKeys: 'Org API keys',
   agent: 'Agent',
   notifications: 'Notifications',
-  executionLogs: 'Execution logs',
   databaseBackups: 'Database backups',
   dedicatedDbsSupport: 'Dedicated DBs (global)',
   dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
@@ -167,7 +164,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       orgApiKeys: false,
       agent: true,
       notifications: false,
-      executionLogs: true,
       databaseBackups: true,
       dedicatedDbsSupport: true,
       dedicatedDbsDocumentsDB: false,
@@ -208,7 +204,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       orgApiKeys: false,
       agent: false,
       notifications: false,
-      executionLogs: false,
       databaseBackups: false,
       dedicatedDbsSupport: false,
       dedicatedDbsDocumentsDB: false,
@@ -323,6 +318,7 @@ function migrateStoredProfileFeatures(
     next.agent = next.aiAssistant
   }
   delete next.aiAssistant
+  delete next.executionLogs
   return next
 }
 
