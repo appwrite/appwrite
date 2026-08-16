@@ -87,6 +87,19 @@ fn nullable_json_array() {
     assert!(Json.is_valid(&json!("{\"a\":1}")));
     assert!(ArrayList::new(Integer::new()).is_valid(&json!([1, 2, 3])));
     assert!(!ArrayList::new(Integer::new()).is_valid(&json!([1, "x"])));
+
+    // PHP's `$length` is a maximum, not an exact count.
+    let capped = ArrayList::with_length(Integer::new(), 2);
+    assert!(capped.is_valid(&json!([])));
+    assert!(capped.is_valid(&json!([1, 2])));
+    assert!(!capped.is_valid(&json!([1, 2, 3])));
+    assert_eq!(
+        capped.description(),
+        format!(
+            "Value must a valid array no longer than 2 items and {}",
+            Integer::new().description()
+        )
+    );
 }
 
 #[test]

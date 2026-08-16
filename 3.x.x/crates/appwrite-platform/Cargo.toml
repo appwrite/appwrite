@@ -28,6 +28,7 @@ utopia-validators = { workspace = true }
 utopia-database = { workspace = true, features = ["postgres", "mysql", "mongo"] }
 utopia-cache = { workspace = true }
 utopia-auth = { workspace = true }
+utopia-emails = { workspace = true }
 utopia-servers = { workspace = true }
 appwrite-exception = { workspace = true }
 appwrite-hooks = { workspace = true }

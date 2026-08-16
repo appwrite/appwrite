@@ -4,8 +4,9 @@
 //! error/response plumbing every `http/*` handler in this module needs.
 //!
 //! Simplifications versus PHP (documented, not silently dropped):
-//! - `PersonalData`, disposable/canonical/free/corporate email policy, and
-//!   the cloud `$plan` gate are not implemented -- self-hosted Appwrite
+//! - `PersonalData` and the cloud `$plan` gate are not implemented, and the
+//!   disposable/canonical/free/corporate email *policies* are not enforced
+//!   (the metadata columns they read are populated). Self-hosted Appwrite
 //!   leaves all of these disabled unless the project is `console`, which
 //!   this milestone's dev-seeded project never is.
 //! - Duplicate target identifiers are not de-duplicated against an existing
@@ -246,8 +247,8 @@ pub fn user_not_found() -> Exception {
     Exception::new(Exception::USER_NOT_FOUND)
 }
 
-/// PHP `Utopia\Database\Helpers\Permission::{read,update,delete}` triple
-/// scoping a resource to its owning user, plus public read (`any()`).
+/// PHP `Base::createUser()`'s `users` document permissions: public read plus
+/// update/delete for the owning user.
 #[must_use]
 pub fn owner_permissions(user_id: &str) -> Vec<String> {
     vec![
@@ -255,6 +256,165 @@ pub fn owner_permissions(user_id: &str) -> Vec<String> {
         Permission::update(&Role::user(user_id.to_string(), String::new())),
         Permission::delete(&Role::user(user_id.to_string(), String::new())),
     ]
+}
+
+/// PHP's permission triple for user-owned sub-resources (`sessions`,
+/// `targets`): read/update/delete scoped to the owning user only, with no
+/// `any()` read.
+#[must_use]
+pub fn user_permissions(user_id: &str) -> Vec<String> {
+    vec![
+        Permission::read(&Role::user(user_id.to_string(), String::new())),
+        Permission::update(&Role::user(user_id.to_string(), String::new())),
+        Permission::delete(&Role::user(user_id.to_string(), String::new())),
+    ]
+}
+
+/// PHP `$user->getSequence()`, the `userInternalId` every user sub-resource
+/// (`sessions`, `tokens`, `targets`, `identities`, `memberships`) stores so
+/// PHP's `subQuery*` relationship filters can find it again. Always a string:
+/// the column is `VAR_STRING` in every one of those collections, and handing
+/// the driver a number instead fails to serialize.
+#[must_use]
+pub fn sequence_of(document: &utopia_database::Document) -> Value {
+    document
+        .get_sequence()
+        .map_or(Value::Null, |sequence| json!(sequence))
+}
+
+/// A `Boolean::new().loose(true)` param read back as a `bool`. `loose`
+/// accepts PHP's `http_build_query` encoding (`total=0` / `total=1`), so the
+/// stored param may still be the string form.
+#[must_use]
+pub fn param_bool(ctx: &ActionContext, key: &str, default: bool) -> bool {
+    match ctx.param_value(key) {
+        Some(Value::Bool(value)) => *value,
+        Some(Value::String(value)) => !matches!(value.as_str(), "" | "0" | "false"),
+        Some(Value::Number(value)) => value.as_f64().is_some_and(|value| value != 0.0),
+        _ => default,
+    }
+}
+
+/// Rust port of the `userSearch` filter (`app/init/database/filters.php`):
+/// `implode(' ', array_filter([$id, $email, $name, $phone, ...'label:'.$label]))`.
+/// The field order and the `label:` prefix both matter -- this is the haystack
+/// `Query::search('search', ...)` matches against, and `array_filter` drops
+/// the empty entries so a user with no phone has no stray double space.
+///
+/// PHP registers this as a `Database` filter, which recomputes it on every
+/// write because `updateDocument` encodes the merged document. The Rust filter
+/// registry passes only the attribute value, not the owning document, so the
+/// handlers that change one of these fields call [`refreshed_search`] instead.
+#[must_use]
+pub fn user_search(
+    user_id: &str,
+    email: Option<&str>,
+    name: &str,
+    phone: Option<&str>,
+    labels: &[String],
+) -> String {
+    let mut parts = vec![
+        user_id.to_string(),
+        email.unwrap_or_default().to_string(),
+        name.to_string(),
+        phone.unwrap_or_default().to_string(),
+    ];
+    parts.extend(labels.iter().map(|label| format!("label:{label}")));
+    parts.retain(|part| !part.is_empty());
+    parts.join(" ")
+}
+
+/// Rebuild [`user_search`] from an already-loaded `users` document, applying
+/// `overrides` (the sparse update about to be written) on top of its current
+/// attributes first -- the same merged view PHP's filter sees.
+#[must_use]
+pub fn refreshed_search(user: &utopia_database::Document, overrides: &Value) -> String {
+    let current = document_to_json(user);
+    let pick = |key: &str| -> Option<String> {
+        overrides
+            .get(key)
+            .or_else(|| current.get(key))
+            .and_then(Value::as_str)
+            .map(str::to_string)
+    };
+    let labels = overrides
+        .get("labels")
+        .or_else(|| current.get("labels"))
+        .and_then(Value::as_array)
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(|value| value.as_str().map(str::to_string))
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    user_search(
+        &user.get_id(),
+        pick("email").as_deref(),
+        pick("name").unwrap_or_default().as_str(),
+        pick("phone").as_deref(),
+        &labels,
+    )
+}
+
+/// [`update_user_fields`] plus the `search` rebuild every handler that
+/// changes `name`/`email`/`phone`/`labels` needs.
+pub fn update_user_fields_and_search(
+    db: &mut crate::state::ProjectDb,
+    user_id: &str,
+    mut fields: Value,
+) -> Result<Value, Exception> {
+    let user = require_document(db, "users", user_id, Exception::USER_NOT_FOUND)?;
+    let search = refreshed_search(&user, &fields);
+    if let Some(fields) = fields.as_object_mut() {
+        fields.insert("search".to_string(), json!(search));
+    }
+    update_user_fields(db, user_id, fields)
+}
+
+/// Rust port of `Base::createUser()`'s `$emailMetadata` block: the five
+/// `email*` columns derived from `Utopia\Emails\Email`, all `null` when the
+/// address is missing or unparseable (PHP's `catch (\Throwable)`).
+#[must_use]
+pub fn email_metadata(email: Option<&str>) -> Value {
+    let parsed = email
+        .filter(|value| !value.is_empty())
+        .and_then(|value| utopia_emails::Email::new(value).ok());
+    let Some(parsed) = parsed else {
+        return json!({
+            "emailCanonical": Value::Null,
+            "emailIsCanonical": Value::Null,
+            "emailIsCorporate": Value::Null,
+            "emailIsDisposable": Value::Null,
+            "emailIsFree": Value::Null,
+        });
+    };
+    let Ok(canonical) = parsed.get_canonical() else {
+        return json!({
+            "emailCanonical": Value::Null,
+            "emailIsCanonical": Value::Null,
+            "emailIsCorporate": Value::Null,
+            "emailIsDisposable": Value::Null,
+            "emailIsFree": Value::Null,
+        });
+    };
+    json!({
+        "emailCanonical": canonical,
+        "emailIsCanonical": parsed.get() == canonical,
+        "emailIsCorporate": parsed.is_corporate(),
+        "emailIsDisposable": parsed.is_disposable(),
+        "emailIsFree": parsed.is_free(),
+    })
+}
+
+/// Merge `extra`'s keys into `target` (both JSON objects).
+pub fn merge_into(target: &mut Value, extra: &Value) {
+    let (Some(target), Some(extra)) = (target.as_object_mut(), extra.as_object()) else {
+        return;
+    };
+    for (key, value) in extra {
+        target.insert(key.clone(), value.clone());
+    }
 }
 
 /// Parameters for [`create_user`], mirroring `Base::createUser()`'s
@@ -333,18 +493,14 @@ pub fn create_user(
     }
 
     let now = now_iso();
-    // PHP `'search' => implode(' ', [$userId, $email, $phone, $name])`, the
-    // fulltext-index field `Query::search('search', ...)` filters against
-    // (see `http::crud::list`). Not refreshed on email/phone/name updates
-    // (documented simplification: those handlers don't rewrite `search`).
-    let search = [
+    let search = user_search(
         resolved_id.as_str(),
-        email.as_deref().unwrap_or_default(),
-        phone.as_deref().unwrap_or_default(),
+        email.as_deref(),
         name.as_str(),
-    ]
-    .join(" ");
-    let doc_json = json!({
+        phone.as_deref(),
+        &[],
+    );
+    let mut doc_json = json!({
         "$id": resolved_id,
         "$permissions": owner_permissions(&resolved_id),
         "email": email,
@@ -359,12 +515,14 @@ pub fn create_user(
         "hash": hash_name,
         "hashOptions": hash_options,
         "registration": now.clone(),
+        "reset": false,
         "mfa": false,
         "name": name,
         "prefs": {},
         "accessedAt": now,
         "search": search,
     });
+    merge_into(&mut doc_json, &email_metadata(email.as_deref()));
 
     let document = document_from_json(doc_json);
     let created = db.create_document("users", document).map_err(db_error)?;
@@ -380,6 +538,30 @@ pub fn create_user(
     user_json["targets"] = Value::Array(targets);
 
     Ok(user_json)
+}
+
+/// PHP's `foreach ($sessions as $session) { $dbForProject->deleteDocument(
+/// 'sessions', $session->getId()); }` loop, shared by `Sessions\Bulk\Delete`
+/// and `Password\Update`'s `invalidateSessions` branch.
+pub fn delete_user_sessions(
+    db: &mut crate::state::ProjectDb,
+    user_id: &str,
+) -> Result<(), Exception> {
+    let sessions = db
+        .find(
+            "sessions",
+            &[
+                Query::equal("userId", vec![AttrValue::from(user_id)]),
+                Query::limit(1000),
+            ],
+            "read",
+        )
+        .map_err(db_error)?;
+    for session in sessions {
+        db.delete_document("sessions", &session.get_id())
+            .map_err(db_error)?;
+    }
+    Ok(())
 }
 
 /// PHP `Users\Get`/`Users\XList`'s `$user->setAttribute('targets', ...)`
@@ -419,8 +601,9 @@ pub fn create_target(
     let user_id = user.get_id();
     let target_json = json!({
         "$id": appwrite_database::resolve_id(appwrite_database::UNIQUE_SENTINEL),
-        "$permissions": owner_permissions(&user_id),
+        "$permissions": user_permissions(&user_id),
         "userId": user_id,
+        "userInternalId": sequence_of(user),
         "providerType": provider_type,
         "identifier": identifier,
         "expired": false,

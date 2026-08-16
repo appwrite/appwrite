@@ -26,34 +26,51 @@ impl ArrayList {
         }
     }
 
+    /// PHP's `$length` constructor argument: the *maximum* number of items,
+    /// not an exact count.
     pub fn length(mut self, length: usize) -> Self {
         self.length = Some(length);
         self
+    }
+
+    /// [`Self::new`] plus [`Self::length`], mirroring PHP's
+    /// `new ArrayList($validator, $length)`.
+    pub fn with_length(element: impl Validator + 'static, length: usize) -> Self {
+        Self::new(element).length(length)
     }
 }
 
 impl Validator for ArrayList {
     fn description(&self) -> String {
-        format!("Value must be an array of {}", self.element.description())
+        let mut message = String::from("Value must a valid array");
+        if let Some(length) = self.length.filter(|length| *length > 0) {
+            message.push_str(&format!(" no longer than {length} items"));
+        }
+        let element = self.element.description();
+        if !element.is_empty() && element != "0" {
+            message.push_str(&format!(" and {element}"));
+        }
+        message
     }
 
     fn is_array(&self) -> bool {
         true
     }
 
+    /// PHP `ArrayList::getType()` delegates to the element validator; the
+    /// `isArray()` flag above is what marks the param itself as a list.
     fn value_type(&self) -> ValueType {
-        ValueType::Array
+        self.element.value_type()
     }
 
     fn is_valid(&self, value: &Value) -> bool {
         let Some(arr) = value.as_array() else {
             return false;
         };
-        if let Some(len) = self.length {
-            if arr.len() != len {
-                return false;
-            }
+        if !arr.iter().all(|v| self.element.is_valid(v)) {
+            return false;
         }
-        arr.iter().all(|v| self.element.is_valid(v))
+        self.length
+            .is_none_or(|length| length == 0 || arr.len() <= length)
     }
 }

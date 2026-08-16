@@ -196,6 +196,7 @@ dependencies = [
  "utopia-cache",
  "utopia-database",
  "utopia-di",
+ "utopia-emails",
  "utopia-http",
  "utopia-platform",
  "utopia-servers",
