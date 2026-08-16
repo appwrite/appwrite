@@ -156,7 +156,15 @@ impl Validator for Queries {
         };
         let mut queries = Vec::new();
         for item in arr {
-            match Query::parse(&item.to_string()) {
+            // A query arrives either already decoded (an object, as when the
+            // caller sent a JSON body) or as the JSON *string* an SDK's
+            // `Query::equal(...)->toString()` produces. Re-encoding the latter
+            // would hand `parse` a quoted string instead of the query.
+            let parsed = match item {
+                Value::String(query) => Query::parse(query),
+                other => Query::parse(&other.to_string()),
+            };
+            match parsed {
                 Ok(q) => queries.push(q),
                 Err(e) => {
                     self.set_message(format!("Invalid query: {}", e.message()));

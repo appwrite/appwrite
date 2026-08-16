@@ -282,6 +282,13 @@ pub fn sequence_of(document: &utopia_database::Document) -> Value {
         .map_or(Value::Null, |sequence| json!(sequence))
 }
 
+/// [`sequence_of`] as a plain string, for building queries against the
+/// `userInternalId` column.
+#[must_use]
+pub fn sequence_str(document: &utopia_database::Document) -> String {
+    document.get_sequence().unwrap_or_default()
+}
+
 /// A `Boolean::new().loose(true)` param read back as a `bool`. `loose`
 /// accepts PHP's `http_build_query` encoding (`total=0` / `total=1`), so the
 /// stored param may still be the string form.

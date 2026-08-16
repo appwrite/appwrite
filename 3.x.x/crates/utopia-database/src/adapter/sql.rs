@@ -6,8 +6,10 @@ use crate::document::Document;
 use crate::error::{DatabaseError, Result};
 use crate::pdo::{Dialect, Pdo, SqlParam};
 use crate::query::{
-    Query, TYPE_EQUAL, TYPE_GREATER, TYPE_GREATER_EQUAL, TYPE_IS_NOT_NULL, TYPE_IS_NULL,
-    TYPE_LESSER, TYPE_LESSER_EQUAL, TYPE_NOT_EQUAL,
+    Query, TYPE_BETWEEN, TYPE_CONTAINS, TYPE_CONTAINS_ALL, TYPE_CONTAINS_ANY, TYPE_ENDS_WITH,
+    TYPE_EQUAL, TYPE_GREATER, TYPE_GREATER_EQUAL, TYPE_IS_NOT_NULL, TYPE_IS_NULL, TYPE_LESSER,
+    TYPE_LESSER_EQUAL, TYPE_NOT_BETWEEN, TYPE_NOT_CONTAINS, TYPE_NOT_ENDS_WITH, TYPE_NOT_EQUAL,
+    TYPE_NOT_SEARCH, TYPE_NOT_STARTS_WITH, TYPE_OR, TYPE_SEARCH, TYPE_STARTS_WITH,
 };
 use crate::value::AttrValue;
 use indexmap::IndexMap;
@@ -189,6 +191,250 @@ impl SqlAdapter {
     fn pdo_mut(&mut self) -> &mut Pdo {
         &mut self.pdo
     }
+
+    /// PHP `getSQLCondition`: one query to one WHERE fragment, pushing its
+    /// binds onto `params`. `arrays` names the collection's array attributes,
+    /// which decide whether `contains` is a JSON containment test or a LIKE.
+    /// Returns `None` for a query that contributes no WHERE fragment (ordering
+    /// and paging are applied by the caller).
+    fn sql_condition(
+        &self,
+        query: &Query,
+        arrays: &[String],
+        params: &mut Vec<(String, SqlParam)>,
+        next: &mut usize,
+    ) -> Option<String> {
+        let method = query.get_method();
+        if query.is_nested() {
+            let joined = query
+                .get_values()
+                .iter()
+                .filter_map(AttrValue::as_query)
+                .filter_map(|inner| self.sql_condition(inner, arrays, params, next))
+                .collect::<Vec<_>>();
+            if joined.is_empty() {
+                return None;
+            }
+            let separator = if method == TYPE_OR { " OR " } else { " AND " };
+            return Some(format!("({})", joined.join(separator)));
+        }
+
+        let attribute = Self::internal_key(query.get_attribute());
+        let column = self.q(attribute);
+        let on_array = query.on_array() || arrays.iter().any(|key| key == attribute);
+        let mut bind = |params: &mut Vec<(String, SqlParam)>, value: SqlParam| -> String {
+            let key = format!(":f{next}");
+            *next += 1;
+            params.push((key.clone(), value));
+            key
+        };
+
+        match method {
+            TYPE_EQUAL | TYPE_NOT_EQUAL | TYPE_LESSER | TYPE_LESSER_EQUAL | TYPE_GREATER
+            | TYPE_GREATER_EQUAL => {
+                let op = match method {
+                    TYPE_EQUAL => "=",
+                    TYPE_NOT_EQUAL => "!=",
+                    TYPE_LESSER => "<",
+                    TYPE_LESSER_EQUAL => "<=",
+                    TYPE_GREATER => ">",
+                    _ => ">=",
+                };
+                if method == TYPE_EQUAL && query.get_values().len() > 1 {
+                    let keys: Vec<String> = query
+                        .get_values()
+                        .iter()
+                        .map(|value| bind(params, SqlParam::from_attr(value)))
+                        .collect();
+                    Some(format!("{column} IN ({})", keys.join(", ")))
+                } else {
+                    let key = bind(params, SqlParam::from_attr(query.get_value()));
+                    Some(format!("{column} {op} {key}"))
+                }
+            }
+            TYPE_IS_NULL => Some(format!("{column} IS NULL")),
+            TYPE_IS_NOT_NULL => Some(format!("{column} IS NOT NULL")),
+            TYPE_BETWEEN | TYPE_NOT_BETWEEN => {
+                let values = query.get_values();
+                let (low, high) = (values.first()?, values.get(1)?);
+                let low = bind(params, SqlParam::from_attr(low));
+                let high = bind(params, SqlParam::from_attr(high));
+                let not = if method == TYPE_NOT_BETWEEN { "NOT " } else { "" };
+                Some(format!("{column} {not}BETWEEN {low} AND {high}"))
+            }
+            TYPE_SEARCH | TYPE_NOT_SEARCH => {
+                let value = fulltext_value(query.get_value().as_str().unwrap_or_default(), self.dialect);
+                if value.is_empty() {
+                    return None;
+                }
+                let key = bind(params, SqlParam::from_str(&value));
+                let matches = match self.dialect {
+                    // Appwrite's Postgres adapter normalizes punctuation out of
+                    // the column before matching, so `label:x` and `a@b.com`
+                    // tokenize the same way they do in the query text.
+                    Dialect::Postgres => format!(
+                        "to_tsvector(regexp_replace({column}, '[^\\w]+',' ','g')) @@ websearch_to_tsquery({key})"
+                    ),
+                    Dialect::Mysql | Dialect::Mariadb => {
+                        format!("MATCH({column}) AGAINST ({key} IN BOOLEAN MODE)")
+                    }
+                    Dialect::Sqlite => format!("{column} LIKE {key}"),
+                };
+                Some(if method == TYPE_NOT_SEARCH {
+                    format!("NOT ({matches})")
+                } else {
+                    matches
+                })
+            }
+            TYPE_STARTS_WITH | TYPE_NOT_STARTS_WITH | TYPE_ENDS_WITH | TYPE_NOT_ENDS_WITH
+            | TYPE_CONTAINS | TYPE_NOT_CONTAINS | TYPE_CONTAINS_ANY | TYPE_CONTAINS_ALL => {
+                let negated = matches!(
+                    method,
+                    TYPE_NOT_STARTS_WITH | TYPE_NOT_ENDS_WITH | TYPE_NOT_CONTAINS
+                );
+                let fragments = if on_array {
+                    self.array_containment(method, &column, query, params, next)
+                } else {
+                    query
+                        .get_values()
+                        .iter()
+                        .map(|value| {
+                            let raw = value.as_str().unwrap_or_default();
+                            let escaped = escape_wildcards(raw);
+                            let pattern = match method {
+                                TYPE_STARTS_WITH | TYPE_NOT_STARTS_WITH => format!("{escaped}%"),
+                                TYPE_ENDS_WITH | TYPE_NOT_ENDS_WITH => format!("%{escaped}"),
+                                _ => format!("%{escaped}%"),
+                            };
+                            let key = bind(params, SqlParam::from_str(&pattern));
+                            format!("{column} LIKE {key}")
+                        })
+                        .collect()
+                };
+                if fragments.is_empty() {
+                    return None;
+                }
+                let joined = fragments.join(if negated { " AND " } else { " OR " });
+                Some(if negated {
+                    format!("NOT ({joined})")
+                } else {
+                    format!("({joined})")
+                })
+            }
+            _ => None,
+        }
+    }
+
+    /// The `contains`-family fragments for an array attribute: JSON
+    /// containment rather than a substring match. `containsAll` tests the
+    /// whole value list at once, the others test each value separately.
+    fn array_containment(
+        &self,
+        method: &str,
+        column: &str,
+        query: &Query,
+        params: &mut Vec<(String, SqlParam)>,
+        next: &mut usize,
+    ) -> Vec<String> {
+        let encode = |value: &AttrValue| serde_json::to_string(&value.to_json()).unwrap_or_default();
+        let payloads: Vec<String> = if method == TYPE_CONTAINS_ALL {
+            let all: Vec<serde_json::Value> =
+                query.get_values().iter().map(AttrValue::to_json).collect();
+            vec![serde_json::to_string(&all).unwrap_or_default()]
+        } else {
+            query
+                .get_values()
+                .iter()
+                .map(|value| serde_json::to_string(&vec![value.to_json()]).unwrap_or(encode(value)))
+                .collect()
+        };
+        payloads
+            .into_iter()
+            .map(|payload| {
+                let key = format!(":f{next}");
+                *next += 1;
+                params.push((key.clone(), SqlParam::from_str(&payload)));
+                match self.dialect {
+                    Dialect::Postgres => format!("{column} @> {key}::jsonb"),
+                    Dialect::Mysql | Dialect::Mariadb => {
+                        format!("JSON_CONTAINS({column}, {key})")
+                    }
+                    Dialect::Sqlite => format!("{column} LIKE '%' || {key} || '%'"),
+                }
+            })
+            .collect()
+    }
+}
+
+/// The `key`s of a collection's array attributes, which `contains` queries
+/// have to treat as JSON documents rather than strings.
+fn array_attributes(collection: &Document) -> Vec<String> {
+    collection_attributes(collection)
+        .iter()
+        .filter(|attribute| attribute.get_attribute("array").as_bool().unwrap_or(false))
+        .map(|attribute| {
+            let key = attribute.get_attribute("key");
+            let key = if key.is_null() {
+                attribute.get_attribute("$id")
+            } else {
+                key
+            };
+            key.as_str().unwrap_or_default().to_string()
+        })
+        .collect()
+}
+
+/// PHP `escapeWildcards`.
+fn escape_wildcards(value: &str) -> String {
+    let mut escaped = String::with_capacity(value.len());
+    for ch in value.chars() {
+        if matches!(ch, '%' | '_' | '[' | ']' | '^' | '\\') {
+            escaped.push('\\');
+        }
+        escaped.push(ch);
+    }
+    escaped
+}
+
+/// PHP `getFulltextValue`, which differs per engine: Postgres builds a
+/// `websearch_to_tsquery` string, MySQL/MariaDB a boolean-mode term.
+fn fulltext_value(value: &str, dialect: Dialect) -> String {
+    let exact = value.len() > 1 && value.starts_with('"') && value.ends_with('"');
+    match dialect {
+        Dialect::Postgres => {
+            let cleaned = collapse_whitespace(&value.replace(
+                ['@', '+', '-', '*', '.', '\'', '"'],
+                " ",
+            ));
+            if cleaned.is_empty() {
+                return String::new();
+            }
+            let joined = if exact {
+                cleaned
+            } else {
+                cleaned.split(' ').collect::<Vec<_>>().join(" or ")
+            };
+            format!("'{joined}'")
+        }
+        _ => {
+            let cleaned = collapse_whitespace(&value.replace(
+                ['@', '+', '-', '*', ')', '(', '<', '>', '~', '"'],
+                " ",
+            ));
+            if cleaned.is_empty() {
+                return String::new();
+            }
+            if exact {
+                format!("\"{cleaned}\"")
+            } else {
+                format!("{cleaned}*")
+            }
+        }
+    }
+}
+
+fn collapse_whitespace(value: &str) -> String {
+    value.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 impl Adapter for SqlAdapter {
@@ -752,49 +998,13 @@ impl Adapter for SqlAdapter {
         _for_permission: &str,
     ) -> Result<Vec<Document>> {
         let name = filter_key(&collection.get_id());
+        let arrays = array_attributes(collection);
         let mut where_sql = Vec::new();
         let mut params: Vec<(String, SqlParam)> = Vec::new();
         let mut i = 0;
         for query in queries {
-            match query.get_method() {
-                TYPE_EQUAL | TYPE_NOT_EQUAL | TYPE_LESSER | TYPE_LESSER_EQUAL | TYPE_GREATER
-                | TYPE_GREATER_EQUAL => {
-                    let column = Self::internal_key(query.get_attribute());
-                    let op = match query.get_method() {
-                        TYPE_EQUAL => "=",
-                        TYPE_NOT_EQUAL => "!=",
-                        TYPE_LESSER => "<",
-                        TYPE_LESSER_EQUAL => "<=",
-                        TYPE_GREATER => ">",
-                        _ => ">=",
-                    };
-                    if query.get_method() == TYPE_EQUAL && query.get_values().len() > 1 {
-                        let mut keys = Vec::new();
-                        for value in query.get_values() {
-                            let key = format!(":f{i}");
-                            keys.push(key.clone());
-                            params.push((key, SqlParam::from_attr(value)));
-                            i += 1;
-                        }
-                        where_sql.push(format!("{} IN ({})", self.q(column), keys.join(", ")));
-                    } else {
-                        let key = format!(":f{i}");
-                        where_sql.push(format!("{} {op} {key}", self.q(column)));
-                        params.push((key, SqlParam::from_attr(query.get_value())));
-                        i += 1;
-                    }
-                }
-                TYPE_IS_NULL => where_sql.push(format!(
-                    "{} IS NULL",
-                    self.q(Self::internal_key(query.get_attribute()))
-                )),
-                TYPE_IS_NOT_NULL => {
-                    where_sql.push(format!(
-                        "{} IS NOT NULL",
-                        self.q(Self::internal_key(query.get_attribute()))
-                    ));
-                }
-                _ => {}
+            if let Some(fragment) = self.sql_condition(query, &arrays, &mut params, &mut i) {
+                where_sql.push(fragment);
             }
         }
         let mut sql = format!("SELECT * FROM {}", self.table(&name));

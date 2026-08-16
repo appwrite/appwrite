@@ -2,15 +2,13 @@
 //! of `app/controllers/shared/api.php`'s `Http::init()`.
 //!
 //! Simplifications versus PHP (documented, not silently dropped):
-//! - Only the `standard` API key type is supported (`Appwrite\Auth\Key`'s
-//!   `dynamic`/`jwt` cases -- session cookies, session headers, and JWTs --
-//!   are not wired into this hook yet; see `crates/appwrite-platform/README.md`
-//!   TODOs). Every `/v1/users*` route requires a `users.read`/`users.write`
-//!   scope, so an unauthenticated (guest) key always fails the scope check
-//!   below, which is the correct behavior for this module even without the
-//!   other key types.
-//! - No abuse/rate-limiting, mode (`X-Appwrite-Mode`) resolution, or usage
-//!   stats gate -- out of scope for the Users-API v1 milestone.
+//! - Only the `standard` API key type and the Console session cookie are
+//!   supported. JWT (`Appwrite\Auth\Key`'s `jwt` case) is not wired into this
+//!   hook; see `crates/appwrite-platform/README.md` TODOs. Every `/v1/users*`
+//!   route requires a `users.read`/`users.write` scope, so an unauthenticated
+//!   (guest) key always fails the scope check below.
+//! - No abuse/rate-limiting or usage stats gate -- out of scope for the
+//!   Users-API v1 milestone.
 
 use std::sync::Arc;
 
@@ -22,7 +20,7 @@ use utopia_platform::{Action, ActionType};
 
 use crate::state::AppwriteState;
 
-use super::send_error;
+use super::{console, send_error};
 
 #[must_use]
 pub fn action() -> Action {
@@ -49,14 +47,31 @@ pub fn action() -> Action {
             };
 
             let key_secret = ctx.request().header_line("x-appwrite-key");
-            let key = if key_secret.is_empty() {
-                Key::guest(project_id.clone())
-            } else {
+            let mut console_user = None;
+            let key = if !key_secret.is_empty() {
                 Key::decode_standard(&project, &key_secret)
+            } else if let Some(session) = console::resolve(&state, &ctx, &project) {
+                console_user = Some(session.user);
+                session.key
+            } else {
+                Key::guest(project_id.clone())
             };
 
             if key.expired {
                 return send_error(&ctx, &Exception::new(Exception::PROJECT_KEY_EXPIRED));
+            }
+
+            // PHP grants `users.read` to an impersonator so the Console can
+            // look a target user up before impersonation starts.
+            let mut key = key;
+            if console_user
+                .as_ref()
+                .and_then(|user| user.get("impersonator"))
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+                && !key.scopes.iter().any(|scope| scope == "users.read")
+            {
+                key.scopes.push("users.read".to_string());
             }
 
             if let Some(required) = required_scope(&ctx) {

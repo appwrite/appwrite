@@ -280,7 +280,10 @@ pub fn raw_param(value: Option<&serde_json::Value>) -> Vec<String> {
         .map(|values| {
             values
                 .iter()
-                .filter_map(|value| value.as_str().map(str::to_string))
+                .map(|value| match value {
+                    serde_json::Value::String(query) => query.clone(),
+                    other => other.to_string(),
+                })
                 .collect()
         })
         .unwrap_or_default()

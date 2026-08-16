@@ -1463,6 +1463,15 @@ impl<A: Adapter> Database<A> {
         if collection_doc.is_empty() {
             return Err(DatabaseError::not_found("Collection not found"));
         }
+        let collection_id = collection_doc.get_id();
+        // PHP loads the stored document first and merges the caller's partial
+        // update over it, so callers can (and by Appwrite convention do) pass
+        // only the changed attributes and still get the whole document back.
+        let old = self
+            .skip_authorization(|db| db.silent(|db| db.get_document(&collection_id, id, &[], true)))?;
+        if old.is_empty() {
+            return Ok(Document::new());
+        }
         if collection_doc.get_id() != METADATA {
             let mut perms = collection_doc.get_update();
             let security = collection_doc
@@ -1470,6 +1479,7 @@ impl<A: Adapter> Database<A> {
                 .as_bool()
                 .unwrap_or(false);
             if security {
+                perms.extend(old.get_update());
                 perms.extend(document.get_update());
             }
             if !self
@@ -1482,11 +1492,21 @@ impl<A: Adapter> Database<A> {
                 ));
             }
         }
+        let created_at = document.get_attribute("$createdAt").clone();
+        document = merge_over(&old, document);
+        if !self.preserve_dates || matches!(created_at, AttrValue::Null) {
+            document.set_attribute("$createdAt", old.get_attribute("$createdAt").clone());
+        }
         if !self.preserve_dates {
             document.set_attribute("$updatedAt", AttrValue::from(DateTime::now()));
         }
         document.set_attribute("$id", AttrValue::from(id));
         document.set_attribute("$collection", AttrValue::from(collection_doc.get_id()));
+        // `$sequence` is immutable in PHP; carry the stored value forward so a
+        // partial update cannot drop or rewrite it.
+        if !matches!(old.get_attribute("$sequence"), AttrValue::Null) {
+            document.set_attribute("$sequence", old.get_attribute("$sequence").clone());
+        }
         document = self.encode(&collection_doc, document, false)?;
         document = self
             .adapter
@@ -2125,6 +2145,17 @@ impl<A: Adapter> Database<A> {
         });
         hex::encode(Md5::digest(payload.to_string().as_bytes()))
     }
+}
+
+/// PHP `\array_merge($old->getArrayCopy(), $document->getArrayCopy())`:
+/// `update`'s attributes win, `old`'s order is preserved for the keys they
+/// share, and keys only `old` has are carried through untouched.
+fn merge_over(old: &Document, update: Document) -> Document {
+    let mut merged: IndexMap<String, AttrValue> = old.get_array_copy(&[], &[]);
+    for (key, value) in update.iter() {
+        merged.insert(key.clone(), value.clone());
+    }
+    Document::from_map(merged).unwrap_or(update)
 }
 
 fn encode_json(value: &AttrValue) -> AttrValue {

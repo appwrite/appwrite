@@ -256,6 +256,13 @@ impl AppwriteState {
         Some(project_json)
     }
 
+    /// PHP `inject('dbForPlatform')`. `None` in Memory mode, where there is
+    /// no separate platform database to consult.
+    #[must_use]
+    pub fn platform_db(&self) -> Option<&Mutex<ProjectDb>> {
+        self.platform.as_ref()
+    }
+
     #[must_use]
     pub fn project_sequence(&self, project: &Value) -> Option<String> {
         match project.get("$sequence")? {

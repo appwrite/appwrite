@@ -351,18 +351,22 @@ pub fn create_jwt() -> Action {
                 .param_value("duration")
                 .and_then(Value::as_i64)
                 .unwrap_or(900);
-            base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
+            let user =
+                base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
+            // PHP reads `$user->getAttribute('sessions')`, the relationship
+            // keyed on `userInternalId`, so match on the same column rather
+            // than `userId`.
             let sessions = db
                 .find(
                     "sessions",
                     &[
-                        Query::equal("userId", vec![user_id.clone().into()]),
+                        Query::equal("userInternalId", vec![base::sequence_str(&user).into()]),
                         Query::limit(1000),
                     ],
                     "read",
                 )
-                .unwrap_or_default();
+                .map_err(base::db_error)?;
             let session = if session_id == "recent" {
                 sessions.last().cloned()
             } else {
