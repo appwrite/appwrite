@@ -180,19 +180,60 @@ impl Request {
         }
         self.query_parsed = true;
         if let Some(q) = self.uri.split_once('?').map(|(_, q)| q) {
-            let mut map = HashMap::new();
-            for pair in q.split('&') {
-                if pair.is_empty() {
-                    continue;
-                }
-                let mut it = pair.splitn(2, '=');
-                let k = urlencoding_decode(it.next().unwrap_or(""));
-                let v = urlencoding_decode(it.next().unwrap_or(""));
-                map.insert(k, Value::String(v));
-            }
-            self.query = map;
+            self.query = parse_urlencoded_map(q);
         }
     }
+
+    /// Populate [`Self::payload`] from [`Self::raw_payload`] using `Content-Type`.
+    ///
+    /// Mirrors Utopia PHP's request body → params merge for JSON objects and
+    /// `application/x-www-form-urlencoded` bodies. Nested JSON values are kept
+    /// as [`Value`]s (arrays/objects), not stringified.
+    pub fn parse_payload_from_raw(&mut self) {
+        if self.raw_payload.is_empty() || !self.payload.is_empty() {
+            return;
+        }
+        let content_type = self.header_line("content-type").to_ascii_lowercase();
+        let ctype = content_type
+            .split(';')
+            .next()
+            .unwrap_or("")
+            .trim();
+        if ctype == "application/json" || ctype.ends_with("+json") {
+            if let Ok(Value::Object(map)) = serde_json::from_slice::<Value>(&self.raw_payload) {
+                self.payload = map.into_iter().collect();
+            }
+            return;
+        }
+        if ctype == "application/x-www-form-urlencoded"
+            || ctype.is_empty()
+                && self
+                    .raw_payload
+                    .iter()
+                    .all(|b| b.is_ascii() && !b.is_ascii_control() || *b == b'\r' || *b == b'\n')
+        {
+            if let Ok(s) = std::str::from_utf8(&self.raw_payload) {
+                // Only treat as urlencoded when it looks like key=value pairs.
+                if ctype == "application/x-www-form-urlencoded" || s.contains('=') {
+                    self.payload = parse_urlencoded_map(s);
+                }
+            }
+        }
+    }
+}
+
+fn parse_urlencoded_map(input: &str) -> HashMap<String, Value> {
+    let mut map = HashMap::new();
+    for pair in input.split('&') {
+        if pair.is_empty() {
+            continue;
+        }
+        let mut it = pair.splitn(2, '=');
+        let k = urlencoding_decode(it.next().unwrap_or(""));
+        let v = urlencoding_decode(it.next().unwrap_or(""));
+        map.insert(k, Value::String(v));
+    }
+    map
 }
 
 fn urlencoding_decode(s: &str) -> String {
@@ -224,4 +265,20 @@ fn urlencoding_decode(s: &str) -> String {
         }
     }
     out
+}
+
+#[cfg(test)]
+mod payload_parse_tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn parse_json_object_into_payload() {
+        let mut req = Request::new("POST", "/v1/users");
+        req.set_header("content-type", "application/json");
+        req.set_raw_payload(br#"{"userId":"u1","email":"a@b.c"}"#.to_vec());
+        req.parse_payload_from_raw();
+        assert_eq!(req.param_ref("userId"), Some(&json!("u1")));
+        assert_eq!(req.param_ref("email"), Some(&json!("a@b.c")));
+    }
 }
