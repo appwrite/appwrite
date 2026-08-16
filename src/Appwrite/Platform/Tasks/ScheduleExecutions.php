@@ -154,20 +154,35 @@ class ScheduleExecutions extends ScheduleBase
             return false;
         }
 
+        $published = false;
         try {
-            $enqueue();
+            return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId, $enqueue, &$published) {
+                $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
+
+                if ($schedule->isEmpty()) {
+                    return false;
+                }
+
+                $enqueue();
+                $published = true;
+
+                if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
+                    throw new \RuntimeException('Failed to remove claimed execution schedule');
+                }
+
+                return true;
+            });
         } catch (\Throwable $error) {
-            $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
-                'resourceUpdatedAt' => DateTime::now(),
-                'active' => true,
-            ]));
+            // A failed publish releases the claim for a later retry. Once the
+            // publish succeeds, keep the schedule inactive even if cleanup
+            // fails so another scheduler cannot publish it again.
+            if (!$published) {
+                $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'active' => true,
+                ]));
+            }
             throw $error;
         }
-
-        if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
-            throw new \RuntimeException('Failed to remove claimed execution schedule');
-        }
-
-        return true;
     }
 }

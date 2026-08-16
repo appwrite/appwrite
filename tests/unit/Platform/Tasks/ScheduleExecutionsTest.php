@@ -12,20 +12,23 @@ use Utopia\Database\Document;
 
 final class ScheduleExecutionsTest extends TestCase
 {
-    public function testActiveScheduleIsLockedWhileEnqueuedAndRemoved(): void
+    public function testActiveScheduleIsClaimedBeforeItIsEnqueuedAndRemoved(): void
     {
         $task = $this->task();
         $dbForPlatform = $this->createMock(Database::class);
         $claimed = false;
         $dbForPlatform
-            ->expects($this->once())
+            ->expects($this->exactly(2))
             ->method('withTransaction')
             ->willReturnCallback(fn (callable $callback): mixed => $callback());
         $dbForPlatform
-            ->expects($this->once())
+            ->expects($this->exactly(2))
             ->method('getDocument')
             ->with('schedules', 'schedule-id', [], true)
-            ->willReturn(new Document(['$id' => 'schedule-id', 'active' => true]));
+            ->willReturnOnConsecutiveCalls(
+                new Document(['$id' => 'schedule-id', 'active' => true]),
+                new Document(['$id' => 'schedule-id', 'active' => false]),
+            );
         $dbForPlatform
             ->expects($this->once())
             ->method('updateDocument')
@@ -72,20 +75,52 @@ final class ScheduleExecutionsTest extends TestCase
         ));
     }
 
+    public function testCancellationAfterClaimPreventsPublish(): void
+    {
+        $task = $this->task();
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform
+            ->expects($this->exactly(2))
+            ->method('withTransaction')
+            ->willReturnCallback(fn (callable $callback): mixed => $callback());
+        $dbForPlatform
+            ->expects($this->exactly(2))
+            ->method('getDocument')
+            ->with('schedules', 'schedule-id', [], true)
+            ->willReturnOnConsecutiveCalls(
+                new Document(['$id' => 'schedule-id', 'active' => true]),
+                new Document(),
+            );
+        $dbForPlatform
+            ->expects($this->once())
+            ->method('updateDocument')
+            ->willReturn(new Document(['$id' => 'schedule-id', 'active' => false]));
+        $dbForPlatform->expects($this->never())->method('deleteDocument');
+
+        $this->assertFalse($task->enqueue(
+            $dbForPlatform,
+            'schedule-id',
+            fn () => $this->fail('Cancelled schedule was enqueued'),
+        ));
+    }
+
     public function testFailedPublishReleasesScheduleClaim(): void
     {
         $task = $this->task();
         $dbForPlatform = $this->createMock(Database::class);
         $updates = [];
         $dbForPlatform
-            ->expects($this->once())
+            ->expects($this->exactly(2))
             ->method('withTransaction')
             ->willReturnCallback(fn (callable $callback): mixed => $callback());
         $dbForPlatform
-            ->expects($this->once())
+            ->expects($this->exactly(2))
             ->method('getDocument')
             ->with('schedules', 'schedule-id', [], true)
-            ->willReturn(new Document(['$id' => 'schedule-id', 'active' => true]));
+            ->willReturnOnConsecutiveCalls(
+                new Document(['$id' => 'schedule-id', 'active' => true]),
+                new Document(['$id' => 'schedule-id', 'active' => false]),
+            );
         $dbForPlatform
             ->expects($this->exactly(2))
             ->method('updateDocument')

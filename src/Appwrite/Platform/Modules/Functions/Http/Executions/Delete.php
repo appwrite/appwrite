@@ -91,14 +91,13 @@ class Delete extends Base
         $execution = $dbForProject->getDocument('executions', $executionId);
         if ($execution->isEmpty()) {
             // A scheduled execution can be cancelled before its document has
-            // been persisted by the executions worker. Deactivate the schedule
-            // and dispatch ExecutionCancelled so the worker removes the
-            // document if it lands later.
+            // been persisted by the executions worker. Remove the schedule and
+            // dispatch ExecutionCancelled so the worker removes the document
+            // if it lands later.
             $schedule = $authorization->skip(fn () => $dbForPlatform->findOne('schedules', [
                 Query::equal('resourceId', [$executionId]),
                 Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
                 Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::equal('active', [true]),
             ]));
 
             if ($schedule->isEmpty()) {
@@ -109,7 +108,7 @@ class Delete extends Base
                 throw new Exception(Exception::EXECUTION_NOT_FOUND);
             }
 
-            $cancelled = $authorization->skip(fn () => $this->deactivateSchedule($dbForPlatform, $schedule->getId()));
+            $cancelled = $authorization->skip(fn () => $this->cancelSchedule($dbForPlatform, $schedule->getId()));
             if (!$cancelled) {
                 throw new Exception(Exception::EXECUTION_NOT_FOUND);
             }
@@ -173,14 +172,13 @@ class Delete extends Base
                 Query::equal('resourceId', [$execution->getId()]),
                 Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
                 Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::equal('active', [true]),
             ]));
 
             if ($schedule->isEmpty()) {
                 throw new Exception(Exception::EXECUTION_IN_PROGRESS);
             }
 
-            $cancelled = $authorization->skip(fn () => $this->deactivateSchedule($dbForPlatform, $schedule->getId()));
+            $cancelled = $authorization->skip(fn () => $this->cancelSchedule($dbForPlatform, $schedule->getId()));
             if (!$cancelled) {
                 throw new Exception(Exception::EXECUTION_IN_PROGRESS);
             }
@@ -204,21 +202,16 @@ class Delete extends Base
         $response->noContent();
     }
 
-    private function deactivateSchedule(Database $dbForPlatform, string $scheduleId): bool
+    private function cancelSchedule(Database $dbForPlatform, string $scheduleId): bool
     {
         return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
             $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
 
-            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+            if ($schedule->isEmpty()) {
                 return false;
             }
 
-            $schedule = $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
-                'resourceUpdatedAt' => DateTime::now(),
-                'active' => false,
-            ]));
-
-            return !$schedule->isEmpty();
+            return $dbForPlatform->deleteDocument('schedules', $scheduleId);
         });
     }
 }
