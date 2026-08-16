@@ -25,6 +25,7 @@ trait DatabasesBase
     use SchemaPolling;
     use QueryJoinTypes;
     use QueryJoinOperators;
+    use QueryJoinPermissions;
     use QueryJoinProjection;
     use QueryStatisticalAggregates;
     use QueryRejectedMethods;
