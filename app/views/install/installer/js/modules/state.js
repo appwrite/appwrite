@@ -50,6 +50,9 @@
         if (data.lockedDatabase) {
             formState.database = data.lockedDatabase;
         }
+        if (data.topology === 'combined' || data.topology === 'separate') {
+            formState.topology = data.topology;
+        }
         if (!isUpgradeMode?.()) {
             setStateIfEmpty('database', data.defaultDatabase);
         }

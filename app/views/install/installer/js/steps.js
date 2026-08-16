@@ -10,7 +10,8 @@
         INSTALLATION_STEPS,
         clampStep,
         isUpgradeMode,
-        getEnabledDatabases
+        getEnabledDatabases,
+        getTopology
     } = Context;
 
     const {
@@ -106,7 +107,7 @@
     const hydrateStep1State = (root) => {
         State.setStateIfEmpty?.('appDomain', root.querySelector('#hostname')?.value);
         State.setStateIfEmpty?.('database', root.querySelector('input[name="database"]:checked')?.value);
-        State.setStateIfEmpty?.('topology', root.querySelector('input[name="topology"]:checked')?.value || 'combined');
+        State.setStateIfEmpty?.('topology', getTopology?.() || root.querySelector('input[name="topology"]:checked')?.value || 'combined');
         State.setStateIfEmpty?.('httpPort', root.querySelector('#http-port')?.value);
         State.setStateIfEmpty?.('httpsPort', root.querySelector('#https-port')?.value);
         State.setStateIfEmpty?.('emailCertificates', root.querySelector('#ssl-email')?.value);

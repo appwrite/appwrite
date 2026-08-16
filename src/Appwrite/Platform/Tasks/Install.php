@@ -361,6 +361,7 @@ class Install extends Action
             'vars' => $vars,
             'isUpgrade' => $isUpgrade,
             'lockedDatabase' => $lockedDatabase,
+            'topology' => $this->topology,
             'enabledDatabases' => $enabledDatabases,
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
