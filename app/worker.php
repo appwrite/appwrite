@@ -99,13 +99,12 @@ $createConsumer = static function () use ($redisHost, $redisPort, $commands): Br
 
 // Adapter is transport only — queue names and concurrency come from job().
 $adapter = new Swoole(
-    $createConsumer(),
+    $createConsumer,
     System::getEnv('_APP_WORKERS_NUM', 1),
     resources: $container,
 );
 
 $worker = new Server($adapter);
-$worker->consumer(fn (string $name) => $createConsumer());
 
 try {
     $worker->init()->action(function () use ($worker, $registerWorkerMessageResources) {
