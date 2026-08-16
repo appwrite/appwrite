@@ -1385,6 +1385,9 @@ export function organizationsQueryOptions() {
     queryKey: ['organizations', 'console'],
     queryFn: fetchOrganizations,
     staleTime: LONG_STALE_TIME,
+    // Default QueryClient gcTime is 0. Without this, loader prefetch is
+    // discarded before OrgOverview mounts and the list is fetched twice.
+    gcTime: LONG_STALE_TIME,
     retry: false, // Don't retry on error
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
@@ -1408,6 +1411,7 @@ export function organizationsFullQueryOptions() {
     queryKey: ['organizations', 'console', 'full'],
     queryFn: fetchOrganizationsWithBillingFields,
     staleTime: 30 * 1000,
+    gcTime: LONG_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
