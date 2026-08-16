@@ -55,7 +55,9 @@ class Executions extends Action
             Span::add('execution.id', $execution->getId());
             Span::add('execution.cancelled', true);
 
-            $dbForProject->deleteDocument('executions', $execution->getId());
+            if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
+                throw new Exception('Failed to remove cancelled execution');
+            }
 
             return;
         }

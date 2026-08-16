@@ -94,7 +94,28 @@ final class ExecutionsTest extends TestCase
         $dbForProject = $this->createMock(Database::class);
         $dbForProject->expects($this->once())
             ->method('deleteDocument')
-            ->with('executions', 'execution');
+            ->with('executions', 'execution')
+            ->willReturn(true);
+
+        (new Executions())->action(
+            $this->message((new ExecutionCancelled(
+                project: new Document(['$id' => 'project']),
+                execution: new Document(['$id' => 'execution']),
+            ))->toArray()),
+            $dbForProject,
+        );
+    }
+
+    public function testRetriesCancelledExecutionWhenDeletionReturnsFalse(): void
+    {
+        $dbForProject = $this->createMock(Database::class);
+        $dbForProject->expects($this->once())
+            ->method('deleteDocument')
+            ->with('executions', 'execution')
+            ->willReturn(false);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to remove cancelled execution');
 
         (new Executions())->action(
             $this->message((new ExecutionCancelled(

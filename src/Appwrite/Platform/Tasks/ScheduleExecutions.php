@@ -104,42 +104,50 @@ class ScheduleExecutions extends ScheduleBase
                     Co::sleep($delay);
                 }
 
-                // The schedule can be cancelled while this coroutine sleeps.
-                // Re-read it before publishing so a captured execution is not
-                // enqueued after cancellation cleanup has already run.
-                if (!$this->isScheduleActive($dbForPlatform, $schedule['$id'])) {
-                    $dbForPlatform->deleteDocument('schedules', $schedule['$id']);
-                    unset($this->schedules[$schedule['$sequence']]);
-                    return;
-                }
-
-                $publisherForFunctions->enqueue(new FunctionMessage(
-                    project: $schedule['project'],
-                    userId: $data['userId'] ?? '',
-                    functionId: $functionId,
-                    execution: $schedule['resource'],
-                    type: 'schedule',
-                    body: $data['body'] ?? '',
-                    path: $data['path'] ?? '/',
-                    headers: $data['headers'] ?? [],
-                    method: $data['method'] ?? 'POST',
-                ));
-
-                $dbForPlatform->deleteDocument(
-                    'schedules',
+                // Lock the schedule while checking and publishing. A
+                // cancellation takes the same lock, so exactly one path can
+                // claim the scheduled execution.
+                $enqueued = $this->enqueueIfActive(
+                    $dbForPlatform,
                     $schedule['$id'],
+                    fn () => $publisherForFunctions->enqueue(new FunctionMessage(
+                        project: $schedule['project'],
+                        userId: $data['userId'] ?? '',
+                        functionId: $functionId,
+                        execution: $schedule['resource'],
+                        type: 'schedule',
+                        body: $data['body'] ?? '',
+                        path: $data['path'] ?? '/',
+                        headers: $data['headers'] ?? [],
+                        method: $data['method'] ?? 'POST',
+                    )),
                 );
 
-                $this->recordEnqueueDelay($scheduledAt);
+                if ($enqueued) {
+                    $this->recordEnqueueDelay($scheduledAt);
+                }
+
                 unset($this->schedules[$schedule['$sequence']]);
             });
         }
     }
 
-    protected function isScheduleActive(Database $dbForPlatform, string $scheduleId): bool
+    protected function enqueueIfActive(Database $dbForPlatform, string $scheduleId, callable $enqueue): bool
     {
-        $schedule = $dbForPlatform->getDocument('schedules', $scheduleId);
+        return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId, $enqueue) {
+            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
 
-        return !$schedule->isEmpty() && $schedule->getAttribute('active', false);
+            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+                return false;
+            }
+
+            $enqueue();
+
+            if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
+                throw new \RuntimeException('Failed to remove claimed execution schedule');
+            }
+
+            return true;
+        });
     }
 }

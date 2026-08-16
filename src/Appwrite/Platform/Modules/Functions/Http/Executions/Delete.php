@@ -109,10 +109,10 @@ class Delete extends Base
                 throw new Exception(Exception::EXECUTION_NOT_FOUND);
             }
 
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
-                'resourceUpdatedAt' => DateTime::now(),
-                'active' => false,
-            ])));
+            $cancelled = $authorization->skip(fn () => $this->deactivateSchedule($dbForPlatform, $schedule->getId()));
+            if (!$cancelled) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
 
             $execution = new Document([
                 '$id' => $executionId,
@@ -175,16 +175,18 @@ class Delete extends Base
                 Query::equal('active', [true]),
             ]));
 
-            if (!$schedule->isEmpty()) {
-                $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
-                    'resourceUpdatedAt' => DateTime::now(),
-                    'active' => false,
-                ])));
+            if ($schedule->isEmpty()) {
+                throw new Exception(Exception::EXECUTION_IN_PROGRESS);
+            }
+
+            $cancelled = $authorization->skip(fn () => $this->deactivateSchedule($dbForPlatform, $schedule->getId()));
+            if (!$cancelled) {
+                throw new Exception(Exception::EXECUTION_IN_PROGRESS);
             }
 
             // Route cancellation through the executions queue so it is ordered
-            // after the scheduled insert and cannot be recreated by a delayed
-            // ExecutionScheduled event.
+            // after the scheduled insert. The schedule lock ensures no delayed
+            // function execution can be published afterward.
             $bus->dispatch(new ExecutionCancelled(
                 execution: $execution->getArrayCopy(),
                 project: $project->getArrayCopy(),
@@ -199,5 +201,23 @@ class Delete extends Base
             ->setPayload($response->output($execution, Response::MODEL_EXECUTION));
 
         $response->noContent();
+    }
+
+    private function deactivateSchedule(Database $dbForPlatform, string $scheduleId): bool
+    {
+        return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
+            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
+
+            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+                return false;
+            }
+
+            $schedule = $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                'resourceUpdatedAt' => DateTime::now(),
+                'active' => false,
+            ]));
+
+            return !$schedule->isEmpty();
+        });
     }
 }
