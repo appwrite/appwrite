@@ -3149,7 +3149,7 @@ final class ProjectsConsoleClientTest extends Scope
             ]
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' and contain between 7 and 15 digits.', $response['body']['message']);
 
         /** Trying to pass a number longer than 15 digits  */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
@@ -3165,7 +3165,7 @@ final class ProjectsConsoleClientTest extends Scope
             ]
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' and contain between 7 and 15 digits.', $response['body']['message']);
 
         /** Trying to pass duplicate numbers  */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
