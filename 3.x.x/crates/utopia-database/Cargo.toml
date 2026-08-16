@@ -14,7 +14,7 @@ categories = ["database", "web-programming"]
 [features]
 default = ["sqlite"]
 mysql = ["dep:mysql"]
-postgres = ["dep:postgres", "dep:bytes"]
+postgres = ["dep:postgres", "dep:bytes", "dep:tokio"]
 sqlite = ["dep:rusqlite"]
 mongo = ["dep:mongodb"]
 redis = ["dep:redis"]
@@ -30,6 +30,7 @@ mysql = { workspace = true, optional = true }
 once_cell = { workspace = true }
 parking_lot = { workspace = true }
 postgres = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true, features = ["rt"] }
 rand = { workspace = true }
 redis = { workspace = true, optional = true }
 regex = { workspace = true }

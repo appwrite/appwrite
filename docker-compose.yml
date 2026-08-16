@@ -340,8 +340,10 @@ services:
       - traefik.http.routers.appwrite_rust_users_https.service=appwrite_rust_users
       - traefik.http.routers.appwrite_rust_users_https.tls=true
     depends_on:
-      - ${_APP_DB_HOST:-postgresql}
-      - redis
+      ${_APP_DB_HOST:-postgresql}:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - APPWRITE_BIND=0.0.0.0:80
       - _APP_ENV

@@ -14,15 +14,23 @@ use appwrite_platform::AppwriteState;
 use serde_json::json;
 use utopia_http::prelude::*;
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    // Mirrors PHP's `_APP_DB_ADAPTER`-driven adapter choice
-    // (`postgresql` / `mysql` / `mariadb` / `mongodb`), falling back to the
-    // in-memory `dbForPlatform`/`dbForProject` stand-in when the adapter is
-    // `memory`/unset, the matching Cargo feature is missing, or connect fails.
+fn main() -> Result<()> {
+    // Connect before entering the Tokio runtime. The sync `postgres` client
+    // (and other sync engines) call `Handle::block_on` internally; doing that
+    // under `#[tokio::main]` panics with nested-runtime errors. Request-path
+    // PDO calls still use `block_in_place` inside utopia-database.
     let (state, adapter) = AppwriteState::connect_from_env();
     println!("appwrite-server: dbForPlatform/dbForProject adapter = {adapter}");
     let state = Arc::new(state);
+
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime")
+        .block_on(async_main(state, adapter))
+}
+
+async fn async_main(state: Arc<AppwriteState>, adapter: &str) -> Result<()> {
 
     // PHP has no equivalent -- this seeds an in-memory dev project with a
     // `standard` key scoped to `users.read`/`users.write` so `apps/server`

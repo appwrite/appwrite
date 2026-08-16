@@ -289,6 +289,18 @@ impl Pdo {
     }
 }
 
+/// The sync `postgres` crate drives tokio-postgres via `Handle::block_on`.
+/// Calling it from an async task panics with "Cannot start a runtime from
+/// within a runtime"; `block_in_place` is the supported escape hatch when a
+/// Tokio worker is already driving the thread (Hyper / `#[tokio::main]`).
+#[cfg(feature = "postgres")]
+fn postgres_blocking<T>(f: impl FnOnce() -> T) -> T {
+    match tokio::runtime::Handle::try_current() {
+        Ok(_) => tokio::task::block_in_place(f),
+        Err(_) => f(),
+    }
+}
+
 #[cfg(feature = "postgres")]
 impl Pdo {
     /// Connect to Postgres.
@@ -300,7 +312,7 @@ impl Pdo {
         db: &str,
     ) -> Result<Self, DatabaseError> {
         let url = format!("host={host} port={port} user={user} password={pass} dbname={db}");
-        let client = postgres::Client::connect(&url, postgres::NoTls)
+        let client = postgres_blocking(|| postgres::Client::connect(&url, postgres::NoTls))
             .map_err(|e| DatabaseError::database(format!("Postgres connect failed: {e}")))?;
         Ok(Self {
             dsn: format!("pgsql:host={host};port={port};dbname={db}"),
@@ -325,8 +337,7 @@ impl Pdo {
             .ok_or_else(|| DatabaseError::database("Postgres PDO is not connected"))?;
         let (sql, owned) = rewrite_postgres(sql, params);
         let refs = postgres_refs(&owned);
-        let n = client
-            .execute(&sql, refs.as_slice())
+        let n = postgres_blocking(|| client.execute(&sql, refs.as_slice()))
             .map_err(|e| map_postgres(&e))?;
         Ok(n)
     }
@@ -342,8 +353,7 @@ impl Pdo {
             .ok_or_else(|| DatabaseError::database("Postgres PDO is not connected"))?;
         let (sql, owned) = rewrite_postgres(sql, params);
         let refs = postgres_refs(&owned);
-        let rows = client
-            .query(&sql, refs.as_slice())
+        let rows = postgres_blocking(|| client.query(&sql, refs.as_slice()))
             .map_err(|e| map_postgres(&e))?;
         Ok(rows.iter().map(postgres_row_to_map).collect())
     }
