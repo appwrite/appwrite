@@ -1,9 +1,5 @@
-//! Membership endpoints. Rust port of `Http/Users/Memberships/XList.php`.
-//!
-//! Simplifications versus PHP (documented, not silently dropped): the
-//! `memberships` and `teams` collections are only written by the Teams
-//! module, which is not yet ported, so `list` just enriches whatever that
-//! module (still served by PHP) writes into them.
+//! `GET /v1/users/:userId/memberships` (`listUserMemberships`). Rust port of
+//! `Http/Users/Memberships/XList.php`.
 
 use appwrite_exception::Exception;
 use serde_json::{json, Value};
@@ -17,7 +13,7 @@ use crate::state::document_to_json;
 
 /// `GET /v1/users/:userId/memberships` (`listUserMemberships`).
 #[must_use]
-pub fn list() -> Action {
+pub fn xlist() -> Action {
     inject(
         Action::new()
             .set_http_method(HttpMethod::Get)

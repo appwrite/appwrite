@@ -1,11 +1,5 @@
-//! Identity endpoints. Rust port of
-//! `Http/Users/Identities/{XList,Delete}.php`.
-//!
-//! Simplifications versus PHP (documented, not silently dropped): the
-//! `identities` collection is never populated by this milestone (OAuth
-//! login lives in the not-yet-ported Account module), so `list`/`delete`
-//! only operate on whatever a caller (or a future Account port) writes
-//! into it directly.
+//! `GET /v1/users/identities` (`listIdentities`). Rust port of
+//! `Http/Users/Identities/XList.php`.
 
 use appwrite_exception::Exception;
 use serde_json::{json, Value};
@@ -19,7 +13,7 @@ use crate::state::document_to_json;
 
 /// `GET /v1/users/identities` (`listIdentities`).
 #[must_use]
-pub fn list() -> Action {
+pub fn xlist() -> Action {
     inject(
         Action::new()
             .set_http_method(HttpMethod::Get)
@@ -88,45 +82,5 @@ pub fn list() -> Action {
             }))
         })();
         base::finish(&ctx, 200, appwrite_response::MODEL_IDENTITY_LIST, result)
-    })
-}
-
-/// `DELETE /v1/users/identities/:identityId` (`deleteIdentity`).
-#[must_use]
-pub fn delete() -> Action {
-    inject(
-        Action::new()
-            .set_http_method(HttpMethod::Delete)
-            .set_http_path("/v1/users/identities/:identityId")
-            .desc("Delete identity")
-            .groups(["api", "users"])
-            .label("scope", "users.write")
-            .label("audits.event", "identity.delete")
-            .label("audits.resource", "identity/{request.$identityId}")
-            .param(
-                "identityId",
-                json!(""),
-                Text::new(36),
-                "Identity ID.",
-                false,
-            ),
-        &["response", "dbForProject"],
-    )
-    .http_action(|ctx| async move {
-        let result = (|| -> Result<(), Exception> {
-            let db_handle = base::get_db(&ctx)?;
-            let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
-            let identity_id = base::param_str(&ctx, "identityId")?;
-            let identity = db
-                .get_document("identities", &identity_id, &[], false)
-                .map_err(base::db_error)?;
-            if identity.is_empty() {
-                return Err(Exception::new(Exception::USER_IDENTITY_NOT_FOUND));
-            }
-            db.delete_document("identities", &identity_id)
-                .map_err(base::db_error)?;
-            Ok(())
-        })();
-        base::finish_no_content(&ctx, result)
     })
 }
