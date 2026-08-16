@@ -77,7 +77,7 @@ pub fn list() -> Action {
                 .find("identities", &parsed, "read")
                 .map_err(base::db_error)?;
             let total = if include_total {
-                db.count("identities", &parsed, None)
+                db.count("identities", &parsed, Some(5000))
                     .map_err(base::db_error)?
             } else {
                 0

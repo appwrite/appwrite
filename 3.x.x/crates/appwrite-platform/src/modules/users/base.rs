@@ -459,17 +459,17 @@ pub fn create_user(
     let phone = phone.filter(|p| !p.is_empty());
 
     if let Some(email) = &email {
-        let matches = db
-            .find(
+        // PHP uses findOne; do not scan the whole identities match set.
+        let match_doc = db
+            .find_one(
                 "identities",
                 &[Query::equal(
                     "providerEmail",
                     vec![AttrValue::from(email.as_str())],
                 )],
-                "read",
             )
             .map_err(db_error)?;
-        if !matches.is_empty() {
+        if !match_doc.is_empty() {
             return Err(Exception::new(Exception::USER_EMAIL_ALREADY_EXISTS));
         }
     }
@@ -583,29 +583,69 @@ pub fn delete_user_sessions(
     Ok(())
 }
 
-/// PHP `Users\Get`/`Users\XList`'s `$user->setAttribute('targets', ...)`
-/// enrichment: attach every `targets` document scoped to `user`'s id (the
-/// Memory adapter has no relationship attributes, so this is a direct query
-/// rather than an already-populated `$user->getAttribute('targets')`).
+/// PHP `Users\Get`'s `$user->setAttribute('targets', ...)` enrichment for a
+/// single user. Prefer [`users_with_targets`] for list handlers (one batched
+/// query instead of N+1).
 #[must_use]
 pub fn user_with_targets(
     db: &mut crate::state::ProjectDb,
     user: &utopia_database::Document,
 ) -> Value {
-    let mut user_json = document_to_json(user);
-    let user_id = user.get_id();
-    let targets = db
-        .find(
-            "targets",
-            &[
-                Query::equal("userId", vec![AttrValue::from(user_id.as_str())]),
-                Query::limit(100),
-            ],
-            "read",
-        )
-        .unwrap_or_default();
-    user_json["targets"] = Value::Array(targets.iter().map(document_to_json).collect());
-    user_json
+    users_with_targets(db, std::slice::from_ref(user))
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| document_to_json(user))
+}
+
+/// PHP `Users\XList` target enrichment: one `find('targets', equal(userInternalId,
+/// sequences))` grouped in memory, matching
+/// `src/Appwrite/Platform/Modules/Users/Http/Users/XList.php`.
+#[must_use]
+pub fn users_with_targets(
+    db: &mut crate::state::ProjectDb,
+    users: &[utopia_database::Document],
+) -> Vec<Value> {
+    if users.is_empty() {
+        return Vec::new();
+    }
+    let sequences: Vec<AttrValue> = users
+        .iter()
+        .map(|user| AttrValue::from(sequence_str(user)))
+        .filter(|value| !matches!(value, AttrValue::String(s) if s.is_empty()))
+        .collect();
+    let mut targets_by_user: HashMap<String, Vec<Value>> = HashMap::new();
+    if !sequences.is_empty() {
+        let targets = db
+            .find(
+                "targets",
+                &[
+                    Query::equal("userInternalId", sequences),
+                    Query::limit(i64::MAX),
+                ],
+                "read",
+            )
+            .unwrap_or_default();
+        for target in targets {
+            let key = match target.get_attribute("userInternalId") {
+                AttrValue::String(s) => s.clone(),
+                AttrValue::Number(n) => n.to_string(),
+                _ => sequence_str(&target), // fall back; unlikely for this attribute
+            };
+            targets_by_user
+                .entry(key)
+                .or_default()
+                .push(document_to_json(&target));
+        }
+    }
+    users
+        .iter()
+        .map(|user| {
+            let mut user_json = document_to_json(user);
+            let seq = sequence_str(user);
+            user_json["targets"] = Value::Array(targets_by_user.remove(&seq).unwrap_or_default());
+            user_json
+        })
+        .collect()
 }
 
 /// PHP `$dbForProject->createDocument('targets', new Document([...]))` from

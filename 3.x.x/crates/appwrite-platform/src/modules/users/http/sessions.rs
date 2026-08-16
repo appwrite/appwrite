@@ -135,14 +135,16 @@ pub fn list() -> Action {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
             let user_id = base::param_str(&ctx, "userId")?;
-            base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
+            let user =
+                base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
             let include_total = ctx
                 .param_value("total")
                 .and_then(Value::as_bool)
                 .unwrap_or(true);
 
+            // Prefer `userInternalId` (same column PHP's relationship uses).
             let queries = [
-                Query::equal("userId", vec![user_id.clone().into()]),
+                Query::equal("userInternalId", vec![base::sequence_str(&user).into()]),
                 Query::limit(100),
             ];
             let sessions = db
@@ -357,23 +359,34 @@ pub fn create_jwt() -> Action {
             let user =
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
-            // PHP reads `$user->getAttribute('sessions')`, the relationship
-            // keyed on `userInternalId`, so match on the same column rather
-            // than `userId`.
-            let sessions = db
-                .find(
+            // PHP reads `$user->getAttribute('sessions')` from the cached
+            // relationship. Avoid loading every session: for `recent` take the
+            // newest by `$id` with limit 1; for a concrete id, get by primary key.
+            let session = if session_id == "recent" {
+                db.find_one(
                     "sessions",
                     &[
                         Query::equal("userInternalId", vec![base::sequence_str(&user).into()]),
-                        Query::limit(1000),
+                        Query::order_desc("$id"),
                     ],
-                    "read",
                 )
-                .map_err(base::db_error)?;
-            let session = if session_id == "recent" {
-                sessions.last().cloned()
+                .map_err(base::db_error)?
             } else {
-                sessions.into_iter().find(|s| s.get_id() == session_id)
+                let found = db
+                    .get_document("sessions", &session_id, &[], false)
+                    .map_err(base::db_error)?;
+                if found.is_empty()
+                    || found.get_attribute("userId").as_str() != Some(user_id.as_str())
+                {
+                    utopia_database::Document::default()
+                } else {
+                    found
+                }
+            };
+            let session_id_claim = if session.is_empty() {
+                String::new()
+            } else {
+                session.get_id()
             };
 
             #[derive(serde::Serialize)]
@@ -389,7 +402,7 @@ pub fn create_jwt() -> Action {
             let exp = chrono::Utc::now().timestamp() + duration;
             let claims = Claims {
                 user_id,
-                session_id: session.map(|s| s.get_id()).unwrap_or_default(),
+                session_id: session_id_claim,
                 exp,
             };
             let jwt = jsonwebtoken::encode(

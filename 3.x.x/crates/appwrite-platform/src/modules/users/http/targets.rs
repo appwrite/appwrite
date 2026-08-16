@@ -208,7 +208,7 @@ pub fn list() -> Action {
                 .find("targets", &queries, "read")
                 .map_err(base::db_error)?;
             let total = if include_total {
-                db.count("targets", &queries, None)
+                db.count("targets", &queries, Some(5000))
                     .map_err(base::db_error)?
             } else {
                 0

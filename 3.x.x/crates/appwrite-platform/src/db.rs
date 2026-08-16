@@ -207,6 +207,14 @@ impl ProjectDb {
         with_db!(self, db => db.find(collection, queries, for_permission))
     }
 
+    pub fn find_one(
+        &mut self,
+        collection: &str,
+        queries: &[Query],
+    ) -> utopia_database::Result<Document> {
+        with_db!(self, db => db.find_one(collection, queries))
+    }
+
     pub fn count(
         &mut self,
         collection: &str,

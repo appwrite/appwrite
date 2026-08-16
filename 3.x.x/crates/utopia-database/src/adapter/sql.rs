@@ -4,13 +4,13 @@ use crate::adapter::{filter_key, Adapter, AdapterState};
 use crate::constants::*;
 use crate::document::Document;
 use crate::error::{DatabaseError, Result};
-use crate::sql_client::{Dialect, SqlClient, SqlParam};
 use crate::query::{
     Query, TYPE_BETWEEN, TYPE_CONTAINS, TYPE_CONTAINS_ALL, TYPE_CONTAINS_ANY, TYPE_ENDS_WITH,
     TYPE_EQUAL, TYPE_GREATER, TYPE_GREATER_EQUAL, TYPE_IS_NOT_NULL, TYPE_IS_NULL, TYPE_LESSER,
     TYPE_LESSER_EQUAL, TYPE_NOT_BETWEEN, TYPE_NOT_CONTAINS, TYPE_NOT_ENDS_WITH, TYPE_NOT_EQUAL,
     TYPE_NOT_SEARCH, TYPE_NOT_STARTS_WITH, TYPE_OR, TYPE_SEARCH, TYPE_STARTS_WITH,
 };
+use crate::sql_client::{Dialect, SqlClient, SqlParam};
 use crate::value::AttrValue;
 use indexmap::IndexMap;
 
@@ -1122,18 +1122,46 @@ impl Adapter for SqlAdapter {
     }
 
     fn count(&mut self, collection: &Document, queries: &[Query], max: Option<i64>) -> Result<i64> {
-        let docs = self.find(
-            collection,
-            queries,
-            max,
-            None,
-            &[],
-            &[],
-            None,
-            CURSOR_AFTER,
-            PERMISSION_READ,
-        )?;
-        Ok(docs.len() as i64)
+        // Match Utopia PHP `Adapter\SQL::count`: `SELECT COUNT(1)` with the same
+        // WHERE as find. When `max` is set, wrap a `SELECT 1 ... LIMIT max`
+        // subquery so the count never scans more than that many rows. Never
+        // materialize documents just to count them.
+        let name = filter_key(&collection.get_id());
+        let arrays = array_attributes(collection);
+        let mut where_sql = Vec::new();
+        let mut params: Vec<(String, SqlParam)> = Vec::new();
+        let mut i = 0;
+        for query in queries {
+            if let Some(fragment) = self.sql_condition(query, &arrays, &mut params, &mut i) {
+                where_sql.push(fragment);
+            }
+        }
+        let sql_where = if where_sql.is_empty() {
+            String::new()
+        } else {
+            format!(" WHERE {}", where_sql.join(" AND "))
+        };
+        let table = self.table(&name);
+        let sql = match max {
+            Some(limit) if limit >= 0 => {
+                params.push((":limit".into(), SqlParam::I64(limit)));
+                format!(
+                    "SELECT COUNT(1) AS sum FROM (SELECT 1 FROM {table}{sql_where} LIMIT :limit) table_count"
+                )
+            }
+            _ => format!("SELECT COUNT(1) AS sum FROM {table}{sql_where}"),
+        };
+        let refs: Vec<(&str, SqlParam)> = params
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.clone()))
+            .collect();
+        let rows = self.client.query(&sql, &refs)?;
+        let sum = rows
+            .first()
+            .and_then(|row| row.get("sum"))
+            .and_then(AttrValue::as_i64)
+            .unwrap_or(0);
+        Ok(sum)
     }
 
     fn get_support_for_timeouts(&self) -> bool {

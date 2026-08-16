@@ -80,7 +80,7 @@ pub fn list() -> Action {
                 .find("memberships", &parsed, "read")
                 .map_err(base::db_error)?;
             let total = if include_total {
-                db.count("memberships", &parsed, None)
+                db.count("memberships", &parsed, Some(5000))
                     .map_err(base::db_error)?
             } else {
                 0

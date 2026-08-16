@@ -194,16 +194,15 @@ pub fn list() -> Action {
             }
 
             let users = db.find("users", &parsed, "read").map_err(base::db_error)?;
+            // PHP `APP_LIMIT_COUNT` (5000) caps the count scan.
             let total = if include_total {
-                db.count("users", &parsed, None).map_err(base::db_error)?
+                db.count("users", &parsed, Some(5000))
+                    .map_err(base::db_error)?
             } else {
                 0
             };
 
-            let items: Vec<Value> = users
-                .iter()
-                .map(|user| base::user_with_targets(&mut db, user))
-                .collect();
+            let items = base::users_with_targets(&mut db, &users);
             Ok(json!({ "users": items, "total": total }))
         })();
         base::finish(&ctx, 200, appwrite_response::MODEL_USER_LIST, result)
@@ -211,9 +210,9 @@ pub fn list() -> Action {
 }
 
 /// `DELETE /v1/users/:userId` (`deleteUser`). Rust port of
-/// `Http/Users/Delete.php`: also purges `identities`/`targets` and enqueues
-/// a `v1-deletes` message (session/token/membership cascade is left to the
-/// worker in PHP too, so it is out of scope here as well).
+/// `Http/Users/Delete.php`: delete the user, batch-delete identities/targets
+/// by `userInternalId`, and enqueue `v1-deletes` for sessions/tokens/memberships
+/// (handled by the deletes worker in PHP).
 #[must_use]
 pub fn delete() -> Action {
     inject(
@@ -239,22 +238,28 @@ pub fn delete() -> Action {
             let user_id = base::param_str(&ctx, "userId")?;
             let user =
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
+            let sequence = base::sequence_str(&user);
 
-            for collection in ["identities", "targets", "sessions", "tokens"] {
-                if let Ok(docs) = db.find(
-                    collection,
-                    &[
-                        Query::equal("userId", vec![user_id.clone().into()]),
-                        Query::limit(1000),
-                    ],
-                    "read",
-                ) {
-                    for doc in docs {
-                        let _ = db.delete_document(collection, &doc.get_id());
+            // Match PHP order: delete the user first, then identities/targets.
+            // Sessions/tokens are left to the deletes worker.
+            db.delete_document("users", &user_id)
+                .map_err(base::db_error)?;
+            if !sequence.is_empty() {
+                for collection in ["identities", "targets"] {
+                    if let Ok(docs) = db.find(
+                        collection,
+                        &[
+                            Query::equal("userInternalId", vec![sequence.clone().into()]),
+                            Query::limit(1000),
+                        ],
+                        "read",
+                    ) {
+                        for doc in docs {
+                            let _ = db.delete_document(collection, &doc.get_id());
+                        }
                     }
                 }
             }
-            let _ = db.delete_document("users", &user_id);
 
             let message = DeleteMessage::new(appwrite_event::DELETE_TYPE_DOCUMENT)
                 .with_document(document_to_json(&user))
