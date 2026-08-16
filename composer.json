@@ -133,7 +133,7 @@
         "utopia-php/dsn": "0.2.1",
         "utopia-php/http": "^2.0@RC",
         "utopia-php/fetch": "^1.1",
-        "utopia-php/validators": "^0.4",
+        "utopia-php/validators": "^0.5",
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.8.*",
         "utopia-php/lock": "0.3.*",
@@ -165,7 +165,7 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "^2.0",
+        "appwrite/sdk-generator": "^4.0",
         "brianium/paratest": "7.*",
         "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",

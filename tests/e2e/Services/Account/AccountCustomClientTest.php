@@ -1772,6 +1772,30 @@ final class AccountCustomClientTest extends Scope
 
     }
 
+    public function testDeleteAccountSessionsWithJWT(): void
+    {
+        $data = $this->setupAccountWithVerifiedEmail();
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwt', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $data['session'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $jwt = $response['body']['jwt'];
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
     public function testCreateAccountRecovery(): void
     {
         $data = $this->setupAccountWithVerifiedEmail();

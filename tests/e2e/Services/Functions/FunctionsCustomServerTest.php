@@ -429,6 +429,14 @@ final class FunctionsCustomServerTest extends Scope
          */
         $functions = $this->listFunctions([
             'queries' => [
+                Query::search('name', 'Test')->toString(),
+            ],
+        ]);
+        $this->assertEquals(400, $functions['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $functions['body']['type']);
+
+        $functions = $this->listFunctions([
+            'queries' => [
                 Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
             ],
         ]);
@@ -1639,6 +1647,16 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertGreaterThanOrEqual(1, count($deployments['body']['deployments']));
         $this->assertArrayHasKey('sourceSize', $deployments['body']['deployments'][0]);
         $this->assertArrayHasKey('buildSize', $deployments['body']['deployments'][0]);
+
+        /**
+         * Test for FAILURE
+         */
+        $deployments = $this->listDeployments($functionId, [
+            'search' => 'deployment',
+        ]);
+
+        $this->assertEquals(400, $deployments['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $deployments['body']['type']);
 
         $deployments = $this->listDeployments($functionId, [
             'queries' => [
