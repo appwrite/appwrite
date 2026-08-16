@@ -56,7 +56,7 @@ final class FunctionsScheduleTest extends Scope
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'timeout' => 10,
+            'timeout' => 30,
             'logging' => true,
         ]);
         $this->setupDeployment($functionId, [

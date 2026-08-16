@@ -168,27 +168,29 @@ class Delete extends Base
             throw new Exception(Exception::EXECUTION_IN_PROGRESS);
         }
 
-        if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
-        }
-
         if ($status === 'scheduled') {
-            $schedule = $dbForPlatform->findOne('schedules', [
+            $schedule = $authorization->skip(fn () => $dbForPlatform->findOne('schedules', [
                 Query::equal('resourceId', [$execution->getId()]),
                 Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
                 Query::equal('active', [true]),
-            ]);
+            ]));
 
             if (!$schedule->isEmpty()) {
-                $schedule
-                    ->setAttribute('resourceUpdatedAt', DateTime::now())
-                    ->setAttribute('active', false);
-
                 $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
-                    'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
-                    'active' => $schedule->getAttribute('active'),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'active' => false,
                 ])));
             }
+
+            // Route cancellation through the executions queue so it is ordered
+            // after the scheduled insert and cannot be recreated by a delayed
+            // ExecutionScheduled event.
+            $bus->dispatch(new ExecutionCancelled(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
+        } elseif (!$dbForProject->deleteDocument('executions', $execution->getId())) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
         }
 
         $queueForEvents

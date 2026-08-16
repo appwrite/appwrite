@@ -19,10 +19,15 @@ final class ExecutionsTest extends TestCase
 {
     public function testCreatesPendingExecutionWithoutUpsert(): void
     {
+        $created = null;
         $dbForProject = $this->createMock(Database::class);
         $dbForProject->expects($this->once())
             ->method('createDocument')
-            ->with('executions', $this->callback(fn (Document $execution) => $execution->getAttribute('status') === 'waiting'));
+            ->with('executions', $this->isInstanceOf(Document::class))
+            ->willReturnCallback(function (string $collection, Document $execution) use (&$created): Document {
+                $created = $execution;
+                return $execution;
+            });
         $dbForProject->expects($this->never())->method('upsertDocument');
 
         (new Executions())->action(
@@ -32,6 +37,9 @@ final class ExecutionsTest extends TestCase
             ))->toArray()),
             $dbForProject,
         );
+
+        $this->assertInstanceOf(Document::class, $created);
+        $this->assertSame('waiting', $created->getAttribute('status'));
     }
 
     public function testPendingExecutionDoesNotReplaceExistingTerminalExecution(): void
@@ -53,14 +61,16 @@ final class ExecutionsTest extends TestCase
 
     public function testUpsertsCompletedExecutionWithLogs(): void
     {
+        $upserted = null;
         $dbForProject = $this->createMock(Database::class);
         $dbForProject->expects($this->never())->method('createDocument');
         $dbForProject->expects($this->once())
             ->method('upsertDocument')
-            ->with('executions', $this->callback(function (Document $execution): bool {
-                return $execution->getAttribute('status') === 'completed'
-                    && $execution->getAttribute('logs') === 'output';
-            }));
+            ->with('executions', $this->isInstanceOf(Document::class))
+            ->willReturnCallback(function (string $collection, Document $execution) use (&$upserted): Document {
+                $upserted = $execution;
+                return $execution;
+            });
 
         (new Executions())->action(
             $this->message((new Execution(
@@ -73,6 +83,10 @@ final class ExecutionsTest extends TestCase
             ))->toArray()),
             $dbForProject,
         );
+
+        $this->assertInstanceOf(Document::class, $upserted);
+        $this->assertSame('completed', $upserted->getAttribute('status'));
+        $this->assertSame('output', $upserted->getAttribute('logs'));
     }
 
     public function testDeletesCancelledExecution(): void
