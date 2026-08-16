@@ -4,7 +4,7 @@ use crate::adapter::{filter_key, Adapter, AdapterState};
 use crate::constants::*;
 use crate::document::Document;
 use crate::error::{DatabaseError, Result};
-use crate::pdo::{Dialect, Pdo, SqlParam};
+use crate::sql_client::{Dialect, SqlClient, SqlParam};
 use crate::query::{
     Query, TYPE_BETWEEN, TYPE_CONTAINS, TYPE_CONTAINS_ALL, TYPE_CONTAINS_ANY, TYPE_ENDS_WITH,
     TYPE_EQUAL, TYPE_GREATER, TYPE_GREATER_EQUAL, TYPE_IS_NOT_NULL, TYPE_IS_NULL, TYPE_LESSER,
@@ -60,31 +60,31 @@ pub fn collection_attributes(collection: &Document) -> Vec<Document> {
     }
 }
 
-/// PHP `Utopia\Database\Adapter\SQL` - PDO-backed SQL adapter.
+/// Shared SQL adapter helpers used by MySQL, MariaDB, Postgres, and SQLite.
 #[derive(Debug)]
 pub struct Sql {
     state: AdapterState,
-    pdo: Option<Pdo>,
+    client: Option<SqlClient>,
     float_precision: i32,
 }
 
 impl Sql {
-    /// PHP `__construct($pdo)`.
+    /// Wrap a live [`SqlClient`].
     #[must_use]
-    pub fn new(pdo: Pdo) -> Self {
+    pub fn new(client: SqlClient) -> Self {
         Self {
             state: AdapterState::default(),
-            pdo: Some(pdo),
+            client: Some(client),
             float_precision: 17,
         }
     }
 
-    /// Construct without an open PDO (used by feature-gated stubs).
+    /// Construct without an open client (used by feature-gated stubs).
     #[must_use]
     pub fn disconnected() -> Self {
         Self {
             state: AdapterState::default(),
-            pdo: None,
+            client: None,
             float_precision: 17,
         }
     }
@@ -103,10 +103,10 @@ impl Sql {
         )
     }
 
-    /// The wrapped PDO, if any.
+    /// The wrapped SQL client, if any.
     #[must_use]
-    pub fn pdo(&self) -> Option<&Pdo> {
-        self.pdo.as_ref()
+    pub fn client(&self) -> Option<&SqlClient> {
+        self.client.as_ref()
     }
 }
 
@@ -129,18 +129,18 @@ pub type SqlResult<T> = Result<T>;
 #[derive(Debug)]
 pub struct SqlAdapter {
     state: AdapterState,
-    pdo: Pdo,
+    client: SqlClient,
     dialect: Dialect,
 }
 
 impl SqlAdapter {
-    /// Wrap an open PDO.
+    /// Wrap an open [`SqlClient`].
     #[must_use]
-    pub fn new(pdo: Pdo) -> Self {
-        let dialect = pdo.dialect();
+    pub fn new(client: SqlClient) -> Self {
+        let dialect = client.dialect();
         Self {
             state: AdapterState::default(),
-            pdo,
+            client,
             dialect,
         }
     }
@@ -188,8 +188,8 @@ impl SqlAdapter {
         }
     }
 
-    fn pdo_mut(&mut self) -> &mut Pdo {
-        &mut self.pdo
+    fn client_mut(&mut self) -> &mut SqlClient {
+        &mut self.client
     }
 
     /// PHP `getSQLCondition`: one query to one WHERE fragment, pushing its
@@ -498,15 +498,15 @@ impl Adapter for SqlAdapter {
     }
 
     fn ping(&mut self) -> bool {
-        self.pdo.ping().unwrap_or(false)
+        self.client.ping().unwrap_or(false)
     }
 
     fn start_transaction(&mut self) -> Result<bool> {
         if self.state.in_transaction == 0 {
-            self.pdo.exec("BEGIN", &[])?;
+            self.client.exec("BEGIN", &[])?;
         } else {
             let sql = format!("SAVEPOINT transaction{}", self.state.in_transaction);
-            self.pdo.exec(&sql, &[])?;
+            self.client.exec(&sql, &[])?;
         }
         self.state.in_transaction += 1;
         Ok(true)
@@ -517,13 +517,13 @@ impl Adapter for SqlAdapter {
             return Ok(false);
         }
         if self.state.in_transaction == 1 {
-            self.pdo.exec("COMMIT", &[])?;
+            self.client.exec("COMMIT", &[])?;
         } else {
             let sql = format!(
                 "RELEASE SAVEPOINT transaction{}",
                 self.state.in_transaction - 1
             );
-            self.pdo.exec(&sql, &[])?;
+            self.client.exec(&sql, &[])?;
         }
         self.state.in_transaction -= 1;
         Ok(true)
@@ -534,13 +534,13 @@ impl Adapter for SqlAdapter {
             return Ok(false);
         }
         if self.state.in_transaction == 1 {
-            self.pdo.exec("ROLLBACK", &[])?;
+            self.client.exec("ROLLBACK", &[])?;
         } else {
             let sql = format!(
                 "ROLLBACK TO SAVEPOINT transaction{}",
                 self.state.in_transaction - 1
             );
-            self.pdo.exec(&sql, &[])?;
+            self.client.exec(&sql, &[])?;
         }
         self.state.in_transaction -= 1;
         Ok(true)
@@ -555,10 +555,10 @@ impl Adapter for SqlAdapter {
                     return Ok(true);
                 }
                 let sql = format!("CREATE SCHEMA {}", self.q(&name));
-                self.pdo.exec(&sql, &[])?;
+                self.client.exec(&sql, &[])?;
                 for ext in ["postgis", "vector", "pg_trgm"] {
                     let _ = self
-                        .pdo
+                        .client
                         .exec(&format!("CREATE EXTENSION IF NOT EXISTS {ext}"), &[]);
                 }
                 Ok(true)
@@ -571,7 +571,7 @@ impl Adapter for SqlAdapter {
                     "CREATE DATABASE {} /*!40100 DEFAULT CHARACTER SET utf8mb4 */",
                     self.q(&name)
                 );
-                self.pdo.exec(&sql, &[])?;
+                self.client.exec(&sql, &[])?;
                 Ok(true)
             }
         }
@@ -583,7 +583,7 @@ impl Adapter for SqlAdapter {
             (Dialect::Sqlite, None) => Ok(true),
             (Dialect::Sqlite, Some(collection)) => {
                 let table = format!("{}_{}", self.state.namespace, filter_key(collection));
-                let rows = self.pdo.query(
+                let rows = self.client.query(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name = :table",
                     &[(":table", SqlParam::from_str(table.clone()))],
                 )?;
@@ -592,7 +592,7 @@ impl Adapter for SqlAdapter {
                     .any(|r| r.get("name").and_then(AttrValue::as_str) == Some(table.as_str())))
             }
             (Dialect::Postgres, None) => {
-                let rows = self.pdo.query(
+                let rows = self.client.query(
                     "SELECT schema_name FROM information_schema.schemata WHERE schema_name = :schema",
                     &[(":schema", SqlParam::from_str(database))],
                 )?;
@@ -600,7 +600,7 @@ impl Adapter for SqlAdapter {
             }
             (Dialect::Postgres, Some(collection)) => {
                 let table = format!("{}_{}", self.state.namespace, filter_key(collection));
-                let rows = self.pdo.query(
+                let rows = self.client.query(
                     "SELECT table_name FROM information_schema.tables WHERE table_schema = :schema AND table_name = :table",
                     &[
                         (":schema", SqlParam::from_str(database)),
@@ -610,7 +610,7 @@ impl Adapter for SqlAdapter {
                 Ok(!rows.is_empty())
             }
             (_, None) => {
-                let rows = self.pdo.query(
+                let rows = self.client.query(
                     "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = :schema",
                     &[(":schema", SqlParam::from_str(database))],
                 )?;
@@ -618,7 +618,7 @@ impl Adapter for SqlAdapter {
             }
             (_, Some(collection)) => {
                 let table = format!("{}_{}", self.state.namespace, filter_key(collection));
-                let rows = self.pdo.query(
+                let rows = self.client.query(
                     "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :table",
                     &[
                         (":schema", SqlParam::from_str(database)),
@@ -636,12 +636,12 @@ impl Adapter for SqlAdapter {
             Dialect::Sqlite => Ok(true),
             Dialect::Postgres => {
                 let sql = format!("DROP SCHEMA IF EXISTS {} CASCADE", self.q(&name));
-                self.pdo.exec(&sql, &[])?;
+                self.client.exec(&sql, &[])?;
                 Ok(true)
             }
             Dialect::Mysql | Dialect::Mariadb => {
                 let sql = format!("DROP DATABASE IF EXISTS {}", self.q(&name));
-                self.pdo.exec(&sql, &[])?;
+                self.client.exec(&sql, &[])?;
                 Ok(true)
             }
         }
@@ -758,8 +758,8 @@ impl Adapter for SqlAdapter {
                 ),
             ),
         };
-        self.pdo.exec(&collection_sql, &[])?;
-        self.pdo.exec(&perms_sql, &[])?;
+        self.client.exec(&collection_sql, &[])?;
+        self.client.exec(&perms_sql, &[])?;
         Ok(true)
     }
 
@@ -769,13 +769,13 @@ impl Adapter for SqlAdapter {
         let perms = self.table(&format!("{id}_perms"));
         match self.dialect {
             Dialect::Sqlite => {
-                self.pdo
+                self.client
                     .exec(&format!("DROP TABLE IF EXISTS {table}"), &[])?;
-                self.pdo
+                self.client
                     .exec(&format!("DROP TABLE IF EXISTS {perms}"), &[])?;
             }
             _ => {
-                self.pdo
+                self.client
                     .exec(&format!("DROP TABLE IF EXISTS {table}, {perms}"), &[])?;
             }
         }
@@ -798,7 +798,7 @@ impl Adapter for SqlAdapter {
             self.table(collection),
             self.q(&filter_key(id))
         );
-        self.pdo.exec(&sql, &[])?;
+        self.client.exec(&sql, &[])?;
         Ok(true)
     }
 
@@ -808,7 +808,7 @@ impl Adapter for SqlAdapter {
             self.table(collection),
             self.q(&filter_key(id))
         );
-        self.pdo.exec(&sql, &[])?;
+        self.client.exec(&sql, &[])?;
         Ok(true)
     }
 
@@ -819,7 +819,7 @@ impl Adapter for SqlAdapter {
             self.q(&filter_key(old)),
             self.q(&filter_key(new))
         );
-        self.pdo.exec(&sql, &[])?;
+        self.client.exec(&sql, &[])?;
         Ok(true)
     }
 
@@ -842,7 +842,7 @@ impl Adapter for SqlAdapter {
             self.q("_uid")
         );
         let rows = self
-            .pdo_mut()
+            .client_mut()
             .query(&sql, &[(":_uid", SqlParam::from_str(id))])?;
         Ok(rows
             .into_iter()
@@ -917,7 +917,7 @@ impl Adapter for SqlAdapter {
             .map(|(k, v)| (k.as_str(), v.clone()))
             .collect();
         if self.dialect == Dialect::Postgres {
-            let rows = self.pdo.query(&sql, &param_refs)?;
+            let rows = self.client.query(&sql, &param_refs)?;
             if let Some(id) = rows
                 .first()
                 .and_then(|r| r.get("_id"))
@@ -926,8 +926,8 @@ impl Adapter for SqlAdapter {
                 document.set_attribute("$sequence", AttrValue::from(id));
             }
         } else {
-            self.pdo.exec(&sql, &param_refs)?;
-            let id = self.pdo.last_insert_id().to_owned();
+            self.client.exec(&sql, &param_refs)?;
+            let id = self.client.last_insert_id().to_owned();
             if id.is_empty() || id == "0" {
                 return Err(DatabaseError::database(
                     "Error creating document empty \"$sequence\"",
@@ -961,7 +961,7 @@ impl Adapter for SqlAdapter {
                 .iter()
                 .map(|(k, v)| (k.as_str(), v.clone()))
                 .collect();
-            let _ = self.pdo.exec(&sql, &refs);
+            let _ = self.client.exec(&sql, &refs);
         }
         Ok(document)
     }
@@ -1012,13 +1012,13 @@ impl Adapter for SqlAdapter {
             .iter()
             .map(|(k, v)| (k.as_str(), v.clone()))
             .collect();
-        self.pdo.exec(&sql, &refs)?;
+        self.client.exec(&sql, &refs)?;
         Ok(document)
     }
 
     fn delete_document(&mut self, collection: &str, id: &str) -> Result<bool> {
         let name = filter_key(collection);
-        self.pdo.exec(
+        self.client.exec(
             &format!(
                 "DELETE FROM {} WHERE {} = :_uid",
                 self.table(&name),
@@ -1026,7 +1026,7 @@ impl Adapter for SqlAdapter {
             ),
             &[(":_uid", SqlParam::from_str(id))],
         )?;
-        self.pdo.exec(
+        self.client.exec(
             &format!(
                 "DELETE FROM {} WHERE {} = :_uid",
                 self.table(&format!("{name}_perms")),
@@ -1113,7 +1113,7 @@ impl Adapter for SqlAdapter {
             .iter()
             .map(|(k, v)| (k.as_str(), v.clone()))
             .collect();
-        let rows = self.pdo.query(&sql, &refs)?;
+        let rows = self.client.query(&sql, &refs)?;
         let mut documents: Vec<Document> = rows.into_iter().map(row_to_document).collect();
         if backwards {
             documents.reverse();

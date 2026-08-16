@@ -34,7 +34,7 @@ db.create(None).unwrap();
 | Adapter | PHP name | Feature | Notes |
 |---------|----------|---------|-------|
 | [`adapter::Memory`](src/adapter/memory.rs) | `Adapter\Memory` | default | In-process. Used by unit tests. |
-| [`adapter::Sql`](src/adapter/sql.rs) | `Adapter\SQL` | - | Shared quoting / type-map helpers + PDO wrapper. |
+| [`adapter::Sql`](src/adapter/sql.rs) | `Adapter\SQL` | - | Shared quoting / type-map helpers used by SQL engines. |
 | [`adapter::mysql::Mysql`](src/adapter/mysql.rs) | `Adapter\MySQL` | `mysql` | Compiles with the `mysql` crate. Live I/O env-gated. |
 | `adapter::mysql::MariaDb` | `Adapter\MariaDB` | `mysql` | Type alias of `Mysql`. |
 | [`adapter::postgres::Postgres`](src/adapter/postgres.rs) | `Adapter\Postgres` | `postgres` | |
@@ -55,7 +55,7 @@ db.create(None).unwrap();
 | [`Change`](src/change.rs) | `Change` | Old/new document pair. |
 | [`Connection`](src/connection.rs) | `Connection` | Lost-connection heuristics. |
 | [`Mirror`](src/mirror.rs) | `Mirror` | Dual-write. |
-| [`Pdo`](src/pdo.rs) / [`PdoStatement`](src/pdo.rs) | `PDO` / `PDOStatement` | |
+| [`SqlClient`](src/sql_client.rs) / [`SqlStatement`](src/sql_client.rs) | *(none - Rust)* | Engine connection behind SQL adapters. Not a PDO port; prefer `Postgres` / `Mysql` / `Sqlite`. |
 | [`Id`](src/helpers/id.rs) | `Helpers\ID` | `unique`, `custom`. |
 | [`Permission`](src/helpers/permission.rs) | `Helpers\Permission` | `read`/`create`/`update`/`delete`/`write`, `parse`, `aggregate`. |
 | [`Role`](src/helpers/role.rs) | `Helpers\Role` | `any`, `user`, `users`, `team`, `guests`, `label`, `member`. |
@@ -102,6 +102,7 @@ PHP `Utopia\Database\Validator\*` is under [`validator`](src/validator): `Key`, 
 - `AttrValue` replaces PHP `mixed`. Empty-document `get_id()` is `""` (PHP returns `""`; PHPUnit `assertEquals(null, '')` is loose).
 - `Id::unique()` returns `Result<String>`. `Role::user` / `users` take explicit status strings (PHP defaults to `''`).
 - `Database` is generic over the adapter (`Database<Memory>`). `Adapter` is not `dyn` because fluent setters return `&mut Self`.
+- SQL engines use Rust crates (`postgres`, `mysql`, `rusqlite`) behind [`SqlClient`](src/sql_client.rs). There is no PDO / DSN / `PDOStatement` public API - call `Postgres::connect`, `Mysql::connect_db`, or `Sqlite::open` instead.
 - SQL/Mongo adapters execute live queries. Default `cargo test -p utopia-database` runs Memory + SQLite. `cargo test -p utopia-database --features mysql,postgres,mongo` needs `docker compose -f docker-compose.test.yml up -d`.
 - Mongo remains on the family not-converting list; the adapter is still shipped and tested against a container.
 - Cache is [`utopia_cache::Cache`](../utopia-cache), not an in-crate stand-in.

@@ -17,8 +17,6 @@ use utopia_database::adapter::mysql::{MariaDb, Mysql};
 use utopia_database::adapter::postgres::Postgres;
 pub use utopia_database::adapter::Memory;
 use utopia_database::helpers::{Permission, Role};
-#[cfg(feature = "mysql")]
-use utopia_database::pdo::Pdo;
 use utopia_database::{Database, DatabaseError, Document, Query};
 
 use crate::state::{COLLECTIONS, PLATFORM_NAMESPACE};
@@ -343,7 +341,7 @@ fn configure_live_database<A: utopia_database::adapter::Adapter>(
 ) -> Result<Database<A>, DatabaseError> {
     db.disable_validation();
     db.get_authorization_mut().disable();
-    // PHP's pooled PDO adapter carries the DSN host, and that host is a
+    // PHP's pooled SQL adapter carries the DSN host, and that host is a
     // segment of every cache key. Without it, Rust would read and purge a
     // different key space than the PHP server sharing this Redis.
     db.get_adapter_mut().set_hostname(config.host.as_str());
@@ -430,35 +428,28 @@ fn open_database(config: &DatabaseConfig, namespace: &str) -> Result<ProjectDb, 
         )),
         #[cfg(feature = "mysql")]
         AdapterKind::Mysql => {
-            let pdo = Pdo::mysql(
+            let adapter = Mysql::connect_db(
                 &config.host,
                 config.port,
                 &config.user,
                 &config.pass,
                 Some(config.schema.as_str()),
-                false,
             )
             .map_err(|err| DatabaseError::database(format!("mysql connect failed: {err}")))?;
-            let db =
-                configure_live_database(Database::new(Mysql::new(pdo), cache), config, namespace)?;
+            let db = configure_live_database(Database::new(adapter, cache), config, namespace)?;
             Ok(ProjectDb::Mysql(db))
         }
         #[cfg(feature = "mysql")]
         AdapterKind::MariaDb => {
-            let pdo = Pdo::mysql(
+            let adapter = MariaDb::connect_db(
                 &config.host,
                 config.port,
                 &config.user,
                 &config.pass,
                 Some(config.schema.as_str()),
-                true,
             )
             .map_err(|err| DatabaseError::database(format!("mariadb connect failed: {err}")))?;
-            let db = configure_live_database(
-                Database::new(MariaDb::new(pdo), cache),
-                config,
-                namespace,
-            )?;
+            let db = configure_live_database(Database::new(adapter, cache), config, namespace)?;
             Ok(ProjectDb::MariaDb(db))
         }
         #[cfg(not(feature = "mysql"))]

@@ -18,7 +18,7 @@ fn main() -> Result<()> {
     // Connect before entering the Tokio runtime. The sync `postgres` client
     // (and other sync engines) call `Handle::block_on` internally; doing that
     // under `#[tokio::main]` panics with nested-runtime errors. Request-path
-    // PDO calls still use `block_in_place` inside utopia-database.
+    // sync SQL client calls still use `block_in_place` inside utopia-database.
     let (state, adapter) = AppwriteState::connect_from_env();
     println!("appwrite-server: dbForPlatform/dbForProject adapter = {adapter}");
     let state = Arc::new(state);

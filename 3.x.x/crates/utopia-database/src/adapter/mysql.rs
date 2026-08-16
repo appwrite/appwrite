@@ -1,30 +1,41 @@
-//! MySQL / MariaDB adapters (PHP `Adapter\MySQL`, `Adapter\MariaDB`).
+//! MySQL / MariaDB adapters.
 
 use super::sql::{quote_mysql, SqlAdapter};
 use crate::error::Result;
 use crate::impl_sql_engine;
-use crate::pdo::Pdo;
+use crate::sql_client::SqlClient;
 
-/// MySQL adapter (PHP `Utopia\Database\Adapter\MySQL`).
+/// MySQL adapter.
 #[derive(Debug)]
 pub struct Mysql {
     pub(crate) inner: SqlAdapter,
 }
 
 impl Mysql {
-    /// Connect using host/port credentials.
+    /// Connect using host/port credentials (no default database selected).
     pub fn connect(host: &str, port: u16, user: &str, pass: &str) -> Result<Self> {
-        let pdo = Pdo::mysql(host, port, user, pass, None, false)?;
+        Self::connect_db(host, port, user, pass, None)
+    }
+
+    /// Connect and optionally select a default database/schema.
+    pub fn connect_db(
+        host: &str,
+        port: u16,
+        user: &str,
+        pass: &str,
+        database: Option<&str>,
+    ) -> Result<Self> {
+        let client = SqlClient::mysql(host, port, user, pass, database, false)?;
         Ok(Self {
-            inner: SqlAdapter::new(pdo),
+            inner: SqlAdapter::new(client),
         })
     }
 
-    /// Wrap an existing PDO.
+    /// Wrap an existing [`SqlClient`].
     #[must_use]
-    pub fn new(pdo: Pdo) -> Self {
+    pub fn from_client(client: SqlClient) -> Self {
         Self {
-            inner: SqlAdapter::new(pdo),
+            inner: SqlAdapter::new(client),
         }
     }
 
@@ -37,26 +48,37 @@ impl Mysql {
 
 impl_sql_engine!(Mysql, "mysql");
 
-/// MariaDB adapter (PHP `Utopia\Database\Adapter\MariaDB`).
+/// MariaDB adapter.
 #[derive(Debug)]
 pub struct MariaDb {
     pub(crate) inner: SqlAdapter,
 }
 
 impl MariaDb {
-    /// Connect using host/port credentials.
+    /// Connect using host/port credentials (no default database selected).
     pub fn connect(host: &str, port: u16, user: &str, pass: &str) -> Result<Self> {
-        let pdo = Pdo::mysql(host, port, user, pass, None, true)?;
+        Self::connect_db(host, port, user, pass, None)
+    }
+
+    /// Connect and optionally select a default database/schema.
+    pub fn connect_db(
+        host: &str,
+        port: u16,
+        user: &str,
+        pass: &str,
+        database: Option<&str>,
+    ) -> Result<Self> {
+        let client = SqlClient::mysql(host, port, user, pass, database, true)?;
         Ok(Self {
-            inner: SqlAdapter::new(pdo),
+            inner: SqlAdapter::new(client),
         })
     }
 
-    /// Wrap an existing PDO.
+    /// Wrap an existing [`SqlClient`].
     #[must_use]
-    pub fn new(pdo: Pdo) -> Self {
+    pub fn from_client(client: SqlClient) -> Self {
         Self {
-            inner: SqlAdapter::new(pdo),
+            inner: SqlAdapter::new(client),
         }
     }
 

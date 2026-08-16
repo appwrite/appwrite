@@ -40,6 +40,24 @@ Naming makes ownership obvious: `cargo test -p utopia-http` vs `cargo test -p ap
 
 Shared env with PHP: `_APP_DB_HOST`, `_APP_DB_PORT`, `_APP_DB_USER`, `_APP_DB_PASS`, `_APP_DB_SCHEMA`, `_APP_OPENSSL_KEY_V1`.
 
+## Architecture (keep / drop)
+
+Follow Appwrite's **high-level** shape from PHP, not PHP's runtime:
+
+**Keep (domain architecture):**
+
+- Platform composition, Modules, HTTP Actions (`create` / `get` / `list` / `update` / `delete`)
+- Utopia DI, hooks, events, response models
+- Document / Query / `Database` adapter API (`dbForPlatform`, `dbForProject`)
+- Shared env vars and Traefik split routing with PHP
+
+**Drop (PHP-specific tooling):**
+
+- PDO, `PDOStatement`, PHP DSNs, reflection-heavy patterns, and other PHP runtime APIs
+- Replicating PHP extension surfaces when a Rust crate already does the job (`postgres`, `mysql`, `rusqlite`, Tokio, Hyper, …)
+
+Prefer idiomatic Rust under the Utopia/Appwrite public APIs. Engine connections live behind `Postgres::connect` / `Mysql::connect_db` / `Sqlite::open` ([`SqlClient`](crates/utopia-database/src/sql_client.rs) is an internal adapter helper, not a PDO port).
+
 ## Build and test
 
 From this directory (`3.x.x/`):
