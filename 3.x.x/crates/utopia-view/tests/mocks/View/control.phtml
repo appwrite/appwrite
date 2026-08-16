@@ -1,0 +1,2 @@
+<?php if ($this->getParam('show')): ?>YES<?php else: ?>NO<?php endif; ?>
+<?php foreach ($this->getParam('items') as $item): ?>[<?= $this->print($item, 'escape') ?>]<?php endforeach; ?>

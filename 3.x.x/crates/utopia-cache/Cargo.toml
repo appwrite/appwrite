@@ -1,0 +1,40 @@
+[package]
+name = "utopia-cache"
+description = "Cache adapters for Utopia (Rust port of utopia-php/cache)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["cache", "redis", "memcached", "utopia"]
+categories = ["caching", "web-programming"]
+
+[features]
+default = ["redis"]
+redis = ["dep:redis"]
+memcached = []
+hazelcast = []
+
+[dependencies]
+crc32fast = { workspace = true }
+hex = { workspace = true }
+parking_lot = { workspace = true }
+redis = { workspace = true, optional = true }
+serde_json = { workspace = true, features = ["preserve_order"] }
+sha1 = { workspace = true }
+thiserror = { workspace = true }
+utopia-circuit-breaker = { workspace = true }
+utopia-pools = { workspace = true }
+utopia-telemetry = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[[bench]]
+name = "cache"
+harness = false
+
+[lints]
+workspace = true

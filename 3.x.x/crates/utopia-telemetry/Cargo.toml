@@ -1,0 +1,37 @@
+[package]
+name = "utopia-telemetry"
+description = "Metrics telemetry adapters for Utopia (Rust port of utopia-php/telemetry)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["telemetry", "metrics", "opentelemetry", "utopia"]
+categories = ["web-programming"]
+
+[features]
+default = []
+
+[dependencies]
+bytes = { workspace = true }
+http = { workspace = true }
+opentelemetry = { workspace = true }
+opentelemetry-http = { workspace = true }
+opentelemetry-otlp = { workspace = true }
+opentelemetry_sdk = { workspace = true }
+parking_lot = { workspace = true }
+reqwest = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+utopia-test-wiremock = { workspace = true }
+
+[[bench]]
+name = "telemetry"
+harness = false
+
+[lints]
+workspace = true

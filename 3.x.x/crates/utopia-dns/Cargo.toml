@@ -1,0 +1,42 @@
+[package]
+name = "utopia-dns"
+description = "DNS message codec, zone files, resolvers, and server/client for Utopia (Rust port of utopia-php/dns)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["dns", "server", "resolver", "zone", "utopia"]
+categories = ["network-programming", "parser-implementations"]
+
+[dependencies]
+async-trait = { workspace = true }
+base64 = { workspace = true }
+bytes = { workspace = true }
+http = { workspace = true }
+http-body-util = { workspace = true }
+hyper = { workspace = true }
+hyper-util = { workspace = true }
+parking_lot = { workspace = true }
+rand = { workspace = true }
+serde_json = { workspace = true }
+socket2 = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+utopia-domains = { workspace = true }
+utopia-telemetry = { workspace = true }
+utopia-validators = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio = { workspace = true }
+
+[[bench]]
+name = "dns"
+path = "benches/dns.rs"
+harness = false
+
+[lints]
+workspace = true

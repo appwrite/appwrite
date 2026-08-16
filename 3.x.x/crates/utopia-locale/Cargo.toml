@@ -1,0 +1,28 @@
+[package]
+name = "utopia-locale"
+description = "Application translations and localization (Rust port of utopia-php/locale)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["locale", "i18n", "translation", "localization", "utopia"]
+categories = ["internationalization"]
+
+[dependencies]
+parking_lot = { workspace = true }
+once_cell = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[[bench]]
+name = "locale"
+harness = false
+
+[lints]
+workspace = true
