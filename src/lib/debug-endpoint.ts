@@ -10,7 +10,8 @@ import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
 export type EndpointPresetId =
   | 'production'
   | 'stage'
-  | 'localhost'
+  | 'localhostCloud'
+  | 'localhostCe'
   | 'oss'
   | 'custom'
 
@@ -28,10 +29,15 @@ export const ENDPOINT_PRESETS: Record<
     url: 'https://cloud.staging.appwrite.io/v1',
     description: 'Appwrite Cloud staging',
   },
-  localhost: {
-    label: 'Localhost',
+  localhostCloud: {
+    label: 'Local Cloud',
     url: 'http://localhost/v1',
-    description: 'Local Appwrite instance',
+    description: 'Local Cloud instance',
+  },
+  localhostCe: {
+    label: 'Local CE',
+    url: 'http://localhost:9522/v1',
+    description: 'Local Community Edition instance',
   },
   oss: {
     label: 'OSS',

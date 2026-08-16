@@ -5,7 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useEffect, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
-import { Eye, EyeOff } from 'lucide-react'
+import { AppwriteException, ID } from '@appwrite.io/console'
+import { Bug, Eye, EyeOff } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -18,8 +20,24 @@ import {
 import { Input } from '@/components/ui/input'
 import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
+import { useDebugMode } from '@/components/global/providers/DebugMode'
+import { sdk } from '@/lib/appwrite/sdk'
 import { getLastLoginMethod } from '@/lib/utils/auth-storage'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
+
+const DEMO_USER_EMAIL = 'dev@appwrite.io'
+const DEMO_USER_PASSWORD = 'appwritedev'
+const DEMO_USER_NAME = 'Demo'
+
+function isAccountAlreadyExistsError(error: unknown): boolean {
+  if (!(error instanceof AppwriteException)) return false
+  return (
+    error.code === 409 ||
+    error.type === 'user_already_exists' ||
+    error.type === 'user_email_already_exists'
+  )
+}
 
 const createLoginSchema = (t: Translator) =>
   z.object({
@@ -40,9 +58,13 @@ type FormValues = {
   name?: string
 }
 
+export type SignInSubmitOptions = {
+  skipAccountCreate?: boolean
+}
+
 interface SignInProps {
   mode?: 'sign-in' | 'sign-up'
-  onSubmit: (data: FormValues) => void
+  onSubmit: (data: FormValues, options?: SignInSubmitOptions) => void
   onGitHubLogin?: () => void
   isLoading?: boolean
   isGitHubLoading?: boolean
@@ -58,6 +80,7 @@ export function SignIn({
   redirect,
 }: SignInProps) {
   const t = useT()
+  const { isDebugModeOpen } = useDebugMode()
   const schema =
     mode === 'sign-in' ? createLoginSchema(t) : createSignUpSchema(t)
   const form = useForm<FormValues>({
@@ -68,6 +91,7 @@ export function SignIn({
       name: '',
     },
   })
+  const [isCreatingDemo, setIsCreatingDemo] = useState(false)
 
   // Watch email value to pass it to recovery page
   const emailValue = form.watch('email')
@@ -117,6 +141,52 @@ export function SignIn({
     onSubmit(data)
   }
 
+  const formBusy = isLoading || isCreatingDemo
+
+  const handleCreateDemoUser = async () => {
+    form.setValue('email', DEMO_USER_EMAIL, { shouldDirty: true, shouldValidate: true })
+    form.setValue('password', DEMO_USER_PASSWORD, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+    if (mode === 'sign-up') {
+      form.setValue('name', DEMO_USER_NAME, { shouldDirty: true, shouldValidate: true })
+    }
+    setShowPassword(true)
+
+    toast.message('Creating demo user', {
+      description: `Email: ${DEMO_USER_EMAIL}. Password: ${DEMO_USER_PASSWORD}`,
+    })
+
+    setIsCreatingDemo(true)
+    try {
+      try {
+        await sdk.forConsole.account.create({
+          userId: ID.unique(),
+          email: DEMO_USER_EMAIL,
+          password: DEMO_USER_PASSWORD,
+          name: DEMO_USER_NAME,
+        })
+      } catch (error: unknown) {
+        if (!isAccountAlreadyExistsError(error)) {
+          toast.error(getErrorMessage(error, 'Failed to create demo user'))
+          return
+        }
+      }
+
+      onSubmit(
+        {
+          email: DEMO_USER_EMAIL,
+          password: DEMO_USER_PASSWORD,
+          name: DEMO_USER_NAME,
+        },
+        { skipAccountCreate: true },
+      )
+    } finally {
+      setIsCreatingDemo(false)
+    }
+  }
+
   return (
     <Card className="overflow-hidden py-0">
       <div className="grid md:grid-cols-2">
@@ -152,7 +222,7 @@ export function SignIn({
                       type="button"
                       className="w-full"
                       onClick={onGitHubLogin}
-                      disabled={isGitHubLoading || isLoading}
+                      disabled={isGitHubLoading || formBusy}
                     >
                       <svg
                         className="me-1.5 h-4 w-4"
@@ -271,7 +341,7 @@ export function SignIn({
                     {t('Last used')}
                   </span>
                 )}
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full" disabled={formBusy}>
                   {mode === 'sign-in' ? t('Login') : t('Sign up')}
                 </Button>
               </div>
@@ -290,6 +360,52 @@ export function SignIn({
               </p>
             </form>
           </Form>
+          {isDebugModeOpen ? (
+            <div
+              dir="ltr"
+              lang="en"
+              data-analytics-track="false"
+              className="mt-6 rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40 p-3 text-left"
+            >
+              <p className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-[var(--network-globe-edge)]/75">
+                <Bug className="h-3 w-3 shrink-0 text-[var(--network-globe-edge)]" />
+                Debug
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
+                Create a demo user and sign in with these credentials.
+              </p>
+              <dl className="mt-2 space-y-1 font-mono text-[11px]">
+                <div className="flex gap-2">
+                  <dt className="shrink-0 text-[var(--network-globe-edge)]/70">
+                    Email
+                  </dt>
+                  <dd className="min-w-0 break-all text-foreground">
+                    {DEMO_USER_EMAIL}
+                  </dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="shrink-0 text-[var(--network-globe-edge)]/70">
+                    Password
+                  </dt>
+                  <dd className="min-w-0 break-all text-foreground">
+                    {DEMO_USER_PASSWORD}
+                  </dd>
+                </div>
+              </dl>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3 h-7 border-[color-mix(in_srgb,var(--network-globe-edge)_30%,var(--border))] bg-transparent text-[12px] text-foreground hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
+                disabled={formBusy}
+                onClick={() => {
+                  void handleCreateDemoUser()
+                }}
+              >
+                Create demo user
+              </Button>
+            </div>
+          ) : null}
         </div>
         <div className="hidden bg-background md:block min-h-[600px]">
           <img
