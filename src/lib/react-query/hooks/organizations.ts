@@ -2949,8 +2949,17 @@ export function useUpdateOrganizationPlan() {
 
   return useMutation({
     mutationFn: updateOrganizationPlan,
-    onSuccess: (_, variables) => {
-      // Invalidate organization and plan queries
+    onSuccess: (data, variables) => {
+      // 402 / 3DS responses are not an upgraded organization yet. Invalidating
+      // here refetches the still-Free org and can overwrite the post-validate
+      // cache on the billing page.
+      if (
+        !data ||
+        typeof data !== 'object' ||
+        typeof (data as { $id?: unknown }).$id !== 'string'
+      ) {
+        return
+      }
       queryClient.invalidateQueries({
         queryKey: ['organization', variables.organizationId],
       })

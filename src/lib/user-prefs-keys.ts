@@ -1083,10 +1083,29 @@ export function resolveMysqlSelectedSchema(args: {
   persisted: string | null
 }): string | null {
   const { schemas, persisted } = args
-  if (persisted) return persisted
-  if (schemas.length === 0) return null
-  if (schemas.includes('public')) return 'public'
-  return schemas[0] ?? null
+  const normalizedSchemas = schemas
+    .map((schema) => (typeof schema === 'string' ? schema.trim() : ''))
+    .filter((schema) => schema.length > 0)
+  if (persisted) {
+    const trimmed = persisted.trim()
+    if (trimmed) return trimmed
+  }
+  if (normalizedSchemas.length === 0) return null
+
+  const systemSchemas = new Set([
+    'mysql',
+    'information_schema',
+    'performance_schema',
+    'sys',
+  ])
+  const userSchema = normalizedSchemas.find(
+    (schema) => !systemSchemas.has(schema.toLowerCase()),
+  )
+  if (userSchema) return userSchema
+
+  // MySQL has no Postgres-style `public` default; prefer it only when present.
+  if (normalizedSchemas.includes('public')) return 'public'
+  return normalizedSchemas[0] ?? null
 }
 
 // ---------------------------------------------------------------------------

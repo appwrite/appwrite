@@ -27,11 +27,16 @@ import {
   explainMysqlDatabaseQuery,
 } from '@/lib/mysql-query-explanation'
 import {
+  getMysqlExecutionColumnNames,
+  isMysqlReadQuery,
+  mysqlExecutionNeedsJsonWrap,
   normalizeMysqlExecutionResult,
   wrapMysqlSqlForDisplay,
 } from '@/lib/mysql-execution-values'
 import {
   executionResultRows,
+  coerceMysqlStringValue,
+  readMysqlRowString,
   buildMysqlListSchemasCountSql,
   buildMysqlListSchemasSql,
   buildMysqlListTablesCountSql,
@@ -46,7 +51,6 @@ import {
   type MysqlColumnRow,
   type MysqlListSchemasOptions,
   type MysqlListTablesOptions,
-  type MysqlSchemaRow,
   type MysqlTableColumnRow,
   type MysqlSchemaEnumRow,
   type MysqlTableIndexRow,
@@ -196,11 +200,30 @@ export async function executeMysqlDatabaseSql(
   sql: string,
   timeoutSeconds?: number,
 ): Promise<Models.DedicatedDatabaseExecution> {
-  const execution = await sdk.forProject(projectId).mysql.createExecution({
-    databaseId,
-    sql: wrapMysqlSqlForDisplay(sql),
-    timeoutSeconds,
-  })
+  const projectSdk = sdk.forProject(projectId)
+  const run = (sqlToRun: string) =>
+    projectSdk.mysql.createExecution({
+      databaseId,
+      sql: sqlToRun,
+      timeoutSeconds,
+    })
+
+  // First pass: run as-is (most console catalog queries only return strings).
+  const execution = await run(wrapMysqlSqlForDisplay(sql))
+
+  // Retry with a JSON_ARRAYAGG wrap when the API could not marshal driver types
+  // such as DATETIME / TIMESTAMP / VARCHAR byte buffers (same role as Postgres
+  // row_to_json wrapping). Check the raw payload before normalize, which may
+  // already decode byte arrays and hide the need to wrap.
+  if (isMysqlReadQuery(sql) && mysqlExecutionNeedsJsonWrap(execution)) {
+    const columnNames = getMysqlExecutionColumnNames(execution)
+    const wrappedSql = wrapMysqlSqlForDisplay(sql, columnNames)
+    if (wrappedSql !== sql.trim() && columnNames.length > 0) {
+      const wrappedExecution = await run(wrappedSql)
+      return normalizeMysqlExecutionResult(wrappedExecution)
+    }
+  }
+
   return normalizeMysqlExecutionResult(execution)
 }
 
@@ -208,10 +231,11 @@ function parseMysqlCountTotal(
   execution: Models.DedicatedDatabaseExecution,
   fallback = 0,
 ): number {
-  const rows = executionResultRows<{ total?: number | string }>(execution)
+  const rows = executionResultRows<{ total?: unknown }>(execution)
   const totalRaw = rows[0]?.total
   if (typeof totalRaw === 'number' && Number.isFinite(totalRaw)) return totalRaw
-  const parsed = Number.parseInt(String(totalRaw ?? fallback), 10)
+  const asString = coerceMysqlStringValue(totalRaw) ?? String(totalRaw ?? fallback)
+  const parsed = Number.parseInt(asString, 10)
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
@@ -241,8 +265,10 @@ export async function fetchMysqlSchemasPage(
     ),
   ])
 
-  const rows = executionResultRows<MysqlSchemaRow>(dataExecution)
-  const schemas = rows.map((row) => row.schema_name).filter(Boolean)
+  const rows = executionResultRows<Record<string, unknown>>(dataExecution)
+  const schemas = rows
+    .map((row) => readMysqlRowString(row, 'schema_name', 'SCHEMA_NAME'))
+    .filter((name): name is string => !!name)
   const total = parseMysqlCountTotal(countExecution, schemas.length)
 
   return {
@@ -264,7 +290,7 @@ export async function fetchMysqlTablesPage(
     limit?: number
   },
 ) {
-  const schema = options.schema?.trim() || undefined
+  const schema = coerceMysqlStringValue(options.schema) || undefined
   const limit = options.limit ?? MYSQL_SIDEBAR_LIST_PAGE_SIZE
   const page = options.page ?? 0
   const offset = page * limit
@@ -1637,6 +1663,7 @@ export function mysqlSidebarTablesInfiniteQueryOptions(
   schema: string | null | undefined,
   search: string,
 ) {
+  const normalizedSchema = coerceMysqlStringValue(schema) ?? ''
   const normalizedSearch = search.trim() || undefined
   return infiniteQueryOptions({
     queryKey: [
@@ -1645,25 +1672,25 @@ export function mysqlSidebarTablesInfiniteQueryOptions(
       projectId,
       databaseId,
       'sidebar',
-      schema,
+      normalizedSchema || null,
       normalizedSearch,
     ],
     queryFn: ({ pageParam }) =>
       fetchMysqlTablesPage(projectId!, databaseId!, {
-        schema: schema?.trim() || undefined,
+        schema: normalizedSchema || undefined,
         search: normalizedSearch,
         page: pageParam,
       }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) =>
       lastPage?.hasMore ? lastPage.page + 1 : undefined,
-    enabled: !!projectId && !!databaseId && !!schema?.trim(),
+    enabled: !!projectId && !!databaseId && !!normalizedSchema,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    gcTime: projectId && databaseId && schema?.trim() ? 5 * 60 * 1000 : 0,
+    gcTime: projectId && databaseId && normalizedSchema ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -1692,7 +1719,10 @@ export function useMysqlSidebarSchemas(
   })
 
   const schemas = useMemo(
-    () => data?.pages.flatMap((page) => page.schemas) ?? [],
+    () =>
+      (data?.pages.flatMap((page) => page.schemas) ?? []).filter(
+        (schema): schema is string => typeof schema === 'string' && schema.trim().length > 0,
+      ),
     [data?.pages],
   )
   const total = data?.pages[0]?.total ?? schemas.length
@@ -2346,7 +2376,7 @@ export function useMysqlSelectedSchema(
 
   const setSelectedSchema = useCallback(
     (schema: string) => {
-      const trimmed = schema.trim()
+      const trimmed = coerceMysqlStringValue(schema) ?? ''
       if (!trimmed) return
       setSelectedSchemaState(trimmed)
       if (!databaseId) return

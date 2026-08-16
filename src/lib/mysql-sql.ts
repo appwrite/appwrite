@@ -4,10 +4,6 @@ import { quoteMysqlIdentifier } from '@/lib/mysql-database-routes'
 
 const MYSQL_SYSTEM_SCHEMAS = `('mysql', 'information_schema', 'performance_schema', 'sys')`
 
-const MYSQL_SCHEMAS_SYSTEM_FILTER = `
-  SCHEMA_NAME NOT IN ${MYSQL_SYSTEM_SCHEMAS}
-`.trim()
-
 const MYSQL_TABLES_SYSTEM_SCHEMA_FILTER = `
   TABLE_SCHEMA NOT IN ${MYSQL_SYSTEM_SCHEMAS}
 `.trim()
@@ -128,7 +124,7 @@ function mysqlLikeCondition(column: string, pattern: string): string {
 export function buildMysqlListSchemasSql(
   options?: MysqlListSchemasOptions,
 ): string {
-  const conditions = [MYSQL_SCHEMAS_SYSTEM_FILTER]
+  const conditions: string[] = []
 
   const search = options?.search?.trim()
   if (search) {
@@ -136,10 +132,13 @@ export function buildMysqlListSchemasSql(
     conditions.push(mysqlLikeCondition('SCHEMA_NAME', pattern))
   }
 
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join('\n  AND ')}` : ''
+
   const base = `
-SELECT SCHEMA_NAME AS schema_name
+SELECT CONVERT(SCHEMA_NAME USING utf8mb4) AS schema_name
 FROM information_schema.SCHEMATA
-WHERE ${conditions.join('\n  AND ')}
+${whereClause}
 ORDER BY SCHEMA_NAME
 `.trim()
 
@@ -156,7 +155,7 @@ ORDER BY SCHEMA_NAME
 export function buildMysqlListSchemasCountSql(
   options?: Pick<MysqlListSchemasOptions, 'search'>,
 ): string {
-  const conditions = [MYSQL_SCHEMAS_SYSTEM_FILTER]
+  const conditions: string[] = []
 
   const search = options?.search?.trim()
   if (search) {
@@ -164,11 +163,14 @@ export function buildMysqlListSchemasCountSql(
     conditions.push(mysqlLikeCondition('SCHEMA_NAME', pattern))
   }
 
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join('\n  AND ')}` : ''
+
   return prefixMysqlSqlComment(
     `
 SELECT COUNT(*) AS total
 FROM information_schema.SCHEMATA
-WHERE ${conditions.join('\n  AND ')}
+${whereClause}
 `.trim(),
     'Count database schemas',
   )
@@ -184,14 +186,15 @@ export type MysqlListTablesOptions = {
 export function buildMysqlListTablesSql(
   options?: MysqlListTablesOptions,
 ): string {
-  const conditions = [
-    MYSQL_TABLES_SYSTEM_SCHEMA_FILTER,
-    `TABLE_TYPE IN ('BASE TABLE', 'VIEW')`,
-  ]
+  const conditions = [`TABLE_TYPE IN ('BASE TABLE', 'VIEW')`]
 
   const schema = options?.schema?.trim()
   if (schema) {
+    // When a schema is selected (including system schemas), list its tables.
     conditions.push(`TABLE_SCHEMA = ${quoteMysqlStringLiteral(schema)}`)
+  } else {
+    // Cross-schema browse: hide internal MySQL schemas by default.
+    conditions.push(MYSQL_TABLES_SYSTEM_SCHEMA_FILTER)
   }
 
   const search = options?.search?.trim()
@@ -223,14 +226,13 @@ ORDER BY TABLE_SCHEMA, TABLE_NAME
 export function buildMysqlListTablesCountSql(
   options?: Pick<MysqlListTablesOptions, 'schema' | 'search'>,
 ): string {
-  const conditions = [
-    MYSQL_TABLES_SYSTEM_SCHEMA_FILTER,
-    `TABLE_TYPE IN ('BASE TABLE', 'VIEW')`,
-  ]
+  const conditions = [`TABLE_TYPE IN ('BASE TABLE', 'VIEW')`]
 
   const schema = options?.schema?.trim()
   if (schema) {
     conditions.push(`TABLE_SCHEMA = ${quoteMysqlStringLiteral(schema)}`)
+  } else {
+    conditions.push(MYSQL_TABLES_SYSTEM_SCHEMA_FILTER)
   }
 
   const search = options?.search?.trim()
@@ -683,9 +685,126 @@ export function executionResultRows<T extends Record<string, unknown>>(
     return rows as T[]
   }
   if (rows && typeof rows === 'object') {
-    return Object.values(rows as Record<string, T>)
+    const record = rows as Record<string, unknown>
+    const values = Object.values(record)
+    // Map of row objects: { "0": {...}, "1": {...} } or id-keyed rows.
+    // Do not use Object.values on a single column→value row: that turns
+    // { schema_name: <bytes> } into [<bytes>] and drops the column name.
+    const everyValueIsRowObject =
+      values.length > 0 &&
+      values.every(
+        (value) =>
+          value !== null &&
+          typeof value === 'object' &&
+          !Array.isArray(value),
+      )
+    if (everyValueIsRowObject) {
+      return values as T[]
+    }
+    return [record as T]
   }
   return []
+}
+
+/**
+ * True when a value looks like a MySQL driver byte buffer (VARCHAR/CHAR/TEXT
+ * often arrives as number[] of UTF-8 code units over the SQL API).
+ */
+export function isMysqlDriverByteArray(value: unknown): value is number[] {
+  if (!Array.isArray(value)) return false
+  if (value.length === 0) return true
+  return value.every(
+    (entry) =>
+      typeof entry === 'number' &&
+      Number.isInteger(entry) &&
+      entry >= 0 &&
+      entry <= 255,
+  )
+}
+
+/** Decode a MySQL driver byte array to UTF-8 text, or null if it looks binary. */
+export function decodeMysqlDriverByteArray(bytes: number[]): string | null {
+  try {
+    const decoded = new TextDecoder('utf-8', { fatal: false }).decode(
+      Uint8Array.from(bytes),
+    )
+    if (!decoded.includes('\uFFFD')) return decoded
+    const replacementCount = [...decoded].filter((char) => char === '\uFFFD').length
+    // Allow a little corruption; reject mostly-binary payloads.
+    if (replacementCount <= Math.max(1, Math.floor(decoded.length * 0.1))) {
+      return decoded
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+/** Coerce a SQL cell value to a non-empty trimmed string, or null. */
+export function coerceMysqlStringValue(value: unknown): string | null {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+  if (typeof value === 'number' || typeof value === 'bigint') {
+    return String(value)
+  }
+  if (isMysqlDriverByteArray(value)) {
+    const decoded = decodeMysqlDriverByteArray(value)
+    if (decoded === null) return null
+    const trimmed = decoded.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+  if (
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    (value as { type?: unknown }).type === 'Buffer' &&
+    isMysqlDriverByteArray((value as { data?: unknown }).data)
+  ) {
+    return coerceMysqlStringValue((value as { data: number[] }).data)
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null
+  }
+
+  const record = value as Record<string, unknown>
+  for (const key of [
+    'value',
+    'Value',
+    '$value',
+    'text',
+    'Text',
+    'string',
+    'String',
+    'schema_name',
+    'SCHEMA_NAME',
+  ]) {
+    if (!(key in record)) continue
+    const nested = coerceMysqlStringValue(record[key])
+    if (nested) return nested
+  }
+  return null
+}
+
+/**
+ * Read a string column from an execution row, matching keys case-insensitively.
+ * MySQL result metadata sometimes returns `SCHEMA_NAME` instead of `schema_name`.
+ */
+export function readMysqlRowString(
+  row: Record<string, unknown>,
+  ...keys: string[]
+): string | null {
+  const keyByLower = new Map(
+    Object.keys(row).map((key) => [key.toLowerCase(), key] as const),
+  )
+  for (const key of keys) {
+    const actualKey = keyByLower.get(key.toLowerCase())
+    if (actualKey === undefined) continue
+    const coerced = coerceMysqlStringValue(row[actualKey])
+    if (coerced) return coerced
+  }
+  return null
 }
 
 export function formatMysqlRowCount(count: number): string {

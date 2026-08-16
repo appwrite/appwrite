@@ -1,6 +1,11 @@
 import type { Models } from '@appwrite.io/console' // pragma: allowlist secret
+import { quoteMysqlIdentifier } from '@/lib/mysql-database-routes'
 import {
+  decodeMysqlDriverByteArray,
   executionResultRows,
+  isMysqlDriverByteArray,
+  peelLeadingMysqlSqlComments,
+  quoteMysqlStringLiteral,
   stripLeadingMysqlSqlComments,
 } from '@/lib/mysql-sql'
 
@@ -28,12 +33,85 @@ export function isMysqlReadQuery(sql: string): boolean {
   return READ_QUERY_PATTERN.test(trimmed)
 }
 
+function buildMysqlJsonObjectExpr(columnNames: readonly string[]): string {
+  const seen = new Map<string, number>()
+  const parts: string[] = []
+
+  for (const name of columnNames) {
+    const baseKey = name.trim() || 'column'
+    const count = seen.get(baseKey) ?? 0
+    seen.set(baseKey, count + 1)
+    const jsonKey = count === 0 ? baseKey : `${baseKey}_${count}`
+    parts.push(quoteMysqlStringLiteral(jsonKey), quoteMysqlIdentifier(name))
+  }
+
+  return `JSON_OBJECT(${parts.join(', ')})`
+}
+
 /**
- * MySQL does not need the Postgres row_to_json display wrapper.
- * Return the original SQL unchanged.
+ * Wrap a read query so MySQL serializes rows as JSON before the SQL API marshals
+ * the response. This avoids "<unsupported type …>" placeholders for DATETIME,
+ * TIMESTAMP, DECIMAL, and other non-primitive driver types.
+ *
+ * Column names are required (MySQL has no row_to_json). When omitted, the SQL is
+ * returned unchanged so callers can probe once, then retry with a wrap.
  */
-export function wrapMysqlSqlForDisplay(sql: string): string {
-  return sql.trim()
+export function wrapMysqlSqlForDisplay(
+  sql: string,
+  columnNames?: readonly string[],
+): string {
+  const trimmed = sql.trim()
+  const { leadingComments, sqlWithoutLeadingComments } =
+    peelLeadingMysqlSqlComments(trimmed)
+  const innerSql = stripTrailingStatementSemicolon(sqlWithoutLeadingComments)
+  if (!isMysqlReadQuery(sqlWithoutLeadingComments)) return trimmed
+  if (!columnNames?.length) return trimmed
+
+  const column = quoteMysqlIdentifier(MYSQL_CONSOLE_RESULT_COLUMN)
+  const jsonObject = buildMysqlJsonObjectExpr(columnNames)
+  const wrapped = `SELECT COALESCE(JSON_ARRAYAGG(${jsonObject}), JSON_ARRAY()) AS ${column} FROM (${innerSql}) AS __console_subq`
+  if (!leadingComments) return wrapped
+  return `${leadingComments}\n${wrapped}`
+}
+
+/** True when the API returned cells that need a JSON wrap to marshal correctly. */
+export function mysqlExecutionNeedsJsonWrap(
+  execution: Models.DedicatedDatabaseExecution,
+): boolean {
+  const rows = executionResultRows<Record<string, unknown>>(execution)
+  for (const row of rows) {
+    for (const value of Object.values(row)) {
+      if (typeof value === 'string' && UNSUPPORTED_TYPE_PATTERN.test(value)) {
+        return true
+      }
+      // VARCHAR/TEXT often arrive as raw driver byte arrays.
+      if (isMysqlDriverByteArray(value) && value.length > 0) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+/** @deprecated Use mysqlExecutionNeedsJsonWrap */
+export function mysqlExecutionHasUnsupportedTypes(
+  execution: Models.DedicatedDatabaseExecution,
+): boolean {
+  return mysqlExecutionNeedsJsonWrap(execution)
+}
+
+/** Column names from execution metadata, falling back to the first row's keys. */
+export function getMysqlExecutionColumnNames(
+  execution: Models.DedicatedDatabaseExecution,
+): string[] {
+  const fromMeta = (execution.columns ?? [])
+    .map((column) => column.name)
+    .filter((name): name is string => typeof name === 'string' && name.length > 0)
+  if (fromMeta.length > 0) return fromMeta
+
+  const rows = executionResultRows<Record<string, unknown>>(execution)
+  const first = rows[0]
+  return first ? Object.keys(first) : []
 }
 
 function parseJsonArray(value: unknown): unknown[] | null {
@@ -93,6 +171,10 @@ function formatByteaValue(value: unknown): string {
   }
 
   if (Array.isArray(value)) {
+    if (isMysqlDriverByteArray(value)) {
+      const decoded = decodeMysqlDriverByteArray(value)
+      if (decoded !== null) return decoded
+    }
     return `[${value.map((entry) => formatMysqlExecutionCellValue(entry)).join(', ')}]`
   }
 
@@ -119,7 +201,19 @@ export function formatMysqlExecutionCellValue(value: unknown): string {
   }
 
   if (Array.isArray(value)) {
+    if (isMysqlDriverByteArray(value)) {
+      const decoded = decodeMysqlDriverByteArray(value)
+      if (decoded !== null) return decoded
+    }
     return `[${value.map((entry) => formatMysqlExecutionCellValue(entry)).join(', ')}]`
+  }
+
+  if (
+    isPlainObject(value) &&
+    value.type === 'Buffer' &&
+    isMysqlDriverByteArray(value.data)
+  ) {
+    return formatMysqlExecutionCellValue(value.data)
   }
 
   if (!isPlainObject(value)) {
@@ -228,7 +322,19 @@ export function normalizeMysqlExecutionCellValue(value: unknown): unknown {
   }
 
   if (Array.isArray(value)) {
+    if (isMysqlDriverByteArray(value)) {
+      const decoded = decodeMysqlDriverByteArray(value)
+      if (decoded !== null) return decoded
+    }
     return value.map((entry) => normalizeMysqlExecutionCellValue(entry))
+  }
+
+  if (
+    isPlainObject(value) &&
+    value.type === 'Buffer' &&
+    isMysqlDriverByteArray(value.data)
+  ) {
+    return normalizeMysqlExecutionCellValue(value.data)
   }
 
   if (!isPlainObject(value)) {
@@ -250,6 +356,13 @@ export function normalizeMysqlExecutionCellValue(value: unknown): unknown {
     'String',
   )
 
+  // Unwrap driver/API tagged scalars. Some payloads include only `value` /
+  // `text` without a `type` field; leaving those as objects breaks callers
+  // that expect strings (e.g. schema?.trim() in sidebar table queries).
+  if (taggedValue !== undefined && isMysqlTaggedScalarObject(value)) {
+    return normalizeMysqlExecutionCellValue(taggedValue)
+  }
+
   if (taggedType && taggedValue !== undefined) {
     return normalizeMysqlExecutionCellValue(taggedValue)
   }
@@ -259,6 +372,27 @@ export function normalizeMysqlExecutionCellValue(value: unknown): unknown {
     normalizeMysqlExecutionCellValue(entry),
   ])
   return Object.fromEntries(normalizedEntries)
+}
+
+const MYSQL_TAGGED_SCALAR_KEYS = new Set([
+  'type',
+  'Type',
+  '$type',
+  'pgType',
+  'pg_type',
+  'value',
+  'Value',
+  '$value',
+  'text',
+  'Text',
+  'string',
+  'String',
+])
+
+function isMysqlTaggedScalarObject(value: Record<string, unknown>): boolean {
+  const keys = Object.keys(value)
+  if (keys.length === 0 || keys.length > 3) return false
+  return keys.every((key) => MYSQL_TAGGED_SCALAR_KEYS.has(key))
 }
 
 function normalizeMysqlExecutionRow(

@@ -39,7 +39,7 @@ import {
 } from 'react'
 import { flushSync } from 'react-dom'
 
-const DEFAULT_SQL = 'SELECT NOW() AS current_time;'
+const DEFAULT_SQL = 'SELECT NOW() AS now;'
 
 export type MysqlSidebarPanel =
   import('@/lib/user-prefs-keys').MysqlSidebarPanelPreference
