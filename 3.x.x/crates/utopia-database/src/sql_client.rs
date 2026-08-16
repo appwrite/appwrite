@@ -1,7 +1,12 @@
-//! PHP `Utopia\Database\PDO` / `PDOStatement` wrappers.
+//! Engine-specific SQL client used by the SQL adapters.
 //!
-//! Live connections are compiled behind `mysql`, `postgres`, and `sqlite`
-//! features. The type always exists so call sites compile.
+//! This is the Rust-native connection layer behind
+//! [`crate::adapter::postgres::Postgres`], [`crate::adapter::mysql::Mysql`],
+//! and [`crate::adapter::sqlite::Sqlite`]. Prefer those adapters (and the
+//! high-level [`crate::Database`] API) over talking to [`SqlClient`] directly.
+//!
+//! Live connections are compiled behind the `mysql`, `postgres`, and
+//! `sqlite` features.
 
 use std::collections::HashMap;
 
@@ -10,17 +15,7 @@ use crate::value::AttrValue;
 use indexmap::IndexMap;
 use serde_json::Number;
 
-/// PHP `PDO::PARAM_*` constants.
-pub const PARAM_NULL: i32 = 0;
-pub const PARAM_INT: i32 = 1;
-pub const PARAM_STR: i32 = 2;
-pub const PARAM_LOB: i32 = 3;
-pub const PARAM_BOOL: i32 = 5;
-
-/// Connection timeout attribute (PHP `PDO::ATTR_TIMEOUT`).
-pub const ATTR_TIMEOUT: i32 = 2;
-
-/// SQL dialect used by a live PDO.
+/// SQL dialect spoken by a live [`SqlClient`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Dialect {
     Mysql,
@@ -67,14 +62,14 @@ impl SqlParam {
     }
 }
 
-/// A prepared statement wrapper (PHP `Utopia\Database\PDOStatement`).
+/// A prepared statement helper used by SQL adapters.
 #[derive(Debug, Default)]
-pub struct PdoStatement {
+pub struct SqlStatement {
     query: String,
     params: HashMap<String, String>,
 }
 
-impl PdoStatement {
+impl SqlStatement {
     /// Create a statement for `query`.
     pub fn new(query: impl Into<String>) -> Self {
         Self {
@@ -83,9 +78,8 @@ impl PdoStatement {
         }
     }
 
-    /// Bind a named or positional parameter (PHP `bindValue`).
-    pub fn bind_value(&mut self, param: impl Into<String>, value: impl ToString, _type: i32) {
-        let _ = _type;
+    /// Bind a named or positional parameter.
+    pub fn bind_value(&mut self, param: impl Into<String>, value: impl ToString) {
         self.params.insert(param.into(), value.to_string());
     }
 
@@ -100,8 +94,7 @@ impl PdoStatement {
     }
 }
 
-/// A PDO-like connection (PHP `Utopia\Database\PDO`).
-pub struct Pdo {
+pub struct SqlClient {
     dsn: String,
     dialect: Dialect,
     last_insert_id: String,
@@ -113,16 +106,16 @@ pub struct Pdo {
     sqlite: Option<rusqlite::Connection>,
 }
 
-impl std::fmt::Debug for Pdo {
+impl std::fmt::Debug for SqlClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Pdo")
+        f.debug_struct("SqlClient")
             .field("dsn", &self.dsn)
             .field("dialect", &self.dialect)
             .finish_non_exhaustive()
     }
 }
 
-impl Pdo {
+impl SqlClient {
     /// Connect using a DSN string (PHP constructor). Live I/O requires features.
     pub fn new(dsn: impl Into<String>) -> Result<Self, DatabaseError> {
         let dsn = dsn.into();
@@ -151,8 +144,8 @@ impl Pdo {
     }
 
     /// Prepare a statement (PHP `prepare`).
-    pub fn prepare(&self, query: impl Into<String>) -> PdoStatement {
-        PdoStatement::new(query)
+    pub fn prepare(&self, query: impl Into<String>) -> SqlStatement {
+        SqlStatement::new(query)
     }
 
     /// Quote a string for interpolation (PHP `quote`).
@@ -180,7 +173,7 @@ impl Pdo {
         if self.sqlite.is_some() {
             return self.exec_sqlite(sql, params);
         }
-        Err(DatabaseError::database("PDO is not connected"))
+        Err(DatabaseError::database("SQL client is not connected"))
     }
 
     /// Query rows with named parameters.
@@ -202,7 +195,7 @@ impl Pdo {
         if self.sqlite.is_some() {
             return self.query_sqlite(sql, params);
         }
-        Err(DatabaseError::database("PDO is not connected"))
+        Err(DatabaseError::database("SQL client is not connected"))
     }
 
     /// `SELECT 1` ping.
@@ -212,7 +205,7 @@ impl Pdo {
 }
 
 #[cfg(feature = "mysql")]
-impl Pdo {
+impl SqlClient {
     /// Connect to MySQL / MariaDB.
     pub fn mysql(
         host: &str,
@@ -263,7 +256,7 @@ impl Pdo {
         let conn = self
             .mysql
             .as_mut()
-            .ok_or_else(|| DatabaseError::database("MySQL PDO is not connected"))?;
+            .ok_or_else(|| DatabaseError::database("MySQL SQL client is not connected"))?;
         let (sql, values) = rewrite_mysql(sql, params);
         conn.exec_drop(&sql, mysql::Params::Positional(values))
             .map_err(map_mysql)?;
@@ -280,7 +273,7 @@ impl Pdo {
         let conn = self
             .mysql
             .as_mut()
-            .ok_or_else(|| DatabaseError::database("MySQL PDO is not connected"))?;
+            .ok_or_else(|| DatabaseError::database("MySQL SQL client is not connected"))?;
         let (sql, values) = rewrite_mysql(sql, params);
         let result: Vec<mysql::Row> = conn
             .exec(&sql, mysql::Params::Positional(values))
@@ -289,9 +282,21 @@ impl Pdo {
     }
 }
 
+/// The sync `postgres` crate drives tokio-postgres via `Handle::block_on`.
+/// Calling it from an async task panics with "Cannot start a runtime from
+/// within a runtime"; `block_in_place` is the supported escape hatch when a
+/// Tokio worker is already driving the thread (Hyper / `#[tokio::main]`).
 #[cfg(feature = "postgres")]
-impl Pdo {
-    /// Connect to Postgres.
+fn postgres_blocking<T>(f: impl FnOnce() -> T) -> T {
+    match tokio::runtime::Handle::try_current() {
+        Ok(_) => tokio::task::block_in_place(f),
+        Err(_) => f(),
+    }
+}
+
+#[cfg(feature = "postgres")]
+impl SqlClient {
+    /// Connect to Postgres via the `postgres` crate.
     pub fn postgres(
         host: &str,
         port: u16,
@@ -300,7 +305,7 @@ impl Pdo {
         db: &str,
     ) -> Result<Self, DatabaseError> {
         let url = format!("host={host} port={port} user={user} password={pass} dbname={db}");
-        let client = postgres::Client::connect(&url, postgres::NoTls)
+        let client = postgres_blocking(|| postgres::Client::connect(&url, postgres::NoTls))
             .map_err(|e| DatabaseError::database(format!("Postgres connect failed: {e}")))?;
         Ok(Self {
             dsn: format!("pgsql:host={host};port={port};dbname={db}"),
@@ -322,11 +327,10 @@ impl Pdo {
         let client = self
             .postgres
             .as_mut()
-            .ok_or_else(|| DatabaseError::database("Postgres PDO is not connected"))?;
+            .ok_or_else(|| DatabaseError::database("Postgres SQL client is not connected"))?;
         let (sql, owned) = rewrite_postgres(sql, params);
         let refs = postgres_refs(&owned);
-        let n = client
-            .execute(&sql, refs.as_slice())
+        let n = postgres_blocking(|| client.execute(&sql, refs.as_slice()))
             .map_err(|e| map_postgres(&e))?;
         Ok(n)
     }
@@ -339,11 +343,10 @@ impl Pdo {
         let client = self
             .postgres
             .as_mut()
-            .ok_or_else(|| DatabaseError::database("Postgres PDO is not connected"))?;
+            .ok_or_else(|| DatabaseError::database("Postgres SQL client is not connected"))?;
         let (sql, owned) = rewrite_postgres(sql, params);
         let refs = postgres_refs(&owned);
-        let rows = client
-            .query(&sql, refs.as_slice())
+        let rows = postgres_blocking(|| client.query(&sql, refs.as_slice()))
             .map_err(|e| map_postgres(&e))?;
         Ok(rows.iter().map(postgres_row_to_map).collect())
     }
@@ -355,8 +358,8 @@ impl Pdo {
 }
 
 #[cfg(feature = "sqlite")]
-impl Pdo {
-    /// Open SQLite at `path` (`:memory:` allowed).
+impl SqlClient {
+    /// Open SQLite at `path` (`:memory:` allowed) via `rusqlite`.
     pub fn sqlite(path: &str) -> Result<Self, DatabaseError> {
         let conn = rusqlite::Connection::open(path)
             .map_err(|e| DatabaseError::database(format!("SQLite open failed: {e}")))?;
@@ -382,7 +385,7 @@ impl Pdo {
         let conn = self
             .sqlite
             .as_mut()
-            .ok_or_else(|| DatabaseError::database("SQLite PDO is not connected"))?;
+            .ok_or_else(|| DatabaseError::database("SQLite SQL client is not connected"))?;
         let (sql, values) = rewrite_sqlite(sql, params);
         let n = conn
             .execute(&sql, rusqlite::params_from_iter(values.iter()))
@@ -399,7 +402,7 @@ impl Pdo {
         let conn = self
             .sqlite
             .as_mut()
-            .ok_or_else(|| DatabaseError::database("SQLite PDO is not connected"))?;
+            .ok_or_else(|| DatabaseError::database("SQLite SQL client is not connected"))?;
         let (sql, values) = rewrite_sqlite(sql, params);
         let mut stmt = conn.prepare(&sql).map_err(map_sqlite)?;
         let column_names: Vec<String> =
@@ -592,13 +595,116 @@ impl postgres::types::ToSql for PgFlexible {
     postgres::types::to_sql_checked!();
 }
 
+/// A bound integer. `i64`'s own `ToSql` accepts `INT8` only, so binding one
+/// to a narrower column (`tokens.type` is `INT4`) fails with "error
+/// serializing parameter N". Widen/narrow against the column type the way the
+/// PHP driver's untyped bind does.
+#[cfg(feature = "postgres")]
+#[derive(Debug)]
+struct PgInt(i64);
+
+#[cfg(feature = "postgres")]
+impl postgres::types::ToSql for PgInt {
+    fn to_sql(
+        &self,
+        ty: &postgres::types::Type,
+        out: &mut bytes::BytesMut,
+    ) -> Result<postgres::types::IsNull, Box<dyn std::error::Error + Sync + Send>> {
+        use postgres::types::{Json, Type};
+        match *ty {
+            Type::INT2 => i16::try_from(self.0)?.to_sql(ty, out),
+            Type::INT4 => i32::try_from(self.0)?.to_sql(ty, out),
+            Type::INT8 => self.0.to_sql(ty, out),
+            #[allow(clippy::cast_precision_loss)]
+            Type::FLOAT4 => (self.0 as f32).to_sql(ty, out),
+            #[allow(clippy::cast_precision_loss)]
+            Type::FLOAT8 => (self.0 as f64).to_sql(ty, out),
+            Type::BOOL => (self.0 != 0).to_sql(ty, out),
+            Type::JSON | Type::JSONB => Json(serde_json::json!(self.0)).to_sql(ty, out),
+            _ => self.0.to_string().to_sql(ty, out),
+        }
+    }
+
+    fn accepts(_ty: &postgres::types::Type) -> bool {
+        true
+    }
+
+    postgres::types::to_sql_checked!();
+}
+
+/// A bound float, widened/narrowed like [`PgInt`] (`f64` accepts `FLOAT8`
+/// only, so a `real` column would otherwise fail).
+#[cfg(feature = "postgres")]
+#[derive(Debug)]
+struct PgFloat(f64);
+
+#[cfg(feature = "postgres")]
+impl postgres::types::ToSql for PgFloat {
+    fn to_sql(
+        &self,
+        ty: &postgres::types::Type,
+        out: &mut bytes::BytesMut,
+    ) -> Result<postgres::types::IsNull, Box<dyn std::error::Error + Sync + Send>> {
+        use postgres::types::{Json, Type};
+        #[allow(clippy::cast_possible_truncation)]
+        match *ty {
+            Type::FLOAT4 => (self.0 as f32).to_sql(ty, out),
+            Type::FLOAT8 => self.0.to_sql(ty, out),
+            Type::INT2 => (self.0 as i16).to_sql(ty, out),
+            Type::INT4 => (self.0 as i32).to_sql(ty, out),
+            Type::INT8 => (self.0 as i64).to_sql(ty, out),
+            Type::BOOL => (self.0 != 0.0).to_sql(ty, out),
+            Type::JSON | Type::JSONB => Json(serde_json::json!(self.0)).to_sql(ty, out),
+            _ => self.0.to_string().to_sql(ty, out),
+        }
+    }
+
+    fn accepts(_ty: &postgres::types::Type) -> bool {
+        true
+    }
+
+    postgres::types::to_sql_checked!();
+}
+
+/// A bound boolean, which Appwrite also stores in `INT`-typed columns
+/// (`Database::VAR_BOOLEAN` maps to `TINYINT` on MySQL) and in JSON.
+#[cfg(feature = "postgres")]
+#[derive(Debug)]
+struct PgBool(bool);
+
+#[cfg(feature = "postgres")]
+impl postgres::types::ToSql for PgBool {
+    fn to_sql(
+        &self,
+        ty: &postgres::types::Type,
+        out: &mut bytes::BytesMut,
+    ) -> Result<postgres::types::IsNull, Box<dyn std::error::Error + Sync + Send>> {
+        use postgres::types::{Json, Type};
+        let as_int = i64::from(self.0);
+        match *ty {
+            Type::BOOL => self.0.to_sql(ty, out),
+            Type::INT2 => (as_int as i16).to_sql(ty, out),
+            Type::INT4 => (as_int as i32).to_sql(ty, out),
+            Type::INT8 => as_int.to_sql(ty, out),
+            Type::JSON | Type::JSONB => Json(serde_json::json!(self.0)).to_sql(ty, out),
+            _ => self.0.to_string().to_sql(ty, out),
+        }
+    }
+
+    fn accepts(_ty: &postgres::types::Type) -> bool {
+        true
+    }
+
+    postgres::types::to_sql_checked!();
+}
+
 #[cfg(feature = "postgres")]
 #[derive(Debug)]
 enum PgOwned {
     Null,
-    Bool(bool),
-    I64(i64),
-    F64(f64),
+    Bool(PgBool),
+    I64(PgInt),
+    F64(PgFloat),
     Text(PgFlexible),
 }
 
@@ -609,9 +715,9 @@ fn rewrite_postgres(sql: &str, params: &[(&str, SqlParam)]) -> (String, Vec<PgOw
         .into_iter()
         .map(|v| match v {
             SqlParam::Null => PgOwned::Null,
-            SqlParam::Bool(b) => PgOwned::Bool(b),
-            SqlParam::I64(i) => PgOwned::I64(i),
-            SqlParam::F64(f) => PgOwned::F64(f),
+            SqlParam::Bool(b) => PgOwned::Bool(PgBool(b)),
+            SqlParam::I64(i) => PgOwned::I64(PgInt(i)),
+            SqlParam::F64(f) => PgOwned::F64(PgFloat(f)),
             SqlParam::Text(s) => PgOwned::Text(PgFlexible(s)),
         })
         .collect();
@@ -662,6 +768,20 @@ fn postgres_cell(row: &postgres::Row, column: &postgres::Column) -> AttrValue {
     }
     if let Ok(v) = row.try_get::<_, Option<String>>(idx) {
         return v.map_or(AttrValue::Null, AttrValue::from);
+    }
+    // `datetime`-filtered attributes are real `TIMESTAMP` columns in Postgres
+    // (MySQL/MariaDB hand them back as strings). Render them in the same
+    // `Y-m-d H:i:s.v` shape the `datetime` filter's decode side expects, so
+    // `$createdAt`, `registration`, `accessedAt`, ... do not read back as null.
+    if let Ok(v) = row.try_get::<_, Option<chrono::NaiveDateTime>>(idx) {
+        return v.map_or(AttrValue::Null, |naive| {
+            AttrValue::from(crate::datetime::DateTime::format(naive))
+        });
+    }
+    if let Ok(v) = row.try_get::<_, Option<chrono::DateTime<chrono::Utc>>>(idx) {
+        return v.map_or(AttrValue::Null, |utc| {
+            AttrValue::from(crate::datetime::DateTime::format(utc.naive_utc()))
+        });
     }
     // `array`-typed attributes (`postgres_type`) store as JSON/JSONB, which
     // `postgres`'s `FromSql for String` does not accept -- only

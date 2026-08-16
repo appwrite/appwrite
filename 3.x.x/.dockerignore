@@ -1,0 +1,11 @@
+target
+**/target
+.git
+**/.git
+benchmarks
+**/benches
+**/*.md
+!crates/*/README.md
+!apps/server/README.md
+Dockerfile
+.dockerignore

@@ -56,6 +56,21 @@ fn user_id_param(action: Action) -> Action {
     action.param("userId", json!(""), Text::new(36), "User ID.", false)
 }
 
+/// PHP `APP_LIMIT_ARRAY_LABELS_SIZE` (`app/init/constants.php`).
+const LIMIT_ARRAY_LABELS_SIZE: usize = 1000;
+
+/// PHP `new Text(36, allowList: [...Text::NUMBERS, ...Text::ALPHABET_UPPER,
+/// ...Text::ALPHABET_LOWER])`: labels are alphanumeric only, so `invalid-label`
+/// is rejected on the hyphen rather than stored.
+fn label_text() -> Text {
+    Text::new(36).with_allow_list(
+        ('0'..='9')
+            .chain('A'..='Z')
+            .chain('a'..='z')
+            .collect::<Vec<_>>(),
+    )
+}
+
 /// `PATCH /v1/users/:userId/status` (`updateUserStatus`).
 #[must_use]
 pub fn update_status() -> Action {
@@ -123,7 +138,7 @@ pub fn update_name() -> Action {
             let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
             let user_id = base::param_str(&ctx, "userId")?;
             let name = base::param_str(&ctx, "name")?;
-            base::update_user_fields(&mut db, &user_id, json!({ "name": name }))
+            base::update_user_fields_and_search(&mut db, &user_id, json!({ "name": name }))
         })();
         base::finish(&ctx, 200, appwrite_response::MODEL_USER, result)
     })
@@ -154,14 +169,14 @@ pub fn update_email() -> Action {
             let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
             let user_id = base::param_str(&ctx, "userId")?;
             let email = base::param_str(&ctx, "email")?.to_lowercase();
-            let user = base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
+            let user =
+                base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
             if !email.is_empty() {
                 // PHP checks unconditionally (not scoped to this user), so an
                 // update to an email already used by *any* target -- including
                 // this user's own current target -- fails the same way.
-                if base::find_one(&mut db, "identities", "providerEmail", email.as_str())?
-                    .is_some()
+                if base::find_one(&mut db, "identities", "providerEmail", email.as_str())?.is_some()
                 {
                     return Err(Exception::new(Exception::USER_EMAIL_ALREADY_EXISTS));
                 }
@@ -176,11 +191,12 @@ pub fn update_email() -> Action {
                 .unwrap_or_default()
                 .to_string();
 
-            base::update_user_fields(
-                &mut db,
-                &user_id,
-                json!({ "email": if email.is_empty() { Value::Null } else { json!(email) }, "emailVerification": false }),
-            )?;
+            let mut fields = json!({
+                "email": if email.is_empty() { Value::Null } else { json!(email) },
+                "emailVerification": false,
+            });
+            base::merge_into(&mut fields, &base::email_metadata(Some(email.as_str())));
+            base::update_user_fields_and_search(&mut db, &user_id, fields)?;
 
             match base::find_target_by_identifier(&mut db, &user_id, &old_email)? {
                 Some(old_target) if !email.is_empty() => {
@@ -198,6 +214,7 @@ pub fn update_email() -> Action {
                 }
                 None => {}
             }
+            base::purge_user(&mut db, &user_id);
 
             let final_user =
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
@@ -263,7 +280,7 @@ pub fn update_phone() -> Action {
             } else {
                 json!(number)
             };
-            base::update_user_fields(
+            base::update_user_fields_and_search(
                 &mut db,
                 &user_id,
                 json!({ "phone": phone_value, "phoneVerification": false }),
@@ -285,6 +302,7 @@ pub fn update_phone() -> Action {
                 }
                 None => {}
             }
+            base::purge_user(&mut db, &user_id);
 
             let final_user =
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
@@ -321,41 +339,61 @@ pub fn update_password() -> Action {
             "New user password. Must be at least 8 chars.",
             false,
         ),
-        &["response", "dbForProject"],
+        &["response", "project", "dbForProject"],
     )
     .http_action(|ctx| async move {
         let result = (|| -> Result<Value, Exception> {
             let db_handle = base::get_db(&ctx)?;
+            let project = base::get_project(&ctx)?;
             let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
             let user_id = base::param_str(&ctx, "userId")?;
             let password = base::param_str(&ctx, "password")?;
             base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
-            if password.is_empty() {
-                return base::update_user_fields(
+            let updated = if password.is_empty() {
+                base::update_user_fields(
                     &mut db,
                     &user_id,
                     json!({ "password": "", "passwordUpdate": base::now_iso() }),
-                );
+                )?
+            } else {
+                let hasher = Password::create_hash(Password::ARGON2, HashMap::new())
+                    .map_err(base::hash_error)?;
+                let hashed = hasher.hash(&password).map_err(base::hash_error)?;
+                base::update_user_fields(
+                    &mut db,
+                    &user_id,
+                    json!({
+                        "password": hashed,
+                        "passwordUpdate": base::now_iso(),
+                        "hash": hasher.name(),
+                        "hashOptions": hasher.options(),
+                    }),
+                )?
+            };
+
+            if auths_flag(&project, "invalidateSessions") {
+                base::delete_user_sessions(&mut db, &user_id)?;
             }
+            base::purge_user(&mut db, &user_id);
 
-            let hasher = Password::create_hash(Password::ARGON2, HashMap::new())
-                .map_err(base::hash_error)?;
-            let hashed = hasher.hash(&password).map_err(base::hash_error)?;
-
-            base::update_user_fields(
-                &mut db,
-                &user_id,
-                json!({
-                    "password": hashed,
-                    "passwordUpdate": base::now_iso(),
-                    "hash": hasher.name(),
-                    "hashOptions": hasher.options(),
-                }),
-            )
+            Ok(updated)
         })();
         base::finish(&ctx, 200, appwrite_response::MODEL_USER, result)
     })
+}
+
+/// PHP `$project->getAttribute('auths', [])['<flag>'] ?? false`.
+fn auths_flag(project: &Value, flag: &str) -> bool {
+    project
+        .get("auths")
+        .and_then(|auths| auths.get(flag))
+        .is_some_and(|value| match value {
+            Value::Bool(value) => *value,
+            Value::Number(value) => value.as_f64().is_some_and(|value| value != 0.0),
+            Value::String(value) => !matches!(value.as_str(), "" | "0" | "false"),
+            _ => false,
+        })
 }
 
 /// `PUT /v1/users/:userId/labels` (`updateUserLabels`).
@@ -375,8 +413,10 @@ pub fn update_labels() -> Action {
         .param(
             "labels",
             json!([]),
-            utopia_validators::ArrayList::new(Text::new(36)),
-            "Array of user labels. Replaces the previous labels.",
+            utopia_validators::ArrayList::with_length(label_text(), LIMIT_ARRAY_LABELS_SIZE),
+            "Array of user labels. Replaces the previous labels. Maximum of \
+             1000 labels are allowed, each up to 36 alphanumeric characters \
+             long.",
             false,
         ),
         &["response", "dbForProject"],
@@ -397,7 +437,7 @@ pub fn update_labels() -> Action {
                     unique.push(label);
                 }
             }
-            base::update_user_fields(&mut db, &user_id, json!({ "labels": unique }))
+            base::update_user_fields_and_search(&mut db, &user_id, json!({ "labels": unique }))
         })();
         base::finish(&ctx, 200, appwrite_response::MODEL_USER, result)
     })

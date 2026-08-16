@@ -2,15 +2,13 @@
 //! of `app/controllers/shared/api.php`'s `Http::init()`.
 //!
 //! Simplifications versus PHP (documented, not silently dropped):
-//! - Only the `standard` API key type is supported (`Appwrite\Auth\Key`'s
-//!   `dynamic`/`jwt` cases -- session cookies, session headers, and JWTs --
-//!   are not wired into this hook yet; see `crates/appwrite-platform/README.md`
-//!   TODOs). Every `/v1/users*` route requires a `users.read`/`users.write`
-//!   scope, so an unauthenticated (guest) key always fails the scope check
-//!   below, which is the correct behavior for this module even without the
-//!   other key types.
-//! - No abuse/rate-limiting, mode (`X-Appwrite-Mode`) resolution, or usage
-//!   stats gate -- out of scope for the Users-API v1 milestone.
+//! - Only the `standard` API key type and the Console session cookie are
+//!   supported. JWT (`Appwrite\Auth\Key`'s `jwt` case) is not wired into this
+//!   hook; see `crates/appwrite-platform/README.md` TODOs. Every `/v1/users*`
+//!   route requires a `users.read`/`users.write` scope, so an unauthenticated
+//!   (guest) key always fails the scope check below.
+//! - No abuse/rate-limiting or usage stats gate -- out of scope for the
+//!   Users-API v1 milestone.
 
 use std::sync::Arc;
 
@@ -22,7 +20,7 @@ use utopia_platform::{Action, ActionType};
 
 use crate::state::AppwriteState;
 
-use super::send_error;
+use super::{console, send_error};
 
 #[must_use]
 pub fn action() -> Action {
@@ -48,9 +46,21 @@ pub fn action() -> Action {
                 return send_error(&ctx, &Exception::new(Exception::PROJECT_NOT_FOUND));
             };
 
+            let sequence = state.project_sequence(&project);
+            let db = match state
+                .databases
+                .get_or_create(&project_id, sequence.as_deref())
+            {
+                Ok(db) => db,
+                Err(_) => {
+                    return send_error(&ctx, &Exception::new(Exception::GENERAL_SERVER_ERROR));
+                }
+            };
+
             let key_secret = ctx.request().header_line("x-appwrite-key");
             let key = if key_secret.is_empty() {
-                Key::guest(project_id.clone())
+                console::resolve(&state, &ctx, &project, &db)
+                    .map_or_else(|| Key::guest(project_id.clone()), |session| session.key)
             } else {
                 Key::decode_standard(&project, &key_secret)
             };
@@ -67,17 +77,6 @@ pub fn action() -> Action {
                     );
                 }
             }
-
-            let sequence = state.project_sequence(&project);
-            let db = match state
-                .databases
-                .get_or_create(&project_id, sequence.as_deref())
-            {
-                Ok(db) => db,
-                Err(_) => {
-                    return send_error(&ctx, &Exception::new(Exception::GENERAL_SERVER_ERROR));
-                }
-            };
 
             ctx.container.set_cached("project", Resource::new(project));
             ctx.container.set_cached("apiKey", Resource::new(key));

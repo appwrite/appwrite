@@ -11,6 +11,7 @@
 
 pub mod base;
 pub mod http;
+pub mod queries;
 pub mod services;
 pub mod validators;
 

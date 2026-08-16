@@ -25,6 +25,8 @@ const SESSION_PROVIDER_SERVER: &str = "server";
 const TOKEN_EXPIRATION_LOGIN_LONG: i64 = 31_536_000;
 /// PHP `TOKEN_EXPIRATION_GENERIC`: 15 minutes, in seconds.
 const TOKEN_EXPIRATION_GENERIC: i64 = 900;
+/// PHP `TOKEN_TYPE_GENERIC` (`app/init/constants.php`).
+const TOKEN_TYPE_GENERIC: i64 = 8;
 
 fn expire_at(seconds: i64) -> String {
     let expire = chrono::Utc::now() + chrono::Duration::seconds(seconds);
@@ -75,8 +77,9 @@ pub fn create() -> Action {
 
             let session_json = json!({
                 "$id": appwrite_database::resolve_id(appwrite_database::UNIQUE_SENTINEL),
-                "$permissions": base::owner_permissions(&user_id),
+                "$permissions": base::user_permissions(&user_id),
                 "userId": user_id,
+                "userInternalId": base::sequence_of(&user),
                 "provider": SESSION_PROVIDER_SERVER,
                 "secret": hashed,
                 "userAgent": if user_agent.is_empty() { "UNKNOWN".to_string() } else { user_agent },
@@ -88,10 +91,19 @@ pub fn create() -> Action {
             let created = db
                 .create_document("sessions", document_from_json(session_json))
                 .map_err(base::db_error)?;
+            base::purge_user(&mut db, &user_id);
+
+            // PHP returns the Store-encoded `{id, secret}` pair, not the raw
+            // token: `x-appwrite-session` / the session cookie carry that
+            // encoding, and the DB keeps only the one-way hash.
+            let mut store = utopia_auth::Store::new();
+            store
+                .set_property("id", user_id.clone())
+                .set_property("secret", secret);
+            let encoded = store.encode().map_err(base::hash_error)?;
 
             let mut session_out = document_to_json(&created);
-            session_out["secret"] = json!(secret);
-            let _ = &user;
+            session_out["secret"] = json!(encoded);
             Ok(session_out)
         })();
         base::finish(&ctx, 201, appwrite_response::MODEL_SESSION, result)
@@ -189,6 +201,7 @@ pub fn delete() -> Action {
             }
             db.delete_document("sessions", &session_id)
                 .map_err(base::db_error)?;
+            base::purge_user(&mut db, &user_id);
             Ok(())
         })();
         base::finish_no_content(&ctx, result)
@@ -216,21 +229,7 @@ pub fn delete_all() -> Action {
             let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
             let user_id = base::param_str(&ctx, "userId")?;
             base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
-
-            let sessions = db
-                .find(
-                    "sessions",
-                    &[
-                        Query::equal("userId", vec![user_id.clone().into()]),
-                        Query::limit(1000),
-                    ],
-                    "read",
-                )
-                .map_err(base::db_error)?;
-            for session in sessions {
-                let _ = db.delete_document("sessions", &session.get_id());
-            }
-            Ok(())
+            base::delete_user_sessions(&mut db, &user_id)
         })();
         base::finish_no_content(&ctx, result)
     })
@@ -280,7 +279,8 @@ pub fn create_token() -> Action {
                 .param_value("expire")
                 .and_then(Value::as_i64)
                 .unwrap_or(TOKEN_EXPIRATION_GENERIC);
-            base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
+            let user =
+                base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
             let mut proof = utopia_auth::Token::new(length).map_err(base::hash_error)?;
             proof.set_hasher(Arc::new(utopia_auth::Sha::new()));
@@ -292,9 +292,9 @@ pub fn create_token() -> Action {
 
             let token_json = json!({
                 "$id": appwrite_database::resolve_id(appwrite_database::UNIQUE_SENTINEL),
-                "$permissions": base::owner_permissions(&user_id),
                 "userId": user_id,
-                "type": "generic",
+                "userInternalId": base::sequence_of(&user),
+                "type": TOKEN_TYPE_GENERIC,
                 "secret": hashed,
                 "expire": expire,
                 "userAgent": if user_agent.is_empty() { "UNKNOWN".to_string() } else { user_agent },
@@ -303,6 +303,7 @@ pub fn create_token() -> Action {
             let created = db
                 .create_document("tokens", document_from_json(token_json))
                 .map_err(base::db_error)?;
+            base::purge_user(&mut db, &user_id);
             let mut token_out = document_to_json(&created);
             token_out["secret"] = json!(secret);
             Ok(token_out)
@@ -353,18 +354,22 @@ pub fn create_jwt() -> Action {
                 .param_value("duration")
                 .and_then(Value::as_i64)
                 .unwrap_or(900);
-            base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
+            let user =
+                base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
+            // PHP reads `$user->getAttribute('sessions')`, the relationship
+            // keyed on `userInternalId`, so match on the same column rather
+            // than `userId`.
             let sessions = db
                 .find(
                     "sessions",
                     &[
-                        Query::equal("userId", vec![user_id.clone().into()]),
+                        Query::equal("userInternalId", vec![base::sequence_str(&user).into()]),
                         Query::limit(1000),
                     ],
                     "read",
                 )
-                .unwrap_or_default();
+                .map_err(base::db_error)?;
             let session = if session_id == "recent" {
                 sessions.last().cloned()
             } else {

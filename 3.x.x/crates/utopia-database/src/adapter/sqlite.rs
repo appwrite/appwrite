@@ -3,7 +3,7 @@
 use super::sql::{quote_mysql, SqlAdapter};
 use crate::error::Result;
 use crate::impl_sql_engine;
-use crate::pdo::Pdo;
+use crate::sql_client::SqlClient;
 
 /// SQLite adapter.
 #[derive(Debug)]
@@ -19,17 +19,17 @@ impl Sqlite {
 
     /// Open a SQLite database at `path` (`:memory:` allowed).
     pub fn open(path: impl AsRef<str>) -> Result<Self> {
-        let pdo = Pdo::sqlite(path.as_ref())?;
+        let client = SqlClient::sqlite(path.as_ref())?;
         Ok(Self {
-            inner: SqlAdapter::new(pdo),
+            inner: SqlAdapter::new(client),
         })
     }
 
-    /// Wrap an existing PDO.
+    /// Wrap an existing [`SqlClient`].
     #[must_use]
-    pub fn from_pdo(pdo: Pdo) -> Self {
+    pub fn from_client(client: SqlClient) -> Self {
         Self {
-            inner: SqlAdapter::new(pdo),
+            inner: SqlAdapter::new(client),
         }
     }
 

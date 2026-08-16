@@ -1,10 +1,9 @@
 //! Membership endpoints. Rust port of `Http/Users/Memberships/XList.php`.
 //!
-//! Simplifications versus PHP (documented, not silently dropped): no
-//! `queries` DSL / cursor pagination (see `crud::list`); the `memberships`
-//! and `teams` collections are never populated by this milestone (the
-//! Teams module is not yet ported), so `list` only enriches whatever a
-//! future Teams port writes into them.
+//! Simplifications versus PHP (documented, not silently dropped): the
+//! `memberships` and `teams` collections are only written by the Teams
+//! module, which is not yet ported, so `list` just enriches whatever that
+//! module (still served by PHP) writes into them.
 
 use appwrite_exception::Exception;
 use serde_json::{json, Value};
@@ -13,6 +12,7 @@ use utopia_platform::{Action, HttpMethod};
 use utopia_validators::{Boolean, Text};
 
 use crate::modules::users::base::{self, inject};
+use crate::modules::users::queries;
 use crate::state::document_to_json;
 
 /// `GET /v1/users/:userId/memberships` (`listUserMemberships`).
@@ -26,6 +26,14 @@ pub fn list() -> Action {
             .groups(["api", "users"])
             .label("scope", "users.read")
             .param("userId", json!(""), Text::new(36), "User ID.", false)
+            .param(
+                "queries",
+                json!([]),
+                queries::memberships(),
+                "Array of query strings generated using the Query class \
+                 provided by the SDK.",
+                true,
+            )
             .param(
                 "search",
                 json!(""),
@@ -50,23 +58,30 @@ pub fn list() -> Action {
             let user =
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
             let search = base::param_str(&ctx, "search").unwrap_or_default();
-            let include_total = ctx
-                .param_value("total")
-                .and_then(Value::as_bool)
-                .unwrap_or(true);
+            let include_total = base::param_bool(&ctx, "total", true);
 
-            let mut queries = vec![
-                Query::equal("userId", vec![user_id.clone().into()]),
-                Query::limit(100),
-            ];
-            if !search.is_empty() {
-                queries.push(Query::search("search", search));
+            let mut parsed = queries::parse(&queries::raw_param(ctx.param_value("queries")))?;
+            queries::push_search(&mut parsed, queries::COLLECTION_MEMBERSHIPS, &search)?;
+            queries::resolve_cursor(&mut db, &mut parsed, "memberships", |id| {
+                Exception::with_message(
+                    Exception::GENERAL_CURSOR_NOT_FOUND,
+                    format!("Membership '{id}' for the 'cursor' value not found."),
+                )
+            })?;
+            if !queries::has_method(&parsed, utopia_database::query::TYPE_LIMIT) {
+                parsed.push(Query::limit(25));
             }
+            // PHP scopes the list to the route's user via the `memberships`
+            // relationship on the user document rather than a query, so the
+            // caller's queries never have to carry it.
+            parsed.insert(0, Query::equal("userId", vec![user_id.clone().into()]));
+
             let memberships = db
-                .find("memberships", &queries, "read")
+                .find("memberships", &parsed, "read")
                 .map_err(base::db_error)?;
             let total = if include_total {
-                memberships.len() as i64
+                db.count("memberships", &parsed, None)
+                    .map_err(base::db_error)?
             } else {
                 0
             };

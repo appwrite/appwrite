@@ -4,10 +4,12 @@ use crate::adapter::{filter_key, Adapter, AdapterState};
 use crate::constants::*;
 use crate::document::Document;
 use crate::error::{DatabaseError, Result};
-use crate::pdo::{Dialect, Pdo, SqlParam};
+use crate::sql_client::{Dialect, SqlClient, SqlParam};
 use crate::query::{
-    Query, TYPE_EQUAL, TYPE_GREATER, TYPE_GREATER_EQUAL, TYPE_IS_NOT_NULL, TYPE_IS_NULL,
-    TYPE_LESSER, TYPE_LESSER_EQUAL, TYPE_NOT_EQUAL,
+    Query, TYPE_BETWEEN, TYPE_CONTAINS, TYPE_CONTAINS_ALL, TYPE_CONTAINS_ANY, TYPE_ENDS_WITH,
+    TYPE_EQUAL, TYPE_GREATER, TYPE_GREATER_EQUAL, TYPE_IS_NOT_NULL, TYPE_IS_NULL, TYPE_LESSER,
+    TYPE_LESSER_EQUAL, TYPE_NOT_BETWEEN, TYPE_NOT_CONTAINS, TYPE_NOT_ENDS_WITH, TYPE_NOT_EQUAL,
+    TYPE_NOT_SEARCH, TYPE_NOT_STARTS_WITH, TYPE_OR, TYPE_SEARCH, TYPE_STARTS_WITH,
 };
 use crate::value::AttrValue;
 use indexmap::IndexMap;
@@ -58,31 +60,31 @@ pub fn collection_attributes(collection: &Document) -> Vec<Document> {
     }
 }
 
-/// PHP `Utopia\Database\Adapter\SQL` - PDO-backed SQL adapter.
+/// Shared SQL adapter helpers used by MySQL, MariaDB, Postgres, and SQLite.
 #[derive(Debug)]
 pub struct Sql {
     state: AdapterState,
-    pdo: Option<Pdo>,
+    client: Option<SqlClient>,
     float_precision: i32,
 }
 
 impl Sql {
-    /// PHP `__construct($pdo)`.
+    /// Wrap a live [`SqlClient`].
     #[must_use]
-    pub fn new(pdo: Pdo) -> Self {
+    pub fn new(client: SqlClient) -> Self {
         Self {
             state: AdapterState::default(),
-            pdo: Some(pdo),
+            client: Some(client),
             float_precision: 17,
         }
     }
 
-    /// Construct without an open PDO (used by feature-gated stubs).
+    /// Construct without an open client (used by feature-gated stubs).
     #[must_use]
     pub fn disconnected() -> Self {
         Self {
             state: AdapterState::default(),
-            pdo: None,
+            client: None,
             float_precision: 17,
         }
     }
@@ -101,10 +103,10 @@ impl Sql {
         )
     }
 
-    /// The wrapped PDO, if any.
+    /// The wrapped SQL client, if any.
     #[must_use]
-    pub fn pdo(&self) -> Option<&Pdo> {
-        self.pdo.as_ref()
+    pub fn client(&self) -> Option<&SqlClient> {
+        self.client.as_ref()
     }
 }
 
@@ -127,18 +129,18 @@ pub type SqlResult<T> = Result<T>;
 #[derive(Debug)]
 pub struct SqlAdapter {
     state: AdapterState,
-    pdo: Pdo,
+    client: SqlClient,
     dialect: Dialect,
 }
 
 impl SqlAdapter {
-    /// Wrap an open PDO.
+    /// Wrap an open [`SqlClient`].
     #[must_use]
-    pub fn new(pdo: Pdo) -> Self {
-        let dialect = pdo.dialect();
+    pub fn new(client: SqlClient) -> Self {
+        let dialect = client.dialect();
         Self {
             state: AdapterState::default(),
-            pdo,
+            client,
             dialect,
         }
     }
@@ -186,9 +188,305 @@ impl SqlAdapter {
         }
     }
 
-    fn pdo_mut(&mut self) -> &mut Pdo {
-        &mut self.pdo
+    fn client_mut(&mut self) -> &mut SqlClient {
+        &mut self.client
     }
+
+    /// PHP `getSQLCondition`: one query to one WHERE fragment, pushing its
+    /// binds onto `params`. `arrays` names the collection's array attributes,
+    /// which decide whether `contains` is a JSON containment test or a LIKE.
+    /// Returns `None` for a query that contributes no WHERE fragment (ordering
+    /// and paging are applied by the caller).
+    fn sql_condition(
+        &self,
+        query: &Query,
+        arrays: &[String],
+        params: &mut Vec<(String, SqlParam)>,
+        next: &mut usize,
+    ) -> Option<String> {
+        let method = query.get_method();
+        if query.is_nested() {
+            let joined = query
+                .get_values()
+                .iter()
+                .filter_map(AttrValue::as_query)
+                .filter_map(|inner| self.sql_condition(inner, arrays, params, next))
+                .collect::<Vec<_>>();
+            if joined.is_empty() {
+                return None;
+            }
+            let separator = if method == TYPE_OR { " OR " } else { " AND " };
+            return Some(format!("({})", joined.join(separator)));
+        }
+
+        let attribute = Self::internal_key(query.get_attribute());
+        let column = self.q(attribute);
+        let on_array = query.on_array() || arrays.iter().any(|key| key == attribute);
+        let mut bind = |params: &mut Vec<(String, SqlParam)>, value: SqlParam| -> String {
+            let key = format!(":f{next}");
+            *next += 1;
+            params.push((key.clone(), value));
+            key
+        };
+
+        match method {
+            TYPE_EQUAL | TYPE_NOT_EQUAL | TYPE_LESSER | TYPE_LESSER_EQUAL | TYPE_GREATER
+            | TYPE_GREATER_EQUAL => {
+                let op = match method {
+                    TYPE_EQUAL => "=",
+                    TYPE_NOT_EQUAL => "!=",
+                    TYPE_LESSER => "<",
+                    TYPE_LESSER_EQUAL => "<=",
+                    TYPE_GREATER => ">",
+                    _ => ">=",
+                };
+                if method == TYPE_EQUAL && query.get_values().len() > 1 {
+                    let keys: Vec<String> = query
+                        .get_values()
+                        .iter()
+                        .map(|value| bind(params, SqlParam::from_attr(value)))
+                        .collect();
+                    Some(format!("{column} IN ({})", keys.join(", ")))
+                } else {
+                    let key = bind(params, SqlParam::from_attr(query.get_value()));
+                    Some(format!("{column} {op} {key}"))
+                }
+            }
+            TYPE_IS_NULL => Some(format!("{column} IS NULL")),
+            TYPE_IS_NOT_NULL => Some(format!("{column} IS NOT NULL")),
+            TYPE_BETWEEN | TYPE_NOT_BETWEEN => {
+                let values = query.get_values();
+                let (low, high) = (values.first()?, values.get(1)?);
+                let low = bind(params, SqlParam::from_attr(low));
+                let high = bind(params, SqlParam::from_attr(high));
+                let not = if method == TYPE_NOT_BETWEEN {
+                    "NOT "
+                } else {
+                    ""
+                };
+                Some(format!("{column} {not}BETWEEN {low} AND {high}"))
+            }
+            TYPE_SEARCH | TYPE_NOT_SEARCH => {
+                let value =
+                    fulltext_value(query.get_value().as_str().unwrap_or_default(), self.dialect);
+                if value.is_empty() {
+                    return None;
+                }
+                let key = bind(params, SqlParam::from_str(&value));
+                let matches = match self.dialect {
+                    // Appwrite's Postgres adapter normalizes punctuation out of
+                    // the column before matching, so `label:x` and `a@b.com`
+                    // tokenize the same way they do in the query text.
+                    Dialect::Postgres => format!(
+                        "to_tsvector(regexp_replace({column}, '[^\\w]+',' ','g')) @@ websearch_to_tsquery({key})"
+                    ),
+                    Dialect::Mysql | Dialect::Mariadb => {
+                        format!("MATCH({column}) AGAINST ({key} IN BOOLEAN MODE)")
+                    }
+                    Dialect::Sqlite => format!("{column} LIKE {key}"),
+                };
+                Some(if method == TYPE_NOT_SEARCH {
+                    format!("NOT ({matches})")
+                } else {
+                    matches
+                })
+            }
+            TYPE_STARTS_WITH | TYPE_NOT_STARTS_WITH | TYPE_ENDS_WITH | TYPE_NOT_ENDS_WITH
+            | TYPE_CONTAINS | TYPE_NOT_CONTAINS | TYPE_CONTAINS_ANY | TYPE_CONTAINS_ALL => {
+                let negated = matches!(
+                    method,
+                    TYPE_NOT_STARTS_WITH | TYPE_NOT_ENDS_WITH | TYPE_NOT_CONTAINS
+                );
+                let fragments = if on_array {
+                    self.array_containment(method, &column, query, params, next)
+                } else {
+                    query
+                        .get_values()
+                        .iter()
+                        .map(|value| {
+                            let raw = value.as_str().unwrap_or_default();
+                            let escaped = escape_wildcards(raw);
+                            let pattern = match method {
+                                TYPE_STARTS_WITH | TYPE_NOT_STARTS_WITH => format!("{escaped}%"),
+                                TYPE_ENDS_WITH | TYPE_NOT_ENDS_WITH => format!("%{escaped}"),
+                                _ => format!("%{escaped}%"),
+                            };
+                            let key = bind(params, SqlParam::from_str(&pattern));
+                            format!("{column} LIKE {key}")
+                        })
+                        .collect()
+                };
+                if fragments.is_empty() {
+                    return None;
+                }
+                let joined = fragments.join(if negated { " AND " } else { " OR " });
+                Some(if negated {
+                    format!("NOT ({joined})")
+                } else {
+                    format!("({joined})")
+                })
+            }
+            _ => None,
+        }
+    }
+
+    /// The lexicographic "after the cursor row" comparison over the effective
+    /// ordering: the first column that differs decides, and ties fall through
+    /// to the next one. `ordered` is already flipped for `cursorBefore`, so
+    /// the same expression serves both directions.
+    fn cursor_condition(
+        &self,
+        cursor: &Document,
+        ordered: &[(String, bool)],
+        params: &mut Vec<(String, SqlParam)>,
+        next: &mut usize,
+    ) -> Option<String> {
+        let mut condition = String::new();
+        for (column, ascending) in ordered.iter().rev() {
+            let value = cursor_value(cursor, column);
+            let quoted = self.q(column);
+            let strict = format!(":f{next}");
+            *next += 1;
+            params.push((strict.clone(), value.clone()));
+            let tie = format!(":f{next}");
+            *next += 1;
+            params.push((tie.clone(), value));
+
+            let operator = if *ascending { ">" } else { "<" };
+            condition = if condition.is_empty() {
+                format!("{quoted} {operator} {strict}")
+            } else {
+                format!("({quoted} {operator} {strict} OR ({quoted} = {tie} AND {condition}))")
+            };
+        }
+        (!condition.is_empty()).then_some(condition)
+    }
+
+    /// The `contains`-family fragments for an array attribute: JSON
+    /// containment rather than a substring match. `containsAll` tests the
+    /// whole value list at once, the others test each value separately.
+    fn array_containment(
+        &self,
+        method: &str,
+        column: &str,
+        query: &Query,
+        params: &mut Vec<(String, SqlParam)>,
+        next: &mut usize,
+    ) -> Vec<String> {
+        let encode =
+            |value: &AttrValue| serde_json::to_string(&value.to_json()).unwrap_or_default();
+        let payloads: Vec<String> = if method == TYPE_CONTAINS_ALL {
+            let all: Vec<serde_json::Value> =
+                query.get_values().iter().map(AttrValue::to_json).collect();
+            vec![serde_json::to_string(&all).unwrap_or_default()]
+        } else {
+            query
+                .get_values()
+                .iter()
+                .map(|value| serde_json::to_string(&vec![value.to_json()]).unwrap_or(encode(value)))
+                .collect()
+        };
+        payloads
+            .into_iter()
+            .map(|payload| {
+                let key = format!(":f{next}");
+                *next += 1;
+                params.push((key.clone(), SqlParam::from_str(&payload)));
+                match self.dialect {
+                    Dialect::Postgres => format!("{column} @> {key}::jsonb"),
+                    Dialect::Mysql | Dialect::Mariadb => {
+                        format!("JSON_CONTAINS({column}, {key})")
+                    }
+                    Dialect::Sqlite => format!("{column} LIKE '%' || {key} || '%'"),
+                }
+            })
+            .collect()
+    }
+}
+
+/// The cursor document's value for an internal column, read back through the
+/// `$`-prefixed name it carries on a decoded document.
+fn cursor_value(cursor: &Document, column: &str) -> SqlParam {
+    let external = match column {
+        "_uid" => "$id",
+        "_id" => "$sequence",
+        "_createdAt" => "$createdAt",
+        "_updatedAt" => "$updatedAt",
+        other => other,
+    };
+    let value = cursor.get_attribute(external);
+    if value.is_null() && external != column {
+        return SqlParam::from_attr(cursor.get_attribute(column));
+    }
+    SqlParam::from_attr(value)
+}
+
+/// The `key`s of a collection's array attributes, which `contains` queries
+/// have to treat as JSON documents rather than strings.
+fn array_attributes(collection: &Document) -> Vec<String> {
+    collection_attributes(collection)
+        .iter()
+        .filter(|attribute| attribute.get_attribute("array").as_bool().unwrap_or(false))
+        .map(|attribute| {
+            let key = attribute.get_attribute("key");
+            let key = if key.is_null() {
+                attribute.get_attribute("$id")
+            } else {
+                key
+            };
+            key.as_str().unwrap_or_default().to_string()
+        })
+        .collect()
+}
+
+/// PHP `escapeWildcards`.
+fn escape_wildcards(value: &str) -> String {
+    let mut escaped = String::with_capacity(value.len());
+    for ch in value.chars() {
+        if matches!(ch, '%' | '_' | '[' | ']' | '^' | '\\') {
+            escaped.push('\\');
+        }
+        escaped.push(ch);
+    }
+    escaped
+}
+
+/// PHP `getFulltextValue`, which differs per engine: Postgres builds a
+/// `websearch_to_tsquery` string, MySQL/MariaDB a boolean-mode term.
+fn fulltext_value(value: &str, dialect: Dialect) -> String {
+    let exact = value.len() > 1 && value.starts_with('"') && value.ends_with('"');
+    match dialect {
+        Dialect::Postgres => {
+            let cleaned =
+                collapse_whitespace(&value.replace(['@', '+', '-', '*', '.', '\'', '"'], " "));
+            if cleaned.is_empty() {
+                return String::new();
+            }
+            let joined = if exact {
+                cleaned
+            } else {
+                cleaned.split(' ').collect::<Vec<_>>().join(" or ")
+            };
+            format!("'{joined}'")
+        }
+        _ => {
+            let cleaned = collapse_whitespace(
+                &value.replace(['@', '+', '-', '*', ')', '(', '<', '>', '~', '"'], " "),
+            );
+            if cleaned.is_empty() {
+                return String::new();
+            }
+            if exact {
+                format!("\"{cleaned}\"")
+            } else {
+                format!("{cleaned}*")
+            }
+        }
+    }
+}
+
+fn collapse_whitespace(value: &str) -> String {
+    value.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 impl Adapter for SqlAdapter {
@@ -200,15 +498,15 @@ impl Adapter for SqlAdapter {
     }
 
     fn ping(&mut self) -> bool {
-        self.pdo.ping().unwrap_or(false)
+        self.client.ping().unwrap_or(false)
     }
 
     fn start_transaction(&mut self) -> Result<bool> {
         if self.state.in_transaction == 0 {
-            self.pdo.exec("BEGIN", &[])?;
+            self.client.exec("BEGIN", &[])?;
         } else {
             let sql = format!("SAVEPOINT transaction{}", self.state.in_transaction);
-            self.pdo.exec(&sql, &[])?;
+            self.client.exec(&sql, &[])?;
         }
         self.state.in_transaction += 1;
         Ok(true)
@@ -219,13 +517,13 @@ impl Adapter for SqlAdapter {
             return Ok(false);
         }
         if self.state.in_transaction == 1 {
-            self.pdo.exec("COMMIT", &[])?;
+            self.client.exec("COMMIT", &[])?;
         } else {
             let sql = format!(
                 "RELEASE SAVEPOINT transaction{}",
                 self.state.in_transaction - 1
             );
-            self.pdo.exec(&sql, &[])?;
+            self.client.exec(&sql, &[])?;
         }
         self.state.in_transaction -= 1;
         Ok(true)
@@ -236,13 +534,13 @@ impl Adapter for SqlAdapter {
             return Ok(false);
         }
         if self.state.in_transaction == 1 {
-            self.pdo.exec("ROLLBACK", &[])?;
+            self.client.exec("ROLLBACK", &[])?;
         } else {
             let sql = format!(
                 "ROLLBACK TO SAVEPOINT transaction{}",
                 self.state.in_transaction - 1
             );
-            self.pdo.exec(&sql, &[])?;
+            self.client.exec(&sql, &[])?;
         }
         self.state.in_transaction -= 1;
         Ok(true)
@@ -257,10 +555,10 @@ impl Adapter for SqlAdapter {
                     return Ok(true);
                 }
                 let sql = format!("CREATE SCHEMA {}", self.q(&name));
-                self.pdo.exec(&sql, &[])?;
+                self.client.exec(&sql, &[])?;
                 for ext in ["postgis", "vector", "pg_trgm"] {
                     let _ = self
-                        .pdo
+                        .client
                         .exec(&format!("CREATE EXTENSION IF NOT EXISTS {ext}"), &[]);
                 }
                 Ok(true)
@@ -273,7 +571,7 @@ impl Adapter for SqlAdapter {
                     "CREATE DATABASE {} /*!40100 DEFAULT CHARACTER SET utf8mb4 */",
                     self.q(&name)
                 );
-                self.pdo.exec(&sql, &[])?;
+                self.client.exec(&sql, &[])?;
                 Ok(true)
             }
         }
@@ -285,7 +583,7 @@ impl Adapter for SqlAdapter {
             (Dialect::Sqlite, None) => Ok(true),
             (Dialect::Sqlite, Some(collection)) => {
                 let table = format!("{}_{}", self.state.namespace, filter_key(collection));
-                let rows = self.pdo.query(
+                let rows = self.client.query(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name = :table",
                     &[(":table", SqlParam::from_str(table.clone()))],
                 )?;
@@ -294,7 +592,7 @@ impl Adapter for SqlAdapter {
                     .any(|r| r.get("name").and_then(AttrValue::as_str) == Some(table.as_str())))
             }
             (Dialect::Postgres, None) => {
-                let rows = self.pdo.query(
+                let rows = self.client.query(
                     "SELECT schema_name FROM information_schema.schemata WHERE schema_name = :schema",
                     &[(":schema", SqlParam::from_str(database))],
                 )?;
@@ -302,7 +600,7 @@ impl Adapter for SqlAdapter {
             }
             (Dialect::Postgres, Some(collection)) => {
                 let table = format!("{}_{}", self.state.namespace, filter_key(collection));
-                let rows = self.pdo.query(
+                let rows = self.client.query(
                     "SELECT table_name FROM information_schema.tables WHERE table_schema = :schema AND table_name = :table",
                     &[
                         (":schema", SqlParam::from_str(database)),
@@ -312,7 +610,7 @@ impl Adapter for SqlAdapter {
                 Ok(!rows.is_empty())
             }
             (_, None) => {
-                let rows = self.pdo.query(
+                let rows = self.client.query(
                     "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = :schema",
                     &[(":schema", SqlParam::from_str(database))],
                 )?;
@@ -320,7 +618,7 @@ impl Adapter for SqlAdapter {
             }
             (_, Some(collection)) => {
                 let table = format!("{}_{}", self.state.namespace, filter_key(collection));
-                let rows = self.pdo.query(
+                let rows = self.client.query(
                     "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :table",
                     &[
                         (":schema", SqlParam::from_str(database)),
@@ -338,12 +636,12 @@ impl Adapter for SqlAdapter {
             Dialect::Sqlite => Ok(true),
             Dialect::Postgres => {
                 let sql = format!("DROP SCHEMA IF EXISTS {} CASCADE", self.q(&name));
-                self.pdo.exec(&sql, &[])?;
+                self.client.exec(&sql, &[])?;
                 Ok(true)
             }
             Dialect::Mysql | Dialect::Mariadb => {
                 let sql = format!("DROP DATABASE IF EXISTS {}", self.q(&name));
-                self.pdo.exec(&sql, &[])?;
+                self.client.exec(&sql, &[])?;
                 Ok(true)
             }
         }
@@ -460,8 +758,8 @@ impl Adapter for SqlAdapter {
                 ),
             ),
         };
-        self.pdo.exec(&collection_sql, &[])?;
-        self.pdo.exec(&perms_sql, &[])?;
+        self.client.exec(&collection_sql, &[])?;
+        self.client.exec(&perms_sql, &[])?;
         Ok(true)
     }
 
@@ -471,13 +769,13 @@ impl Adapter for SqlAdapter {
         let perms = self.table(&format!("{id}_perms"));
         match self.dialect {
             Dialect::Sqlite => {
-                self.pdo
+                self.client
                     .exec(&format!("DROP TABLE IF EXISTS {table}"), &[])?;
-                self.pdo
+                self.client
                     .exec(&format!("DROP TABLE IF EXISTS {perms}"), &[])?;
             }
             _ => {
-                self.pdo
+                self.client
                     .exec(&format!("DROP TABLE IF EXISTS {table}, {perms}"), &[])?;
             }
         }
@@ -500,7 +798,7 @@ impl Adapter for SqlAdapter {
             self.table(collection),
             self.q(&filter_key(id))
         );
-        self.pdo.exec(&sql, &[])?;
+        self.client.exec(&sql, &[])?;
         Ok(true)
     }
 
@@ -510,7 +808,7 @@ impl Adapter for SqlAdapter {
             self.table(collection),
             self.q(&filter_key(id))
         );
-        self.pdo.exec(&sql, &[])?;
+        self.client.exec(&sql, &[])?;
         Ok(true)
     }
 
@@ -521,7 +819,7 @@ impl Adapter for SqlAdapter {
             self.q(&filter_key(old)),
             self.q(&filter_key(new))
         );
-        self.pdo.exec(&sql, &[])?;
+        self.client.exec(&sql, &[])?;
         Ok(true)
     }
 
@@ -544,7 +842,7 @@ impl Adapter for SqlAdapter {
             self.q("_uid")
         );
         let rows = self
-            .pdo_mut()
+            .client_mut()
             .query(&sql, &[(":_uid", SqlParam::from_str(id))])?;
         Ok(rows
             .into_iter()
@@ -619,7 +917,7 @@ impl Adapter for SqlAdapter {
             .map(|(k, v)| (k.as_str(), v.clone()))
             .collect();
         if self.dialect == Dialect::Postgres {
-            let rows = self.pdo.query(&sql, &param_refs)?;
+            let rows = self.client.query(&sql, &param_refs)?;
             if let Some(id) = rows
                 .first()
                 .and_then(|r| r.get("_id"))
@@ -628,8 +926,8 @@ impl Adapter for SqlAdapter {
                 document.set_attribute("$sequence", AttrValue::from(id));
             }
         } else {
-            self.pdo.exec(&sql, &param_refs)?;
-            let id = self.pdo.last_insert_id().to_owned();
+            self.client.exec(&sql, &param_refs)?;
+            let id = self.client.last_insert_id().to_owned();
             if id.is_empty() || id == "0" {
                 return Err(DatabaseError::database(
                     "Error creating document empty \"$sequence\"",
@@ -663,7 +961,7 @@ impl Adapter for SqlAdapter {
                 .iter()
                 .map(|(k, v)| (k.as_str(), v.clone()))
                 .collect();
-            let _ = self.pdo.exec(&sql, &refs);
+            let _ = self.client.exec(&sql, &refs);
         }
         Ok(document)
     }
@@ -714,13 +1012,13 @@ impl Adapter for SqlAdapter {
             .iter()
             .map(|(k, v)| (k.as_str(), v.clone()))
             .collect();
-        self.pdo.exec(&sql, &refs)?;
+        self.client.exec(&sql, &refs)?;
         Ok(document)
     }
 
     fn delete_document(&mut self, collection: &str, id: &str) -> Result<bool> {
         let name = filter_key(collection);
-        self.pdo.exec(
+        self.client.exec(
             &format!(
                 "DELETE FROM {} WHERE {} = :_uid",
                 self.table(&name),
@@ -728,7 +1026,7 @@ impl Adapter for SqlAdapter {
             ),
             &[(":_uid", SqlParam::from_str(id))],
         )?;
-        self.pdo.exec(
+        self.client.exec(
             &format!(
                 "DELETE FROM {} WHERE {} = :_uid",
                 self.table(&format!("{name}_perms")),
@@ -747,75 +1045,64 @@ impl Adapter for SqlAdapter {
         offset: Option<i64>,
         order_attributes: &[String],
         order_types: &[String],
-        _cursor: Option<&Document>,
-        _cursor_direction: &str,
+        cursor: Option<&Document>,
+        cursor_direction: &str,
         _for_permission: &str,
     ) -> Result<Vec<Document>> {
         let name = filter_key(&collection.get_id());
+        let arrays = array_attributes(collection);
         let mut where_sql = Vec::new();
         let mut params: Vec<(String, SqlParam)> = Vec::new();
         let mut i = 0;
         for query in queries {
-            match query.get_method() {
-                TYPE_EQUAL | TYPE_NOT_EQUAL | TYPE_LESSER | TYPE_LESSER_EQUAL | TYPE_GREATER
-                | TYPE_GREATER_EQUAL => {
-                    let column = Self::internal_key(query.get_attribute());
-                    let op = match query.get_method() {
-                        TYPE_EQUAL => "=",
-                        TYPE_NOT_EQUAL => "!=",
-                        TYPE_LESSER => "<",
-                        TYPE_LESSER_EQUAL => "<=",
-                        TYPE_GREATER => ">",
-                        _ => ">=",
-                    };
-                    if query.get_method() == TYPE_EQUAL && query.get_values().len() > 1 {
-                        let mut keys = Vec::new();
-                        for value in query.get_values() {
-                            let key = format!(":f{i}");
-                            keys.push(key.clone());
-                            params.push((key, SqlParam::from_attr(value)));
-                            i += 1;
-                        }
-                        where_sql.push(format!("{} IN ({})", self.q(column), keys.join(", ")));
-                    } else {
-                        let key = format!(":f{i}");
-                        where_sql.push(format!("{} {op} {key}", self.q(column)));
-                        params.push((key, SqlParam::from_attr(query.get_value())));
-                        i += 1;
-                    }
-                }
-                TYPE_IS_NULL => where_sql.push(format!(
-                    "{} IS NULL",
-                    self.q(Self::internal_key(query.get_attribute()))
-                )),
-                TYPE_IS_NOT_NULL => {
-                    where_sql.push(format!(
-                        "{} IS NOT NULL",
-                        self.q(Self::internal_key(query.get_attribute()))
-                    ));
-                }
-                _ => {}
+            if let Some(fragment) = self.sql_condition(query, &arrays, &mut params, &mut i) {
+                where_sql.push(fragment);
             }
         }
+
+        // A `cursorBefore` page is the rows *preceding* the cursor, which SQL
+        // can only reach by walking the reversed order and flipping the page
+        // back afterwards.
+        let backwards = cursor_direction == CURSOR_BEFORE;
+        let mut ordered: Vec<(String, bool)> = order_attributes
+            .iter()
+            .enumerate()
+            .map(|(idx, attribute)| {
+                let ascending = order_types
+                    .get(idx)
+                    .map(String::as_str)
+                    .unwrap_or(ORDER_ASC)
+                    .eq_ignore_ascii_case(ORDER_ASC);
+                (
+                    Self::internal_key(attribute).to_string(),
+                    ascending != backwards,
+                )
+            })
+            .collect();
+        if ordered.is_empty() {
+            ordered.push(("_id".to_string(), !backwards));
+        }
+
+        if let Some(cursor) = cursor {
+            if let Some(fragment) = self.cursor_condition(cursor, &ordered, &mut params, &mut i) {
+                where_sql.push(fragment);
+            }
+        }
+
         let mut sql = format!("SELECT * FROM {}", self.table(&name));
         if !where_sql.is_empty() {
             sql.push_str(" WHERE ");
             sql.push_str(&where_sql.join(" AND "));
         }
-        if !order_attributes.is_empty() {
-            let mut orders = Vec::new();
-            for (idx, attr) in order_attributes.iter().enumerate() {
-                let dir = order_types
-                    .get(idx)
-                    .map(String::as_str)
-                    .unwrap_or(ORDER_ASC);
-                orders.push(format!("{} {dir}", self.q(Self::internal_key(attr))));
-            }
-            sql.push_str(" ORDER BY ");
-            sql.push_str(&orders.join(", "));
-        } else {
-            sql.push_str(&format!(" ORDER BY {}", self.q("_id")));
-        }
+        let orders: Vec<String> = ordered
+            .iter()
+            .map(|(column, ascending)| {
+                let direction = if *ascending { ORDER_ASC } else { ORDER_DESC };
+                format!("{} {direction}", self.q(column))
+            })
+            .collect();
+        sql.push_str(" ORDER BY ");
+        sql.push_str(&orders.join(", "));
         if let Some(limit) = limit {
             sql.push_str(&format!(" LIMIT {limit}"));
         }
@@ -826,8 +1113,12 @@ impl Adapter for SqlAdapter {
             .iter()
             .map(|(k, v)| (k.as_str(), v.clone()))
             .collect();
-        let rows = self.pdo.query(&sql, &refs)?;
-        Ok(rows.into_iter().map(row_to_document).collect())
+        let rows = self.client.query(&sql, &refs)?;
+        let mut documents: Vec<Document> = rows.into_iter().map(row_to_document).collect();
+        if backwards {
+            documents.reverse();
+        }
+        Ok(documents)
     }
 
     fn count(&mut self, collection: &Document, queries: &[Query], max: Option<i64>) -> Result<i64> {

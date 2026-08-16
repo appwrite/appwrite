@@ -54,11 +54,16 @@ impl Token {
 
 impl Proof for Token {
     fn generate(&self) -> Result<String, AuthError> {
-        let bytes_length = (self.length / 2).max(1);
+        // PHP: `max(1, (int) ceil($this->length / 2))` then `substr($token, 0,
+        // $this->length)`. Rounding *up* matters for odd lengths: `length / 2`
+        // would leave the hex string one character short, and `substr` clamps
+        // where slicing would panic.
+        let bytes_length = self.length.div_ceil(2).max(1);
         let mut bytes = vec![0u8; bytes_length];
         rand::thread_rng().fill_bytes(&mut bytes);
-        let token = hex::encode(bytes);
-        Ok(token[..self.length].to_owned())
+        let mut token = hex::encode(bytes);
+        token.truncate(self.length);
+        Ok(token)
     }
 
     fn hash(&self, proof: &str) -> Result<String, AuthError> {

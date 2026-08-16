@@ -50,3 +50,6 @@ assert_eq!(
   `appwrite-event`, not the Redis-backed `Utopia\Queue\Publisher` PHP uses.
   Swapping in a real publisher is an `apps/server` wiring change, not a
   change to this crate's composition surface.
+- Live SQL uses Rust engine crates via Utopia adapters (`Postgres`, `Mysql`,
+  `MariaDb`). Product code should not construct a low-level SQL client or
+  mirror PHP PDO; see `3.x.x/AGENTS.md` and `3.x.x/README.md`.

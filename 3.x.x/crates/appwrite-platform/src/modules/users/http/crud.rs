@@ -7,9 +7,10 @@ use serde_json::{json, Value};
 use std::sync::Arc;
 use utopia_database::Query;
 use utopia_platform::{Action, HttpMethod};
-use utopia_validators::{ArrayList, Boolean, Nullable, Text};
+use utopia_validators::{Boolean, Nullable, Text};
 
 use crate::modules::users::base::{self, inject};
+use crate::modules::users::queries;
 use crate::modules::users::validators::Email;
 use crate::state::document_to_json;
 
@@ -144,10 +145,7 @@ pub fn get() -> Action {
     })
 }
 
-/// `GET /v1/users` (`listUsers`). Rust port of `Http/Users/XList.php`,
-/// simplified: no `queries` DSL / cursor pagination (documented gap; see
-/// module docs), just `search` (fulltext-ish substring match over id/name/
-/// email/phone) plus `total`.
+/// `GET /v1/users` (`listUsers`). Rust port of `Http/Users/XList.php`.
 #[must_use]
 pub fn list() -> Action {
     inject(
@@ -160,16 +158,18 @@ pub fn list() -> Action {
             .param(
                 "queries",
                 json!([]),
-                ArrayList::new(Text::new(4096)),
-                "Queries.",
+                queries::users(),
+                "Array of query strings generated using the Query class \
+                 provided by the SDK.",
                 true,
             )
             .param("search", json!(""), Text::new(256), "Search term.", true)
             .param(
                 "total",
                 json!(true),
-                Boolean::new(),
-                "Include total count.",
+                Boolean::new().loose(true),
+                "When set to false, the total count returned will be 0 and \
+                 will not be calculated.",
                 true,
             ),
         &["response", "dbForProject"],
@@ -179,18 +179,23 @@ pub fn list() -> Action {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
             let search = base::param_str(&ctx, "search").unwrap_or_default();
-            let include_total = ctx
-                .param_value("total")
-                .and_then(Value::as_bool)
-                .unwrap_or(true);
+            let include_total = base::param_bool(&ctx, "total", true);
 
-            let mut queries = vec![Query::limit(25)];
-            if !search.is_empty() {
-                queries.push(Query::search("search", search));
+            let mut parsed = queries::parse(&queries::raw_param(ctx.param_value("queries")))?;
+            queries::push_search(&mut parsed, queries::COLLECTION_USERS, &search)?;
+            queries::resolve_cursor(&mut db, &mut parsed, "users", |id| {
+                Exception::with_message(
+                    Exception::GENERAL_CURSOR_NOT_FOUND,
+                    format!("User '{id}' for the 'cursor' value not found."),
+                )
+            })?;
+            if !queries::has_method(&parsed, utopia_database::query::TYPE_LIMIT) {
+                parsed.push(Query::limit(25));
             }
-            let users = db.find("users", &queries, "read").map_err(base::db_error)?;
+
+            let users = db.find("users", &parsed, "read").map_err(base::db_error)?;
             let total = if include_total {
-                db.count("users", &[], None).map_err(base::db_error)?
+                db.count("users", &parsed, None).map_err(base::db_error)?
             } else {
                 0
             };

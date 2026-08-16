@@ -385,6 +385,7 @@ pub fn delete_authenticator() -> Action {
                 .ok_or_else(|| Exception::new(Exception::USER_AUTHENTICATOR_NOT_FOUND))?;
             db.delete_document("authenticators", &authenticator.get_id())
                 .map_err(base::db_error)?;
+            base::purge_user(&mut db, &user_id);
             Ok(())
         })();
         base::finish_no_content(&ctx, result)

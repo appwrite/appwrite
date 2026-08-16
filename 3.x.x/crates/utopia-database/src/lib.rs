@@ -90,7 +90,7 @@ pub mod error;
 pub mod helpers;
 pub mod mirror;
 pub mod operator;
-pub mod pdo;
+pub mod sql_client;
 pub mod query;
 pub mod validator;
 pub mod value;
@@ -106,10 +106,7 @@ pub use error::{DatabaseError, Result};
 pub use helpers::{Id, Permission, Role};
 pub use mirror::{AllowAllFilter, Mirror, MirrorFilter};
 pub use operator::Operator;
-pub use pdo::{
-    Dialect, Pdo, PdoStatement, SqlParam, ATTR_TIMEOUT, PARAM_BOOL, PARAM_INT, PARAM_LOB,
-    PARAM_NULL, PARAM_STR,
-};
+pub use sql_client::{Dialect, SqlClient, SqlParam, SqlStatement};
 pub use query::{GroupedQueries, Query};
 pub use validator::authorization::{Authorization, Input};
 pub use value::AttrValue;
@@ -121,6 +118,6 @@ pub mod prelude {
     pub use crate::query::Query;
     pub use crate::{
         Adapter, AttrValue, Authorization, Change, Connection, Database, DatabaseError, DateTime,
-        Document, Operator, Pdo,
+        Document, Operator, SqlClient,
     };
 }

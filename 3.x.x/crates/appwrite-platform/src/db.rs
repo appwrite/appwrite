@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use utopia_cache::adapter::Memory as CacheMemory;
+use utopia_cache::adapter::{Memory as CacheMemory, Redis as CacheRedis};
 use utopia_cache::Cache;
 #[cfg(feature = "mongo")]
 use utopia_database::adapter::mongo::Mongo;
@@ -17,8 +17,6 @@ use utopia_database::adapter::mysql::{MariaDb, Mysql};
 use utopia_database::adapter::postgres::Postgres;
 pub use utopia_database::adapter::Memory;
 use utopia_database::helpers::{Permission, Role};
-#[cfg(feature = "mysql")]
-use utopia_database::pdo::Pdo;
 use utopia_database::{Database, DatabaseError, Document, Query};
 
 use crate::state::{COLLECTIONS, PLATFORM_NAMESPACE};
@@ -222,6 +220,19 @@ impl ProjectDb {
         with_db!(self, db => db.create(database))
     }
 
+    /// PHP `$dbForProject->purgeCachedDocument($collection, $id)`.
+    ///
+    /// Writing a child document (a session, a target) leaves the parent user
+    /// document cached with the old relationship, so the handlers that mutate
+    /// one purge the other, exactly where the PHP handlers do.
+    pub fn purge_cached_document(
+        &mut self,
+        collection: &str,
+        id: &str,
+    ) -> utopia_database::Result<bool> {
+        with_db!(self, db => db.purge_cached_document(collection, Some(id)))
+    }
+
     pub fn create_collection(
         &mut self,
         id: &str,
@@ -325,16 +336,58 @@ pub fn new_memory_project_database(project_id: &str) -> Database<Memory> {
 
 fn configure_live_database<A: utopia_database::adapter::Adapter>(
     mut db: Database<A>,
-    schema: &str,
+    config: &DatabaseConfig,
     namespace: &str,
 ) -> Result<Database<A>, DatabaseError> {
     db.disable_validation();
     db.get_authorization_mut().disable();
-    db.set_database(schema)
+    // PHP's pooled SQL adapter carries the DSN host, and that host is a
+    // segment of every cache key. Without it, Rust would read and purge a
+    // different key space than the PHP server sharing this Redis.
+    db.get_adapter_mut().set_hostname(config.host.as_str());
+    db.set_database(&config.schema)
         .map_err(|err| DatabaseError::database(format!("setDatabase failed: {err}")))?;
     db.set_namespace(namespace)
         .map_err(|err| DatabaseError::database(format!("setNamespace failed: {err}")))?;
     Ok(db)
+}
+
+/// The cache PHP and Rust share.
+///
+/// `Database` builds keys as `{cacheName}-cache-{hostname}:{namespace}:
+/// {tenant}:collection:{id}[:{documentId}]`, so pointing both servers at the
+/// same Redis makes a purge on one side invalidate the other's entry. Falls
+/// back to a private in-process cache when Redis is unreachable: correct for
+/// this process, but PHP will not see its purges.
+fn shared_cache() -> Cache {
+    let Some(host) = std::env::var("_APP_REDIS_HOST")
+        .ok()
+        .filter(|host| !host.is_empty())
+    else {
+        return Cache::new(CacheMemory::new());
+    };
+    let port = std::env::var("_APP_REDIS_PORT")
+        .ok()
+        .and_then(|port| port.parse::<u16>().ok())
+        .unwrap_or(6379);
+    let user = std::env::var("_APP_REDIS_USER").unwrap_or_default();
+    let pass = std::env::var("_APP_REDIS_PASS").unwrap_or_default();
+    let credentials = match (user.is_empty(), pass.is_empty()) {
+        (true, true) => String::new(),
+        (true, false) => format!(":{pass}@"),
+        _ => format!("{user}:{pass}@"),
+    };
+
+    match CacheRedis::connect_url(&format!("redis://{credentials}{host}:{port}/")) {
+        Ok(redis) => Cache::new(redis),
+        Err(err) => {
+            eprintln!(
+                "appwrite-platform: redis cache connect failed ({err}); falling back to an \
+                 in-process cache, which PHP cannot invalidate"
+            );
+            Cache::new(CacheMemory::new())
+        }
+    }
 }
 
 fn new_project_database_live(
@@ -351,7 +404,7 @@ pub fn new_platform_database(config: &DatabaseConfig) -> Result<ProjectDb, Datab
 }
 
 fn open_database(config: &DatabaseConfig, namespace: &str) -> Result<ProjectDb, DatabaseError> {
-    let cache = Cache::new(CacheMemory::new());
+    let cache = shared_cache();
     match config.kind {
         AdapterKind::Memory => Err(DatabaseError::database(
             "open_database called for memory adapter",
@@ -366,8 +419,7 @@ fn open_database(config: &DatabaseConfig, namespace: &str) -> Result<ProjectDb, 
                 &config.schema,
             )
             .map_err(|err| DatabaseError::database(format!("postgres connect failed: {err}")))?;
-            let db =
-                configure_live_database(Database::new(adapter, cache), &config.schema, namespace)?;
+            let db = configure_live_database(Database::new(adapter, cache), config, namespace)?;
             Ok(ProjectDb::Postgres(db))
         }
         #[cfg(not(feature = "postgres"))]
@@ -376,38 +428,28 @@ fn open_database(config: &DatabaseConfig, namespace: &str) -> Result<ProjectDb, 
         )),
         #[cfg(feature = "mysql")]
         AdapterKind::Mysql => {
-            let pdo = Pdo::mysql(
+            let adapter = Mysql::connect_db(
                 &config.host,
                 config.port,
                 &config.user,
                 &config.pass,
                 Some(config.schema.as_str()),
-                false,
             )
             .map_err(|err| DatabaseError::database(format!("mysql connect failed: {err}")))?;
-            let db = configure_live_database(
-                Database::new(Mysql::new(pdo), cache),
-                &config.schema,
-                namespace,
-            )?;
+            let db = configure_live_database(Database::new(adapter, cache), config, namespace)?;
             Ok(ProjectDb::Mysql(db))
         }
         #[cfg(feature = "mysql")]
         AdapterKind::MariaDb => {
-            let pdo = Pdo::mysql(
+            let adapter = MariaDb::connect_db(
                 &config.host,
                 config.port,
                 &config.user,
                 &config.pass,
                 Some(config.schema.as_str()),
-                true,
             )
             .map_err(|err| DatabaseError::database(format!("mariadb connect failed: {err}")))?;
-            let db = configure_live_database(
-                Database::new(MariaDb::new(pdo), cache),
-                &config.schema,
-                namespace,
-            )?;
+            let db = configure_live_database(Database::new(adapter, cache), config, namespace)?;
             Ok(ProjectDb::MariaDb(db))
         }
         #[cfg(not(feature = "mysql"))]
@@ -419,8 +461,7 @@ fn open_database(config: &DatabaseConfig, namespace: &str) -> Result<ProjectDb, 
             let uri = mongo_uri(config);
             let adapter = Mongo::connect(&uri)
                 .map_err(|err| DatabaseError::database(format!("mongodb connect failed: {err}")))?;
-            let db =
-                configure_live_database(Database::new(adapter, cache), &config.schema, namespace)?;
+            let db = configure_live_database(Database::new(adapter, cache), config, namespace)?;
             Ok(ProjectDb::Mongo(db))
         }
         #[cfg(not(feature = "mongo"))]
