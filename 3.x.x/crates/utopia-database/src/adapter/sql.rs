@@ -259,11 +259,16 @@ impl SqlAdapter {
                 let (low, high) = (values.first()?, values.get(1)?);
                 let low = bind(params, SqlParam::from_attr(low));
                 let high = bind(params, SqlParam::from_attr(high));
-                let not = if method == TYPE_NOT_BETWEEN { "NOT " } else { "" };
+                let not = if method == TYPE_NOT_BETWEEN {
+                    "NOT "
+                } else {
+                    ""
+                };
                 Some(format!("{column} {not}BETWEEN {low} AND {high}"))
             }
             TYPE_SEARCH | TYPE_NOT_SEARCH => {
-                let value = fulltext_value(query.get_value().as_str().unwrap_or_default(), self.dialect);
+                let value =
+                    fulltext_value(query.get_value().as_str().unwrap_or_default(), self.dialect);
                 if value.is_empty() {
                     return None;
                 }
@@ -368,7 +373,8 @@ impl SqlAdapter {
         params: &mut Vec<(String, SqlParam)>,
         next: &mut usize,
     ) -> Vec<String> {
-        let encode = |value: &AttrValue| serde_json::to_string(&value.to_json()).unwrap_or_default();
+        let encode =
+            |value: &AttrValue| serde_json::to_string(&value.to_json()).unwrap_or_default();
         let payloads: Vec<String> = if method == TYPE_CONTAINS_ALL {
             let all: Vec<serde_json::Value> =
                 query.get_values().iter().map(AttrValue::to_json).collect();
@@ -451,10 +457,8 @@ fn fulltext_value(value: &str, dialect: Dialect) -> String {
     let exact = value.len() > 1 && value.starts_with('"') && value.ends_with('"');
     match dialect {
         Dialect::Postgres => {
-            let cleaned = collapse_whitespace(&value.replace(
-                ['@', '+', '-', '*', '.', '\'', '"'],
-                " ",
-            ));
+            let cleaned =
+                collapse_whitespace(&value.replace(['@', '+', '-', '*', '.', '\'', '"'], " "));
             if cleaned.is_empty() {
                 return String::new();
             }
@@ -466,10 +470,9 @@ fn fulltext_value(value: &str, dialect: Dialect) -> String {
             format!("'{joined}'")
         }
         _ => {
-            let cleaned = collapse_whitespace(&value.replace(
-                ['@', '+', '-', '*', ')', '(', '<', '>', '~', '"'],
-                " ",
-            ));
+            let cleaned = collapse_whitespace(
+                &value.replace(['@', '+', '-', '*', ')', '(', '<', '>', '~', '"'], " "),
+            );
             if cleaned.is_empty() {
                 return String::new();
             }
@@ -1070,7 +1073,10 @@ impl Adapter for SqlAdapter {
                     .map(String::as_str)
                     .unwrap_or(ORDER_ASC)
                     .eq_ignore_ascii_case(ORDER_ASC);
-                (Self::internal_key(attribute).to_string(), ascending != backwards)
+                (
+                    Self::internal_key(attribute).to_string(),
+                    ascending != backwards,
+                )
             })
             .collect();
         if ordered.is_empty() {

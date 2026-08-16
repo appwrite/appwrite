@@ -19,7 +19,9 @@
 
 use appwrite_exception::Exception;
 use utopia_database::validator::queries::Queries;
-use utopia_database::validator::query::{Cursor, Filter, Limit, Offset, Order, QueryMethodValidator};
+use utopia_database::validator::query::{
+    Cursor, Filter, Limit, Offset, Order, QueryMethodValidator,
+};
 use utopia_database::{AttrValue, Document, Query};
 use utopia_validators::Validator;
 
@@ -128,9 +130,7 @@ const MEMBERSHIPS: &[Attribute] = &[
 ];
 
 /// PHP `Queries\Memberships::ALLOWED_ATTRIBUTES`.
-const MEMBERSHIPS_ALLOWED: &[&str] = &[
-    "userId", "teamId", "invited", "joined", "confirm", "roles",
-];
+const MEMBERSHIPS_ALLOWED: &[&str] = &["userId", "teamId", "invited", "joined", "confirm", "roles"];
 
 /// PHP `Queries\Base`'s `$internalAttributes`, appended to both the filterable
 /// and the full attribute set.
@@ -326,9 +326,7 @@ pub fn resolve_cursor(
 
     let document = db
         .get_document(collection, &id, &[], false)
-        .map_err(|err| {
-            Exception::with_message(Exception::GENERAL_SERVER_ERROR, err.to_string())
-        })?;
+        .map_err(|err| Exception::with_message(Exception::GENERAL_SERVER_ERROR, err.to_string()))?;
     if document.is_empty() {
         return Err(not_found(&id));
     }

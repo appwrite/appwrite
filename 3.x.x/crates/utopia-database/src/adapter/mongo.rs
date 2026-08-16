@@ -95,10 +95,7 @@ impl Adapter for Mongo {
         _indexes: &[Document],
     ) -> Result<bool> {
         self.db()
-            .create_collection(
-                &format!("{}_{}", self.state.namespace, filter_key(name)),
-                None,
-            )
+            .create_collection(format!("{}_{}", self.state.namespace, filter_key(name)), None)
             .map_err(|e| DatabaseError::database(e.to_string()))?;
         Ok(true)
     }
@@ -194,7 +191,7 @@ impl Adapter for Mongo {
                 _ => {}
             }
         }
-        let mut find = self
+        let find = self
             .collection(&collection.get_id())
             .find(filter, None)
             .map_err(|e| DatabaseError::database(e.to_string()))?;
@@ -202,7 +199,7 @@ impl Adapter for Mongo {
         let skip = skip_n.unwrap_or(0).max(0) as usize;
         let take = limit_n.unwrap_or(i64::MAX).max(0) as usize;
         let mut i = 0usize;
-        while let Some(doc) = find.next() {
+        for doc in find {
             let doc = doc.map_err(|e| DatabaseError::database(e.to_string()))?;
             if i < skip {
                 i += 1;

@@ -1467,8 +1467,9 @@ impl<A: Adapter> Database<A> {
         // PHP loads the stored document first and merges the caller's partial
         // update over it, so callers can (and by Appwrite convention do) pass
         // only the changed attributes and still get the whole document back.
-        let old = self
-            .skip_authorization(|db| db.silent(|db| db.get_document(&collection_id, id, &[], true)))?;
+        let old = self.skip_authorization(|db| {
+            db.silent(|db| db.get_document(&collection_id, id, &[], true))
+        })?;
         if old.is_empty() {
             return Ok(Document::new());
         }

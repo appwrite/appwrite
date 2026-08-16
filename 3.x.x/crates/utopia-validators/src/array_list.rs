@@ -1,6 +1,6 @@
 use crate::{Validator, ValueType};
 use serde_json::Value;
-use std::fmt;
+use std::fmt::{self, Write};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -44,11 +44,11 @@ impl Validator for ArrayList {
     fn description(&self) -> String {
         let mut message = String::from("Value must a valid array");
         if let Some(length) = self.length.filter(|length| *length > 0) {
-            message.push_str(&format!(" no longer than {length} items"));
+            let _ = write!(message, " no longer than {length} items");
         }
         let element = self.element.description();
         if !element.is_empty() && element != "0" {
-            message.push_str(&format!(" and {element}"));
+            let _ = write!(message, " and {element}");
         }
         message
     }

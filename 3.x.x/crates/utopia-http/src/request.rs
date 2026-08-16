@@ -214,11 +214,7 @@ impl Request {
             return;
         }
         let content_type = self.header_line("content-type").to_ascii_lowercase();
-        let ctype = content_type
-            .split(';')
-            .next()
-            .unwrap_or("")
-            .trim();
+        let ctype = content_type.split(';').next().unwrap_or("").trim();
         if ctype == "application/json" || ctype.ends_with("+json") {
             if let Ok(Value::Object(map)) = serde_json::from_slice::<Value>(&self.raw_payload) {
                 self.payload = map.into_iter().collect();

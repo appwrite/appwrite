@@ -188,7 +188,10 @@ pub fn resolve(
     project: &Value,
     project_db: &ProjectDatabase,
 ) -> Option<Session> {
-    let project_id = project.get("$id").and_then(Value::as_str).unwrap_or_default();
+    let project_id = project
+        .get("$id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
     let mode = mode(ctx);
 
     let store = decode_store(ctx, project_id, &mode)?;
@@ -218,7 +221,10 @@ pub fn resolve(
         admin_scopes(db, &user, project)?
     } else {
         // A plain project session is PHP's `ROLE_USERS`.
-        MEMBER_SCOPES.iter().map(|scope| (*scope).to_string()).collect()
+        MEMBER_SCOPES
+            .iter()
+            .map(|scope| (*scope).to_string())
+            .collect()
     };
 
     // PHP grants `users.read` to an impersonator so the Console can look a
@@ -254,8 +260,15 @@ pub fn resolve(
 /// membership on the project's team grants. `None` where PHP throws
 /// `USER_UNAUTHORIZED`, which the caller turns into the same scope failure an
 /// anonymous request gets.
-fn admin_scopes(db: &mut ProjectDb, user: &utopia_database::Document, project: &Value) -> Option<Vec<String>> {
-    let project_id = project.get("$id").and_then(Value::as_str).unwrap_or_default();
+fn admin_scopes(
+    db: &mut ProjectDb,
+    user: &utopia_database::Document,
+    project: &Value,
+) -> Option<Vec<String>> {
+    let project_id = project
+        .get("$id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
     let team_id = project
         .get("teamId")
         .and_then(Value::as_str)
@@ -422,7 +435,10 @@ mod tests {
 
     #[test]
     fn project_scoped_roles_apply_only_to_their_project() {
-        assert_eq!(applicable_role("project-proj1-admin", "proj1"), Some("admin"));
+        assert_eq!(
+            applicable_role("project-proj1-admin", "proj1"),
+            Some("admin")
+        );
         assert_eq!(applicable_role("project-proj1-admin", "proj2"), None);
         assert_eq!(applicable_role("project-proj1-admin", CONSOLE), None);
     }

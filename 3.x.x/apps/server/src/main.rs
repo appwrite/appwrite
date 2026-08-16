@@ -31,7 +31,6 @@ fn main() -> Result<()> {
 }
 
 async fn async_main(state: Arc<AppwriteState>, adapter: &str) -> Result<()> {
-
     // PHP has no equivalent -- this seeds an in-memory dev project with a
     // `standard` key scoped to `users.read`/`users.write` so `apps/server`
     // (or a test) can exercise `/v1/users*` without a real platform
