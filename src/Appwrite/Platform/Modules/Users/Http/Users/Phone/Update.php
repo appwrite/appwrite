@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\Phone;
 
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -18,6 +17,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Phone;
 
 class Update extends Action
 {

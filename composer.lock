@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4ca087676c3a1fdd1786d6e683050e81",
+    "content-hash": "330c1ea0ed3bf2b31833ee4eb17cc2d5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3086,24 +3086,27 @@
         },
         {
             "name": "utopia-php/auth",
-            "version": "0.10.1",
+            "version": "dev-cursor/auth-validators-oauth2-1299",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/auth.git",
-                "reference": "0f1a342bceebc2659736e52a4496daf24ca4954c"
+                "url": "https://github.com/utopia-php/auth",
+                "reference": "5a0940e23a40cd7e8cd0d82cebcdb4a3faf077d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/0f1a342bceebc2659736e52a4496daf24ca4954c",
-                "reference": "0f1a342bceebc2659736e52a4496daf24ca4954c",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/5a0940e23a40cd7e8cd0d82cebcdb4a3faf077d2",
+                "reference": "5a0940e23a40cd7e8cd0d82cebcdb4a3faf077d2",
                 "shasum": ""
             },
             "require": {
+                "ext-curl": "*",
                 "ext-hash": "*",
+                "ext-json": "*",
                 "ext-openssl": "*",
                 "ext-scrypt": "*",
                 "ext-sodium": "*",
-                "php": ">=8.3"
+                "php": ">=8.3",
+                "utopia-php/validators": "^0.5"
             },
             "type": "library",
             "autoload": {
@@ -3113,12 +3116,16 @@
             },
             "autoload-dev": {
                 "psr-4": {
-                    "Utopia\\Tests\\Auth\\": "tests/Auth"
+                    "Utopia\\Tests\\Auth\\": "tests/Auth",
+                    "Utopia\\Tests\\Auth\\E2E\\": "tests/E2E"
                 }
             },
             "scripts": {
                 "test": [
-                    "phpunit --configuration phpunit.xml"
+                    "phpunit --configuration phpunit.xml --testsuite unit"
+                ],
+                "test:e2e": [
+                    "phpunit --configuration phpunit.xml --testsuite e2e"
                 ]
             },
             "license": [
@@ -3137,11 +3144,7 @@
                 "php",
                 "security"
             ],
-            "support": {
-                "source": "https://github.com/utopia-php/auth/tree/0.10.1",
-                "issues": "https://github.com/utopia-php/auth/issues"
-            },
-            "time": "2026-07-23T07:34:27+00:00"
+            "time": "2026-08-16T08:28:50+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -5061,25 +5064,7 @@
                     "Utopia\\VCS\\": "src/VCS"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/VCS"
-                }
-            },
-            "scripts": {
-                "lint": [
-                    "./vendor/bin/pint --test --config pint.json"
-                ],
-                "format": [
-                    "./vendor/bin/pint --config pint.json"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 8 --memory-limit 512M -c phpstan.neon src tests"
-                ],
-                "test": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml --debug"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -5091,8 +5076,8 @@
                 "vcs"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/vcs/tree/5.1.2",
-                "issues": "https://github.com/utopia-php/vcs/issues"
+                "issues": "https://github.com/utopia-php/vcs/issues",
+                "source": "https://github.com/utopia-php/vcs/tree/5.1.2"
             },
             "time": "2026-08-07T12:32:15+00:00"
         },
@@ -8397,9 +8382,17 @@
             "time": "2026-08-14T07:11:54+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/auth",
+            "version": "dev-cursor/auth-validators-oauth2-1299",
+            "alias": "0.10.999",
+            "alias_normalized": "0.10.999.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
+        "utopia-php/auth": 20,
         "utopia-php/http": 5,
         "utopia-php/platform": 5
     },
@@ -8423,5 +8416,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

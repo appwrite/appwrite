@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 
-use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Auth\OAuth2\Providers\Github as OAuth2Github;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

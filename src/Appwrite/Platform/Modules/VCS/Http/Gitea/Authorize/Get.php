@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Gitea\Authorize;
 
-use Appwrite\Auth\OAuth2;
-use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
 use Appwrite\Platform\Modules\VCS\Http\Authorize\Base;
+use Utopia\Auth\OAuth2\Provider;
+use Utopia\Auth\OAuth2\Providers\Gitea as OAuth2Gitea;
 use Utopia\System\System;
 
 class Get extends Base
@@ -24,7 +24,7 @@ class Get extends Base
         return 'Gitea';
     }
 
-    protected function createOAuth2(string $callback, array $state): OAuth2
+    protected function createOAuth2(string $callback, array $state): Provider
     {
         $oauth2 = new OAuth2Gitea(
             System::getEnv('_APP_VCS_GITEA_CLIENT_ID', ''),

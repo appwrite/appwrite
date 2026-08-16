@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Vcs;
 
-use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\Factory;
 use PHPUnit\Framework\TestCase;
+use Utopia\Auth\OAuth2\Providers\Github as OAuth2Github;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;

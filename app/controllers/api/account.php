@@ -2,14 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\MFA\Type;
-use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
-use Appwrite\Auth\Validator\EmailWhitelist;
-use Appwrite\Auth\Validator\Password;
-use Appwrite\Auth\Validator\PasswordDictionary;
-use Appwrite\Auth\Validator\PasswordHistory;
-use Appwrite\Auth\Validator\PasswordStrength;
-use Appwrite\Auth\Validator\PersonalData;
-use Appwrite\Auth\Validator\Phone;
+use Appwrite\Auth\OAuth2Client;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -40,11 +33,18 @@ use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Sha;
+use Utopia\Auth\OAuth2\Exception as OAuth2Exception;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Phrase;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
+use Utopia\Auth\Validator\EmailWhitelist;
+use Utopia\Auth\Validator\Password;
+use Utopia\Auth\Validator\PasswordDictionary;
+use Utopia\Auth\Validator\PasswordHistory;
+use Utopia\Auth\Validator\PasswordStrength;
+use Utopia\Auth\Validator\PersonalData;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -73,6 +73,7 @@ use Utopia\Validator\AllOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Phone;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -904,7 +905,7 @@ Http::patch('/v1/account/sessions/:sessionId')
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
-            $oauth2 = new $className($appId, $appSecret, '', [], []);
+            $oauth2 = OAuth2Client::create($className, $appId, $appSecret, '');
             $oauth2->refreshTokens($refreshToken);
 
             $session
@@ -1384,7 +1385,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             $failure = $redirectBase . $oauthDefaultFailure;
         }
 
-        $oauth2 = new $className($appId, $appSecret, $callback, [
+        $oauth2 = OAuth2Client::create($className, $appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => false,
@@ -1526,8 +1527,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $providers = Config::getParam('oAuthProviders') ?? [];
         $providerName = $providers[$provider]['name'] ?? '';
 
-        /** @var Appwrite\Auth\OAuth2 $oauth2 */
-        $oauth2 = new $className($appId, $appSecret, $callback);
+        /** @var \Utopia\Auth\OAuth2\Provider $oauth2 */
+        $oauth2 = OAuth2Client::create($className, $appId, $appSecret, $callback);
 
         if (!empty($state)) {
             try {
@@ -2208,7 +2209,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             $failure = $redirectBase . $oauthDefaultFailure;
         }
 
-        $oauth2 = new $className($appId, $appSecret, $callback, [
+        $oauth2 = OAuth2Client::create($className, $appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => true,

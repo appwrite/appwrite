@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft;
 
-use Appwrite\Auth\OAuth2\Microsoft;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Base;
@@ -10,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\OAuth2\Providers\Microsoft;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;

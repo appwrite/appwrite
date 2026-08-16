@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
@@ -38,6 +37,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Phone;
 use Utopia\Validator\Text;
 
 class Create extends Action

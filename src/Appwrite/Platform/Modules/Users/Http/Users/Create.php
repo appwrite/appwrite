@@ -2,9 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users;
 
-use Appwrite\Auth\Validator\PasswordDictionary;
-use Appwrite\Auth\Validator\PasswordStrength;
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Users\Base;
@@ -15,6 +12,8 @@ use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Plaintext;
+use Utopia\Auth\Validator\PasswordDictionary;
+use Utopia\Auth\Validator\PasswordStrength;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -22,6 +21,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator;
 use Utopia\Validator\AllOf;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Phone;
 use Utopia\Validator\Text;
 
 class Create extends Base

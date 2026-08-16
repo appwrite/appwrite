@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Gitlab\Authorize;
 
-use Appwrite\Auth\OAuth2;
-use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
 use Appwrite\Platform\Modules\VCS\Http\Authorize\Base;
+use Utopia\Auth\OAuth2\Provider;
+use Utopia\Auth\OAuth2\Providers\Gitlab as OAuth2Gitlab;
 use Utopia\System\System;
 
 class Get extends Base
@@ -24,9 +24,9 @@ class Get extends Base
         return 'GitLab';
     }
 
-    protected function createOAuth2(string $callback, array $state): OAuth2
+    protected function createOAuth2(string $callback, array $state): Provider
     {
-        // Auth\OAuth2\Gitlab reads the endpoint out of a JSON-encoded appSecret; no setEndpoint().
+        // Providers\Gitlab reads the endpoint out of a JSON-encoded appSecret; no setEndpoint().
         return new OAuth2Gitlab(
             System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''),
             \json_encode([

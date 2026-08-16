@@ -2,8 +2,8 @@
 
 namespace Appwrite\Vcs;
 
-use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
+use Utopia\Auth\OAuth2\Provider;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -95,7 +95,7 @@ class Factory
         return $this->getEnv($key, 'webhookSecret');
     }
 
-    public function oauth2FromProvider(string $key): OAuth2
+    public function oauth2FromProvider(string $key): Provider
     {
         $builder = $this->registry[$key]['oauth2'] ?? null;
 
@@ -109,7 +109,7 @@ class Factory
 
         $oauth2 = $builder($clientId, $clientSecret, $endpoint);
 
-        if (!$oauth2 instanceof OAuth2) {
+        if (!$oauth2 instanceof Provider) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'VCS provider "' . $key . '" oauth2 builder returned an invalid client');
         }
 

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Vcs;
 
-use Appwrite\Auth\OAuth2;
-use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\InstallationTokens;
 use PHPUnit\Framework\TestCase;
+use Utopia\Auth\OAuth2\Exception as OAuth2Exception;
+use Utopia\Auth\OAuth2\Provider;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -351,7 +351,7 @@ final class InstallationTokensTest extends TestCase
      */
     protected function fakeOAuth2(bool $emptyUserId = false, string $refresh = 'ok')
     {
-        return new class ($emptyUserId, $refresh) extends OAuth2 {
+        return new class ($emptyUserId, $refresh) extends Provider {
             public int $refreshCalls = 0;
             protected array $tokens = [];
 

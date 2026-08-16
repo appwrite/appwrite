@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox;
 
-use Appwrite\Auth\OAuth2\TradeshiftBox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as TradeshiftUpdate;
+use Utopia\Auth\OAuth2\Providers\TradeshiftBox;
 
 class Update extends TradeshiftUpdate
 {

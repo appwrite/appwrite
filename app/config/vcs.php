@@ -4,10 +4,10 @@
  * VCS provider registry, read by Appwrite\Vcs\Factory.
  */
 
-use Appwrite\Auth\OAuth2\Bitbucket as OAuth2Bitbucket;
-use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
-use Appwrite\Auth\OAuth2\Github as OAuth2Github;
-use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
+use Utopia\Auth\OAuth2\Providers\Bitbucket as OAuth2Bitbucket;
+use Utopia\Auth\OAuth2\Providers\Gitea as OAuth2Gitea;
+use Utopia\Auth\OAuth2\Providers\Github as OAuth2Github;
+use Utopia\Auth\OAuth2\Providers\Gitlab as OAuth2Gitlab;
 use Utopia\VCS\Adapter\Git\Bitbucket;
 use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -47,7 +47,7 @@ return [
     ],
     'gitlab' => [
         'adapter' => GitLab::class,
-        // Auth\OAuth2\Gitlab is shared with the "Sign in with GitLab" account-login
+        // Auth\OAuth2\Providers\Gitlab is shared with the "Sign in with GitLab" account-login
         // provider, which JSON-encodes its secret as {"clientSecret","endpoint"}
         // to support a per-project self-hosted endpoint -- match that shape here too.
         'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Gitlab($clientId, \json_encode([

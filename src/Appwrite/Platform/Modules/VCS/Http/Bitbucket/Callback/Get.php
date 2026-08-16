@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Bitbucket\Callback;
 
-use Appwrite\Auth\OAuth2;
-use Appwrite\Auth\OAuth2\Bitbucket as OAuth2Bitbucket;
 use Appwrite\Platform\Modules\VCS\Http\Callback\Base;
+use Utopia\Auth\OAuth2\Provider;
+use Utopia\Auth\OAuth2\Providers\Bitbucket as OAuth2Bitbucket;
 use Utopia\System\System;
 
 class Get extends Base
@@ -24,7 +24,7 @@ class Get extends Base
         return 'Bitbucket';
     }
 
-    protected function createOAuth2(string $callback): OAuth2
+    protected function createOAuth2(string $callback): Provider
     {
         return new OAuth2Bitbucket(
             System::getEnv('_APP_VCS_BITBUCKET_CLIENT_ID', ''),

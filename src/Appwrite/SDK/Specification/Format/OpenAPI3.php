@@ -613,13 +613,13 @@ class OpenAPI3 extends Format
                         ];
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
                         break;
-                    case \Appwrite\Auth\Validator\Password::class:
+                    case \Utopia\Auth\Validator\Password::class:
                     case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'password';
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'password';
                         break;
-                    case \Appwrite\Auth\Validator\Phone::class:
+                    case \Utopia\Validator\Phone::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'phone';
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '+12065550100'; // In the US, 555 is reserved like example.com

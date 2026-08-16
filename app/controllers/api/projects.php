@@ -1,8 +1,8 @@
 <?php
 
-use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\Validator\MockNumber;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

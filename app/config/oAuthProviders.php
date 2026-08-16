@@ -11,7 +11,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Amazon',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Amazon',
     ],
     'apple' => [
         'name' => 'Apple',
@@ -22,7 +22,7 @@ return [
         'form' => 'apple.phtml', // Preparation for adding ability to customized OAuth UI forms, currently handled hardcoded.
         'beta' => true,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Apple',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Apple',
     ],
     'appwrite' => [
         'name' => 'Appwrite',
@@ -33,7 +33,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Appwrite',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Appwrite',
     ],
     'auth0' => [
         'name' => 'Auth0',
@@ -44,7 +44,7 @@ return [
         'form' => 'auth0.phtml',
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Auth0',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Auth0',
     ],
     'authentik' => [
         'name' => 'Authentik',
@@ -55,7 +55,7 @@ return [
         'form' => 'authentik.phtml',
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Authentik',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Authentik',
     ],
     'autodesk' => [
         'name' => 'Autodesk',
@@ -66,7 +66,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Autodesk',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Autodesk',
     ],
     'bitbucket' => [
         'name' => 'BitBucket',
@@ -77,7 +77,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Bitbucket',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Bitbucket',
     ],
     'bitly' => [
         'name' => 'Bitly',
@@ -88,7 +88,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Bitly',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Bitly',
     ],
     'box' => [
         'name' => 'Box',
@@ -99,7 +99,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Box',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Box',
     ],
     'dailymotion' => [
         'name' => 'Dailymotion',
@@ -110,7 +110,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Dailymotion',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Dailymotion',
     ],
     'discord' => [
         'name' => 'Discord',
@@ -121,7 +121,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Discord',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Discord',
     ],
     'disqus' => [
         'name' => 'Disqus',
@@ -132,7 +132,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Disqus',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Disqus',
     ],
     'dropbox' => [
         'name' => 'Dropbox',
@@ -143,7 +143,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Dropbox',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Dropbox',
     ],
     'etsy' => [
         'name' => 'Etsy',
@@ -154,7 +154,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Etsy',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Etsy',
     ],
     'facebook' => [
         'name' => 'Facebook',
@@ -165,7 +165,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Facebook',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Facebook',
     ],
     'figma' => [
         'name' => 'Figma',
@@ -176,7 +176,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Figma',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Figma',
     ],
     'fusionauth' => [
         'name' => 'FusionAuth',
@@ -187,7 +187,7 @@ return [
         'form' => 'fusionauth.phtml',
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\FusionAuth',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\FusionAuth',
     ],
     'github' => [
         'name' => 'GitHub',
@@ -198,7 +198,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Github',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Github',
     ],
     'gitlab' => [
         'name' => 'GitLab',
@@ -209,7 +209,7 @@ return [
         'form' => 'gitlab.phtml',
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Gitlab',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Gitlab',
     ],
     'google' => [
         'name' => 'Google',
@@ -220,7 +220,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Google',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Google',
     ],
     'keycloak' => [
         'name' => 'Keycloak',
@@ -231,7 +231,7 @@ return [
         'form' => 'keycloak.phtml',
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Keycloak',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Keycloak',
     ],
     'kick' => [
         'name' => 'Kick',
@@ -242,7 +242,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Kick',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Kick',
     ],
     'linkedin' => [
         'name' => 'LinkedIn',
@@ -253,7 +253,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Linkedin',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Linkedin',
     ],
     'microsoft' => [
         'name' => 'Microsoft',
@@ -264,7 +264,7 @@ return [
         'form' => 'microsoft.phtml',
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Microsoft',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Microsoft',
     ],
     'notion' => [
         'name' => 'Notion',
@@ -275,7 +275,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Notion',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Notion',
     ],
     'oidc' => [
         'name' => 'OpenID Connect',
@@ -286,7 +286,7 @@ return [
         'form' => 'oidc.phtml',
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Oidc',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Oidc',
     ],
     'okta' => [
         'name' => 'Okta',
@@ -297,7 +297,7 @@ return [
         'form' => 'okta.phtml',
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Okta',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Okta',
     ],
     'paypal' => [
         'name' => 'PayPal',
@@ -308,7 +308,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Paypal',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Paypal',
     ],
     'paypalSandbox' => [
         'name' => 'PayPal Sandbox',
@@ -319,7 +319,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Paypal',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Paypal',
     ],
     'podio' => [
         'name' => 'Podio',
@@ -330,7 +330,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Podio',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Podio',
     ],
     'salesforce' => [
         'name' => 'Salesforce',
@@ -341,7 +341,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Salesforce',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Salesforce',
     ],
     'slack' => [
         'name' => 'Slack',
@@ -352,7 +352,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Slack',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Slack',
     ],
     'spotify' => [
         'name' => 'Spotify',
@@ -363,7 +363,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Spotify',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Spotify',
     ],
     'stripe' => [
         'name' => 'Stripe',
@@ -374,7 +374,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Stripe',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Stripe',
     ],
     'tradeshift' => [
         'name' => 'Tradeshift',
@@ -385,7 +385,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Tradeshift',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Tradeshift',
     ],
     'tradeshiftBox' => [
         'name' => 'Tradeshift Sandbox',
@@ -396,7 +396,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Tradeshift',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Tradeshift',
     ],
     'twitch' => [
         'name' => 'Twitch',
@@ -407,7 +407,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Twitch',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Twitch',
     ],
     'wordpress' => [
         'name' => 'WordPress',
@@ -418,7 +418,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Wordpress',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\WordPress',
     ],
     'x' => [
         'name' => 'X',
@@ -429,7 +429,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\X',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\X',
     ],
     'yahoo' => [
         'name' => 'Yahoo',
@@ -440,7 +440,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Yahoo',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Yahoo',
     ],
     'yammer' => [
         'name' => 'Yammer',
@@ -451,7 +451,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Yammer',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Yammer',
     ],
     'yandex' => [
         'name' => 'Yandex',
@@ -462,7 +462,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Yandex',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Yandex',
     ],
     'zoho' => [
         'name' => 'Zoho',
@@ -473,7 +473,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Zoho',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Zoho',
     ],
     'zoom' => [
         'name' => 'Zoom',
@@ -484,7 +484,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Zoom',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Zoom',
     ],
     // 'instagram' => [
     //     'name' => 'Instagram',
@@ -493,7 +493,7 @@ return [
     //     'enabled' => false,
     //     'beta' => false,
     //     'mock' => false,
-    //     'class' => 'Appwrite\\Auth\\OAuth2\\Instagram',
+    //     'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Instagram',
     // ],
     // 'twitter' => [
     //     'name' => 'twitter',
@@ -502,7 +502,7 @@ return [
     //     'enabled' => false,
     //     'beta' => false,
     //     'mock' => false,
-    //     'class' => 'Appwrite\\Auth\\OAuth2\\Twitter',
+    //     'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Twitter',
     // ],
 
     // Keep Last
@@ -515,7 +515,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => true,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Mock',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\Mock',
     ],
     'mock-unverified' => [
         'name' => 'MockUnverified',
@@ -526,6 +526,6 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => true,
-        'class' => 'Appwrite\\Auth\\OAuth2\\MockUnverified',
+        'class' => 'Utopia\\Auth\\OAuth2\\Providers\\MockUnverified',
     ],
 ];

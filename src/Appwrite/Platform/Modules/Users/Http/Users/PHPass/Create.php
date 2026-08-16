@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\PHPass;
 
-use Appwrite\Auth\Validator\Password;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Users\Base;
@@ -12,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\PHPass;
+use Utopia\Auth\Validator\Password;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\MockPhone;
 
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -11,6 +10,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Phone;
 
 class Get extends Action
 {
