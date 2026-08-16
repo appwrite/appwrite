@@ -55,34 +55,37 @@ pub fn update() -> Action {
     )
     .http_action(|ctx| async move {
         let result = (|| -> Result<Value, Exception> {
-            let db_handle = base::get_db(&ctx)?;
             let project = base::get_project(&ctx)?;
-            let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
             let user_id = base::param_str(&ctx, "userId")?;
             let password = base::param_str(&ctx, "password")?;
-            base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
-            let updated = if password.is_empty() {
-                base::update_user_fields(
-                    &mut db,
-                    &user_id,
-                    json!({ "password": "", "passwordUpdate": base::now_iso() }),
-                )?
+            // Argon2-hash before checking `dbForProject` out of the pool -
+            // the same reasoning as `Http/Users/Create.php`'s plaintext path
+            // (see `base::resolve_password`).
+            let hashed_fields = if password.is_empty() {
+                None
             } else {
                 let hasher = Password::create_hash(Password::ARGON2, HashMap::new())
                     .map_err(base::hash_error)?;
                 let hashed = hasher.hash(&password).map_err(base::hash_error)?;
-                base::update_user_fields(
-                    &mut db,
-                    &user_id,
-                    json!({
-                        "password": hashed,
-                        "passwordUpdate": base::now_iso(),
-                        "hash": hasher.name(),
-                        "hashOptions": hasher.options(),
-                    }),
-                )?
+                Some(json!({
+                    "password": hashed,
+                    "passwordUpdate": base::now_iso(),
+                    "hash": hasher.name(),
+                    "hashOptions": hasher.options(),
+                }))
             };
+
+            let db_handle = base::get_db(&ctx)?;
+            let mut db = db_handle.lock();
+            base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
+
+            let updated = base::update_user_fields(
+                &mut db,
+                &user_id,
+                hashed_fields
+                    .unwrap_or_else(|| json!({ "password": "", "passwordUpdate": base::now_iso() })),
+            )?;
 
             if auths_flag(&project, "invalidateSessions") {
                 base::delete_user_sessions(&mut db, &user_id)?;

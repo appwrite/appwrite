@@ -436,32 +436,82 @@ pub fn merge_into(target: &mut Value, extra: &Value) {
 }
 
 /// Parameters for [`create_user`], mirroring `Base::createUser()`'s
-/// positional arguments.
+/// positional arguments. `password` is not here - resolve it via
+/// [`resolve_password`] before locking `db` and pass the result instead.
 #[derive(Debug)]
 pub struct CreateUserParams {
     pub user_id: String,
     pub email: Option<String>,
-    pub password: Option<String>,
     pub phone: Option<String>,
     pub name: Option<String>,
 }
 
+/// Output of [`resolve_password`]: the pieces of `create_user`'s document
+/// that come from hashing, computed with no `dbForProject` connection held.
+#[derive(Debug)]
+pub struct ResolvedPassword {
+    pub hashed: Option<String>,
+    pub hash_name: String,
+    pub hash_options: HashMap<String, Value>,
+}
+
+/// The hashing half of PHP `Base::createUser()`, split out so callers can run
+/// it **before** checking a `dbForProject` connection out of the pool
+/// (`create_user` no longer touches a hasher at all). For the plaintext
+/// `POST /v1/users` endpoint this is the Argon2 computation itself -
+/// milliseconds of pure CPU that, run under the lock, used to hold a pooled
+/// connection idle for no reason. Every `/v1/users/{argon2,bcrypt,md5,sha,
+/// phpass,scrypt,scrypt-modified}` endpoint's `password` is already a hash
+/// from the caller, so this is a cheap passthrough for those.
+pub fn resolve_password(
+    hasher: &dyn Hash,
+    password: Option<&str>,
+    hooks: &Hooks,
+) -> Result<ResolvedPassword, Exception> {
+    let is_plaintext = hasher.name() == "plaintext";
+    let mut hashed: Option<String> = None;
+    let mut hash_name = hasher.name().to_string();
+    let mut hash_options: HashMap<String, Value> = hasher.options().clone();
+
+    if let Some(pw) = password.filter(|p| !p.is_empty()) {
+        if is_plaintext {
+            let default_hasher =
+                Password::create_hash(Password::ARGON2, HashMap::new()).map_err(hash_error)?;
+            hashed = Some(default_hasher.hash(pw).map_err(hash_error)?);
+            hash_name = default_hasher.name().to_string();
+            hash_options.clone_from(default_hasher.options());
+            let _ = hooks.trigger(appwrite_hooks::PASSWORD_VALIDATOR, &[json!(pw)]);
+        } else {
+            hashed = Some(pw.to_string());
+        }
+    } else {
+        let default_hasher =
+            Password::create_hash(Password::ARGON2, HashMap::new()).map_err(hash_error)?;
+        hash_name = default_hasher.name().to_string();
+        hash_options.clone_from(default_hasher.options());
+    }
+
+    Ok(ResolvedPassword {
+        hashed,
+        hash_name,
+        hash_options,
+    })
+}
+
 /// Rust port of `Appwrite\Platform\Modules\Users\Base::createUser()`.
 ///
-/// `hasher` is the caller's requested algorithm (`Plaintext` for the plain
-/// `POST /v1/users` endpoint, a concrete hash for the `/v1/users/{argon2,
-/// bcrypt, md5, sha, phpass, scrypt, scrypt-modified}` endpoints where
-/// `password` is assumed already hashed by the caller).
+/// `resolved_password` is computed by [`resolve_password`] *before* the
+/// caller checks out `db` (see that function's docs for why): this function
+/// never hashes anything, so it never holds a pooled connection through a
+/// CPU-bound Argon2 call.
 pub fn create_user(
     db: &mut crate::state::ProjectDb,
-    hooks: &Hooks,
-    hasher: Arc<dyn Hash>,
+    resolved_password: ResolvedPassword,
     params: CreateUserParams,
 ) -> Result<Value, Exception> {
     let CreateUserParams {
         user_id,
         email,
-        password,
         phone,
         name,
     } = params;
@@ -486,29 +536,11 @@ pub fn create_user(
     }
 
     let resolved_id = appwrite_database::resolve_id(&user_id);
-
-    let is_plaintext = hasher.name() == "plaintext";
-    let mut hashed_password: Option<String> = None;
-    let mut hash_name = hasher.name().to_string();
-    let mut hash_options: HashMap<String, Value> = hasher.options().clone();
-
-    if let Some(pw) = password.as_deref().filter(|p| !p.is_empty()) {
-        if is_plaintext {
-            let default_hasher =
-                Password::create_hash(Password::ARGON2, HashMap::new()).map_err(hash_error)?;
-            hashed_password = Some(default_hasher.hash(pw).map_err(hash_error)?);
-            hash_name = default_hasher.name().to_string();
-            hash_options.clone_from(default_hasher.options());
-            let _ = hooks.trigger(appwrite_hooks::PASSWORD_VALIDATOR, &[json!(pw)]);
-        } else {
-            hashed_password = Some(pw.to_string());
-        }
-    } else {
-        let default_hasher =
-            Password::create_hash(Password::ARGON2, HashMap::new()).map_err(hash_error)?;
-        hash_name = default_hasher.name().to_string();
-        hash_options.clone_from(default_hasher.options());
-    }
+    let ResolvedPassword {
+        hashed: hashed_password,
+        hash_name,
+        hash_options,
+    } = resolved_password;
 
     let now = now_iso();
     let search = user_search(
@@ -725,23 +757,27 @@ pub fn create_hashed_user_action(path: &'static str, desc: &'static str) -> Acti
 }
 
 /// Body of every pre-hashed `Create` action: resolve hasher, then
-/// [`create_user`] (PHP `$this->createUser($hash, ...)`).
+/// [`create_user`] (PHP `$this->createUser($hash, ...)`). The hasher never
+/// does real work here (`password` is already a hash for every one of these
+/// endpoints), but [`resolve_password`] still runs before [`get_db`] so the
+/// db checkout happens as late as possible either way.
 pub fn create_hashed_user(
     ctx: &ActionContext,
     hasher: Result<Arc<dyn Hash>, utopia_auth::AuthError>,
 ) -> Result<Value, Exception> {
     let hasher = hasher.map_err(hash_error)?;
-    let db_handle = get_db(ctx)?;
     let hooks = get_hooks(ctx)?;
-    let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
+    let password = param_str(ctx, "password")?;
+    let resolved_password = resolve_password(hasher.as_ref(), Some(password.as_str()), &hooks)?;
+
+    let db_handle = get_db(ctx)?;
+    let mut db = db_handle.lock();
     create_user(
         &mut db,
-        &hooks,
-        hasher,
+        resolved_password,
         CreateUserParams {
             user_id: param_str(ctx, "userId")?,
             email: Some(param_str(ctx, "email")?),
-            password: Some(param_str(ctx, "password")?),
             phone: None,
             name: ctx
                 .param_value("name")
