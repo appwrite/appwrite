@@ -29,8 +29,8 @@ class Generator
         'enableAssistant' => 'appwrite-assistant',
     ];
 
-    private const array BACKGROUND_SERVICE_GROUPS = [
-        'background' => [
+    private const array TOPOLOGY_SERVICE_GROUPS = [
+        'topology' => [
             'default' => 'combined',
             'modes' => [
                 'combined' => [
@@ -75,7 +75,7 @@ class Generator
         'database' => 'postgresql',
         'hostPath' => '',
         'enableAssistant' => false,
-        'background' => 'combined',
+        'topology' => 'combined',
     ];
 
     private const array DEPENDENCY_SELECTORS = [
@@ -162,7 +162,7 @@ class Generator
             }
         }
 
-        foreach (self::BACKGROUND_SERVICE_GROUPS as $param => $config) {
+        foreach (self::TOPOLOGY_SERVICE_GROUPS as $param => $config) {
             if (!\array_key_exists($params[$param], $config['modes'])) {
                 $params[$param] = $config['default'];
             }
@@ -207,7 +207,7 @@ class Generator
             }
         }
 
-        foreach (self::BACKGROUND_SERVICE_GROUPS as $param => $config) {
+        foreach (self::TOPOLOGY_SERVICE_GROUPS as $param => $config) {
             $selected = $this->params[$param];
             foreach ($config['modes'] as $mode => $names) {
                 if ($mode === $selected) {

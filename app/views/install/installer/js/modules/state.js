@@ -18,7 +18,7 @@
         emailCertificates: null,
         opensslKey: null,
         assistantOpenAIKey: null,
-        background: 'combined',
+        topology: 'combined',
         accountEmail: null,
         accountPassword: null
     };

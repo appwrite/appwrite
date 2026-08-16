@@ -44,7 +44,7 @@ class Install extends Action
     protected ?bool $isLocalInstall = null;
     protected ?array $installerConfig = null;
     protected string $path = '/usr/src/code/appwrite';
-    protected string $background = 'combined';
+    protected string $topology = 'combined';
 
     public static function getName(): string
     {
@@ -62,7 +62,7 @@ class Install extends Action
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
-            ->param('background', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
+            ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
             ->callback($this->action(...));
     }
 
@@ -74,7 +74,7 @@ class Install extends Action
         string $interactive,
         bool $noStart,
         string $database,
-        string $background
+        string $topology
     ): void {
         $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
@@ -116,10 +116,10 @@ class Install extends Action
             Console::info('Compose file found, creating backup: ' . $composeFileName . '.' . $time . '.backup');
             file_put_contents($this->path . '/' . $composeFileName . '.' . $time . '.backup', $data);
             $compose = new Compose($data);
-            if (!$this->hasExplicitBackgroundParam()) {
-                $detected = $this->detectBackgroundFromCompose($compose);
+            if (!$this->hasExplicitTopologyParam()) {
+                $detected = $this->detectTopologyFromCompose($compose);
                 if ($detected !== null) {
-                    $background = $detected;
+                    $topology = $detected;
                 }
             }
             $appwrite = $compose->getService('appwrite');
@@ -219,7 +219,7 @@ class Install extends Action
             Console::exit(1);
         }
 
-        $this->setBackground($background);
+        $this->setTopology($topology);
 
         // If interactive and web mode enabled, start web server
         // Skip the web installer when explicit CLI params are provided
@@ -585,7 +585,7 @@ class Install extends Action
             'database' => $database,
             'hostPath' => $this->hostPath,
             'enableAssistant' => $enableAssistant,
-            'background' => $this->background,
+            'topology' => $this->topology,
         ]);
 
         $templateForEnv->setParam('vars', $input);
@@ -1551,17 +1551,17 @@ class Install extends Action
         return null;
     }
 
-    public function setBackground(string $background): void
+    public function setTopology(string $topology): void
     {
-        $this->background = \in_array($background, ['combined', 'separate'], true)
-            ? $background
+        $this->topology = \in_array($topology, ['combined', 'separate'], true)
+            ? $topology
             : 'combined';
     }
 
-    private function hasExplicitBackgroundParam(): bool
+    private function hasExplicitTopologyParam(): bool
     {
         foreach ($_SERVER['argv'] ?? [] as $arg) {
-            if (\str_starts_with((string) $arg, '--background')) {
+            if (\str_starts_with((string) $arg, '--topology')) {
                 return true;
             }
         }
@@ -1569,7 +1569,7 @@ class Install extends Action
         return false;
     }
 
-    private function detectBackgroundFromCompose(Compose $compose): ?string
+    private function detectTopologyFromCompose(Compose $compose): ?string
     {
         $names = array_keys($compose->getServices());
         if (\in_array('appwrite-worker', $names, true)) {

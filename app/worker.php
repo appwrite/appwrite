@@ -5,6 +5,7 @@ $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Workers\Jobs;
 use Swoole\Runtime;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -83,25 +84,7 @@ if ($requested === [] || \in_array('all', $requested, true)) {
 // Same as a single worker: resolve queue + concurrency from config/env.
 // For one worker, `_APP_WORKER_MAX_COROUTINES` still overrides (except databases).
 // For many, each queue keeps its own cap so databases stays at 1.
-$jobs = [];
-$single = \count($workers) === 1;
-foreach ($workers as $name) {
-    $spec = $workersConfig[$name];
-    $queue = System::getEnv($spec['queueEnv'] ?? '_APP_QUEUE_NAME', $spec['queue']);
-    $maxCoroutines = max(1, (int) ($spec['maxCoroutines'] ?? 1));
-
-    if ($single && $name !== 'databases') {
-        $env = System::getEnv('_APP_WORKER_MAX_COROUTINES');
-        if ($env !== false && $env !== null && $env !== '') {
-            $maxCoroutines = max(1, (int) $env);
-        }
-    }
-
-    $jobs[$name] = [
-        'queue' => $queue,
-        'maxCoroutines' => $maxCoroutines,
-    ];
-}
+$jobs = Jobs::resolve($workers, $workersConfig, System::getEnv(...));
 
 $redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
 $redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);

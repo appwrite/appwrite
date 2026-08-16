@@ -75,10 +75,10 @@ final class GeneratorTest extends TestCase
         $this->assertArrayNotHasKey('appwrite-task-scheduler-functions', $compose['services']);
     }
 
-    public function testSelectsSeparateBackground(): void
+    public function testSelectsSeparateTopology(): void
     {
         $compose = $this->render([
-            'background' => 'separate',
+            'topology' => 'separate',
         ]);
 
         $this->assertArrayNotHasKey('appwrite-worker', $compose['services']);

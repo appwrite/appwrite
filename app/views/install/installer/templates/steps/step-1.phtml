@@ -107,14 +107,14 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                         <label class="label-text typography-text-m-500 text-neutral-secondary">Workers and schedulers</label>
                         <div class="selector-group">
                             <label class="selector-card selected">
-                                <input type="radio" name="background" value="combined" checked class="sr-only">
+                                <input type="radio" name="topology" value="combined" checked class="sr-only">
                                 <div class="selector-content">
                                     <div class="typography-text-m-500 text-neutral-primary">Combined</div>
                                     <div class="typography-text-xs-400 text-neutral-secondary">One worker and one scheduler (recommended)</div>
                                 </div>
                             </label>
                             <label class="selector-card">
-                                <input type="radio" name="background" value="separate" class="sr-only">
+                                <input type="radio" name="topology" value="separate" class="sr-only">
                                 <div class="selector-content">
                                     <div class="typography-text-m-500 text-neutral-primary">Separate</div>
                                     <div class="typography-text-xs-400 text-neutral-secondary">One container per queue for scale-out</div>
