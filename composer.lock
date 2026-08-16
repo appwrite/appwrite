@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4ca087676c3a1fdd1786d6e683050e81",
+    "content-hash": "c5eef516e0b88744e9127a35db3ad5f1",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3086,62 +3086,27 @@
         },
         {
             "name": "utopia-php/auth",
-            "version": "0.10.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/auth.git",
-                "reference": "0f1a342bceebc2659736e52a4496daf24ca4954c"
-            },
+            "version": "0.10.999",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/0f1a342bceebc2659736e52a4496daf24ca4954c",
-                "reference": "0f1a342bceebc2659736e52a4496daf24ca4954c",
-                "shasum": ""
+                "type": "tar",
+                "url": "https://codeload.github.com/utopia-php/auth/tar.gz/e309f796e40eb6efa3186a4ee57a2173fb6baf29"
             },
             "require": {
+                "ext-curl": "*",
                 "ext-hash": "*",
+                "ext-json": "*",
                 "ext-openssl": "*",
                 "ext-scrypt": "*",
                 "ext-sodium": "*",
-                "php": ">=8.3"
+                "php": ">=8.3",
+                "utopia-php/validators": "^0.5"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "Utopia\\Auth\\": "src/Auth"
                 }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\Auth\\": "tests/Auth"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit --configuration phpunit.xml"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Utopia PHP",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A simple PHP authentication library",
-            "keywords": [
-                "auth",
-                "authentication",
-                "php",
-                "security"
-            ],
-            "support": {
-                "source": "https://github.com/utopia-php/auth/tree/0.10.1",
-                "issues": "https://github.com/utopia-php/auth/issues"
-            },
-            "time": "2026-07-23T07:34:27+00:00"
+            }
         },
         {
             "name": "utopia-php/cache",
@@ -4991,17 +4956,10 @@
         },
         {
             "name": "utopia-php/validators",
-            "version": "0.5.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/validators.git",
-                "reference": "ea6c1ad13019c8a088866cf422c232928de5a25e"
-            },
+            "version": "0.5.999",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/validators/zipball/ea6c1ad13019c8a088866cf422c232928de5a25e",
-                "reference": "ea6c1ad13019c8a088866cf422c232928de5a25e",
-                "shasum": ""
+                "type": "tar",
+                "url": "https://raw.githubusercontent.com/appwrite/appwrite/cursor/use-utopia-auth-clients-1299/dev/utopia-php-validators.tar.gz"
             },
             "require": {
                 "php": ">=8.5"
@@ -5011,23 +4969,7 @@
                 "psr-4": {
                     "Utopia\\": "src/"
                 }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A lightweight collection of reusable validators for Utopia projects",
-            "keywords": [
-                "php",
-                "utopia",
-                "validation",
-                "validator"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/validators/issues",
-                "source": "https://github.com/utopia-php/validators/tree/0.5.0"
-            },
-            "time": "2026-08-14T05:12:07+00:00"
+            }
         },
         {
             "name": "utopia-php/vcs",
@@ -5061,25 +5003,7 @@
                     "Utopia\\VCS\\": "src/VCS"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/VCS"
-                }
-            },
-            "scripts": {
-                "lint": [
-                    "./vendor/bin/pint --test --config pint.json"
-                ],
-                "format": [
-                    "./vendor/bin/pint --config pint.json"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 8 --memory-limit 512M -c phpstan.neon src tests"
-                ],
-                "test": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml --debug"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -5091,8 +5015,8 @@
                 "vcs"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/vcs/tree/5.1.2",
-                "issues": "https://github.com/utopia-php/vcs/issues"
+                "issues": "https://github.com/utopia-php/vcs/issues",
+                "source": "https://github.com/utopia-php/vcs/tree/5.1.2"
             },
             "time": "2026-08-07T12:32:15+00:00"
         },
@@ -8423,5 +8347,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

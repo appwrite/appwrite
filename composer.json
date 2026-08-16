@@ -40,12 +40,49 @@
     "prefer-stable": true,
     "repositories": [
         {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/auth"
+            "type": "package",
+            "package": {
+                "name": "utopia-php/auth",
+                "version": "0.10.999",
+                "dist": {
+                    "url": "https://codeload.github.com/utopia-php/auth/tar.gz/e309f796e40eb6efa3186a4ee57a2173fb6baf29",
+                    "type": "tar"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Utopia\\Auth\\": "src/Auth"
+                    }
+                },
+                "require": {
+                    "php": ">=8.3",
+                    "ext-curl": "*",
+                    "ext-hash": "*",
+                    "ext-json": "*",
+                    "ext-openssl": "*",
+                    "ext-scrypt": "*",
+                    "ext-sodium": "*",
+                    "utopia-php/validators": "^0.5"
+                }
+            }
         },
         {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/vcs"
+            "type": "package",
+            "package": {
+                "name": "utopia-php/validators",
+                "version": "0.5.999",
+                "dist": {
+                    "url": "https://raw.githubusercontent.com/appwrite/appwrite/cursor/use-utopia-auth-clients-1299/dev/utopia-php-validators.tar.gz",
+                    "type": "tar"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Utopia\\": "src/"
+                    }
+                },
+                "require": {
+                    "php": ">=8.5"
+                }
+            }
         }
     ],
     "require": {
@@ -67,7 +104,7 @@
         "utopia-php/abuse": "2.0.*",
         "utopia-php/agents": "2.*",
         "utopia-php/audit": "3.0.*",
-        "utopia-php/auth": "^0.11",
+        "utopia-php/auth": "0.10.999",
         "utopia-php/cache": "^4.0.0",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",
@@ -81,7 +118,7 @@
         "utopia-php/dsn": "0.2.1",
         "utopia-php/http": "^2.0@RC",
         "utopia-php/fetch": "^1.1",
-        "utopia-php/validators": "^0.5",
+        "utopia-php/validators": "0.5.999",
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.8.*",
         "utopia-php/lock": "0.3.*",
