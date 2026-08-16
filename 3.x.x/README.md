@@ -6,52 +6,59 @@ Rust workspace for the Appwrite 3.x server rewrite. Utopia domain crates live un
 
 | Path | Role |
 |------|------|
-| `crates/utopia-*` | Domain building blocks ported from Utopia PHP (DI, HTTP, database, auth, …). Treat as libraries; do not fold Appwrite product logic into them. |
-| `crates/appwrite-*` | Appwrite-specific layers (exceptions, hooks, locale, auth, events, response models, database helpers, platform composition). Currently stubs. |
-| `apps/server` | Binary crate (`appwrite-server`). Minimal Hyper health endpoint for now. |
+| `crates/utopia-*` | Domain building blocks ported from Utopia PHP. No Appwrite product logic here. |
+| `crates/appwrite-*` | Appwrite-specific layers (exceptions, hooks, locale, auth, events, response models, database helpers, platform/Users module). |
+| `apps/server` | Binary crate (`appwrite-server`). Serves `/v1/users*` (+ health) for Traefik split routing. |
+| `benchmarks/users/` | PHP vs Rust Users service benchmarks. |
+
+Naming makes ownership obvious: `cargo test -p utopia-http` vs `cargo test -p appwrite-auth`.
 
 ### Appwrite crates
 
 | Crate | Purpose |
 |-------|---------|
-| `appwrite-exception` | Error types |
-| `appwrite-hooks` | Lifecycle hooks |
-| `appwrite-locale` | Locale helpers |
-| `appwrite-auth` | Auth on `utopia-auth` / `utopia-validators` |
-| `appwrite-event` | Event envelopes |
-| `appwrite-response` | API response models |
-| `appwrite-database` | Database helpers on `utopia-database` |
-| `appwrite-platform` | Platform composition on Utopia + other `appwrite-*` crates |
+| `appwrite-exception` | Error types + Error JSON envelope |
+| `appwrite-hooks` | Named hook registry (`passwordValidator`, …) |
+| `appwrite-locale` | `GeoRecord` helpers |
+| `appwrite-auth` | API `Key` decode, password/phone validators, MFA constants |
+| `appwrite-event` | Event / delete / audit message publishers |
+| `appwrite-response` | `MODEL_*` + `dynamic()` serialization |
+| `appwrite-database` | `CustomId`, encrypt filter, query helpers |
+| `appwrite-platform` | Shared `api` hooks + Users HTTP module |
 
 ## Build and test
 
 From this directory (`3.x.x/`):
 
 ```bash
-# Default member is apps/server
-cargo build
+cargo build -p appwrite-server
+cargo test -p appwrite-platform
+cargo test -p appwrite-exception -p appwrite-auth -p appwrite-response
 
-# Individual stubs
-cargo check -p appwrite-exception -p appwrite-hooks -p appwrite-locale
-cargo check -p appwrite-auth -p appwrite-event -p appwrite-response
-cargo check -p appwrite-database -p appwrite-platform -p appwrite-server
+# Memory-mode local server (seeded project + key)
+_APP_RUST_SEED=1 _APP_RUST_SEED_KEY=devkey APPWRITE_BIND=127.0.0.1:8080 cargo run -p appwrite-server
 
-# Tests / benches (stubs)
-cargo test -p appwrite-exception
-cargo bench -p appwrite-exception --bench smoke
-
-# Run the health stub
-APPWRITE_BIND=127.0.0.1:8080 cargo run -p appwrite-server
+# Postgres mode (same env as PHP Appwrite)
+_APP_DB_ADAPTER=postgresql _APP_DB_HOST=127.0.0.1 _APP_DB_PORT=5432 \
+  _APP_DB_SCHEMA=appwrite _APP_DB_USER=... _APP_DB_PASS=... _APP_OPENSSL_KEY_V1=... \
+  APPWRITE_BIND=127.0.0.1:8080 cargo run -p appwrite-server
 ```
 
 Docker (from this directory):
 
 ```bash
-docker build -t appwrite-server -f apps/server/Dockerfile .
+docker build -t appwrite-rust:local -f apps/server/Dockerfile .
+```
+
+Compose (from Appwrite repo root): service `appwrite-rust` is labeled so Traefik routes `PathPrefix(/v1/users)` (priority 100) to Rust while PHP keeps the catch-all.
+
+```bash
+docker compose up -d --build appwrite-rust
+docker compose exec appwrite test tests/e2e/Services/Users
 ```
 
 ## Notes
 
-- Workspace metadata (`version`, `edition`, lints) is inherited via `*.workspace = true`.
-- Do not modify `utopia-*` sources when working on Appwrite stubs unless you are intentionally syncing Utopia.
-- Toolchain: see `rust-toolchain.toml` (Rust 1.97.1).
+- Workspace metadata is inherited via `*.workspace = true`.
+- Do not put Appwrite types inside `utopia-*`.
+- Toolchain: `rust-toolchain.toml` (Rust 1.97.1).

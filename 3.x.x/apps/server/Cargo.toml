@@ -25,5 +25,9 @@ appwrite-platform = { workspace = true, features = ["postgres"] }
 tokio = { workspace = true }
 serde_json = { workspace = true }
 
+[[bench]]
+name = "users"
+harness = false
+
 [lints]
 workspace = true
