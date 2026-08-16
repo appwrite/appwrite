@@ -33,7 +33,7 @@ export type ConsoleProfileFeatures = {
   multiTenancy: boolean
   /** Organization role selection (developer, editor, analyst, billing). When false, all members are owners and role UI is hidden. */
   orgRoles: boolean
-  /** Appwrite Cloud system status (status.appwrite.online) */
+  /** Appwrite Cloud system status (status.appwrite.online) */ // pragma: allowlist secret
   systemStatus: boolean
   /** Console account MFA (enable/disable, TOTP, email, SMS, recovery codes) */
   accountMfa: boolean
@@ -70,7 +70,7 @@ export type ConsoleProfileFeatures = {
   /**
    * Edge network for Functions/Sites custom domains. When enabled, the CNAME
    * target shown in Add/Verify domain flows is the edge network host
-   * (`appwrite.network`) instead of the project endpoint host.
+   * (`appwrite.network`) instead of the project endpoint host. // pragma: allowlist secret
    */
   edgeNetwork: boolean
   /** Require console user email verification after signup (cloud: redirect to verify-email page; self-hosted: skip). */
@@ -169,7 +169,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
       nativeDbsPostgres: true,
-      nativeDbsMySQL: false,
+      nativeDbsMySQL: true,
       nativeDbsMongo: false,
       multiRegion: true,
       edgeNetwork: true,
@@ -227,7 +227,7 @@ const VALID_PROFILE_IDS: ConsoleProfileId[] = ['cloud', 'self-hosted']
 function isCloudEndpoint(url: string): boolean {
   try {
     const host = new URL(url).hostname.toLowerCase()
-    return host === 'cloud.appwrite.io' || host.endsWith('.cloud.appwrite.io')
+    return host === 'cloud.appwrite.io' || host.endsWith('.cloud.appwrite.io') // pragma: allowlist secret
   } catch {
     return false
   }
@@ -241,7 +241,7 @@ function detectProfileFromEndpoint(): ConsoleProfileId {
     }
   }
 
-  const envEndpoint = getRuntimeConfig().appwriteEndpoint
+  const envEndpoint = getRuntimeConfig().appwriteEndpoint // pragma: allowlist secret
   if (envEndpoint.trim()) {
     return isCloudEndpoint(envEndpoint) ? 'cloud' : 'self-hosted'
   }

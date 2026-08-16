@@ -8,6 +8,7 @@
 import './project'
 import './project-actions'
 import './postgres-sql-editor-actions'
+import './mysql-sql-editor-actions'
 import './project-create'
 import './project-tabs'
 import './project-cards'

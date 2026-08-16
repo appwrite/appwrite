@@ -24,14 +24,14 @@ import {
   type DatabaseSetupPhase,
   type DatabaseSetupProgressState,
 } from './CreateDatabaseSetupProgress'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk } from '@/lib/appwrite/sdk' // pragma: allowlist secret
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
 import {
   getBackupPoliciesPlanLimit,
   getBackupPoliciesRemainingSlots,
   supportsAdvancedBackupPolicies,
 } from '@/lib/databases/backup-policy-plan-limits'
-import { ID, BackupServices, type Models } from '@appwrite.io/console'
+import { ID, BackupServices, type Models } from '@appwrite.io/console' // pragma: allowlist secret
 import { DatabaseType } from '@/lib/databases/database-type'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
@@ -105,6 +105,7 @@ import {
   formatDedicatedDatabaseCreateError,
 } from '@/lib/dedicated-database-id'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
+import { mysqlDatabaseHome } from '@/lib/mysql-database-routes'
 import {
   formatDedicatedDatabaseRegionUnavailableDescription,
   projectSupportsDedicatedDatabaseCompute,
@@ -749,6 +750,16 @@ export function CreateDatabaseWizardView() {
       if (dbType === 'Postgres') {
         navigate({
           ...postgresDatabaseHome({
+            projectId: pid,
+            databaseId: database.$id,
+            tableId: '-',
+          }),
+        })
+        return
+      }
+      if (dbType === 'MySQL') {
+        navigate({
+          ...mysqlDatabaseHome({
             projectId: pid,
             databaseId: database.$id,
             tableId: '-',

@@ -12,17 +12,17 @@ import {
   queryOptions,
   type QueryClient,
 } from '@tanstack/react-query'
-import type { Models } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console' // pragma: allowlist secret
 import {
   AppwriteException,
   ProjectAuthMethodId,
   Query,
-} from '@appwrite.io/console'
+} from '@appwrite.io/console' // pragma: allowlist secret
 import {
   clearConsoleImpersonateUser,
   clearConsoleSessionLocally,
   sdk,
-} from '@/lib/appwrite/sdk'
+} from '@/lib/appwrite/sdk' // pragma: allowlist secret
 import {
   clearConsoleAccountCache,
   getConsoleAccountSync,
@@ -44,13 +44,16 @@ import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
   buildDatabasesSidebarWidthPrefs,
+  buildMysqlSqlEditorHeightPrefs,
   buildPostgresSqlEditorHeightPrefs,
   buildSavedFiltersPrefs,
   buildSavedImageTransformPresetsPrefs,
   buildStorageSidebarWidthPrefs,
   DATABASES_SIDEBAR_DEFAULT_WIDTH_PX,
+  MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   parseDatabasesSidebarWidthPx,
+  parseMysqlSqlEditorHeightPx,
   parsePostgresSqlEditorHeightPx,
   parseStorageSidebarWidthPx,
   parseSavedFilters,
@@ -1667,6 +1670,59 @@ export function usePostgresSqlEditorHeight(
     },
     onMutate: async (value) => {
       const patch = buildPostgresSqlEditorHeightPrefs(value)
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const persistEditorHeightPx = useCallback(
+    (value: number) => {
+      updateMutation.mutate(value)
+    },
+    [updateMutation],
+  )
+
+  return { heightPx, persistEditorHeightPx }
+}
+
+/**
+ * Persisted SQL editor container height in px for the MySQL SQL workbench.
+ */
+export function useMysqlSqlEditorHeight(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const heightPx =
+    parseMysqlSqlEditorHeightPx(account?.prefs as UserPrefs | undefined) ??
+    MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs({
+        ...account.prefs,
+        ...buildMysqlSqlEditorHeightPrefs(value),
+      },
+        'mysql-sql-editor-height')
+    },
+    onMutate: async (value) => {
+      const patch = buildMysqlSqlEditorHeightPrefs(value)
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
         { queryKey: ['account', 'console'] },
         (current) =>

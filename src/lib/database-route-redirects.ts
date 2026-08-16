@@ -6,6 +6,12 @@ import {
   postgresDatabaseTabLink,
 } from '@/lib/postgres-database-routes'
 import {
+  MYSQL_DB_KIND,
+  isMysqlDatabaseTabSegment,
+  mysqlDatabaseHome,
+  mysqlDatabaseTabLink,
+} from '@/lib/mysql-database-routes'
+import {
   type DatabaseRouteKind,
   usesCollectionsPath,
 } from '@/lib/database-routes'
@@ -59,6 +65,37 @@ export function throwRedirectPostgresDbKind(
 
   throw redirect({
     ...postgresDatabaseHome({
+      projectId: params.projectId,
+      databaseId: params.databaseId,
+      tableId: tableId && tableId !== '-' ? tableId : '-',
+    }),
+    search: {},
+    replace: true,
+  })
+}
+
+/** Redirect mistaken `$dbKind=mysql` matches to the dedicated MySQL route tree. */
+export function throwRedirectMysqlDbKind(
+  dbKind: string,
+  params: {
+    projectId: string
+    databaseId: string
+    tableId?: string
+  },
+): void {
+  if (dbKind !== MYSQL_DB_KIND) return
+
+  const tableId = params.tableId?.trim()
+  if (tableId && tableId !== '-' && isMysqlDatabaseTabSegment(tableId)) {
+    throw redirect({
+      ...mysqlDatabaseTabLink(params.projectId, params.databaseId, tableId),
+      search: {},
+      replace: true,
+    })
+  }
+
+  throw redirect({
+    ...mysqlDatabaseHome({
       projectId: params.projectId,
       databaseId: params.databaseId,
       tableId: tableId && tableId !== '-' ? tableId : '-',

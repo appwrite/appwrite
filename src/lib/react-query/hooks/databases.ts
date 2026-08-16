@@ -34,6 +34,7 @@ import {
   dedicatedDatabaseSourceFromRouteKind,
   dedicatedDatabaseSourceKey,
   POSTGRES_DATABASE_SPECS_SOURCE,
+  MYSQL_DATABASE_SPECS_SOURCE,
   type DedicatedDatabaseSource,
 } from '@/lib/databases/dedicated-database-source'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
@@ -1800,6 +1801,7 @@ export {
   dedicatedDatabaseSourceFromEngine,
   dedicatedDatabaseSourceFromRouteKind,
   POSTGRES_DATABASE_SPECS_SOURCE,
+  MYSQL_DATABASE_SPECS_SOURCE,
 }
 
 /** True when at least one native DB engine (PostgreSQL/MySQL/MongoDB) is available. */

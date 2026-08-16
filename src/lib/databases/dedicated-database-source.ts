@@ -84,3 +84,7 @@ export const dedicatedReplicationSourceFromRouteKind =
   dedicatedDatabaseSourceFromRouteKind
 export const dedicatedReplicationSourceKey = dedicatedDatabaseSourceKey
 export const dedicatedReplicationService = dedicatedDatabaseService
+
+/** Native MySQL settings / monitor screens. */
+export const MYSQL_DATABASE_SPECS_SOURCE: DedicatedDatabaseSource =
+  dedicatedDatabaseSourceFromEngine('mysql')
