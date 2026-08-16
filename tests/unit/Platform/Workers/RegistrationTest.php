@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Platform\Services\Workers;
+use Appwrite\Platform\Workers\Executions;
 use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Notifications;
 use PHPUnit\Framework\TestCase;
@@ -17,6 +18,13 @@ final class RegistrationTest extends TestCase
 
         $this->assertInstanceOf(Mails::class, $service->getAction('mails'));
         $this->assertInstanceOf(Notifications::class, $service->getAction('notifications'));
+    }
+
+    public function testExecutionsWorkerIsRegistered(): void
+    {
+        $service = new Workers();
+
+        $this->assertInstanceOf(Executions::class, $service->getAction('executions'));
     }
 
     public function testEntrypointDoesNotAliasMailsToNotifications(): void

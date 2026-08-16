@@ -27,6 +27,76 @@ final class FunctionsCustomServerTest extends Scope
     protected static array $testFunctionCache = [];
     protected static array $testDeploymentCache = [];
 
+    private function setupDeployedFunction(string $name, string $fixture = 'basic', array $overrides = []): string
+    {
+        $functionId = $this->setupFunction(\array_merge([
+            'functionId' => ID::unique(),
+            'name' => $name,
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 60,
+        ], $overrides));
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction($fixture),
+            'activate' => true,
+        ]);
+
+        return $functionId;
+    }
+
+    public function testExecutionLogsPersistAndCanBeManaged(): void
+    {
+        $functionId = '';
+
+        try {
+            $functionId = $this->setupDeployedFunction('Execution logs');
+            $execution = $this->createExecution($functionId, [
+                'async' => true,
+                'path' => '/execution-logs',
+                'method' => 'PATCH',
+                'body' => 'execution-body',
+                'headers' => [
+                    'x-custom-header' => 'execution-header',
+                ],
+            ]);
+
+            $this->assertEquals(202, $execution['headers']['status-code']);
+            $executionId = $execution['body']['$id'] ?? '';
+
+            $this->assertEventually(function () use ($functionId, $executionId) {
+                $execution = $this->getExecution($functionId, $executionId);
+
+                $this->assertEquals(200, $execution['headers']['status-code']);
+                $this->assertEquals('completed', $execution['body']['status']);
+                $this->assertStringContainsString('body-is-execution-body', (string) $execution['body']['logs']);
+                $this->assertStringContainsString('custom-header-is-execution-header', (string) $execution['body']['logs']);
+                $this->assertStringContainsString('path-is-/execution-logs', (string) $execution['body']['logs']);
+                $this->assertStringContainsString('error-log-works', (string) $execution['body']['errors']);
+            }, 60000, 500);
+
+            $executions = $this->listExecutions($functionId, [
+                'queries' => [
+                    Query::equal('$id', [$executionId])->toString(),
+                ],
+            ]);
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $this->assertCount(1, $executions['body']['executions']);
+            $this->assertEquals($executionId, $executions['body']['executions'][0]['$id']);
+
+            $deleted = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/executions/' . $executionId, \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(204, $deleted['headers']['status-code']);
+            $this->assertEquals(404, $this->getExecution($functionId, $executionId)['headers']['status-code']);
+        } finally {
+            if ($functionId !== '') {
+                $this->cleanupFunction($functionId);
+            }
+        }
+    }
+
     /**
      * Setup a test function with variables for independent tests (with static caching)
      */
@@ -1895,12 +1965,14 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($execution['body']['responseHeaders']);
         $this->assertEmpty($execution['body']['responseBody']); // For HEAD requests, response body is empty
 
-        /** 404 on Server CE (executions are not persisted), 204 on platforms that persist them */
-        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $execution['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-        $this->assertContains($execution['headers']['status-code'], [204, 404]);
+        $executionId = $execution['body']['$id'];
+        $this->assertEventually(function () use ($data, $executionId) {
+            $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), []);
+            $this->assertEquals(204, $execution['headers']['status-code']);
+        }, 10000, 500);
 
         /** Test create execution with 400 status code */
         $execution = $this->createExecution($data['functionId'], [
@@ -1912,12 +1984,14 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(400, $execution['body']['responseStatusCode']);
 
-        /** 404 on Server CE (executions are not persisted), 204 on platforms that persist them */
-        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $execution['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-        $this->assertContains($execution['headers']['status-code'], [204, 404]);
+        $executionId = $execution['body']['$id'];
+        $this->assertEventually(function () use ($data, $executionId) {
+            $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), []);
+            $this->assertEquals(204, $execution['headers']['status-code']);
+        }, 10000, 500);
     }
 
     public function testSyncCreateExecution(): void
@@ -1940,6 +2014,16 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('22', (string) $execution['body']['responseBody']);
         // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertLessThan(1.500, $execution['body']['duration']);
+
+        $executionId = $execution['body']['$id'];
+        $this->assertEventually(function () use ($data, $executionId) {
+            $execution = $this->getExecution($data['functionId'], $executionId);
+
+            $this->assertEquals(200, $execution['headers']['status-code']);
+            $this->assertEquals('completed', $execution['body']['status']);
+            $this->assertNotEmpty($execution['body']['logs']);
+            $this->assertNotEmpty($execution['body']['errors']);
+        }, 10000, 500);
     }
 
     public function testUpdateSpecs(): void
@@ -2414,6 +2498,17 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $user['headers']['status-code']);
 
         $userId = $user['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $this->assertNotEmpty($executions['body']['executions']);
+            $execution = $executions['body']['executions'][0];
+            $this->assertEquals('completed', $execution['status']);
+            $this->assertStringContainsString($userId, (string) $execution['logs']);
+            $this->assertStringContainsString('Event User', (string) $execution['logs']);
+        }, 20000, 500);
 
         $this->cleanupFunction($functionId);
 

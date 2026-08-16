@@ -100,6 +100,18 @@ final class FunctionsScheduleTest extends Scope
         $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
         $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
 
+        $this->assertEventually(function () use ($functionId, $executionId) {
+            $execution = $this->getExecution($functionId, $executionId);
+
+            $this->assertEquals(200, $execution['headers']['status-code']);
+            $this->assertEquals('completed', $execution['body']['status']);
+            $this->assertStringContainsString('body-is-custom-body', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('custom-header-is-custom-value', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('method-is-patch', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('path-is-/custom-path', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('error-log-works', (string) $execution['body']['errors']);
+        }, 240000, 1000);
+
         /* Test for FAILURE */
         // Schedule synchronous execution
         $execution = $this->createExecution($functionId, [
