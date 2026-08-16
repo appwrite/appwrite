@@ -104,6 +104,15 @@ class ScheduleExecutions extends ScheduleBase
                     Co::sleep($delay);
                 }
 
+                // The schedule can be cancelled while this coroutine sleeps.
+                // Re-read it before publishing so a captured execution is not
+                // enqueued after cancellation cleanup has already run.
+                if (!$this->isScheduleActive($dbForPlatform, $schedule['$id'])) {
+                    $dbForPlatform->deleteDocument('schedules', $schedule['$id']);
+                    unset($this->schedules[$schedule['$sequence']]);
+                    return;
+                }
+
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $schedule['project'],
                     userId: $data['userId'] ?? '',
@@ -125,5 +134,12 @@ class ScheduleExecutions extends ScheduleBase
                 unset($this->schedules[$schedule['$sequence']]);
             });
         }
+    }
+
+    protected function isScheduleActive(Database $dbForPlatform, string $scheduleId): bool
+    {
+        $schedule = $dbForPlatform->getDocument('schedules', $scheduleId);
+
+        return !$schedule->isEmpty() && $schedule->getAttribute('active', false);
     }
 }
