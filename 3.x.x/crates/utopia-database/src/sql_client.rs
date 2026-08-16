@@ -204,6 +204,23 @@ impl SqlClient {
     }
 }
 
+/// Unlike the sync `postgres` crate (see [`postgres_blocking`]), the sync
+/// `mysql` crate does its own socket I/O and never calls back into a Tokio
+/// runtime, so calling it from an async task cannot panic. It still parks
+/// the calling OS thread for the query's full round-trip, though, and with a
+/// real connection pool checked out per request (`appwrite_platform::db`)
+/// many requests can be doing that at once. `block_in_place` hands the
+/// current worker thread back to Tokio's scheduler for that duration instead
+/// of one query stalling whatever else that worker would have run, the same
+/// reason `postgres_blocking` wraps every `postgres` crate call.
+#[cfg(feature = "mysql")]
+fn mysql_blocking<T>(f: impl FnOnce() -> T) -> T {
+    match tokio::runtime::Handle::try_current() {
+        Ok(_) => tokio::task::block_in_place(f),
+        Err(_) => f(),
+    }
+}
+
 #[cfg(feature = "mysql")]
 impl SqlClient {
     /// Connect to MySQL / MariaDB.
@@ -227,9 +244,9 @@ impl SqlClient {
             .prefer_socket(false)
             .ssl_opts(Option::<SslOpts>::None);
         let _ = &mut opts;
-        let mut conn = mysql::Conn::new(opts)
+        let mut conn = mysql_blocking(|| mysql::Conn::new(opts))
             .map_err(|e| DatabaseError::database(format!("MySQL connect failed: {e}")))?;
-        conn.query_drop("SET NAMES utf8mb4")
+        mysql_blocking(|| conn.query_drop("SET NAMES utf8mb4"))
             .map_err(|e| DatabaseError::database(e.to_string()))?;
         let dsn = format!(
             "mysql:host={host};port={port}{}",
@@ -258,7 +275,7 @@ impl SqlClient {
             .as_mut()
             .ok_or_else(|| DatabaseError::database("MySQL SQL client is not connected"))?;
         let (sql, values) = rewrite_mysql(sql, params);
-        conn.exec_drop(&sql, mysql::Params::Positional(values))
+        mysql_blocking(|| conn.exec_drop(&sql, mysql::Params::Positional(values)))
             .map_err(map_mysql)?;
         self.last_insert_id = conn.last_insert_id().to_string();
         Ok(conn.affected_rows())
@@ -275,9 +292,9 @@ impl SqlClient {
             .as_mut()
             .ok_or_else(|| DatabaseError::database("MySQL SQL client is not connected"))?;
         let (sql, values) = rewrite_mysql(sql, params);
-        let result: Vec<mysql::Row> = conn
-            .exec(&sql, mysql::Params::Positional(values))
-            .map_err(map_mysql)?;
+        let result: Vec<mysql::Row> =
+            mysql_blocking(|| conn.exec(&sql, mysql::Params::Positional(values)))
+                .map_err(map_mysql)?;
         Ok(result.into_iter().map(mysql_row_to_map).collect())
     }
 }

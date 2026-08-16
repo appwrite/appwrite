@@ -13,7 +13,7 @@ categories = ["database", "web-programming"]
 
 [features]
 default = ["sqlite"]
-mysql = ["dep:mysql"]
+mysql = ["dep:mysql", "dep:tokio"]
 postgres = ["dep:postgres", "dep:bytes", "dep:tokio"]
 sqlite = ["dep:rusqlite"]
 mongo = ["dep:mongodb"]
