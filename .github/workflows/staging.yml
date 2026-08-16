@@ -12,9 +12,10 @@ concurrency:
 
 env:
     ENVIRONMENT: staging
-    PROJECT: console
+    PROJECT: assets
+    APPLICATION: console
     DECLARATIVE_OWNER: appwrite-labs
-    DECLARATIVE_REPOSITORY: assets-applications
+    DECLARATIVE_REPOSITORY: application-configuration
     REGISTRY_GITHUB: ghcr.io
     REGISTRY_DOCKERHUB: docker.io
     IMAGE_NAME: appwrite/new
@@ -66,7 +67,7 @@ jobs:
         runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
         timeout-minutes: 10
         # Shared across the staging and production workflows so their deploy
-        # jobs never push to assets-applications at the same time.
+        # jobs never push to application-configuration at the same time.
         concurrency:
             group: declarative-deploy
             cancel-in-progress: false
@@ -87,16 +88,16 @@ jobs:
                   token: ${{ steps.app-token.outputs.token }}
 
             - name: Update image reference
-              run: yq -i '.global.image.repository = strenv(IMAGE_NAME) | .global.image.tag = strenv(TAG)' ${{ env.ENVIRONMENT }}/${{ env.PROJECT }}/default.yaml
+              run: yq -i '.global.image.repository = strenv(IMAGE_NAME) | .global.image.tag = strenv(TAG)' ${{ env.PROJECT }}/${{ env.ENVIRONMENT }}/${{ env.APPLICATION }}/default.yaml
 
             - name: Commit and push
               run: |
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
-                  git add ${{ env.ENVIRONMENT }}/${{ env.PROJECT }}/default.yaml
+                  git add ${{ env.PROJECT }}/${{ env.ENVIRONMENT }}/${{ env.APPLICATION }}/default.yaml
                   if git diff --cached --quiet; then
                     echo "No changes to commit"
                   else
-                    git commit -m "chore(${{ env.ENVIRONMENT }}): ${{ env.PROJECT }} image to ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+                    git commit -m "chore(${{ env.ENVIRONMENT }}): ${{ env.APPLICATION }} image to ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
                     git push
                   fi
