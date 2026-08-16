@@ -20,11 +20,32 @@ fn main() -> Result<()> {
     // under `#[tokio::main]` panics with nested-runtime errors. Request-path
     // sync SQL client calls still use `block_in_place` inside utopia-database.
     let (state, adapter) = AppwriteState::connect_from_env();
-    println!("appwrite-server: dbForPlatform/dbForProject adapter = {adapter}");
+    if adapter == "memory" {
+        println!("appwrite-server: dbForPlatform/dbForProject adapter = {adapter}");
+    } else {
+        // Every live-adapter dbForProject/dbForPlatform is a
+        // `utopia_pools::Pool` of this many independent connections (see
+        // `appwrite_platform::db::pool_size_from_env`, mirroring PHP
+        // `app/init/registers.php`'s `_APP_CONNECTIONS_MAX` /
+        // `_APP_POOL_CLIENTS` / `_APP_WORKER_MAX_COROUTINES` math) rather
+        // than the single shared connection earlier builds serialized every
+        // request behind.
+        println!(
+            "appwrite-server: dbForPlatform/dbForProject adapter = {adapter}, pool_size = {}",
+            appwrite_platform::db::pool_size_from_env()
+        );
+    }
     let state = Arc::new(state);
 
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
+        // Sync engine calls (`postgres`, `mysql`) run via `block_in_place`,
+        // which borrows a blocking-pool thread for the call's duration. The
+        // Tokio default (512) already covers this, but pin it explicitly so
+        // a future default change can't silently shrink the headroom this
+        // pooled-dbForProject design assumes (many concurrent checkouts each
+        // holding a blocking thread while their query is in flight).
+        .max_blocking_threads(512)
         .build()
         .expect("tokio runtime")
         .block_on(async_main(state, adapter))
