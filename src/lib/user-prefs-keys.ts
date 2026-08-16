@@ -1158,7 +1158,7 @@ export function buildMysqlSavedQueriesSortPrefs(
   }
 }
 
-export function sortSavedPostgresQueries(
+export function sortSavedMysqlQueries(
   queries: SavedMysqlQuery[],
   sort: MysqlSavedQueriesSort,
 ): SavedMysqlQuery[] {
@@ -1248,7 +1248,7 @@ export function buildMysqlSidebarTablesSortPrefs(
   }
 }
 
-export function sortPostgresSidebarTableRows<T extends { table_name: string }>(
+export function sortMysqlSidebarTableRows<T extends { table_name: string }>(
   tables: T[],
   sort: MysqlSidebarTablesSort,
 ): T[] {

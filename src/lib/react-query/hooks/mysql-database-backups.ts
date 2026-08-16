@@ -3,9 +3,9 @@
  */
 
 import { useQuery, queryOptions } from '@tanstack/react-query'
-import { Query } from '@[REDACTED].io/console'
-import type { Models } from '@[REDACTED].io/console'
-import { sdk } from '@/lib/[REDACTED]/sdk'
+import { Query } from '@appwrite.io/console' // pragma: allowlist secret
+import type { Models } from '@appwrite.io/console' // pragma: allowlist secret
+import { sdk } from '@/lib/appwrite/sdk' // pragma: allowlist secret
 import { DEFAULT_STALE_TIME, GRID_DEFAULT_PAGE_SIZE } from './constants'
 import {
   dedicatedBackupPoliciesQueryOptions,
