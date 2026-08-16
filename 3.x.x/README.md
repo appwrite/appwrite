@@ -84,10 +84,10 @@ docker build -t appwrite-rust:local -f apps/server/Dockerfile .
 
 Compose (from Appwrite repo root): service `appwrite-rust` is labeled so Traefik routes `PathPrefix(/v1/users)` (priority 100) to Rust while PHP keeps the catch-all.
 
-```bash
-docker compose up -d --build appwrite-rust
-docker compose exec appwrite test tests/e2e/Services/Users
-```
+# Multi-endpoint PHP vs Rust (from Appwrite container; 3.x.x is not mounted):
+#   docker cp 3.x.x/benchmarks/users/bench-endpoints.php appwrite:/tmp/bench-endpoints.php
+#   docker exec -e PHP_DIRECT=http://127.0.0.1 -e RUST_DIRECT=http://appwrite-rust \
+#     -e TRAEFIK=http://traefik -e N=100 appwrite php /tmp/bench-endpoints.php
 
 ## Notes
 
