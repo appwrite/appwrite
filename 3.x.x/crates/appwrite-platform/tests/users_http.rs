@@ -9,9 +9,7 @@ use std::collections::HashMap;
 use serde_json::{json, Value};
 use utopia_http::{Request, Response};
 
-use users_support::{
-    body_json, boot, boot_with_scopes, create_user, create_user_id, map, run,
-};
+use users_support::{body_json, boot, boot_with_scopes, create_user, create_user_id, map, run};
 
 #[tokio::test]
 async fn create_and_get_user_round_trip() {
@@ -198,10 +196,7 @@ async fn update_user_properties_round_trip() {
     )
     .await;
     assert_eq!(res.status_code(), 200, "{}", res.body_string());
-    assert_eq!(
-        body_json(&res),
-        json!({"theme": "dark", "lang": "en"})
-    );
+    assert_eq!(body_json(&res), json!({"theme": "dark", "lang": "en"}));
 
     // email verification
     let res = run(
@@ -261,13 +256,7 @@ async fn create_bcrypt_user_and_get() {
     assert_eq!(created["password"], json!(password));
     assert_eq!(created["hash"], json!("bcrypt"));
 
-    let res = run(
-        &h.http,
-        "GET",
-        "/v1/users/bcrypt-user",
-        HashMap::new(),
-    )
-    .await;
+    let res = run(&h.http, "GET", "/v1/users/bcrypt-user", HashMap::new()).await;
     assert_eq!(res.status_code(), 200, "{}", res.body_string());
     let fetched = body_json(&res);
     assert_eq!(fetched["hash"], json!("bcrypt"));
@@ -611,7 +600,10 @@ async fn mfa_update_factors_and_recovery_codes() {
     )
     .await;
     assert_eq!(res.status_code(), 200, "{}", res.body_string());
-    assert_eq!(body_json(&res)["recoveryCodes"].as_array().unwrap().len(), 6);
+    assert_eq!(
+        body_json(&res)["recoveryCodes"].as_array().unwrap().len(),
+        6
+    );
 
     // regenerate recovery codes
     let res = run(

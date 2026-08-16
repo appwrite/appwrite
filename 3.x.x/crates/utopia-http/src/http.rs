@@ -293,7 +293,15 @@ impl Http {
                 .await
             {
                 let _ = self
-                    .run_error_hooks(&[], &request, &response, None, empty_params(), Some(e), None)
+                    .run_error_hooks(
+                        &[],
+                        &request,
+                        &response,
+                        None,
+                        empty_params(),
+                        Some(e),
+                        None,
+                    )
                     .await;
             }
             return Ok(());
@@ -302,7 +310,15 @@ impl Http {
         let Some(m) = match_ else {
             let err = HttpError::not_found();
             let _ = self
-                .run_error_hooks(&[], &request, &response, None, empty_params(), Some(err), None)
+                .run_error_hooks(
+                    &[],
+                    &request,
+                    &response,
+                    None,
+                    empty_params(),
+                    Some(err),
+                    None,
+                )
                 .await;
             return Ok(());
         };
