@@ -30,7 +30,7 @@ pub fn delete() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<(), Exception> {
+        base::finish_no_content_blocking(ctx, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let identity_id = base::param_str(&ctx, "identityId")?;
@@ -43,7 +43,7 @@ pub fn delete() -> Action {
             db.delete_document("identities", &identity_id)
                 .map_err(base::db_error)?;
             Ok(())
-        })();
-        base::finish_no_content(&ctx, result)
+        })
+        .await
     })
 }

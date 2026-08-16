@@ -2,7 +2,7 @@
 //! `Http/Users/Identities/XList.php`.
 
 use appwrite_exception::Exception;
-use serde_json::{json, Value};
+use serde_json::json;
 use utopia_database::Query;
 use utopia_platform::{Action, HttpMethod};
 use utopia_validators::{Boolean, Text};
@@ -46,7 +46,7 @@ pub fn xlist() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_IDENTITY_LIST, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let search = base::param_str(&ctx, "search").unwrap_or_default();
@@ -80,7 +80,7 @@ pub fn xlist() -> Action {
                 "identities": identities.iter().map(document_to_json).collect::<Vec<_>>(),
                 "total": total,
             }))
-        })();
-        base::finish(&ctx, 200, appwrite_response::MODEL_IDENTITY_LIST, result)
+        })
+        .await
     })
 }

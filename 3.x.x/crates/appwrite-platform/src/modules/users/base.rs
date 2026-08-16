@@ -80,6 +80,57 @@ pub fn finish_no_content(
     }
 }
 
+/// Run sync Users handler work without monopolising a single Tokio worker's
+/// async schedule.
+///
+/// Sync SQL still uses the `postgres` / `mysql` crates, which must run under
+/// [`tokio::task::block_in_place`] (their `Handle::block_on` path panics inside
+/// `spawn_blocking`). Handlers therefore stay on async workers via
+/// `block_in_place`, and the HTTP server pins a large enough `worker_threads`
+/// count so concurrent checkouts can progress up to the connection-pool size
+/// instead of the default CPU count.
+pub async fn run_blocking<F, T>(f: F) -> T
+where
+    F: FnOnce() -> T + Send + 'static,
+    T: Send + 'static,
+{
+    // Let the scheduler drain ready tasks before we convert this worker into
+    // a blocking one for the duration of `f`.
+    tokio::task::yield_now().await;
+    match tokio::runtime::Handle::try_current() {
+        Ok(_) => tokio::task::block_in_place(f),
+        Err(_) => f(),
+    }
+}
+
+/// [`finish`] after running `f` on the blocking pool (see [`run_blocking`]).
+pub async fn finish_blocking<F>(
+    ctx: ActionContext,
+    status: u16,
+    model: &'static str,
+    f: F,
+) -> utopia_http::Result<()>
+where
+    F: FnOnce(&ActionContext) -> Result<Value, Exception> + Send + 'static,
+{
+    let work_ctx = ctx.clone();
+    let result = run_blocking(move || f(&work_ctx)).await;
+    finish(&ctx, status, model, result)
+}
+
+/// [`finish_no_content`] after running `f` on the blocking pool.
+pub async fn finish_no_content_blocking<F>(
+    ctx: ActionContext,
+    f: F,
+) -> utopia_http::Result<()>
+where
+    F: FnOnce(&ActionContext) -> Result<(), Exception> + Send + 'static,
+{
+    let work_ctx = ctx.clone();
+    let result = run_blocking(move || f(&work_ctx)).await;
+    finish_no_content(&ctx, result)
+}
+
 /// PHP `inject('...')`-chain builder: applies every injection in `names` to
 /// `action`, panicking (at platform-build time, not per-request) on the
 /// `DuplicateInjection` case the fixed name lists below never trigger.

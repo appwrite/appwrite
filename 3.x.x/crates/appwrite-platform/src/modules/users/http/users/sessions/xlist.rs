@@ -31,7 +31,7 @@ pub fn xlist() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_SESSION_LIST, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
@@ -64,7 +64,7 @@ pub fn xlist() -> Action {
                 })
                 .collect();
             Ok(json!({ "sessions": items, "total": total }))
-        })();
-        base::finish(&ctx, 200, appwrite_response::MODEL_SESSION_LIST, result)
+        })
+        .await
     })
 }

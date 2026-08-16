@@ -51,7 +51,7 @@ pub fn create() -> Action {
         &["request", "response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 201, appwrite_response::MODEL_TOKEN, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
@@ -92,7 +92,7 @@ pub fn create() -> Action {
             let mut token_out = document_to_json(&created);
             token_out["secret"] = json!(secret);
             Ok(token_out)
-        })();
-        base::finish(&ctx, 201, appwrite_response::MODEL_TOKEN, result)
+        })
+        .await
     })
 }

@@ -2,7 +2,7 @@
 //! Rust port of `Http/Users/MFA/RecoveryCodes/Create.php`.
 
 use appwrite_exception::Exception;
-use serde_json::{json, Value};
+use serde_json::json;
 use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Text;
 
@@ -25,7 +25,7 @@ pub fn create() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 201, appwrite_response::MODEL_MFA_RECOVERY_CODES, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
@@ -47,12 +47,7 @@ pub fn create() -> Action {
             .map_err(base::db_error)?;
 
             Ok(json!({ "recoveryCodes": codes }))
-        })();
-        base::finish(
-            &ctx,
-            201,
-            appwrite_response::MODEL_MFA_RECOVERY_CODES,
-            result,
-        )
+        })
+        .await
     })
 }

@@ -47,23 +47,25 @@ pub fn create() -> Action {
     )
     .param("name", json!(""), Text::new(128), "User name.", true)
     .http_action(|ctx| async move {
-        let mut options = HashMap::new();
-        options.insert(
-            "salt".to_string(),
-            json!(base::param_str(&ctx, "passwordSalt").unwrap_or_default()),
-        );
-        options.insert(
-            "saltSeparator".to_string(),
-            json!(base::param_str(&ctx, "passwordSaltSeparator").unwrap_or_default()),
-        );
-        options.insert(
-            "signerKey".to_string(),
-            json!(base::param_str(&ctx, "passwordSignerKey").unwrap_or_default()),
-        );
-        let result = base::create_hashed_user(
-            &ctx,
-            Password::create_hash(Password::SCRYPT_MODIFIED, options),
-        );
-        base::finish(&ctx, 201, appwrite_response::MODEL_USER, result)
+        base::finish_blocking(ctx, 201, appwrite_response::MODEL_USER, |ctx| {
+            let mut options = HashMap::new();
+            options.insert(
+                "salt".to_string(),
+                json!(base::param_str(ctx, "passwordSalt").unwrap_or_default()),
+            );
+            options.insert(
+                "saltSeparator".to_string(),
+                json!(base::param_str(ctx, "passwordSaltSeparator").unwrap_or_default()),
+            );
+            options.insert(
+                "signerKey".to_string(),
+                json!(base::param_str(ctx, "passwordSignerKey").unwrap_or_default()),
+            );
+            base::create_hashed_user(
+                ctx,
+                Password::create_hash(Password::SCRYPT_MODIFIED, options),
+            )
+        })
+        .await
     })
 }

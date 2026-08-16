@@ -24,13 +24,13 @@ pub fn delete() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<(), Exception> {
+        base::finish_no_content_blocking(ctx, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
             base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
             base::delete_user_sessions(&mut db, &user_id)
-        })();
-        base::finish_no_content(&ctx, result)
+        })
+        .await
     })
 }

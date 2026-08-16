@@ -287,17 +287,19 @@ impl Recover for ProjectDb {
     }
 }
 
-/// PHP `Utopia\Pools\Pool` sizing (`app/init/registers.php`): connection
-/// budget divided across workers, floored by the coroutine/concurrency
-/// count. PHP's "worker" is one of many Swoole *processes*, each often
-/// ending up with a size-1 pool because concurrency within a worker comes
-/// from coroutines sharing that one process's slice of the budget. This
-/// server is a single multi-threaded process handling every request
-/// (`std::thread::available_parallelism` stands in for the worker count),
-/// so reproducing PHP's occasional size-1 result would reintroduce the
-/// single-connection bottleneck this module exists to fix. Clamping to
-/// `[2, 32]` keeps a real floor under that math while still respecting an
-/// operator's `_APP_CONNECTIONS_MAX` / `_APP_POOL_CLIENTS` budget.
+/// Connection-pool size for this Rust process.
+///
+/// PHP (`app/init/registers.php`) divides `_APP_CONNECTIONS_MAX /
+/// _APP_POOL_CLIENTS` across **many Swoole worker processes**, so each
+/// process often gets a small pool (sometimes size 1) and concurrency comes
+/// from having many processes.
+///
+/// This server is a **single** multi-threaded process that opens **one pool
+/// per project** (plus `dbForPlatform`). Compose Postgres defaults to
+/// `max_connections=100` and PHP already holds dozens of idle sockets, so a
+/// large per-project pool exhausts the server (warm-up then returns 500).
+/// Use a modest per-instance size floored by CPU count and clamped to
+/// `[2, 8]`.
 #[must_use]
 pub fn pool_size_from_env() -> usize {
     compute_pool_size(
@@ -306,14 +308,14 @@ pub fn pool_size_from_env() -> usize {
         std::thread::available_parallelism()
             .map(std::num::NonZeroUsize::get)
             .unwrap_or(4),
-        env_usize("_APP_WORKER_MAX_COROUTINES", 4),
     )
 }
 
-fn compute_pool_size(max_connections: usize, pool_clients: usize, workers: usize, coroutines: usize) -> usize {
+fn compute_pool_size(max_connections: usize, pool_clients: usize, cores: usize) -> usize {
     let instance_connections = max_connections / pool_clients.max(1);
-    let size = instance_connections / workers.max(1);
-    size.max(coroutines).clamp(2, 32)
+    // Prefer enough sockets for parallel handlers, but never more than 8 per
+    // project - see `pool_size_from_env` docs.
+    instance_connections.min(cores.max(2)).clamp(2, 8)
 }
 
 /// PHP `_APP_CONNECTIONS_TIMEOUT`: seconds a `Pool::pop()` waits for an idle
@@ -425,7 +427,23 @@ impl ProjectDatabase {
 /// outright on a current-thread runtime.
 fn pop_sync(pool: &Pool<ProjectDb>) -> Result<Connection<ProjectDb>, PoolError> {
     match tokio::runtime::Handle::try_current() {
-        Ok(handle) => tokio::task::block_in_place(move || handle.block_on(pool.pop())),
+        // Prefer spawning the async `pop` onto the runtime and waiting on a
+        // channel under `block_in_place`. Driving `pool.pop()` with
+        // `Handle::block_on` on this worker can run the pool `init` closure
+        // (live SQL connect) while the thread is still entered into the
+        // outer runtime, which panics inside the sync `postgres` client's
+        // nested `Runtime::new()`.
+        Ok(handle) => {
+            let pool = pool.clone();
+            let (tx, rx) = std::sync::mpsc::sync_channel(1);
+            handle.spawn(async move {
+                let _ = tx.send(pool.pop().await);
+            });
+            tokio::task::block_in_place(move || {
+                rx.recv()
+                    .expect("dbForProject pool pop task dropped before reply")
+            })
+        }
         Err(_) => tokio::runtime::Builder::new_multi_thread()
             .worker_threads(1)
             .enable_all()
@@ -717,11 +735,13 @@ pub fn new_platform_database_pool(
     Ok(ProjectDatabase::pooled(pool))
 }
 
-/// Eagerly pop-and-reclaim one connection right after construction so an
-/// unreachable database fails loudly at boot / first `get_or_create`
-/// instead of on some later request's first checkout. `Pool::try_new` only
-/// validates `size`/`timeout`; the `init` closure that actually opens a
-/// socket does not run until the first `pop()`.
+/// Eagerly open one pool slot at construction so an unreachable database
+/// fails loudly at boot / first `get_or_create` instead of mid-request.
+/// Remaining slots are created lazily on first checkout (`Pool` `init`),
+/// which keeps compose Postgres (`max_connections=100`) from being exhausted
+/// when many projects each warm a full pool alongside PHP's idle sockets.
+/// `Pool::try_new` only validates `size`/`timeout`; the `init` closure that
+/// actually opens a socket does not run until `pop()`.
 fn warm_up_pool(pool: &Pool<ProjectDb>, name: &str) -> Result<(), DatabaseError> {
     let connection = pop_sync(pool).map_err(|err| {
         DatabaseError::database(format!("dbForProject pool warm-up failed for {name}: {err}"))
@@ -879,5 +899,16 @@ mod tests {
         assert_eq!(AdapterKind::Mysql.default_port(), 3306);
         assert_eq!(AdapterKind::MariaDb.default_port(), 3306);
         assert_eq!(AdapterKind::Mongo.default_port(), 27017);
+    }
+
+    #[test]
+    fn pool_size_uses_instance_budget_not_worker_division() {
+        // PHP defaults: 151 / 14 ≈ 10, but we clamp per-project pools to 8 and
+        // prefer min(budget, cores) so compose Postgres (max_connections=100)
+        // is not exhausted when many projects are opened.
+        assert_eq!(compute_pool_size(151, 14, 4), 4);
+        assert_eq!(compute_pool_size(151, 14, 16), 8); // clamp
+        assert_eq!(compute_pool_size(20, 14, 1), 2); // clamp floor
+        assert_eq!(compute_pool_size(151, 0, 4), 4); // clients treated as 1 → min(151,4)
     }
 }

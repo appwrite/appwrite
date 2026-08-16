@@ -62,7 +62,7 @@ pub fn create() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 201, appwrite_response::MODEL_TARGET, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let target_id = base::param_str(&ctx, "targetId")?;
@@ -121,7 +121,7 @@ pub fn create() -> Action {
             base::purge_user(&mut db, &user_id);
 
             Ok(document_to_json(&created))
-        })();
-        base::finish(&ctx, 201, appwrite_response::MODEL_TARGET, result)
+        })
+        .await
     })
 }

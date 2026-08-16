@@ -1,8 +1,7 @@
 //! `PATCH /v1/users/:userId/name` (`updateUserName`). Rust port of
 //! `Http/Users/Name/Update.php`.
 
-use appwrite_exception::Exception;
-use serde_json::{json, Value};
+use serde_json::json;
 use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Text;
 
@@ -32,13 +31,13 @@ pub fn update() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_USER, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
             let name = base::param_str(&ctx, "name")?;
             base::update_user_fields_and_search(&mut db, &user_id, json!({ "name": name }))
-        })();
-        base::finish(&ctx, 200, appwrite_response::MODEL_USER, result)
+        })
+        .await
     })
 }

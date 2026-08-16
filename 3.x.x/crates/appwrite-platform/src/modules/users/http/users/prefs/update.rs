@@ -1,8 +1,7 @@
 //! `PATCH /v1/users/:userId/prefs` (`updateUserPrefs`). Rust port of
 //! `Http/Users/Prefs/Update.php`.
 
-use appwrite_exception::Exception;
-use serde_json::{json, Value};
+use serde_json::json;
 use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Assoc;
 
@@ -30,7 +29,7 @@ pub fn update() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_PREFERENCES, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
@@ -40,7 +39,7 @@ pub fn update() -> Action {
                 .unwrap_or_else(|| json!({}));
             base::update_user_fields(&mut db, &user_id, json!({ "prefs": prefs.clone() }))?;
             Ok(prefs)
-        })();
-        base::finish(&ctx, 200, appwrite_response::MODEL_PREFERENCES, result)
+        })
+        .await
     })
 }

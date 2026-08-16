@@ -1,6 +1,5 @@
 //! `POST /v1/users` (`createUser`). Rust port of `Http/Users/Create.php`.
 
-use appwrite_exception::Exception;
 use serde_json::{json, Value};
 use utopia_platform::{Action, HttpMethod};
 use utopia_validators::{Nullable, Text};
@@ -78,7 +77,7 @@ pub fn create() -> Action {
         &["response", "project", "dbForProject", "hooks"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 201, appwrite_response::MODEL_USER, |ctx| {
             let hooks = base::get_hooks(&ctx)?;
             let hasher = PlaintextMarker;
             let password = ctx
@@ -112,7 +111,7 @@ pub fn create() -> Action {
                         .map(str::to_string),
                 },
             )
-        })();
-        base::finish(&ctx, 201, appwrite_response::MODEL_USER, result)
+        })
+        .await
     })
 }

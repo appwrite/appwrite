@@ -236,7 +236,15 @@ impl AppwriteState {
             return self.projects.get(project_id);
         };
         let mut db = platform.lock();
-        let project = db.get_document("projects", project_id, &[], false).ok()?;
+        let project = match db.get_document("projects", project_id, &[], false) {
+            Ok(project) => project,
+            Err(err) => {
+                eprintln!(
+                    "appwrite-platform: resolve_project({project_id}) get_document failed: {err}"
+                );
+                return None;
+            }
+        };
         if project.is_empty() {
             return None;
         }

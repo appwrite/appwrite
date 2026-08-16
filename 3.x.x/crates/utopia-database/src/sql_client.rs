@@ -101,7 +101,7 @@ pub struct SqlClient {
     #[cfg(feature = "mysql")]
     mysql: Option<mysql::Conn>,
     #[cfg(feature = "postgres")]
-    postgres: Option<postgres::Client>,
+    postgres: Option<std::sync::Arc<std::sync::Mutex<PostgresGuard>>>,
     #[cfg(feature = "sqlite")]
     sqlite: Option<rusqlite::Connection>,
 }
@@ -299,14 +299,70 @@ impl SqlClient {
     }
 }
 
-/// The sync `postgres` crate drives tokio-postgres via `Handle::block_on`.
-/// Calling it from an async task panics with "Cannot start a runtime from
-/// within a runtime"; `block_in_place` is the supported escape hatch when a
-/// Tokio worker is already driving the thread (Hyper / `#[tokio::main]`).
+/// Owns a [`postgres::Client`] and never runs its `Drop`/`close_inner` on a
+/// Tokio worker thread. Closing uses the client's private runtime `block_on`,
+/// which panics under Hyper ("Cannot start a runtime from within a runtime").
 #[cfg(feature = "postgres")]
-fn postgres_blocking<T>(f: impl FnOnce() -> T) -> T {
+struct PostgresGuard(Option<postgres::Client>);
+
+#[cfg(feature = "postgres")]
+impl PostgresGuard {
+    fn new(client: postgres::Client) -> Self {
+        Self(Some(client))
+    }
+
+    fn with_mut<T>(&mut self, f: impl FnOnce(&mut postgres::Client) -> T) -> T {
+        f(self.0.as_mut().expect("postgres client present"))
+    }
+}
+
+#[cfg(feature = "postgres")]
+impl Drop for PostgresGuard {
+    fn drop(&mut self) {
+        let Some(client) = self.0.take() else {
+            return;
+        };
+        // Isolate close/drop from Hyper's runtime - same reason as
+        // [`postgres_blocking`] for queries.
+        if tokio::runtime::Handle::try_current().is_ok() {
+            let (tx, rx) = std::sync::mpsc::sync_channel(1);
+            let _ = std::thread::Builder::new()
+                .name("postgres-drop".into())
+                .spawn(move || {
+                    drop(client);
+                    let _ = tx.send(());
+                });
+            let _ = tokio::task::block_in_place(|| rx.recv());
+        } else {
+            drop(client);
+        }
+    }
+}
+
+/// The sync `postgres` crate owns a private current-thread Tokio `Runtime`
+/// per client. Calling that runtime's `block_on` while the calling thread is
+/// entered into Hyper's multi-thread runtime panics with "Cannot start a
+/// runtime from within a runtime". [`tokio::task::block_in_place`] and even
+/// `std::thread::scope` on a Tokio worker have still left that panic on the
+/// worker thread in practice under load.
+///
+/// So when an ambient Tokio handle is present, every connect/query runs on a
+/// detached OS thread that never enters the process runtime (`Client` is held
+/// behind a [`std::sync::Mutex`] so the closure can be `'static`). The caller
+/// waits under `block_in_place` so Hyper can keep scheduling.
+#[cfg(feature = "postgres")]
+fn postgres_blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> T {
     match tokio::runtime::Handle::try_current() {
-        Ok(_) => tokio::task::block_in_place(f),
+        Ok(_) => {
+            let (tx, rx) = std::sync::mpsc::sync_channel(1);
+            std::thread::Builder::new()
+                .name("postgres-sql".into())
+                .spawn(move || {
+                    let _ = tx.send(f());
+                })
+                .expect("spawn postgres-sql thread");
+            tokio::task::block_in_place(|| rx.recv().expect("postgres-sql result"))
+        }
         Err(_) => f(),
     }
 }
@@ -322,7 +378,7 @@ impl SqlClient {
         db: &str,
     ) -> Result<Self, DatabaseError> {
         let url = format!("host={host} port={port} user={user} password={pass} dbname={db}");
-        let client = postgres_blocking(|| postgres::Client::connect(&url, postgres::NoTls))
+        let client = postgres_blocking(move || postgres::Client::connect(&url, postgres::NoTls))
             .map_err(|e| DatabaseError::database(format!("Postgres connect failed: {e}")))?;
         Ok(Self {
             dsn: format!("pgsql:host={host};port={port};dbname={db}"),
@@ -330,7 +386,7 @@ impl SqlClient {
             last_insert_id: "0".into(),
             #[cfg(feature = "mysql")]
             mysql: None,
-            postgres: Some(client),
+            postgres: Some(std::sync::Arc::new(std::sync::Mutex::new(PostgresGuard::new(client)))),
             #[cfg(feature = "sqlite")]
             sqlite: None,
         })
@@ -343,12 +399,20 @@ impl SqlClient {
     ) -> Result<u64, DatabaseError> {
         let client = self
             .postgres
-            .as_mut()
-            .ok_or_else(|| DatabaseError::database("Postgres SQL client is not connected"))?;
+            .as_ref()
+            .ok_or_else(|| DatabaseError::database("Postgres SQL client is not connected"))?
+            .clone();
         let (sql, owned) = rewrite_postgres(sql, params);
-        let refs = postgres_refs(&owned);
-        let n = postgres_blocking(|| client.execute(&sql, refs.as_slice()))
-            .map_err(|e| map_postgres(&e))?;
+        let n = postgres_blocking(move || {
+            let mut guard = client
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            guard.with_mut(|client| {
+                let refs = postgres_refs(&owned);
+                client.execute(&sql, refs.as_slice())
+            })
+        })
+        .map_err(|e| map_postgres(&e))?;
         Ok(n)
     }
 
@@ -359,12 +423,20 @@ impl SqlClient {
     ) -> Result<Vec<IndexMap<String, AttrValue>>, DatabaseError> {
         let client = self
             .postgres
-            .as_mut()
-            .ok_or_else(|| DatabaseError::database("Postgres SQL client is not connected"))?;
+            .as_ref()
+            .ok_or_else(|| DatabaseError::database("Postgres SQL client is not connected"))?
+            .clone();
         let (sql, owned) = rewrite_postgres(sql, params);
-        let refs = postgres_refs(&owned);
-        let rows = postgres_blocking(|| client.query(&sql, refs.as_slice()))
-            .map_err(|e| map_postgres(&e))?;
+        let rows = postgres_blocking(move || {
+            let mut guard = client
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            guard.with_mut(|client| {
+                let refs = postgres_refs(&owned);
+                client.query(&sql, refs.as_slice())
+            })
+        })
+        .map_err(|e| map_postgres(&e))?;
         Ok(rows.iter().map(postgres_row_to_map).collect())
     }
 

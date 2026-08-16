@@ -23,10 +23,12 @@ pub fn create() -> Action {
         )
         .param("name", json!(""), Text::new(128), "User name.", true)
         .http_action(|ctx| async move {
-            let result = base::create_hashed_user(
-                &ctx,
-                Password::create_hash(Password::ARGON2, HashMap::new()),
-            );
-            base::finish(&ctx, 201, appwrite_response::MODEL_USER, result)
+            base::finish_blocking(ctx, 201, appwrite_response::MODEL_USER, |ctx| {
+                base::create_hashed_user(
+                    ctx,
+                    Password::create_hash(Password::ARGON2, HashMap::new()),
+                )
+            })
+            .await
         })
 }

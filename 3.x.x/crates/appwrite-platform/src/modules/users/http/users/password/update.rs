@@ -54,7 +54,7 @@ pub fn update() -> Action {
         &["response", "project", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_USER, |ctx| {
             let project = base::get_project(&ctx)?;
             let user_id = base::param_str(&ctx, "userId")?;
             let password = base::param_str(&ctx, "password")?;
@@ -93,7 +93,7 @@ pub fn update() -> Action {
             base::purge_user(&mut db, &user_id);
 
             Ok(updated)
-        })();
-        base::finish(&ctx, 200, appwrite_response::MODEL_USER, result)
+        })
+        .await
     })
 }

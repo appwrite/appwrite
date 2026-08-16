@@ -1,7 +1,6 @@
 //! `PATCH /v1/users/:userId/mfa` (`updateUserMFA`). Rust port of
 //! `Http/Users/MFA/Update.php`.
 
-use appwrite_exception::Exception;
 use serde_json::{json, Value};
 use utopia_platform::{Action, HttpMethod};
 use utopia_validators::{Boolean, Text};
@@ -31,7 +30,7 @@ pub fn update() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_USER, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
@@ -40,7 +39,7 @@ pub fn update() -> Action {
                 .and_then(Value::as_bool)
                 .unwrap_or(false);
             base::update_user_fields(&mut db, &user_id, json!({ "mfa": mfa }))
-        })();
-        base::finish(&ctx, 200, appwrite_response::MODEL_USER, result)
+        })
+        .await
     })
 }

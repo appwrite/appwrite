@@ -57,7 +57,7 @@ pub fn update() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_USER, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
@@ -115,7 +115,7 @@ pub fn update() -> Action {
             let final_user =
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
             Ok(base::user_with_targets(&mut db, &final_user))
-        })();
-        base::finish(&ctx, 200, appwrite_response::MODEL_USER, result)
+        })
+        .await
     })
 }

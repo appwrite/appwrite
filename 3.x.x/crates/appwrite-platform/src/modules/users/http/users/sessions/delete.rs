@@ -25,7 +25,7 @@ pub fn delete() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<(), Exception> {
+        base::finish_no_content_blocking(ctx, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
@@ -44,7 +44,7 @@ pub fn delete() -> Action {
                 .map_err(base::db_error)?;
             base::purge_user(&mut db, &user_id);
             Ok(())
-        })();
-        base::finish_no_content(&ctx, result)
+        })
+        .await
     })
 }

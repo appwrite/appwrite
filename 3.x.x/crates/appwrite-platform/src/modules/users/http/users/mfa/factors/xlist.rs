@@ -22,7 +22,7 @@ pub fn xlist() -> Action {
         &["response", "dbForProject", "project"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_MFA_FACTORS, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
@@ -72,7 +72,7 @@ pub fn xlist() -> Action {
                 "phone": factor_enabled("phone", true) && !phone.is_empty() && phone_verified,
                 "custom": factor_enabled("custom", false),
             }))
-        })();
-        base::finish(&ctx, 200, appwrite_response::MODEL_MFA_FACTORS, result)
+        })
+        .await
     })
 }

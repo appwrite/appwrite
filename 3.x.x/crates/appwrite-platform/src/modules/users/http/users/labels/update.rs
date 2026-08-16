@@ -1,7 +1,6 @@
 //! `PUT /v1/users/:userId/labels` (`updateUserLabels`). Rust port of
 //! `Http/Users/Labels/Update.php`.
 
-use appwrite_exception::Exception;
 use serde_json::{json, Value};
 use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Text;
@@ -48,7 +47,7 @@ pub fn update() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_USER, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
@@ -64,7 +63,7 @@ pub fn update() -> Action {
                 }
             }
             base::update_user_fields_and_search(&mut db, &user_id, json!({ "labels": unique }))
-        })();
-        base::finish(&ctx, 200, appwrite_response::MODEL_USER, result)
+        })
+        .await
     })
 }

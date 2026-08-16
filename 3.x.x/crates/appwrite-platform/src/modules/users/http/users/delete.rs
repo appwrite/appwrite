@@ -29,7 +29,7 @@ pub fn delete() -> Action {
         &["response", "dbForProject", "publisherForDeletes"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<(), Exception> {
+        base::finish_no_content_blocking(ctx, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let deletes = ctx
                 .container
@@ -67,7 +67,7 @@ pub fn delete() -> Action {
                 .with_resource_type(appwrite_event::RESOURCE_TYPE_USERS);
             let _ = deletes.enqueue(message);
             Ok(())
-        })();
-        base::finish_no_content(&ctx, result)
+        })
+        .await
     })
 }

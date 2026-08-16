@@ -26,8 +26,9 @@ pub fn create() -> Action {
         .http_action(|ctx| async move {
             let mut options = HashMap::new();
             options.insert("cost".to_string(), json!(8));
-            let result =
-                base::create_hashed_user(&ctx, Password::create_hash(Password::BCRYPT, options));
-            base::finish(&ctx, 201, appwrite_response::MODEL_USER, result)
+            base::finish_blocking(ctx, 201, appwrite_response::MODEL_USER, |ctx| {
+                base::create_hashed_user(ctx, Password::create_hash(Password::BCRYPT, options))
+            })
+            .await
         })
 }

@@ -1,7 +1,6 @@
 //! `PATCH /v1/users/:userId/verification/phone` (`updateUserPhoneVerification`).
 //! Rust port of `Http/Users/Verification/Phone/Update.php`.
 
-use appwrite_exception::Exception;
 use serde_json::{json, Value};
 use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Boolean;
@@ -32,7 +31,7 @@ pub fn update() -> Action {
         &["response", "dbForProject"],
     )
     .http_action(|ctx| async move {
-        let result = (|| -> Result<Value, Exception> {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_USER, |ctx| {
             let db_handle = base::get_db(&ctx)?;
             let mut db = db_handle.lock();
             let user_id = base::param_str(&ctx, "userId")?;
@@ -45,7 +44,7 @@ pub fn update() -> Action {
                 &user_id,
                 json!({ "phoneVerification": verification }),
             )
-        })();
-        base::finish(&ctx, 200, appwrite_response::MODEL_USER, result)
+        })
+        .await
     })
 }

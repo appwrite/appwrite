@@ -88,8 +88,9 @@ pub fn create() -> Action {
                     .cloned()
                     .unwrap_or(json!(64)),
             );
-            let result =
-                base::create_hashed_user(&ctx, Password::create_hash(Password::SCRYPT, options));
-            base::finish(&ctx, 201, appwrite_response::MODEL_USER, result)
+            base::finish_blocking(ctx, 201, appwrite_response::MODEL_USER, |ctx| {
+                base::create_hashed_user(ctx, Password::create_hash(Password::SCRYPT, options))
+            })
+            .await
         })
 }
