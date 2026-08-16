@@ -20,6 +20,7 @@ path = "src/main.rs"
 utopia-http = { workspace = true }
 utopia-platform = { workspace = true }
 utopia-di = { workspace = true }
+utopia-console = { workspace = true }
 utopia-database = { workspace = true, features = ["postgres", "mysql", "mongo"] }
 appwrite-platform = { workspace = true, features = ["postgres", "mysql", "mongo"] }
 tokio = { workspace = true }

@@ -1,13 +1,13 @@
 # Appwrite 3.x (Rust)
 
-Rust workspace for the Appwrite 3.x server rewrite. Utopia domain crates live under `crates/utopia-*`. Appwrite product crates live under `crates/appwrite-*`. The runnable HTTP binary is `apps/server`.
+Rust workspace for the Appwrite 3.x server rewrite. Utopia domain crates live under `crates-utopia/*`. Appwrite product crates live under `crates-appwrite/*`. The runnable HTTP binary is `apps/server`.
 
 ## Layout
 
 | Path | Role |
 |------|------|
-| `crates/utopia-*` | Domain building blocks ported from Utopia PHP. No Appwrite product logic here. |
-| `crates/appwrite-*` | Appwrite-specific layers (exceptions, hooks, locale, auth, events, response models, database helpers, platform/Users module). |
+| `crates-utopia/*` | Domain building blocks ported from Utopia PHP. No Appwrite product logic here. |
+| `crates-appwrite/*` | Appwrite-specific layers (exceptions, hooks, locale, auth, events, response models, database helpers, platform/Users module). |
 | `apps/server` | Binary crate (`appwrite-server`). Serves `/v1/users*` (+ health) for Traefik split routing. |
 | `benchmarks/users/` | PHP vs Rust Users service benchmarks. |
 
@@ -56,7 +56,7 @@ Follow Appwrite's **high-level** shape from PHP, not PHP's runtime:
 - PDO, `PDOStatement`, PHP DSNs, reflection-heavy patterns, and other PHP runtime APIs
 - Replicating PHP extension surfaces when a Rust crate already does the job (`postgres`, `mysql`, `rusqlite`, Tokio, Hyper, …)
 
-Prefer idiomatic Rust under the Utopia/Appwrite public APIs. Engine connections live behind `Postgres::connect` / `Mysql::connect_db` / `Sqlite::open` ([`SqlClient`](crates/utopia-database/src/sql_client.rs) is an internal adapter helper, not a PDO port).
+Prefer idiomatic Rust under the Utopia/Appwrite public APIs. Engine connections live behind `Postgres::connect` / `Mysql::connect_db` / `Sqlite::open` ([`SqlClient`](crates-utopia/database/src/sql_client.rs) is an internal adapter helper, not a PDO port).
 
 ## Build and test
 
@@ -69,6 +69,10 @@ cargo test -p appwrite-exception -p appwrite-auth -p appwrite-response
 
 # Memory-mode local server (seeded project + key)
 _APP_RUST_SEED=1 _APP_RUST_SEED_KEY=devkey APPWRITE_BIND=127.0.0.1:8080 cargo run -p appwrite-server
+
+# Per-request access logs (method, URI, status, duration). Also the default
+# for service `appwrite-rust` in the repo's docker-compose.override.yml.
+_APP_VERBOSE=enabled APPWRITE_BIND=127.0.0.1:8080 cargo run -p appwrite-server
 
 # Postgres mode (same env as PHP Appwrite)
 _APP_DB_ADAPTER=postgresql _APP_DB_HOST=127.0.0.1 _APP_DB_PORT=5432 \

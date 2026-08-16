@@ -1,65 +1,65 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/utopia-di",
-    "crates/utopia-validators",
-    "crates/utopia-servers",
-    "crates/utopia-compression",
-    "crates/utopia-telemetry",
-    "crates/utopia-span",
-    "crates/utopia-system",
-    "crates/utopia-http",
-    "crates/utopia-image",
-    "crates/utopia-config",
-    "crates/utopia-console",
-    "crates/utopia-cli",
-    "crates/utopia-user-agent",
-    "crates/utopia-auth",
-    "crates/utopia-storage",
-    "crates/utopia-platform",
-    "crates/utopia-pools",
-    "crates/utopia-ab",
-    "crates/utopia-abuse",
-    "crates/utopia-dsn",
-    "crates/utopia-view",
-    "crates/utopia-locale",
-    "crates/utopia-logger",
-    "crates/utopia-waf",
-    "crates/utopia-domains",
-    "crates/utopia-emails",
-    "crates/utopia-cache",
-    "crates/utopia-queue",
-    "crates/utopia-dns",
-    "crates/utopia-messaging",
-    "crates/utopia-vcs",
-    "crates/utopia-lock",
-    "crates/utopia-circuit-breaker",
-    "crates/utopia-cloudevents",
-    "crates/utopia-replication",
-    "crates/utopia-pay",
-    "crates/utopia-cdn",
-    "crates/utopia-feed",
-    "crates/utopia-openapi",
-    "crates/utopia-nats",
-    "crates/utopia-proxy",
-    "crates/utopia-query",
-    "crates/utopia-database",
-    "crates/utopia-audit",
-    "crates/utopia-usage",
-    "crates/utopia-migration",
-    "crates/utopia-detector",
-    "crates/utopia-websocket",
-    "crates/utopia-orchestration",
-    "crates/utopia-client",
-    "crates/utopia-test-wiremock",
-    "crates/appwrite-exception",
-    "crates/appwrite-hooks",
-    "crates/appwrite-locale",
-    "crates/appwrite-auth",
-    "crates/appwrite-event",
-    "crates/appwrite-response",
-    "crates/appwrite-database",
-    "crates/appwrite-platform",
+    "crates-utopia/di",
+    "crates-utopia/validators",
+    "crates-utopia/servers",
+    "crates-utopia/compression",
+    "crates-utopia/telemetry",
+    "crates-utopia/span",
+    "crates-utopia/system",
+    "crates-utopia/http",
+    "crates-utopia/image",
+    "crates-utopia/config",
+    "crates-utopia/console",
+    "crates-utopia/cli",
+    "crates-utopia/user-agent",
+    "crates-utopia/auth",
+    "crates-utopia/storage",
+    "crates-utopia/platform",
+    "crates-utopia/pools",
+    "crates-utopia/ab",
+    "crates-utopia/abuse",
+    "crates-utopia/dsn",
+    "crates-utopia/view",
+    "crates-utopia/locale",
+    "crates-utopia/logger",
+    "crates-utopia/waf",
+    "crates-utopia/domains",
+    "crates-utopia/emails",
+    "crates-utopia/cache",
+    "crates-utopia/queue",
+    "crates-utopia/dns",
+    "crates-utopia/messaging",
+    "crates-utopia/vcs",
+    "crates-utopia/lock",
+    "crates-utopia/circuit-breaker",
+    "crates-utopia/cloudevents",
+    "crates-utopia/replication",
+    "crates-utopia/pay",
+    "crates-utopia/cdn",
+    "crates-utopia/feed",
+    "crates-utopia/openapi",
+    "crates-utopia/nats",
+    "crates-utopia/proxy",
+    "crates-utopia/query",
+    "crates-utopia/database",
+    "crates-utopia/audit",
+    "crates-utopia/usage",
+    "crates-utopia/migration",
+    "crates-utopia/detector",
+    "crates-utopia/websocket",
+    "crates-utopia/orchestration",
+    "crates-utopia/client",
+    "crates-utopia/test-wiremock",
+    "crates-appwrite/exception",
+    "crates-appwrite/hooks",
+    "crates-appwrite/locale",
+    "crates-appwrite/auth",
+    "crates-appwrite/event",
+    "crates-appwrite/response",
+    "crates-appwrite/database",
+    "crates-appwrite/platform",
     "apps/server",
 ]
 exclude = [
@@ -77,65 +77,65 @@ authors = ["Appwrite Team"]
 rust-version = "1.97"
 
 [workspace.dependencies]
-appwrite-exception = { path = "crates/appwrite-exception", version = "0.1.0" }
-appwrite-hooks = { path = "crates/appwrite-hooks", version = "0.1.0" }
-appwrite-locale = { path = "crates/appwrite-locale", version = "0.1.0" }
-appwrite-auth = { path = "crates/appwrite-auth", version = "0.1.0" }
-appwrite-event = { path = "crates/appwrite-event", version = "0.1.0" }
-appwrite-response = { path = "crates/appwrite-response", version = "0.1.0" }
-appwrite-database = { path = "crates/appwrite-database", version = "0.1.0" }
-appwrite-platform = { path = "crates/appwrite-platform", version = "0.1.0" }
-utopia-abuse = { path = "crates/utopia-abuse", version = "0.1.0" }
-utopia-di = { path = "crates/utopia-di", version = "0.1.0" }
-utopia-validators = { path = "crates/utopia-validators", version = "0.1.0" }
-utopia-servers = { path = "crates/utopia-servers", version = "0.1.0" }
-utopia-compression = { path = "crates/utopia-compression", version = "0.1.0" }
-utopia-telemetry = { path = "crates/utopia-telemetry", version = "0.1.0" }
-utopia-span = { path = "crates/utopia-span", version = "0.1.0" }
-utopia-system = { path = "crates/utopia-system", version = "0.1.0" }
-utopia-http = { path = "crates/utopia-http", version = "0.1.0" }
-utopia-image = { path = "crates/utopia-image", version = "0.1.0" }
-utopia-config = { path = "crates/utopia-config", version = "0.1.0" }
-utopia-console = { path = "crates/utopia-console", version = "0.1.0" }
-utopia-cli = { path = "crates/utopia-cli", version = "0.1.0" }
-utopia-user-agent = { path = "crates/utopia-user-agent", version = "0.1.0" }
-utopia-auth = { path = "crates/utopia-auth", version = "0.1.0" }
-utopia-storage = { path = "crates/utopia-storage", version = "0.1.0" }
-utopia-platform = { path = "crates/utopia-platform", version = "0.1.0" }
-utopia-pools = { path = "crates/utopia-pools", version = "0.1.0" }
-utopia-ab = { path = "crates/utopia-ab", version = "0.1.0" }
-utopia-dsn = { path = "crates/utopia-dsn", version = "0.1.0" }
-utopia-view = { path = "crates/utopia-view", version = "0.1.0" }
-utopia-locale = { path = "crates/utopia-locale", version = "0.1.0" }
-utopia-logger = { path = "crates/utopia-logger", version = "0.1.0" }
-utopia-waf = { path = "crates/utopia-waf", version = "0.1.0" }
-utopia-domains = { path = "crates/utopia-domains", version = "0.1.0" }
-utopia-emails = { path = "crates/utopia-emails", version = "0.1.0" }
-utopia-cache = { path = "crates/utopia-cache", version = "0.1.0", default-features = false }
-utopia-queue = { path = "crates/utopia-queue", version = "0.1.0" }
-utopia-dns = { path = "crates/utopia-dns", version = "0.1.0" }
-utopia-messaging = { path = "crates/utopia-messaging", version = "0.1.0" }
-utopia-vcs = { path = "crates/utopia-vcs", version = "0.1.0" }
-utopia-client = { path = "crates/utopia-client", version = "0.1.0" }
-utopia-test-wiremock = { path = "crates/utopia-test-wiremock", version = "0.1.0" }
-utopia-lock = { path = "crates/utopia-lock", version = "0.1.0" }
-utopia-circuit-breaker = { path = "crates/utopia-circuit-breaker", version = "0.1.0" }
-utopia-detector = { path = "crates/utopia-detector", version = "0.1.0" }
-utopia-websocket = { path = "crates/utopia-websocket", version = "0.1.0" }
-utopia-orchestration = { path = "crates/utopia-orchestration", version = "0.1.0" }
-utopia-audit = { path = "crates/utopia-audit", version = "0.1.0" }
-utopia-usage = { path = "crates/utopia-usage", version = "0.1.0" }
-utopia-migration = { path = "crates/utopia-migration", version = "0.1.0" }
-utopia-database = { path = "crates/utopia-database", version = "0.1.0" }
-utopia-query = { path = "crates/utopia-query", version = "0.1.0" }
-utopia-nats = { path = "crates/utopia-nats", version = "0.1.0" }
-utopia-openapi = { path = "crates/utopia-openapi", version = "0.1.0" }
-utopia-proxy = { path = "crates/utopia-proxy", version = "0.1.0" }
-utopia-cloudevents = { path = "crates/utopia-cloudevents", version = "0.1.0" }
-utopia-replication = { path = "crates/utopia-replication", version = "0.1.0" }
-utopia-pay = { path = "crates/utopia-pay", version = "0.1.0" }
-utopia-cdn = { path = "crates/utopia-cdn", version = "0.1.0" }
-utopia-feed = { path = "crates/utopia-feed", version = "0.1.0" }
+appwrite-exception = { path = "crates-appwrite/exception", version = "0.1.0" }
+appwrite-hooks = { path = "crates-appwrite/hooks", version = "0.1.0" }
+appwrite-locale = { path = "crates-appwrite/locale", version = "0.1.0" }
+appwrite-auth = { path = "crates-appwrite/auth", version = "0.1.0" }
+appwrite-event = { path = "crates-appwrite/event", version = "0.1.0" }
+appwrite-response = { path = "crates-appwrite/response", version = "0.1.0" }
+appwrite-database = { path = "crates-appwrite/database", version = "0.1.0" }
+appwrite-platform = { path = "crates-appwrite/platform", version = "0.1.0" }
+utopia-abuse = { path = "crates-utopia/abuse", version = "0.1.0" }
+utopia-di = { path = "crates-utopia/di", version = "0.1.0" }
+utopia-validators = { path = "crates-utopia/validators", version = "0.1.0" }
+utopia-servers = { path = "crates-utopia/servers", version = "0.1.0" }
+utopia-compression = { path = "crates-utopia/compression", version = "0.1.0" }
+utopia-telemetry = { path = "crates-utopia/telemetry", version = "0.1.0" }
+utopia-span = { path = "crates-utopia/span", version = "0.1.0" }
+utopia-system = { path = "crates-utopia/system", version = "0.1.0" }
+utopia-http = { path = "crates-utopia/http", version = "0.1.0" }
+utopia-image = { path = "crates-utopia/image", version = "0.1.0" }
+utopia-config = { path = "crates-utopia/config", version = "0.1.0" }
+utopia-console = { path = "crates-utopia/console", version = "0.1.0" }
+utopia-cli = { path = "crates-utopia/cli", version = "0.1.0" }
+utopia-user-agent = { path = "crates-utopia/user-agent", version = "0.1.0" }
+utopia-auth = { path = "crates-utopia/auth", version = "0.1.0" }
+utopia-storage = { path = "crates-utopia/storage", version = "0.1.0" }
+utopia-platform = { path = "crates-utopia/platform", version = "0.1.0" }
+utopia-pools = { path = "crates-utopia/pools", version = "0.1.0" }
+utopia-ab = { path = "crates-utopia/ab", version = "0.1.0" }
+utopia-dsn = { path = "crates-utopia/dsn", version = "0.1.0" }
+utopia-view = { path = "crates-utopia/view", version = "0.1.0" }
+utopia-locale = { path = "crates-utopia/locale", version = "0.1.0" }
+utopia-logger = { path = "crates-utopia/logger", version = "0.1.0" }
+utopia-waf = { path = "crates-utopia/waf", version = "0.1.0" }
+utopia-domains = { path = "crates-utopia/domains", version = "0.1.0" }
+utopia-emails = { path = "crates-utopia/emails", version = "0.1.0" }
+utopia-cache = { path = "crates-utopia/cache", version = "0.1.0", default-features = false }
+utopia-queue = { path = "crates-utopia/queue", version = "0.1.0" }
+utopia-dns = { path = "crates-utopia/dns", version = "0.1.0" }
+utopia-messaging = { path = "crates-utopia/messaging", version = "0.1.0" }
+utopia-vcs = { path = "crates-utopia/vcs", version = "0.1.0" }
+utopia-client = { path = "crates-utopia/client", version = "0.1.0" }
+utopia-test-wiremock = { path = "crates-utopia/test-wiremock", version = "0.1.0" }
+utopia-lock = { path = "crates-utopia/lock", version = "0.1.0" }
+utopia-circuit-breaker = { path = "crates-utopia/circuit-breaker", version = "0.1.0" }
+utopia-detector = { path = "crates-utopia/detector", version = "0.1.0" }
+utopia-websocket = { path = "crates-utopia/websocket", version = "0.1.0" }
+utopia-orchestration = { path = "crates-utopia/orchestration", version = "0.1.0" }
+utopia-audit = { path = "crates-utopia/audit", version = "0.1.0" }
+utopia-usage = { path = "crates-utopia/usage", version = "0.1.0" }
+utopia-migration = { path = "crates-utopia/migration", version = "0.1.0" }
+utopia-database = { path = "crates-utopia/database", version = "0.1.0" }
+utopia-query = { path = "crates-utopia/query", version = "0.1.0" }
+utopia-nats = { path = "crates-utopia/nats", version = "0.1.0" }
+utopia-openapi = { path = "crates-utopia/openapi", version = "0.1.0" }
+utopia-proxy = { path = "crates-utopia/proxy", version = "0.1.0" }
+utopia-cloudevents = { path = "crates-utopia/cloudevents", version = "0.1.0" }
+utopia-replication = { path = "crates-utopia/replication", version = "0.1.0" }
+utopia-pay = { path = "crates-utopia/pay", version = "0.1.0" }
+utopia-cdn = { path = "crates-utopia/cdn", version = "0.1.0" }
+utopia-feed = { path = "crates-utopia/feed", version = "0.1.0" }
 
 bytes = "1"
 http = "1"

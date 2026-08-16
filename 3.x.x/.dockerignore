@@ -3,9 +3,7 @@ target
 .git
 **/.git
 benchmarks
-**/benches
 **/*.md
-!crates/*/README.md
-!apps/server/README.md
+!**/README.md
 Dockerfile
 .dockerignore

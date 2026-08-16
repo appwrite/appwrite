@@ -11,7 +11,7 @@ Port Appwrite services to Rust under this workspace. Match PHP **product behavio
 
 ## Module and HTTP file layout (parity with PHP)
 
-Mirror `src/Appwrite/Platform/Modules/{Name}/` in `crates/appwrite-platform/src/modules/{name}/`:
+Mirror `src/Appwrite/Platform/Modules/{Name}/` in `crates-appwrite/platform/src/modules/{name}/`:
 
 | PHP | Rust |
 |-----|------|
@@ -29,7 +29,7 @@ Rules:
 - **Shared logic belongs on `base.rs` (PHP `Base`).** PHP uses `class Create extends Base` and `$this->createUser(...)`. Rust has no class inheritance; action files call `base::create_user` / `base::create_hashed_user_action` / etc. instead. Do not invent parallel `helpers.rs` / `shared.rs` modules beside actions for that role.
 - Directory names are snake_case versions of the PHP path (`recovery_codes`, `jwts`, `md5`).
 
-Reference layout: `crates/appwrite-platform/src/modules/users/http/users/` ↔ `Modules/Users/Http/Users/`.
+Reference layout: `crates-appwrite/platform/src/modules/users/http/users/` ↔ `Modules/Users/Http/Users/`.
 
 ## Drop / avoid
 
@@ -42,7 +42,7 @@ Reference layout: `crates/appwrite-platform/src/modules/users/http/users/` ↔ `
 
 Call engine adapters (`Postgres::connect`, `Mysql::connect_db`, `MariaDb::connect_db`, `Sqlite::open`, `Mongo::connect`). Prefer the high-level `Database` / `Document` / `Query` API from `appwrite-platform` (`dbForProject`, `dbForPlatform`).
 
-[`SqlClient`](crates/utopia-database/src/sql_client.rs) is the Rust connection layer **behind** those adapters (using `postgres` / `mysql` / `rusqlite`). It is not a PDO port and should stay out of product code.
+[`SqlClient`](crates-utopia/database/src/sql_client.rs) is the Rust connection layer **behind** those adapters (using `postgres` / `mysql` / `rusqlite`). It is not a PDO port and should stay out of product code.
 
 ### Connection pooling
 
