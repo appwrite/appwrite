@@ -288,11 +288,12 @@ impl Http {
                     match_.as_ref().map(|m| m.route.clone()),
                     empty_params(),
                     None,
+                    None,
                 )
                 .await
             {
                 let _ = self
-                    .run_error_hooks(&[], &request, &response, None, empty_params(), Some(e))
+                    .run_error_hooks(&[], &request, &response, None, empty_params(), Some(e), None)
                     .await;
             }
             return Ok(());
@@ -301,7 +302,7 @@ impl Http {
         let Some(m) = match_ else {
             let err = HttpError::not_found();
             let _ = self
-                .run_error_hooks(&[], &request, &response, None, empty_params(), Some(err))
+                .run_error_hooks(&[], &request, &response, None, empty_params(), Some(err), None)
                 .await;
             return Ok(());
         };
@@ -315,6 +316,12 @@ impl Http {
             .collect();
         let include_global = route.get_hook_flag();
 
+        // One request-scoped DI container shared across init hooks, the route
+        // action, and shutdown hooks -- mirrors PHP `Utopia\App`'s single
+        // per-request `Container`, so resources an `api`-group `Init` hook binds
+        // (`project`, `dbForProject`, `apiKey`, ...) stay visible downstream.
+        let shared_context = self.adapter.context();
+
         let result = async {
             self.run_hooks(
                 &self.init,
@@ -325,6 +332,7 @@ impl Http {
                 Some(route.clone()),
                 &ctx_params,
                 None,
+                Some(&shared_context),
             )
             .await?;
 
@@ -340,6 +348,7 @@ impl Http {
                     Some(route.clone()),
                     &ctx_params,
                     None,
+                    Some(&shared_context),
                 )?;
                 action(ctx).await?;
             }
@@ -353,6 +362,7 @@ impl Http {
                 Some(route.clone()),
                 &ctx_params,
                 None,
+                Some(&shared_context),
             )
             .await?;
             Ok::<(), HttpError>(())
@@ -368,6 +378,7 @@ impl Http {
                     Some(route),
                     &ctx_params,
                     Some(e),
+                    Some(&shared_context),
                 )
                 .await;
         }
@@ -417,11 +428,20 @@ impl Http {
                     None,
                     empty_params(),
                     None,
+                    Some(&context),
                 )
                 .await
             {
                 let _ = self
-                    .run_error_hooks(&[], &req_arc, &response, None, empty_params(), Some(e))
+                    .run_error_hooks(
+                        &[],
+                        &req_arc,
+                        &response,
+                        None,
+                        empty_params(),
+                        Some(e),
+                        Some(&context),
+                    )
                     .await;
             } else if let Some((bytes, mime)) = self.files.get(request.uri()).cloned() {
                 response.set_content_type(mime);
@@ -461,6 +481,7 @@ impl Http {
         route: Option<Arc<Route>>,
         path_params: &HashMap<String, Value>,
         error: Option<HttpError>,
+        shared: Option<&Container>,
     ) -> Result<()> {
         if hooks.is_empty() {
             return Ok(());
@@ -483,6 +504,7 @@ impl Http {
                 route.clone(),
                 path_params,
                 error.clone(),
+                shared,
             )?;
             (hook.action)(ctx).await?;
             if response.is_sent() {
@@ -492,6 +514,7 @@ impl Http {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn run_error_hooks(
         &self,
         groups: &[String],
@@ -500,6 +523,7 @@ impl Http {
         route: Option<Arc<Route>>,
         path_params: &HashMap<String, Value>,
         error: Option<HttpError>,
+        shared: Option<&Container>,
     ) -> Result<()> {
         self.run_hooks(
             &self.errors,
@@ -510,10 +534,12 @@ impl Http {
             route,
             path_params,
             error,
+            shared,
         )
         .await
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn build_context(
         &self,
         hook: &Hook,
@@ -522,11 +548,15 @@ impl Http {
         route: Option<Arc<Route>>,
         path_params: &HashMap<String, Value>,
         error: Option<Arc<HttpError>>,
+        shared: Option<&Container>,
     ) -> Result<ActionContext> {
         // Prefer shared app container when the action/hook does not need DI bindings.
-        // Otherwise use a request-scoped child so concurrent requests never mutate parent.
+        // Otherwise reuse the request-scoped container passed in from `execute()`/`run()`
+        // (falling back to a fresh child) so concurrent requests never mutate the parent,
+        // while resources bound by one hook stay visible to the next hook/action in the
+        // same request -- mirrors PHP `Utopia\App`'s single per-request `Container`.
         let context = if error.is_some() || hook.has_injections() {
-            let context = self.adapter.context();
+            let context = shared.cloned().unwrap_or_else(|| self.adapter.context());
             if let Some(err) = &error {
                 context.set_cached("error", Resource::new(err.clone()));
             }

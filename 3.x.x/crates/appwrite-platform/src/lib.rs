@@ -7,15 +7,22 @@
 //! `Appwrite\*` services (`$hooks`, `$publisherForDeletes`,
 //! `$publisherForAudits`, ...) into the Utopia `App`/`Platform` at boot.
 
+use std::sync::Arc;
+
 use appwrite_auth::Password;
 use appwrite_event::{
     AuditPublisher, DeletePublisher, MemoryAuditPublisher, MemoryDeletePublisher,
 };
 use appwrite_exception::Exception;
 use appwrite_hooks::Hooks;
-use utopia_di::Container;
+use utopia_di::{Container, Resource};
 use utopia_platform::{Module, Platform};
 use utopia_validators::Validator;
+
+pub mod modules;
+pub mod state;
+
+pub use state::AppwriteState;
 
 /// Appwrite platform facade.
 pub struct AppwritePlatform {
@@ -121,4 +128,32 @@ impl Default for AppwritePlatform {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Build the global DI resources container plus a [`Platform`] with the
+/// `core` (shared `api`-group `Init`/`Error`/`Shutdown` hooks) and `users`
+/// modules registered, ready for [`Platform::init_http`].
+///
+/// The returned [`Container`] must be the one handed to the
+/// [`utopia_http::Http`] adapter (e.g. `HyperServer::bind(&bind,
+/// resources)`), since every request's DI container is a
+/// [`Container::child`] of it -- this is how the `api`-group `Init` hook and
+/// every route action resolve `appwriteState`, `hooks`, `publisherForDeletes`,
+/// and `publisherForAudits` (PHP's globally-bound `app/init.php` resources)
+/// without re-registering them per request.
+#[must_use]
+pub fn build(state: Arc<AppwriteState>) -> (Container, Platform) {
+    let resources = Container::new();
+    resources.set_cached("appwriteState", Resource::new(state.clone()));
+    resources.set_cached("hooks", Resource::new(state.hooks.clone()));
+    resources.set_cached("publisherForDeletes", Resource::new(state.deletes.clone()));
+    resources.set_cached("publisherForAudits", Resource::new(state.audits.clone()));
+    resources.set_cached(
+        "passwordsDictionary",
+        Resource::new(state.passwords_dictionary.clone()),
+    );
+
+    let platform = Platform::new(modules::core::module()).add_module(modules::users::module());
+
+    (resources, platform)
 }

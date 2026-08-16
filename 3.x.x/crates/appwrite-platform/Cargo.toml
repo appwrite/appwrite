@@ -11,12 +11,22 @@ readme = "README.md"
 keywords = ["appwrite", "platform"]
 categories = ["web-programming"]
 
+[features]
+default = ["memory"]
+memory = []
+postgres = ["utopia-database/postgres"]
+
 [dependencies]
+serde = { workspace = true }
 serde_json = { workspace = true }
-utopia-platform = { workspace = true }
+utopia-platform = { workspace = true, features = ["http"] }
 utopia-http = { workspace = true }
 utopia-di = { workspace = true }
 utopia-validators = { workspace = true }
+utopia-database = { workspace = true }
+utopia-cache = { workspace = true }
+utopia-auth = { workspace = true }
+utopia-servers = { workspace = true }
 appwrite-exception = { workspace = true }
 appwrite-hooks = { workspace = true }
 appwrite-locale = { workspace = true }
@@ -24,6 +34,15 @@ appwrite-auth = { workspace = true }
 appwrite-event = { workspace = true }
 appwrite-response = { workspace = true }
 appwrite-database = { workspace = true }
+chrono = { workspace = true }
+jsonwebtoken = { workspace = true }
+rand = { workspace = true }
+parking_lot = { workspace = true }
+once_cell = { workspace = true }
+regex = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
 
 [[bench]]
 name = "smoke"
