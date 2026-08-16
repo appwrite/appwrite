@@ -96,6 +96,17 @@ export async function canAccessPostgresDatabaseSettings(
   return canCreateDatabase(access, features)
 }
 
+/** Native MySQL database Settings tab. */
+export async function canAccessMysqlDatabaseSettings(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canCreateDatabase(access, features)
+}
+
 /** Table-level Security/Settings. */
 export async function canAccessTableSecuritySettings(
   queryClient: QueryClient,
