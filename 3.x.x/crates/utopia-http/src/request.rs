@@ -184,6 +184,26 @@ impl Request {
         }
     }
 
+    /// Populate [`Self::cookies`] from the `Cookie` header, so
+    /// [`Self::cookie`] can answer without re-parsing per lookup.
+    pub fn parse_cookies_from_header(&mut self) {
+        if !self.cookies.is_empty() {
+            return;
+        }
+        let header = self.header_line("cookie");
+        for pair in header.split(';') {
+            let Some((name, value)) = pair.split_once('=') else {
+                continue;
+            };
+            let name = name.trim();
+            if name.is_empty() {
+                continue;
+            }
+            self.cookies
+                .insert(name.to_string(), urlencoding_decode(value.trim()));
+        }
+    }
+
     /// Populate [`Self::payload`] from [`Self::raw_payload`] using `Content-Type`.
     ///
     /// Mirrors Utopia PHP's request body → params merge for JSON objects and
@@ -336,6 +356,27 @@ mod payload_parse_tests {
         req.parse_payload_from_raw();
         assert_eq!(req.param_ref("userId"), Some(&json!("u1")));
         assert_eq!(req.param_ref("email"), Some(&json!("a@b.c")));
+    }
+
+    #[test]
+    fn parse_cookies_splits_the_cookie_header() {
+        let mut req = Request::new("GET", "/v1/users");
+        req.set_header("cookie", "a_session_console=abc; other=1; padded = 2 ");
+        req.parse_cookies_from_header();
+
+        assert_eq!(req.cookie("a_session_console", ""), "abc");
+        assert_eq!(req.cookie("other", ""), "1");
+        assert_eq!(req.cookie("padded", ""), "2");
+        assert_eq!(req.cookie("missing", "fallback"), "fallback");
+    }
+
+    #[test]
+    fn parse_cookies_decodes_percent_escapes() {
+        let mut req = Request::new("GET", "/v1/users");
+        req.set_header("cookie", "token=a%2Bb%3Dc");
+        req.parse_cookies_from_header();
+
+        assert_eq!(req.cookie("token", ""), "a+b=c");
     }
 
     #[test]

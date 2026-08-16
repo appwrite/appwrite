@@ -206,6 +206,7 @@ async fn hyper_to_utopia(req: HyperRequest<Incoming>) -> Result<Request> {
         request.set_raw_payload(raw);
     }
     request.parse_query_from_uri();
+    request.parse_cookies_from_header();
     request.parse_payload_from_raw();
     Ok(request)
 }

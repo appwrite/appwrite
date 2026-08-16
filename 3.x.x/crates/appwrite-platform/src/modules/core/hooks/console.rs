@@ -223,12 +223,14 @@ pub fn resolve(
 
     // PHP grants `users.read` to an impersonator so the Console can look a
     // target user up before impersonation starts, and keeps it for the
-    // duration of the impersonation.
+    // duration of the impersonation. Both arms of PHP's condition
+    // (`impersonator` set, or an impersonation already resolved) require the
+    // capability, so a caller who merely sends the headers gains nothing.
     let impersonator = user
         .get_attribute("impersonator")
         .as_bool()
         .unwrap_or(false);
-    if (impersonator || impersonating(ctx)) && !scopes.iter().any(|scope| scope == "users.read") {
+    if impersonator && !scopes.iter().any(|scope| scope == "users.read") {
         scopes.push("users.read".to_string());
     }
     scopes.sort_unstable();
@@ -273,33 +275,6 @@ fn admin_scopes(db: &mut ProjectDb, user: &utopia_database::Document, project: &
         scopes.extend(scopes_for_role(role).into_iter().map(str::to_string));
     }
     Some(scopes)
-}
-
-/// Whether the request asks to impersonate someone, by header or by the
-/// query-param fallback the Console uses for direct file URLs.
-fn impersonating(ctx: &ActionContext) -> bool {
-    const HEADERS: [&str; 3] = [
-        "x-appwrite-impersonate-user-id",
-        "x-appwrite-impersonate-user-email",
-        "x-appwrite-impersonate-user-phone",
-    ];
-    const PARAMS: [&str; 6] = [
-        "impersonateuserid",
-        "impersonateUserId",
-        "impersonateemail",
-        "impersonateEmail",
-        "impersonatephone",
-        "impersonatePhone",
-    ];
-    HEADERS
-        .iter()
-        .any(|header| !ctx.request().header_line(header).is_empty())
-        || PARAMS.iter().any(|param| {
-            ctx.request()
-                .param_ref(param)
-                .and_then(Value::as_str)
-                .is_some_and(|value| !value.is_empty())
-        })
 }
 
 /// PHP's `project-<projectId>-<role>` handling: a team-wide role always
