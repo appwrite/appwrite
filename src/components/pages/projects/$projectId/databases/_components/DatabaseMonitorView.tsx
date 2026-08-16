@@ -1,3 +1,4 @@
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -181,7 +182,7 @@ export function DatabaseMonitorView({
     (database as { specification?: string | null } | null)?.specification ??
     null
   const apiSpecId =
-    dedicated?.specification?.trim() || productSpecId?.trim() || null
+    coerceTrimmedString(dedicated?.specification) || coerceTrimmedString(productSpecId) || null
   const specId = getEffectiveDatabaseSpecIdForMonitoring(
     databaseType,
     apiSpecId,

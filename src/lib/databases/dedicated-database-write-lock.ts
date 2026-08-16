@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { translate } from '@/lib/i18n/translate'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import { readDatabaseOperationalStatus } from '@/lib/databases/read-database-operational-status'
 
 export type DedicatedDatabaseOperationsLockReason = 'failed'
@@ -32,7 +33,7 @@ const STATUS_OPERATIONS_LOCK_REASONS: Partial<
 export function getDedicatedDatabaseOperationsLock(
   status: string | null | undefined,
 ): DedicatedDatabaseOperationsLockState {
-  const normalized = status?.trim().toLowerCase()
+  const normalized = coerceTrimmedString(status).toLowerCase()
   if (!normalized) {
     return { locked: false, reason: null }
   }

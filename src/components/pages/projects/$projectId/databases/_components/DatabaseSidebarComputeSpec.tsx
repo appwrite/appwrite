@@ -24,6 +24,7 @@ import {
   hasDedicatedDatabaseCompute,
   resolveDatabaseComputeSpecId,
 } from '@/lib/databases/database-compute'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import {
   projectSupportsDedicatedDatabaseCompute,
   formatDedicatedDatabaseRegionUnavailableDescription,
@@ -162,8 +163,8 @@ export function DatabaseSidebarComputeSpec({
         mode === 'postgres' ? postgresDatabase : mysqlDatabase
       const nativeDedicated = dedicatedById.get(databaseId)
       const specSlug =
-        nativeDatabase?.specification?.trim() ||
-        nativeDedicated?.specification?.trim() ||
+        coerceTrimmedString(nativeDatabase?.specification) ||
+        coerceTrimmedString(nativeDedicated?.specification) ||
         undefined
       const cpu = nativeDatabase?.cpu ?? nativeDedicated?.cpu ?? undefined
       const memory =

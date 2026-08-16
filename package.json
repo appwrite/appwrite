@@ -9,6 +9,7 @@
     "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack",
     "dev": "tsr generate && vite dev --port 3000",
     "e2e": "playwright test",
+    "e2e:mysql": "playwright test --project=console-mysql",
     "e2e:ui": "playwright test --ui",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

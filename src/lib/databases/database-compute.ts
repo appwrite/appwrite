@@ -4,6 +4,7 @@ import {
   engineFromDatabaseTypeValue,
   isNativeDatabaseTypeValue,
 } from '@/lib/databases/database-type'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import {
   formatDedicatedSpecCpu,
   formatDedicatedSpecMemory,
@@ -52,9 +53,9 @@ export function readDatabaseLifecycleStatus(status: unknown): string | null {
 
 /** Spec slug from a product or dedicated payload. */
 export function readDatabaseSpecification(
-  value: string | null | undefined,
+  value: unknown,
 ): string | null {
-  const trimmed = value?.trim()
+  const trimmed = coerceTrimmedString(value)
   return trimmed ? trimmed : null
 }
 
@@ -230,7 +231,7 @@ export function buildProductDedicatedCardSource(
 
   const type = coerceDatabaseType(db.databaseType)
   const api =
-    dedicated?.api?.trim() ||
+    coerceTrimmedString(dedicated?.api) ||
     (type === DatabaseType.Documentsdb
       ? 'documentsdb'
       : type === DatabaseType.Vectorsdb
@@ -241,7 +242,7 @@ export function buildProductDedicatedCardSource(
 
   const engineHint =
     productDedicatedEngineHints(db.databaseType)[0] ?? 'postgresql'
-  const engine = dedicated?.engine?.trim() || engineHint
+  const engine = coerceTrimmedString(dedicated?.engine) || engineHint
 
   const status =
     readDatabaseLifecycleStatus(dedicated?.status) ||

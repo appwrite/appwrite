@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import {
+  coerceTrimmedString,
   dedicatedDatabaseStatusBadgeVariant,
   isDedicatedDatabaseReady,
 } from '@/lib/databases/dedicated-database-status'
@@ -20,18 +21,19 @@ export function DedicatedDatabaseStatusBadge({
   onlyWhenNotReady = false,
 }: DedicatedDatabaseStatusBadgeProps) {
   const t = useT()
-  if (!status?.trim()) return null
-  if (onlyWhenNotReady && isDedicatedDatabaseReady(status)) return null
+  const normalized = coerceTrimmedString(status)
+  if (!normalized) return null
+  if (onlyWhenNotReady && isDedicatedDatabaseReady(normalized)) return null
 
   return (
     <Badge
-      variant={dedicatedDatabaseStatusBadgeVariant(status)}
+      variant={dedicatedDatabaseStatusBadgeVariant(normalized)}
       className={cn(
         'text-[10px] font-medium shrink-0 border px-2 py-0.5 capitalize',
         className,
       )}
     >
-      {localizeResourceStatusLabel(status, t)}
+      {localizeResourceStatusLabel(normalized, t)}
     </Badge>
   )
 }

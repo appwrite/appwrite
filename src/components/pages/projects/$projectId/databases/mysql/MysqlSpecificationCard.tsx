@@ -22,6 +22,7 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import { cn } from '@/lib/utils'
 import { useMemo } from 'react'
 import { useT } from '@/lib/i18n/translate'
@@ -146,7 +147,7 @@ export function MysqlSpecificationCard({
   const nav = mysqlNav({ projectId, databaseId })
 
   const specLabel =
-    currentSpec?.label ?? database?.specification?.trim() ?? 'Compute tier'
+    currentSpec?.label ?? (coerceTrimmedString(database?.specification) || 'Compute tier')
   const cpuLabel =
     currentSpec?.cpu ??
     (database?.cpu ? formatDedicatedSpecCpu(database.cpu) : '-')

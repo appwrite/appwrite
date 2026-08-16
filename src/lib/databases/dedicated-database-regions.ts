@@ -1,3 +1,4 @@
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 /** Regions where dedicated database compute and native SQL engines are available. */
 export const DEDICATED_DATABASE_SUPPORTED_REGIONS = ['fra', 'nyc'] as const
 
@@ -15,7 +16,7 @@ export const DEDICATED_DATABASE_REGION_DISPLAY_NAMES: Record<
 export function normalizeProjectRegion(
   region: string | null | undefined,
 ): string {
-  return region?.trim().toLowerCase() ?? ''
+  return coerceTrimmedString(region).toLowerCase()
 }
 
 export function projectSupportsDedicatedDatabaseCompute(

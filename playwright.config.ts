@@ -49,10 +49,33 @@ const config: PlaywrightTestConfig = {
     {
       name: 'console',
       dependencies: ['setup'],
-      testMatch: /console\..*\.spec\.ts/,
+      // Smoke / read-only console specs only (exclude MySQL write suites).
+      testMatch: /console\.(?!mysql\.).*\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState,
+      },
+    },
+    {
+      name: 'console-mysql',
+      dependencies: ['setup'],
+      testMatch: /console\.mysql\..*\.spec\.ts/,
+      timeout: 15 * 60_000,
+      // One worker: each suite provisions a dedicated MySQL instance.
+      fullyParallel: false,
+      workers: 1,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState,
+        // Keep videos for completed MySQL coverage runs.
+        video: {
+          mode: 'on',
+          size: { width: 1280, height: 720 },
+        },
+        trace: 'retain-on-failure',
+        screenshot: 'only-on-failure',
+        actionTimeout: 60_000,
+        navigationTimeout: 90_000,
       },
     },
   ],
@@ -66,6 +89,7 @@ const config: PlaywrightTestConfig = {
         process.env.PUBLIC_APPWRITE_MULTI_REGION || '',
       VITE_STRIPE_PUBLISHABLE_KEY:
         process.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
+      // Cloud profile enables native MySQL / dedicated DB feature flags.
       VITE_CONSOLE_PROFILE: process.env.VITE_CONSOLE_PROFILE || 'cloud',
       VITE_CONSOLE_FINGERPRINT_KEY:
         process.env.VITE_CONSOLE_FINGERPRINT_KEY || '',

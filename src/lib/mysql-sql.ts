@@ -135,6 +135,9 @@ export function buildMysqlListSchemasSql(
   const whereClause =
     conditions.length > 0 ? `WHERE ${conditions.join('\n  AND ')}` : ''
 
+  // CONVERT to utf8mb4: cloud SQL API returns SCHEMA_NAME as VARBINARY byte
+  // arrays otherwise, which the console must decode before the schema picker
+  // can render.
   const base = `
 SELECT CONVERT(SCHEMA_NAME USING utf8mb4) AS schema_name
 FROM information_schema.SCHEMATA

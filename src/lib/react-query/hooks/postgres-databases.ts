@@ -147,6 +147,7 @@ import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 import { DEFAULT_STALE_TIME } from './constants'
 import {
   DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
+  coerceTrimmedString,
   shouldPollDedicatedDatabaseStatus,
 } from '@/lib/databases/dedicated-database-status'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
@@ -241,7 +242,9 @@ export async function fetchPostgresSchemasPage(
   ])
 
   const rows = executionResultRows<PostgresSchemaRow>(dataExecution)
-  const schemas = rows.map((row) => row.schema_name).filter(Boolean)
+  const schemas = rows
+    .map((row) => coerceTrimmedString(row.schema_name))
+    .filter(Boolean)
   const total = parsePostgresCountTotal(countExecution, schemas.length)
 
   return {

@@ -40,6 +40,7 @@ import {
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import {
   DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
+  coerceTrimmedString,
   shouldPollDedicatedDatabaseStatus,
 } from '@/lib/databases/dedicated-database-status'
 import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
@@ -183,12 +184,12 @@ const DATABASE_LIFECYCLE_FAILED_STATUSES = new Set([
 ])
 
 function isDatabaseLifecycleFailed(status: string | null | undefined): boolean {
-  const normalized = status?.trim().toLowerCase()
+  const normalized = coerceTrimmedString(status).toLowerCase()
   return !!normalized && DATABASE_LIFECYCLE_FAILED_STATUSES.has(normalized)
 }
 
 function isDatabaseLifecycleReady(status: string | null | undefined): boolean {
-  const normalized = status?.trim().toLowerCase()
+  const normalized = coerceTrimmedString(status).toLowerCase()
   return !!normalized && DEDICATED_DATABASE_READY_STATUSES.has(normalized)
 }
 

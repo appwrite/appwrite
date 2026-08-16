@@ -43,6 +43,7 @@ import {
   productFromDatabaseTypeValue,
 } from '@/lib/databases/database-type'
 import { resolveDatabaseComputeSpecId } from '@/lib/databases/database-compute'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import { isDatabaseTypeFeatureEnabled } from '@/lib/database-routes'
 import { DEDICATED_FEATURE_UNAVAILABLE } from '@/lib/databases/dedicated-engine'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
@@ -191,7 +192,7 @@ export function DatabaseSelector({
     for (const dedicated of dedicatedData?.databases ?? []) {
       if (!dedicated.$id) continue
       map.set(dedicated.$id, {
-        specSlug: dedicated.specification?.trim() || null,
+        specSlug: coerceTrimmedString(dedicated.specification) || null,
         engine: dedicated.engine ?? null,
         api: dedicated.api ?? null,
         status: dedicated.status ?? null,
@@ -222,7 +223,7 @@ export function DatabaseSelector({
         databaseType: db.type,
         status: db.status,
         replicas: typeof db.replicas === 'number' ? db.replicas : null,
-        specification: db.specification?.trim() ? db.specification : null,
+        specification: coerceTrimmedString(db.specification) || null,
       }
       return {
         id: db.$id,

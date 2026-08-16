@@ -67,7 +67,12 @@ export function MysqlConnectionsHeaderLimit({
     return (clientConnectionCount / maxConnections) * 100
   }, [clientConnectionCount, maxConnections])
 
-  const connectionsLimitLabel = currentSpec?.connections?.trim()
+  const connectionsLimitLabel =
+    typeof currentSpec?.connections === 'string'
+      ? currentSpec.connections.trim()
+      : currentSpec?.connections != null
+        ? String(currentSpec.connections).trim()
+        : ''
   const isServerlessLimit = connectionsLimitLabel === 'Serverless'
 
   if (!connectionsLimitLabel || connectionsLimitLabel === '-') {

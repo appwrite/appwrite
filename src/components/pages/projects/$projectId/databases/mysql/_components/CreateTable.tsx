@@ -71,7 +71,13 @@ type DraftIndex = {
   formState: MysqlIndexFormState
 }
 
+/** Unquoted MySQL identifiers (table/column/index names created in the UI). */
 const MYSQL_IDENTIFIER_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/
+/**
+ * Existing managed schemas are often the database $id and may start with a digit.
+ * CREATE TABLE always quotes schema names, so leading digits are valid.
+ */
+const MYSQL_SCHEMA_IDENTIFIER_REGEX = /^[A-Za-z0-9_]+$/
 
 function reorderList<T>(list: T[], fromIndex: number, toIndex: number): T[] {
   const copy = [...list]
@@ -157,7 +163,7 @@ function createDefaultTableColumns(): DraftColumn[] {
       name: 'created_at',
       typeState: createDefaultMysqlColumnTypeState('timestamp with time zone'),
       nullable: false,
-      defaultValue: 'now()',
+      defaultValue: 'CURRENT_TIMESTAMP',
     }),
   ]
 }
@@ -415,7 +421,7 @@ export function CreateTable({
       toast.error(t('Schema name is required'))
       return
     }
-    if (!MYSQL_IDENTIFIER_REGEX.test(normalizedSchema)) {
+    if (!MYSQL_SCHEMA_IDENTIFIER_REGEX.test(normalizedSchema)) {
       toast.error(t('Schema name must use letters, numbers, and underscores only.'))
       return
     }
