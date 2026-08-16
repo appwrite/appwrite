@@ -46,43 +46,6 @@ pub fn action() -> Action {
                 return send_error(&ctx, &Exception::new(Exception::PROJECT_NOT_FOUND));
             };
 
-            let key_secret = ctx.request().header_line("x-appwrite-key");
-            let mut console_user = None;
-            let key = if !key_secret.is_empty() {
-                Key::decode_standard(&project, &key_secret)
-            } else if let Some(session) = console::resolve(&state, &ctx, &project) {
-                console_user = Some(session.user);
-                session.key
-            } else {
-                Key::guest(project_id.clone())
-            };
-
-            if key.expired {
-                return send_error(&ctx, &Exception::new(Exception::PROJECT_KEY_EXPIRED));
-            }
-
-            // PHP grants `users.read` to an impersonator so the Console can
-            // look a target user up before impersonation starts.
-            let mut key = key;
-            if console_user
-                .as_ref()
-                .and_then(|user| user.get("impersonator"))
-                .and_then(Value::as_bool)
-                .unwrap_or(false)
-                && !key.scopes.iter().any(|scope| scope == "users.read")
-            {
-                key.scopes.push("users.read".to_string());
-            }
-
-            if let Some(required) = required_scope(&ctx) {
-                if !key_satisfies_scope(&key, &required) {
-                    return send_error(
-                        &ctx,
-                        &Exception::new(Exception::GENERAL_UNAUTHORIZED_SCOPE),
-                    );
-                }
-            }
-
             let sequence = state.project_sequence(&project);
             let db = match state
                 .databases
@@ -93,6 +56,27 @@ pub fn action() -> Action {
                     return send_error(&ctx, &Exception::new(Exception::GENERAL_SERVER_ERROR));
                 }
             };
+
+            let key_secret = ctx.request().header_line("x-appwrite-key");
+            let key = if key_secret.is_empty() {
+                console::resolve(&state, &ctx, &project, &db)
+                    .map_or_else(|| Key::guest(project_id.clone()), |session| session.key)
+            } else {
+                Key::decode_standard(&project, &key_secret)
+            };
+
+            if key.expired {
+                return send_error(&ctx, &Exception::new(Exception::PROJECT_KEY_EXPIRED));
+            }
+
+            if let Some(required) = required_scope(&ctx) {
+                if !key_satisfies_scope(&key, &required) {
+                    return send_error(
+                        &ctx,
+                        &Exception::new(Exception::GENERAL_UNAUTHORIZED_SCOPE),
+                    );
+                }
+            }
 
             ctx.container.set_cached("project", Resource::new(project));
             ctx.container.set_cached("apiKey", Resource::new(key));

@@ -325,6 +325,38 @@ impl SqlAdapter {
         }
     }
 
+    /// The lexicographic "after the cursor row" comparison over the effective
+    /// ordering: the first column that differs decides, and ties fall through
+    /// to the next one. `ordered` is already flipped for `cursorBefore`, so
+    /// the same expression serves both directions.
+    fn cursor_condition(
+        &self,
+        cursor: &Document,
+        ordered: &[(String, bool)],
+        params: &mut Vec<(String, SqlParam)>,
+        next: &mut usize,
+    ) -> Option<String> {
+        let mut condition = String::new();
+        for (column, ascending) in ordered.iter().rev() {
+            let value = cursor_value(cursor, column);
+            let quoted = self.q(column);
+            let strict = format!(":f{next}");
+            *next += 1;
+            params.push((strict.clone(), value.clone()));
+            let tie = format!(":f{next}");
+            *next += 1;
+            params.push((tie.clone(), value));
+
+            let operator = if *ascending { ">" } else { "<" };
+            condition = if condition.is_empty() {
+                format!("{quoted} {operator} {strict}")
+            } else {
+                format!("({quoted} {operator} {strict} OR ({quoted} = {tie} AND {condition}))")
+            };
+        }
+        (!condition.is_empty()).then_some(condition)
+    }
+
     /// The `contains`-family fragments for an array attribute: JSON
     /// containment rather than a substring match. `containsAll` tests the
     /// whole value list at once, the others test each value separately.
@@ -364,6 +396,23 @@ impl SqlAdapter {
             })
             .collect()
     }
+}
+
+/// The cursor document's value for an internal column, read back through the
+/// `$`-prefixed name it carries on a decoded document.
+fn cursor_value(cursor: &Document, column: &str) -> SqlParam {
+    let external = match column {
+        "_uid" => "$id",
+        "_id" => "$sequence",
+        "_createdAt" => "$createdAt",
+        "_updatedAt" => "$updatedAt",
+        other => other,
+    };
+    let value = cursor.get_attribute(external);
+    if value.is_null() && external != column {
+        return SqlParam::from_attr(cursor.get_attribute(column));
+    }
+    SqlParam::from_attr(value)
 }
 
 /// The `key`s of a collection's array attributes, which `contains` queries
@@ -993,8 +1042,8 @@ impl Adapter for SqlAdapter {
         offset: Option<i64>,
         order_attributes: &[String],
         order_types: &[String],
-        _cursor: Option<&Document>,
-        _cursor_direction: &str,
+        cursor: Option<&Document>,
+        cursor_direction: &str,
         _for_permission: &str,
     ) -> Result<Vec<Document>> {
         let name = filter_key(&collection.get_id());
@@ -1007,25 +1056,47 @@ impl Adapter for SqlAdapter {
                 where_sql.push(fragment);
             }
         }
+
+        // A `cursorBefore` page is the rows *preceding* the cursor, which SQL
+        // can only reach by walking the reversed order and flipping the page
+        // back afterwards.
+        let backwards = cursor_direction == CURSOR_BEFORE;
+        let mut ordered: Vec<(String, bool)> = order_attributes
+            .iter()
+            .enumerate()
+            .map(|(idx, attribute)| {
+                let ascending = order_types
+                    .get(idx)
+                    .map(String::as_str)
+                    .unwrap_or(ORDER_ASC)
+                    .eq_ignore_ascii_case(ORDER_ASC);
+                (Self::internal_key(attribute).to_string(), ascending != backwards)
+            })
+            .collect();
+        if ordered.is_empty() {
+            ordered.push(("_id".to_string(), !backwards));
+        }
+
+        if let Some(cursor) = cursor {
+            if let Some(fragment) = self.cursor_condition(cursor, &ordered, &mut params, &mut i) {
+                where_sql.push(fragment);
+            }
+        }
+
         let mut sql = format!("SELECT * FROM {}", self.table(&name));
         if !where_sql.is_empty() {
             sql.push_str(" WHERE ");
             sql.push_str(&where_sql.join(" AND "));
         }
-        if !order_attributes.is_empty() {
-            let mut orders = Vec::new();
-            for (idx, attr) in order_attributes.iter().enumerate() {
-                let dir = order_types
-                    .get(idx)
-                    .map(String::as_str)
-                    .unwrap_or(ORDER_ASC);
-                orders.push(format!("{} {dir}", self.q(Self::internal_key(attr))));
-            }
-            sql.push_str(" ORDER BY ");
-            sql.push_str(&orders.join(", "));
-        } else {
-            sql.push_str(&format!(" ORDER BY {}", self.q("_id")));
-        }
+        let orders: Vec<String> = ordered
+            .iter()
+            .map(|(column, ascending)| {
+                let direction = if *ascending { ORDER_ASC } else { ORDER_DESC };
+                format!("{} {direction}", self.q(column))
+            })
+            .collect();
+        sql.push_str(" ORDER BY ");
+        sql.push_str(&orders.join(", "));
         if let Some(limit) = limit {
             sql.push_str(&format!(" LIMIT {limit}"));
         }
@@ -1037,7 +1108,11 @@ impl Adapter for SqlAdapter {
             .map(|(k, v)| (k.as_str(), v.clone()))
             .collect();
         let rows = self.pdo.query(&sql, &refs)?;
-        Ok(rows.into_iter().map(row_to_document).collect())
+        let mut documents: Vec<Document> = rows.into_iter().map(row_to_document).collect();
+        if backwards {
+            documents.reverse();
+        }
+        Ok(documents)
     }
 
     fn count(&mut self, collection: &Document, queries: &[Query], max: Option<i64>) -> Result<i64> {

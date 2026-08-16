@@ -22,7 +22,7 @@ use utopia_auth::{Proof, Store};
 use utopia_database::{AttrValue, Query};
 use utopia_http::ActionContext;
 
-use crate::state::{AppwriteState, ProjectDb};
+use crate::state::{AppwriteState, ProjectDatabase, ProjectDb};
 
 /// PHP `APP_MODE_ADMIN`.
 pub const MODE_ADMIN: &str = "admin";
@@ -178,11 +178,16 @@ pub fn mode(ctx: &ActionContext) -> String {
     }
 }
 
-/// Resolve the Console session for this request, or `None` when the request
-/// carries no session, the session does not verify, or the user has no
-/// confirmed membership granting scopes on this project's team.
+/// Resolve the session-authenticated user for this request, or `None` when
+/// the request carries no session, the session does not verify, or an admin
+/// request's user has no confirmed membership on the project's team.
 #[must_use]
-pub fn resolve(state: &Arc<AppwriteState>, ctx: &ActionContext, project: &Value) -> Option<Session> {
+pub fn resolve(
+    state: &Arc<AppwriteState>,
+    ctx: &ActionContext,
+    project: &Value,
+    project_db: &ProjectDatabase,
+) -> Option<Session> {
     let project_id = project.get("$id").and_then(Value::as_str).unwrap_or_default();
     let mode = mode(ctx);
 
@@ -193,27 +198,67 @@ pub fn resolve(state: &Arc<AppwriteState>, ctx: &ActionContext, project: &Value)
         return None;
     }
 
-    // PHP picks the platform database for admin mode and for the console
+    // PHP reads the platform database for admin mode and for the console
     // project itself; every other request reads the project's own users.
-    let platform = state.platform_db()?;
-    let mut db = platform.lock().unwrap_or_else(|error| error.into_inner());
-    if mode != MODE_ADMIN && project_id != CONSOLE {
-        return None;
-    }
+    let is_admin = mode == MODE_ADMIN || project_id == CONSOLE;
+    let platform = if is_admin { state.platform_db() } else { None };
+    let mut guard = match &platform {
+        Some(platform) => platform.lock().unwrap_or_else(|error| error.into_inner()),
+        None if is_admin => return None,
+        None => project_db.lock().unwrap_or_else(|error| error.into_inner()),
+    };
+    let db = &mut *guard;
 
     let user = db.get_document("users", &id, &[], false).ok()?;
-    if user.is_empty() {
-        return None;
-    }
-    if !session_verifies(&mut db, &user, &secret) {
+    if user.is_empty() || !session_verifies(db, &user, &secret) {
         return None;
     }
 
-    let team_id = project.get("teamId").and_then(Value::as_str).unwrap_or_default();
-    let roles = confirmed_roles(&mut db, &user, team_id);
-    // PHP throws `USER_UNAUTHORIZED` here; returning `None` lets the caller
-    // fall through to the same scope check an anonymous request gets, which
-    // produces the identical 401 for every route that needs a scope.
+    let mut scopes = if is_admin {
+        admin_scopes(db, &user, project)?
+    } else {
+        // A plain project session is PHP's `ROLE_USERS`.
+        MEMBER_SCOPES.iter().map(|scope| (*scope).to_string()).collect()
+    };
+
+    // PHP grants `users.read` to an impersonator so the Console can look a
+    // target user up before impersonation starts, and keeps it for the
+    // duration of the impersonation.
+    let impersonator = user
+        .get_attribute("impersonator")
+        .as_bool()
+        .unwrap_or(false);
+    if (impersonator || impersonating(ctx)) && !scopes.iter().any(|scope| scope == "users.read") {
+        scopes.push("users.read".to_string());
+    }
+    scopes.sort_unstable();
+    scopes.dedup();
+
+    let user_json = crate::state::document_to_json(&user);
+    Some(Session {
+        key: Key {
+            project_id: project_id.to_string(),
+            scopes,
+            name: "Session".to_string(),
+            key_type: appwrite_auth::TYPE_STANDARD.to_string(),
+            expired: false,
+            role: if is_admin { "admin" } else { "users" }.to_string(),
+        },
+        user: user_json,
+    })
+}
+
+/// PHP's "Admin User Authentication" branch: the scopes the user's confirmed
+/// membership on the project's team grants. `None` where PHP throws
+/// `USER_UNAUTHORIZED`, which the caller turns into the same scope failure an
+/// anonymous request gets.
+fn admin_scopes(db: &mut ProjectDb, user: &utopia_database::Document, project: &Value) -> Option<Vec<String>> {
+    let project_id = project.get("$id").and_then(Value::as_str).unwrap_or_default();
+    let team_id = project
+        .get("teamId")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let roles = confirmed_roles(db, user, team_id);
     if roles.is_empty() {
         return None;
     }
@@ -227,21 +272,34 @@ pub fn resolve(state: &Arc<AppwriteState>, ctx: &ActionContext, project: &Value)
         };
         scopes.extend(scopes_for_role(role).into_iter().map(str::to_string));
     }
-    scopes.sort_unstable();
-    scopes.dedup();
+    Some(scopes)
+}
 
-    let user_json = crate::state::document_to_json(&user);
-    Some(Session {
-        key: Key {
-            project_id: project_id.to_string(),
-            scopes,
-            name: "Console".to_string(),
-            key_type: appwrite_auth::TYPE_STANDARD.to_string(),
-            expired: false,
-            role: "admin".to_string(),
-        },
-        user: user_json,
-    })
+/// Whether the request asks to impersonate someone, by header or by the
+/// query-param fallback the Console uses for direct file URLs.
+fn impersonating(ctx: &ActionContext) -> bool {
+    const HEADERS: [&str; 3] = [
+        "x-appwrite-impersonate-user-id",
+        "x-appwrite-impersonate-user-email",
+        "x-appwrite-impersonate-user-phone",
+    ];
+    const PARAMS: [&str; 6] = [
+        "impersonateuserid",
+        "impersonateUserId",
+        "impersonateemail",
+        "impersonateEmail",
+        "impersonatephone",
+        "impersonatePhone",
+    ];
+    HEADERS
+        .iter()
+        .any(|header| !ctx.request().header_line(header).is_empty())
+        || PARAMS.iter().any(|param| {
+            ctx.request()
+                .param_ref(param)
+                .and_then(Value::as_str)
+                .is_some_and(|value| !value.is_empty())
+        })
 }
 
 /// PHP's `project-<projectId>-<role>` handling: a team-wide role always
