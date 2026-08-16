@@ -44,6 +44,17 @@ Call engine adapters (`Postgres::connect`, `Mysql::connect_db`, `MariaDb::connec
 
 [`SqlClient`](crates/utopia-database/src/sql_client.rs) is the Rust connection layer **behind** those adapters (using `postgres` / `mysql` / `rusqlite`). It is not a PDO port and should stay out of product code.
 
+### Connection pooling
+
+`ProjectDatabase` (per-project `dbForProject`) and the platform DB (`dbForPlatform`) are backed by a real pool of connections for live adapters (Postgres/MySQL/Mongo), not a single shared mutex:
+
+- `ProjectDatabase` wraps `Arc<utopia_pools::Pool<ProjectDb>>` for live adapters; `ProjectDb` implements `utopia_pools::Recover` (`reset`/`reconnect` both ping the underlying connection).
+- `ProjectDatabase::lock()` checks a connection **out** of the pool and returns a `ProjectDbGuard` that derefs to `&mut ProjectDb` and is held across multi-op handlers; `Drop` reclaims it back to the pool. Handler call sites are unchanged (`db_handle.lock()`).
+- Memory adapter keeps a single `Mutex<ProjectDb>` (in-process, nothing to pool) via `ProjectDatabase`'s `Memory` variant.
+- Pool size mirrors PHP's `app/init/registers.php` intent (`_APP_CONNECTIONS_MAX` / `_APP_POOL_CLIENTS` / available parallelism, floored by `_APP_WORKER_MAX_COROUTINES`, clamped `[2, 32]`); logged at boot in `apps/server`.
+- **Hash before checkout**: Argon2/password hashing in `base::create_user`, `create_hashed_user`, and the password update handler happens *before* the pool checkout, so CPU-bound hashing never holds a DB connection idle.
+- MySQL and Postgres blocking calls in `sql_client.rs` run inside `tokio::task::block_in_place` so one slow query doesn't stall the async runtime; the pool (not `block_in_place` alone) is what enables concurrent DB access across requests.
+
 ## Quality
 
 From `3.x.x/`:
