@@ -7,6 +7,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Coroutine as Co;
 use Utopia\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 
 /**
@@ -104,7 +105,7 @@ class ScheduleExecutions extends ScheduleBase
                     Co::sleep($delay);
                 }
 
-                // Lock the schedule while checking and publishing. A
+                // Atomically claim the schedule before publishing. A
                 // cancellation takes the same lock, so exactly one path can
                 // claim the scheduled execution.
                 $enqueued = $this->enqueueIfActive(
@@ -134,20 +135,39 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueIfActive(Database $dbForPlatform, string $scheduleId, callable $enqueue): bool
     {
-        return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId, $enqueue) {
+        $claimed = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
             $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
 
             if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
                 return false;
             }
 
-            $enqueue();
+            $schedule = $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                'resourceUpdatedAt' => DateTime::now(),
+                'active' => false,
+            ]));
 
-            if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
-                throw new \RuntimeException('Failed to remove claimed execution schedule');
-            }
-
-            return true;
+            return !$schedule->isEmpty();
         });
+
+        if (!$claimed) {
+            return false;
+        }
+
+        try {
+            $enqueue();
+        } catch (\Throwable $error) {
+            $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                'resourceUpdatedAt' => DateTime::now(),
+                'active' => true,
+            ]));
+            throw $error;
+        }
+
+        if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
+            throw new \RuntimeException('Failed to remove claimed execution schedule');
+        }
+
+        return true;
     }
 }

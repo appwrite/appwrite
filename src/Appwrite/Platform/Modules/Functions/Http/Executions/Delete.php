@@ -172,6 +172,7 @@ class Delete extends Base
             $schedule = $authorization->skip(fn () => $dbForPlatform->findOne('schedules', [
                 Query::equal('resourceId', [$execution->getId()]),
                 Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
                 Query::equal('active', [true]),
             ]));
 
