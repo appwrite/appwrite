@@ -7,7 +7,6 @@ use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Text;
 
 use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::mfa::shared;
 
 /// `GET /v1/users/:userId/mfa/factors` (`listUserMFAFactors`).
 #[must_use]
@@ -31,7 +30,7 @@ pub fn xlist() -> Action {
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
             let project = base::get_project(&ctx)?;
 
-            let totp = shared::totp_authenticator(&mut db, &user_id)?;
+            let totp = base::totp_authenticator(&mut db, &user_id)?;
             let totp_verified = totp
                 .as_ref()
                 .is_some_and(|doc| doc.get_attribute("verified").as_bool().unwrap_or(false));

@@ -9,12 +9,11 @@ use utopia_platform::Action;
 use utopia_validators::Text;
 
 use crate::modules::users::base;
-use crate::modules::users::http::users::hash_create;
 
 /// `POST /v1/users/scrypt-modified` (`createScryptModifiedUser`).
 #[must_use]
 pub fn create() -> Action {
-    hash_create::create_action(
+    base::create_hashed_user_action(
         "/v1/users/scrypt-modified",
         "Create user with Scrypt modified password",
     )
@@ -61,7 +60,7 @@ pub fn create() -> Action {
             "signerKey".to_string(),
             json!(base::param_str(&ctx, "passwordSignerKey").unwrap_or_default()),
         );
-        let result = hash_create::run_create(
+        let result = base::create_hashed_user(
             &ctx,
             Password::create_hash(Password::SCRYPT_MODIFIED, options),
         );

@@ -9,12 +9,11 @@ use utopia_platform::Action;
 use utopia_validators::Text;
 
 use crate::modules::users::base;
-use crate::modules::users::http::users::hash_create;
 
 /// `POST /v1/users/argon2` (`createArgon2User`).
 #[must_use]
 pub fn create() -> Action {
-    hash_create::create_action("/v1/users/argon2", "Create user with Argon2 password")
+    base::create_hashed_user_action("/v1/users/argon2", "Create user with Argon2 password")
         .param(
             "password",
             json!(""),
@@ -24,7 +23,7 @@ pub fn create() -> Action {
         )
         .param("name", json!(""), Text::new(128), "User name.", true)
         .http_action(|ctx| async move {
-            let result = hash_create::run_create(
+            let result = base::create_hashed_user(
                 &ctx,
                 Password::create_hash(Password::ARGON2, HashMap::new()),
             );

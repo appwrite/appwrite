@@ -8,13 +8,12 @@ use utopia_platform::Action;
 use utopia_validators::{Text, WhiteList};
 
 use crate::modules::users::base;
-use crate::modules::users::http::users::hash_create;
 
 /// `POST /v1/users/sha` (`createSHAUser`). Optional `passwordVersion`
 /// (PHP `$sha->setVersion($passwordVersion)`).
 #[must_use]
 pub fn create() -> Action {
-    hash_create::create_action("/v1/users/sha", "Create user with SHA password")
+    base::create_hashed_user_action("/v1/users/sha", "Create user with SHA password")
         .param(
             "password",
             json!(""),
@@ -50,7 +49,7 @@ pub fn create() -> Action {
                 }
             }
             let result =
-                hash_create::run_create(&ctx, Password::create_hash(Password::SHA, options));
+                base::create_hashed_user(&ctx, Password::create_hash(Password::SHA, options));
             base::finish(&ctx, 201, appwrite_response::MODEL_USER, result)
         })
 }

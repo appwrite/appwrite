@@ -26,7 +26,7 @@ Rules:
 
 - **One PHP action class → one Rust action file.** Do not combine Create/Get/Update/Delete/XList (or sibling resources) into a single `crud.rs` / `properties.rs`.
 - Action files are only `create.rs`, `get.rs`, `update.rs`, `delete.rs`, `xlist.rs`, each exporting a fn of the same name that returns `Action`.
-- Shared helpers that are **not** PHP action classes may live in small helper modules (`hash_create.rs`, `helpers.rs`, `shared.rs`) and must be documented as such.
+- **Shared logic belongs on `base.rs` (PHP `Base`).** PHP uses `class Create extends Base` and `$this->createUser(...)`. Rust has no class inheritance; action files call `base::create_user` / `base::create_hashed_user_action` / etc. instead. Do not invent parallel `helpers.rs` / `shared.rs` modules beside actions for that role.
 - Directory names are snake_case versions of the PHP path (`recovery_codes`, `jwts`, `md5`).
 
 Reference layout: `crates/appwrite-platform/src/modules/users/http/users/` ↔ `Modules/Users/Http/Users/`.

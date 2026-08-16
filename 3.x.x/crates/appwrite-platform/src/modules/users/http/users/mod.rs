@@ -5,11 +5,9 @@
 //! `create.rs` / `get.rs` / `update.rs` / `delete.rs` / `xlist.rs` maps to
 //! PHP `Create.php` / `Get.php` / `Update.php` / `Delete.php` / `XList.php`.
 //!
-//! Non-action shared helpers (not PHP classes) live in [`hash_create`],
-//! [`helpers`], and private `shared` modules under `sessions` and `mfa`.
-
-mod hash_create;
-mod helpers;
+//! Shared protected-style API (PHP `class Base extends Action`) lives in
+//! [`crate::modules::users::base`] - action files call `base::…` instead of
+//! classical inheritance.
 
 pub mod argon2;
 pub mod bcrypt;

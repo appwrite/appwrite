@@ -1,7 +1,15 @@
-//! Shared Users-API helpers. Rust port of the pieces of
-//! `Appwrite\Platform\Modules\Users\Base::createUser()`
-//! (`src/Appwrite/Platform/Modules/Users/Base.php`) and common
-//! error/response plumbing every `http/*` handler in this module needs.
+//! Users module base. Rust port of
+//! `Appwrite\Platform\Modules\Users\Base` (`Base.php`).
+//!
+//! PHP: hash-create endpoints `extend Base` and call `$this->createUser(...)`.
+//! Rust has no class inheritance, so action files call free functions on this
+//! module instead (`base::create_user`, `base::create_hashed_user_action`, …).
+//! That is the intended parity - shared protected-style API lives here, not in
+//! ad-hoc `helpers.rs` / `shared.rs` files beside actions.
+//!
+//! Also holds small Users-scoped constants and MFA/session helpers that PHP
+//! pulls from `app/init/constants.php` or Auth MFA types (not separate Base
+//! subclasses).
 //!
 //! Simplifications versus PHP (documented, not silently dropped):
 //! - `PersonalData` and the cloud `$plan` gate are not implemented, and the
@@ -21,11 +29,14 @@ use appwrite_exception::Exception;
 use appwrite_hooks::Hooks;
 use chrono::Utc;
 use serde_json::{json, Value};
-use utopia_auth::{Hash, Password};
+use utopia_auth::{Hash, Password, Proof};
 use utopia_database::helpers::{Permission, Role};
 use utopia_database::{AttrValue, DatabaseError, Query};
 use utopia_http::ActionContext;
+use utopia_platform::Action;
+use utopia_validators::Text;
 
+use crate::modules::users::validators::Email;
 use crate::state::{document_from_json, document_to_json, ProjectDatabase};
 
 /// Write a filtered [`appwrite_response::dynamic`] JSON body plus status
@@ -73,7 +84,7 @@ pub fn finish_no_content(
 /// `action`, panicking (at platform-build time, not per-request) on the
 /// `DuplicateInjection` case the fixed name lists below never trigger.
 #[must_use]
-pub fn inject(action: utopia_platform::Action, names: &[&str]) -> utopia_platform::Action {
+pub fn inject(action: Action, names: &[&str]) -> Action {
     names.iter().fold(action, |action, name| {
         action
             .inject(*name)
@@ -670,4 +681,142 @@ pub fn create_target(
     let document = document_from_json(target_json);
     let created = db.create_document("targets", document).map_err(db_error)?;
     Ok(document_to_json(&created))
+}
+
+// ---------------------------------------------------------------------------
+// Inherited-style API (PHP `class Create extends Base`)
+// ---------------------------------------------------------------------------
+
+/// Common `userId` route param on most user property endpoints.
+#[must_use]
+pub fn user_id_param(action: Action) -> Action {
+    action.param("userId", json!(""), Text::new(36), "User ID.", false)
+}
+
+fn hashed_create_common_params(action: Action) -> Action {
+    action
+        .param(
+            "userId",
+            json!(""),
+            appwrite_database::CustomId::default(),
+            "User ID.",
+            false,
+        )
+        .param("email", json!(""), Email::new(false), "User email.", false)
+}
+
+/// Skeleton action for `Http/Users/{Argon2,Bcrypt,...}/Create.php` - the
+/// shared constructor wiring those PHP classes inherit from [`Base`].
+#[must_use]
+pub fn create_hashed_user_action(path: &'static str, desc: &'static str) -> Action {
+    inject(
+        hashed_create_common_params(
+            Action::new()
+                .set_http_method(utopia_platform::HttpMethod::Post)
+                .set_http_path(path)
+                .desc(desc)
+                .groups(["api", "users"])
+                .label("scope", "users.write")
+                .label("audits.event", "user.create")
+                .label("audits.resource", "user/{response.$id}"),
+        ),
+        &["response", "project", "dbForProject", "hooks"],
+    )
+}
+
+/// Body of every pre-hashed `Create` action: resolve hasher, then
+/// [`create_user`] (PHP `$this->createUser($hash, ...)`).
+pub fn create_hashed_user(
+    ctx: &ActionContext,
+    hasher: Result<Arc<dyn Hash>, utopia_auth::AuthError>,
+) -> Result<Value, Exception> {
+    let hasher = hasher.map_err(hash_error)?;
+    let db_handle = get_db(ctx)?;
+    let hooks = get_hooks(ctx)?;
+    let mut db = db_handle.lock().unwrap_or_else(|e| e.into_inner());
+    create_user(
+        &mut db,
+        &hooks,
+        hasher,
+        CreateUserParams {
+            user_id: param_str(ctx, "userId")?,
+            email: Some(param_str(ctx, "email")?),
+            password: Some(param_str(ctx, "password")?),
+            phone: None,
+            name: ctx
+                .param_value("name")
+                .and_then(Value::as_str)
+                .map(str::to_string),
+        },
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Session / token constants (PHP `app/init/constants.php`)
+// ---------------------------------------------------------------------------
+
+/// PHP `SESSION_PROVIDER_SERVER`.
+pub const SESSION_PROVIDER_SERVER: &str = "server";
+/// PHP `TOKEN_EXPIRATION_LOGIN_LONG`: 1 year, in seconds.
+pub const TOKEN_EXPIRATION_LOGIN_LONG: i64 = 31_536_000;
+/// PHP `TOKEN_EXPIRATION_GENERIC`: 15 minutes, in seconds.
+pub const TOKEN_EXPIRATION_GENERIC: i64 = 900;
+/// PHP `TOKEN_TYPE_GENERIC`.
+pub const TOKEN_TYPE_GENERIC: i64 = 8;
+
+#[must_use]
+pub fn expire_at(seconds: i64) -> String {
+    let expire = Utc::now() + chrono::Duration::seconds(seconds);
+    expire.format("%Y-%m-%dT%H:%M:%S%.3f+00:00").to_string()
+}
+
+pub fn token_proof() -> Result<utopia_auth::Token, Exception> {
+    let mut token = utopia_auth::Token::new(32).map_err(hash_error)?;
+    token.set_hasher(Arc::new(utopia_auth::Sha::new()));
+    Ok(token)
+}
+
+// ---------------------------------------------------------------------------
+// MFA helpers (PHP Auth MFA types / document attributes)
+// ---------------------------------------------------------------------------
+
+/// PHP `TOTP::getAuthenticatorFromUser()`.
+pub fn totp_authenticator(
+    db: &mut crate::state::ProjectDb,
+    user_id: &str,
+) -> Result<Option<utopia_database::Document>, Exception> {
+    let mut matches = db
+        .find(
+            "authenticators",
+            &[
+                Query::equal("userId", vec![AttrValue::from(user_id)]),
+                Query::equal("type", vec![AttrValue::from(appwrite_auth::mfa::TOTP)]),
+                Query::limit(1),
+            ],
+            "read",
+        )
+        .map_err(db_error)?;
+    Ok(if matches.is_empty() {
+        None
+    } else {
+        Some(matches.remove(0))
+    })
+}
+
+/// PHP `Appwrite\Auth\MFA\Type::generateBackupCodes(10, 6)`.
+pub fn generate_backup_codes() -> Result<Vec<String>, Exception> {
+    let proof = utopia_auth::Token::new(10).map_err(hash_error)?;
+    (0..6)
+        .map(|_| proof.generate().map_err(hash_error))
+        .collect()
+}
+
+/// PHP `$user->getAttribute('mfaRecoveryCodes', [])`.
+#[must_use]
+pub fn recovery_codes_of(user: &utopia_database::Document) -> Vec<Value> {
+    document_to_json(user)
+        .get("mfaRecoveryCodes")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default()
 }

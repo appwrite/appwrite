@@ -10,9 +10,8 @@ use serde_json::{json, Value};
 use utopia_auth::Proof;
 use utopia_platform::{Action, HttpMethod};
 
-use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::sessions::{
-    expire_at, token_proof, SESSION_PROVIDER_SERVER, TOKEN_EXPIRATION_LOGIN_LONG,
+use crate::modules::users::base::{
+    self, expire_at, inject, token_proof, SESSION_PROVIDER_SERVER, TOKEN_EXPIRATION_LOGIN_LONG,
 };
 use crate::state::{document_from_json, document_to_json};
 

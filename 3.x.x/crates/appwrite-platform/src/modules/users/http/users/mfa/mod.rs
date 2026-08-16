@@ -1,5 +1,3 @@
-mod shared;
-
 pub mod authenticators;
 pub mod challenges;
 pub mod factors;

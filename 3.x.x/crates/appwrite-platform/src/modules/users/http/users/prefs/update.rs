@@ -7,13 +7,12 @@ use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Assoc;
 
 use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::helpers;
 
 /// `PATCH /v1/users/:userId/prefs` (`updateUserPrefs`).
 #[must_use]
 pub fn update() -> Action {
     inject(
-        helpers::user_id_param(
+        base::user_id_param(
             Action::new()
                 .set_http_method(HttpMethod::Patch)
                 .set_http_path("/v1/users/:userId/prefs")

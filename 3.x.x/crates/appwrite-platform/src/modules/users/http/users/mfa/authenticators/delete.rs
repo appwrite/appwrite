@@ -8,7 +8,6 @@ use utopia_platform::{Action, HttpMethod};
 use utopia_validators::{Text, WhiteList};
 
 use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::mfa::shared;
 
 /// `DELETE /v1/users/:userId/mfa/authenticators/:type`
 /// (`deleteUserMFAAuthenticator`).
@@ -40,7 +39,7 @@ pub fn delete() -> Action {
             let user_id = base::param_str(&ctx, "userId")?;
             base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
-            let authenticator = shared::totp_authenticator(&mut db, &user_id)?
+            let authenticator = base::totp_authenticator(&mut db, &user_id)?
                 .ok_or_else(|| Exception::new(Exception::USER_AUTHENTICATOR_NOT_FOUND))?;
             db.delete_document("authenticators", &authenticator.get_id())
                 .map_err(base::db_error)?;

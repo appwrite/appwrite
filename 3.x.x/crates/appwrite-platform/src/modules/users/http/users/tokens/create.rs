@@ -9,9 +9,9 @@ use utopia_auth::Proof;
 use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Range;
 
-use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::sessions::{
-    expire_at, TOKEN_EXPIRATION_GENERIC, TOKEN_EXPIRATION_LOGIN_LONG, TOKEN_TYPE_GENERIC,
+use crate::modules::users::base::{
+    self, expire_at, inject, TOKEN_EXPIRATION_GENERIC, TOKEN_EXPIRATION_LOGIN_LONG,
+    TOKEN_TYPE_GENERIC,
 };
 use crate::state::{document_from_json, document_to_json};
 

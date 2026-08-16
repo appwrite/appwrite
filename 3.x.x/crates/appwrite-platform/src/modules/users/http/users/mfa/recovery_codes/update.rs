@@ -7,7 +7,6 @@ use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Text;
 
 use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::mfa::shared;
 use crate::state::document_from_json;
 
 /// `PUT /v1/users/:userId/mfa/recovery-codes` (`updateUserMFARecoveryCodes`).
@@ -33,11 +32,11 @@ pub fn update() -> Action {
             let user =
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
-            if shared::recovery_codes_of(&user).is_empty() {
+            if base::recovery_codes_of(&user).is_empty() {
                 return Err(Exception::new(Exception::USER_RECOVERY_CODES_NOT_FOUND));
             }
 
-            let codes = shared::generate_backup_codes()?;
+            let codes = base::generate_backup_codes()?;
             db.update_document(
                 "users",
                 &user_id,

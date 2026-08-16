@@ -16,7 +16,6 @@ use utopia_auth::Password;
 use utopia_platform::{Action, HttpMethod};
 
 use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::helpers;
 
 /// PHP `$project->getAttribute('auths', [])['<flag>'] ?? false`.
 fn auths_flag(project: &Value, flag: &str) -> bool {
@@ -35,7 +34,7 @@ fn auths_flag(project: &Value, flag: &str) -> bool {
 #[must_use]
 pub fn update() -> Action {
     inject(
-        helpers::user_id_param(
+        base::user_id_param(
             Action::new()
                 .set_http_method(HttpMethod::Patch)
                 .set_http_path("/v1/users/:userId/password")

@@ -7,7 +7,6 @@ use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Text;
 
 use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::helpers;
 
 /// PHP `APP_LIMIT_ARRAY_LABELS_SIZE` (`app/init/constants.php`).
 const LIMIT_ARRAY_LABELS_SIZE: usize = 1000;
@@ -27,7 +26,7 @@ fn label_text() -> Text {
 #[must_use]
 pub fn update() -> Action {
     inject(
-        helpers::user_id_param(
+        base::user_id_param(
             Action::new()
                 .set_http_method(HttpMethod::Put)
                 .set_http_path("/v1/users/:userId/labels")

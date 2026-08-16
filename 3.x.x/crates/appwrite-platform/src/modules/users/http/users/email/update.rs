@@ -10,7 +10,7 @@ use serde_json::{json, Value};
 use utopia_platform::{Action, HttpMethod};
 
 use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::helpers;
+
 use crate::modules::users::validators::Email;
 use crate::state::document_from_json;
 
@@ -18,7 +18,7 @@ use crate::state::document_from_json;
 #[must_use]
 pub fn update() -> Action {
     inject(
-        helpers::user_id_param(
+        base::user_id_param(
             Action::new()
                 .set_http_method(HttpMethod::Patch)
                 .set_http_path("/v1/users/:userId/email")

@@ -6,14 +6,14 @@ use serde_json::Value;
 use utopia_platform::{Action, HttpMethod};
 
 use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::helpers;
+
 use crate::modules::users::http::users::prefs;
 
 /// `GET /v1/users/:userId/prefs` (`getUserPrefs`).
 #[must_use]
 pub fn get() -> Action {
     inject(
-        helpers::user_id_param(
+        base::user_id_param(
             Action::new()
                 .set_http_method(HttpMethod::Get)
                 .set_http_path("/v1/users/:userId/prefs")

@@ -7,7 +7,6 @@ use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Text;
 
 use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::mfa::shared;
 
 /// `GET /v1/users/:userId/mfa/recovery-codes` (`getUserMFARecoveryCodes`).
 #[must_use]
@@ -30,7 +29,7 @@ pub fn get() -> Action {
             let user =
                 base::require_document(&mut db, "users", &user_id, Exception::USER_NOT_FOUND)?;
 
-            let codes = shared::recovery_codes_of(&user);
+            let codes = base::recovery_codes_of(&user);
             if codes.is_empty() {
                 return Err(Exception::new(Exception::USER_RECOVERY_CODES_NOT_FOUND));
             }

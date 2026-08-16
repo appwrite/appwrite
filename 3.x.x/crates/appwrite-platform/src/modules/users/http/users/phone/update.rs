@@ -7,7 +7,7 @@ use utopia_platform::{Action, HttpMethod};
 use utopia_validators::Validator;
 
 use crate::modules::users::base::{self, inject};
-use crate::modules::users::http::users::helpers;
+
 use crate::state::document_from_json;
 
 /// PHP `new Phone(allowEmpty: true)`: `appwrite-auth::Phone` has no
@@ -37,7 +37,7 @@ impl Validator for PhoneOrEmpty {
 #[must_use]
 pub fn update() -> Action {
     inject(
-        helpers::user_id_param(
+        base::user_id_param(
             Action::new()
                 .set_http_method(HttpMethod::Patch)
                 .set_http_path("/v1/users/:userId/phone")
