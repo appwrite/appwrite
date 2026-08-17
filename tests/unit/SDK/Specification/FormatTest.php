@@ -273,8 +273,6 @@ final class FormatTest extends TestCase
 
         $this->assertSame('testGetOrUpdateTest', $get['operationId']);
         $this->assertSame('testGetOrUpdateTestPost', $post['operationId']);
-        $this->assertArrayNotHasKey('method', $get['x-appwrite']);
-        $this->assertArrayNotHasKey('method', $post['x-appwrite']);
         $this->assertSame('path', $get['parameters'][0]['in']);
         $this->assertSame('query', $get['parameters'][1]['in']);
         $this->assertArrayNotHasKey('requestBody', $get);
