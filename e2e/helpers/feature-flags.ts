@@ -6,8 +6,8 @@ import type { Page } from '@playwright/test'
  */
 const DEBUG_PROFILE_KEY = 'debug:consoleProfile'
 
-/** Feature flags required for dedicated / native MySQL UI against Cloud. */
-export const MYSQL_E2E_FEATURE_OVERRIDES = {
+/** Feature flags required for dedicated / native / product database UI against Cloud. */
+export const DATABASE_E2E_FEATURE_OVERRIDES = {
   dedicatedDbsSupport: true,
   dedicatedDbsDocumentsDB: true,
   dedicatedDbsVectorsDB: true,
@@ -19,17 +19,20 @@ export const MYSQL_E2E_FEATURE_OVERRIDES = {
   multiRegion: true,
 } as const
 
+/** @deprecated Use DATABASE_E2E_FEATURE_OVERRIDES */
+export const MYSQL_E2E_FEATURE_OVERRIDES = DATABASE_E2E_FEATURE_OVERRIDES
+
 /**
- * Force MySQL / dedicated-DB feature flags on for the current page origin.
+ * Force database feature flags on for the current page origin.
  * Must run before navigating to console routes that gate on these flags.
  */
-export async function enableMysqlFeatureFlags(page: Page): Promise<void> {
+export async function enableDatabaseFeatureFlags(page: Page): Promise<void> {
   await page.addInitScript(
     ({ key, features }) => {
       const payload = {
         id: 'cloud',
         label: 'Cloud',
-        description: 'E2E override - MySQL feature flags enabled',
+        description: 'E2E override - database feature flags enabled',
         features,
       }
       try {
@@ -38,7 +41,7 @@ export async function enableMysqlFeatureFlags(page: Page): Promise<void> {
         // Ignore quota / private-mode failures; cloud profile defaults still apply.
       }
     },
-    { key: DEBUG_PROFILE_KEY, features: MYSQL_E2E_FEATURE_OVERRIDES },
+    { key: DEBUG_PROFILE_KEY, features: DATABASE_E2E_FEATURE_OVERRIDES },
   )
 
   // Also set on the current document if a page is already open.
@@ -48,14 +51,17 @@ export async function enableMysqlFeatureFlags(page: Page): Promise<void> {
         const payload = {
           id: 'cloud',
           label: 'Cloud',
-          description: 'E2E override - MySQL feature flags enabled',
+          description: 'E2E override - database feature flags enabled',
           features,
         }
         window.localStorage.setItem(key, JSON.stringify(payload))
       },
-      { key: DEBUG_PROFILE_KEY, features: MYSQL_E2E_FEATURE_OVERRIDES },
+      { key: DEBUG_PROFILE_KEY, features: DATABASE_E2E_FEATURE_OVERRIDES },
     )
     .catch(() => {
       // No document yet (about:blank) - init script covers the next navigation.
     })
 }
+
+/** @deprecated Use enableDatabaseFeatureFlags */
+export const enableMysqlFeatureFlags = enableDatabaseFeatureFlags
