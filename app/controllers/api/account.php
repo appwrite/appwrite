@@ -1710,6 +1710,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
+        $newUser = null;
+        $newTarget = null;
+
         if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
@@ -1843,8 +1846,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                     $user->removeAttribute('$sequence');
                     $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+                    $newUser = $userDoc;
                     if (!empty($email)) {
-                        $dbForProject->createDocument('targets', new Document([
+                        $newTarget = $dbForProject->createDocument('targets', new Document([
                             '$permissions' => [
                                 Permission::read(Role::user($user->getId())),
                                 Permission::update(Role::user($user->getId())),
@@ -1934,6 +1938,22 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $user->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate']);
             $user->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable']);
             $user->setAttribute('emailIsFree', $emailMetadata['emailIsFree']);
+
+            try {
+                $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getSequence(),
+                    'providerType' => MESSAGE_TYPE_EMAIL,
+                    'identifier' => $email,
+                ]));
+            } catch (Duplicate) {
+                // Another target already uses this identifier; leave it untouched
+            }
         }
 
         $identity = $dbForProject->findOne('identities', [
@@ -1974,7 +1994,16 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                 ]));
             } catch (Duplicate) {
-                // The (provider, providerUid) unique index guards the same identity being connected to two users
+                // The (provider, providerUid) unique index guards the same identity being connected to two users.
+                // A request that lost the race must not leave behind the user it just created.
+                if ($newUser !== null) {
+                    $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
+                        if ($newTarget !== null) {
+                            $dbForProject->deleteDocument('targets', $newTarget->getId());
+                        }
+                        $dbForProject->deleteDocument('users', $newUser->getId());
+                    });
+                }
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         } else {

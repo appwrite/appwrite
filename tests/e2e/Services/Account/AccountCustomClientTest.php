@@ -3536,6 +3536,55 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($userId, $response['body']['$id']);
 
+        // Linking a provider that returns an email backfills the account email and creates a messaging target
+        $backfillEmail = 'useroauthunverified@localhost.test';
+        $this->deleteUserByEmail($backfillEmail);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => 'mock-unverified',
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock-unverified', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionCookieKey . '=' . $session,
+        ]), [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('success', $response['body']['result']);
+        $session = $response['cookies'][$sessionCookieKey];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionCookieKey . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['$id']);
+        $this->assertEquals($backfillEmail, $response['body']['email']);
+        $this->assertFalse($response['body']['emailVerification']);
+        $emailTargets = \array_filter(
+            $response['body']['targets'],
+            fn ($target) => $target['providerType'] === 'email' && $target['identifier'] === $backfillEmail
+        );
+        $this->assertCount(1, $emailTargets);
+
         // Another user cannot link an identity that is already connected to a different account
         $email = uniqid() . 'oauthnoemail@localhost.test';
         $password = 'password';
