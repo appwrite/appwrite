@@ -98,6 +98,7 @@ class Delete extends Base
                 Query::equal('resourceId', [$executionId]),
                 Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
                 Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('active', [true]),
             ]));
 
             if ($schedule->isEmpty()) {
@@ -172,6 +173,7 @@ class Delete extends Base
                 Query::equal('resourceId', [$execution->getId()]),
                 Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
                 Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('active', [true]),
             ]));
 
             if ($schedule->isEmpty()) {
@@ -207,7 +209,10 @@ class Delete extends Base
         return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
             $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
 
-            if ($schedule->isEmpty()) {
+            // active=false is the scheduler's durable claim. Cancellation
+            // loses once that claim is committed, even if queue publication
+            // succeeds and the scheduler later fails to remove the schedule.
+            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
                 return false;
             }
 
