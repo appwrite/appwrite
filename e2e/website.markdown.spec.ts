@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import {
   WEBSITE_ACCESS_COOKIE_NAME,
 } from '../src/lib/website-access'

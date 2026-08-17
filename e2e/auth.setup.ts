@@ -1,7 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { env } from './config/env'
+import { acceptCookieBannerIfPresent } from './helpers/cookie-banner'
 import { withWebsiteAccessCookie } from './helpers/website-access'
 
 type StorageState = {
@@ -59,6 +60,7 @@ test('authenticate once and persist storage state', async ({
 
   await test.step('sign in with E2E credentials', async () => {
     await page.goto('/sign-in', { waitUntil: 'domcontentloaded' })
+    await acceptCookieBannerIfPresent(page)
 
     await page.locator('input[name="email"]').fill(email)
     await page.locator('input[name="password"]').fill(password)

@@ -1,10 +1,17 @@
 import 'dotenv/config'
 import { devices, type PlaywrightTestConfig } from '@playwright/test'
 import { env } from './e2e/config/env'
+import { E2E_VIEWPORT } from './e2e/config/viewport'
 import { websiteAccessStorageState } from './e2e/helpers/website-access'
 
 const isCI = env.CI
 const storageState = 'e2e/.auth/auth.json'
+
+const desktopChrome = {
+  ...devices['Desktop Chrome'],
+  viewport: E2E_VIEWPORT,
+  screen: E2E_VIEWPORT,
+}
 
 const config: PlaywrightTestConfig = {
   timeout: 120_000,
@@ -25,6 +32,8 @@ const config: PlaywrightTestConfig = {
   outputDir: 'test-results',
   use: {
     baseURL: 'http://localhost:4173/',
+    viewport: E2E_VIEWPORT,
+    screen: E2E_VIEWPORT,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -33,7 +42,7 @@ const config: PlaywrightTestConfig = {
       name: 'setup',
       testMatch: /auth\.setup\.ts/,
       use: {
-        ...devices['Desktop Chrome'],
+        ...desktopChrome,
         // Soft-launch gate: unlock /sign-in before capturing auth state.
         storageState: websiteAccessStorageState,
       },
@@ -42,7 +51,7 @@ const config: PlaywrightTestConfig = {
       name: 'website',
       testMatch: /website\..*\.spec\.ts/,
       use: {
-        ...devices['Desktop Chrome'],
+        ...desktopChrome,
         storageState: websiteAccessStorageState,
       },
     },
@@ -52,7 +61,7 @@ const config: PlaywrightTestConfig = {
       // Smoke / read-only console specs only (exclude MySQL write suites).
       testMatch: /console\.(?!mysql\.).*\.spec\.ts/,
       use: {
-        ...devices['Desktop Chrome'],
+        ...desktopChrome,
         storageState,
       },
     },
@@ -65,12 +74,12 @@ const config: PlaywrightTestConfig = {
       fullyParallel: false,
       workers: 1,
       use: {
-        ...devices['Desktop Chrome'],
+        ...desktopChrome,
         storageState,
         // Keep videos for completed MySQL coverage runs.
         video: {
           mode: 'on',
-          size: { width: 1280, height: 720 },
+          size: E2E_VIEWPORT,
         },
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',

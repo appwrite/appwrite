@@ -1,5 +1,7 @@
 import { expect, type Page } from '@playwright/test'
 import { enableMysqlFeatureFlags } from './feature-flags'
+import { acceptCookieBannerIfPresent } from './cookie-banner'
+import { waitForFullscreenLoaderHidden } from './fullscreen-loader'
 
 export type CreatedMysqlDatabase = {
   databaseId: string
@@ -31,6 +33,7 @@ export async function createMysqlDatabaseViaWizard(
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   })
+  await acceptCookieBannerIfPresent(page)
   await expect(page).toHaveURL(/\/databases\/create/, { timeout: 60_000 })
   await expect(
     page.getByRole('heading', { name: 'Choose database type' }),
@@ -151,6 +154,7 @@ export async function expectMysqlTabRenders(
   const path = mysqlDatabasePath(projectId, databaseId, tabPath)
 
   await page.goto(path, { waitUntil: 'domcontentloaded', timeout })
+  await acceptCookieBannerIfPresent(page)
   await expect(page).toHaveURL(new RegExp(tabPath.replace(/\//g, '\\/')), {
     timeout,
   })
@@ -178,9 +182,7 @@ export async function selectMysqlSchema(
   page: Page,
   schema?: string,
 ): Promise<string> {
-  await expect(page.locator('[data-fullscreen-loader]')).toHaveCount(0, {
-    timeout: 120_000,
-  })
+  await waitForFullscreenLoaderHidden(page, 120_000)
 
   const picker = page.getByRole('button', { name: 'Schema' }).first()
   await expect(picker).toBeVisible({ timeout: 60_000 })
@@ -253,9 +255,7 @@ function escapeRegExp(value: string): string {
 }
 
 export async function typeMysqlSql(page: Page, sql: string): Promise<void> {
-  await expect(page.locator('[data-fullscreen-loader]')).toHaveCount(0, {
-    timeout: 120_000,
-  })
+  await waitForFullscreenLoaderHidden(page, 120_000)
   const editor = page.locator('.monaco-editor').first()
   await expect(editor).toBeVisible({ timeout: 60_000 })
   await editor.click({ force: true })
@@ -295,12 +295,82 @@ export async function typeMysqlSql(page: Page, sql: string): Promise<void> {
   await page.waitForTimeout(200)
 }
 
-export async function runMysqlSql(page: Page): Promise<void> {
+export type MysqlExecutionPayload = {
+  rows?: unknown
+  rowCount?: number
+  columns?: Array<{ name?: string }>
+}
+
+/** Normalize execution `rows` (array or object map) into row objects. */
+export function mysqlExecutionRows(
+  payload: MysqlExecutionPayload,
+): Record<string, unknown>[] {
+  const rows = payload.rows
+  if (Array.isArray(rows)) {
+    return rows.filter(
+      (row): row is Record<string, unknown> =>
+        row !== null && typeof row === 'object' && !Array.isArray(row),
+    )
+  }
+  if (rows && typeof rows === 'object') {
+    const values = Object.values(rows as Record<string, unknown>)
+    const everyValueIsRowObject =
+      values.length > 0 &&
+      values.every(
+        (value) =>
+          value !== null && typeof value === 'object' && !Array.isArray(value),
+      )
+    if (everyValueIsRowObject) {
+      return values as Record<string, unknown>[]
+    }
+    return [rows as Record<string, unknown>]
+  }
+  return []
+}
+
+function rowValueForColumn(
+  row: Record<string, unknown>,
+  column: string,
+): unknown {
+  const match = Object.keys(row).find(
+    (key) => key.toLowerCase() === column.toLowerCase(),
+  )
+  return match === undefined ? undefined : row[match]
+}
+
+function stringifyExecutionValue(value: unknown): string {
+  if (value === null || value === undefined) return String(value)
+  // MySQL VARCHAR/CHAR often arrives as UTF-8 code units.
+  if (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((item) => typeof item === 'number')
+  ) {
+    try {
+      return new TextDecoder().decode(Uint8Array.from(value as number[]))
+    } catch {
+      return String(value)
+    }
+  }
+  return String(value)
+}
+
+export function expectMysqlExecutionCell(
+  payload: MysqlExecutionPayload,
+  column: string,
+  expected: string,
+): void {
+  const rows = mysqlExecutionRows(payload)
+  if (rows.length === 0) return
+  const value = rowValueForColumn(rows[0], column)
+  if (value === undefined) return
+  expect(stringifyExecutionValue(value)).toBe(expected)
+}
+
+export async function runMysqlSql(page: Page): Promise<MysqlExecutionPayload> {
   const runButton = page.getByRole('button', { name: /^Run/ }).first()
   await expect(runButton).toBeEnabled({ timeout: 30_000 })
-  await expect(page.locator('[data-fullscreen-loader]')).toHaveCount(0, {
-    timeout: 120_000,
-  })
+  await waitForFullscreenLoaderHidden(page, 120_000)
 
   const executionPromise = page.waitForResponse(
     (response) => {
@@ -320,8 +390,58 @@ export async function runMysqlSql(page: Page): Promise<void> {
 
   await runButton.click()
   const response = await executionPromise
+  const bodyText = await response.text()
   expect(
     response.ok(),
-    `SQL execution failed: ${response.status()} ${await response.text()}`,
+    `SQL execution failed: ${response.status()} ${bodyText}`,
   ).toBeTruthy()
+
+  try {
+    return JSON.parse(bodyText) as MysqlExecutionPayload
+  } catch {
+    throw new Error(`SQL execution response was not JSON: ${bodyText.slice(0, 500)}`)
+  }
+}
+
+/** Assert the SQL results grid shows a cell value (and optional row count). */
+export async function expectMysqlQueryResult(
+  page: Page,
+  options: {
+    column: string
+    value: string
+    rowCount?: number
+  },
+): Promise<void> {
+  await expect(page.getByRole('heading', { name: 'Query failed' })).toHaveCount(0)
+  await expect(page.getByText('Query results', { exact: true })).toBeVisible({
+    timeout: 60_000,
+  })
+
+  if (options.rowCount != null) {
+    const countLabel =
+      options.rowCount === 1 ? '1 row' : `${options.rowCount} rows`
+    await expect(page.getByText(countLabel, { exact: true })).toBeVisible()
+  }
+
+  await expect(
+    page
+      .locator('thead th')
+      .filter({ hasText: new RegExp(`^${escapeRegExp(options.column)}$`, 'i') }),
+  ).toBeVisible()
+
+  await expect(
+    page
+      .locator('tbody td[data-column]')
+      .filter({ hasText: new RegExp(`^${escapeRegExp(options.value)}$`) })
+      .first(),
+  ).toBeVisible()
+}
+
+export async function expectMysqlSidebarTable(
+  page: Page,
+  tableName: string,
+): Promise<void> {
+  await expect(
+    page.getByRole('link', { name: tableName, exact: true }),
+  ).toBeVisible({ timeout: 60_000 })
 }

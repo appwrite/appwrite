@@ -1,5 +1,7 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 import { env } from './config/env'
+import { E2E_VIEWPORT } from './config/viewport'
+import { newE2ePage } from './helpers/cookie-banner'
 import { enableMysqlFeatureFlags } from './helpers/feature-flags'
 import {
   createMysqlDatabaseViaWizard,
@@ -26,9 +28,11 @@ test.describe('console mysql create', () => {
 
     const context = await browser.newContext({
       storageState: 'e2e/.auth/auth.json',
-      recordVideo: { dir: 'test-results/mysql-videos/create' },
+      viewport: E2E_VIEWPORT,
+      screen: E2E_VIEWPORT,
+      recordVideo: { dir: 'test-results/mysql-videos/create', size: E2E_VIEWPORT },
     })
-    const page = await context.newPage()
+    const page = await newE2ePage(context)
     try {
       await enableMysqlFeatureFlags(page)
       project = await createE2eProject(page, { namePrefix: 'e2e-mysql-create' })
@@ -41,8 +45,10 @@ test.describe('console mysql create', () => {
     if (!project?.projectId) return
     const context = await browser.newContext({
       storageState: 'e2e/.auth/auth.json',
+      viewport: E2E_VIEWPORT,
+      screen: E2E_VIEWPORT,
     })
-    const page = await context.newPage()
+    const page = await newE2ePage(context)
     try {
       await deleteE2eProject(page, project)
     } finally {
@@ -65,6 +71,15 @@ test.describe('console mysql create', () => {
       ),
     )
     await expect(page.getByText(database.databaseName).first()).toBeVisible({
+      timeout: 60_000,
+    })
+    await expect(
+      page
+        .getByRole('heading', { name: /sql editor/i })
+        .or(page.getByRole('link', { name: 'SQL editor' }))
+        .first(),
+    ).toBeVisible({ timeout: 60_000 })
+    await expect(page.locator('.monaco-editor').first()).toBeVisible({
       timeout: 60_000,
     })
   })

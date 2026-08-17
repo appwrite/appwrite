@@ -1,4 +1,6 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
+import { E2E_VIEWPORT } from './config/viewport'
+import { acceptCookieBannerIfPresent, newE2ePage } from './helpers/cookie-banner'
 import { discoverConsoleTargets } from './helpers/discovery'
 import { ensureProjectActive } from './helpers/ensure-project-active'
 import { expectPageRenders } from './helpers/smoke'
@@ -16,8 +18,10 @@ test.describe('console smoke (read-only)', () => {
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext({
       storageState: 'e2e/.auth/auth.json',
+      viewport: E2E_VIEWPORT,
+      screen: E2E_VIEWPORT,
     })
-    const page = await context.newPage()
+    const page = await newE2ePage(context)
     try {
       const targets = await discoverConsoleTargets(page)
       orgId = targets.orgId
@@ -32,6 +36,7 @@ test.describe('console smoke (read-only)', () => {
     // SSR (no localStorage cookieFallback yet) and send users to `/home`, even when
     // the Playwright storage state is valid for client-side console routes.
     await page.goto('/account', { waitUntil: 'domcontentloaded' })
+    await acceptCookieBannerIfPresent(page)
     await expect(page).not.toHaveURL(/\/sign-in/)
     await expect(page).toHaveURL(/\/account(?:\/|$|\?)/, { timeout: 45_000 })
     // Prefer either the settings nav or a heading; `.first()` avoids strict-mode
@@ -58,31 +63,41 @@ test.describe('console smoke (read-only)', () => {
   test('account security renders', async ({ page }) => {
     await expectPageRenders(page, '/account/security', {
       url: /\/account\/security/,
+      ready: () =>
+        page.locator('[data-testid="settings-navigation"]:visible').first(),
     })
   })
 
   test('organization overview renders', async ({ page }) => {
     await expectPageRenders(page, `/organizations/${orgId}`, {
       url: new RegExp(`/organizations/${orgId}(?:/|$|\\?)`),
+      ready: () => page.locator('#main-content'),
     })
   })
 
   test('organization members renders', async ({ page }) => {
-    await expectPageRenders(page, `/organizations/${orgId}/members`, {
-      url: new RegExp(`/organizations/${orgId}/members`),
+    await expectPageRenders(page, `/organizations/${orgId}/settings/members`, {
+      url: new RegExp(`/organizations/${orgId}/settings/members`),
+      ready: () => page.locator('#main-content'),
     })
   })
 
   test('organization domains renders', async ({ page }) => {
     await expectPageRenders(page, `/organizations/${orgId}/domains`, {
       url: new RegExp(`/organizations/${orgId}/domains`),
+      ready: () => page.locator('#main-content'),
     })
   })
 
   test('organization billing renders', async ({ page }) => {
-    await expectPageRenders(page, `/organizations/${orgId}/billing`, {
-      url: new RegExp(`/organizations/${orgId}/billing`),
-    })
+    await expectPageRenders(
+      page,
+      `/organizations/${orgId}/settings/billing`,
+      {
+        url: new RegExp(`/organizations/${orgId}/settings/billing`),
+        ready: () => page.locator('#main-content'),
+      },
+    )
   })
 
   test.describe('project services', () => {
@@ -94,8 +109,10 @@ test.describe('console smoke (read-only)', () => {
 
       const context = await browser.newContext({
         storageState: 'e2e/.auth/auth.json',
+        viewport: E2E_VIEWPORT,
+        screen: E2E_VIEWPORT,
       })
-      const page = await context.newPage()
+      const page = await newE2ePage(context)
       try {
         await ensureProjectActive(page, projectId!)
       } finally {
@@ -121,6 +138,7 @@ test.describe('console smoke (read-only)', () => {
           url: new RegExp(
             `/projects/${projectId}${service.suffix.replace(/\//g, '\\/')}(?:/|$|\\?)`,
           ),
+          ready: () => page.locator('#main-content'),
         })
       })
     }

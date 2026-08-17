@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { acceptCookieBannerIfPresent } from './cookie-banner'
 
 /**
  * Free-plan projects can be paused for inactivity. Console project smoke tests
@@ -15,12 +16,13 @@ export async function ensureProjectActive(
     waitUntil: 'domcontentloaded',
     timeout: 45_000,
   })
+  await acceptCookieBannerIfPresent(page)
 
   const pausedHeading = page.getByRole('heading', { name: 'Project paused' })
   const restoreButton = page.getByRole('button', { name: 'Restore project' })
 
   const isPaused = await restoreButton
-    .waitFor({ state: 'visible', timeout: 10_000 })
+    .waitFor({ state: 'visible', timeout: 3_000 })
     .then(() => true)
     .catch(() => false)
 

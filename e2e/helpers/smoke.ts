@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { acceptCookieBannerIfPresent } from './cookie-banner'
 
 const FATAL_PAGE_COPY = [
   /Something went wrong/i,
@@ -56,6 +57,7 @@ export async function expectPageRenders(
     }
 
     await expect(page.locator('body')).toBeVisible({ timeout })
+    await acceptCookieBannerIfPresent(page)
 
     if (options?.url) {
       await expect(page).toHaveURL(options.url, { timeout })

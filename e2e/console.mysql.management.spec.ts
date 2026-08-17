@@ -1,6 +1,10 @@
-import { test, expect } from '@playwright/test'
+import { type Page } from '@playwright/test'
+import { test, expect } from './fixtures'
 import { env } from './config/env'
+import { E2E_VIEWPORT } from './config/viewport'
+import { newE2ePage } from './helpers/cookie-banner'
 import { enableMysqlFeatureFlags } from './helpers/feature-flags'
+import { waitForFullscreenLoaderHidden } from './helpers/fullscreen-loader'
 import {
   createMysqlDatabaseViaWizard,
   expectMysqlTabRenders,
@@ -13,25 +17,103 @@ import {
   type CreatedProject,
 } from './helpers/project-lifecycle'
 
-const DATABASE_TABS = [
-  { name: 'sql editor', path: '/sql', readyText: /Run|SQL|monaco/i },
-  { name: 'visualizer', path: '/visualizer' },
-  { name: 'enums', path: '/enums' },
-  { name: 'monitor', path: '/monitor' },
-  { name: 'backups', path: '/backups' },
-  { name: 'connections', path: '/connections' },
-  { name: 'roles', path: '/roles' },
-] as const
+const DATABASE_TABS: Array<{
+  name: string
+  path: string
+  ready: (page: Page) => ReturnType<Page['locator']>
+}> = [
+  {
+    name: 'sql editor',
+    path: '/sql',
+    ready: (page) => page.locator('.monaco-editor').first(),
+  },
+  {
+    name: 'visualizer',
+    path: '/visualizer',
+    ready: (page) =>
+      page
+        .getByText(/Select a schema in the sidebar|no user tables or views|Fit to view/i)
+        .first(),
+  },
+  {
+    name: 'enums',
+    path: '/enums',
+    ready: (page) =>
+      page
+        .getByText(/No enums|Create enum/i)
+        .or(page.getByRole('button', { name: /Create enum/i }))
+        .first(),
+  },
+  {
+    name: 'monitor',
+    path: '/monitor',
+    ready: (page) =>
+      page.getByRole('navigation', { name: 'Monitor metrics' }),
+  },
+  {
+    name: 'backups',
+    path: '/backups',
+    ready: (page) =>
+      page.getByText(/Backup|Policy|Create backup|No backups|Snapshots/i).first(),
+  },
+  {
+    name: 'connections',
+    path: '/connections',
+    ready: (page) =>
+      page.getByText(/Connect|Host|Connection|Clients|Backends/i).first(),
+  },
+  {
+    name: 'roles',
+    path: '/roles',
+    ready: (page) =>
+      page
+        .getByRole('button', { name: /Create role/i })
+        .or(page.getByText(/Create roles|No roles/i))
+        .first(),
+  },
+]
 
-const SETTINGS_SECTIONS = [
-  { name: 'general', path: '/settings' },
-  { name: 'compute', path: '/settings/compute' },
-  { name: 'replication', path: '/settings/replication' },
-  { name: 'network', path: '/settings/network' },
-  { name: 'pitr', path: '/settings/pitr' },
-  { name: 'storage', path: '/settings/storage' },
-  { name: 'maintenance', path: '/settings/maintenance' },
-] as const
+const SETTINGS_SECTIONS: Array<{
+  name: string
+  path: string
+  ready: (page: Page) => ReturnType<Page['locator']>
+}> = [
+  {
+    name: 'general',
+    path: '/settings',
+    ready: (page) => page.getByRole('heading', { name: 'Name', exact: true }),
+  },
+  {
+    name: 'compute',
+    path: '/settings/compute',
+    ready: (page) => page.getByRole('heading', { name: 'Compute tier' }),
+  },
+  {
+    name: 'replication',
+    path: '/settings/replication',
+    ready: (page) => page.getByRole('heading', { name: 'Read replicas' }),
+  },
+  {
+    name: 'network',
+    path: '/settings/network',
+    ready: (page) => page.getByRole('heading', { name: 'Network', exact: true }),
+  },
+  {
+    name: 'pitr',
+    path: '/settings/pitr',
+    ready: (page) => page.getByRole('heading', { name: /Point-in-time recovery/ }),
+  },
+  {
+    name: 'storage',
+    path: '/settings/storage',
+    ready: (page) => page.getByRole('heading', { name: 'Storage', exact: true }),
+  },
+  {
+    name: 'maintenance',
+    path: '/settings/maintenance',
+    ready: (page) => page.getByRole('heading', { name: 'Maintenance window' }),
+  },
+]
 
 /**
  * Suite: management surfaces (tabs + settings) on a fresh project + MySQL DB.
@@ -47,9 +129,14 @@ test.describe('console mysql management', () => {
 
     const context = await browser.newContext({
       storageState: 'e2e/.auth/auth.json',
-      recordVideo: { dir: 'test-results/mysql-videos/management-setup' },
+      viewport: E2E_VIEWPORT,
+      screen: E2E_VIEWPORT,
+      recordVideo: {
+        dir: 'test-results/mysql-videos/management-setup',
+        size: E2E_VIEWPORT,
+      },
     })
-    const page = await context.newPage()
+    const page = await newE2ePage(context)
     try {
       await enableMysqlFeatureFlags(page)
       project = await createE2eProject(page, {
@@ -67,8 +154,10 @@ test.describe('console mysql management', () => {
     if (!project?.projectId) return
     const context = await browser.newContext({
       storageState: 'e2e/.auth/auth.json',
+      viewport: E2E_VIEWPORT,
+      screen: E2E_VIEWPORT,
     })
-    const page = await context.newPage()
+    const page = await newE2ePage(context)
     try {
       await deleteE2eProject(page, project)
     } finally {
@@ -87,8 +176,8 @@ test.describe('console mysql management', () => {
         project.projectId,
         database.databaseId,
         tab.path,
+        { ready: () => tab.ready(page) },
       )
-      await expect(page.locator('body')).toBeVisible()
       await expect(page.getByText(/Something went wrong/i)).toHaveCount(0)
     })
   }
@@ -100,6 +189,7 @@ test.describe('console mysql management', () => {
         project.projectId,
         database.databaseId,
         section.path,
+        { ready: () => section.ready(page) },
       )
       await expect(page.getByText(/Something went wrong/i)).toHaveCount(0)
     })
@@ -114,10 +204,7 @@ test.describe('console mysql management', () => {
     await expect(
       page.getByRole('heading', { name: 'Error', exact: true }),
     ).toHaveCount(0)
-    // Settings can briefly show the global fullscreen loader over the form.
-    await expect(page.locator('[data-fullscreen-loader]')).toHaveCount(0, {
-      timeout: 120_000,
-    })
+    await waitForFullscreenLoaderHidden(page, 120_000)
 
     const nameCard = page
       .locator('div.rounded-xl')
@@ -138,9 +225,7 @@ test.describe('console mysql management', () => {
       exact: true,
     })
     await expect(updateButton).toBeEnabled({ timeout: 15_000 })
-    await expect(page.locator('[data-fullscreen-loader]')).toHaveCount(0, {
-      timeout: 60_000,
-    })
+    await waitForFullscreenLoaderHidden(page, 60_000)
 
     const patchPromise = page.waitForResponse(
       (response) => {
@@ -161,49 +246,24 @@ test.describe('console mysql management', () => {
     const response = await patchPromise
     expect(response.ok(), await response.text()).toBeTruthy()
 
-    await expect(
-      page.getByText(/Database name updated|updated/i).first(),
-    ).toBeVisible({ timeout: 30_000 })
-  })
+    await expect(page.getByText('Database name updated')).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(input).toHaveValue(updatedName)
 
-  test('roles empty / create role control is reachable', async ({ page }) => {
-    await page.goto(
-      mysqlDatabasePath(project.projectId, database.databaseId, '/roles'),
-      { waitUntil: 'domcontentloaded', timeout: 60_000 },
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await expect(page.locator('[data-fullscreen-loader]')).toHaveCount(0, {
+      timeout: 120_000,
+    })
+    const nameCardAfterReload = page
+      .locator('div.rounded-xl')
+      .filter({
+        has: page.getByRole('heading', { name: 'Name', exact: true }),
+      })
+      .first()
+    await expect(nameCardAfterReload.locator('input').first()).toHaveValue(
+      updatedName,
+      { timeout: 60_000 },
     )
-    await expect(
-      page
-        .getByRole('button', { name: /Create role/i })
-        .or(page.getByText(/Create roles|No roles/i))
-        .first(),
-    ).toBeVisible({ timeout: 60_000 })
-  })
-
-  test('connections page shows connection details entry', async ({ page }) => {
-    await page.goto(
-      mysqlDatabasePath(
-        project.projectId,
-        database.databaseId,
-        '/connections',
-      ),
-      { waitUntil: 'domcontentloaded', timeout: 60_000 },
-    )
-    await expect(
-      page
-        .getByText(/Connect|Host|Connection|Clients|Backends/i)
-        .first(),
-    ).toBeVisible({ timeout: 60_000 })
-  })
-
-  test('backups page shows policies or empty state', async ({ page }) => {
-    await page.goto(
-      mysqlDatabasePath(project.projectId, database.databaseId, '/backups'),
-      { waitUntil: 'domcontentloaded', timeout: 60_000 },
-    )
-    await expect(
-      page
-        .getByText(/Backup|Policy|Create backup|No backups|Snapshots/i)
-        .first(),
-    ).toBeVisible({ timeout: 60_000 })
   })
 })

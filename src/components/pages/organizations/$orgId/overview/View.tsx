@@ -3668,13 +3668,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       <PopoverTrigger asChild>
                                                         <button
                                                           type="button"
-                                                          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] text-foreground hover:bg-muted/60"
+                                                          className="inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 text-[12px] text-foreground hover:bg-muted/60"
                                                         >
                                                           {`${memberProjectAccess.length} ${t('projects')}`}
-                                                          <ChevronDown
-                                                            className="h-3.5 w-3.5 text-muted-foreground"
-                                                            aria-hidden
-                                                          />
                                                         </button>
                                                       </PopoverTrigger>
                                                       <PopoverContent

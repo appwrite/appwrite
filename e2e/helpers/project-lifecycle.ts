@@ -1,6 +1,7 @@
 import { expect, type Page } from '@playwright/test'
 import { env } from '../config/env'
 import { enableMysqlFeatureFlags } from './feature-flags'
+import { acceptCookieBannerIfPresent } from './cookie-banner'
 
 export const MYSQL_E2E_PROJECT_REGION = 'fra'
 
@@ -37,6 +38,7 @@ export async function createE2eProject(
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   })
+  await acceptCookieBannerIfPresent(page)
   await expect(page).toHaveURL(new RegExp(`/organizations/${orgId}`), {
     timeout: 60_000,
   })
@@ -118,6 +120,7 @@ export async function deleteE2eProject(
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   })
+  await acceptCookieBannerIfPresent(page)
 
   // Already deleted / not found - treat as success for cleanup.
   const notFound = page.getByText(/not found|doesn't exist|does not exist/i)

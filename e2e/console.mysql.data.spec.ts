@@ -1,8 +1,13 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 import { env } from './config/env'
+import { E2E_VIEWPORT } from './config/viewport'
+import { newE2ePage } from './helpers/cookie-banner'
 import { enableMysqlFeatureFlags } from './helpers/feature-flags'
 import {
   createMysqlDatabaseViaWizard,
+  expectMysqlExecutionCell,
+  expectMysqlQueryResult,
+  expectMysqlSidebarTable,
   expectMysqlTabRenders,
   mysqlDatabasePath,
   runMysqlSql,
@@ -35,9 +40,11 @@ test.describe('console mysql data', () => {
 
     const context = await browser.newContext({
       storageState: 'e2e/.auth/auth.json',
-      recordVideo: { dir: 'test-results/mysql-videos/data-setup' },
+      viewport: E2E_VIEWPORT,
+      screen: E2E_VIEWPORT,
+      recordVideo: { dir: 'test-results/mysql-videos/data-setup', size: E2E_VIEWPORT },
     })
-    const page = await context.newPage()
+    const page = await newE2ePage(context)
     try {
       await enableMysqlFeatureFlags(page)
       project = await createE2eProject(page, { namePrefix: 'e2e-mysql-data' })
@@ -53,8 +60,10 @@ test.describe('console mysql data', () => {
     if (!project?.projectId) return
     const context = await browser.newContext({
       storageState: 'e2e/.auth/auth.json',
+      viewport: E2E_VIEWPORT,
+      screen: E2E_VIEWPORT,
     })
-    const page = await context.newPage()
+    const page = await newE2ePage(context)
     try {
       await deleteE2eProject(page, project)
     } finally {
@@ -84,10 +93,16 @@ test.describe('console mysql data', () => {
     ).toHaveCount(0)
 
     await typeMysqlSql(page, 'SELECT 1 AS ok;')
-    await runMysqlSql(page)
+    const execution = await runMysqlSql(page)
 
-    await expect(page.getByText('ok', { exact: true }).first()).toBeVisible({
-      timeout: 60_000,
+    expectMysqlExecutionCell(execution, 'ok', '1')
+    if (execution.rowCount != null) {
+      expect(Number(execution.rowCount)).toBe(1)
+    }
+    await expectMysqlQueryResult(page, {
+      column: 'ok',
+      value: '1',
+      rowCount: 1,
     })
   })
 
@@ -149,6 +164,7 @@ test.describe('console mysql data', () => {
       0,
       { timeout: 30_000 },
     )
+    await expectMysqlSidebarTable(page, tableName)
 
     const tableId = `${schemaName}.${tableName}`
     const encoded = encodeURIComponent(tableId)
@@ -161,11 +177,12 @@ test.describe('console mysql data', () => {
       {
         ready: () =>
           page
-            .getByText(tableName)
-            .or(page.getByRole('columnheader').first())
+            .getByRole('columnheader', { name: 'id', exact: true })
+            .or(page.getByText('No results for query'))
             .first(),
       },
     )
+    await expectMysqlSidebarTable(page, tableName)
 
     await expectMysqlTabRenders(
       page,
@@ -173,13 +190,10 @@ test.describe('console mysql data', () => {
       database.databaseId,
       `/tables/${encoded}/columns`,
       {
-        ready: () =>
-          page
-            .getByText(/id|Column/i)
-            .or(page.getByRole('columnheader').first())
-            .first(),
+        ready: () => page.getByText('id', { exact: true }).first(),
       },
     )
+    await expect(page.getByText('created_at', { exact: true }).first()).toBeVisible()
 
     await expectMysqlTabRenders(
       page,
@@ -189,8 +203,8 @@ test.describe('console mysql data', () => {
       {
         ready: () =>
           page
-            .getByText(/PRIMARY|Index|index/i)
-            .or(page.getByRole('columnheader').first())
+            .getByText('PRIMARY', { exact: true })
+            .or(page.getByText('Primary key'))
             .first(),
       },
     )
@@ -200,13 +214,22 @@ test.describe('console mysql data', () => {
       project.projectId,
       database.databaseId,
       `/tables/${encoded}/settings`,
+      {
+        ready: () =>
+          page.getByRole('heading', { name: 'Table properties' }),
+      },
     )
+    await expect(page.getByText(tableName).first()).toBeVisible()
 
     await expectMysqlTabRenders(
       page,
       project.projectId,
       database.databaseId,
       `/tables/${encoded}/security`,
+      {
+        ready: () =>
+          page.getByRole('heading', { name: /Row level security/ }),
+      },
     )
   })
 
@@ -217,6 +240,13 @@ test.describe('console mysql data', () => {
       mysqlDatabasePath(project.projectId, database.databaseId, '/sql'),
       { waitUntil: 'domcontentloaded', timeout: 60_000 },
     )
+    await expect(page.getByText('Loading database...')).toHaveCount(0, {
+      timeout: 120_000,
+    })
+    await expect(page.locator('.monaco-editor').first()).toBeVisible({
+      timeout: 120_000,
+    })
+    await selectMysqlSchema(page, schemaName)
 
     const ddlTable = 'e2e_sql_table'
     await typeMysqlSql(
@@ -224,12 +254,27 @@ test.describe('console mysql data', () => {
       `CREATE TABLE \`${schemaName}\`.\`${ddlTable}\` (id BIGINT PRIMARY KEY, name VARCHAR(64));`,
     )
     await runMysqlSql(page)
-
+    await expect(page.getByRole('heading', { name: 'Query failed' })).toHaveCount(
+      0,
+    )
     await expect(
       page
-        .getByText(ddlTable)
-        .or(page.getByText(/success|0 rows|affected/i))
+        .getByText('Query results', { exact: true })
+        .or(page.getByText('0 rows', { exact: true }))
         .first(),
     ).toBeVisible({ timeout: 60_000 })
+
+    await typeMysqlSql(
+      page,
+      `SELECT TABLE_NAME AS table_name FROM information_schema.TABLES WHERE TABLE_SCHEMA = '${schemaName}' AND TABLE_NAME = '${ddlTable}';`,
+    )
+    const execution = await runMysqlSql(page)
+    expectMysqlExecutionCell(execution, 'table_name', ddlTable)
+    await expectMysqlQueryResult(page, {
+      column: 'table_name',
+      value: ddlTable,
+      rowCount: 1,
+    })
+    await expectMysqlSidebarTable(page, ddlTable)
   })
 })

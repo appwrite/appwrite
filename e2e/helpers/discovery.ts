@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test'
 import { expect } from '@playwright/test'
 import { env } from '../config/env'
+import { acceptCookieBannerIfPresent } from './cookie-banner'
 
 export type ConsoleTargets = {
   orgId: string
@@ -45,6 +46,7 @@ export async function discoverConsoleTargets(
 
   try {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 45_000 })
+    await acceptCookieBannerIfPresent(page)
     await page.waitForURL(/\/organizations\/[^/?#]+/, { timeout: 45_000 })
 
     const match = new URL(page.url()).pathname.match(
