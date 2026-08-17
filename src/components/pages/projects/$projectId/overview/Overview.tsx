@@ -1561,7 +1561,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   <div className="mb-4 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
                     <div className="h-px flex-1 bg-border" />
                     <span className="font-medium text-foreground/80">
-                      {t('Create API key for your language')}
+                      {t('Get started with your platform of choice')}
                     </span>
                     <div className="h-px flex-1 bg-border" />
                   </div>

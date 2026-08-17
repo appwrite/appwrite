@@ -23,7 +23,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search API keys...': 'API キーを検索...',
   'Create API key': 'API キーの作成',
   'No API keys created': 'API キーが作成されていません',
-  'Create API key for your language': '使用する言語用の API キーを作成',
+  'Get started with your platform of choice': 'お好みのプラットフォームで始めましょう',
   'No API keys match your search': '検索に一致する API キーがありません',
   'Delete API key': 'API キーの削除',
   'this API key': 'この API キー',
