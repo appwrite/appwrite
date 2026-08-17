@@ -1209,7 +1209,7 @@ trait Base
                             _permissions
                             data
                         }
-                    }   
+                    }
                 }';
             case self::CREATE_DOCUMENT:
                 return 'mutation createDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){

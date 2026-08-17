@@ -289,7 +289,6 @@ trait QueryJoinPermissions
             ],
         ]);
         $this->assertSame(201, $carol['headers']['status-code']);
-        $carolId = $carol['body']['$id'];
 
         $publicOrder = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $ordersId), $serverHeaders, [
             $this->joinRecordIdParam() => ID::unique(),
@@ -496,7 +495,6 @@ trait QueryJoinPermissions
             'ordersId' => $ordersId,
             'privateId' => $privateId,
             'aliceId' => $aliceId,
-            'carolId' => $carolId,
             'selfJoinId' => $selfJoinId,
             'dsOffSourceId' => $dsOffSourceId,
             'dsOffJoinedId' => $dsOffJoinedId,
