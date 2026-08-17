@@ -1770,17 +1770,53 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(401, $response['headers']['status-code']);
 
+        $projectId = $this->getProject()['$id'];
+        unset(
+            self::$accountData[$projectId],
+            self::$sessionData[$projectId],
+            self::$updatedNameData[$projectId],
+            self::$updatedPasswordData[$projectId],
+            self::$updatedEmailData[$projectId],
+            self::$updatedPrefsData[$projectId],
+            self::$verificationData[$projectId],
+            self::$verifiedData[$projectId],
+        );
     }
 
     public function testDeleteAccountSessionsWithJWT(): void
     {
-        $data = $this->setupAccountWithVerifiedEmail();
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'JWT session delete',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session = $response['cookies']['a_session_' . $projectId];
 
         $response = $this->client->call(Client::METHOD_POST, '/account/jwt', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $data['session'],
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
