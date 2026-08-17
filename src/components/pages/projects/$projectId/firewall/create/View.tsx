@@ -65,7 +65,6 @@ function initialConditionsFromSearch(
   )
 }
 
-
 const RESOURCE_TYPE_META: Record<
   FirewallResourceType,
   { description: string; icon: typeof Globe }
@@ -399,6 +398,12 @@ export function View() {
           action={form.action}
           resourceType={form.resourceType}
           resourceId={form.resourceId}
+          rateLimit={{
+            strategy: form.strategy,
+            limit: form.limit,
+            interval: form.interval,
+            maxBucketSize: form.maxBucketSize,
+          }}
         />
       }
       footer={
@@ -432,7 +437,9 @@ export function View() {
           </div>
 
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="firewall-rule-description">{t('Description')}</Label>
+            <Label htmlFor="firewall-rule-description">
+              {t('Description')}
+            </Label>
             <Textarea
               id="firewall-rule-description"
               value={form.description}

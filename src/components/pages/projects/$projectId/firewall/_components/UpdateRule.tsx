@@ -295,7 +295,9 @@ export function UpdateRule({
             min={CHALLENGE_TTL_MIN}
             max={CHALLENGE_TTL_MAX}
             value={ttl}
-            onChange={(e) => setTtl(Number(e.target.value) || CHALLENGE_TTL_MIN)}
+            onChange={(e) =>
+              setTtl(Number(e.target.value) || CHALLENGE_TTL_MIN)
+            }
             disabled={updateMutation.isPending}
           />
           <p className="text-[12px] text-muted-foreground">
@@ -436,7 +438,9 @@ export function UpdateRule({
               />
 
               <div className="space-y-2">
-                <Label htmlFor="update-firewall-priority">{t('Priority')}</Label>
+                <Label htmlFor="update-firewall-priority">
+                  {t('Priority')}
+                </Label>
                 <Input
                   id="update-firewall-priority"
                   type="number"
@@ -472,6 +476,7 @@ export function UpdateRule({
                 resourceType={resourceType}
                 resourceId={resourceId}
                 showActivity
+                rateLimit={{ strategy, limit, interval, maxBucketSize }}
               />
             </div>
           </div>

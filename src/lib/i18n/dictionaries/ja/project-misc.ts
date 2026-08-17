@@ -189,6 +189,22 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Site ID': 'サイト ID',
   'Request limit': 'リクエスト上限',
   'Interval (seconds)': '間隔 (秒)',
+  'Fixed window': '固定ウィンドウ',
+  'Sliding window': 'スライディングウィンドウ',
+  'Token bucket': 'トークンバケット',
+  'Max bucket size': 'バケットの最大サイズ',
+  'The largest burst allowed. Defaults to the request limit when left unset.':
+    '許可される最大バースト。未設定の場合はリクエスト上限が既定値になります。',
+  'Rate limit strategy illustration': 'レート制限戦略の図',
+  'first request': '最初のリクエスト',
+  per: '/',
+  'each request takes one token': 'リクエストごとにトークン1つ消費',
+  'Windows align to the clock. Rate limit resets for everyone when the next time interval starts.':
+    'ウィンドウは時計に揃えられます。次の時間間隔が始まると、全員のレート制限がリセットされます。',
+  "Windows align to the user. Helps prevent traffic spikes since the reset doesn't occur for all users at the same time.":
+    'ウィンドウはユーザーに揃えられます。リセットが全ユーザーで同時に発生しないため、トラフィックの急増を防ぎやすくなります。',
+  'Windows align to human behaviour. Allows accumulated short bursts, and refills for sustained pace.':
+    'ウィンドウは人間の行動に揃えられます。蓄積された短いバーストを許可し、持続的なペースに向けて補充されます。',
   'Redirect location': 'リダイレクト先',
   'Status code': 'ステータスコード',
   'Match requests when all conditions are true.':
