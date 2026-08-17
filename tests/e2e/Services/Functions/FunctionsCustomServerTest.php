@@ -1847,8 +1847,10 @@ final class FunctionsCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
+        // Explicitly send an empty JSON object instead of relying on the default empty array.
         $execution = $this->createExecution($data['functionId'], [
             'async' => 'false',
+            'headers' => new \stdClass(),
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
