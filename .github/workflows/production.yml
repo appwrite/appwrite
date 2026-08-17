@@ -22,8 +22,28 @@ env:
 
 jobs:
     build:
-        runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7/extras=otel
+        # One job per architecture, each on a runner of that architecture, so the
+        # arm64 image is built natively instead of under QEMU emulation.
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - arch: amd64
+                      platform: linux/amd64
+                      runner: 4cpu-linux-x64
+                      family: c7
+                    - arch: arm64
+                      platform: linux/arm64
+                      runner: 4cpu-linux-arm64
+                      family: c7g
+        runs-on: runs-on=${{ github.run_id }}/runner=${{ matrix.runner }}/family=${{ matrix.family }}/extras=otel
         timeout-minutes: 45
+        # Matrix legs share one output map, so each leg has to write to its own
+        # key; the leg it does not belong to gets an empty value, which GitHub
+        # drops rather than writing over the other leg's digest.
+        outputs:
+            digest_amd64: ${{ matrix.arch == 'amd64' && steps.build.outputs.digest || '' }}
+            digest_arm64: ${{ matrix.arch == 'arm64' && steps.build.outputs.digest || '' }}
         steps:
             - name: Checkout the repo
               uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -42,14 +62,19 @@ jobs:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-            - name: Build and push
+            - name: Build and push by digest
+              id: build
               uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
               with:
                   context: .
-                  push: true
-                  tags: |
-                      ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
-                      ${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+                  platforms: ${{ matrix.platform }}
+                  # Pushed by digest, with no tag of its own: the manifest job below
+                  # is what tags the merged index, so ${TAG} is the only tag that ever
+                  # appears in the registries - no per-arch tags to clean up.
+                  outputs: type=image,"name=${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME }},${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
+                  # Default provenance would push an image index per arch, leaving
+                  # imagetools to merge an index of indexes.
+                  provenance: false
                   # Only build-time (brand) constants are passed here. Per-environment
                   # public config is supplied at runtime via the Helm chart env, so the
                   # same image is promoted across environments.
@@ -61,8 +86,42 @@ jobs:
                   secrets: |
                       sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
 
-    deploy:
+    manifest:
         needs: build
+        runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
+        timeout-minutes: 10
+        steps:
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+              with:
+                  registry: ${{ env.REGISTRY_GITHUB }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+              with:
+                  registry: ${{ env.REGISTRY_DOCKERHUB }}
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Tag the per-arch digests as one multi-arch manifest
+              # Digests are content-addressed, so the same pair is valid in both
+              # registries.
+              env:
+                  DIGESTS: ${{ needs.build.outputs.digest_amd64 }} ${{ needs.build.outputs.digest_arm64 }}
+              run: |
+                  for registry in "$REGISTRY_GITHUB" "$REGISTRY_DOCKERHUB"; do
+                    refs=""
+                    for digest in $DIGESTS; do
+                      refs="$refs $registry/$IMAGE_NAME@$digest"
+                    done
+                    docker buildx imagetools create --tag "$registry/$IMAGE_NAME:$TAG" $refs
+                    docker buildx imagetools inspect "$registry/$IMAGE_NAME:$TAG"
+                  done
+
+    deploy:
+        needs: manifest
         runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
         timeout-minutes: 10
         # Shared across the staging and production workflows so their deploy
