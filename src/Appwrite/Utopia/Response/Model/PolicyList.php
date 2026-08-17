@@ -41,6 +41,10 @@ class PolicyList extends Model
             Response::MODEL_POLICY_USER_LIMIT,
             Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
             Response::MODEL_POLICY_MFA_FACTORS,
+            Response::MODEL_POLICY_DENY_ALIASED_EMAIL,
+            Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
+            Response::MODEL_POLICY_DENY_FREE_EMAIL,
         ];
     }
 

@@ -153,6 +153,22 @@ class XList extends Action
             ], $auths['mfaFactors'] ?? [], [
                 '$id' => 'mfa-factors',
             ])),
+            new Document([
+                '$id' => 'deny-aliased-email',
+                'enabled' => $auths['canonicalEmails'] ?? false,
+            ]),
+            new Document([
+                '$id' => 'deny-corporate-email',
+                'enabled' => $auths['corporateEmails'] ?? false,
+            ]),
+            new Document([
+                '$id' => 'deny-disposable-email',
+                'enabled' => $auths['disposableEmails'] ?? false,
+            ]),
+            new Document([
+                '$id' => 'deny-free-email',
+                'enabled' => $auths['freeEmails'] ?? false,
+            ]),
         ];
     }
 }

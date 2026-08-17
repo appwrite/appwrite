@@ -86,6 +86,10 @@ class Get extends Action
             'user-limit' => Response::MODEL_POLICY_USER_LIMIT,
             'membership-privacy' => Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
             'mfa-factors' => Response::MODEL_POLICY_MFA_FACTORS,
+            'deny-aliased-email' => Response::MODEL_POLICY_DENY_ALIASED_EMAIL,
+            'deny-corporate-email' => Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            'deny-disposable-email' => Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
+            'deny-free-email' => Response::MODEL_POLICY_DENY_FREE_EMAIL,
         ];
     }
 
@@ -187,6 +191,34 @@ class Get extends Action
                     '$id' => 'mfa-factors',
                 ])),
                 Response::MODEL_POLICY_MFA_FACTORS,
+            ],
+            'deny-aliased-email' => [
+                new Document([
+                    '$id' => 'deny-aliased-email',
+                    'enabled' => $auths['canonicalEmails'] ?? false,
+                ]),
+                Response::MODEL_POLICY_DENY_ALIASED_EMAIL,
+            ],
+            'deny-corporate-email' => [
+                new Document([
+                    '$id' => 'deny-corporate-email',
+                    'enabled' => $auths['corporateEmails'] ?? false,
+                ]),
+                Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            ],
+            'deny-disposable-email' => [
+                new Document([
+                    '$id' => 'deny-disposable-email',
+                    'enabled' => $auths['disposableEmails'] ?? false,
+                ]),
+                Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
+            ],
+            'deny-free-email' => [
+                new Document([
+                    '$id' => 'deny-free-email',
+                    'enabled' => $auths['freeEmails'] ?? false,
+                ]),
+                Response::MODEL_POLICY_DENY_FREE_EMAIL,
             ],
             default => null,
         };

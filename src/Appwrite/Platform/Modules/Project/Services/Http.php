@@ -76,6 +76,10 @@ use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Create as CreateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Update as UpdateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\XList as ListPlatforms;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyAliasedEmail\Update as UpdateDenyAliasedEmailPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyCorporateEmail\Update as UpdateDenyCorporateEmailPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyDisposableEmail\Update as UpdateDenyDisposableEmailPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyFreeEmail\Update as UpdateDenyFreeEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\Get as GetPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MembershipPrivacy\Update as UpdateMembershipPrivacyPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MFAFactors\Update as UpdateMFAFactorsPolicy;
@@ -168,6 +172,10 @@ class Http extends Service
         // Policies
         $this->addAction(ListPolicies::getName(), new ListPolicies());
         $this->addAction(GetPolicy::getName(), new GetPolicy());
+        $this->addAction(UpdateDenyAliasedEmailPolicy::getName(), new UpdateDenyAliasedEmailPolicy());
+        $this->addAction(UpdateDenyCorporateEmailPolicy::getName(), new UpdateDenyCorporateEmailPolicy());
+        $this->addAction(UpdateDenyDisposableEmailPolicy::getName(), new UpdateDenyDisposableEmailPolicy());
+        $this->addAction(UpdateDenyFreeEmailPolicy::getName(), new UpdateDenyFreeEmailPolicy());
         $this->addAction(UpdateMembershipPrivacyPolicy::getName(), new UpdateMembershipPrivacyPolicy());
         $this->addAction(UpdateMFAFactorsPolicy::getName(), new UpdateMFAFactorsPolicy());
         $this->addAction(UpdatePasswordDictionaryPolicy::getName(), new UpdatePasswordDictionaryPolicy());

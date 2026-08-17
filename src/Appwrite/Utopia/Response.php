@@ -263,6 +263,10 @@ class Response extends SwooleResponse
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_POLICY_LIST = 'policyList';
+    public const MODEL_POLICY_DENY_ALIASED_EMAIL = 'policyDenyAliasedEmail';
+    public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
+    public const MODEL_POLICY_DENY_DISPOSABLE_EMAIL = 'policyDenyDisposableEmail';
+    public const MODEL_POLICY_DENY_FREE_EMAIL = 'policyDenyFreeEmail';
     public const MODEL_POLICY_PASSWORD_DICTIONARY = 'policyPasswordDictionary';
     public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
     public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
