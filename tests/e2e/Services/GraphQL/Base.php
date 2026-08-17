@@ -2248,7 +2248,8 @@ trait Base
                 return 'query getExecution($functionId: String!$executionId: String!) {
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
                         _id
-                        functionId
+                        resourceId
+                        resourceType
                         status
                         logs
                         errors
@@ -2260,7 +2261,8 @@ trait Base
                         total
                         executions {
                             _id
-                            functionId
+                            resourceId
+                            resourceType
                             status
                             logs
                             errors
@@ -2271,7 +2273,8 @@ trait Base
                 return 'mutation createExecution($functionId: String!, $body: String, $async: Boolean) {
                     functionsCreateExecution(functionId: $functionId, body: $body, async: $async) {
                         _id
-                        functionId
+                        resourceId
+                        resourceType
                         status
                         logs
                         errors
