@@ -43,6 +43,7 @@ class Get extends Action
             ->groups(['api', 'database'])
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -135,8 +136,9 @@ class Get extends Action
         );
 
         $usage
-            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
+            ->setResource('database')
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1));
 
         $response->addHeader('X-Debug-Operations', $operations);
 

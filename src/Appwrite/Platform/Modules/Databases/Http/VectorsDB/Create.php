@@ -32,6 +32,7 @@ class Create extends DatabaseCreate
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'database.create')
             ->label('audits.resource', 'database/{response.$id}')
+            ->label('usage.resource', 'database/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: 'vectorsdb',

@@ -651,42 +651,6 @@ final class DatabaseServerTest extends Scope
         return self::$cachedRelationshipColumnData[$cacheKey];
     }
 
-    protected function setupUpdatedRelationshipColumn(): array
-    {
-        $data = $this->setupRelationshipColumn();
-        $projectId = $this->getProject()['$id'];
-
-        $databaseId = $data['database']['_id'];
-        $tableId = $data['table2']['_id'];
-
-        $this->assertEventually(function () use ($databaseId, $tableId) {
-            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/actors', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals('available', $response['body']['status']);
-        }, 240000, 500);
-
-        $query = $this->getQuery(self::UPDATE_RELATIONSHIP_COLUMN);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $databaseId,
-                'tableId' => $tableId,
-                'key' => 'actors',
-                'onDelete' => Database::RELATION_MUTATE_CASCADE,
-            ]
-        ];
-
-        $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        return $data;
-    }
-
     protected function setupIPColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -717,43 +681,6 @@ final class DatabaseServerTest extends Scope
         return self::$cachedIPColumnData[$cacheKey];
     }
 
-    protected function setupUpdatedIPColumn(): array
-    {
-        $data = $this->setupIPColumn();
-        $projectId = $this->getProject()['$id'];
-
-        $databaseId = $data['database']['_id'];
-        $tableId = $data['table']['_id'];
-
-        $this->assertEventually(function () use ($databaseId, $tableId) {
-            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/ip', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals('available', $response['body']['status']);
-        }, 240000, 500);
-
-        $query = $this->getQuery(self::UPDATE_IP_COLUMN);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $databaseId,
-                'tableId' => $tableId,
-                'key' => 'ip',
-                'required' => false,
-                'default' => '127.0.0.1'
-            ]
-        ];
-
-        $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        return $data;
-    }
-
     protected function setupURLColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -782,43 +709,6 @@ final class DatabaseServerTest extends Scope
 
         self::$cachedURLColumnData[$cacheKey] = $data;
         return self::$cachedURLColumnData[$cacheKey];
-    }
-
-    protected function setupUpdatedURLColumn(): array
-    {
-        $data = $this->setupURLColumn();
-        $projectId = $this->getProject()['$id'];
-
-        $databaseId = $data['database']['_id'];
-        $tableId = $data['table']['_id'];
-
-        $this->assertEventually(function () use ($databaseId, $tableId) {
-            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/url', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals('available', $response['body']['status']);
-        }, 240000, 500);
-
-        $query = $this->getQuery(self::UPDATE_URL_COLUMN);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $databaseId,
-                'tableId' => $tableId,
-                'key' => 'url',
-                'required' => false,
-                'default' => 'https://cloud.appwrite.io'
-            ]
-        ];
-
-        $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        return $data;
     }
 
     protected function setupIndex(): array

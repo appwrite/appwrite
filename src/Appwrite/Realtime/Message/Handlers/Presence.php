@@ -16,7 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Platform\Action;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Text;
 
 class Presence extends Action
@@ -28,7 +28,7 @@ class Presence extends Action
             ->label(Dispatcher::LABEL_MESSAGE_TYPE, 'presence')
             ->param('status', '', new Text(2048), 'Presence status')
             ->param('presenceId', 'unique()', new Text(36), 'Presence document ID', true)
-            ->param('metadata', null, new JSON(), 'Optional metadata payload', true, [], true)
+            ->param('metadata', null, new JSONObject(), 'Optional metadata payload', true, [], true)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('connectionId')
             ->inject('realtime')

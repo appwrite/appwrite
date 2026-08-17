@@ -210,14 +210,16 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function getLog(string $siteId, $logId): mixed
+    protected function listLogs(string $siteId, array $queries = []): mixed
     {
-        $log = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs/' . $logId, array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => $queries
+        ]);
 
-        return $log;
+        return $logs;
     }
 
     protected function listSites(mixed $params = []): mixed
@@ -238,18 +240,6 @@ trait SitesBase
         ], $this->getHeaders()), $params);
 
         return $deployments;
-    }
-
-    protected function listLogs(string $siteId, array $queries = []): mixed
-    {
-        $logs = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => $queries
-        ]);
-
-        return $logs;
     }
 
     protected function packageSite(string $site): CURLFile
@@ -286,27 +276,6 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function setupDuplicateDeployment(string $siteId, string $deploymentId): string
-    {
-        $deployment = $this->createDuplicateDeployment($siteId, $deploymentId);
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-
-        $deploymentId = $deployment['body']['$id'];
-        $this->assertNotEmpty($deploymentId);
-
-        $this->assertEventually(function () use ($siteId, $deploymentId) {
-            $deployment = $this->getDeployment($siteId, $deploymentId);
-            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 120000, 500);
-
-        $this->assertEventually(function () use ($siteId, $deploymentId) {
-            $site = $this->getSite($siteId);
-            $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-        }, 60000, 500);
-
-        return $deploymentId;
-    }
-
     protected function createDuplicateDeployment(string $siteId, string $deploymentId): mixed
     {
         $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/duplicate', array_merge([
@@ -329,16 +298,6 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function getUsage(string $siteId, mixed $params): mixed
-    {
-        $usage = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $usage;
-    }
-
     protected function getTemplate(string $templateId)
     {
         $template = $this->client->call(Client::METHOD_GET, '/sites/templates/' . $templateId, [
@@ -347,35 +306,6 @@ trait SitesBase
         ]);
 
         return $template;
-    }
-
-    protected function helperGetLatestCommit(string $owner, string $repository): ?string
-    {
-        $maxRetries = 3;
-        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
-            if ($attempt > 0) {
-                sleep(2);
-            }
-
-            $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'User-Agent: Appwrite',
-                'Accept: application/vnd.github.v3+json'
-            ]);
-
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-            if ($httpCode === 200) {
-                $commitData = json_decode($response, true);
-                if (isset($commitData['sha'])) {
-                    return $commitData['sha'];
-                }
-            }
-        }
-
-        return null;
     }
 
     protected function deleteSite(string $siteId): mixed
@@ -496,5 +426,14 @@ trait SitesBase
         ], $this->getHeaders()), $params);
 
         return $specifications;
+    }
+
+    protected function getEnabledSpecification(array $specifications): string
+    {
+        $specification = array_find($specifications, fn (array $specification) => $specification['enabled']);
+
+        $this->assertNotNull($specification, 'Expected at least one enabled specification.');
+
+        return $specification['slug'];
     }
 }

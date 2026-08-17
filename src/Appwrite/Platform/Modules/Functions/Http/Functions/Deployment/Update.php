@@ -40,6 +40,7 @@ class Update extends Base
             ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'functions',
@@ -84,6 +85,15 @@ class Update extends Base
         }
 
         if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        $resourceType = $deployment->getAttribute('resourceType');
+        // Untyped deployments predate Sites and belong to Functions.
+        if (
+            $deployment->getAttribute('resourceId') !== $function->getId()
+            || ($resourceType !== 'functions' && !empty($resourceType))
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 

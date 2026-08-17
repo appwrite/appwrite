@@ -186,11 +186,15 @@ class State
                 return false;
             }
             if (count($parts) === 2) {
+                // Trailing colon with no digits is an explicit but empty port.
+                if ($parts[1] === '') {
+                    return false;
+                }
                 [$host, $port] = $parts;
             }
         }
 
-        if ($port !== null && $port !== '' && !$this->isValidPort($port)) {
+        if ($port !== null && !$this->isValidPort($port)) {
             return false;
         }
 
@@ -199,7 +203,7 @@ class State
 
     public function isValidDatabaseAdapter(string $value): bool
     {
-        return in_array($value, ['mongodb', 'mariadb', 'postgresql'], true);
+        return in_array($value, ['postgresql', 'mariadb', 'mongodb'], true);
     }
 
     public function progressFilePath(string $installId): string

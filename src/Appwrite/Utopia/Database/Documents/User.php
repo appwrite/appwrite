@@ -11,7 +11,6 @@ use Utopia\Database\Validator\Roles;
 
 class User extends Document
 {
-    public const ROLE_ANY = 'any';
     public const ROLE_GUESTS = 'guests';
     public const ROLE_USERS = 'users';
     public const ROLE_ADMIN = 'admin';
@@ -19,16 +18,6 @@ class User extends Document
     public const ROLE_OWNER = 'owner';
     public const ROLE_KEYS = 'keys';
     public const ROLE_SYSTEM = 'system';
-
-    public function getEmail(): ?string
-    {
-        return $this->getAttribute('email');
-    }
-
-    public function getPhone(): ?string
-    {
-        return $this->getAttribute('phone');
-    }
 
     /**
      * Returns all roles for a user.
@@ -81,17 +70,6 @@ class User extends Document
         }
 
         return $roles;
-    }
-
-    /**
-     * Check if user is anonymous.
-     *
-     * @return bool
-     */
-    public function isAnonymous(): bool
-    {
-        return is_null($this->getEmail())
-            && is_null($this->getPhone());
     }
 
     /**
@@ -173,5 +151,23 @@ class User extends Document
         }
 
         return false;
+    }
+
+    /**
+     * Check that a session exists on the user and has not expired.
+     *
+     * Used by JWT authentication, which binds to a session ID rather than a
+     * session secret.
+     */
+    public function sessionActive(string $sessionId): bool
+    {
+        $session = $this->find('$id', $sessionId, 'sessions');
+
+        if (empty($session)) {
+            return false;
+        }
+
+        return $session->isSet('expire')
+            && DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now());
     }
 }

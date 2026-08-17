@@ -11,6 +11,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -25,6 +27,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -47,6 +50,7 @@ class Create extends Base
             ->label('event', 'sites.[siteId].create')
             ->label('audits.event', 'site.create')
             ->label('audits.resource', 'site/{response.$id}')
+            ->label('usage.resource', 'site/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'sites',
@@ -96,11 +100,14 @@ class Create extends Base
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the SSR executions.', true, ['plan'])
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ->param('scopes', [], new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('vcsFactory')
+            ->inject('repositoryWebhooks')
             ->callback($this->action(...));
     }
 
@@ -128,11 +135,14 @@ class Create extends Base
         string $buildSpecification,
         string $runtimeSpecification,
         int $deploymentRetention,
+        array $scopes,
         Response $response,
         Database $dbForProject,
         Document $project,
         Event $queueForEvents,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        VcsFactory $vcsFactory,
+        RepositoryWebhooks $repositoryWebhooks
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -141,6 +151,12 @@ class Create extends Base
             if (!$validator->isValid($adapter)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
             }
+        }
+
+        $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
+
+        if (!empty($allowList) && !empty($buildRuntime) && !\in_array($buildRuntime, $allowList, true)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "' . $buildRuntime . '" is not supported');
         }
 
         $siteId = ($siteId == 'unique()') ? ID::unique() : $siteId;
@@ -190,6 +206,7 @@ class Create extends Base
             'runtimeSpecification' => $runtimeSpecification,
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
+            'scopes' => $scopes,
         ]);
 
         try {
@@ -214,6 +231,22 @@ class Create extends Base
                 'providerPullRequestIds' => []
             ]);
             $repository = $dbForPlatform->createDocument('repositories', $repository);
+
+            try {
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
+                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+                }
+            } catch (\Throwable $error) {
+                // Don't leave an orphaned repositories document behind -- it
+                // would make the next retry's connection count look like a
+                // repeat, silently skipping webhook creation.
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
+                throw $error;
+            }
+
             $site->setAttribute('repositoryId', $repository->getId());
             $site->setAttribute('repositoryInternalId', $repository->getSequence());
 

@@ -6,6 +6,7 @@ use Appwrite\Event\Message\Audit as AuditMessage;
 use Utopia\Console;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
+use Utopia\System\System;
 
 readonly class Audit extends Base
 {
@@ -18,6 +19,10 @@ readonly class Audit extends Base
 
     public function enqueue(AuditMessage $message): string|bool
     {
+        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+            return false;
+        }
+
         // Audit delivery is best-effort and should never fail the request lifecycle.
         try {
             return $this->publish($this->queue, $message);

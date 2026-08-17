@@ -54,6 +54,11 @@ return [
         'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
         'code' => 429,
     ],
+    Exception::GENERAL_RESOURCE_LOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_LOCKED,
+        'description' => 'The requested resource is currently being modified by another request. Please retry after a brief delay.',
+        'code' => 409,
+    ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
         'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',
@@ -342,6 +347,11 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_OAUTH2_PROVIDER_FAILURE => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_FAILURE,
+        'description' => '%s couldn\'t complete sign-in (%s). Please try again.',
+        'code' => 424,
+    ],
     Exception::USER_EMAIL_NOT_VERIFIED => [
         'name' => Exception::USER_EMAIL_NOT_VERIFIED,
         'description' => 'User email is not verified',
@@ -385,6 +395,11 @@ return [
     Exception::USER_JWT_AND_COOKIE_SET => [
         'name' => Exception::USER_JWT_AND_COOKIE_SET,
         'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
+        'code' => 403,
+    ],
+    Exception::USER_JWT_CREATION_DENIED => [
+        'name' => Exception::USER_JWT_CREATION_DENIED,
+        'description' => 'A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead.',
         'code' => 403,
     ],
     Exception::API_KEY_EXPIRED => [
@@ -510,6 +525,11 @@ return [
     Exception::STORAGE_FILE_TYPE_UNSUPPORTED => [
         'name' => Exception::STORAGE_FILE_TYPE_UNSUPPORTED,
         'description' => 'The given file extension is not supported.',
+        'code' => 400,
+    ],
+    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED => [
+        'name' => Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+        'description' => 'The image resolution exceeds the maximum allowed for processing.',
         'code' => 400,
     ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
@@ -824,6 +844,11 @@ return [
         'description' => 'Document with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
+    Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION => [
+        'name' => Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION,
+        'description' => 'Document violates a unique attribute constraint. Try again with different value(s).',
+        'code' => 409,
+    ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
         'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
         'description' => 'Remote document is newer than local.',
@@ -859,6 +884,11 @@ return [
     Exception::ROW_ALREADY_EXISTS => [
         'name' => Exception::ROW_ALREADY_EXISTS,
         'description' => 'Row with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION => [
+        'name' => Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION,
+        'description' => 'Row violates a unique column constraint. Try again with different value(s).',
         'code' => 409,
     ],
     Exception::ROW_UPDATE_CONFLICT => [
@@ -1200,6 +1230,16 @@ return [
         'name' => Exception::KEY_ALREADY_EXISTS,
         'description' => 'Key with the same ID already exists. Try again with a different ID.',
         'code' => 409,
+    ],
+    Exception::KEY_CREATION_DENIED => [
+        'name' => Exception::KEY_CREATION_DENIED,
+        'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
+        'code' => 403,
+    ],
+    Exception::DEV_KEY_GONE => [
+        'name' => Exception::DEV_KEY_GONE,
+        'description' => 'Dev key creation is no longer available.',
+        'code' => 410,
     ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,

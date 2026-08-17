@@ -3,12 +3,10 @@
 namespace Appwrite\Platform\Modules\Projects\Http\Projects;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 
@@ -19,11 +17,6 @@ class Update extends Action
     public static function getName()
     {
         return 'updateProject';
-    }
-
-    protected function getQueriesValidator(): Validator
-    {
-        return new Projects();
     }
 
     public function __construct()
@@ -72,6 +65,7 @@ class Update extends Action
             ->setAttribute('legalAddress', $legalAddress)
             ->setAttribute('legalTaxId', $legalTaxId)
             ->setAttribute('search', implode(' ', [$projectId, $name])));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

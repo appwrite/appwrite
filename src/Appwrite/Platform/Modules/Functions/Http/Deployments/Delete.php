@@ -41,6 +41,7 @@ class Delete extends Action
             ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
             ->label('audits.event', 'deployment.delete')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'deployments',
@@ -86,7 +87,12 @@ class Delete extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
+        $resourceType = $deployment->getAttribute('resourceType');
+        // Untyped deployments predate Sites and belong to Functions.
+        if (
+            $deployment->getAttribute('resourceId') !== $function->getId()
+            || ($resourceType !== 'functions' && !empty($resourceType))
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 

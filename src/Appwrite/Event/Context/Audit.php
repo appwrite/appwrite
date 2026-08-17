@@ -9,10 +9,13 @@ class Audit
     public function __construct(
         public ?Document $project = null,
         public ?Document $user = null,
+        public ?Document $impersonatorUser = null,
         public string $mode = '',
         public string $userAgent = '',
         public string $ip = '',
         public string $hostname = '',
+        public string $sdk = '',
+        public string $sdkVersion = '',
         public string $event = '',
         public string $resource = '',
         public array $payload = [],
@@ -23,10 +26,13 @@ class Audit
     {
         return $this->project === null
             && $this->user === null
+            && $this->impersonatorUser === null
             && $this->mode === ''
             && $this->userAgent === ''
             && $this->ip === ''
             && $this->hostname === ''
+            && $this->sdk === ''
+            && $this->sdkVersion === ''
             && $this->event === ''
             && $this->resource === ''
             && $this->payload === [];

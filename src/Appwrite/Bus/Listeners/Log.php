@@ -3,6 +3,7 @@
 namespace Appwrite\Bus\Listeners;
 
 use Appwrite\Bus\Events\ExecutionCompleted;
+use Appwrite\Bus\Events\ExecutionScheduled;
 use Appwrite\Event\Message\Execution as ExecutionMessage;
 use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Utopia\Bus\Listener;
@@ -18,7 +19,10 @@ class Log extends Listener
 
     public static function getEvents(): array
     {
-        return [ExecutionCompleted::class];
+        return [
+            ExecutionCompleted::class,
+            ExecutionScheduled::class,
+        ];
     }
 
     public function __construct()
@@ -29,7 +33,7 @@ class Log extends Listener
             ->callback($this->handle(...));
     }
 
-    public function handle(ExecutionCompleted $event, ExecutionPublisher $publisherForExecutions): void
+    public function handle(ExecutionCompleted|ExecutionScheduled $event, ExecutionPublisher $publisherForExecutions): void
     {
         $project = new Document($event->project);
         $execution = new Document($event->execution);

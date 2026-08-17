@@ -35,6 +35,7 @@ class Delete extends Base
             ->label('event', 'sites.[siteId].logs.[logId].delete')
             ->label('audits.event', 'logs.delete')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'logs',
@@ -71,7 +72,7 @@ class Delete extends Base
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 
-        if ($log->getAttribute('resourceType') !== 'sites' && $log->getAttribute('resourceInternalId') !== $site->getSequence()) {
+        if ($log->getAttribute('resourceType') !== 'sites' || $log->getAttribute('resourceInternalId') !== $site->getSequence()) {
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 

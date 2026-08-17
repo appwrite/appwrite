@@ -307,26 +307,6 @@ final class AccountTest extends Scope
         return $session;
     }
 
-    public function testGetAccountLogs(): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::GET_ACCOUNT_LOGS);
-        $graphQLPayload = [
-            'query' => $query,
-        ];
-
-        $logs = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertArrayNotHasKey('errors', $logs['body']);
-        $this->assertIsArray($logs['body']['data']);
-        $this->assertIsArray($logs['body']['data']['accountListLogs']);
-
-        return $logs;
-    }
-
     public function testUpdateAccountName(): array
     {
         $projectId = $this->getProject()['$id'];

@@ -143,7 +143,7 @@ return [
                 'key' => 'static',
                 'buildCommand' => 'npm run generate',
                 'installCommand' => 'npm install',
-                'outputDirectory' => './output/public',
+                'outputDirectory' => './.output/public',
                 'startCommand' => 'bash helpers/server.sh',
             ]
         ]

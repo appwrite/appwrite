@@ -41,6 +41,7 @@ class Create extends Base
             ->label('event', 'variables.[variableId].create')
             ->label('audits.event', 'variable.create')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'variables',

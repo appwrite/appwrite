@@ -51,7 +51,6 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Get as GetDocument;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Logs\XList as ListDocumentLogs;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Upsert as UpsertDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\XList as ListDocuments;
@@ -60,14 +59,11 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Creat
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Delete as DeleteIndex;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Get as GetIndex;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\XList as ListIndexes;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Logs\XList as ListCollectionLogs;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Update as UpdateCollection;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Usage\Get as GetCollectionUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\XList as ListCollections;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Create as CreateDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Delete as DeleteDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Get as GetDatabase;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Logs\XList as ListDatabaseLogs;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Create as CreateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Delete as DeleteTransaction;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Get as GetTransaction;
@@ -75,8 +71,6 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations\C
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Update as UpdateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\XList as ListTransactions;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Update as UpdateDatabase;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\Get as GetDatabaseUsage;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\XList as ListDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\XList as ListDatabases;
 use Utopia\Platform\Service;
 
@@ -109,9 +103,6 @@ class Legacy extends Base
         $service->addAction(UpdateDatabase::getName(), new UpdateDatabase());
         $service->addAction(DeleteDatabase::getName(), new DeleteDatabase());
         $service->addAction(ListDatabases::getName(), new ListDatabases());
-        $service->addAction(ListDatabaseLogs::getName(), new ListDatabaseLogs());
-        $service->addAction(GetDatabaseUsage::getName(), new GetDatabaseUsage());
-        $service->addAction(ListDatabaseUsage::getName(), new ListDatabaseUsage());
     }
 
     private function registerCollectionActions(Service $service): void
@@ -121,8 +112,6 @@ class Legacy extends Base
         $service->addAction(UpdateCollection::getName(), new UpdateCollection());
         $service->addAction(DeleteCollection::getName(), new DeleteCollection());
         $service->addAction(ListCollections::getName(), new ListCollections());
-        $service->addAction(ListCollectionLogs::getName(), new ListCollectionLogs());
-        $service->addAction(GetCollectionUsage::getName(), new GetCollectionUsage());
     }
 
     private function registerDocumentActions(Service $service): void
@@ -136,7 +125,6 @@ class Legacy extends Base
         $service->addAction(DeleteDocument::getName(), new DeleteDocument());
         $service->addAction(DeleteDocuments::getName(), new DeleteDocuments());
         $service->addAction(ListDocuments::getName(), new ListDocuments());
-        $service->addAction(ListDocumentLogs::getName(), new ListDocumentLogs());
         $service->addAction(IncrementDocumentAttribute::getName(), new IncrementDocumentAttribute());
         $service->addAction(DecrementDocumentAttribute::getName(), new DecrementDocumentAttribute());
 

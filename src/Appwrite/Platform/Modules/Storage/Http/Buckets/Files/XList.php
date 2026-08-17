@@ -41,6 +41,7 @@ class XList extends Action
             ->desc('List files')
             ->groups(['api', 'storage'])
             ->label('scope', 'files.read')
+            ->label('usage.resource', 'bucket/{request.bucketId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('sdk', new Method(
                 namespace: 'storage',

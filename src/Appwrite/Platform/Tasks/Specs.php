@@ -153,6 +153,12 @@ class Specs extends Action
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
                 ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
+                ],
                 'Locale' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
@@ -228,11 +234,23 @@ class Specs extends Action
                     'description' => 'Your secret API key',
                     'in' => 'header',
                 ],
+                'Organization' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Organization',
+                    'description' => 'Your organization ID',
+                    'in' => 'header',
+                ],
                 'JWT' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-JWT',
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
+                ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
                     'type' => 'apiKey',
@@ -315,11 +333,23 @@ class Specs extends Action
                     'description' => 'Your secret API key',
                     'in' => 'header',
                 ],
+                'Organization' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Organization',
+                    'description' => 'Your organization ID',
+                    'in' => 'header',
+                ],
                 'JWT' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-JWT',
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
+                ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
                     'type' => 'apiKey',
@@ -597,6 +627,7 @@ class Specs extends Action
             $routes = [];
             $models = [];
             $services = [];
+            $routeNamespaces = [];
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
@@ -642,11 +673,27 @@ class Specs extends Action
                         }
 
                         $routes[] = $route;
+                        $routeNamespaces[$sdk->getNamespace()] = true;
                     }
                 }
             }
 
+            /**
+             * Tag names must match Method namespaces (path tags), e.g. tablesDB.
+             * Service config keys stay lowercase (tablesdb); descriptions resolve
+             * case-insensitively from services.php.
+             */
+            $serviceDescriptions = [];
+            $configuredServices = [];
+
             foreach (Config::getParam('services', []) as $service) {
+                $serviceKey = $service['key'] ?? '';
+                if ($serviceKey === '') {
+                    continue;
+                }
+
+                $serviceDescriptions[\strtolower($serviceKey)] = $service['subtitle'] ?? '';
+
                 if (
                     !isset($service['docs']) // Skip service if not part of the public API
                     || !isset($service['sdk'])
@@ -661,9 +708,27 @@ class Specs extends Action
                     continue;
                 }
 
+                $configuredServices[$serviceKey] = $service['subtitle'] ?? '';
+            }
+
+            $seenServices = [];
+
+            foreach (\array_keys($routeNamespaces) as $namespace) {
                 $services[] = [
-                    'name' => $service['key'] ?? '',
-                    'description' => $service['subtitle'] ?? '',
+                    'name' => $namespace,
+                    'description' => $serviceDescriptions[\strtolower($namespace)] ?? '',
+                ];
+                $seenServices[\strtolower($namespace)] = true;
+            }
+
+            foreach ($configuredServices as $serviceKey => $description) {
+                if (isset($seenServices[\strtolower($serviceKey)])) {
+                    continue;
+                }
+
+                $services[] = [
+                    'name' => $serviceKey,
+                    'description' => $description,
                 ];
             }
 
@@ -714,7 +779,10 @@ class Specs extends Action
                     $parsedSpecs = $specs->parse();
                     $this->verifyParsedSpec($parsedSpecs);
                 } catch (\RuntimeException $e) {
-                    throw new \RuntimeException("Spec generation failed for {$platform} ({$format}): " . $e->getMessage(), 0, $e);
+                    // A throw is reported and carried on from, so stop here
+                    Console::error("Spec generation failed for {$platform} ({$format}): " . $e->getMessage());
+                    Console::exit(1);
+                    return;
                 }
 
                 $encodedSpecs = \json_encode($parsedSpecs, JSON_PRETTY_PRINT);

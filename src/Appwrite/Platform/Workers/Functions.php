@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -53,7 +54,7 @@ class Functions extends Action
             ->inject('bus')
             ->inject('log')
             ->inject('executor')
-            ->inject('isResourceBlocked')
+            ->inject('getIsResourceBlocked')
             ->callback($this->action(...));
     }
 
@@ -68,7 +69,7 @@ class Functions extends Action
         Bus $bus,
         Log $log,
         Executor $executor,
-        callable $isResourceBlocked
+        callable $getIsResourceBlocked
     ): void {
         $payload = $message->getPayload();
 
@@ -152,7 +153,7 @@ class Functions extends Action
                         continue;
                     }
 
-                    if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+                    if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
                         Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
                         continue;
                     }
@@ -196,7 +197,7 @@ class Functions extends Action
             return;
         }
 
-        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+        if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
             Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
             return;
         }
@@ -313,10 +314,13 @@ class Functions extends Action
             'requestPath' => $path,
             'requestMethod' => $method,
             'requestHeaders' => $headersFiltered,
-            'errors' => $message,
+            'errors' => '',
             'logs' => '',
             'duration' => 0.0,
         ]);
+
+        $executionForEvent = (new Document($execution->getArrayCopy()))
+            ->setAttribute('errors', $message);
 
         Span::add('function.id', $function->getId());
         Span::add('execution.id', $execution->getId());
@@ -325,8 +329,9 @@ class Functions extends Action
         Span::add('execution.status', $execution->getAttribute('status', ''));
 
         $bus->dispatch(new ExecutionCompleted(
-            execution: $execution->getArrayCopy(),
+            execution: $executionForEvent->getArrayCopy(),
             project: $project->getArrayCopy(),
+            resource: $function->getArrayCopy(),
         ));
     }
 
@@ -423,7 +428,7 @@ class Functions extends Action
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
             'projectId' => $project->getId(),
-            'scopes' => $function->getAttribute('scopes', [])
+            'scopes' => Deployments::scopes($function)
         ]);
 
         $headers['x-appwrite-execution-id'] = $executionId ?? '';
@@ -539,15 +544,10 @@ class Functions extends Action
 
         try {
             $version = $function->getAttribute('version', 'v2');
-            $command = $runtime['startCommand'];
-
-            if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $command = 'cd /usr/local/server/src/function/ && ' . str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $deployment->getAttribute('startCommand', ''));
-            }
+            $command = Deployments::startCommand($deployment, $runtime['startCommand']);
 
             $source = $deployment->getAttribute('buildPath', '');
-            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
-            $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
+            $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";
             try {
                 $executionResponse = $executor->createExecution(
                     projectId: $project->getId(),
@@ -630,6 +630,7 @@ class Functions extends Action
                 execution: $execution->getArrayCopy(),
                 project: $project->getArrayCopy(),
                 spec: $spec,
+                resource: $function->getArrayCopy(),
             ));
         }
 

@@ -29,22 +29,14 @@ class Response extends SwooleResponse
     public const MODEL_METRIC_LIST = 'metricList';
     public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
-    public const MODEL_BASE_LIST = 'baseList';
-    public const MODEL_USAGE_DATABASES = 'usageDatabases';
-    public const MODEL_USAGE_DATABASE = 'usageDatabase';
     public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
     public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
     public const MODEL_USAGE_VECTORSDBS = 'usageVectorsDBs';
     public const MODEL_USAGE_VECTORSDB = 'usageVectorsDB';
-    public const MODEL_USAGE_TABLE = 'usageTable';
-    public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
     public const MODEL_USAGE_PRESENCE = 'usagePresence';
-    public const MODEL_USAGE_BUCKETS = 'usageBuckets';
-    public const MODEL_USAGE_STORAGE = 'usageStorage';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
     public const MODEL_USAGE_FUNCTION = 'usageFunction';
-    public const MODEL_USAGE_SITES = 'usageSites';
     public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
@@ -69,6 +61,10 @@ class Response extends SwooleResponse
     public const MODEL_PRESENCE_LIST = 'presenceList';
     public const MODEL_ROW = 'row';
     public const MODEL_ROW_LIST = 'rowList';
+
+    // Notifications
+    public const MODEL_NOTIFICATION = 'notification';
+    public const MODEL_NOTIFICATION_LIST = 'notificationList';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
@@ -135,8 +131,8 @@ class Response extends SwooleResponse
     // MFA
     public const MODEL_MFA_TYPE = 'mfaType';
     public const MODEL_MFA_FACTORS = 'mfaFactors';
-    public const MODEL_MFA_OTP = 'mfaTotp';
     public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
+    public const MODEL_MFA_CHALLENGE_SECRET = 'mfaChallengeSecret';
     public const MODEL_MFA_RECOVERY_CODES = 'mfaRecoveryCodes';
 
     // Users password algos
@@ -193,11 +189,12 @@ class Response extends SwooleResponse
     public const MODEL_INSTALLATION = 'installation';
     public const MODEL_INSTALLATION_LIST = 'installationList';
     public const MODEL_PROVIDER_REPOSITORY = 'providerRepository';
-    public const MODEL_PROVIDER_REPOSITORY_LIST = 'providerRepositoryList';
     public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK = 'providerRepositoryFramework';
     public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST = 'providerRepositoryFrameworkList';
     public const MODEL_PROVIDER_REPOSITORY_RUNTIME = 'providerRepositoryRuntime';
     public const MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST = 'providerRepositoryRuntimeList';
+    public const MODEL_VCS_NAMESPACE = 'vcsNamespace';
+    public const MODEL_VCS_NAMESPACE_LIST = 'vcsNamespaceList';
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
     public const MODEL_DETECTION_FRAMEWORK = 'detectionFramework';
@@ -225,7 +222,6 @@ class Response extends SwooleResponse
     public const MODEL_DEPLOYMENT_LIST = 'deploymentList';
     public const MODEL_EXECUTION = 'execution';
     public const MODEL_EXECUTION_LIST = 'executionList';
-    public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
     public const MODEL_SPECIFICATION = 'specification';
     public const MODEL_SPECIFICATION_LIST = 'specificationList';
@@ -252,6 +248,8 @@ class Response extends SwooleResponse
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
+    public const MODEL_STAGE = 'stage';
+    public const MODEL_STAGE_LIST = 'stageList';
     public const MODEL_PROJECT_AUTH_METHOD = 'projectAuthMethod';
     public const MODEL_PROJECT_SERVICE = 'projectService';
     public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
@@ -275,6 +273,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_SESSION_LIMIT = 'policySessionLimit';
     public const MODEL_POLICY_USER_LIMIT = 'policyUserLimit';
     public const MODEL_POLICY_MEMBERSHIP_PRIVACY = 'policyMembershipPrivacy';
+    public const MODEL_POLICY_MFA_FACTORS = 'policyMfaFactors';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';
@@ -285,7 +284,6 @@ class Response extends SwooleResponse
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
-    public const MODEL_VCS = 'vcs';
     public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
     public const MODEL_EMAIL_TEMPLATE_LIST = 'emailTemplateList';
     public const MODEL_OAUTH2_GITHUB = 'oAuth2Github';
@@ -319,6 +317,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_TRADESHIFT = 'oAuth2Tradeshift';
     public const MODEL_OAUTH2_PAYPAL = 'oAuth2Paypal';
     public const MODEL_OAUTH2_GITLAB = 'oAuth2Gitlab';
+    public const MODEL_OAUTH2_APPWRITE = 'oAuth2Appwrite';
     public const MODEL_OAUTH2_AUTHENTIK = 'oAuth2Authentik';
     public const MODEL_OAUTH2_AUTH0 = 'oAuth2Auth0';
     public const MODEL_OAUTH2_FUSIONAUTH = 'oAuth2FusionAuth';
@@ -353,13 +352,6 @@ class Response extends SwooleResponse
     public const MODEL_CONSOLE_OAUTH2_PROVIDER_LIST = 'consoleOAuth2ProviderList';
     public const MODEL_CONSOLE_KEY_SCOPE = 'consoleKeyScope';
     public const MODEL_CONSOLE_KEY_SCOPE_LIST = 'consoleKeyScopeList';
-
-    // Deprecated
-    public const MODEL_PERMISSIONS = 'permissions';
-    public const MODEL_RULE = 'rule';
-    public const MODEL_TASK = 'task';
-    public const MODEL_DOMAIN = 'domain';
-    public const MODEL_DOMAIN_LIST = 'domainList';
 
     // Tests (keep last)
     public const MODEL_MOCK = 'mock';
@@ -471,6 +463,16 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
+        if (
+            $this->impersonatorUser !== null
+            && $model === self::MODEL_ACCOUNT
+            && $this->user !== null
+            && $document->getId() === $this->user->getId()
+        ) {
+            $document = clone $document;
+            $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
+        }
+
         $output = $this->output(clone $document, $model);
         $output = $this->applyFilters($output, $model, raw: clone $document);
 
@@ -548,6 +550,10 @@ class Response extends SwooleResponse
                 }
 
                 foreach ($data[$key] as $index => $item) {
+                    if (\is_array($item) && !\is_array($rule['type']) && self::hasModel($rule['type'])) {
+                        $item = new Document($item);
+                    }
+
                     if ($item instanceof Document) {
                         $ruleType = null;
 
@@ -736,16 +742,6 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Reset filters
-     *
-     * @return void
-     */
-    public function resetFilters(): void
-    {
-        $this->filters = [];
-    }
-
-    /**
      * Check if a filter has been set
      *
      * @return bool
@@ -775,6 +771,7 @@ class Response extends SwooleResponse
 
     private ?Authorization $authorization = null;
     private ?DBUser $user = null;
+    private ?Document $impersonatorUser = null;
 
     public function setAuthorization(Authorization $authorization): void
     {
@@ -784,5 +781,10 @@ class Response extends SwooleResponse
     public function setUser(DBUser $user): void
     {
         $this->user = $user;
+    }
+
+    public function setImpersonatorUser(Document $impersonatorUser): void
+    {
+        $this->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
     }
 }

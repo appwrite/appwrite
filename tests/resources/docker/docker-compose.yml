@@ -61,11 +61,13 @@ services:
     environment:
       - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
       - _APP_DOMAIN_FUNCTIONS
       - _APP_DOMAIN_TARGET
@@ -77,7 +79,6 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DB_ADAPTER
-      - _APP_USAGE_STATS
       - _APP_STORAGE_ANTIVIRUS=disabled
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
@@ -85,42 +86,6 @@ services:
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
       - _APP_EXECUTOR_HOST
-
-  appwrite-worker-stats-usage:
-    entrypoint: worker-stats-usage
-    container_name: appwrite-worker-stats-usage
-    build:
-      context: .
-    restart: unless-stopped
-    networks:
-      - appwrite
-    depends_on:
-      - redis
-    environment:
-      - _APP_ENV
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-
-  appwrite-worker-audits:
-    entrypoint: worker-audits
-    container_name: appwrite-worker-audits
-    build:
-      context: .
-    restart: unless-stopped
-    networks:
-      - appwrite
-    depends_on:
-      - redis
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
@@ -135,6 +100,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -157,6 +123,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -182,6 +149,7 @@ services:
       - appwrite-cache:/storage/cache:rw
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -208,6 +176,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -229,6 +198,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -254,6 +224,7 @@ services:
       - appwrite-functions:/storage/functions:rw
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -281,6 +252,31 @@ services:
       # - smtp
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-worker-notifications:
+    entrypoint: worker-notifications
+    container_name: appwrite-worker-notifications
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - maildev
+    environment:
+      - _APP_ENV
+      - _APP_LOGGING_FORMAT
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -317,6 +313,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
 
@@ -332,6 +329,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
 

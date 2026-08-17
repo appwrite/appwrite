@@ -17,13 +17,7 @@ class Executor
 
     public const METHOD_GET = 'GET';
     public const METHOD_POST = 'POST';
-    public const METHOD_PUT = 'PUT';
-    public const METHOD_PATCH = 'PATCH';
     public const METHOD_DELETE = 'DELETE';
-    public const METHOD_HEAD = 'HEAD';
-    public const METHOD_OPTIONS = 'OPTIONS';
-    public const METHOD_CONNECT = 'CONNECT';
-    public const METHOD_TRACE = 'TRACE';
 
     protected bool $selfSigned = false;
 
@@ -39,99 +33,6 @@ class Executor
             'x-opr-addressing-method' => 'anycast-efficient',
             'x-edge-bypass-gateway' => '1'
         ];
-    }
-
-    /**
-     * Create runtime
-     *
-     * Launches a runtime container for a deployment ready for execution
-     *
-     * @param string $deploymentId
-     * @param string $projectId
-     * @param string $source
-     * @param string $image
-     * @param bool $remove
-     * @param string $entrypoint
-     * @param string $destination
-     * @param array $variables
-     * @param string $command
-     */
-    public function createRuntime(
-        string $deploymentId,
-        string $projectId,
-        string $source,
-        string $image,
-        string $version,
-        float $cpus,
-        int $memory,
-        int $timeout,
-        bool $remove = false,
-        string $entrypoint = '',
-        string $destination = '',
-        array $variables = [],
-        ?string $command = null,
-        string $outputDirectory = '',
-        string $runtimeEntrypoint = '',
-        string $cacheKey = ''
-    ) {
-        $runtimeId = "$projectId-$deploymentId-build";
-        $route = "/runtimes";
-
-        // Remove after migration
-        if ($version === 'v3' || $version === 'v4') {
-            $version = 'v5';
-        }
-
-        $params = [
-            'runtimeId' => $runtimeId,
-            'source' => $source,
-            'destination' => $destination,
-            'image' => $image,
-            'entrypoint' => $entrypoint,
-            'variables' => $variables,
-            'remove' => $remove,
-            'command' => $command,
-            'cpus' => $cpus,
-            'memory' => $memory,
-            'version' => $version,
-            'timeout' => $timeout,
-            'outputDirectory' => $outputDirectory,
-            'runtimeEntrypoint' => $runtimeEntrypoint,
-            'cacheKey' => $cacheKey
-        ];
-
-
-        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
-
-        $status = $response['headers']['status-code'];
-        if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new ExecutorException($message, $status);
-        }
-
-        return $response['body'];
-    }
-
-    /**
-     * Listen to realtime logs stream of a runtime
-     *
-     * @param string $deploymentId
-     * @param string $projectId
-     * @param callable $callback
-     */
-    public function getLogs(
-        string $deploymentId,
-        string $projectId,
-        string $timeout,
-        callable $callback
-    ) {
-        $runtimeId = "$projectId-$deploymentId-build";
-        $route = "/runtimes/{$runtimeId}/logs";
-        $params = [
-            'timeout' => $timeout
-        ];
-
-        $this->call($this->endpoint, self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
     }
 
     /**
@@ -165,7 +66,8 @@ class Executor
         }
 
         if ($status >= 400) {
-            throw new ExecutorException($message, $status);
+            $type = \is_array($response['body']) ? ($response['body']['type'] ?? ExecutorException::GENERAL_UNKNOWN) : ExecutorException::GENERAL_UNKNOWN;
+            throw new ExecutorException($message, $status, type: $type);
         }
 
         return $response['body'];
@@ -248,8 +150,9 @@ class Executor
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new ExecutorException($message, $status);
+            $message = \is_string($response['body']) ? $response['body'] : ($response['body']['message'] ?? '');
+            $type = \is_array($response['body']) ? ($response['body']['type'] ?? ExecutorException::GENERAL_UNKNOWN) : ExecutorException::GENERAL_UNKNOWN;
+            throw new ExecutorException($message, $status, type: $type);
         }
 
         $headers = $response['body']['headers'] ?? [];
@@ -260,31 +163,6 @@ class Executor
         $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
         $response['body']['duration'] = \floatval($response['body']['duration'] ?? 0);
         $response['body']['startTime'] = \floatval($response['body']['startTime'] ?? \microtime(true));
-
-        return $response['body'];
-    }
-
-    public function createCommand(
-        string $deploymentId,
-        string $projectId,
-        string $command,
-        int $timeout
-    ) {
-        $runtimeId = "$projectId-$deploymentId-build";
-        $route = "/runtimes/$runtimeId/commands";
-
-        $params = [
-            'command' => $command,
-            'timeout' => $timeout
-        ];
-
-        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
-
-        $status = $response['headers']['status-code'];
-        if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new ExecutorException($message, $status);
-        }
 
         return $response['body'];
     }
@@ -414,7 +292,7 @@ class Executor
 
         if ($curlError) {
             if ($curlError == CURLE_OPERATION_TIMEDOUT) {
-                throw new ExecutorTimeout('Executor request timed out', $timeout);
+                throw new ExecutorTimeout('Executor request timed out after ' . $timeout . ' seconds');
             }
             throw new ExecutorException($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
         }

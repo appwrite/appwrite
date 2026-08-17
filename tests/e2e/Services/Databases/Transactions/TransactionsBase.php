@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases\Transactions;
 
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
 use Utopia\Database\Helpers\ID;
@@ -98,6 +99,22 @@ trait TransactionsBase
         self::$sharedCollectionId = '';
         self::$sharedSetupDone = false;
         parent::tearDownAfterClass();
+    }
+
+    protected function assertStagedWriteResponseSystemAttributes(array $body, bool $empty = false): void
+    {
+        $this->assertArrayHasKey('$sequence', $body, 'Staged write response should include $sequence for SDK model hydration.');
+        $this->assertArrayHasKey('$createdAt', $body, 'Staged write response should include $createdAt for SDK model hydration.');
+        $this->assertArrayHasKey('$updatedAt', $body, 'Staged write response should include $updatedAt for SDK model hydration.');
+        $this->assertIsString($body['$sequence']);
+        $this->assertIsString($body['$createdAt']);
+        $this->assertIsString($body['$updatedAt']);
+
+        if ($empty) {
+            $this->assertSame('', $body['$sequence']);
+            $this->assertSame('', $body['$createdAt']);
+            $this->assertSame('', $body['$updatedAt']);
+        }
     }
 
     /**
@@ -474,6 +491,84 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCommitInvalidRelationship(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported');
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'TransactionRelationshipTestDB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collections = [];
+        foreach (['parents', 'children'] as $name) {
+            $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+                $this->getContainerIdParam() => ID::unique(),
+                'name' => $name,
+                'permissions' => [
+                    Permission::create(Role::any()),
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertEquals(201, $collection['headers']['status-code']);
+            $collections[$name] = $collection['body']['$id'];
+        }
+
+        $relationship = $this->client->call(
+            Client::METHOD_POST,
+            $this->getSchemaUrl($databaseId, $collections['parents']) . '/relationship',
+            $headers,
+            [
+                $this->getRelatedIdParam() => $collections['children'],
+                'type' => 'oneToOne',
+                'twoWay' => false,
+                'key' => 'child',
+            ]
+        );
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, $collections['parents']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $operation = $this->client->call(
+            Client::METHOD_POST,
+            $this->getTransactionUrl($transactionId) . '/operations',
+            $headers,
+            [
+                'operations' => [[
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collections['parents'],
+                    'action' => 'create',
+                    $this->getRecordIdParam() => ID::unique(),
+                    'data' => ['child' => 123],
+                ]],
+            ]
+        );
+        $this->assertEquals(201, $operation['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertEquals(400, $commit['headers']['status-code']);
+        $this->assertEquals(Exception::RELATIONSHIP_VALUE_INVALID, $commit['body']['type']);
+
+        $failed = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $headers);
+        $this->assertEquals(200, $failed['headers']['status-code']);
+        $this->assertEquals('failed', $failed['body']['status']);
     }
 
     /**
@@ -1207,9 +1302,9 @@ trait TransactionsBase
             }
         }
 
-        $this->assertEquals(0, $oldCategoryCount);
-        $this->assertEquals(4, $updatedCategoryCount); // 4 existing docs updated
-        $this->assertEquals(3, $newCategoryCount); // 3 new docs
+        $this->assertSame(0, $oldCategoryCount);
+        $this->assertSame(4, $updatedCategoryCount); // 4 existing docs updated
+        $this->assertSame(3, $newCategoryCount); // 3 new docs
     }
 
     /**
@@ -1661,6 +1756,7 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertStagedWriteResponseSystemAttributes($response['body'], empty: true);
 
         // Document should not exist outside transaction yet
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, "doc_from_route"), array_merge([

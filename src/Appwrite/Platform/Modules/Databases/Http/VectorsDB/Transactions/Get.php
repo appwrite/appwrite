@@ -18,11 +18,6 @@ class Get extends TransactionsGet
         return 'getVectorsDBTransaction';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION;
-    }
-
     public function __construct()
     {
         $this
@@ -31,6 +26,7 @@ class Get extends TransactionsGet
             ->desc('Get transaction')
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'documents.read')
+            ->label('usage.resource', 'transaction/{request.transactionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',

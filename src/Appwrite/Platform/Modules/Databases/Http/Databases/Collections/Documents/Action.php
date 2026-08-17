@@ -61,14 +61,6 @@ abstract class Action extends DatabasesAction
         return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_READS;
     }
 
-    protected function getDatabasesIdOperationReadMetric(): string
-    {
-        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
-            return METRIC_DATABASE_ID_OPERATIONS_READS;
-        }
-        return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_READS;
-    }
-
     protected function getDatabasesOperationWriteMetric(): string
     {
         if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
@@ -76,14 +68,6 @@ abstract class Action extends DatabasesAction
         }
         return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_WRITES;
 
-    }
-
-    protected function getDatabasesIdOperationWriteMetric(): string
-    {
-        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
-            return METRIC_DATABASE_ID_OPERATIONS_WRITES;
-        }
-        return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_WRITES;
     }
 
     /**
@@ -181,6 +165,16 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * Get the appropriate unique constraint exception.
+     */
+    protected function getUniqueConstraintException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION
+            : Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION;
+    }
+
+    /**
      * Get the appropriate conflict exception.
      */
     protected function getConflictException(): string
@@ -271,6 +265,45 @@ abstract class Action extends DatabasesAction
     {
         $resource = $this->isCollectionsAPI() ? 'document' : 'row';
         return $resource . 'Id';
+    }
+
+    /**
+     * Convert a request object to the associative shape Document expects while
+     * retaining empty objects at any nested depth.
+     *
+     * @return array<string, mixed>
+     */
+    protected function normalizeData(string|array|\stdClass $data): array
+    {
+        if (\is_string($data)) {
+            $data = \json_decode($data);
+            if (!$data instanceof \stdClass && !\is_array($data)) {
+                return [];
+            }
+        }
+
+        if ($data instanceof \stdClass) {
+            $data = (array) $data;
+        }
+
+        return \array_map($this->normalizeValue(...), $data);
+    }
+
+    private function normalizeValue(mixed $value): mixed
+    {
+        if ($value instanceof \stdClass) {
+            $properties = (array) $value;
+
+            return $properties === []
+                ? $value
+                : \array_map($this->normalizeValue(...), $properties);
+        }
+
+        if (\is_array($value)) {
+            return \array_map($this->normalizeValue(...), $value);
+        }
+
+        return $value;
     }
 
     /**

@@ -1,6 +1,8 @@
 <?php
 
-return [
+use Utopia\System\System;
+
+$platforms = [
     APP_SDK_PLATFORM_CLIENT => [
         'key' => APP_SDK_PLATFORM_CLIENT,
         'name' => 'Client',
@@ -94,24 +96,6 @@ return [
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/apple/CHANGELOG.md'),
-            ],
-            [
-                'key' => 'objective-c',
-                'name' => 'Objective C',
-                'url' => '',
-                'package' => '',
-                'enabled' => false,
-                'beta' => false,
-                'dev' => false,
-                'hidden' => false,
-                'family' => APP_SDK_PLATFORM_CLIENT,
-                'prism' => '',
-                'source' => false,
-                'gitUrl' => 'git@github.com:appwrite/sdk-for-objective-c.git',
-                'gitRepoName' => 'sdk-for-objective-c',
-                'gitUserName' => 'appwrite',
-                'gitBranch' => 'dev',
-                'changelog' => \realpath(__DIR__ . '/../../docs/sdks/objective-c/CHANGELOG.md'),
             ],
             [
                 'key' => 'android',
@@ -607,3 +591,18 @@ return [
         ],
     ],
 ];
+
+// A preview SDK is built from a PR to show the whole API surface that PR produces
+// and publishes nothing, so none of the exclusions above apply to it. Only the
+// preview workflow sets _APP_SDK_PREVIEW; every other run, releases included,
+// leaves it unset and keeps every rule. The per-endpoint counterpart is the `hide`
+// argument on Appwrite\SDK\Method, lifted under the same flag at its call sites.
+if (System::getEnv('_APP_SDK_PREVIEW', 'disabled') === 'enabled') {
+    foreach ($platforms as $platformKey => $platform) {
+        foreach (\array_keys($platform['sdks']) as $index) {
+            unset($platforms[$platformKey]['sdks'][$index]['exclude']);
+        }
+    }
+}
+
+return $platforms;

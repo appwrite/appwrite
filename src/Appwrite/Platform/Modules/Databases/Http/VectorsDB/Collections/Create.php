@@ -52,6 +52,7 @@ class Create extends CollectionAction
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'collection.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: 'collections',
