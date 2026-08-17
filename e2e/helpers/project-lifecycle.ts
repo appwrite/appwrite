@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test'
 import { env } from '../config/env'
-import { enableMysqlFeatureFlags } from './feature-flags'
+import { enableDatabaseFeatureFlags } from './feature-flags'
 import { acceptCookieBannerIfPresent } from './cookie-banner'
 
 export const MYSQL_E2E_PROJECT_REGION = 'fra'
@@ -15,8 +15,12 @@ function uniqueSuffix(): string {
 }
 
 /**
- * Create a disposable project in E2E_ORG_ID (Frankfurt) for dedicated MySQL.
+ * Create a disposable project in E2E_ORG_ID (Frankfurt) for database e2e.
  * Returns the new project id and display name.
+ *
+ * Reuse this project across a suite (tables, columns, indexes, tabs). Do not
+ * create a new project per test: dedicated compute keys take minutes to
+ * provision, and deleting a project forces the next one to wait again.
  */
 export async function createE2eProject(
   page: Page,
@@ -24,12 +28,12 @@ export async function createE2eProject(
 ): Promise<CreatedProject> {
   const orgId = env.E2E_ORG_ID
   if (!orgId) {
-    throw new Error('E2E_ORG_ID is required for MySQL e2e suites')
+    throw new Error('E2E_ORG_ID is required for database e2e suites')
   }
 
-  await enableMysqlFeatureFlags(page)
+  await enableDatabaseFeatureFlags(page)
 
-  const projectName = `${options?.namePrefix ?? 'e2e-mysql'}-${uniqueSuffix()}`.slice(
+  const projectName = `${options?.namePrefix ?? 'e2e-db'}-${uniqueSuffix()}`.slice(
     0,
     128,
   )
@@ -114,7 +118,7 @@ export async function deleteE2eProject(
   page: Page,
   project: CreatedProject,
 ): Promise<void> {
-  await enableMysqlFeatureFlags(page)
+  await enableDatabaseFeatureFlags(page)
 
   await page.goto(`/projects/${project.projectId}/settings`, {
     waitUntil: 'domcontentloaded',

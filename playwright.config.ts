@@ -58,8 +58,9 @@ const config: PlaywrightTestConfig = {
     {
       name: 'console',
       dependencies: ['setup'],
-      // Smoke / read-only console specs only (exclude MySQL write suites).
-      testMatch: /console\.(?!mysql\.).*\.spec\.ts/,
+      // Smoke / read-only console specs only (exclude write database suites).
+      testMatch:
+        /console\.(?!mysql\.|postgres\.|tablesdb\.|documentsdb\.|vectorsdb\.).*\.spec\.ts/,
       use: {
         ...desktopChrome,
         storageState,
@@ -68,15 +69,55 @@ const config: PlaywrightTestConfig = {
     {
       name: 'console-mysql',
       dependencies: ['setup'],
-      testMatch: /console\.mysql\..*\.spec\.ts/,
+      testMatch: /console\.mysql\.spec\.ts/,
       timeout: 15 * 60_000,
-      // One worker: each suite provisions a dedicated MySQL instance.
+      // One worker: the spec reuses one project + dedicated database.
       fullyParallel: false,
       workers: 1,
       use: {
         ...desktopChrome,
         storageState,
-        // Keep videos for completed MySQL coverage runs.
+        video: {
+          mode: 'on',
+          size: E2E_VIEWPORT,
+        },
+        trace: 'retain-on-failure',
+        screenshot: 'only-on-failure',
+        actionTimeout: 60_000,
+        navigationTimeout: 90_000,
+      },
+    },
+    {
+      name: 'console-postgres',
+      dependencies: ['setup'],
+      testMatch: /console\.postgres\.spec\.ts/,
+      timeout: 15 * 60_000,
+      fullyParallel: false,
+      workers: 1,
+      use: {
+        ...desktopChrome,
+        storageState,
+        video: {
+          mode: 'on',
+          size: E2E_VIEWPORT,
+        },
+        trace: 'retain-on-failure',
+        screenshot: 'only-on-failure',
+        actionTimeout: 60_000,
+        navigationTimeout: 90_000,
+      },
+    },
+    {
+      name: 'console-product-dbs',
+      dependencies: ['setup'],
+      testMatch: /console\.(tablesdb|documentsdb|vectorsdb)\.spec\.ts/,
+      timeout: 20 * 60_000,
+      // One worker: TablesDB + DocumentsDB + VectorsDB share one project.
+      fullyParallel: false,
+      workers: 1,
+      use: {
+        ...desktopChrome,
+        storageState,
         video: {
           mode: 'on',
           size: E2E_VIEWPORT,
@@ -98,7 +139,7 @@ const config: PlaywrightTestConfig = {
         process.env.PUBLIC_APPWRITE_MULTI_REGION || '',
       VITE_STRIPE_PUBLISHABLE_KEY:
         process.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
-      // Cloud profile enables native MySQL / dedicated DB feature flags.
+      // Cloud profile enables native / dedicated database feature flags.
       VITE_CONSOLE_PROFILE: process.env.VITE_CONSOLE_PROFILE || 'cloud',
       VITE_CONSOLE_FINGERPRINT_KEY:
         process.env.VITE_CONSOLE_FINGERPRINT_KEY || '',

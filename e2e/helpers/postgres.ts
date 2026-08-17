@@ -1,5 +1,5 @@
 /**
- * MySQL-specific wrappers around the shared native-database e2e helpers.
+ * PostgreSQL-specific wrappers around the shared native-database e2e helpers.
  */
 import type { Page } from '@playwright/test'
 import {
@@ -24,24 +24,24 @@ import {
   type NativeExecutionPayload,
 } from './native-db'
 
-export const MYSQL_PROVISION_TIMEOUT_MS = NATIVE_PROVISION_TIMEOUT_MS
-export type CreatedMysqlDatabase = CreatedNativeDatabase
-export type MysqlExecutionPayload = NativeExecutionPayload
+export const POSTGRES_PROVISION_TIMEOUT_MS = NATIVE_PROVISION_TIMEOUT_MS
+export type CreatedPostgresDatabase = CreatedNativeDatabase
+export type PostgresExecutionPayload = NativeExecutionPayload
 
-const ENGINE = 'mysql' as const
+const ENGINE = 'postgres' as const
 
-export { expectNativeExecutionCell as expectMysqlExecutionCell }
-export { expectNativeQueryResult as expectMysqlQueryResult }
-export { expectNativeSidebarTable as expectMysqlSidebarTable }
-export { nativeExecutionRows as mysqlExecutionRows }
+export { expectNativeExecutionCell as expectPostgresExecutionCell }
+export { expectNativeQueryResult as expectPostgresQueryResult }
+export { expectNativeSidebarTable as expectPostgresSidebarTable }
+export { nativeExecutionRows as postgresExecutionRows }
 export { quoteIdent }
-export { selectNativeSchema as selectMysqlSchema }
-export { typeNativeSql as typeMysqlSql }
-export { createNativeTableViaUi as createMysqlTableViaUi }
-export { addNativeIndexViaUi as addMysqlIndexViaUi }
-export { createNativeEnumViaUi as createMysqlEnumViaUi }
+export { selectNativeSchema as selectPostgresSchema }
+export { typeNativeSql as typePostgresSql }
+export { createNativeTableViaUi as createPostgresTableViaUi }
+export { addNativeIndexViaUi as addPostgresIndexViaUi }
+export { createNativeEnumViaUi as createPostgresEnumViaUi }
 
-export function mysqlDatabasePath(
+export function postgresDatabasePath(
   projectId: string,
   databaseId: string,
   suffix = '',
@@ -49,15 +49,15 @@ export function mysqlDatabasePath(
   return nativeDatabasePath(ENGINE, projectId, databaseId, suffix)
 }
 
-export async function createMysqlDatabaseViaWizard(
+export async function createPostgresDatabaseViaWizard(
   page: Page,
   projectId: string,
   options?: { namePrefix?: string },
-): Promise<CreatedMysqlDatabase> {
+): Promise<CreatedPostgresDatabase> {
   return createNativeDatabaseViaWizard(page, projectId, ENGINE, options)
 }
 
-export async function expectMysqlTabRenders(
+export async function expectPostgresTabRenders(
   page: Page,
   projectId: string,
   databaseId: string,
@@ -77,11 +77,13 @@ export async function expectMysqlTabRenders(
   )
 }
 
-export async function runMysqlSql(page: Page): Promise<NativeExecutionPayload> {
+export async function runPostgresSql(
+  page: Page,
+): Promise<NativeExecutionPayload> {
   return runNativeSql(page, ENGINE)
 }
 
-export async function openMysqlSqlEditor(
+export async function openPostgresSqlEditor(
   page: Page,
   projectId: string,
   databaseId: string,
@@ -89,22 +91,22 @@ export async function openMysqlSqlEditor(
   return openNativeSqlEditor(page, ENGINE, projectId, databaseId)
 }
 
-export async function addMysqlColumnViaUi(
+export async function addPostgresColumnViaUi(
   page: Page,
   options: { name: string; typeSearch: string; unique?: boolean },
 ): Promise<void> {
   return addNativeColumnViaUi(page, ENGINE, options)
 }
 
-export async function renameMysqlDatabase(
+export async function renamePostgresDatabase(
   page: Page,
   projectId: string,
-  database: CreatedMysqlDatabase,
+  database: CreatedPostgresDatabase,
 ): Promise<string> {
   return renameNativeDatabase(page, ENGINE, projectId, database)
 }
 
-export function mysqlTablePath(
+export function postgresTablePath(
   projectId: string,
   databaseId: string,
   schema: string,
