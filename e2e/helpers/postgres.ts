@@ -6,6 +6,7 @@ import {
   addNativeColumnViaUi,
   addNativeIndexViaUi,
   createNativeDatabaseViaWizard,
+  createNativeEnumViaUi,
   createNativeTableViaUi,
   expectNativeExecutionCell,
   expectNativeQueryResult,
