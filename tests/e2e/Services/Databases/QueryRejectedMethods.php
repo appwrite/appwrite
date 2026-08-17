@@ -9,6 +9,10 @@ trait QueryRejectedMethods
 {
     public function testGroupByIntervalRejected(): void
     {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -25,6 +29,10 @@ trait QueryRejectedMethods
 
     public function testGroupByTimeBucketRejected(): void
     {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
 
@@ -41,6 +49,10 @@ trait QueryRejectedMethods
 
     public function testUnionRejected(): void
     {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
         $data = $this->setupAnalyticsFixture();
         $databaseId = $data['databaseId'];
 
@@ -59,6 +71,10 @@ trait QueryRejectedMethods
 
     public function testUnionAllRejected(): void
     {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
         $data = $this->setupAnalyticsFixture();
         $databaseId = $data['databaseId'];
 
