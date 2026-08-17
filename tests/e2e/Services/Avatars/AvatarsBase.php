@@ -1342,4 +1342,107 @@ trait AvatarsBase
 
         return [];
     }
+
+    public function testGetGravatar(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        // Explicit email param — uses eldad@appwrite.io (known Gravatar, stable for testing)
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/gravatar', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => 'eldad@appwrite.io',
+                'width' => 200,
+                'height' => 200,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+            $this->assertNotEmpty($response['body']);
+        }, 30_000, 2_000);
+
+        // Default size with identicon — deterministic for any unknown email
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/gravatar', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => 'no-gravatar-' . \uniqid() . '@example.com',
+                'default' => 'identicon',
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+            $this->assertNotEmpty($response['body']);
+        }, 30_000, 2_000);
+
+        // Session-based default: no email param, uses current user's email.
+        // Only meaningful in client/console mode where $user is populated.
+        if ($this->getSide() === 'client') {
+            $this->assertEventually(function () {
+                $response = $this->client->call(Client::METHOD_GET, '/avatars/gravatar', \array_merge([
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), []);
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals('image/png', $response['headers']['content-type']);
+                $this->assertNotEmpty($response['body']);
+            }, 30_000, 2_000);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+
+        // Invalid email format → 400 (rejected by Email validator before action runs)
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/gravatar', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => 'not-an-email',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Out-of-range width → 400
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/gravatar', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => 'eldad@appwrite.io',
+            'width' => 2049,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Invalid default → 400
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/gravatar', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => 'eldad@appwrite.io',
+            'default' => 'invalid',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Invalid rating → 400
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/gravatar', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => 'eldad@appwrite.io',
+            'rating' => 'invalid',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // default=404 with unknown email → 404 with avatar_image_not_found
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/gravatar', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => 'no-gravatar-' . \uniqid() . '@example.com',
+                'default' => '404',
+            ]);
+            $this->assertEquals(404, $response['headers']['status-code']);
+            $this->assertEquals(Exception::AVATAR_IMAGE_NOT_FOUND, $response['body']['type']);
+        }, 30_000, 2_000);
+
+        return [];
+    }
 }
