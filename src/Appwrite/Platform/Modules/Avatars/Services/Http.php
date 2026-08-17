@@ -6,7 +6,8 @@ use Appwrite\Platform\Modules\Avatars\Http\Browsers\Get as GetBrowser;
 use Appwrite\Platform\Modules\Avatars\Http\CreditCards\Get as GetCreditCard;
 use Appwrite\Platform\Modules\Avatars\Http\Favicon\Get as GetFavicon;
 use Appwrite\Platform\Modules\Avatars\Http\Flags\Get as GetFlag;
-use Appwrite\Platform\Modules\Avatars\Http\Gravatar\Get as GetGravatar;
+
+use Appwrite\Platform\Modules\Avatars\Http\Photo\Get as GetPhoto;
 use Appwrite\Platform\Modules\Avatars\Http\Image\Get as GetImage;
 use Appwrite\Platform\Modules\Avatars\Http\Initials\Get as GetInitials;
 use Appwrite\Platform\Modules\Avatars\Http\QR\Get as GetQR;
@@ -27,6 +28,7 @@ class Http extends Service
         $this->addAction(GetQR::getName(), new GetQR());
         $this->addAction(GetInitials::getName(), new GetInitials());
         $this->addAction(GetScreenshot::getName(), new GetScreenshot());
-        $this->addAction(GetGravatar::getName(), new GetGravatar());
+
+        $this->addAction(GetPhoto::getName(), new GetPhoto());
     }
 }
