@@ -38,7 +38,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   // pragma: allowlist secret
   'Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.':
     'צרו מפתח API כדי לאמת את האפליקציות שלכם ולגשת לשירותי Appwrite. מפתחות API מספקים גישה מאובטחת למשאבי הפרויקט שלכם.', // pragma: allowlist secret
-  'Get started with your platform of choice': 'התחילו עם הפלטפורמה לבחירתכם',
+  'Get started with your language of choice': 'התחילו עם השפה לבחירתכם',
   'No API keys match your search': 'אין מפתחות API התואמים לחיפוש שלכם',
   'Delete API key': 'מחיקת מפתח API',
   'this API key': 'מפתח API זה',
