@@ -88,60 +88,135 @@ class Delete extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        // Executions are not persisted by Server CE; only a pending scheduled
-        // execution can be cancelled, through its schedule.
-        $schedule = $authorization->skip(fn () => $dbForPlatform->findOne('schedules', [
-            Query::equal('resourceId', [$executionId]),
-            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
-            Query::equal('active', [true]),
-        ]));
+        $execution = $dbForProject->getDocument('executions', $executionId);
+        if ($execution->isEmpty()) {
+            // A scheduled execution can be cancelled before its document has
+            // been persisted by the executions worker. Remove the schedule and
+            // dispatch ExecutionCancelled so the worker removes the document
+            // if it lands later.
+            $schedule = $authorization->skip(fn () => $dbForPlatform->findOne('schedules', [
+                Query::equal('resourceId', [$executionId]),
+                Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('active', [true]),
+            ]));
 
-        if ($schedule->isEmpty()) {
-            throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            if ($schedule->isEmpty()) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
+
+            if (($schedule->getAttribute('data')['functionId'] ?? null) !== $function->getId()) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
+
+            $cancelled = $authorization->skip(fn () => $this->cancelSchedule($dbForPlatform, $schedule->getId()));
+            if (!$cancelled) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
+
+            $execution = new Document([
+                '$id' => $executionId,
+                '$createdAt' => DateTime::now(),
+                '$updatedAt' => DateTime::now(),
+                '$permissions' => [],
+                'functionId' => $function->getId(),
+                'resourceId' => $function->getId(),
+                'resourceType' => 'functions',
+                'deploymentId' => '',
+                'trigger' => 'schedule',
+                'status' => 'scheduled',
+                'requestMethod' => '',
+                'requestPath' => '',
+                'requestHeaders' => [],
+                'responseStatusCode' => 0,
+                'responseBody' => '',
+                'responseHeaders' => [],
+                'logs' => '',
+                'errors' => '',
+                'duration' => 0.0,
+            ]);
+
+            $bus->dispatch(new ExecutionCancelled(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
+
+            $queueForEvents
+                ->setParam('functionId', $function->getId())
+                ->setParam('executionId', $executionId)
+                ->setPayload($response->output($execution, Response::MODEL_EXECUTION));
+
+            $response->noContent();
+            return;
         }
 
-        if (($schedule->getAttribute('data')['functionId'] ?? null) !== $function->getId()) {
+        if ($execution->getAttribute('resourceType') !== 'functions' || $execution->getAttribute('resourceInternalId') !== $function->getSequence()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
+        $status = $execution->getAttribute('status');
 
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
-            'resourceUpdatedAt' => DateTime::now(),
-            'active' => false,
-        ])));
+        // Treat timed-out executions as failed so they can be deleted.
+        if ($status === 'waiting' || $status === 'processing') {
+            $timeout = $function->getAttribute('timeout', 900);
+            $elapsed = \time() - \strtotime($execution->getCreatedAt());
+            if ($elapsed >= $timeout) {
+                $status = 'failed';
+            }
+        }
 
-        $execution = new Document([
-            '$id' => $executionId,
-            '$createdAt' => DateTime::now(),
-            '$updatedAt' => DateTime::now(),
-            '$permissions' => [],
-            'functionId' => $function->getId(),
-            'resourceId' => $function->getId(),
-            'resourceType' => 'functions',
-            'deploymentId' => '',
-            'trigger' => 'schedule',
-            'status' => 'scheduled',
-            'requestMethod' => '',
-            'requestPath' => '',
-            'requestHeaders' => [],
-            'responseStatusCode' => 0,
-            'responseBody' => '',
-            'responseHeaders' => [],
-            'logs' => '',
-            'errors' => '',
-            'duration' => 0.0,
-        ]);
+        if (!in_array($status, ['completed', 'failed', 'scheduled'])) {
+            throw new Exception(Exception::EXECUTION_IN_PROGRESS);
+        }
 
-        $bus->dispatch(new ExecutionCancelled(
-            execution: $execution->getArrayCopy(),
-            project: $project->getArrayCopy(),
-        ));
+        if ($status === 'scheduled') {
+            $schedule = $authorization->skip(fn () => $dbForPlatform->findOne('schedules', [
+                Query::equal('resourceId', [$execution->getId()]),
+                Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('active', [true]),
+            ]));
+
+            if ($schedule->isEmpty()) {
+                throw new Exception(Exception::EXECUTION_IN_PROGRESS);
+            }
+
+            $cancelled = $authorization->skip(fn () => $this->cancelSchedule($dbForPlatform, $schedule->getId()));
+            if (!$cancelled) {
+                throw new Exception(Exception::EXECUTION_IN_PROGRESS);
+            }
+
+            // Route cancellation through the executions queue so it is ordered
+            // after the scheduled insert. The schedule lock ensures no delayed
+            // function execution can be published afterward.
+            $bus->dispatch(new ExecutionCancelled(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
+        } elseif (!$dbForProject->deleteDocument('executions', $execution->getId())) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
+        }
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
-            ->setParam('executionId', $executionId)
+            ->setParam('executionId', $execution->getId())
             ->setPayload($response->output($execution, Response::MODEL_EXECUTION));
 
         $response->noContent();
+    }
+
+    private function cancelSchedule(Database $dbForPlatform, string $scheduleId): bool
+    {
+        return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
+            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
+
+            // active=false is the scheduler's durable claim. Cancellation
+            // loses once that claim is committed, even if queue publication
+            // succeeds and the scheduler later fails to remove the schedule.
+            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+                return false;
+            }
+
+            return $dbForPlatform->deleteDocument('schedules', $scheduleId);
+        });
     }
 }
