@@ -528,4 +528,15 @@ return [
         'mock' => true,
         'class' => 'Appwrite\\Auth\\OAuth2\\MockUnverified',
     ],
+    'mock-no-email' => [
+        'name' => 'MockNoEmail',
+        'developers' => 'https://appwrite.io',
+        'icon' => 'icon-appwrite',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => true,
+        'class' => 'Appwrite\\Auth\\OAuth2\\MockNoEmail',
+    ],
 ];
