@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Utopia\Database\RuntimeQuery;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 final class MessagingTest extends TestCase
 {
@@ -1127,5 +1129,197 @@ final class MessagingTest extends TestCase
         $this->assertSame(0, $realtime->removePresenceFromConnections('', 'p1'));
         $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', ''));
         $this->assertArrayHasKey('p1', $realtime->connections[1]['presences']);
+    }
+
+    public function testFromPayloadTeamCreateSetsPermissionsChangedAndTeamRole(): void
+    {
+        $teamId = ID::custom('team123');
+        $result = Realtime::fromPayload(
+            event: 'teams.' . $teamId . '.create',
+            payload: new Document(['$id' => $teamId]),
+        );
+
+        $this->assertTrue($result['permissionsChanged']);
+        $this->assertSame([Role::team($teamId)->toString()], $result['roles']);
+    }
+
+    public function testFromPayloadMembershipUpdateSetsPermissionsChanged(): void
+    {
+        $result = Realtime::fromPayload(
+            event: 'teams.team123.memberships.mem456.update',
+            payload: new Document(['$id' => ID::custom('mem456')]),
+        );
+
+        $this->assertNotEmpty($result['permissionsChanged']);
+        $this->assertSame([Role::team('team123')->toString()], $result['roles']);
+    }
+
+    public function testFromPayloadDocumentSecurityIncludesPayloadAnyRead(): void
+    {
+        $result = Realtime::fromPayload(
+            event: 'databases.database_id.collections.collection_id.documents.document_id.create',
+            payload: new Document([
+                '$id' => ID::custom('test'),
+                '$collection' => ID::custom('collection'),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]),
+            database: new Document([
+                '$id' => ID::custom('database'),
+            ]),
+            collection: new Document([
+                '$id' => ID::custom('collection'),
+                '$permissions' => [
+                    Permission::read(Role::team('123abc')),
+                ],
+                'documentSecurity' => true,
+            ])
+        );
+
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+    }
+
+    public function testRuntimeQueryPrepareSelectAllPassesPayload(): void
+    {
+        $payload = ['$id' => 'doc', 'name' => 'Arsenal'];
+
+        $empty = RuntimeQuery::prepare([]);
+        $this->assertSame('selectAll', $empty['type']);
+        $this->assertSame($payload, RuntimeQuery::filter($empty, $payload));
+
+        $selectAll = RuntimeQuery::prepare([Query::select(['*'])]);
+        $this->assertSame('selectAll', $selectAll['type']);
+        $this->assertSame($payload, RuntimeQuery::filter($selectAll, $payload));
+    }
+
+    public function testParseQueriesAcceptsSelectAllFromSubscriptionMetadata(): void
+    {
+        $realtime = new Realtime();
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-1',
+            [Role::user(ID::custom('U'))->toString()],
+            ['teams'],
+            [],
+            'U',
+        );
+
+        $meta = $realtime->getSubscriptionMetadata(1);
+        $this->assertArrayHasKey('sub-1', $meta);
+        $this->assertNotEmpty($meta['sub-1']['queries']);
+
+        $parsed = Query::parseQueries($meta['sub-1']['queries']);
+        $this->assertCount(\count($meta['sub-1']['queries']), $parsed);
+        $this->assertTrue(RuntimeQuery::isSelectAll($parsed[0]));
+    }
+
+    public function testTeamEventDoesNotMatchUserOnlySubscription(): void
+    {
+        $realtime = new Realtime();
+        $userRole = Role::user(ID::custom('U'))->toString();
+        $teamRole = Role::team(ID::custom('T'))->toString();
+
+        $realtime->subscribe('1', 1, 'sub-1', [$userRole], ['teams'], [], 'U');
+
+        $event = [
+            'project' => '1',
+            'roles' => [$teamRole],
+            'data' => [
+                'channels' => ['teams', 'teams.T', 'teams.create', 'teams.T.create'],
+                'payload' => ['$id' => 'T'],
+            ],
+        ];
+
+        $this->assertArrayNotHasKey(1, $realtime->getSubscribers($event));
+
+        $realtime->subscribe('1', 1, 'sub-1', [$teamRole], ['teams'], [], 'U');
+
+        $this->assertArrayHasKey(1, $realtime->getSubscribers($event));
+    }
+
+    public function testUnsubscribeThenThrowLeavesZeroSubscriptions(): void
+    {
+        $realtime = new Realtime();
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-1',
+            [Role::user(ID::custom('U'))->toString()],
+            ['teams'],
+            [],
+            'U',
+        );
+
+        $this->assertNotEmpty($realtime->getSubscriptionMetadata(1));
+
+        $realtime->unsubscribe(1);
+        try {
+            Query::parseQueries(['not-valid-json']);
+            $this->fail('parseQueries should throw on invalid JSON');
+        } catch (\Throwable) {
+        }
+
+        $this->assertArrayNotHasKey(1, $realtime->connections);
+        $this->assertSame([], $realtime->getSubscriptionMetadata(1));
+    }
+
+    public function testRebuildConnectionAppliesTeamRole(): void
+    {
+        $realtime = new Realtime();
+        $userRole = Role::user(ID::custom('U'))->toString();
+        $teamRole = Role::team(ID::custom('T'))->toString();
+
+        $realtime->subscribe('1', 1, 'sub-1', [$userRole], ['teams'], [], 'U');
+
+        $event = [
+            'project' => '1',
+            'roles' => [$teamRole],
+            'data' => [
+                'channels' => ['teams', 'teams.T'],
+                'payload' => ['$id' => 'T'],
+            ],
+        ];
+        $this->assertArrayNotHasKey(1, $realtime->getSubscribers($event));
+
+        $this->assertTrue($realtime->rebuildConnection(1, '1', [$userRole, $teamRole], 'U'));
+
+        $this->assertArrayHasKey(1, $realtime->getSubscribers($event));
+        $this->assertContains($teamRole, $realtime->connections[1]['roles']);
+        $this->assertSame('U', $realtime->connections[1]['userId']);
+    }
+
+    public function testRebuildConnectionRestoresSubscriptionsWhenParseFails(): void
+    {
+        $realtime = new Realtime();
+        $userRole = Role::user(ID::custom('U'))->toString();
+        $realtime->subscribe('1', 1, 'sub-1', [$userRole], ['teams'], [], 'U');
+        $realtime->connections[1]['authorization'] = 'keep-me';
+        $realtime->connections[1]['impersonatedUserId'] = 'impersonator';
+
+        foreach ($realtime->subscriptions['1'] as $role => $byChannel) {
+            foreach ($byChannel as $channel => $byConnection) {
+                foreach ($byConnection as $connectionId => $subscriptions) {
+                    foreach ($subscriptions as $subscriptionId => $data) {
+                        $realtime->subscriptions['1'][$role][$channel][$connectionId][$subscriptionId]['strings'] = ['not-valid-json'];
+                    }
+                }
+            }
+        }
+
+        $this->assertFalse($realtime->rebuildConnection(
+            1,
+            '1',
+            [Role::team(ID::custom('T'))->toString()],
+            'U',
+        ));
+
+        $this->assertArrayHasKey(1, $realtime->connections);
+        $this->assertNotEmpty($realtime->getSubscriptionMetadata(1));
+        $this->assertContains('teams', $realtime->connections[1]['channels']);
+        $this->assertContains($userRole, $realtime->connections[1]['roles']);
+        $this->assertSame('keep-me', $realtime->connections[1]['authorization']);
+        $this->assertSame('impersonator', $realtime->connections[1]['impersonatedUserId']);
     }
 }
