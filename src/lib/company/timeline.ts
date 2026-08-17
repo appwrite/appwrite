@@ -426,7 +426,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
   },
   {
     id: '2026-appwrite-2',
-    date: 'August 26, 2026',
+    date: 'August 31, 2026',
     title: 'Appwrite 2.0',
     description:
       'Appwrite 2.0 introduced a refreshed platform experience and stronger foundations, powered by Hyperloop B, a new engine for the platform, and Console IV, a next-generation console rebuilt with TanStack.',
@@ -434,7 +434,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
   },
   {
     id: '2026-native-databases',
-    date: 'August 2026',
+    date: 'September 2026',
     title: 'Native PostgreSQL and MySQL',
     description:
       'Appwrite introduced native PostgreSQL and MySQL database solutions to the platform, giving teams dedicated relational engines for SQL workflows, portable schemas, and production workloads alongside Appwrite\'s managed data layer.',

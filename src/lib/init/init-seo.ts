@@ -6,7 +6,7 @@ export const INIT_PAGE_SEO_TITLE =
   'Init week: Five days of launches, demos, and giveaways'
 
 export const INIT_PAGE_SEO_DESCRIPTION =
-  'Join Init week August 26–30. Claim your personalized pass, watch live product launches, and enter giveaways for exclusive swag.'
+  'Join Init week August 31–September 4. Claim your personalized pass, watch live product launches, and enter giveaways for exclusive swag.'
 
 export const INIT_TICKET_SHARE_SEO_TITLE =
   'Init week ticket: Claim your pass and win launch swag'
@@ -21,7 +21,7 @@ export const INIT_PAGE_OG_IMAGE_PATH = '/og/init.png'
 export const INIT_PAGE_OG_IMAGE_PARAMS = {
   title: 'Five days of Appwrite product launches',
   subtitle: 'Claim your personalized Init pass and join live sessions.',
-  eyebrow: 'Init week · August 26–30',
+  eyebrow: 'Init week · August 31–September 4',
   cta: INIT_OG_CTA_LABEL,
 } as const
 
