@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Tests\E2E\Services\Realtime\RealtimeBase;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -19,11 +20,14 @@ use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Query\Schema\IndexType;
+use WebSocket\ConnectionException;
+use WebSocket\TimeoutException;
 
 trait MigrationsBase
 {
     use ProjectCustom;
     use FunctionsBase;
+    use RealtimeBase;
 
     /**
      * @var array
@@ -58,6 +62,18 @@ trait MigrationsBase
         self::$project = $projectBackup;
 
         return self::$destinationProject;
+    }
+
+    public function getDestinationUser(bool $fresh = false): array
+    {
+        $project = self::$project;
+        self::$project = $this->getDestinationProject();
+
+        try {
+            return $this->getUser($fresh);
+        } finally {
+            self::$project = $project;
+        }
     }
 
     /**
@@ -2225,6 +2241,7 @@ trait MigrationsBase
             'functionId' => ID::unique(),
             'name' => 'Test',
             'runtime' => 'node-22',
+            'execute' => [Role::users()->toString()],
             'entrypoint' => 'index.js'
         ]);
 
@@ -2275,6 +2292,7 @@ trait MigrationsBase
         $this->assertEquals('Test', $response['body']['name']);
         $this->assertEquals('node-22', $response['body']['runtime']);
         $this->assertEquals('index.js', $response['body']['entrypoint']);
+        $this->assertSame([Role::users()->toString()], $response['body']['execute']);
 
 
         $this->assertEventually(function () use ($functionId) {
@@ -2307,17 +2325,84 @@ trait MigrationsBase
             );
         }, 100000, 500);
 
-        // Attempt execution
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ], [
-            'body' => 'test'
-        ]);
+        $destinationProject = $this->getDestinationProject();
+        $destinationUser = $this->getDestinationUser(true);
+        $realtime = $this->getWebsocket(
+            channels: ['executions'],
+            headers: [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $destinationProject['$id'] . '=' . $destinationUser['session'],
+            ],
+            projectId: $destinationProject['$id'],
+            timeout: 2,
+        );
+        $completedExecution = null;
+        $lastMessage = null;
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertStringContainsString('body-is-test', $execution['body']['logs']);
+        try {
+            $connected = json_decode($realtime->receive(), true);
+
+            $this->assertSame('connected', $connected['type'] ?? null, 'Realtime did not connect: ' . json_encode($connected, JSON_PRETTY_PRINT));
+            $this->assertContains('executions', $connected['data']['channels'] ?? [], 'Realtime did not subscribe to executions: ' . json_encode($connected, JSON_PRETTY_PRINT));
+
+            $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
+                'content-type' => 'application/json',
+                'origin' => 'http://localhost',
+                'x-appwrite-project' => $destinationProject['$id'],
+                'cookie' => 'a_session_' . $destinationProject['$id'] . '=' . $destinationUser['session'],
+            ], [
+                'async' => true,
+                'body' => 'test'
+            ]);
+
+            $this->assertSame(202, $execution['headers']['status-code'], 'Execution was not accepted: ' . json_encode($execution['body'], JSON_PRETTY_PRINT));
+            $this->assertSame('waiting', $execution['body']['status'], 'Execution was not queued: ' . json_encode($execution['body'], JSON_PRETTY_PRINT));
+            $this->assertNotEmpty($execution['body']['$id'], 'Accepted execution has no ID: ' . json_encode($execution['body'], JSON_PRETTY_PRINT));
+
+            $executionId = $execution['body']['$id'];
+            $deadline = microtime(true) + (int) $response['body']['timeout'] + 15;
+
+            while (microtime(true) < $deadline) {
+                try {
+                    $message = json_decode($realtime->receive(), true);
+                } catch (TimeoutException) {
+                    continue;
+                } catch (ConnectionException $exception) {
+                    $this->fail('Realtime closed before the execution completed: ' . $exception->getMessage());
+                }
+
+                if (!is_array($message)) {
+                    continue;
+                }
+
+                $lastMessage = $message;
+                if (
+                    ($message['type'] ?? null) === 'event'
+                    && in_array("functions.{$functionId}.executions.{$executionId}.update", $message['data']['events'] ?? [], true)
+                ) {
+                    $payload = $message['data']['payload'] ?? null;
+                    $this->assertIsArray($payload, 'Execution update has no payload: ' . json_encode($message, JSON_PRETTY_PRINT));
+                    $this->assertSame($executionId, $payload['$id'] ?? null, 'Realtime returned a different execution: ' . json_encode($payload, JSON_PRETTY_PRINT));
+                    $this->assertSame($functionId, $payload['functionId'] ?? null, 'Execution ran a different function: ' . json_encode($payload, JSON_PRETTY_PRINT));
+
+                    if (($payload['status'] ?? null) === 'failed') {
+                        $this->fail('Execution failed: ' . json_encode($payload['errors'] ?? $payload, JSON_PRETTY_PRINT));
+                    }
+
+                    if (($payload['status'] ?? null) === 'completed') {
+                        $completedExecution = $payload;
+                        break;
+                    }
+                }
+            }
+        } finally {
+            $realtime->close();
+        }
+
+        $this->assertIsArray($completedExecution, 'Timed out waiting for the terminal execution event. Last message: ' . json_encode($lastMessage, JSON_PRETTY_PRINT));
+        $this->assertSame('completed', $completedExecution['status'], 'Execution did not complete: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
+        $this->assertSame(200, $completedExecution['responseStatusCode'], 'Execution returned an unexpected status: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
+        $this->assertStringContainsString('body-is-test', (string) $completedExecution['logs'], 'Execution completed without the logs it printed: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
