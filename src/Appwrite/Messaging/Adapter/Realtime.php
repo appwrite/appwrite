@@ -291,7 +291,7 @@ class Realtime extends MessagingAdapter
     ): void {
         foreach ($meta as $subscriptionId => $subscription) {
             try {
-                $queries = Query::parseQueries($subscription['queries'] ?? []);
+                $queries = Query::parseQueries($subscription['queries']);
             } catch (\Throwable $error) {
                 if (!$fallbackQueries) {
                     throw $error;
@@ -305,7 +305,7 @@ class Realtime extends MessagingAdapter
                 $subscriptionId,
                 $roles,
                 self::rebindAccountChannels(
-                    $subscription['channels'] ?? [],
+                    $subscription['channels'],
                     $previousUserId,
                     $userId
                 ),
