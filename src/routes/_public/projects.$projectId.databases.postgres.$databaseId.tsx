@@ -56,7 +56,7 @@ function PostgresDatabaseLayout() {
   }
 
   return (
-    <PostgresSidebarProvider databaseId={databaseId}>
+    <PostgresSidebarProvider key={databaseId} databaseId={databaseId}>
       <PostgresShell>
         <Outlet />
       </PostgresShell>

@@ -56,7 +56,7 @@ function MysqlDatabaseLayout() {
   }
 
   return (
-    <MysqlSidebarProvider databaseId={databaseId}>
+    <MysqlSidebarProvider key={databaseId} databaseId={databaseId}>
       <MysqlShell>
         <Outlet />
       </MysqlShell>
