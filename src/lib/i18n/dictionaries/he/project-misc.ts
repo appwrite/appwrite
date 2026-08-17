@@ -374,6 +374,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Site ID': 'מזהה אתר',
   'Request limit': 'מגבלת בקשות',
   'Interval (seconds)': 'מרווח (שניות)',
+  'Fixed window': 'חלון קבוע',
+  'Sliding window': 'חלון נע',
+  'Token bucket': 'דלי טוקנים',
+  'Max bucket size': 'גודל דלי מרבי',
+  'The largest burst allowed. Defaults to the request limit when left unset.':
+    'הפרץ הגדול ביותר המותר. כברירת מחדל שווה למגבלת הבקשות כשלא הוגדר.',
+  'Rate limit strategy illustration': 'איור אסטרטגיית מגבלת קצב',
+  'first request': 'בקשה ראשונה',
+  per: 'לכל',
+  'each request takes one token': 'כל בקשה צורכת טוקן אחד',
+  'Windows align to the clock. Rate limit resets for everyone when the next time interval starts.':
+    'החלונות מיושרים לפי השעון. מגבלת הקצב מתאפסת לכולם כשמרווח הזמן הבא מתחיל.',
+  "Windows align to the user. Helps prevent traffic spikes since the reset doesn't occur for all users at the same time.":
+    'החלונות מיושרים לפי המשתמש. כך נמנעות קפיצות בתנועה, מכיוון שהאיפוס אינו מתרחש אצל כל המשתמשים בו-זמנית.',
+  'Windows align to human behaviour. Allows accumulated short bursts, and refills for sustained pace.':
+    'החלונות מיושרים לפי התנהגות אנושית. מאפשר פרצים קצרים שנצברו, ומתמלא מחדש לקצב מתמשך.',
   'Redirect location': 'יעד הפניה',
   'Status code': 'קוד סטטוס',
   'Match requests when all conditions are true.':

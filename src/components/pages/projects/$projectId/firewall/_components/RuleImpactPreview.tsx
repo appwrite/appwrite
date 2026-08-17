@@ -40,6 +40,10 @@ import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-
 import { UsageLogRetentionAlert } from '../../usage/_components/UsageLogRetentionAlert'
 import { FirewallImpactChart } from './FirewallImpactChart'
 import { FirewallActionActivityChart } from './FirewallActionActivityChart'
+import {
+  RateLimitStrategyIllustration,
+  type RateLimitIllustrationConfig,
+} from './RateLimitStrategyIllustration'
 import { useT } from '@/lib/i18n/translate'
 
 const IMPACT_DEBOUNCE_MS = 300
@@ -55,6 +59,11 @@ interface RuleImpactPreviewProps {
    * drawer leaves this off.
    */
   showActivity?: boolean
+  /**
+   * Current rate-limit configuration; when the action is Rate limit, the
+   * action card explains the selected strategy with these numbers.
+   */
+  rateLimit?: RateLimitIllustrationConfig
 }
 
 export function RuleImpactPreview({
@@ -63,6 +72,7 @@ export function RuleImpactPreview({
   resourceType,
   resourceId,
   showActivity = false,
+  rateLimit,
 }: RuleImpactPreviewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
@@ -165,8 +175,9 @@ export function RuleImpactPreview({
   const showActivityPlaceholder =
     previewUnavailable || (isLoading && !impact) || !activity
 
-  const filledConditions = conditions.filter((c) => c.value.trim().length > 0)
-    .length
+  const filledConditions = conditions.filter(
+    (c) => c.value.trim().length > 0,
+  ).length
   const showSubtleLoading = !previewUnavailable && isFetching && !isLoading
 
   return (
@@ -360,6 +371,9 @@ export function RuleImpactPreview({
             ? t('Add conditions to narrow which requests this rule matches.')
             : t('Matching estimate updates as you refine conditions.')}
         </p>
+        {action === WafRuleAction.RateLimit && rateLimit ? (
+          <RateLimitStrategyIllustration {...rateLimit} />
+        ) : null}
       </div>
     </div>
   )
