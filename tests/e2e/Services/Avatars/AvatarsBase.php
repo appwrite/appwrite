@@ -1355,13 +1355,12 @@ trait AvatarsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
                 'email' => 'eldad@appwrite.io',
-                'width' => 200,
-                'height' => 200,
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals('image/png', $response['headers']['content-type']);
             $this->assertNotEmpty($response['body']);
+            $this->assertEquals('c37bfe56394ab0f359cb3977eb2ada39', \md5($response['body']));
         }, 30_000, 2_000);
 
         // Default size with identicon — deterministic for any unknown email
@@ -1369,13 +1368,14 @@ trait AvatarsBase
             $response = $this->client->call(Client::METHOD_GET, '/avatars/gravatar', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'email' => 'no-gravatar-' . \uniqid() . '@example.com',
+                'email' => 'no-gravatar-test@example.com',
                 'default' => 'identicon',
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals('image/png', $response['headers']['content-type']);
             $this->assertNotEmpty($response['body']);
+            $this->assertEquals('5b8f150824ca586569a2606b41a16c6f', \md5($response['body']));
         }, 30_000, 2_000);
 
         // Session-based default: no email param, uses current user's email.
@@ -1401,15 +1401,6 @@ trait AvatarsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'email' => 'not-an-email',
-        ]);
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        // Out-of-range width → 400
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/gravatar', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'email' => 'eldad@appwrite.io',
-            'width' => 2049,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
