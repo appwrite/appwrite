@@ -2,11 +2,11 @@
 
 namespace Appwrite\Database;
 
+use Appwrite\Utopia\Database\Adapter\Pool as DatabasePool;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Hook\Permissions;
@@ -181,7 +181,7 @@ class Factory
 
     protected function adapter(string $name): DatabasePool
     {
-        return new DatabasePool($this->pools->get($name));
+        return (new DatabasePool($this->pools->get($name)))->setHostname($name);
     }
 
     protected function configureDocumentTypes(Database $database): Database

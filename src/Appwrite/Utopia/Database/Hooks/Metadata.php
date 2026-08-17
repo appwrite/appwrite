@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Hooks;
 
+use Appwrite\Utopia\Database\Adapter\Pool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
@@ -91,12 +92,27 @@ class Metadata implements Decorator
                 return $publicIds[$internalId];
             }
 
-            $database = $catalog !== null && ! $tenant->getAdapter()->inTransaction()
+            $database = $catalog !== null && (
+                ! $tenant->getAdapter()->inTransaction()
+                || ! self::sharesPool($tenant, $catalog)
+            )
                 ? $catalog
                 : $tenant;
 
             return self::resolvePublicId($database, $internalId);
         };
+    }
+
+    private static function sharesPool(Database $tenant, Database $catalog): bool
+    {
+        $left = $tenant->getAdapter();
+        $right = $catalog->getAdapter();
+
+        if ($left instanceof Pool && $right instanceof Pool) {
+            return $left->getPool() === $right->getPool();
+        }
+
+        return $left->getHostname() === $right->getHostname();
     }
 
     private function decorateRelationships(Document $collection, Document $document, int $depth = 0): void

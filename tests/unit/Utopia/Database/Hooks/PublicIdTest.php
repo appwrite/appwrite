@@ -94,8 +94,19 @@ final class PublicIdTest extends TestCase
 
     public function testResolverDoesNotQueryCatalogDuringTenantTransaction(): void
     {
-        $tenant = $this->database(new Document(['$id' => 'movies']), inTransaction: true);
-        $catalog = $this->database();
+        $tenant = $this->database(new Document(['$id' => 'movies']), inTransaction: true, hostname: 'mariadb');
+        $catalog = $this->database(hostname: 'mariadb');
+
+        $this->assertSame(
+            'movies',
+            (Metadata::resolver($tenant, $catalog))('database_2_collection_17'),
+        );
+    }
+
+    public function testResolverUsesCatalogDuringTenantTransactionOnDifferentHost(): void
+    {
+        $tenant = $this->database(inTransaction: true, hostname: 'dedicated');
+        $catalog = $this->database(new Document(['$id' => 'movies']), hostname: 'mariadb');
 
         $this->assertSame(
             'movies',
@@ -129,8 +140,8 @@ final class PublicIdTest extends TestCase
 
     public function testDecorateDuringTenantTransactionDoesNotQueryCatalog(): void
     {
-        $tenant = $this->database(new Document(['$id' => 'movies']), inTransaction: true);
-        $catalog = $this->database();
+        $tenant = $this->database(new Document(['$id' => 'movies']), inTransaction: true, hostname: 'mariadb');
+        $catalog = $this->database(hostname: 'mariadb');
 
         $result = (new Metadata(
             database: new Document(['$id' => 'db1']),
@@ -146,13 +157,33 @@ final class PublicIdTest extends TestCase
         $this->assertSame('db1', $result->getAttribute('$databaseId'));
     }
 
-    private function database(?Document $catalog = null, ?callable $assertFindOne = null, bool $inTransaction = false): Database
+    public function testDecorateDuringDedicatedTransactionUsesCatalog(): void
+    {
+        $tenant = $this->database(inTransaction: true, hostname: 'dedicated');
+        $catalog = $this->database(new Document(['$id' => 'movies']), hostname: 'mariadb');
+
+        $result = (new Metadata(
+            database: new Document(['$id' => 'db1']),
+            context: 'table',
+            resolvePublicId: Metadata::resolver($tenant, $catalog),
+        ))->decorate(
+            Event::DocumentCreate,
+            new Document(['$id' => 'database_2_collection_17']),
+            new Document(['$id' => 'row1']),
+        );
+
+        $this->assertSame('movies', $result->getAttribute('$tableId'));
+        $this->assertSame('db1', $result->getAttribute('$databaseId'));
+    }
+
+    private function database(?Document $catalog = null, ?callable $assertFindOne = null, bool $inTransaction = false, string $hostname = ''): Database
     {
         $authorization = $this->createStub(Authorization::class);
         $authorization->method('skip')->willReturnCallback(fn (callable $callback): mixed => $callback());
 
         $adapter = $this->createStub(Adapter::class);
         $adapter->method('inTransaction')->willReturn($inTransaction);
+        $adapter->method('getHostname')->willReturn($hostname);
 
         $database = $this->createMock(Database::class);
         $database->method('getAuthorization')->willReturn($authorization);
