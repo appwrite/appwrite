@@ -156,6 +156,10 @@ import {
 } from '@/lib/databases/dedicated-database-status'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { matchesNativeEngine } from '@/lib/databases/native-database-engines'
+import {
+  ensureConsoleSqlApiStatements,
+  isSqlApiDdlBlockedError,
+} from '@/lib/databases/sql-api-statements'
 
 function isMysqlEngine(engine: string | undefined): boolean {
   return matchesNativeEngine(engine, 'mysql')
@@ -208,23 +212,39 @@ export async function executeMysqlDatabaseSql(
       timeoutSeconds,
     })
 
-  // First pass: run as-is (most console catalog queries only return strings).
-  const execution = await run(wrapMysqlSqlForDisplay(sql))
+  const execute = async () => {
+    // First pass: run as-is (most console catalog queries only return strings).
+    const execution = await run(wrapMysqlSqlForDisplay(sql))
 
-  // Retry with a JSON_ARRAYAGG wrap when the API could not marshal driver types
-  // such as DATETIME / TIMESTAMP / VARCHAR byte buffers (same role as Postgres
-  // row_to_json wrapping). Check the raw payload before normalize, which may
-  // already decode byte arrays and hide the need to wrap.
-  if (isMysqlReadQuery(sql) && mysqlExecutionNeedsJsonWrap(execution)) {
-    const columnNames = getMysqlExecutionColumnNames(execution)
-    const wrappedSql = wrapMysqlSqlForDisplay(sql, columnNames)
-    if (wrappedSql !== sql.trim() && columnNames.length > 0) {
-      const wrappedExecution = await run(wrappedSql)
-      return normalizeMysqlExecutionResult(wrappedExecution)
+    // Retry with a JSON_ARRAYAGG wrap when the API could not marshal driver types
+    // such as DATETIME / TIMESTAMP / VARCHAR byte buffers (same role as Postgres
+    // row_to_json wrapping). Check the raw payload before normalize, which may
+    // already decode byte arrays and hide the need to wrap.
+    if (isMysqlReadQuery(sql) && mysqlExecutionNeedsJsonWrap(execution)) {
+      const columnNames = getMysqlExecutionColumnNames(execution)
+      const wrappedSql = wrapMysqlSqlForDisplay(sql, columnNames)
+      if (wrappedSql !== sql.trim() && columnNames.length > 0) {
+        const wrappedExecution = await run(wrappedSql)
+        return normalizeMysqlExecutionResult(wrappedExecution)
+      }
     }
+
+    return normalizeMysqlExecutionResult(execution)
   }
 
-  return normalizeMysqlExecutionResult(execution)
+  try {
+    return await execute()
+  } catch (error) {
+    if (!isSqlApiDdlBlockedError(error)) throw error
+    await ensureConsoleSqlApiStatements(
+      projectId,
+      databaseId,
+      'mysql',
+    ).catch(() => {
+      /* Retry the statement even if the allow-list PATCH is a no-op */
+    })
+    return await execute()
+  }
 }
 
 function parseMysqlCountTotal(

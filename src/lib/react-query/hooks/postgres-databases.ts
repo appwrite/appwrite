@@ -152,6 +152,10 @@ import {
 } from '@/lib/databases/dedicated-database-status'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { matchesNativeEngine } from '@/lib/databases/native-database-engines'
+import {
+  ensureConsoleSqlApiStatements,
+  isSqlApiDdlBlockedError,
+} from '@/lib/databases/sql-api-statements'
 
 function isPostgresEngine(engine: string | undefined): boolean {
   return matchesNativeEngine(engine, 'postgres')
@@ -196,12 +200,28 @@ export async function executePostgresDatabaseSql(
   sql: string,
   timeoutSeconds?: number,
 ): Promise<Models.DedicatedDatabaseExecution> {
-  const execution = await sdk.forProject(projectId).postgresql.createExecution({
-    databaseId,
-    sql: wrapPostgresSqlForDisplay(sql),
-    timeoutSeconds,
-  })
-  return normalizePostgresExecutionResult(execution)
+  const run = async () => {
+    const execution = await sdk.forProject(projectId).postgresql.createExecution({
+      databaseId,
+      sql: wrapPostgresSqlForDisplay(sql),
+      timeoutSeconds,
+    })
+    return normalizePostgresExecutionResult(execution)
+  }
+
+  try {
+    return await run()
+  } catch (error) {
+    if (!isSqlApiDdlBlockedError(error)) throw error
+    await ensureConsoleSqlApiStatements(
+      projectId,
+      databaseId,
+      'postgresql',
+    ).catch(() => {
+      /* Retry the statement even if the allow-list PATCH is a no-op */
+    })
+    return await run()
+  }
 }
 
 function parsePostgresCountTotal(

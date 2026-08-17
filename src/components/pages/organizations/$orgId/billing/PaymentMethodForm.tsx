@@ -34,6 +34,7 @@ import {
   useSetOrganizationDefaultPaymentMethod,
   useSetOrganizationBackupPaymentMethod,
   usePaymentMethods,
+  useLocale,
 } from '@/lib/react-query/hooks'
 import type { Models } from '@appwrite.io/console'
 import { maskCardNumber } from './utils'
@@ -120,13 +121,18 @@ export function PaymentMethodForm({
   variant = 'dialog',
 }: PaymentMethodFormProps) {
   const t = useT()
+  const { data: localeData } = useLocale()
+  const isUsLocale =
+    localeData?.countryCode?.trim().toUpperCase() === 'US'
+  const isUsLocaleRef = useRef(isUsLocale)
+  isUsLocaleRef.current = isUsLocale
   const [cardholderName, setCardholderName] = useState('')
   const [selectedState, setSelectedState] = useState<string>('')
   // Post-Stripe confirm step (US state and/or recovery name entry).
   const [showConfirmStep, setShowConfirmStep] = useState(false)
-  // US state is required only when Stripe reports card.country === 'US'.
-  // Matches old console: never show the US state list for other countries,
-  // and never fall back to it when country is unknown.
+  // US state is required only when locale.get() reports countryCode === 'US'
+  // (IP-derived, already fetched for the console). Card BIN and the Stripe
+  // country dropdown are not used for this gate.
   const [requiresState, setRequiresState] = useState(false)
   // Recovery: SetupIntent already succeeded but Appwrite link never landed.
   // Card form is skipped; cardholder name must be collected on the confirm step.
@@ -228,10 +234,7 @@ export function PaymentMethodForm({
         // (Appwrite PM exists with clientSecret but no providerMethodId
         // because the backend link never landed), skip the card form and
         // show a confirm step so the user can enter a name and finish linking.
-        // Only require US state when Stripe returns an expanded card with
-        // country === 'US' (same gate as the old console). retrieveSetupIntent
-        // usually does not expand payment_method, so country is often unknown
-        // here - do not fall back to the US state list in that case.
+        // Only require US state when the user's locale country is US.
         const { setupIntent: existingIntent } =
           await stripe.retrieveSetupIntent(secret)
         if (!mounted) return
@@ -253,7 +256,7 @@ export function PaymentMethodForm({
               })
             }
             setIsRecovery(true)
-            setRequiresState(pmCard?.country === 'US')
+            setRequiresState(isUsLocaleRef.current)
             setShowConfirmStep(true)
             setIsStripeLoading(false)
             return
@@ -403,9 +406,8 @@ export function PaymentMethodForm({
 
         let finalIntent = existingIntent ?? null
         // Card object captured from the pre-action SetupIntent. handleNextAction
-        // returns a bare payment_method id, so this is the only path that
-        // exposes the card's country - without it the US state-picker check
-        // would silently fail for any 3DS card.
+        // returns a bare payment_method id, so keep the expanded card for the
+        // confirm-step preview.
         let initialPmCard: StripePaymentMethod.Card | null = null
 
         if (finalIntent?.status !== 'succeeded') {
@@ -485,7 +487,7 @@ export function PaymentMethodForm({
             : initialPmCard
 
         // Cache the card preview for the confirm step whenever we have
-        // expanded card info, so the US state path shows which card was added.
+        // expanded card info.
         if (pmCard?.last4) {
           setAddedCardPreview({
             brand: pmCard.brand ?? '',
@@ -495,11 +497,9 @@ export function PaymentMethodForm({
           })
         }
 
-        // Same gate as the old console: only collect US state when Stripe
-        // reports card.country === 'US'. If the card object is missing
-        // (string PM id after retrieve / 3DS), skip state and link — do not
-        // fall back to the US state list for non-US cards.
-        if (pmCard?.country === 'US' && !showConfirmStep) {
+        // Only collect US state when locale.get() countryCode is US.
+        // Non-US IPs skip this step even if Stripe reports a US-issued card.
+        if (isUsLocaleRef.current && !showConfirmStep) {
           setProviderMethodId(resolvedProviderMethodId)
           setRequiresState(true)
           setShowConfirmStep(true)

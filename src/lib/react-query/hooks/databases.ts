@@ -38,6 +38,7 @@ import {
   type DedicatedDatabaseSource,
 } from '@/lib/databases/dedicated-database-source'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
+import { ensureConsoleSqlApiStatements } from '@/lib/databases/sql-api-statements'
 import {
   DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
   coerceTrimmedString,
@@ -215,6 +216,16 @@ export async function waitForDedicatedDatabaseReady(
         return false
       }
       if (isDatabaseLifecycleReady(status)) {
+        if (source.type === 'engine' && database) {
+          await ensureConsoleSqlApiStatements(
+            projectId,
+            databaseId,
+            source.engine,
+            database,
+          ).catch(() => {
+            /* Console DDL still retries on first write if this PATCH fails */
+          })
+        }
         return true
       }
     } catch {
