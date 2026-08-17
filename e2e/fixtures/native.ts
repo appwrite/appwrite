@@ -1,8 +1,11 @@
-import { test as base } from '../fixtures'
+import { test as base } from './database-flags'
 import { env } from '../config/env'
 import { E2E_VIEWPORT } from '../config/viewport'
 import { newE2ePage } from '../helpers/cookie-banner'
-import { enableDatabaseFeatureFlags } from '../helpers/feature-flags'
+import {
+  enableDatabaseFeatureFlags,
+  seedDatabaseFeatureFlags,
+} from '../helpers/feature-flags'
 import {
   createNativeDatabaseViaWizard,
   type CreatedNativeDatabase,
@@ -37,11 +40,8 @@ async function setupNativeSuite(
     storageState: 'e2e/.auth/auth.json',
     viewport: E2E_VIEWPORT,
     screen: E2E_VIEWPORT,
-    recordVideo: {
-      dir: `test-results/${engine}-videos/suite-setup`,
-      size: E2E_VIEWPORT,
-    },
   })
+  await seedDatabaseFeatureFlags(context)
   const page = await newE2ePage(context)
 
   let project: CreatedProject | undefined
@@ -52,7 +52,7 @@ async function setupNativeSuite(
       page,
       project.projectId,
       engine,
-      { namePrefix: engine },
+      { namePrefix },
     )
     await use({ project, database })
   } finally {
@@ -69,9 +69,9 @@ export const mysqlTest = base.extend<
 >({
   mysqlSuite: [
     async ({ browser }, use) => {
-      await setupNativeSuite(browser, 'mysql', 'e2e-mysql', use)
+      await setupNativeSuite(browser, 'mysql', 'e2e-sqlm', use)
     },
-    { scope: 'worker', timeout: 15 * 60_000 },
+    { scope: 'worker', timeout: 25 * 60_000 },
   ],
 })
 
@@ -81,9 +81,9 @@ export const postgresTest = base.extend<
 >({
   postgresSuite: [
     async ({ browser }, use) => {
-      await setupNativeSuite(browser, 'postgres', 'e2e-pg', use)
+      await setupNativeSuite(browser, 'postgres', 'e2e-sqlp', use)
     },
-    { scope: 'worker', timeout: 15 * 60_000 },
+    { scope: 'worker', timeout: 25 * 60_000 },
   ],
 })
 

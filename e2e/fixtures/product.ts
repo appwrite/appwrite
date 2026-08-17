@@ -1,8 +1,11 @@
-import { test as base } from '../fixtures'
+import { test as base } from './database-flags'
 import { env } from '../config/env'
 import { E2E_VIEWPORT } from '../config/viewport'
 import { newE2ePage } from '../helpers/cookie-banner'
-import { enableDatabaseFeatureFlags } from '../helpers/feature-flags'
+import {
+  enableDatabaseFeatureFlags,
+  seedDatabaseFeatureFlags,
+} from '../helpers/feature-flags'
 import {
   createProductDatabaseViaWizard,
   type CreatedProductDatabase,
@@ -14,91 +17,85 @@ import {
   type CreatedProject,
 } from '../helpers/project-lifecycle'
 
-export type ProductDbSuite = {
+export type DatabaseSuite = {
   project: CreatedProject
-  tablesdb: CreatedProductDatabase | null
-  documentsdb: CreatedProductDatabase | null
-  vectorsdb: CreatedProductDatabase | null
+  database: CreatedProductDatabase
 }
 
-async function tryCreateProductDatabase(
-  page: import('@playwright/test').Page,
-  projectId: string,
+async function setupDatabaseSuite(
+  browser: import('@playwright/test').Browser,
   kind: ProductDbKind,
   namePrefix: string,
-): Promise<CreatedProductDatabase | null> {
-  try {
-    return await createProductDatabaseViaWizard(page, projectId, kind, {
-      namePrefix,
+  use: (suite: DatabaseSuite) => Promise<void>,
+) {
+  if (!env.E2E_ORG_ID) {
+    await use({
+      project: { projectId: '', projectName: '' },
+      database: { kind, databaseId: '', databaseName: '' },
     })
-  } catch (error) {
-    console.error(`Failed to create ${kind} database for e2e:`, error)
-    return null
+    return
+  }
+
+  const context = await browser.newContext({
+    storageState: 'e2e/.auth/auth.json',
+    viewport: E2E_VIEWPORT,
+    screen: E2E_VIEWPORT,
+  })
+  await seedDatabaseFeatureFlags(context)
+  const page = await newE2ePage(context)
+
+  let project: CreatedProject | undefined
+  try {
+    await enableDatabaseFeatureFlags(page)
+    project = await createE2eProject(page, { namePrefix })
+    const database = await createProductDatabaseViaWizard(
+      page,
+      project.projectId,
+      kind,
+      { namePrefix },
+    )
+    await use({ project, database })
+  } finally {
+    if (project?.projectId) {
+      await deleteE2eProject(page, project).catch(() => undefined)
+    }
+    await context.close()
   }
 }
 
-export const productTest = base.extend<
+export const tablesdbTest = base.extend<
   Record<string, never>,
-  { productSuite: ProductDbSuite }
+  { tablesdbSuite: DatabaseSuite }
 >({
-  productSuite: [
+  tablesdbSuite: [
     async ({ browser }, use) => {
-      if (!env.E2E_ORG_ID) {
-        await use({
-          project: { projectId: '', projectName: '' },
-          tablesdb: null,
-          documentsdb: null,
-          vectorsdb: null,
-        })
-        return
-      }
-
-      const context = await browser.newContext({
-        storageState: 'e2e/.auth/auth.json',
-        viewport: E2E_VIEWPORT,
-        screen: E2E_VIEWPORT,
-        recordVideo: {
-          dir: 'test-results/product-db-videos/suite-setup',
-          size: E2E_VIEWPORT,
-        },
-      })
-      const page = await newE2ePage(context)
-
-      let project: CreatedProject | undefined
-      try {
-        await enableDatabaseFeatureFlags(page)
-        project = await createE2eProject(page, {
-          namePrefix: 'e2e-product-dbs',
-        })
-
-        const tablesdb = await tryCreateProductDatabase(
-          page,
-          project.projectId,
-          'tablesdb',
-          'tables',
-        )
-        const documentsdb = await tryCreateProductDatabase(
-          page,
-          project.projectId,
-          'documentsdb',
-          'docs',
-        )
-        const vectorsdb = await tryCreateProductDatabase(
-          page,
-          project.projectId,
-          'vectorsdb',
-          'vectors',
-        )
-
-        await use({ project, tablesdb, documentsdb, vectorsdb })
-      } finally {
-        if (project?.projectId) {
-          await deleteE2eProject(page, project).catch(() => undefined)
-        }
-        await context.close()
-      }
+      await setupDatabaseSuite(browser, 'tablesdb', 'e2e-tdb', use)
     },
-    { scope: 'worker', timeout: 30 * 60_000 },
+    { scope: 'worker', timeout: 20 * 60_000 },
+  ],
+})
+
+export const documentsdbTest = base.extend<
+  Record<string, never>,
+  { documentsdbSuite: DatabaseSuite }
+>({
+  documentsdbSuite: [
+    async ({ browser }, use) => {
+      await setupDatabaseSuite(browser, 'documentsdb', 'e2e-ddb', use)
+    },
+    { scope: 'worker', timeout: 25 * 60_000 },
+  ],
+})
+
+export const vectorsdbTest = base.extend<
+  Record<string, never>,
+  { vectorsdbSuite: DatabaseSuite }
+>({
+  vectorsdbSuite: [
+    async ({ browser }, use) => {
+      await setupDatabaseSuite(browser, 'vectorsdb', 'e2e-vdb', use)
+    },
+    { scope: 'worker', timeout: 25 * 60_000 },
   ],
 })
 

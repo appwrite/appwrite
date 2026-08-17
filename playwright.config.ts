@@ -13,10 +13,23 @@ const desktopChrome = {
   screen: E2E_VIEWPORT,
 }
 
+const consoleDatabaseUse = {
+  ...desktopChrome,
+  storageState,
+  video: {
+    mode: 'retain-on-failure' as const,
+    size: E2E_VIEWPORT,
+  },
+  trace: 'retain-on-failure' as const,
+  screenshot: 'only-on-failure' as const,
+  actionTimeout: 20_000,
+  navigationTimeout: 45_000,
+}
+
 const config: PlaywrightTestConfig = {
-  timeout: 120_000,
+  timeout: 90_000,
   expect: {
-    timeout: 30_000,
+    timeout: 15_000,
   },
   reportSlowTests: null,
   reporter: isCI
@@ -70,63 +83,46 @@ const config: PlaywrightTestConfig = {
       name: 'console-mysql',
       dependencies: ['setup'],
       testMatch: /console\.mysql\.spec\.ts/,
-      timeout: 15 * 60_000,
-      // One worker: the spec reuses one project + dedicated database.
+      timeout: 25 * 60_000,
       fullyParallel: false,
       workers: 1,
-      use: {
-        ...desktopChrome,
-        storageState,
-        video: {
-          mode: 'on',
-          size: E2E_VIEWPORT,
-        },
-        trace: 'retain-on-failure',
-        screenshot: 'only-on-failure',
-        actionTimeout: 60_000,
-        navigationTimeout: 90_000,
-      },
+      use: consoleDatabaseUse,
     },
     {
       name: 'console-postgres',
       dependencies: ['setup'],
       testMatch: /console\.postgres\.spec\.ts/,
-      timeout: 15 * 60_000,
+      timeout: 25 * 60_000,
       fullyParallel: false,
       workers: 1,
-      use: {
-        ...desktopChrome,
-        storageState,
-        video: {
-          mode: 'on',
-          size: E2E_VIEWPORT,
-        },
-        trace: 'retain-on-failure',
-        screenshot: 'only-on-failure',
-        actionTimeout: 60_000,
-        navigationTimeout: 90_000,
-      },
+      use: consoleDatabaseUse,
     },
     {
-      name: 'console-product-dbs',
+      name: 'console-tablesdb',
       dependencies: ['setup'],
-      testMatch: /console\.(tablesdb|documentsdb|vectorsdb)\.spec\.ts/,
+      testMatch: /console\.tablesdb\.spec\.ts/,
       timeout: 20 * 60_000,
-      // One worker: TablesDB + DocumentsDB + VectorsDB share one project.
       fullyParallel: false,
       workers: 1,
-      use: {
-        ...desktopChrome,
-        storageState,
-        video: {
-          mode: 'on',
-          size: E2E_VIEWPORT,
-        },
-        trace: 'retain-on-failure',
-        screenshot: 'only-on-failure',
-        actionTimeout: 60_000,
-        navigationTimeout: 90_000,
-      },
+      use: consoleDatabaseUse,
+    },
+    {
+      name: 'console-documentsdb',
+      dependencies: ['setup'],
+      testMatch: /console\.documentsdb\.spec\.ts/,
+      timeout: 25 * 60_000,
+      fullyParallel: false,
+      workers: 1,
+      use: consoleDatabaseUse,
+    },
+    {
+      name: 'console-vectorsdb',
+      dependencies: ['setup'],
+      testMatch: /console\.vectorsdb\.spec\.ts/,
+      timeout: 25 * 60_000,
+      fullyParallel: false,
+      workers: 1,
+      use: consoleDatabaseUse,
     },
   ],
   webServer: {

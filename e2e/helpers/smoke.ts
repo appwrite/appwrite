@@ -5,6 +5,7 @@ const FATAL_PAGE_COPY = [
   /Something went wrong/i,
   /Unexpected Application Error/i,
   /This page could not be found/i,
+  /Project not found/i,
 ]
 
 /** Headless Chromium often cannot create WebGL; marketing pages still render. */

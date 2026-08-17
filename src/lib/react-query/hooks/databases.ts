@@ -194,6 +194,13 @@ function isDatabaseLifecycleReady(status: string | null | undefined): boolean {
   return !!normalized && DEDICATED_DATABASE_READY_STATUSES.has(normalized)
 }
 
+/**
+ * Dedicated compute often takes several minutes. 180 attempts with 500ms→3s
+ * backoff covers about 8–9 minutes before the wizard gives up.
+ */
+const CREATED_DATABASE_READY_ATTEMPTS = 180
+const CREATED_DATABASE_WORKSPACE_ATTEMPTS = 90
+
 /** Poll dedicated database status until ready or timeout. */
 export async function waitForDedicatedDatabaseReady(
   projectId: string,
@@ -201,7 +208,7 @@ export async function waitForDedicatedDatabaseReady(
   source:
     | { type: 'product'; dbKind: DatabaseRouteKind }
     | { type: 'engine'; engine: string },
-  maxAttempts = 60,
+  maxAttempts = CREATED_DATABASE_READY_ATTEMPTS,
 ): Promise<boolean> {
   let intervalMs = 500
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -253,7 +260,7 @@ export async function waitForCreatedDatabaseLifecycleReady(
   projectId: string,
   databaseId: string,
   kind: CreatedDatabaseWorkspaceKind,
-  maxAttempts = 60,
+  maxAttempts = CREATED_DATABASE_READY_ATTEMPTS,
 ): Promise<boolean> {
   if (!projectId || !databaseId) return false
 
@@ -366,7 +373,7 @@ export async function waitForCreatedDatabaseWorkspaceReady(
   projectId: string,
   databaseId: string,
   kind: CreatedDatabaseWorkspaceKind,
-  maxAttempts = 40,
+  maxAttempts = CREATED_DATABASE_WORKSPACE_ATTEMPTS,
 ): Promise<boolean> {
   let intervalMs = 500
   for (let attempt = 0; attempt < maxAttempts; attempt++) {

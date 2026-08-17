@@ -61,7 +61,7 @@ type PostgresTableColumnDrawerProps = {
   databaseId: string
   tableId: string
   column: PostgresTableColumnRow | null
-  onSuccess: () => void
+  onSuccess: () => void | Promise<unknown>
 }
 
 function normalizeOptionalText(value: string): string {
@@ -362,7 +362,7 @@ export function PostgresTableColumnDrawer({
       )
       toast.success(isEditing ? t('Column updated') : t('Column created'))
       onOpenChange(false)
-      onSuccess()
+      await onSuccess()
     } catch (error) {
       toast.error(
         getErrorMessage(error) ??

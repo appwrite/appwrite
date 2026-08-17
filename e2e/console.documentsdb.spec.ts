@@ -1,7 +1,6 @@
 import { type Page } from '@playwright/test'
-import { productTest as test, expect } from './fixtures/product'
+import { documentsdbTest as test, expect } from './fixtures/product'
 import { env } from './config/env'
-import { enableDatabaseFeatureFlags } from './helpers/feature-flags'
 import {
   addCollectionIndexViaUi,
   createCollectionDocumentViaUi,
@@ -23,7 +22,12 @@ const DATABASE_TABS: Array<{
     path: '/visualizer',
     ready: (page) =>
       page
-        .getByText(/No collections|Fit to view|Create collection|schema/i)
+        .getByRole('heading', { name: 'Visualizer' })
+        .or(
+          page.getByText(
+            /e2e_articles|Loading schema|Fit to view|No collections|Copy schema|Export as SVG/i,
+          ),
+        )
         .first(),
   },
   {
@@ -74,45 +78,44 @@ const SETTINGS_SECTIONS: Array<{
 ]
 
 test.describe('console documentsdb', () => {
-  test.describe.configure({ mode: 'serial', timeout: 15 * 60_000 })
+  test.describe.configure({ mode: 'serial', timeout: 20 * 60_000 })
 
   let collectionId = ''
 
-  test.beforeEach(async ({ page, productSuite }) => {
+  test.beforeEach(async ({ documentsdbSuite }) => {
     test.skip(!env.E2E_ORG_ID, 'E2E_ORG_ID is required for database e2e')
     test.skip(
-      !productSuite.documentsdb?.databaseId,
+      !documentsdbSuite.database.databaseId,
       'DocumentsDB was not created',
     )
-    await enableDatabaseFeatureFlags(page)
   })
 
   test('DocumentsDB appears on databases list', async ({
     page,
-    productSuite,
+    documentsdbSuite,
   }) => {
-    const { project, documentsdb } = productSuite
+    const { project, database } = documentsdbSuite
     await page.goto(`/projects/${project.projectId}/databases`, {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     })
-    await expect(page.getByText(documentsdb!.databaseName).first()).toBeVisible({
+    await expect(page.getByText(database.databaseName).first()).toBeVisible({
       timeout: 60_000,
     })
   })
 
   test('workspace loads and create collection is available', async ({
     page,
-    productSuite,
+    documentsdbSuite,
   }) => {
-    const { project, documentsdb } = productSuite
+    const { project, database } = documentsdbSuite
     await gotoProductDatabase(
       page,
       KIND,
       project.projectId,
-      documentsdb!.databaseId,
+      database.databaseId,
     )
-    await expect(page.getByText(documentsdb!.databaseName).first()).toBeVisible({
+    await expect(page.getByText(database.databaseName).first()).toBeVisible({
       timeout: 60_000,
     })
     await expect(
@@ -122,14 +125,14 @@ test.describe('console documentsdb', () => {
 
   test('create collection and a JSON document', async ({
     page,
-    productSuite,
+    documentsdbSuite,
   }) => {
-    const { project, documentsdb } = productSuite
+    const { project, database } = documentsdbSuite
     await gotoProductDatabase(
       page,
       KIND,
       project.projectId,
-      documentsdb!.databaseId,
+      database.databaseId,
     )
     collectionId = await createProductContainerViaUi(
       page,
@@ -141,7 +144,7 @@ test.describe('console documentsdb', () => {
       page,
       KIND,
       project.projectId,
-      documentsdb!.databaseId,
+      database.databaseId,
       collectionId,
       'documents',
     )
@@ -155,15 +158,15 @@ test.describe('console documentsdb', () => {
 
   test('create key, unique, and fulltext indexes on custom attributes', async ({
     page,
-    productSuite,
+    documentsdbSuite,
   }) => {
     test.skip(!collectionId, 'Collection was not created')
-    const { project, documentsdb } = productSuite
+    const { project, database } = documentsdbSuite
     await gotoProductContainerTab(
       page,
       KIND,
       project.projectId,
-      documentsdb!.databaseId,
+      database.databaseId,
       collectionId,
       'indexes',
     )
@@ -187,16 +190,16 @@ test.describe('console documentsdb', () => {
 
   test('documents, json, settings, and security tabs render', async ({
     page,
-    productSuite,
+    documentsdbSuite,
   }) => {
     test.skip(!collectionId, 'Collection was not created')
-    const { project, documentsdb } = productSuite
+    const { project, database } = documentsdbSuite
 
     await gotoProductContainerTab(
       page,
       KIND,
       project.projectId,
-      documentsdb!.databaseId,
+      database.databaseId,
       collectionId,
       'documents',
     )
@@ -208,7 +211,7 @@ test.describe('console documentsdb', () => {
       page,
       KIND,
       project.projectId,
-      documentsdb!.databaseId,
+      database.databaseId,
       collectionId,
       'json',
     )
@@ -220,7 +223,7 @@ test.describe('console documentsdb', () => {
       page,
       KIND,
       project.projectId,
-      documentsdb!.databaseId,
+      database.databaseId,
       collectionId,
       'settings',
     )
@@ -232,7 +235,7 @@ test.describe('console documentsdb', () => {
       page,
       KIND,
       project.projectId,
-      documentsdb!.databaseId,
+      database.databaseId,
       collectionId,
       'security',
     )
@@ -242,13 +245,13 @@ test.describe('console documentsdb', () => {
   })
 
   for (const tab of DATABASE_TABS) {
-    test(`${tab.name} tab renders`, async ({ page, productSuite }) => {
-      const { project, documentsdb } = productSuite
+    test(`${tab.name} tab renders`, async ({ page, documentsdbSuite }) => {
+      const { project, database } = documentsdbSuite
       await expectProductTabRenders(
         page,
         KIND,
         project.projectId,
-        documentsdb!.databaseId,
+        database.databaseId,
         tab.path,
         { ready: () => tab.ready(page) },
       )
@@ -257,13 +260,13 @@ test.describe('console documentsdb', () => {
   }
 
   for (const section of SETTINGS_SECTIONS) {
-    test(`settings ${section.name} renders`, async ({ page, productSuite }) => {
-      const { project, documentsdb } = productSuite
+    test(`settings ${section.name} renders`, async ({ page, documentsdbSuite }) => {
+      const { project, database } = documentsdbSuite
       await expectProductTabRenders(
         page,
         KIND,
         project.projectId,
-        documentsdb!.databaseId,
+        database.databaseId,
         section.path,
         { ready: () => section.ready(page) },
       )

@@ -1,7 +1,6 @@
 import { type Page } from '@playwright/test'
-import { productTest as test, expect } from './fixtures/product'
+import { tablesdbTest as test, expect } from './fixtures/product'
 import { env } from './config/env'
-import { enableDatabaseFeatureFlags } from './helpers/feature-flags'
 import {
   addTablesDbColumnViaUi,
   addTablesDbIndexViaUi,
@@ -25,7 +24,12 @@ const DATABASE_TABS: Array<{
     path: '/visualizer',
     ready: (page) =>
       page
-        .getByText(/No tables|Fit to view|Create table|schema/i)
+        .getByRole('heading', { name: 'Visualizer' })
+        .or(
+          page.getByText(
+            /e2e_core|Loading schema|Fit to view|No tables|Copy schema|Export as SVG/i,
+          ),
+        )
         .first(),
   },
   {
@@ -76,40 +80,39 @@ const SETTINGS_SECTIONS: Array<{
 ]
 
 test.describe('console tablesdb', () => {
-  test.describe.configure({ mode: 'serial', timeout: 15 * 60_000 })
+  test.describe.configure({ mode: 'serial', timeout: 20 * 60_000 })
 
   let coreTableId = ''
   let spatialTableId = ''
 
-  test.beforeEach(async ({ page, productSuite }) => {
+  test.beforeEach(async ({ tablesdbSuite }) => {
     test.skip(!env.E2E_ORG_ID, 'E2E_ORG_ID is required for database e2e')
-    test.skip(!productSuite.tablesdb?.databaseId, 'TablesDB was not created')
-    await enableDatabaseFeatureFlags(page)
+    test.skip(!tablesdbSuite.database.databaseId, 'TablesDB was not created')
   })
 
-  test('TablesDB appears on databases list', async ({ page, productSuite }) => {
-    const { project, tablesdb } = productSuite
+  test('TablesDB appears on databases list', async ({ page, tablesdbSuite }) => {
+    const { project, database } = tablesdbSuite
     await page.goto(`/projects/${project.projectId}/databases`, {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     })
-    await expect(page.getByText(tablesdb!.databaseName).first()).toBeVisible({
+    await expect(page.getByText(database.databaseName).first()).toBeVisible({
       timeout: 60_000,
     })
   })
 
   test('workspace loads and create table is available', async ({
     page,
-    productSuite,
+    tablesdbSuite,
   }) => {
-    const { project, tablesdb } = productSuite
+    const { project, database } = tablesdbSuite
     await gotoProductDatabase(
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
     )
-    await expect(page.getByText(tablesdb!.databaseName).first()).toBeVisible({
+    await expect(page.getByText(database.databaseName).first()).toBeVisible({
       timeout: 60_000,
     })
     await expect(
@@ -119,14 +122,14 @@ test.describe('console tablesdb', () => {
 
   test('create core table and columns of each scalar type', async ({
     page,
-    productSuite,
+    tablesdbSuite,
   }) => {
-    const { project, tablesdb } = productSuite
+    const { project, database } = tablesdbSuite
     await gotoProductDatabase(
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
     )
     coreTableId = await createProductContainerViaUi(page, KIND, 'e2e_core')
 
@@ -134,7 +137,7 @@ test.describe('console tablesdb', () => {
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
       coreTableId,
       'columns',
     )
@@ -166,15 +169,15 @@ test.describe('console tablesdb', () => {
 
   test('create key, unique, and fulltext indexes on core table', async ({
     page,
-    productSuite,
+    tablesdbSuite,
   }) => {
     test.skip(!coreTableId, 'Core table was not created')
-    const { project, tablesdb } = productSuite
+    const { project, database } = tablesdbSuite
     await gotoProductContainerTab(
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
       coreTableId,
       'indexes',
     )
@@ -196,14 +199,14 @@ test.describe('console tablesdb', () => {
     })
   })
 
-  test('create a row on the core table', async ({ page, productSuite }) => {
+  test('create a row on the core table', async ({ page, tablesdbSuite }) => {
     test.skip(!coreTableId, 'Core table was not created')
-    const { project, tablesdb } = productSuite
+    const { project, database } = tablesdbSuite
     await gotoProductContainerTab(
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
       coreTableId,
       'rows',
     )
@@ -212,25 +215,29 @@ test.describe('console tablesdb', () => {
 
   test('create spatial table with point / line / polygon and spatial index', async ({
     page,
-    productSuite,
+    tablesdbSuite,
   }) => {
-    const { project, tablesdb } = productSuite
+    const { project, database } = tablesdbSuite
     await gotoProductDatabase(
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
     )
     spatialTableId = await createProductContainerViaUi(page, KIND, 'e2e_spatial')
     await gotoProductContainerTab(
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
       spatialTableId,
       'columns',
     )
-    await addTablesDbColumnViaUi(page, { key: 'location', typeLabel: 'Point' })
+    await addTablesDbColumnViaUi(page, {
+      key: 'location',
+      typeLabel: 'Point',
+      required: true,
+    })
     await addTablesDbColumnViaUi(page, { key: 'path', typeLabel: 'Line' })
     await addTablesDbColumnViaUi(page, { key: 'area', typeLabel: 'Polygon' })
 
@@ -238,7 +245,7 @@ test.describe('console tablesdb', () => {
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
       spatialTableId,
       'indexes',
     )
@@ -251,15 +258,15 @@ test.describe('console tablesdb', () => {
 
   test('create related table and a relationship column', async ({
     page,
-    productSuite,
+    tablesdbSuite,
   }) => {
     test.skip(!coreTableId, 'Core table was not created')
-    const { project, tablesdb } = productSuite
+    const { project, database } = tablesdbSuite
     await gotoProductDatabase(
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
     )
     await createProductContainerViaUi(page, KIND, 'e2e_related')
 
@@ -267,7 +274,7 @@ test.describe('console tablesdb', () => {
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
       coreTableId,
       'columns',
     )
@@ -280,15 +287,15 @@ test.describe('console tablesdb', () => {
 
   test('core table settings and security tabs render', async ({
     page,
-    productSuite,
+    tablesdbSuite,
   }) => {
     test.skip(!coreTableId, 'Core table was not created')
-    const { project, tablesdb } = productSuite
+    const { project, database } = tablesdbSuite
     await gotoProductContainerTab(
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
       coreTableId,
       'settings',
     )
@@ -300,7 +307,7 @@ test.describe('console tablesdb', () => {
       page,
       KIND,
       project.projectId,
-      tablesdb!.databaseId,
+      database.databaseId,
       coreTableId,
       'security',
     )
@@ -310,13 +317,13 @@ test.describe('console tablesdb', () => {
   })
 
   for (const tab of DATABASE_TABS) {
-    test(`${tab.name} tab renders`, async ({ page, productSuite }) => {
-      const { project, tablesdb } = productSuite
+    test(`${tab.name} tab renders`, async ({ page, tablesdbSuite }) => {
+      const { project, database } = tablesdbSuite
       await expectProductTabRenders(
         page,
         KIND,
         project.projectId,
-        tablesdb!.databaseId,
+        database.databaseId,
         tab.path,
         { ready: () => tab.ready(page) },
       )
@@ -325,13 +332,13 @@ test.describe('console tablesdb', () => {
   }
 
   for (const section of SETTINGS_SECTIONS) {
-    test(`settings ${section.name} renders`, async ({ page, productSuite }) => {
-      const { project, tablesdb } = productSuite
+    test(`settings ${section.name} renders`, async ({ page, tablesdbSuite }) => {
+      const { project, database } = tablesdbSuite
       await expectProductTabRenders(
         page,
         KIND,
         project.projectId,
-        tablesdb!.databaseId,
+        database.databaseId,
         section.path,
         { ready: () => section.ready(page) },
       )

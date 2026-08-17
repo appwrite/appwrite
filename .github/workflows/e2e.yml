@@ -11,16 +11,25 @@ jobs:
   e2e:
     name: ${{ matrix.project }}
     runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7i/spot=price-capacity-optimized/retry=when-interrupted/extras=otel
-    timeout-minutes: 10
+    timeout-minutes: ${{ matrix.timeout }}
     strategy:
       fail-fast: false
       matrix:
-        project:
-          - website
-          - console
-          - console-mysql
-          - console-postgres
-          - console-product-dbs
+        include:
+          - project: website
+            timeout: 15
+          - project: console
+            timeout: 15
+          - project: console-mysql
+            timeout: 40
+          - project: console-postgres
+            timeout: 40
+          - project: console-tablesdb
+            timeout: 25
+          - project: console-documentsdb
+            timeout: 40
+          - project: console-vectorsdb
+            timeout: 40
     steps:
       - uses: actions/checkout@v4
 

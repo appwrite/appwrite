@@ -17,6 +17,8 @@ import {
   NATIVE_PROVISION_TIMEOUT_MS,
   openNativeSqlEditor,
   quoteIdent,
+  waitForNativeDatabaseShell,
+  waitForNativeSqlEditor,
   renameNativeDatabase,
   runNativeSql,
   selectNativeSchema,
@@ -38,6 +40,8 @@ export { nativeExecutionRows as postgresExecutionRows }
 export { quoteIdent }
 export { selectNativeSchema as selectPostgresSchema }
 export { typeNativeSql as typePostgresSql }
+export { waitForNativeDatabaseShell as waitForPostgresDatabaseShell }
+export { waitForNativeSqlEditor as waitForPostgresSqlEditor }
 export { createNativeTableViaUi as createPostgresTableViaUi }
 export { addNativeIndexViaUi as addPostgresIndexViaUi }
 export { createNativeEnumViaUi as createPostgresEnumViaUi }

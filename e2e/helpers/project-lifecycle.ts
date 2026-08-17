@@ -42,6 +42,7 @@ export async function createE2eProject(
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   })
+  await enableDatabaseFeatureFlags(page)
   await acceptCookieBannerIfPresent(page)
   await expect(page).toHaveURL(new RegExp(`/organizations/${orgId}`), {
     timeout: 60_000,
@@ -128,12 +129,12 @@ export async function deleteE2eProject(
 
   // Already deleted / not found - treat as success for cleanup.
   const notFound = page.getByText(/not found|doesn't exist|does not exist/i)
-  if (await notFound.first().isVisible({ timeout: 5_000 }).catch(() => false)) {
+  if (await notFound.first().isVisible().catch(() => false)) {
     return
   }
 
   const deleteCard = page.locator('[data-card-id="delete-project"]')
-  if (!(await deleteCard.isVisible({ timeout: 30_000 }).catch(() => false))) {
+  if (!(await deleteCard.isVisible({ timeout: 10_000 }).catch(() => false))) {
     return
   }
 

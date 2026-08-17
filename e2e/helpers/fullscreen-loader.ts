@@ -13,14 +13,12 @@ function pathnameUsesFullscreenLoader(pathname: string): boolean {
 
 /**
  * Wait until the root Appwrite fullscreen loader is gone.
- *
- * Console routes paint the overlay after hydration. A single `count === 0`
- * check right after `domcontentloaded` races that mount, so wait briefly for
- * attach, then wait for detach.
+ * Console routes paint the overlay after hydration; wait briefly for attach,
+ * then wait for detach. Do not wait seconds when the loader never appears.
  */
 export async function waitForFullscreenLoaderHidden(
   page: Page,
-  timeout = 45_000,
+  timeout = 30_000,
 ): Promise<void> {
   let pathname = '/'
   try {
@@ -33,11 +31,21 @@ export async function waitForFullscreenLoaderHidden(
 
   const loader = page.locator('[data-fullscreen-loader]')
   const attached = await loader
-    .waitFor({ state: 'attached', timeout: 2_500 })
+    .waitFor({ state: 'attached', timeout: 250 })
     .then(() => true)
     .catch(() => false)
 
   if (!attached) return
 
-  await loader.waitFor({ state: 'detached', timeout })
+  try {
+    await loader.waitFor({ state: 'detached', timeout })
+  } catch {
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 45_000 })
+    const stillAttached = await loader
+      .waitFor({ state: 'attached', timeout: 250 })
+      .then(() => true)
+      .catch(() => false)
+    if (!stillAttached) return
+    await loader.waitFor({ state: 'detached', timeout })
+  }
 }

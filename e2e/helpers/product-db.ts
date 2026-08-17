@@ -3,6 +3,14 @@ import { enableDatabaseFeatureFlags } from './feature-flags'
 import { acceptCookieBannerIfPresent } from './cookie-banner'
 import { waitForFullscreenLoaderHidden } from './fullscreen-loader'
 import {
+  chooseCommandItem,
+  clickInPage,
+  expectToast,
+  openCreatedDatabase,
+  openSelectAndChoose,
+  waitForDedicatedDatabaseReady,
+} from './ui'
+import {
   escapeRegExp,
   fillWizardDatabaseName,
   openCreateDatabaseWizard,
@@ -108,9 +116,6 @@ export async function createProductDatabaseViaWizard(
 
   await openCreateDatabaseWizard(page, projectId)
   await selectWizardDatabaseType(page, config.wizardType)
-  await expect(page.getByText(config.label).first()).toBeVisible({
-    timeout: 15_000,
-  })
   await fillWizardDatabaseName(page, databaseName)
 
   if (kind === 'tablesdb') {
@@ -139,7 +144,7 @@ export async function createProductDatabaseViaWizard(
     { timeout: 120_000 },
   )
 
-  await createButton.click()
+  await clickInPage(createButton)
   const createResponse = await createResponsePromise
   if (!createResponse.ok()) {
     throw new Error(
@@ -154,23 +159,26 @@ export async function createProductDatabaseViaWizard(
     )
   }
 
-  await expect(page).toHaveURL(
-    new RegExp(`/projects/${projectId}/databases/${kind}/${databaseId}`),
-    {
-      timeout: config.usesDedicatedCompute
-        ? PRODUCT_PROVISION_TIMEOUT_MS
-        : 120_000,
-    },
+  const targetPath = productDatabasePath(kind, projectId, databaseId)
+  const targetPattern = new RegExp(
+    `/projects/${projectId}/databases/${kind}/${databaseId}`,
   )
-  await waitForFullscreenLoaderHidden(page, 120_000)
+  const provisionTimeout = config.usesDedicatedCompute
+    ? PRODUCT_PROVISION_TIMEOUT_MS
+    : 120_000
+  await openCreatedDatabase(page, targetPath, targetPattern, provisionTimeout, {
+    waitUntilReady: config.usesDedicatedCompute,
+  })
+  await expect(page).toHaveURL(targetPattern, { timeout: 30_000 })
+  await waitForFullscreenLoaderHidden(page, 30_000)
   await expect(page.getByText(/Database not found/i)).toHaveCount(0)
   await expect(page.getByText(/trim is not a function/i)).toHaveCount(0)
   await expect(
     page.getByRole('heading', { name: 'Error', exact: true }),
   ).toHaveCount(0)
   await expect(
-    page.getByText(databaseName, { exact: false }).first(),
-  ).toBeVisible({ timeout: 60_000 })
+    page.getByText(databaseName, { exact: true }).first(),
+  ).toBeVisible({ timeout: 30_000 })
 
   return { kind, databaseId, databaseName }
 }
@@ -186,7 +194,8 @@ export async function expectProductTabRenders(
     timeout?: number
   },
 ): Promise<void> {
-  const timeout = options?.timeout ?? 90_000
+  const timeout =
+    options?.timeout ?? (PRODUCT[kind].usesDedicatedCompute ? 60_000 : 30_000)
   const path = productDatabasePath(kind, projectId, databaseId, tabPath)
   await page.goto(path, { waitUntil: 'domcontentloaded', timeout })
   await acceptCookieBannerIfPresent(page)
@@ -194,6 +203,9 @@ export async function expectProductTabRenders(
     timeout,
   })
   await waitForFullscreenLoaderHidden(page, timeout)
+  if (PRODUCT[kind].usesDedicatedCompute) {
+    await waitForDedicatedDatabaseReady(page, PRODUCT_PROVISION_TIMEOUT_MS)
+  }
   await expect(page.getByText(/Database not found/i)).toHaveCount(0)
   await expect(page.getByText(/trim is not a function/i)).toHaveCount(0)
   await expect(
@@ -213,10 +225,13 @@ export async function gotoProductDatabase(
 ): Promise<void> {
   await page.goto(productDatabasePath(kind, projectId, databaseId, suffix), {
     waitUntil: 'domcontentloaded',
-    timeout: 60_000,
+    timeout: 45_000,
   })
   await acceptCookieBannerIfPresent(page)
-  await waitForFullscreenLoaderHidden(page, 120_000)
+  await waitForFullscreenLoaderHidden(page, 30_000)
+  if (PRODUCT[kind].usesDedicatedCompute) {
+    await waitForDedicatedDatabaseReady(page, PRODUCT_PROVISION_TIMEOUT_MS)
+  }
 }
 
 export async function createProductContainerViaUi(
@@ -245,19 +260,24 @@ export async function createProductContainerViaUi(
 
   if (kind === 'vectorsdb') {
     const modelSearch = options?.embeddingModelSearch ?? 'all-minilm'
-    const modelTrigger = page.locator('#embedding-model')
-    await expect(modelTrigger).toBeVisible({ timeout: 15_000 })
-    await modelTrigger.click()
-    const search = page.getByPlaceholder('Search embedding models...')
-    await expect(search).toBeVisible({ timeout: 10_000 })
-    await search.fill(modelSearch)
-    const option = page
-      .locator('[cmdk-item], [data-slot="command-item"]')
-      .filter({ hasText: new RegExp(escapeRegExp(modelSearch), 'i') })
-      .first()
-    await expect(option).toBeVisible({ timeout: 10_000 })
-    await option.click()
+    await chooseCommandItem(
+      page,
+      page.locator('#embedding-model'),
+      'Search embedding models...',
+      modelSearch,
+      new RegExp(escapeRegExp(modelSearch), 'i'),
+    )
+    await expect(page.locator('#embedding-model')).toContainText(
+      new RegExp(escapeRegExp(modelSearch), 'i'),
+    )
+    // Re-apply the name after the combobox so a cmdk fill cannot clobber it.
+    await page.locator('#name').fill(name)
   }
+
+  const dialog = page.getByRole('dialog')
+  const submit = dialog.getByRole('button', { name: 'Create', exact: true })
+  await expect(page.locator('#name')).toHaveValue(name)
+  await expect(submit).toBeEnabled({ timeout: 30_000 })
 
   const createResponsePromise = page.waitForResponse(
     (response) => {
@@ -276,10 +296,7 @@ export async function createProductContainerViaUi(
     { timeout: 90_000 },
   )
 
-  await page
-    .getByRole('dialog')
-    .getByRole('button', { name: 'Create', exact: true })
-    .click()
+  await clickInPage(submit)
   const response = await createResponsePromise
   if (!response.ok()) {
     throw new Error(
@@ -294,7 +311,7 @@ export async function createProductContainerViaUi(
     )
   }
 
-  await expect(page.getByText(createdToast)).toBeVisible({ timeout: 60_000 })
+  await expectToast(page, createdToast)
   return containerId
 }
 
@@ -308,23 +325,11 @@ export async function gotoProductContainerTab(
 ): Promise<void> {
   await page.goto(
     productContainerPath(kind, projectId, databaseId, containerId, tab),
-    { waitUntil: 'domcontentloaded', timeout: 60_000 },
+    { waitUntil: 'domcontentloaded', timeout: 45_000 },
   )
   await acceptCookieBannerIfPresent(page)
-  await waitForFullscreenLoaderHidden(page, 90_000)
+  await waitForFullscreenLoaderHidden(page, 30_000)
   await expect(page.getByText(/trim is not a function/i)).toHaveCount(0)
-}
-
-async function openSelectAndChoose(
-  page: Page,
-  trigger: ReturnType<Page['locator']>,
-  optionName: string,
-): Promise<void> {
-  await expect(trigger).toBeVisible({ timeout: 15_000 })
-  await trigger.click()
-  const option = page.getByRole('option', { name: optionName, exact: true })
-  await expect(option).toBeVisible({ timeout: 10_000 })
-  await option.click()
 }
 
 export async function addTablesDbColumnViaUi(
@@ -333,6 +338,7 @@ export async function addTablesDbColumnViaUi(
     key: string
     typeLabel: string
     enumElements?: string[]
+    required?: boolean
   },
 ): Promise<void> {
   const createButton = page
@@ -364,10 +370,97 @@ export async function addTablesDbColumnViaUi(
     }
   }
 
+  if (options.required) {
+    const requiredBox = page.locator('#spatial-required, #column-required')
+    await expect(requiredBox).toBeVisible({ timeout: 10_000 })
+    await requiredBox.check()
+  }
+
   await page.getByRole('button', { name: 'Create Column' }).click()
-  await expect(page.getByText('Column created successfully')).toBeVisible({
-    timeout: 60_000,
-  })
+  await expectToast(page, 'Column created successfully')
+  await expect(page.getByRole('heading', { name: 'Create Column' })).toHaveCount(
+    0,
+    { timeout: 15_000 },
+  )
+  await waitForProductSchemaAvailable(page, options.key)
+}
+
+async function waitForProductSchemaAvailable(
+  page: Page,
+  key: string,
+): Promise<void> {
+  const row = page
+    .locator('tr, [role="row"]')
+    .filter({ hasText: new RegExp(`(?:^|\\s)${escapeRegExp(key)}(?:\\s|$)`) })
+    .first()
+  const attached = await row
+    .waitFor({ state: 'visible', timeout: 8_000 })
+    .then(() => true)
+    .catch(() => false)
+  if (!attached) return
+  await expect
+    .poll(
+      async () =>
+        !(await row
+          .getByText('Processing', { exact: true })
+          .isVisible()
+          .catch(() => false)),
+      { timeout: 30_000, intervals: [400, 800, 1_200] },
+    )
+    .toBe(true)
+}
+
+function isSchemaNotReadyIndexError(status: number, body: string): boolean {
+  return (
+    status === 400 &&
+    (body.includes('column_not_available') ||
+      body.includes('attribute_not_available') ||
+      body.includes('not yet available'))
+  )
+}
+
+async function submitCreateIndexForm(page: Page): Promise<void> {
+  const submit = page.getByRole('button', { name: 'Create Index' })
+  await expect(submit).toBeEnabled({ timeout: 15_000 })
+  const deadline = Date.now() + 60_000
+  let lastError = 'Create index did not reach the API'
+
+  while (Date.now() < deadline) {
+    const createResponsePromise = page.waitForResponse(
+      (response) => {
+        try {
+          const url = new URL(response.url())
+          return (
+            response.request().method() === 'POST' &&
+            url.pathname.includes('/indexes')
+          )
+        } catch {
+          return false
+        }
+      },
+      { timeout: 30_000 },
+    )
+    await clickInPage(submit)
+    const createResponse = await createResponsePromise.catch(() => null)
+    if (!createResponse) {
+      throw new Error(lastError)
+    }
+    if (createResponse.ok()) {
+      await expectToast(page, 'Index created successfully')
+      await expect(
+        page.getByRole('heading', { name: 'Create Index' }),
+      ).toHaveCount(0, { timeout: 15_000 })
+      return
+    }
+    lastError = `Create index failed: ${createResponse.status()} ${await createResponse.text()}`
+    if (!isSchemaNotReadyIndexError(createResponse.status(), lastError)) {
+      throw new Error(lastError)
+    }
+    await page.waitForTimeout(1_500)
+    await expect(submit).toBeEnabled({ timeout: 15_000 })
+  }
+
+  throw new Error(lastError)
 }
 
 export async function addTablesDbIndexViaUi(
@@ -387,27 +480,29 @@ export async function addTablesDbIndexViaUi(
   await expect(page.getByRole('heading', { name: 'Create Index' })).toBeVisible({
     timeout: 15_000,
   })
-  await page.locator('#index-key').fill(options.key)
 
-  const typeTrigger = page.locator('#index-type')
-  await expect(typeTrigger).toBeVisible({ timeout: 10_000 })
-  await typeTrigger.click()
-  const typeOption = page
-    .locator('[cmdk-item], [data-slot="command-item"]')
-    .filter({ hasText: new RegExp(`^${options.typeLabel}$`) })
-    .first()
-  await expect(typeOption).toBeVisible({ timeout: 10_000 })
-  await typeOption.click()
+  await chooseCommandItem(
+    page,
+    page.locator('#index-type'),
+    'Search index types...',
+    options.typeLabel,
+    new RegExp(`^${options.typeLabel}$`),
+  )
+  await expect(page.locator('#index-type')).toContainText(
+    new RegExp(`^${options.typeLabel}`),
+  )
 
-  const columnTrigger = page.getByRole('combobox').filter({
-    hasText: /Select column|Select/i,
-  }).first()
+  const columnTrigger = page
+    .getByRole('combobox')
+    .filter({ hasText: /Select column/i })
+  await expect(columnTrigger).toBeVisible({ timeout: 10_000 })
   await openSelectAndChoose(page, columnTrigger, options.column)
 
-  await page.getByRole('button', { name: 'Create Index' }).click()
-  await expect(page.getByText('Index created successfully')).toBeVisible({
-    timeout: 60_000,
-  })
+  const keyInput = page.locator('#index-key')
+  await keyInput.fill(options.key)
+  await expect(keyInput).toHaveValue(options.key)
+
+  await submitCreateIndexForm(page)
 }
 
 export async function addTablesDbRelationshipColumnViaUi(
@@ -435,13 +530,7 @@ export async function addTablesDbRelationshipColumnViaUi(
 
   const relatedTrigger = page.locator('#related-table')
   await expect(relatedTrigger).toBeVisible({ timeout: 15_000 })
-  await relatedTrigger.click()
-  const relatedOption = page
-    .getByRole('option')
-    .filter({ hasText: options.relatedTableName })
-    .first()
-  await expect(relatedOption).toBeVisible({ timeout: 10_000 })
-  await relatedOption.click()
+  await openSelectAndChoose(page, relatedTrigger, options.relatedTableName)
 
   const keyInput = page.locator('#column-key-relationship')
   await expect(keyInput).toBeVisible({ timeout: 10_000 })
@@ -451,11 +540,14 @@ export async function addTablesDbRelationshipColumnViaUi(
     page.locator('#relationship-type'),
     options.relationshipType,
   )
+  await openSelectAndChoose(
+    page,
+    page.locator('#on-delete'),
+    'Set NULL - set row ID as NULL in all related rows',
+  )
 
-  await page.getByRole('button', { name: 'Create Column' }).click()
-  await expect(page.getByText('Column created successfully')).toBeVisible({
-    timeout: 60_000,
-  })
+  await clickInPage(page.getByRole('button', { name: 'Create Column' }))
+  await expectToast(page, 'Column created successfully')
 }
 
 export async function addCollectionIndexViaUi(
@@ -475,40 +567,51 @@ export async function addCollectionIndexViaUi(
   await expect(page.getByRole('heading', { name: 'Create Index' })).toBeVisible({
     timeout: 15_000,
   })
-  await page.locator('#index-key').fill(options.key)
 
-  const typeTrigger = page.locator('#index-type')
-  await expect(typeTrigger).toBeVisible({ timeout: 10_000 })
-  await typeTrigger.click()
-  const typeOption = page
-    .locator('[cmdk-item], [data-slot="command-item"]')
-    .filter({ hasText: new RegExp(`^${options.typeLabel}$`) })
-    .first()
-  await expect(typeOption).toBeVisible({ timeout: 10_000 })
-  await typeOption.click()
+  await chooseCommandItem(
+    page,
+    page.locator('#index-type'),
+    'Search index types...',
+    options.typeLabel,
+    new RegExp(`^${options.typeLabel}$`),
+  )
+  await expect(page.locator('#index-type')).toContainText(
+    new RegExp(`^${options.typeLabel}`),
+  )
 
-  const attributeTrigger = page.getByRole('combobox').first()
+  const attributeTrigger = page.getByRole('combobox').filter({
+    hasText: /Select attribute/i,
+  })
   await expect(attributeTrigger).toBeVisible({ timeout: 10_000 })
-  await attributeTrigger.click()
-  const custom = page.getByRole('option', { name: 'Custom attribute' })
-  if (await custom.isVisible().catch(() => false)) {
-    await custom.click()
+  await attributeTrigger.click({ force: true })
+
+  const attributeSearch = page.getByPlaceholder('Search attributes...')
+  await expect(attributeSearch).toBeVisible({ timeout: 10_000 })
+  await attributeSearch.fill(options.attribute)
+
+  const existingAttribute = page
+    .locator('[cmdk-item], [data-slot="command-item"]')
+    .filter({
+      has: page.getByText(new RegExp(`^${escapeRegExp(options.attribute)}$`)),
+    })
+    .first()
+  const customAttribute = page.getByRole('button', { name: 'Custom attribute' })
+  await expect(customAttribute).toBeVisible({ timeout: 10_000 })
+
+  if (await existingAttribute.isVisible().catch(() => false)) {
+    await existingAttribute.click({ force: true })
+  } else {
+    await clickInPage(customAttribute)
     const nameInput = page.getByPlaceholder('e.g. email, score, tags')
     await expect(nameInput).toBeVisible({ timeout: 10_000 })
     await nameInput.fill(options.attribute)
-  } else {
-    const option = page.getByRole('option', {
-      name: options.attribute,
-      exact: true,
-    })
-    await expect(option).toBeVisible({ timeout: 10_000 })
-    await option.click()
   }
 
-  await page.getByRole('button', { name: 'Create Index' }).click()
-  await expect(page.getByText('Index created successfully')).toBeVisible({
-    timeout: 60_000,
-  })
+  const keyInput = page.locator('#index-key')
+  await keyInput.fill(options.key)
+  await expect(keyInput).toHaveValue(options.key)
+
+  await submitCreateIndexForm(page)
 }
 
 export async function createTablesDbRowViaUi(
@@ -520,11 +623,7 @@ export async function createTablesDbRowViaUi(
   const submit = page.getByRole('button', { name: 'Create row' }).last()
   await expect(submit).toBeVisible({ timeout: 15_000 })
   await submit.click()
-  await expect(
-    page
-      .getByText('Row created successfully')
-      .or(page.getByText('Row created')),
-  ).toBeVisible({ timeout: 60_000 })
+  await expectToast(page, /Row created successfully|Row created/)
 }
 
 export async function createCollectionDocumentViaUi(
@@ -562,7 +661,39 @@ export async function createCollectionDocumentViaUi(
   }
 
   await page.getByRole('button', { name: 'Create document' }).last().click()
-  await expect(page.getByText('Document created successfully')).toBeVisible({
-    timeout: 60_000,
-  })
+  await expectToast(page, 'Document created successfully')
+}
+
+export async function createVectorsDbDocumentViaUi(
+  page: Page,
+  options: { text: string; dimensions?: number },
+): Promise<void> {
+  const createButton = page
+    .getByRole('button', { name: 'Create document' })
+    .first()
+  await expect(createButton).toBeVisible({ timeout: 30_000 })
+  await createButton.click()
+
+  await expect(page.getByRole('dialog', { name: 'Create document' })).toBeVisible(
+    { timeout: 15_000 },
+  )
+  await page.getByRole('radio', { name: 'Vector' }).click()
+
+  const dimensions = options.dimensions ?? 384
+  const vectorInput = page.getByRole('textbox', { name: /Vector values/i })
+  await expect(vectorInput).toBeVisible({ timeout: 10_000 })
+  await vectorInput.fill(
+    JSON.stringify(Array.from({ length: dimensions }, () => 0)),
+  )
+
+  const submit = page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Create document' })
+  await expect(submit).toBeEnabled({ timeout: 15_000 })
+  await submit.click({ force: true })
+  await expectToast(
+    page,
+    /Row created successfully|Document created successfully/,
+    30_000,
+  )
 }

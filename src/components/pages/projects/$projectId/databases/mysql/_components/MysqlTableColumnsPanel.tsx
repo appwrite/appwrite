@@ -203,7 +203,7 @@ export function MysqlTableColumnsPanel({
           databaseId={databaseId}
           tableId={tableId}
           column={selectedColumn}
-          onSuccess={() => void refetch()}
+          onSuccess={() => refetch()}
         />
       </>
     )
@@ -492,7 +492,7 @@ export function MysqlTableColumnsPanel({
         databaseId={databaseId}
         tableId={tableId}
         column={selectedColumn}
-        onSuccess={() => void refetch()}
+        onSuccess={() => refetch()}
       />
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -1,7 +1,6 @@
 import { type Page } from '@playwright/test'
 import { postgresTest as test, expect } from './fixtures/native'
 import { env } from './config/env'
-import { enableDatabaseFeatureFlags } from './helpers/feature-flags'
 import {
   addPostgresColumnViaUi,
   addPostgresIndexViaUi,
@@ -13,11 +12,14 @@ import {
   expectPostgresTabRenders,
   postgresDatabasePath,
   postgresTablePath,
+  openPostgresSqlEditor,
   quoteIdent,
   renamePostgresDatabase,
   runPostgresSql,
   selectPostgresSchema,
   typePostgresSql,
+  waitForPostgresDatabaseShell,
+  waitForPostgresSqlEditor,
 } from './helpers/postgres'
 
 const DATABASE_TABS: Array<{
@@ -28,14 +30,23 @@ const DATABASE_TABS: Array<{
   {
     name: 'sql editor',
     path: '/sql',
-    ready: (page) => page.locator('.monaco-editor').first(),
+    ready: (page) =>
+      page
+        .getByRole('heading', { name: /sql editor/i })
+        .or(page.locator('[data-postgres-sql-editor], .monaco-editor'))
+        .first(),
   },
   {
     name: 'visualizer',
     path: '/visualizer',
     ready: (page) =>
       page
-        .getByText(/Select a schema in the sidebar|no user tables or views|Fit to view/i)
+        .getByRole('heading', { name: 'Visualizer' })
+        .or(
+          page.getByText(
+            /Select a schema in the sidebar|no user tables or views|Fit to view/i,
+          ),
+        )
         .first(),
   },
   {
@@ -133,16 +144,15 @@ const SETTINGS_SECTIONS: Array<{
  * in that database.
  */
 test.describe('console postgres', () => {
-  test.describe.configure({ mode: 'serial', timeout: 15 * 60_000 })
+  test.describe.configure({ mode: 'serial', timeout: 25 * 60_000 })
 
   let schemaName = ''
   const tableName = 'e2e_items'
   const typesTable = 'e2e_column_types'
 
-  test.beforeEach(async ({ page, postgresSuite }) => {
+  test.beforeEach(async ({ postgresSuite }) => {
     test.skip(!env.E2E_ORG_ID, 'E2E_ORG_ID is required for Postgres e2e')
     test.skip(!postgresSuite.database.databaseId, 'Database was not created')
-    await enableDatabaseFeatureFlags(page)
   })
 
   test('dedicated PostgreSQL shell loads', async ({ page, postgresSuite }) => {
@@ -166,9 +176,7 @@ test.describe('console postgres', () => {
         .or(page.getByRole('link', { name: 'SQL editor' }))
         .first(),
     ).toBeVisible({ timeout: 60_000 })
-    await expect(page.locator('.monaco-editor').first()).toBeVisible({
-      timeout: 60_000,
-    })
+    await waitForPostgresSqlEditor(page)
   })
 
   test('PostgreSQL appears on databases list', async ({
@@ -188,17 +196,8 @@ test.describe('console postgres', () => {
 
   test('SQL editor runs SELECT 1', async ({ page, postgresSuite }) => {
     const { project, database } = postgresSuite
-    await page.goto(
-      postgresDatabasePath(project.projectId, database.databaseId, '/sql'),
-      { waitUntil: 'domcontentloaded', timeout: 60_000 },
-    )
+    await openPostgresSqlEditor(page, project.projectId, database.databaseId)
     await expect(page).toHaveURL(/\/sql/, { timeout: 60_000 })
-    await expect(page.getByText('Loading database...')).toHaveCount(0, {
-      timeout: 120_000,
-    })
-    await expect(page.locator('.monaco-editor').first()).toBeVisible({
-      timeout: 120_000,
-    })
     await expect(page.getByText(/trim is not a function/i)).toHaveCount(0)
     await expect(
       page.getByRole('heading', { name: 'Error', exact: true }),
@@ -224,9 +223,7 @@ test.describe('console postgres', () => {
       postgresDatabasePath(project.projectId, database.databaseId, '/sql'),
       { waitUntil: 'domcontentloaded', timeout: 60_000 },
     )
-    await expect(page.getByText('Loading database...')).toHaveCount(0, {
-      timeout: 120_000,
-    })
+    await waitForPostgresDatabaseShell(page)
 
     try {
       schemaName = await selectPostgresSchema(page, 'public')
@@ -250,9 +247,7 @@ test.describe('console postgres', () => {
       postgresDatabasePath(project.projectId, database.databaseId, '/sql'),
       { waitUntil: 'domcontentloaded', timeout: 60_000 },
     )
-    await expect(page.getByText('Loading database...')).toHaveCount(0, {
-      timeout: 120_000,
-    })
+    await waitForPostgresDatabaseShell(page)
     await selectPostgresSchema(page, schemaName)
     await createPostgresTableViaUi(page, tableName)
 
@@ -401,16 +396,7 @@ test.describe('console postgres', () => {
     const schema = quoteIdent('postgres', schemaName)
     const table = quoteIdent('postgres', typesTable)
 
-    await page.goto(
-      postgresDatabasePath(project.projectId, database.databaseId, '/sql'),
-      { waitUntil: 'domcontentloaded', timeout: 60_000 },
-    )
-    await expect(page.getByText('Loading database...')).toHaveCount(0, {
-      timeout: 120_000,
-    })
-    await expect(page.locator('.monaco-editor').first()).toBeVisible({
-      timeout: 120_000,
-    })
+    await openPostgresSqlEditor(page, project.projectId, database.databaseId)
     await selectPostgresSchema(page, schemaName)
 
     await typePostgresSql(
@@ -459,9 +445,7 @@ test.describe('console postgres', () => {
       postgresDatabasePath(project.projectId, database.databaseId, '/sql'),
       { waitUntil: 'domcontentloaded', timeout: 60_000 },
     )
-    await expect(page.getByText('Loading database...')).toHaveCount(0, {
-      timeout: 120_000,
-    })
+    await waitForPostgresDatabaseShell(page)
     await selectPostgresSchema(page, schemaName)
     await createPostgresTableViaUi(page, extraTable)
 
@@ -527,9 +511,7 @@ test.describe('console postgres', () => {
       postgresDatabasePath(project.projectId, database.databaseId, '/enums'),
       { waitUntil: 'domcontentloaded', timeout: 60_000 },
     )
-    await expect(page.getByText('Loading database...')).toHaveCount(0, {
-      timeout: 120_000,
-    })
+    await waitForPostgresDatabaseShell(page)
     await selectPostgresSchema(page, schemaName)
     await createPostgresEnumViaUi(page, {
       name: 'e2e_status',

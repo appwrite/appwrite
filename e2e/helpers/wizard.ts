@@ -38,13 +38,13 @@ export async function openCreateDatabaseWizard(
   await enableDatabaseFeatureFlags(page)
   await page.goto(`/projects/${projectId}/databases/create`, {
     waitUntil: 'domcontentloaded',
-    timeout: 60_000,
+    timeout: 45_000,
   })
   await acceptCookieBannerIfPresent(page)
-  await expect(page).toHaveURL(/\/databases\/create/, { timeout: 60_000 })
+  await expect(page).toHaveURL(/\/databases\/create/, { timeout: 30_000 })
   await expect(
     page.getByRole('heading', { name: 'Choose database type' }),
-  ).toBeVisible({ timeout: 60_000 })
+  ).toBeVisible({ timeout: 30_000 })
 }
 
 /**
@@ -64,6 +64,9 @@ export async function selectWizardDatabaseType(
     el.scrollIntoView({ block: 'center', inline: 'nearest' })
     el.click()
   })
+  // Name field only appears for enabled types. Waiting here confirms the
+  // feature flag is on (coming-soon cards stay disabled and never show it).
+  await expect(page.locator('#db-name')).toBeVisible({ timeout: 15_000 })
 }
 
 /** Click the first enabled specification row (skips locked Upgrade rows). */
@@ -73,7 +76,7 @@ export async function selectFirstEnabledSpecification(
   const specRows = page.locator('table tbody tr').filter({
     hasNot: page.getByText('Upgrade', { exact: true }),
   })
-  await expect(specRows.first()).toBeVisible({ timeout: 90_000 })
+  await expect(specRows.first()).toBeVisible({ timeout: 45_000 })
   await specRows.first().click()
 }
 
@@ -84,7 +87,7 @@ export async function selectServerlessSpecificationIfPresent(
   const serverlessRow = page.locator('table tbody tr').filter({
     hasText: /Serverless|Pay as you go/i,
   })
-  if (await serverlessRow.first().isVisible({ timeout: 15_000 }).catch(() => false)) {
+  if (await serverlessRow.first().isVisible({ timeout: 2_000 }).catch(() => false)) {
     await serverlessRow.first().click()
     return
   }

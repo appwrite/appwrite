@@ -3,7 +3,6 @@ import {
   COOKIE_CONSENT_STORAGE_KEY,
   COOKIE_CONSENT_VERSION,
 } from '../../src/lib/cookie-consent/constants'
-import { waitForFullscreenLoaderHidden } from './fullscreen-loader'
 
 const ACCEPT_ALL = 'Accept all'
 const seededContexts = new WeakSet<BrowserContext>()
@@ -56,13 +55,12 @@ export async function seedAcceptedCookieConsent(
  */
 export async function acceptCookieBannerIfPresent(page: Page): Promise<void> {
   await seedAcceptedCookieConsent(page.context())
-  await waitForFullscreenLoaderHidden(page)
 
   const button = acceptAllButton(page)
   if (!(await button.isVisible().catch(() => false))) return
 
   await button.click({ timeout: 5_000 })
-  await button.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => undefined)
+  await button.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => undefined)
 }
 
 export async function newE2ePage(context: BrowserContext): Promise<Page> {

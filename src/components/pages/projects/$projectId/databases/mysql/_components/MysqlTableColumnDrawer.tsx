@@ -61,7 +61,7 @@ type MysqlTableColumnDrawerProps = {
   databaseId: string
   tableId: string
   column: MysqlTableColumnRow | null
-  onSuccess: () => void
+  onSuccess: () => void | Promise<unknown>
 }
 
 function normalizeOptionalText(value: string): string {
@@ -364,7 +364,7 @@ export function MysqlTableColumnDrawer({
       )
       toast.success(isEditing ? t('Column updated') : t('Column created'))
       onOpenChange(false)
-      onSuccess()
+      await onSuccess()
     } catch (error) {
       toast.error(
         getErrorMessage(error) ??

@@ -18,11 +18,22 @@ export async function ensureProjectActive(
   })
   await acceptCookieBannerIfPresent(page)
 
-  const pausedHeading = page.getByRole('heading', { name: 'Project paused' })
+  const missing = page.getByText(/Project not found/i).first()
   const restoreButton = page.getByRole('button', { name: 'Restore project' })
+  const shell = page.locator('#main-content')
+  await expect(shell.or(restoreButton).or(missing)).toBeVisible({
+    timeout: 20_000,
+  })
+  if (await missing.isVisible().catch(() => false)) {
+    throw new Error(
+      `Project ${projectId} was not found. Set E2E_PROJECT_ID to a live project in E2E_ORG_ID.`,
+    )
+  }
+
+  const pausedHeading = page.getByRole('heading', { name: 'Project paused' })
 
   const isPaused = await restoreButton
-    .waitFor({ state: 'visible', timeout: 3_000 })
+    .waitFor({ state: 'visible', timeout: 1_000 })
     .then(() => true)
     .catch(() => false)
 

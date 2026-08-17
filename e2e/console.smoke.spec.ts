@@ -101,10 +101,17 @@ test.describe('console smoke (read-only)', () => {
   })
 
   test.describe('project services', () => {
+    test.beforeEach(() => {
+      test.skip(
+        !projectId,
+        'No live project found for this account. Set E2E_PROJECT_ID or create a project.',
+      )
+    })
+
     test.beforeAll(async ({ browser }) => {
       test.skip(
         !projectId,
-        'No project found for this account. Set E2E_PROJECT_ID or create a project.',
+        'No live project found for this account. Set E2E_PROJECT_ID or create a project.',
       )
 
       const context = await browser.newContext({

@@ -17,6 +17,8 @@ import {
   NATIVE_PROVISION_TIMEOUT_MS,
   openNativeSqlEditor,
   quoteIdent,
+  waitForNativeDatabaseShell,
+  waitForNativeSqlEditor,
   renameNativeDatabase,
   runNativeSql,
   selectNativeSchema,
@@ -38,6 +40,8 @@ export { nativeExecutionRows as mysqlExecutionRows }
 export { quoteIdent }
 export { selectNativeSchema as selectMysqlSchema }
 export { typeNativeSql as typeMysqlSql }
+export { waitForNativeDatabaseShell as waitForMysqlDatabaseShell }
+export { waitForNativeSqlEditor as waitForMysqlSqlEditor }
 export { createNativeTableViaUi as createMysqlTableViaUi }
 export { addNativeIndexViaUi as addMysqlIndexViaUi }
 export { createNativeEnumViaUi as createMysqlEnumViaUi }
