@@ -39,9 +39,6 @@ class Get extends Action
             ->desc('Get user Gravatar')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
-            ->label('cache', true)
-            ->label('cache.resource', 'avatar/gravatar')
-            ->label('cache.params', ['email', 'width', 'height', 'default', 'rating', 'project'])
             ->label('sdk', new Method(
                 namespace: 'avatars',
                 group: null,
@@ -144,7 +141,7 @@ class Get extends Action
         $data = $image->output('png', 80);
 
         $response
-            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+            ->addHeader('Cache-Control', 'public, max-age=60') // 1 minute
             ->setContentType('image/png')
             ->file($data);
         unset($image);
