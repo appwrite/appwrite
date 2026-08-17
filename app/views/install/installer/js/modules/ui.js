@@ -256,6 +256,14 @@
             badge.classList.add(hasKey ? 'badge-success' : 'badge-warning');
         }
 
+        const httpsBadge = root.querySelector('[data-review-https-badge]');
+        if (httpsBadge) {
+            const forceHttps = formState?.forceHttps === true;
+            httpsBadge.textContent = forceHttps ? 'HTTPS' : 'HTTP';
+            httpsBadge.classList.remove('badge-success', 'badge-neutral');
+            httpsBadge.classList.add(forceHttps ? 'badge-success' : 'badge-neutral');
+        }
+
         const assistantBadge = root.querySelector('[data-review-assistant-badge]');
         if (assistantBadge) {
             const hasAssistantKey = Boolean((formState?.assistantOpenAIKey || '').trim());
