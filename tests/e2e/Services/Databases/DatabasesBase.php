@@ -12501,6 +12501,7 @@ trait DatabasesBase
 
         if ($this->getSide() === 'client') {
             $this->assertContains($result['headers']['status-code'], [401, 403]);
+            $this->assertStringNotContainsString('classified-data', json_encode($result['body'] ?? []));
         } else {
             $this->assertEquals(200, $result['headers']['status-code']);
         }
