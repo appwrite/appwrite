@@ -212,6 +212,114 @@ class Realtime extends MessagingAdapter
     }
 
     /**
+     * Rebuild a connection's subscriptions under a new role set.
+     *
+     * Roles are applied only after metadata is captured. If parse or
+     * subscribe throws after unsubscribe, previous subscriptions and
+     * roles are restored so the connection is never left empty.
+     *
+     * @param array<int, string> $roles
+     */
+    public function rebuildConnection(
+        mixed $connection,
+        string $projectId,
+        array $roles,
+        string $userId,
+    ): bool {
+        if (!isset($this->connections[$connection])) {
+            return false;
+        }
+
+        $authorization = $this->connections[$connection]['authorization'] ?? null;
+        $impersonatedUserId = $this->connections[$connection]['impersonatedUserId'] ?? null;
+        $previousUserId = $this->connections[$connection]['userId'] ?? '';
+        $previousRoles = $this->connections[$connection]['roles'] ?? [];
+        $meta = $this->getSubscriptionMetadata($connection);
+        $completed = false;
+
+        try {
+            $this->unsubscribe($connection);
+            $this->applySubscriptions(
+                $connection,
+                $projectId,
+                $meta,
+                $roles,
+                $previousUserId,
+                $userId,
+                fallbackQueries: false,
+            );
+            $completed = true;
+        } catch (\Throwable) {
+            $completed = false;
+        } finally {
+            if (!$completed) {
+                if (isset($this->connections[$connection])) {
+                    $this->unsubscribe($connection);
+                }
+                $this->applySubscriptions(
+                    $connection,
+                    $projectId,
+                    $meta,
+                    $previousRoles,
+                    $previousUserId,
+                    $previousUserId,
+                    fallbackQueries: true,
+                );
+            }
+
+            if ($authorization !== null && isset($this->connections[$connection])) {
+                $this->connections[$connection]['authorization'] = $authorization;
+                $this->connections[$connection]['impersonatedUserId'] = $impersonatedUserId;
+            }
+        }
+
+        return $completed;
+    }
+
+    /**
+     * @param array<string, array{channels: array<int, string>, queries: array<int, string>}> $meta
+     * @param array<int, string> $roles
+     */
+    private function applySubscriptions(
+        mixed $connection,
+        string $projectId,
+        array $meta,
+        array $roles,
+        string $previousUserId,
+        string $userId,
+        bool $fallbackQueries,
+    ): void {
+        foreach ($meta as $subscriptionId => $subscription) {
+            try {
+                $queries = Query::parseQueries($subscription['queries'] ?? []);
+            } catch (\Throwable $error) {
+                if (!$fallbackQueries) {
+                    throw $error;
+                }
+                $queries = [];
+            }
+
+            $this->subscribe(
+                $projectId,
+                $connection,
+                $subscriptionId,
+                $roles,
+                self::rebindAccountChannels(
+                    $subscription['channels'] ?? [],
+                    $previousUserId,
+                    $userId
+                ),
+                $queries,
+                $userId
+            );
+        }
+
+        if (!isset($this->connections[$connection])) {
+            $this->subscribe($projectId, $connection, '', $roles, [], [], $userId);
+        }
+    }
+
+    /**
      * Dedup delete presence triggers.
      * Scenario: when client is connected to realtime and a delete call is made throught rest.
      * If not dedupe then two delete events will get triggered. So remove the presenceIds
