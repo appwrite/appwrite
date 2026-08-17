@@ -141,7 +141,7 @@ class Get extends Action
         $data = $image->output('png', 80);
 
         $response
-            ->addHeader('Cache-Control', 'public, max-age=60') // 1 minute
+            ->addHeader('Cache-Control', 'private, max-age=60') // 1 minute
             ->setContentType('image/png')
             ->file($data);
         unset($image);
