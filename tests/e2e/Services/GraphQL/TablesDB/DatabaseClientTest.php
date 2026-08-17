@@ -9,6 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\GraphQL\Base;
+use Tests\E2E\Services\GraphQL\QueryJoinPermissions;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -19,6 +20,7 @@ final class DatabaseClientTest extends Scope
     use ProjectCustom;
     use SideClient;
     use Base;
+    use QueryJoinPermissions;
 
     /**
      * Cached database data

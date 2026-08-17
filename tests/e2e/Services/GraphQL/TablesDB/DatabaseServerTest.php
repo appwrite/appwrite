@@ -10,6 +10,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\GraphQL\Base;
+use Tests\E2E\Services\GraphQL\QueryJoinPermissions;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -23,6 +24,7 @@ final class DatabaseServerTest extends Scope
     use ProjectCustom;
     use SideServer;
     use Base;
+    use QueryJoinPermissions;
 
     private static array $cachedDatabase = [];
     private static array $cachedTableData = [];

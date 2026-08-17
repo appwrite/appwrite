@@ -1191,8 +1191,8 @@ trait Base
                 }';
 
             case self::GET_DOCUMENT:
-                return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!) {
-                    databasesGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
+                return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $queries: [String!] = []) {
+                    databasesGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, queries: $queries) {
                         _id
                         _collectionId
                         _permissions
@@ -1200,8 +1200,8 @@ trait Base
                     }
                 }';
             case self::GET_DOCUMENTS:
-                return 'query listDocuments($databaseId: String!, $collectionId: String!){
-                    databasesListDocuments(databaseId: $databaseId, collectionId: $collectionId) {
+                return 'query listDocuments($databaseId: String!, $collectionId: String!, $queries: [String!] = []) {
+                    databasesListDocuments(databaseId: $databaseId, collectionId: $collectionId, queries: $queries) {
                         total
                         documents {
                             _id
@@ -1242,8 +1242,8 @@ trait Base
                     }
                 }';
             case self::GET_ROW:
-                return 'query getRow($databaseId: String!, $tableId: String!, $rowId: String!) {
-                    tablesDBGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
+                return 'query getRow($databaseId: String!, $tableId: String!, $rowId: String!, $queries: [String!] = []) {
+                    tablesDBGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, queries: $queries) {
                         _id
                         _tableId
                         _permissions
