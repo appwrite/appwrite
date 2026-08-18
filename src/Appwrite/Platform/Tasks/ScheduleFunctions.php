@@ -58,24 +58,8 @@ class ScheduleFunctions extends Action
         return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
     }
 
-    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): never
+    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): void
     {
-        ($this->boot($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools))();
-
-        Span::init('schedule.functions.stopped');
-        Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
-
-        exit(1);
-    }
-
-    /**
-     * Load the schedules and return the loop that dispatches them, so the
-     * combined task can load all three before running any.
-     */
-    public function boot(FunctionPublisher $publisher, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): \Closure
-    {
-        Span::init('schedule.functions.boot');
-
         $source = new DatabaseSchedule(
             dbForPlatform: $dbForPlatform,
             getProjectDB: $getProjectDB,
@@ -107,12 +91,10 @@ class ScheduleFunctions extends Action
             },
         );
 
-        $scheduler->reconcile();
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions, $dbForPlatform));
 
-        Span::add('schedule.functions.loaded', $source->snapshotted());
-        Span::current()?->finish();
-
-        return fn (): null => $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisher, $dbForPlatform));
+        Span::init('schedule.functions.stopped');
+        Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
@@ -134,7 +116,7 @@ class ScheduleFunctions extends Action
     /**
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, FunctionPublisher $publisher, Database $dbForPlatform): null
+    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions, Database $dbForPlatform): null
     {
         foreach ($occurrences as $occurrence) {
             $schedule = $occurrence->payload;
@@ -149,7 +131,7 @@ class ScheduleFunctions extends Action
 
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                $publisher->enqueue(new FunctionMessage(
+                $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $schedule['project'],
                     function: $schedule['resource'],
                     type: 'schedule',

@@ -51,24 +51,8 @@ class ScheduleMessages extends Action
         return RESOURCE_TYPE_MESSAGES;
     }
 
-    public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): never
+    public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): void
     {
-        ($this->boot($publisherForMessaging, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools))();
-
-        Span::init('schedule.messages.stopped');
-        Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
-
-        exit(1);
-    }
-
-    /**
-     * Load the schedules and return the loop that dispatches them, so the
-     * combined task can load all three before running any.
-     */
-    public function boot(MessagingPublisher $publisher, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): \Closure
-    {
-        Span::init('schedule.messages.boot');
-
         $source = new DatabaseSchedule(
             dbForPlatform: $dbForPlatform,
             getProjectDB: $getProjectDB,
@@ -92,12 +76,10 @@ class ScheduleMessages extends Action
             },
         );
 
-        $scheduler->reconcile();
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForMessaging, $dbForPlatform));
 
-        Span::add('schedule.messages.loaded', $source->snapshotted());
-        Span::current()?->finish();
-
-        return fn (): null => $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisher, $dbForPlatform));
+        Span::init('schedule.messages.stopped');
+        Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
@@ -108,7 +90,7 @@ class ScheduleMessages extends Action
     /**
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, MessagingPublisher $publisher, Database $dbForPlatform): null
+    private function dispatch(array $occurrences, MessagingPublisher $publisherForMessaging, Database $dbForPlatform): null
     {
         foreach ($occurrences as $occurrence) {
             $schedule = $occurrence->payload;
@@ -122,7 +104,7 @@ class ScheduleMessages extends Action
 
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                $publisher->enqueue(new MessagingMessage(
+                $publisherForMessaging->enqueue(new MessagingMessage(
                     type: MESSAGE_SEND_TYPE_EXTERNAL,
                     project: $schedule['project'],
                     messageId: $schedule['resourceId'],

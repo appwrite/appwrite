@@ -41,27 +41,23 @@ class Schedule extends Action
         Telemetry $telemetry,
         Group $pools,
     ): never {
-        $functions = (new ScheduleFunctions())->boot($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
-        $executions = (new ScheduleExecutions())->boot($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
-        $messages = (new ScheduleMessages())->boot($publisherForMessaging, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
-
-        $this->loop($functions);
-        $this->loop($executions);
-        $this->loop($messages);
+        $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
 
         while (true) {
             sleep(3600);
         }
     }
 
-    private function loop(\Closure $dispatch): void
+    private function loop(\Closure $task): void
     {
-        Co::create(function () use ($dispatch): void {
+        Co::create(function () use ($task): void {
             Span::init('schedule.combined.loop');
             $error = null;
 
             try {
-                $dispatch();
+                $task();
             } catch (\Throwable $th) {
                 $error = $th;
             } finally {

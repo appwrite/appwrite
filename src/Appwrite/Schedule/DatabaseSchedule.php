@@ -18,8 +18,6 @@ final class DatabaseSchedule implements Source, Changes
     /** @var array<string, Document> */
     private array $projects = [];
 
-    private int $snapshotted = 0;
-
     /**
      * @param callable(Document): Database $getProjectDB
      * @param callable(Document, string, string): bool $isResourceBlocked
@@ -40,18 +38,7 @@ final class DatabaseSchedule implements Source, Changes
     #[\Override]
     public function snapshot(): iterable
     {
-        $this->snapshotted = 0;
-
-        foreach ($this->rows(null) as $row) {
-            $this->snapshotted++;
-
-            yield $row;
-        }
-    }
-
-    public function snapshotted(): int
-    {
-        return $this->snapshotted;
+        yield from $this->rows(null);
     }
 
     #[\Override]
