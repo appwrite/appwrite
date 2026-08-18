@@ -45,7 +45,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
   - **Usage** -- metrics
   - **Utopia** -- HTTP `Request` / `Response` / models (Appwrite adapters on Utopia)
   - **Extend** -- shared exceptions
-- **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. Nesting: [`src/Appwrite/Platform/AGENTS.md`](src/Appwrite/Platform/AGENTS.md)
+- **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
 - **src/Utopia/** -- Composer PSR-4 overrides of Utopia packages (currently `Bus` only)
 - **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
@@ -63,6 +63,47 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 `src/Appwrite/` is domain libraries, not a dumping ground. Each directory solves **one problem**. Do not grow a library into a second concern; add a new directory instead. See [Layout](#layout) for the current set.
 
 Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it belongs in the `utopia-php` ecosystem as a Composer dependency, not under `src/Appwrite/`. Overrides of Utopia packages live in `src/Utopia/` (currently `Bus` only).
+
+## Modules
+
+Each module under `src/Appwrite/Platform/Modules/` owns one domain: HTTP endpoints, optional workers, and rarely CLI tasks. Generally each API service is its own module; put related code under one roof. Register new modules in `src/Appwrite/Platform/Appwrite.php`.
+
+A module contains:
+
+- `Module.php` -- registers services from `Services/`
+- `Http/` -- HTTP endpoints
+- `Services/` -- `Http.php`, optionally `Workers.php` / `Tasks.php`
+- `Workers/` -- optional module-specific workers
+- `Tasks/` -- optional; most CLI tasks live in `src/Appwrite/Platform/Tasks/`
+
+Directly under `Http/` there are only service directories (and hooks). A single-service module uses one directory named after the service (`Modules/Account/Http/Account`). A multi-service module uses one per service (`Modules/Databases/Http/Databases` and `Modules/Databases/Http/TablesDB`).
+
+Hooks live in `Http/Hooks/{Init,Shutdown,Error}/`, e.g. `Modules/Functions/Http/Hooks/Init/Authentication.php`.
+
+Nest resources and properties as directories. Top-level resources in the same module are **siblings**, not nested under the parent resource folder. Template deployments live at `Modules/Functions/Http/Deployments/Template/Create.php` (`Deployments/` is a sibling of `Functions/`; `template` is a property). Action file names: [HTTP actions](#http-actions).
+
+```
+src/Appwrite/Platform/Modules/Functions
+├── Module.php
+├── Workers
+│   └── Builds.php
+├── Http
+│   ├── Functions
+│   │   ├── Create.php
+│   │   ├── XList.php
+│   │   ├── Update.php
+│   │   ├── Delete.php
+│   │   └── Get.php
+│   └── Deployments
+│       ├── XList.php
+│       ├── Delete.php
+│       ├── Get.php
+│       └── Template
+│           └── Create.php
+└── Services
+    ├── Http.php
+    └── Workers.php
+```
 
 ## HTTP actions
 
@@ -194,7 +235,6 @@ Preview builds set the flag on **both** the `specs` and `sdks` steps in `.github
 
 ## See also
 
-- Modules (HTTP nesting, hooks, registration): [`src/Appwrite/Platform/AGENTS.md`](src/Appwrite/Platform/AGENTS.md)
 - Testing: [`.codex/skills/appwrite-testing/SKILL.md`](.codex/skills/appwrite-testing/SKILL.md)
 - Patch version bump: [`.claude/skills/patch-release-checklist/SKILL.md`](.claude/skills/patch-release-checklist/SKILL.md)
 - Self-hosted RC / release gates: [`.agents/skills/self-hosted-release/SKILL.md`](.agents/skills/self-hosted-release/SKILL.md)
