@@ -318,6 +318,7 @@ Appwrite server dev publishes all host ports in the **9500–9522** range so the
 | 9512 | PostgreSQL |
 | 9513 | Redis |
 | 9514 | Redis Insight |
+| 9515 | Defender (antivirus) |
 
 Containers still talk to each other on the internal Docker network using standard service ports (for example, `mariadb:3306`). The table above is only for connections from your host machine. If you still have a conflict, change the host side in `docker-compose.yml` or `docker-compose.override.yml` and run `docker compose up -d`.
 
@@ -333,7 +334,7 @@ Appwrite stack is a combination of a variety of open-source technologies and too
 - MariaDB - for database storage and queries.
 - InfluxDB - for managing stats and time-series based data
 - Statsd - for sending data over UDP protocol (using Telegraf)
-- ClamAV - for validating and scanning storage files.
+- Defender - for validating and scanning storage files.
 - Imagemagick - for manipulating and managing image media files.
 - Webp - for better compression of images on supporting clients.
 - SMTP - for sending email messages and alerts.

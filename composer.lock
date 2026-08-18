@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "67feeac1b02502832a0b63edcb15d0b2",
+    "content-hash": "d6ec4bd1755a682f07904f1ed5668ff0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -108,57 +108,6 @@
                 "url": "https://appwrite.io/support"
             },
             "time": "2026-06-19T08:16:32+00:00"
-        },
-        {
-            "name": "appwrite/php-clamav",
-            "version": "2.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/appwrite/php-clamav.git",
-                "reference": "f3897169f5c1f365312238a516ae9465f804634f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/php-clamav/zipball/f3897169f5c1f365312238a516ae9465f804634f",
-                "reference": "f3897169f5c1f365312238a516ae9465f804634f",
-                "shasum": ""
-            },
-            "require": {
-                "ext-sockets": "*",
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Appwrite\\ClamAV\\": "src/ClamAV"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
-            "description": "ClamAV network and pipe client for PHP",
-            "keywords": [
-                "anti virus",
-                "appwrite",
-                "clamav",
-                "php"
-            ],
-            "support": {
-                "issues": "https://github.com/appwrite/php-clamav/issues",
-                "source": "https://github.com/appwrite/php-clamav/tree/2.0.0"
-            },
-            "abandoned": true,
-            "time": "2023-02-24T09:50:42+00:00"
         },
         {
             "name": "appwrite/php-runtimes",

@@ -663,7 +663,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
-                'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, you must add the ClamAV service and depend on it on main Appwrite service.',
+                'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, start the Defender service with the `antivirus` Compose profile (`docker compose --profile antivirus up -d`).',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
@@ -672,18 +672,18 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS_HOST',
-                'description' => 'ClamAV server host name address. Default value is: \'clamav\'.',
+                'description' => 'Defender antivirus server host name address. Default value is: \'appwrite-defender\'.',
                 'introduction' => '0.7.0',
-                'default' => 'clamav',
+                'default' => 'appwrite-defender',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS_PORT',
-                'description' => 'ClamAV server TCP port. Default value is: \'3310\'.',
+                'description' => 'Defender antivirus server TCP port. Default value is: \'8080\'.',
                 'introduction' => '0.7.0',
-                'default' => '3310',
+                'default' => '8080',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

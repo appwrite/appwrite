@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\ClamAV\Network;
+use Appwrite\Antivirus\Client as Antivirus;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Storage\Bytes;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -36,10 +36,11 @@ class Doctor extends Action
             ->desc('Validate server health')
             ->inject('register')
             ->inject('authorization')
+            ->inject('antivirus')
             ->callback($this->action(...));
     }
 
-    public function action(Registry $register, Authorization $authorization): void
+    public function action(Registry $register, Authorization $authorization, Antivirus $antivirus): void
     {
         Console::log("  __   ____  ____  _  _  ____  __  ____  ____     __  __  
  / _\ (  _ \(  _ \/ )( \(  _ \(  )(_  _)(  __)   (  )/  \ 
@@ -204,18 +205,9 @@ class Doctor extends Action
         }
 
         if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
-            try {
-                $antivirus = new Network(
-                    System::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                    (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
-                );
-
-                if ((@$antivirus->ping())) {
-                    Console::success('🟢 ' . str_pad("Antivirus", 50, '.') . 'connected');
-                } else {
-                    Console::error('🔴 ' . str_pad("Antivirus", 47, '.') . 'disconnected');
-                }
-            } catch (\Throwable) {
+            if ($antivirus->ping()) {
+                Console::success('🟢 ' . str_pad("Antivirus", 50, '.') . 'connected');
+            } else {
                 Console::error('🔴 ' . str_pad("Antivirus", 47, '.') . 'disconnected');
             }
         }

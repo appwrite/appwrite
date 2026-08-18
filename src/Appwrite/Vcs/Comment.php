@@ -33,7 +33,7 @@ class Comment
         'Build commands execute in runtime containers during deployment',
         'Ephemeral API keys are generated automatically for each function execution',
         'JWT tokens let functions act on behalf of users while preserving their permissions',
-        'Storage files get ClamAV malware scanning and encryption by default',
+        'Storage files get Defender malware scanning and encryption by default',
         'Roll back Sites deployments instantly by switching between versions',
         'Git integration provides automatic deployments with optional PR comments',
         'Silent mode disables those chatty PR comments if you prefer peace and quiet',

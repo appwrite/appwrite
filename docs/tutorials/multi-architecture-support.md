@@ -19,7 +19,7 @@ CPU architecture support for Docker images used by the Appwrite stack. Platforms
 | mariadb:10.11 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🟢 | 🟢 |
 | mongo:8.2.5 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
 | **Optional** | | | | | | | |
-| clamav/clamav:1.4-debian | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🟢 | 🔴 |
+| appwrite/defender:latest | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
 | **Dev / test** | | | | | | | |
 | appwrite/mailcatcher:1.1.1 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
 | appwrite/requestcatcher:1.1.0 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
