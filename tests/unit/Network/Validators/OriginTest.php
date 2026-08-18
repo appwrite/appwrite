@@ -83,6 +83,72 @@ final class OriginTest extends TestCase
         $this->assertSame('Invalid Scheme. The scheme used (random-scheme) in the Origin (random-scheme://localhost) is not supported. If you are using a custom scheme, please change it to `appwrite-callback-<PROJECT_ID>`', $validator->getDescription());
     }
 
+    public function testLoopback(): void
+    {
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io', 'localhost'],
+            allowedSchemes: ['exp']
+        );
+
+        /* Allowing localhost allows its other spellings too */
+        $this->assertEquals(true, $validator->isValid('http://localhost'));
+        $this->assertEquals(true, $validator->isValid('http://localhost:3000'));
+        $this->assertEquals(true, $validator->isValid('http://127.0.0.1'));
+        $this->assertEquals(true, $validator->isValid('https://127.0.0.1:5173'));
+        $this->assertEquals(true, $validator->isValid('http://[::1]'));
+        $this->assertEquals(true, $validator->isValid('http://[::1]:3000'));
+
+        /* Hostnames that only look like loopback are still rejected */
+        $this->assertEquals(false, $validator->isValid('http://127.0.0.1.example.com'));
+        $this->assertEquals(false, $validator->isValid('http://localhost.example.com'));
+        $this->assertEquals(false, $validator->isValid('http://127.0.0.1@example.com'));
+        $this->assertEquals(false, $validator->isValid('http://128.0.0.1'));
+        $this->assertEquals(false, $validator->isValid('http://[2001:db8::1]'));
+
+        /* A prefix or substring match would wrongly accept these */
+        $this->assertEquals(false, $validator->isValid('http://xlocalhost'));
+        $this->assertEquals(false, $validator->isValid('http://127.0.0.1x.example.com'));
+        $this->assertEquals(false, $validator->isValid('http://[::1].evil.com'));
+        $this->assertEquals(false, $validator->isValid('http://[::1]evil.com'));
+
+        /* Only the exact loopback spellings are hardcoded */
+        $this->assertEquals(false, $validator->isValid('http://127.0.0.2'));
+        $this->assertEquals(false, $validator->isValid('http://[0:0:0:0:0:0:0:1]'));
+        $this->assertEquals(false, $validator->isValid('http://localhost.'));
+
+        /* Loopback does not bypass the scheme allow list */
+        $this->assertEquals(false, $validator->isValid('random-scheme://127.0.0.1'));
+    }
+
+    public function testLoopbackRequiresLocalhostToBeAllowed(): void
+    {
+        /* A deployment that does not trust localhost trusts no spelling of it */
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io'],
+            allowedSchemes: ['exp']
+        );
+
+        $this->assertEquals(false, $validator->isValid('http://localhost'));
+        $this->assertEquals(false, $validator->isValid('http://localhost:3000'));
+        $this->assertEquals(false, $validator->isValid('http://127.0.0.1'));
+        $this->assertEquals(false, $validator->isValid('https://127.0.0.1:5173'));
+        $this->assertEquals(false, $validator->isValid('http://[::1]'));
+        $this->assertEquals(false, $validator->isValid('http://[::1]:3000'));
+    }
+
+    public function testLoopbackAliasHonoursAnExplicitEntry(): void
+    {
+        /* An explicitly allowed literal still matches on its own */
+        $validator = new Origin(
+            allowedHostnames: ['127.0.0.1'],
+            allowedSchemes: ['exp']
+        );
+
+        $this->assertEquals(true, $validator->isValid('http://127.0.0.1:5173'));
+        $this->assertEquals(false, $validator->isValid('http://localhost'));
+        $this->assertEquals(false, $validator->isValid('http://[::1]'));
+    }
+
     public function testGetAllowedHostnames(): void
     {
         $validator = new Origin(

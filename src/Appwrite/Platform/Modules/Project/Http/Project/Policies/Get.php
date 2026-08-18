@@ -85,6 +85,7 @@ class Get extends Action
             'session-limit' => Response::MODEL_POLICY_SESSION_LIMIT,
             'user-limit' => Response::MODEL_POLICY_USER_LIMIT,
             'membership-privacy' => Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
+            'mfa-factors' => Response::MODEL_POLICY_MFA_FACTORS,
         ];
     }
 
@@ -175,6 +176,17 @@ class Get extends Action
                     'userAccessedAt' => $auths['membershipsUserAccessedAt'] ?? false,
                 ]),
                 Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
+            ],
+            'mfa-factors' => [
+                new Document(\array_merge([
+                    'totp' => true,
+                    'email' => true,
+                    'phone' => true,
+                    'custom' => false,
+                ], $auths['mfaFactors'] ?? [], [
+                    '$id' => 'mfa-factors',
+                ])),
+                Response::MODEL_POLICY_MFA_FACTORS,
             ],
             default => null,
         };

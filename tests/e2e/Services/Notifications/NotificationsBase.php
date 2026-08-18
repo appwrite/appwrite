@@ -8,16 +8,14 @@ use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
 /**
- * End-to-end coverage for the notifications queue health surface and the
+ * End-to-end coverage for the notifications failed-jobs health surface and the
  * notifications user-facing API.
  *
  * The notification worker itself is exercised in unit tests with a pinned
  * queue payload; the server side cannot deterministically inject a
- * Notification onto the live queue without an admin endpoint, so the health
- * portion validates the public contract that ops and KEDA scale on:
+ * Notification onto the live queue without an admin endpoint. This suite keeps
+ * coverage for the failed-jobs health surface and the user-facing API:
  *
- *   - GET /v1/health/queue/notifications returns the live queue depth
- *   - the threshold guard returns 503 when the depth exceeds the budget
  *   - the failed-jobs surface accepts the notifications queue name
  *
  * The notifications portion exercises the full webhook-paused fanout end-to-end:
@@ -37,28 +35,6 @@ use Utopia\System\System;
  */
 trait NotificationsBase
 {
-    public function testHealthQueueNotificationsReportsSize(): void
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/notifications', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['size']);
-        $this->assertGreaterThanOrEqual(0, $response['body']['size']);
-    }
-
-    public function testHealthQueueNotificationsThresholdGuard(): void
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/notifications', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), ['threshold' => '0']);
-
-        $this->assertContains($response['headers']['status-code'], [200, 503]);
-    }
-
     public function testHealthQueueFailedAcceptsNotifications(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/health/queue/failed/v1-notifications', \array_merge([

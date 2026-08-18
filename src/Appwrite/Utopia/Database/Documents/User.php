@@ -11,7 +11,6 @@ use Utopia\Database\Validator\Roles;
 
 class User extends Document
 {
-    public const ROLE_ANY = 'any';
     public const ROLE_GUESTS = 'guests';
     public const ROLE_USERS = 'users';
     public const ROLE_ADMIN = 'admin';
@@ -19,16 +18,6 @@ class User extends Document
     public const ROLE_OWNER = 'owner';
     public const ROLE_KEYS = 'keys';
     public const ROLE_SYSTEM = 'system';
-
-    public function getEmail(): ?string
-    {
-        return $this->getAttribute('email');
-    }
-
-    public function getPhone(): ?string
-    {
-        return $this->getAttribute('phone');
-    }
 
     /**
      * Returns all roles for a user.
@@ -81,17 +70,6 @@ class User extends Document
         }
 
         return $roles;
-    }
-
-    /**
-     * Check if user is anonymous.
-     *
-     * @return bool
-     */
-    public function isAnonymous(): bool
-    {
-        return is_null($this->getEmail())
-            && is_null($this->getPhone());
     }
 
     /**

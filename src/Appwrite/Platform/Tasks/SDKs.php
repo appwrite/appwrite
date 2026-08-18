@@ -5,13 +5,13 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\ClaudePlugin;
+use Appwrite\SDK\Language\CLI;
 use Appwrite\SDK\Language\CodexPlugin;
 use Appwrite\SDK\Language\CursorPlugin;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
-use Appwrite\SDK\Language\GoCLI;
 use Appwrite\SDK\Language\GraphQL;
 use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Node;
@@ -26,8 +26,6 @@ use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
-use Appwrite\Spec\OpenAPI3;
-use Appwrite\Spec\StaticSpec;
 use CzProject\GitPhp\Git;
 use Utopia\Agents\Adapters\OpenAI;
 use Utopia\Agents\DiffCheck\DiffCheck;
@@ -37,6 +35,7 @@ use Utopia\Agents\Schema;
 use Utopia\Agents\Schema\SchemaObject;
 use Utopia\Config\Config;
 use Utopia\Console;
+use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 use Utopia\Validator\Nullable;
@@ -359,7 +358,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         }
                         break;
                     case 'cli':
-                        $config = new GoCLI();
+                        $config = new CLI();
                         $config->setNPMPackage('appwrite-cli');
                         $config->setExecutableName('appwrite');
                         $config->setLogo("
@@ -471,14 +470,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $sdk = new SDK(
                     $config,
                     $specFormat === 'static'
-                        ? new StaticSpec(
-                            title: 'Appwrite',
-                            description: 'Appwrite backend as a service',
-                            version: $version,
-                            licenseName: 'BSD-3-Clause',
-                            licenseURL: 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
-                        )
-                        : new OpenAPI3($spec)
+                        ? Parser::parse([
+                            'openapi' => '3.0.0',
+                            'info' => [
+                                'title' => 'Appwrite',
+                                'description' => 'Appwrite backend as a service',
+                                'version' => $version,
+                                'license' => [
+                                    'name' => 'BSD-3-Clause',
+                                    'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
+                                ],
+                            ],
+                            'paths' => [],
+                        ])
+                        : Parser::parse($spec)
                 );
 
                 $sdk

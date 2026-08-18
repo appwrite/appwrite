@@ -219,8 +219,10 @@ class Bitbucket extends OAuth2
         $repository = \json_decode($repository, true) ?? [];
 
         // Normalize to the GitHub/Gitea/GitLab field shape ProviderRepository expects.
-        if (isset($repository['uuid'])) {
-            $repository['id'] = $repository['uuid'];
+        // The id is the "workspace/slug" every later lookup routes on, which is
+        // what listing reports too -- a uuid resolves to no repository.
+        if (isset($repository['full_name'])) {
+            $repository['id'] = $repository['full_name'];
         }
 
         if (isset($repository['is_private'])) {

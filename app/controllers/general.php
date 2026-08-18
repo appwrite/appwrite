@@ -410,7 +410,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $jwtKey = $jwtObj->encode([
             'projectId' => $project->getId(),
-            'scopes' => $resource->getAttribute('scopes', [])
+            'scopes' => Deployments::scopes($resource)
         ]);
         $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $jwtKey;
         $headers['x-appwrite-trigger'] = 'http';

@@ -214,7 +214,8 @@ class Deletes extends Action
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount);
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
-                $this->deleteExpiredOAuth2Grants($project, $getProjectDB);
+                $this->deleteExpiredTokens($project, $getProjectDB);
+                $this->deleteExpiredChallenges($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
@@ -1155,19 +1156,55 @@ class Deletes extends Action
      * @return void
      * @throws Exception|Throwable
      */
-    private function deleteExpiredOAuth2Grants(Document $project, callable $getProjectDB): void
+    private function deleteExpiredTokens(Document $project, callable $getProjectDB): void
     {
-        Console::info('Delete expired OAuth2 grants');
+        Console::info('Delete expired tokens');
 
         $dbForProject = $getProjectDB($project);
+        $expire = DateTime::format(new \DateTime());
 
-        $this->deleteByGroup('tokens', [
+        $types = [
+            TOKEN_TYPE_LOGIN,
+            TOKEN_TYPE_VERIFICATION,
+            TOKEN_TYPE_RECOVERY,
+            TOKEN_TYPE_INVITE,
+            TOKEN_TYPE_MAGIC_URL,
+            TOKEN_TYPE_PHONE,
+            TOKEN_TYPE_OAUTH2,
+            TOKEN_TYPE_GENERIC,
+            TOKEN_TYPE_EMAIL,
+        ];
+
+        // Current index is on {`type`, `expire`}
+        // Should be changed to {`expire`}
+
+        foreach ($types as $type) {
+            $this->deleteByGroup('tokens', [
+                Query::select([...$this->selects, 'expire']),
+                Query::equal('type', [$type]),
+                Query::lessThan('expire', $expire),
+                Query::orderDesc('expire'),
+                Query::orderDesc(),
+            ], $dbForProject);
+        }
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @return void
+     * @throws Exception|Throwable
+     */
+    private function deleteExpiredChallenges(Document $project, callable $getProjectDB): void
+    {
+        Console::info('Delete expired challenges');
+
+        $this->deleteByGroup('challenges', [
             Query::select([...$this->selects, 'expire']),
-            Query::equal('type', [TOKEN_TYPE_OAUTH2]),
             Query::lessThan('expire', DateTime::format(new \DateTime())),
             Query::orderAsc('expire'),
             Query::orderAsc(),
-        ], $dbForProject);
+        ], $getProjectDB($project));
     }
 
     /**

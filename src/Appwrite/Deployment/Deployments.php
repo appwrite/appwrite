@@ -3,6 +3,7 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
@@ -501,12 +502,24 @@ readonly class Deployments
         return $resource->getCollection() === 'sites' ? 'v5' : $resource->getAttribute('version', 'v2');
     }
 
+    /**
+     * Scopes encoded into the resource's auto-generated ephemeral API keys
+     *
+     * @return array<string>
+     */
+    public static function scopes(Document $resource): array
+    {
+        $granted = Config::getParam('computeScopes', [])[$resource->getCollection()] ?? [];
+
+        return \array_values(\array_unique(\array_merge($resource->getAttribute('scopes', []), $granted)));
+    }
+
     protected static function runtime(Document $resource, string $version): array
     {
         $key = $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime');
         $runtime = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', [])[$key] ?? null;
         if ($runtime === null) {
-            throw new \Exception('Runtime "' . $key . '" is not supported');
+            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $key . '" is not supported');
         }
 
         return $runtime;
@@ -533,7 +546,7 @@ readonly class Deployments
 
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
             'projectId' => $project->getId(),
-            'scopes' => $resource->getAttribute('scopes', []),
+            'scopes' => static::scopes($resource),
         ]);
 
         $prefix = $resource->getCollection() === 'sites' ? 'SITE' : 'FUNCTION';

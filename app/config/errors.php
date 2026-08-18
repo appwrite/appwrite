@@ -397,6 +397,11 @@ return [
         'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
+    Exception::USER_JWT_CREATION_DENIED => [
+        'name' => Exception::USER_JWT_CREATION_DENIED,
+        'description' => 'A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead.',
+        'code' => 403,
+    ],
     Exception::API_KEY_EXPIRED => [
         'name' => Exception::API_KEY_EXPIRED,
         'description' => 'The ephemeral API key has expired. Please don\'t use ephemeral API keys for more than duration of the execution.',
@@ -839,6 +844,11 @@ return [
         'description' => 'Document with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
+    Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION => [
+        'name' => Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION,
+        'description' => 'Document violates a unique attribute constraint. Try again with different value(s).',
+        'code' => 409,
+    ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
         'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
         'description' => 'Remote document is newer than local.',
@@ -874,6 +884,11 @@ return [
     Exception::ROW_ALREADY_EXISTS => [
         'name' => Exception::ROW_ALREADY_EXISTS,
         'description' => 'Row with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION => [
+        'name' => Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION,
+        'description' => 'Row violates a unique column constraint. Try again with different value(s).',
         'code' => 409,
     ],
     Exception::ROW_UPDATE_CONFLICT => [
@@ -1215,6 +1230,11 @@ return [
         'name' => Exception::KEY_ALREADY_EXISTS,
         'description' => 'Key with the same ID already exists. Try again with a different ID.',
         'code' => 409,
+    ],
+    Exception::KEY_CREATION_DENIED => [
+        'name' => Exception::KEY_CREATION_DENIED,
+        'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
+        'code' => 403,
     ],
     Exception::DEV_KEY_GONE => [
         'name' => Exception::DEV_KEY_GONE,

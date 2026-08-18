@@ -3,7 +3,6 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
-use Appwrite\Auth\Phrase;
 use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
@@ -43,6 +42,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
+use Utopia\Auth\Proofs\Phrase;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
@@ -692,6 +692,8 @@ Http::delete('/v1/account/sessions')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $currentSession->getId());
+        } else {
+            $queueForEvents->reset();
         }
 
         $response->noContent();
@@ -1320,7 +1322,8 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             )
         ],
         contentType: ContentType::HTML,
-        hide: [APP_SDK_PLATFORM_SERVER],
+        // Preview SDK builds show the whole surface, so they do not hide.
+        hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') === 'enabled' ? false : [APP_SDK_PLATFORM_SERVER],
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
@@ -1807,8 +1810,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                             Permission::delete(Role::user($userId)),
                         ],
                         'email' => $email,
-                        'emailVerification' => true,
-                        'status' => true, // Email should already be authenticated by OAuth2 provider
+                        'emailVerification' => $isVerified, // Trust the provider's userinfo claim, not the mere fact an email was returned
+                        'status' => true,
                         'password' => null,
                         'hash' => $proofForPassword->getHash()->getName(),
                         'hashOptions' => $proofForPassword->getHash()->getOptions(),
@@ -1866,6 +1869,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'emailIsFree' => null,
             ];
 
+            $isVerified = $oauth2->isEmailVerified($accessToken);
+
             try {
                 $parsedEmail = new Email($providerEmail);
                 $canonical = $parsedEmail->getCanonical();
@@ -1874,7 +1879,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     || ($plan['supportsCanonicalEmailValidation'] ?? false)
                 )
                     && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
-                    && $oauth2->isEmailVerified($accessToken);
+                    && $isVerified;
                 $email = $canonicalize ? $canonical : $providerEmail;
                 $emails = array_values(array_unique([$email, $providerEmail]));
                 $emailMetadata = [
@@ -1913,6 +1918,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             $user->setAttribute('email', $email);
+            // Never downgrade an already-verified user; only ever promote to verified
+            $user->setAttribute('emailVerification', $user->getAttribute('emailVerification', false) || $isVerified);
             $user->setAttribute('emailCanonical', $emailMetadata['emailCanonical']);
             $user->setAttribute('emailIsCanonical', $emailMetadata['emailIsCanonical']);
             $user->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate']);
@@ -2265,7 +2272,7 @@ Http::post('/v1/account/tokens/magic-url')
 
 
         if ($phrase === true) {
-            $phrase = Phrase::generate();
+            $phrase = (new Phrase())->generate();
         }
 
 
@@ -2593,7 +2600,7 @@ Http::post('/v1/account/tokens/email')
         }
 
         if ($phrase === true) {
-            $phrase = Phrase::generate();
+            $phrase = (new Phrase())->generate();
         }
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
@@ -3214,7 +3221,7 @@ Http::post('/v1/account/jwts')
         group: 'tokens',
         name: 'createJWT',
         description: '/docs/references/account/create-jwt.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -3227,11 +3234,16 @@ Http::post('/v1/account/jwts')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('abuse-key', 'url:{url},userId:{userId}')
+    ->inject('request')
     ->inject('response')
     ->inject('user')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (int $duration, Response $response, User $user, Store $store, ProofsToken $proofForToken) {
+    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken) {
+        if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
+            throw new Exception(Exception::USER_JWT_CREATION_DENIED);
+        }
+
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         if (!$sessionId) {

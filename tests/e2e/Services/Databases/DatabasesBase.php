@@ -1242,7 +1242,7 @@ trait DatabasesBase
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, \count($response['body'][$this->getSchemaResource()]));
+        $this->assertSame(2, \count($response['body'][$this->getSchemaResource()]));
         $response = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2527,7 +2527,7 @@ trait DatabasesBase
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, \count($response['body']['indexes']));
+        $this->assertSame(2, \count($response['body']['indexes']));
         $response = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2700,6 +2700,22 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders());
+
+        $missingId = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordIdParam() => null,
+                'data' => ['title' => 'Missing ID'],
+            ]
+        );
+
+        $this->assertEquals(400, $missingId['headers']['status-code']);
+        $this->assertEquals(
+            $this->getRecordIdParam() === 'documentId' ? Exception::DOCUMENT_MISSING_DATA : Exception::ROW_MISSING_DATA,
+            $missingId['body']['type']
+        );
 
         $documentId = ID::unique();
         $invalid = $this->client->call(
@@ -6262,6 +6278,8 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals($this->getUniqueConstraintException(), $duplicate['body']['type']);
+        $this->assertStringNotContainsString('requested ID', $duplicate['body']['message']);
 
         // Test for exception when inserting new doc and then updating to conflict
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -6298,6 +6316,16 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals($this->getUniqueConstraintException(), $duplicate['body']['type']);
+        $this->assertStringNotContainsString('requested ID', $duplicate['body']['message']);
+
+    }
+
+    private function getUniqueConstraintException(): string
+    {
+        return $this->getRecordResource() === 'rows'
+            ? Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION
+            : Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION;
     }
 
     public function testPersistentCreatedAt(): void
@@ -6863,7 +6891,7 @@ trait DatabasesBase
 
         $this->assertEquals(201, $person2['headers']['status-code']);
         $this->assertArrayHasKey('libraries', $person2['body']);
-        $this->assertEquals(2, count($person2['body']['libraries']));
+        $this->assertSame(2, count($person2['body']['libraries']));
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $personCollection, $person2['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -6877,7 +6905,7 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('$collection', $response['body']);
         $this->assertArrayHasKey('libraries', $response['body']);
-        $this->assertEquals(2, count($response['body']['libraries']));
+        $this->assertSame(2, count($response['body']['libraries']));
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $libraryCollection, $libraryDoc11Id), array_merge([
             'content-type' => 'application/json',
@@ -7062,7 +7090,7 @@ trait DatabasesBase
         $this->assertEquals(200, $artist['headers']['status-code']);
         $this->assertEquals('Artist 1', $artist['body']['name']);
         $this->assertEquals($permissions, $artist['body']['$permissions']);
-        $this->assertEquals(1, count($artist['body']['albums']));
+        $this->assertSame(1, count($artist['body']['albums']));
         $this->assertEquals('album1', $artist['body']['albums'][0]['$id']);
         $this->assertEquals('Album 1', $artist['body']['albums'][0]['name']);
         $this->assertEquals($permissions, $artist['body']['albums'][0]['$permissions']);
@@ -7222,7 +7250,7 @@ trait DatabasesBase
         $this->assertEquals(200, $player['headers']['status-code']);
         $this->assertEquals('Player 1', $player['body']['name']);
         $this->assertEquals($permissions, $player['body']['$permissions']);
-        $this->assertEquals(1, count($player['body']['sports']));
+        $this->assertSame(1, count($player['body']['sports']));
         $this->assertEquals('sport1', $player['body']['sports'][0]['$id']);
         $this->assertEquals('Sport 1', $player['body']['sports'][0]['name']);
         $this->assertEquals($permissions, $player['body']['sports'][0]['$permissions']);
@@ -7251,10 +7279,10 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, count($response['body'][$this->getRecordResource()]));
+        $this->assertSame(1, count($response['body'][$this->getRecordResource()]));
         $this->assertNotEmpty($response['body'][$this->getRecordResource()][0]['$id']);
         $this->assertEquals('Stevie Wonder', $response['body'][$this->getRecordResource()][0]['fullName']);
-        $this->assertEquals(2, count($response['body'][$this->getRecordResource()][0]['libraries']));
+        $this->assertSame(2, count($response['body'][$this->getRecordResource()][0]['libraries']));
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['personCollection']), array_merge([
             'content-type' => 'application/json',
