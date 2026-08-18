@@ -229,6 +229,7 @@ flowchart TB
     Network
     productRealtime[Realtime]
   end
+  services --> Executor & Queue & Cache & Browser & SMTP & Embeddings
 ```
 
 Appwrite 使用高拓展性的微服务架构。此外，Appwrite 支持多种 API（REST、WebSocket 和 GraphQL），来迎合您的个性化开发习惯。
