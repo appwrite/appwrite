@@ -102,10 +102,10 @@ class Webhooks extends Action
             return null;
         }
 
-        $url = \rawurldecode($webhook->getAttribute('url'));
+        $rawUrl = $webhook->getAttribute('url');
 
         if (System::getEnv('_APP_ENV', 'development') === 'production') {
-            $host = \parse_url($url, PHP_URL_HOST) ?? '';
+            $host = \parse_url($rawUrl, PHP_URL_HOST) ?? '';
             $hostnameValidator = new PublicHostname();
             if (!$hostnameValidator->isValid($host)) {
                 return 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
@@ -113,10 +113,10 @@ class Webhooks extends Action
         }
 
         $signatureKey = $webhook->getAttribute('signatureKey');
-        $signature = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signature = base64_encode(hash_hmac('sha1', $rawUrl . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
-        $ch = \curl_init($webhook->getAttribute('url'));
+        $ch = \curl_init($rawUrl);
 
         \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
         \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
@@ -167,7 +167,7 @@ class Webhooks extends Action
             $attempts = $webhook->getAttribute('attempts');
 
             $logs = '';
-            $logs .= 'URL: ' . $webhook->getAttribute('url') . "\n";
+            $logs .= 'URL: ' . $rawUrl . "\n";
             $logs .= 'Method: ' . 'POST' . "\n";
 
             if (!empty($curlError)) {

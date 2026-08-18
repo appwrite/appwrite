@@ -11,9 +11,4 @@ class Exception extends AppwriteException implements ClientAware
     {
         return true;
     }
-
-    public function getCategory(): string
-    {
-        return 'appwrite';
-    }
 }

@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Template;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -13,6 +14,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -27,7 +29,6 @@ use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -85,6 +86,7 @@ class Create extends Base
             ->inject('vcsFactory')
             ->inject('authorization')
             ->inject('deployments')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -106,7 +108,8 @@ class Create extends Base
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
         Authorization $authorization,
-        Backend $deployments,
+        Deployments $deployments,
+        Bus $bus,
         array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -142,6 +145,7 @@ class Create extends Base
                 activate: $activate,
                 authorization: $authorization,
                 deployments: $deployments,
+                bus: $bus,
                 platform: $platform
             );
 
@@ -164,17 +168,7 @@ class Create extends Base
             $commands[] = $site->getAttribute('buildCommand', '');
         }
 
-        // Templates can pin a version range (e.g. "0.3.*"); codeload only takes
-        // a concrete ref, so resolve it to the highest matching tag via GitHub.
-        $ref = $reference;
-        if ($type === Git::CLONE_TYPE_TAG && \str_contains($reference, '*')) {
-            try {
-                $tags = $vcsFactory->fromProvider('github')->listTags($owner, $repository, $reference);
-                $ref = \end($tags) ?: $reference;
-            } catch (\Throwable) {
-                // Fall back to the raw reference; the build surfaces a bad ref.
-            }
-        }
+        $ref = Base::resolveTemplateRef($vcsFactory, $owner, $repository, $type, $reference);
 
         $deploymentId = ID::unique();
         $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -210,7 +204,7 @@ class Create extends Base
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        $authorization->skip(
+        $rule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
@@ -229,12 +223,12 @@ class Create extends Base
                 'region' => $project->getAttribute('region')
             ]))
         );
+        $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
-        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
+        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization, $bus);
 
         // Public template: pull the source straight from GitHub's public repo
-        // (codeload tarball on the jobs backend, a plain git clone on the
-        // executor); unarchive/checkout strips down to the rootDirectory.
+        // as a codeload tarball; unarchive strips down to the rootDirectory.
         $deployment = $deployments->createFromRef(
             $site,
             $deployment,

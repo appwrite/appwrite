@@ -5,6 +5,7 @@ $defaultAppDomain ??= 'localhost';
 $defaultHttpPort ??= '80';
 $defaultHttpsPort ??= '443';
 $defaultEmailCertificates ??= '';
+$defaultForceHttps ??= false;
 $defaultAssistantOpenAIKey ??= '';
 $defaultDatabase ??= 'postgresql';
 $enabledDatabases ??= ['postgresql', 'mariadb', 'mongodb'];
@@ -43,6 +44,19 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                     value="<?php echo $hostnameValue; ?>"
                 >
             </div>
+
+            <label class="toggle-option" for="force-https">
+                <span class="toggle-option-content">
+                    <span class="typography-text-m-500 text-neutral-primary">Use HTTPS</span>
+                    <span id="force-https-description" class="typography-text-xs-400 text-neutral-tertiary">Turn this on when your Appwrite domain is served over HTTPS, including through a reverse proxy.</span>
+                </span>
+                <span class="toggle-switch">
+                    <input type="checkbox" id="force-https" name="forceHttps" class="sr-only" aria-describedby="force-https-description" <?php echo $defaultForceHttps ? 'checked' : ''; ?>>
+                    <span class="toggle-switch-track" aria-hidden="true">
+                        <span class="toggle-switch-thumb"></span>
+                    </span>
+                </span>
+            </label>
 
             <div class="input-group stack-xs">
                 <label class="label-text typography-text-m-500 text-neutral-secondary">Database</label>

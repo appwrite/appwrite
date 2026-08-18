@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions\Deployment;
 
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -9,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -64,6 +66,7 @@ class Update extends Base
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -75,7 +78,8 @@ class Update extends Base
         Database $dbForProject,
         Event $queueForEvents,
         Database $dbForPlatform,
-        Authorization $authorization
+        Authorization $authorization,
+        Bus $bus
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -85,6 +89,15 @@ class Update extends Base
         }
 
         if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        $resourceType = $deployment->getAttribute('resourceType');
+        // Untyped deployments predate Sites and belong to Functions.
+        if (
+            $deployment->getAttribute('resourceId') !== $function->getId()
+            || ($resourceType !== 'functions' && !empty($resourceType))
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -119,16 +132,19 @@ class Update extends Base
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
-        $authorization->skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $authorization) {
-            $rule = $rule
-                ->setAttribute('deploymentId', $deployment->getId())
-                ->setAttribute('deploymentInternalId', $deployment->getSequence());
+        $updatedRules = [];
+        $authorization->skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$updatedRules) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
 
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $rule->getAttribute('deploymentId'),
-                'deploymentInternalId' => $rule->getAttribute('deploymentInternalId'),
-            ])));
+            $updatedRules[] = $rule->getArrayCopy();
         }, $queries));
+
+        foreach ($updatedRules as $rule) {
+            $bus->dispatch(new RuleUpdated($rule));
+        }
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

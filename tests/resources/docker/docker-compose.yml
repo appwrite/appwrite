@@ -61,6 +61,7 @@ services:
     environment:
       - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
@@ -99,6 +100,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -121,6 +123,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -146,6 +149,7 @@ services:
       - appwrite-cache:/storage/cache:rw
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -172,6 +176,29 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-worker-executions:
+    entrypoint: worker-executions
+    container_name: appwrite-worker-executions
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -197,6 +224,7 @@ services:
       - appwrite-functions:/storage/functions:rw
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -224,6 +252,7 @@ services:
       # - smtp
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -246,6 +275,7 @@ services:
       - maildev
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -283,6 +313,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
 
@@ -298,6 +329,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
 

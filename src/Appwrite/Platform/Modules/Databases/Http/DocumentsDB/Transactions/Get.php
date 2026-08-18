@@ -18,11 +18,6 @@ class Get extends TransactionsGet
         return 'getDocumentsDBTransaction';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION;
-    }
-
     public function __construct()
     {
         $this

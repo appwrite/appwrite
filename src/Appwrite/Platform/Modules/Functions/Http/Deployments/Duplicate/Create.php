@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -78,7 +78,7 @@ class Create extends Action
         Database $dbForProject,
         Database $dbForPlatform,
         Event $queueForEvents,
-        Backend $deployments,
+        Deployments $deployments,
         Device $deviceForFunctions,
         VcsFactory $vcsFactory,
     ) {
@@ -90,6 +90,13 @@ class Create extends Action
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        if (
+            $deployment->getAttribute('resourceId') !== $function->getId()
+            || $deployment->getAttribute('resourceType') !== 'functions'
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -112,7 +119,7 @@ class Create extends Action
         $destination = '';
         if ($hasSource) {
             $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-            $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
+            $deviceForFunctions->copy($path, $destination);
         }
 
         // Cloning the source deployment's attributes onto the new one, with
@@ -155,6 +162,7 @@ class Create extends Action
                 $deployment,
                 $github->getRepositoryPresignedUrl($owner, $repository, $ref),
                 $deployment->getAttribute('providerRootDirectory', ''),
+                $github->getRepositoryPresignedUrlHeaders(),
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,

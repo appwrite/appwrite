@@ -13,6 +13,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
@@ -33,6 +34,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Validator\FileExt;
@@ -85,6 +87,7 @@ class Create extends Action
             ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('file', [], new File(), 'Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](https://appwrite.io/docs/products/storage/upload-download#input-file).', skipValidation: true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('folder', '', new Folder(), 'Virtual folder to place the file in, for example "photos/2026". Nest folders with `/`. Defaults to the bucket root.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -103,6 +106,7 @@ class Create extends Action
         string $fileId,
         mixed $file,
         ?array $permissions,
+        string $folder,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -190,6 +194,7 @@ class Create extends Action
 
         $contentRange = $request->getHeaderLine('content-range');
         $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
+        $folder = Folder::normalize($folder);
         $chunk = 1;
         $chunks = 1;
 
@@ -261,7 +266,7 @@ class Create extends Action
         };
 
         try {
-            $locks($lockKey, 600, function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $path, $permissions, $response, &$completed): void {
+            $locks($lockKey, 600, function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed): void {
                 $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
                 if (!$file->isEmpty()) {
                     $chunks = $file->getAttribute('chunksTotal', 1);
@@ -283,7 +288,7 @@ class Create extends Action
                 }
 
                 if ($file->isEmpty()) {
-                    $deviceForFiles->prepareUpload($path, $metadata['content_type'] ?? '', $chunks, $metadata);
+                    $deviceForFiles->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 
                     if (!empty($contentRange)) {
                         $doc = new Document([
@@ -292,6 +297,7 @@ class Create extends Action
                             'bucketId' => $bucket->getId(),
                             'bucketInternalId' => $bucket->getSequence(),
                             'name' => $fileName,
+                            'folder' => $folder,
                             'path' => $path,
                             'signature' => '',
                             'mimeType' => '',
@@ -325,7 +331,7 @@ class Create extends Action
             return;
         }
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $path, $permissions, $queueForEvents, $response): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -352,7 +358,7 @@ class Create extends Action
             $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
-                $deviceForFiles->finalizeUpload($path, $chunks, $metadata);
+                $deviceForFiles->finalize($path, $chunks, $metadata);
 
                 if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === DeviceType::Local) {
                     $antivirus = new Network(
@@ -360,7 +366,7 @@ class Create extends Action
                         (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
                     );
 
-                    if (!$antivirus->fileScan($path)) {
+                    if (!$antivirus->fileScanInStream($path)) {
                         $deviceForFiles->delete($path);
                         throw new Exception(Exception::STORAGE_INVALID_FILE);
                     }
@@ -374,7 +380,7 @@ class Create extends Action
                 // Compression
                 $algorithm = $bucket->getAttribute('compression', Compression::NONE);
                 if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != Compression::NONE) {
-                    $data = $deviceForFiles->read($path);
+                    $data = (string) $deviceForFiles->read($path);
                     switch ($algorithm) {
                         case Compression::ZSTD:
                             $compressor = new Zstd();
@@ -394,7 +400,7 @@ class Create extends Action
 
                 if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
                     if (empty($data)) {
-                        $data = $deviceForFiles->read($path);
+                        $data = (string) $deviceForFiles->read($path);
                     }
                     $key = System::getEnv('_APP_OPENSSL_KEY_V1');
                     $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
@@ -402,7 +408,7 @@ class Create extends Action
                 }
 
                 if (!empty($data)) {
-                    if (!$deviceForFiles->write($path, $data, $mimeType)) {
+                    if (!$deviceForFiles->write($path, new Stream($data), $mimeType)) {
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to save file');
                     }
                 }
@@ -428,6 +434,7 @@ class Create extends Action
                         'bucketId' => $bucket->getId(),
                         'bucketInternalId' => $bucket->getSequence(),
                         'name' => $fileName,
+                        'folder' => $folder,
                         'path' => $path,
                         'signature' => $fileHash,
                         'mimeType' => $mimeType,
@@ -510,7 +517,14 @@ class Create extends Action
         };
 
         try {
-            $chunksUploaded = $deviceForFiles->uploadChunk($deviceForLocal->read($fileTmpName), $path, $chunk, $chunks, $metadata);
+            $chunksUploaded = $deviceForFiles->upload(
+                $deviceForLocal->read($fileTmpName),
+                $path,
+                $metadata['content_type'] ?? '',
+                $chunk,
+                $chunks,
+                $metadata
+            );
 
             if (empty($chunksUploaded)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');

@@ -125,6 +125,8 @@ final class ResponseTest extends TestCase
             'region' => 'default',
         ]), Response::MODEL_PROJECT);
 
+        $project['wafEnabled'] = false;
+
         $generated = GeneratedProject::from($project);
 
         foreach ([

@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
@@ -7,6 +8,7 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
@@ -78,9 +80,8 @@ $container->set('jobs', function () {
         ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
         ->withTimeout(30);
 
-    // No host on executor-only installs: keep the injection resolvable and
-    // fail at call time instead (the client is only used when
-    // _APP_BUILDS_BACKEND=orchestrator, which requires _APP_JOBS_HOST).
+    // Keep the injection resolvable without _APP_JOBS_HOST and fail at call
+    // time instead, so installs that never build stay bootable.
     $host = System::getEnv('_APP_JOBS_HOST', '');
     if ($host !== '') {
         $client = $client->withBaseUri($host);
@@ -127,6 +128,11 @@ $container->set('publisherForCertificates', fn (Publisher $publisher) => new Cer
     new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
 ), ['publisher']);
 
+$container->set('certificateIssuer', fn () => new Certificates(
+    System::getEnv('_APP_EDITION', 'self-hosted'),
+    System::getEnv('_APP_ROUTER_AUTO_CERTIFICATES', 'enabled'),
+), []);
+
 $container->set('publisherForScreenshots', fn (Publisher $publisher) => new ScreenshotPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME))
@@ -140,6 +146,11 @@ $container->set('publisherForVideos', fn (Publisher $publisher) => new VideoPubl
 $container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForExecutions', fn (Publisher $publisher) => new ExecutionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_EXECUTIONS_QUEUE_NAME', Event::EXECUTIONS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(

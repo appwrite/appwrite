@@ -5,13 +5,10 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
-use Appwrite\Deployment\Backend;
-use Appwrite\Deployment\Backend\Executor as ExecutorBackend;
-use Appwrite\Deployment\Backend\Orchestrator;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
@@ -28,7 +25,6 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
 use Utopia\Agents\Agent;
@@ -122,7 +118,10 @@ return function (Container $context): void {
 
     $context->set('locale', function () {
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
-        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+        // Always fall back to English — it is the only complete translation set.
+        // Using _APP_LOCALE here left missing keys as {{emails.*}} when the
+        // instance default was a partial locale (e.g. fr). See #12448.
+        $locale->setFallback('en');
 
         return $locale;
     });
@@ -197,13 +196,11 @@ return function (Container $context): void {
         $publisher,
         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
     ), ['publisher']);
-    // Builds a Backend bound to a given project — webhook handlers resolve
+    // Builds a Deployments bound to a given project — webhook handlers resolve
     // their tenant projects mid-request, after this container is initialized.
-    $context->set('deploymentsFactory', function (BuildPublisher $publisherForBuilds, Jobs $jobs, Executor $executor, array $platform) {
-        return fn (Database $dbForProject, Document $project): Backend => System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator'
-            ? new Orchestrator($jobs, $dbForProject, $project, $platform)
-            : new ExecutorBackend($publisherForBuilds, $dbForProject, $project, $executor, $platform);
-    }, ['publisherForBuilds', 'jobs', 'executor', 'platform']);
+    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform) {
+        return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform);
+    }, ['jobs', 'platform']);
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
@@ -539,16 +536,16 @@ return function (Container $context): void {
             $jwtUserId = $payload['userId'] ?? '';
             if (! empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
+                    /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
                 } else {
+                    /** @var User $user */
                     $user = $dbForProject->getDocument('users', $jwtUserId);
                 }
             }
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId)) {
-                if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-                    $user = new User([]);
-                }
+            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId)) { // Match JWT to active session
+                $user = new User([]);
             }
         }
 

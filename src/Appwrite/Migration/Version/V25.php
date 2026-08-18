@@ -74,11 +74,20 @@ class V25 extends Migration
                     if ($collectionType === 'console') {
                         foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {
                             try {
-                                $this->dbForProject->updateAttribute($id, $attribute, size: 2048);
+                                $this->dbForProject->updateAttribute($id, $attribute, type: Database::VAR_TEXT, size: Database::MAX_TEXT_BYTES);
                             } catch (Throwable $th) {
-                                Console::warning("Failed to resize attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                                Console::warning("Failed to convert attribute \"{$attribute}\" to text in collection {$id}: {$th->getMessage()}");
                             }
                         }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'challenges':
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_expire');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_expire\" from {$id}: {$th->getMessage()}");
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
@@ -113,6 +122,9 @@ class V25 extends Migration
                 case 'sites':
                     if ($collectionType === 'projects') {
                         $attributes = ['providerBranches', 'providerPaths'];
+                        if ($id === 'sites') {
+                            $attributes[] = 'scopes';
+                        }
                         try {
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                         } catch (Throwable $th) {

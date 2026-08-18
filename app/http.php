@@ -126,7 +126,7 @@ function dispatch(\Swoole\Http\Server $server, int $fd, int $type, $data = null)
             // executions request coming from custom domain
             $risky = true;
         } else {
-            foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS')) as $riskyDomain) {
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) as $riskyDomain) {
                 if (empty($riskyDomain)) {
                     continue;
                 }

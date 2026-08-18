@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\ExecutionScheduled;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -42,9 +43,8 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
-use Utopia\Validator\AnyOf;
-use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -89,7 +89,9 @@ class Create extends Base
             ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
             ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'], true), 'HTTP method of execution. Default value is POST.', true, enum: new Enum(name: 'ExecutionMethod'))
-            ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
+            // JSONObject accepts empty JSON `{}` (stdClass from utopia-http) and `[]`;
+            // Assoc + Text AnyOf rejected empty objects after http started preserving them.
+            ->param('headers', [], new JSONObject(65535), 'HTTP headers of execution. Defaults to empty.', true)
             ->param('scheduledAt', null, new Nullable(new Text(100)), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
             ->inject('response')
             ->inject('request')
@@ -150,8 +152,14 @@ class Create extends Base
             }
         }
 
-        if (!is_array($headers)) {
+        if ($headers instanceof \stdClass) {
+            $headers = (array) $headers;
+        } elseif (\is_string($headers)) {
             $headers = \json_decode($headers, true);
+        }
+
+        if (!\is_array($headers)) {
+            $headers = [];
         }
 
         // 'headers' validator
@@ -228,7 +236,7 @@ class Create extends Base
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
             'projectId' => $project->getId(),
-            'scopes' => $function->getAttribute('scopes', [])
+            'scopes' => Deployments::scopes($function)
         ]);
 
         $executionId = ID::unique();
@@ -331,12 +339,12 @@ class Create extends Base
                     ->setAttribute('scheduleId', $schedule->getId())
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
-
-                $bus->dispatch(new ExecutionScheduled(
-                    execution: $execution->getArrayCopy(),
-                    project: $project->getArrayCopy(),
-                ));
             }
+
+            $bus->dispatch(new ExecutionScheduled(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
 
             if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
                 $publisherForDeletes->enqueue(new DeleteMessage(
@@ -408,13 +416,14 @@ class Create extends Base
         ]);
 
         /** Execute function */
+        $executionResponse = [
+            'headers' => [],
+            'body' => '',
+        ];
+
         try {
             $version = $function->getAttribute('version', 'v2');
-            $command = $runtime['startCommand'];
-
-            if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $command = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
-            }
+            $command = Deployments::startCommand($deployment, $runtime['startCommand']);
 
             $source = $deployment->getAttribute('buildPath', '');
             $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";

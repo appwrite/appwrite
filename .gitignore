@@ -30,3 +30,4 @@ docker-compose.web-installer.yml
 docker-compose.web-installer.yml.**.backup
 tests/playwright/screenshots
 .playwright-mcp/
+.phpstan-cache-deadcode

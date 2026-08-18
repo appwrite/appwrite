@@ -97,6 +97,37 @@ final class UserTest extends TestCase
         $this->assertEquals(false, $user2->sessionVerify('false-secret', $proofForToken));
     }
 
+    public function testSessionActive(): void
+    {
+        $user = new User([
+            '$id' => ID::custom('user1'),
+            'sessions' => [
+                new Document([
+                    '$id' => ID::custom('active'),
+                    'secret' => 'secret',
+                    'provider' => SESSION_PROVIDER_EMAIL,
+                    'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
+                ]),
+                new Document([
+                    '$id' => ID::custom('expired'),
+                    'secret' => 'secret',
+                    'provider' => SESSION_PROVIDER_EMAIL,
+                    'expire' => DateTime::addSeconds(new \DateTime(), -60),
+                ]),
+                new Document([
+                    '$id' => ID::custom('missing-expire'),
+                    'secret' => 'secret',
+                    'provider' => SESSION_PROVIDER_EMAIL,
+                ]),
+            ],
+        ]);
+
+        $this->assertTrue($user->sessionActive('active'));
+        $this->assertFalse($user->sessionActive('expired'));
+        $this->assertFalse($user->sessionActive('missing-expire'));
+        $this->assertFalse($user->sessionActive('missing'));
+    }
+
     public function testTokenVerify(): void
     {
         $proofForToken = new Token();

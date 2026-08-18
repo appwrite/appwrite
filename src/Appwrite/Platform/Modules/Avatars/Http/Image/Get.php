@@ -101,8 +101,8 @@ class Get extends Action
 
         try {
             $image = new Image($res->getBody());
-        } catch (\Throwable $exception) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to parse image');
+        } catch (\ImagickException) {
+            throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
         $image->crop((int) $width, (int) $height);

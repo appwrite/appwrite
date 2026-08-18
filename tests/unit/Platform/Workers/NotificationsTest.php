@@ -116,7 +116,7 @@ class ZeroDeliveryConsoleNotifications extends Notifications
  *
  * Set `$throwOnSend = true` to simulate a hard SMTP failure (DNS, refused
  * connection, auth error). The adapter's `send()` calls `process()` directly,
- * so a throw from here propagates exactly like a real PHPMailer error.
+ * so a throw from here propagates exactly like a real send failure.
  */
 class SpyEmailAdapter extends EmailAdapter
 {

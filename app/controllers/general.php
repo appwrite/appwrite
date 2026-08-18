@@ -7,6 +7,8 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
+use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
@@ -132,7 +134,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
         }
 
-        if (!in_array($host, $platformHostnames) && System::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'enabled') === 'enabled') {
+        // Default must match app/config/variables.php and .env (`disabled`). Opt in with `enabled`.
+        if (!in_array($host, $platformHostnames) && System::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.', view: $errorView);
         }
 
@@ -407,7 +410,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $jwtKey = $jwtObj->encode([
             'projectId' => $project->getId(),
-            'scopes' => $resource->getAttribute('scopes', [])
+            'scopes' => Deployments::scopes($resource)
         ]);
         $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $jwtKey;
         $headers['x-appwrite-trigger'] = 'http';
@@ -568,9 +571,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
             }
 
-            if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $startCommand = 'cd /usr/local/server/src/function/ && ' . str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $deployment->getAttribute('startCommand', ''));
-            }
+            $startCommand = Deployments::startCommand($deployment, $startCommand);
 
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
@@ -1058,7 +1059,8 @@ Http::init()
    ->inject('platform')
     ->inject('authorization')
     ->inject('certifiedDomains')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
+    ->inject('bus')
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains, Bus $bus) {
        $hostname = $request->getHostname();
        $platformHostnames = $platform['hostnames'] ?? [];
 
@@ -1084,7 +1086,7 @@ Http::init()
        }
 
        // 4. Check/create rule (requires DB access)
-       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $publisherForCertificates, $certifiedDomains) {
+       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $publisherForCertificates, $certifiedDomains, $bus) {
            try {
                // TODO: (@Meldiron) Remove after 1.7.x migration
                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
@@ -1137,7 +1139,8 @@ Http::init()
                    'region' => $console->getAttribute('region')
                ]);
 
-               $dbForPlatform->createDocument('rules', $document);
+               $document = $dbForPlatform->createDocument('rules', $document);
+               $bus->dispatch(new RuleCreated($document->getArrayCopy()));
 
                Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
                $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(

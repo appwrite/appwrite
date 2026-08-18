@@ -122,12 +122,46 @@ class Messaging extends Action
                 $this->sendInternalSMSMessage($message, $project, $recipients, $log);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
-                $message = $dbForProject->getDocument('messages', $payload['messageId']);
+                $messageId = $payload['messageId'];
+                $message = $dbForProject->getDocument('messages', $messageId);
 
-                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
+                try {
+                    if ($message->isEmpty()) {
+                        throw new \Exception('Message not found: ' . $messageId);
+                    }
+
+                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
+                } catch (\Throwable $e) {
+                    $this->markFailed($dbForProject, $messageId, $e);
+
+                    throw $e;
+                }
                 break;
             default:
                 throw new \Exception('Unknown message type: ' . $type);
+        }
+    }
+
+    /**
+     * Record a failure for a job that died before writing a terminal status. A failed job is dead-lettered
+     * rather than redelivered, so a message left processing stays that way for good.
+     */
+    private function markFailed(Database $dbForProject, string $messageId, \Throwable $error): void
+    {
+        try {
+            $message = $dbForProject->getDocument('messages', $messageId);
+
+            // Attachment cleanup runs after delivery and throws on its own; a terminal status must survive it.
+            if ($message->isEmpty() || \in_array($message->getAttribute('status'), [MessageStatus::SENT, MessageStatus::FAILED], true)) {
+                return;
+            }
+
+            $dbForProject->updateDocument('messages', $messageId, new Document([
+                'status' => MessageStatus::FAILED,
+                'deliveryErrors' => [$error->getMessage()],
+            ]));
+        } catch (\Throwable) {
+            // Never mask the original failure, which the caller rethrows.
         }
     }
 
@@ -1008,7 +1042,7 @@ class Messaging extends Action
                 }
 
                 if ($deviceForFiles->getType() !== DeviceType::Local) {
-                    $deviceForFiles->transfer($path, $path, $this->getLocalDevice($project));
+                    $deviceForFiles->copy($path, $path, $this->getLocalDevice($project));
                 }
 
                 $attachment = new Attachment(

@@ -65,6 +65,7 @@ final class GeneratorTest extends TestCase
         $compose = $this->render();
 
         $this->assertArrayHasKey('appwrite-worker-screenshots', $compose['services']);
+        $this->assertArrayHasKey('appwrite-worker-executions', $compose['services']);
         $this->assertArrayHasKey('appwrite-task-interval', $compose['services']);
         $this->assertArrayHasKey('appwrite-embedding', $compose['services']);
     }

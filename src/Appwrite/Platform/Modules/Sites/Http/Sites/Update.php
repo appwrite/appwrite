@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -15,6 +15,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -105,6 +106,7 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the SSR executions.', true, ['plan'])
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE)), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -117,6 +119,7 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('deployments')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -145,6 +148,7 @@ class Update extends Base
         ?string $buildSpecification,
         string $runtimeSpecification,
         int $deploymentRetention,
+        ?array $scopes,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -156,7 +160,8 @@ class Update extends Base
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         Authorization $authorization,
-        Backend $deployments,
+        Deployments $deployments,
+        Bus $bus,
         array $platform
     ) {
         if (!empty($adapter)) {
@@ -193,6 +198,10 @@ class Update extends Base
 
         if (empty($framework)) {
             $framework = $site->getAttribute('framework');
+        }
+
+        if (empty($buildRuntime)) {
+            $buildRuntime = $site->getAttribute('buildRuntime');
         }
 
         $buildSpecification ??= $site->getAttribute('buildSpecification', APP_SITES_BUILD_SPECIFICATION_DEFAULT);
@@ -333,11 +342,12 @@ class Update extends Base
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
             'fallbackFile' => $fallbackFile,
+            'scopes' => $scopes ?? $site->getAttribute('scopes', []),
         ])));
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $platform);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $bus, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());
