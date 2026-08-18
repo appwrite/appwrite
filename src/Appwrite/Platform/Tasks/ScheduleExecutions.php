@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Func as FunctionMessage;
-use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Coroutine as Co;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -19,6 +18,8 @@ class ScheduleExecutions extends ScheduleBase
 {
     public const UPDATE_TIMER = 3; // seconds
     public const ENQUEUE_TIMER = 4; // seconds
+
+    private bool $enqueuing = false;
 
     public static function getName(): string
     {
@@ -53,33 +54,41 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
-        $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
+        if ($this->enqueuing) {
+            return;
+        }
 
-        $publisherForFunctions = new FunctionPublisher(
-            $this->publisherFunctions,
-            new \Utopia\Queue\Queue(\Utopia\System\System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', \Appwrite\Event\Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', \Appwrite\Event\Event::FUNCTIONS_QUEUE_TTL)
-        );
+        $this->enqueuing = true;
 
-        foreach ($this->schedules as $schedule) {
-            if (!$schedule['active']) {
-                unset($this->schedules[$schedule['$sequence']]);
-                continue;
+        try {
+            $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
+
+            $schedules = [];
+            foreach ($this->schedules as $schedule) {
+                if (!$schedule['active']) {
+                    unset($this->schedules[$schedule['$sequence']]);
+                    continue;
+                }
+
+                $scheduledAt = new \DateTime($schedule['schedule']);
+                if ($scheduledAt > $intervalEnd) {
+                    continue;
+                }
+
+                $schedules[] = [$scheduledAt, $schedule];
             }
 
-            $scheduledAt = new \DateTime($schedule['schedule']);
-            if ($scheduledAt > $intervalEnd) {
-                continue;
-            }
+            usort($schedules, static fn (array $first, array $second) => $first[0] <=> $second[0]);
 
-            $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
+            foreach ($schedules as [$scheduledAt, $schedule]) {
+                $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
-            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay) {
                 try {
                     if ($delay > 0) {
                         Co::sleep($delay);
                     }
 
-                    $publisherForFunctions->enqueue(new FunctionMessage(
+                    $this->publisherForFunctions->enqueue(new FunctionMessage(
                         project: $schedule['project'],
                         functionId: $schedule['resource']->getAttribute('resourceId', ''),
                         execution: new Document([
@@ -93,8 +102,11 @@ class ScheduleExecutions extends ScheduleBase
                     unset($this->schedules[$schedule['$sequence']]);
                 } catch (\Throwable $th) {
                     Console::error("Failed to enqueue scheduled execution {$schedule['resourceId']}: {$th->getMessage()}");
+                    break;
                 }
-            });
+            }
+        } finally {
+            $this->enqueuing = false;
         }
     }
 }
