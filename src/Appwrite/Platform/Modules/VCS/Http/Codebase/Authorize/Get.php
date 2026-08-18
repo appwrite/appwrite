@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -88,6 +89,10 @@ class Get extends Action
             'state' => $state,
             'redirect_uri' => $protocol . '://' . $hostname . '/v1/vcs/codebase/callback',
         ]);
+
+        // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
+        Console::log('[CODEBASE DEBUG] Authorize for project "' . $project->getId() . '" (success: "' . $success . '", failure: "' . $failure . '")');
+        Console::log('[CODEBASE DEBUG] Redirecting to install URL: ' . $url);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

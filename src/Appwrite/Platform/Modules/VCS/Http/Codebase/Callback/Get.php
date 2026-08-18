@@ -4,7 +4,9 @@ namespace Appwrite\Platform\Modules\VCS\Http\Codebase\Callback;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -35,6 +37,7 @@ class Get extends Action
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->param('installation_id', '', new Text(256, 0), 'Codebase installation ID', true)
             ->param('state', '', new Text(2048), 'Codebase state. Contains info sent when starting the installation flow.', true)
+            ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
@@ -44,10 +47,29 @@ class Get extends Action
     public function action(
         string $providerInstallationId,
         string $state,
+        Request $request,
         Response $response,
         Database $dbForPlatform,
         array $platform
     ) {
+        // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
+        $params = $request->getParams();
+        Console::log('[CODEBASE DEBUG] Callback received');
+        Console::log('[CODEBASE DEBUG] Callback params: ' . \json_encode($params));
+        Console::log('[CODEBASE DEBUG] Callback headers: ' . \json_encode($request->getHeaders()));
+        Console::log('[CODEBASE DEBUG] Callback installation_id: "' . $providerInstallationId . '"');
+
+        // Surface anything that looks like an OAuth2 token flow (e.g. a code
+        // exchange), since Codebase is not expected to send one.
+        $oauthParams = \array_intersect_key($params, \array_flip([
+            'code', 'token', 'access_token', 'refresh_token', 'expires_in', 'token_type', 'scope', 'id_token', 'setup_action', 'authuser', 'session_state',
+        ]));
+        if (!empty($oauthParams)) {
+            Console::log('[CODEBASE DEBUG] Possible OAuth2 flow params detected: ' . \json_encode($oauthParams));
+        } else {
+            Console::log('[CODEBASE DEBUG] No OAuth2 flow params detected');
+        }
+
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
         }
@@ -56,14 +78,20 @@ class Get extends Action
         $redirectFailure = $state['failure'] ?? '';
         $projectId = $state['projectId'] ?? '';
 
+        // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
+        Console::log('[CODEBASE DEBUG] Decoded state: ' . \json_encode($state));
+
         // This endpoint is public and Codebase performs no token exchange --
         // without verifying the signature the Authorize action put in state,
         // anyone could pass an arbitrary projectId here and attach an
         // installation to another project.
         $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
         if (!\hash_equals($signature, $state['signature'] ?? '')) {
+            // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
+            Console::log('[CODEBASE DEBUG] State signature mismatch, rejecting callback');
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
+        Console::log('[CODEBASE DEBUG] State signature valid');
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -101,7 +129,7 @@ class Get extends Action
         if ($installation->isEmpty()) {
             $teamId = $project->getAttribute('teamId', '');
 
-            $dbForPlatform->createDocument('installations', new Document([
+            $installation = $dbForPlatform->createDocument('installations', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => $this->getPermissions($teamId, $projectId),
                 'providerInstallationId' => $providerInstallationId,
@@ -111,7 +139,14 @@ class Get extends Action
                 'organization' => '',
                 'personal' => false,
             ]));
+
+            // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
+            Console::log('[CODEBASE DEBUG] Created installation "' . $installation->getId() . '" for project "' . $projectId . '"');
+        } else {
+            Console::log('[CODEBASE DEBUG] Installation already exists: "' . $installation->getId() . '"');
         }
+
+        Console::log('[CODEBASE DEBUG] Redirecting to success URL: ' . $redirectSuccess);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -124,6 +159,9 @@ class Get extends Action
      */
     private function failure(Response $response, string $redirect, string $error, string $type = Exception::GENERAL_ARGUMENT_INVALID): void
     {
+        // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
+        Console::log('[CODEBASE DEBUG] Callback failed: ' . $error . ' (redirect: "' . $redirect . '")');
+
         if (empty($redirect)) {
             throw new Exception($type, $error);
         }
