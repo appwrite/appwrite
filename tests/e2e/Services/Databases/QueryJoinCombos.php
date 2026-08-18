@@ -709,6 +709,20 @@ trait QueryJoinCombos
     }
 
     /**
+     * @param list<string> $queries
+     * @return array<string, mixed>
+     */
+    protected function joinHardcoreGet(string $databaseId, string $containerId, string $recordId, array $queries): array
+    {
+        return $this->client->call(
+            Client::METHOD_GET,
+            $this->getRecordUrl($databaseId, $containerId, $recordId),
+            $this->joinHardcoreHeaders(),
+            ['queries' => $queries],
+        );
+    }
+
+    /**
      * @param array<string, mixed> $result
      * @return list<array<string, mixed>>
      */
@@ -1451,6 +1465,492 @@ trait QueryJoinCombos
             $this->assertSame(0, \count($rows));
             $this->assertSame(0, (int) ($result['body']['total'] ?? 0));
             $this->assertJoinHardcoreClientHidden($encoded, $amounts);
+        }
+    }
+
+    public function testJoinHardcoreSkipAuthMixedDocSecStillHidesSecrets(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinHardcoreFixture();
+        $joinQueries = [
+            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
+        ];
+
+        $control = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::select(['name'])->toString(),
+        ]);
+        $this->assertSame(200, $control['headers']['status-code']);
+        $controlRows = $this->joinHardcoreRows($control);
+        $this->assertNotEmpty($controlRows);
+        $controlNames = [];
+        foreach ($controlRows as $row) {
+            $name = $row['name'] ?? null;
+            if (\is_string($name) && $name !== '') {
+                $controlNames[] = $name;
+            }
+        }
+        $this->assertSame(true, \in_array('Alice', $controlNames, true));
+
+        $listed = $this->joinHardcoreList($data['databaseId'], $data['customersId'], $joinQueries);
+        $this->assertSame(200, $listed['headers']['status-code']);
+        $rows = $this->joinHardcoreRows($listed);
+        $this->assertNotEmpty($rows);
+        $this->assertSame(true, \is_int($listed['body']['total'] ?? null) || \is_numeric($listed['body']['total'] ?? null));
+        $this->assertGreaterThanOrEqual(1, (int) ($listed['body']['total'] ?? 0));
+        $encoded = (string) \json_encode($listed['body']);
+        $amounts = $this->joinComboAmounts($rows);
+
+        foreach ($rows as $row) {
+            $this->assertNotSame($data['order8686Id'], $row['$id'] ?? null);
+            $this->assertNotSame($data['order5151Id'], $row['$id'] ?? null);
+        }
+
+        if ($this->getSide() === 'client') {
+            foreach ([200, 313, 424, 100] as $visible) {
+                $this->assertSame(true, \in_array($visible, $amounts, true));
+            }
+            $this->assertJoinHardcoreClientHidden($encoded, $amounts);
+            $this->assertJoinHardcoreClientHidden(
+                (string) \json_encode($control['body']),
+                $this->joinComboAmounts($controlRows),
+            );
+        } else {
+            $this->assertSame(true, \in_array(313, $amounts, true));
+        }
+
+        $got = $this->joinHardcoreGet($data['databaseId'], $data['customersId'], $data['aliceId'], $joinQueries);
+        $this->assertSame(200, $got['headers']['status-code']);
+        $this->assertSame($data['aliceId'], $got['body']['$id']);
+        $this->assertSame('Alice', $got['body']['name'] ?? null);
+        $this->assertSame(false, \in_array($got['body']['$id'] ?? null, $data['orderIds'], true));
+        $this->assertNotSame($data['order8686Id'], $got['body']['$id']);
+
+        if ($this->getSide() === 'client') {
+            $this->assertJoinHardcoreClientHidden(
+                (string) \json_encode($got['body']),
+                $this->joinComboAmounts([$got['body']]),
+            );
+        }
+    }
+
+    public function testJoinHardcoreNestedAndOrTwoAliasesIndependent(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinHardcoreFixture();
+        $joins = [
+            Query::join($data['ordersId'], '$id', 'customerId', '=', 'alpha')->toString(),
+            Query::join($data['ordersId'], 'code', 'partnerCode', '=', 'beta')->toString(),
+        ];
+
+        $listed = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            ...$joins,
+            Query::and([
+                Query::equal('alpha.amount', [313]),
+                Query::or([
+                    Query::equal('beta.amount', [424]),
+                    Query::equal('alpha.amount', [8686]),
+                ]),
+            ])->toString(),
+            Query::select(['name', 'alpha.amount', 'beta.amount'])->toString(),
+        ]);
+
+        $this->assertSame(200, $listed['headers']['status-code']);
+        $rows = $this->joinHardcoreRows($listed);
+        $encoded = (string) \json_encode($listed['body']);
+        $amounts = $this->joinComboAmounts($rows);
+        $alicePairs = [];
+
+        foreach ($rows as $row) {
+            $this->assertNotSame($data['order8686Id'], $row['$id'] ?? null);
+            $this->assertNotSame($data['order5151Id'], $row['$id'] ?? null);
+            if (($row['name'] ?? null) === 'Alice') {
+                $alicePairs[] = [(int) $row['alpha.amount'], (int) $row['beta.amount']];
+            }
+        }
+
+        if ($this->getSide() === 'client') {
+            $this->assertNotEmpty($rows);
+            $this->assertSame(true, \in_array([313, 424], $alicePairs, true));
+            foreach ($rows as $row) {
+                $this->assertSame('Alice', $row['name'] ?? null);
+                $this->assertSame($data['aliceId'], $row['$id'] ?? null);
+                $this->assertSame(313, (int) $row['alpha.amount']);
+                $this->assertSame(424, (int) $row['beta.amount']);
+            }
+            $this->assertJoinHardcoreClientHidden($encoded, $amounts);
+        } else {
+            $this->assertSame(true, \in_array(313, $amounts, true));
+        }
+
+        $hiddenOnly = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            ...$joins,
+            Query::or([
+                Query::equal('alpha.amount', [8686]),
+                Query::equal('beta.label', ['combo-hard-alpha']),
+            ])->toString(),
+            Query::select(['name', 'alpha.amount', 'beta.amount', 'beta.label'])->toString(),
+        ]);
+
+        $this->assertSame(200, $hiddenOnly['headers']['status-code']);
+        $hiddenRows = $this->joinHardcoreRows($hiddenOnly);
+        $hiddenEncoded = (string) \json_encode($hiddenOnly['body']);
+
+        if ($this->getSide() === 'client') {
+            $this->assertSame(0, \count($hiddenRows));
+            $this->assertSame(0, (int) ($hiddenOnly['body']['total'] ?? 0));
+            $this->assertJoinHardcoreClientHidden($hiddenEncoded, $this->joinComboAmounts($hiddenRows));
+        }
+    }
+
+    public function testJoinHardcoreLeftOnVsInnerWhereVsFojNull(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinHardcoreFixture();
+
+        $left = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::leftJoin($data['secretsId'], '$id', 'customerId', '=', 'sec')->toString(),
+            Query::select(['name', 'sec.secret', 'sec.amount'])->toString(),
+        ]);
+        $this->assertSame(200, $left['headers']['status-code']);
+        $leftRows = $this->joinHardcoreRows($left);
+        $this->assertNotEmpty($leftRows);
+        $leftEncoded = (string) \json_encode($left['body']);
+        $leftAmounts = $this->joinComboAmounts($leftRows);
+        $aliceSeen = false;
+
+        foreach ($leftRows as $row) {
+            $this->assertNotSame($data['order8686Id'], $row['$id'] ?? null);
+            if (($row['name'] ?? null) === 'Alice') {
+                $aliceSeen = true;
+                $this->assertSame($data['aliceId'], $row['$id'] ?? null);
+                $secret = $row['sec.secret'] ?? $row['secret'] ?? null;
+                if ($this->getSide() === 'client') {
+                    $this->assertSame(true, $secret === null || $secret === '');
+                }
+            }
+        }
+
+        $this->assertSame(true, $aliceSeen);
+
+        if ($this->getSide() === 'client') {
+            $this->assertJoinHardcoreClientHidden($leftEncoded, $leftAmounts);
+        }
+
+        $inner = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::join($data['secretsId'], '$id', 'customerId', '=', 'sec')->toString(),
+            Query::equal('sec.amount', [8686])->toString(),
+            Query::select(['name', 'sec.amount', 'sec.secret'])->toString(),
+        ]);
+        $this->assertSame(200, $inner['headers']['status-code']);
+        $innerRows = $this->joinHardcoreRows($inner);
+        $innerEncoded = (string) \json_encode($inner['body']);
+
+        if ($this->getSide() === 'client') {
+            $this->assertSame(0, \count($innerRows));
+            $this->assertSame(0, (int) ($inner['body']['total'] ?? 0));
+            $this->assertJoinHardcoreClientHidden($innerEncoded, $this->joinComboAmounts($innerRows));
+        }
+
+        $foj = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
+        ]);
+        $this->assertSame(200, $foj['headers']['status-code']);
+        $fojRows = $this->joinHardcoreRows($foj);
+        $this->assertNotEmpty($fojRows);
+        $fojEncoded = (string) \json_encode($foj['body']);
+        $fojAmounts = $this->joinComboAmounts($fojRows);
+
+        foreach ($fojRows as $row) {
+            $this->assertNotSame($data['order8686Id'], $row['$id'] ?? null);
+            $this->assertNotSame($data['order5151Id'], $row['$id'] ?? null);
+        }
+
+        if ($this->getSide() === 'client') {
+            $this->assertSame(true, \in_array(700, $fojAmounts, true));
+            $this->assertJoinHardcoreClientHidden($fojEncoded, $fojAmounts);
+        } else {
+            $this->assertSame(true, \in_array(313, $fojAmounts, true) || \in_array(700, $fojAmounts, true));
+        }
+    }
+
+    public function testJoinHardcoreFojPlusSecondAliasCursorRemap(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinHardcoreFixture();
+        $orderQueries = [
+            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::join($data['rightId'], '$id', 'customerId', '=', 'rt')->toString(),
+            Query::orderAsc('ord.amount')->toString(),
+            Query::select(['name', 'ord.$id', 'ord.amount', 'rt.$id', 'rt.tag'])->toString(),
+        ];
+
+        $ordered = $this->joinHardcoreList($data['databaseId'], $data['customersId'], $orderQueries);
+        $this->assertSame(200, $ordered['headers']['status-code']);
+        $rows = $this->joinHardcoreRows($ordered);
+        $this->assertNotEmpty($rows);
+        $encoded = (string) \json_encode($ordered['body']);
+        $amounts = $this->joinComboAmounts($rows);
+
+        $sortedAmounts = [];
+        foreach ($rows as $row) {
+            $id = $this->joinHardcoreCursorId($row);
+            $this->assertNotSame($data['order8686Id'], $id);
+            $this->assertNotSame($data['order5151Id'], $id);
+            $amount = $this->joinHardcoreField($row, 'amount');
+            if (\is_numeric($amount)) {
+                if ($sortedAmounts !== []) {
+                    $this->assertSame(true, (int) $amount >= $sortedAmounts[\count($sortedAmounts) - 1]);
+                }
+                $sortedAmounts[] = (int) $amount;
+            }
+        }
+
+        if ($this->getSide() === 'client') {
+            $this->assertJoinHardcoreClientHidden($encoded, $amounts);
+        } else {
+            $this->assertSame(true, \in_array(313, $amounts, true) || \in_array(200, $amounts, true));
+        }
+
+        $cursorIndex = null;
+        $cursorRow = null;
+        foreach ($rows as $index => $row) {
+            $id = $this->joinHardcoreCursorId($row);
+            $amount = $this->joinHardcoreField($row, 'amount');
+            if ($id !== '' && \is_numeric($amount)) {
+                $cursorIndex = $index;
+                $cursorRow = $row;
+                break;
+            }
+        }
+
+        $this->assertNotNull($cursorRow);
+        $this->assertSame(true, \is_int($cursorIndex));
+        $cursorId = $this->joinHardcoreCursorId($cursorRow);
+        $this->assertNotSame('', $cursorId);
+        $this->assertSame(true, \is_numeric($this->joinHardcoreField($cursorRow, 'amount')));
+        $this->assertNotSame($data['order8686Id'], $cursorId);
+        $this->assertNotSame($data['order5151Id'], $cursorId);
+
+        $after = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            ...$orderQueries,
+            Query::cursorAfter(new Document(['$id' => $cursorId]))->toString(),
+            Query::limit(1)->toString(),
+        ]);
+        $this->assertSame(200, $after['headers']['status-code']);
+        $afterRows = $this->joinHardcoreRows($after);
+        $this->assertSame(1, \count($afterRows));
+        $afterId = $this->joinHardcoreCursorId($afterRows[0]);
+        if ($afterId !== '') {
+            $this->assertNotSame($cursorId, $afterId);
+        }
+        $this->assertNotSame($data['order8686Id'], $afterId);
+        $this->assertNotSame($data['order5151Id'], $afterId);
+
+        $expectedAmount = null;
+        foreach (\array_slice($rows, $cursorIndex + 1) as $row) {
+            $amount = $this->joinHardcoreField($row, 'amount');
+            if (\is_numeric($amount)) {
+                $expectedAmount = (int) $amount;
+                break;
+            }
+        }
+
+        $afterAmount = $this->joinHardcoreField($afterRows[0], 'amount');
+        if ($expectedAmount !== null && \is_numeric($afterAmount)) {
+            $this->assertSame($expectedAmount, (int) $afterAmount);
+        }
+
+        if ($this->getSide() === 'client') {
+            $this->assertJoinHardcoreClientHidden(
+                (string) \json_encode($after['body']),
+                $this->joinComboAmounts($afterRows),
+            );
+        }
+    }
+
+    public function testJoinHardcoreGetDocumentSelectDottedJoinInternals(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinHardcoreFixture();
+
+        $got = $this->joinHardcoreGet($data['databaseId'], $data['customersId'], $data['aliceId'], [
+            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::select(['name', 'ord.amount', 'ord.$id', 'ord.$permissions'])->toString(),
+        ]);
+
+        $this->assertSame(200, $got['headers']['status-code']);
+        $this->assertSame($data['aliceId'], $got['body']['$id']);
+        $this->assertSame('Alice', $got['body']['name'] ?? null);
+        $this->assertSame(false, \in_array($got['body']['$id'] ?? null, $data['orderIds'], true));
+        $this->assertNotSame($data['order8686Id'], $got['body']['$id']);
+        $this->assertNotSame($data['order5151Id'], $got['body']['$id']);
+
+        $orderId = $got['body']['ord.$id'] ?? null;
+        if (\is_string($orderId) && $orderId !== '') {
+            $this->assertSame(true, \in_array($orderId, $data['orderIds'], true));
+            $this->assertNotSame($data['aliceId'], $orderId);
+        }
+
+        $encoded = (string) \json_encode($got['body']);
+        $amounts = $this->joinComboAmounts([$got['body']]);
+
+        if ($this->getSide() === 'client') {
+            if (\is_string($orderId) && $orderId !== '') {
+                $this->assertNotSame($data['order8686Id'], $orderId);
+                $this->assertNotSame($data['order5151Id'], $orderId);
+            }
+            $permissions = $got['body']['ord.$permissions'] ?? [];
+            if (\is_string($permissions)) {
+                $decoded = \json_decode($permissions, true);
+                $permissions = \is_array($decoded) ? $decoded : [$permissions];
+            }
+            if (\is_array($permissions)) {
+                $this->assertSame(false, \in_array('user:combo-hard-hidden', $permissions, true));
+            }
+            $this->assertJoinHardcoreClientHidden($encoded, $amounts);
+        } else {
+            $this->assertSame(true, \in_array(313, $amounts, true) || \in_array(200, $amounts, true));
+        }
+    }
+
+    public function testJoinHardcoreCountSumFojExcludesSecret(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinHardcoreFixture();
+
+        $listed = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
+        ]);
+
+        $this->assertSame(200, $listed['headers']['status-code']);
+        $rows = $this->joinHardcoreRows($listed);
+        $this->assertNotEmpty($rows);
+        $this->assertSame(true, \is_int($listed['body']['total'] ?? null) || \is_numeric($listed['body']['total'] ?? null));
+        $this->assertGreaterThanOrEqual(1, (int) ($listed['body']['total'] ?? 0));
+        $encoded = (string) \json_encode($listed['body']);
+        $amounts = $this->joinComboAmounts($rows);
+
+        foreach ($rows as $row) {
+            $this->assertNotSame($data['order8686Id'], $row['$id'] ?? null);
+            $this->assertNotSame($data['order5151Id'], $row['$id'] ?? null);
+        }
+
+        if ($this->getSide() === 'client') {
+            $this->assertSame(true, \in_array(313, $amounts, true));
+            $this->assertSame(true, \in_array(700, $amounts, true));
+            $this->assertJoinHardcoreClientHidden($encoded, $amounts);
+        } else {
+            $this->assertSame(true, \in_array(313, $amounts, true));
+            $this->assertSame(true, \in_array(700, $amounts, true));
+        }
+
+        $hidden = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::equal('ord.amount', [8686])->toString(),
+            Query::select(['name', 'ord.amount'])->toString(),
+        ]);
+
+        $this->assertSame(200, $hidden['headers']['status-code']);
+        $hiddenRows = $this->joinHardcoreRows($hidden);
+        $hiddenEncoded = (string) \json_encode($hidden['body']);
+
+        if ($this->getSide() === 'client') {
+            $this->assertSame(0, \count($hiddenRows));
+            $this->assertSame(0, (int) ($hidden['body']['total'] ?? 0));
+            $this->assertJoinHardcoreClientHidden($hiddenEncoded, $this->joinComboAmounts($hiddenRows));
+        }
+    }
+
+    public function testJoinHardcoreIsNotNullNotEqualSecretDoesNotLeak(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinHardcoreFixture();
+
+        $notNull = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::leftJoin($data['secretsId'], '$id', 'customerId', '=', 'sec')->toString(),
+            Query::isNotNull('sec.secret')->toString(),
+            Query::select(['name', 'sec.secret', 'sec.amount', 'sec.payload'])->toString(),
+        ]);
+        $this->assertSame(200, $notNull['headers']['status-code']);
+        $notNullRows = $this->joinHardcoreRows($notNull);
+        $notNullEncoded = (string) \json_encode($notNull['body']);
+
+        if ($this->getSide() === 'client') {
+            $this->assertSame(0, \count($notNullRows));
+            $this->assertSame(0, (int) ($notNull['body']['total'] ?? 0));
+            $this->assertJoinHardcoreClientHidden($notNullEncoded, $this->joinComboAmounts($notNullRows));
+        }
+
+        $notEqual = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::notEqual('ord.amount', 8686)->toString(),
+            Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
+        ]);
+        $this->assertSame(200, $notEqual['headers']['status-code']);
+        $notEqualRows = $this->joinHardcoreRows($notEqual);
+        $this->assertNotEmpty($notEqualRows);
+        $notEqualEncoded = (string) \json_encode($notEqual['body']);
+        $notEqualAmounts = $this->joinComboAmounts($notEqualRows);
+
+        foreach ($notEqualRows as $row) {
+            $this->assertNotSame($data['order8686Id'], $row['$id'] ?? null);
+            $this->assertNotSame($data['order5151Id'], $row['$id'] ?? null);
+        }
+
+        if ($this->getSide() === 'client') {
+            foreach ([200, 313, 424, 100] as $visible) {
+                $this->assertSame(true, \in_array($visible, $notEqualAmounts, true));
+            }
+            $this->assertJoinHardcoreClientHidden($notEqualEncoded, $notEqualAmounts);
+        } else {
+            $this->assertSame(true, \in_array(313, $notEqualAmounts, true));
+        }
+
+        $notContainsQuery = null;
+        if (\method_exists(Query::class, 'notContainsString')) {
+            $notContainsQuery = Query::notContainsString('ord.label', 'combo-hard-alpha')->toString();
+        } elseif (\method_exists(Query::class, 'notContains')) {
+            $notContainsQuery = Query::notContains('ord.label', ['combo-hard-alpha'])->toString();
+        }
+
+        if ($notContainsQuery !== null) {
+            $notContains = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+                Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+                $notContainsQuery,
+                Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
+            ]);
+            $this->assertSame(200, $notContains['headers']['status-code']);
+            $notContainsRows = $this->joinHardcoreRows($notContains);
+            $notContainsEncoded = (string) \json_encode($notContains['body']);
+            $notContainsAmounts = $this->joinComboAmounts($notContainsRows);
+
+            if ($this->getSide() === 'client') {
+                $this->assertJoinHardcoreClientHidden($notContainsEncoded, $notContainsAmounts);
+            }
         }
     }
 }
