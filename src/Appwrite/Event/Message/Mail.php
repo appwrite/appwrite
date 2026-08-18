@@ -50,7 +50,7 @@ final class Mail extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: !empty($data['project']) ? new Document($data['project']) : null,
+            project: Payload::documentOrNull($data['project'] ?? null),
             recipient: $data['recipient'] ?? '',
             name: $data['name'] ?? '',
             subject: $data['subject'] ?? '',

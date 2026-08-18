@@ -24,8 +24,8 @@ final class ExecutionCancelled extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: new Document($data['project'] ?? []),
-            execution: new Document($data['execution'] ?? []),
+            project: Payload::document($data['project'] ?? []),
+            execution: Payload::document($data['execution'] ?? []),
         );
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Appwrite\Event\Message\Payload;
 use InvalidArgumentException;
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
@@ -385,8 +386,8 @@ class Event
             'project' => $this->project?->getArrayCopy(),
             'user' => $this->user?->getArrayCopy(),
             'userId' => $this->userId,
-            'payload' => $this->payload,
-            'context' => $this->context,
+            'payload' => Payload::jsonArray($this->payload),
+            'context' => Payload::jsonArray($this->context),
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ];
     }

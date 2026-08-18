@@ -25,8 +25,8 @@ final class Migration extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: new Document($data['project'] ?? []),
-            migration: new Document($data['migration'] ?? []),
+            project: Payload::document($data['project'] ?? []),
+            migration: Payload::document($data['migration'] ?? []),
             platform: $data['platform'] ?? [],
         );
     }

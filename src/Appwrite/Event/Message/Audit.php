@@ -50,9 +50,9 @@ final class Audit extends Base
         return new self(
             event: $data['event'] ?? '',
             payload: $data['payload'] ?? [],
-            project: new Document($data['project'] ?? []),
-            user: new Document($data['user'] ?? []),
-            impersonatorUser: new Document($data['impersonatorUser'] ?? []),
+            project: Payload::document($data['project'] ?? []),
+            user: Payload::document($data['user'] ?? []),
+            impersonatorUser: Payload::document($data['impersonatorUser'] ?? []),
             resource: $data['resource'] ?? '',
             mode: $data['mode'] ?? '',
             ip: $data['ip'] ?? '',

@@ -65,7 +65,7 @@ class Webhooks extends Action
         }
 
         $events = $payload['events'];
-        $webhookPayload = json_encode($payload['payload']);
+        $webhookPayload = json_encode(Payload::jsonArray($payload['payload'] ?? []));
         $user = Payload::document($payload['user'] ?? []);
 
         $log->addTag('projectId', $project->getId());

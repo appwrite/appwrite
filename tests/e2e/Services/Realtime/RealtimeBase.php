@@ -10,6 +10,40 @@ use WebSocket\TimeoutException;
 trait RealtimeBase
 {
     /**
+     * Read the next event frames and return them keyed by an exact event name.
+     *
+     * Schema mutations publish a completion event from the database worker and
+     * a create/delete event from the HTTP request. Redis workers usually emit
+     * HTTP first; Inline can invert that. Tests must accept either order.
+     *
+     * @param array<string, string> $needles result key => exact event name
+     * @return array<string, array<string, mixed>>
+     */
+    private function receiveEventFrames(WebSocketClient $client, array $needles): array
+    {
+        $found = [];
+        $remaining = $needles;
+
+        for ($i = 0, $n = \count($needles); $i < $n; $i++) {
+            $frame = \json_decode($client->receive(), true);
+            $this->assertIsArray($frame);
+            $events = $frame['data']['events'] ?? [];
+
+            foreach ($remaining as $key => $needle) {
+                if (\in_array($needle, $events, true)) {
+                    $found[$key] = $frame;
+                    unset($remaining[$key]);
+                    break;
+                }
+            }
+        }
+
+        $this->assertSame([], $remaining, 'Missing realtime events: ' . \implode(', ', $remaining));
+
+        return $found;
+    }
+
+    /**
      * Receive websocket frames until one matches, skipping unrelated frames.
      *
      * Realtime channels such as `executions` are project-scoped, so a subscriber

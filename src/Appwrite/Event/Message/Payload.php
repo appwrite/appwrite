@@ -31,4 +31,20 @@ final class Payload
 
         return new Document($value);
     }
+
+    /**
+     * JSON-round-trip so Inline matches Redis: empty objects become [].
+     *
+     * @return array<mixed>
+     */
+    public static function jsonArray(mixed $value): array
+    {
+        if ($value === null || $value === []) {
+            return [];
+        }
+
+        $decoded = \json_decode(\json_encode($value), true);
+
+        return \is_array($decoded) ? $decoded : [];
+    }
 }

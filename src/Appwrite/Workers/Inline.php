@@ -56,7 +56,9 @@ final class Inline
     {
         if (!$container->has('certificates')) {
             $container->set('certificates', function () {
-                $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
+                $email = System::getEnv('_APP_EMAIL_CERTIFICATES')
+                    ?: System::getEnv('_APP_EMAIL_SECURITY')
+                    ?: System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
                 if (empty($email)) {
                     throw new \Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
                 }

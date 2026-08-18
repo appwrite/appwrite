@@ -42,9 +42,9 @@ class Usage extends Base
     {
         /** @phpstan-ignore new.static (subclass constructors are backwards-compatible via optional params) */
         return new static(
-            project: new Document($data['project'] ?? []),
+            project: Payload::document($data['project'] ?? []),
             metrics: $data['metrics'] ?? [],
-            reduce: array_map(fn (array $doc) => new Document($doc), $data['reduce'] ?? []),
+            reduce: array_map(fn (mixed $doc) => Payload::document($doc), $data['reduce'] ?? []),
         );
     }
 }

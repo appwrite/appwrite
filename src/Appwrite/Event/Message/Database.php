@@ -37,14 +37,14 @@ final class Database extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: !empty($data['project']) ? new Document($data['project']) : null,
-            user: !empty($data['user']) ? new Document($data['user']) : null,
+            project: Payload::documentOrNull($data['project'] ?? null),
+            user: Payload::documentOrNull($data['user'] ?? null),
             type: $data['type'] ?? '',
-            table: !empty($data['table']) ? new Document($data['table']) : null,
-            row: !empty($data['row']) ? new Document($data['row']) : null,
-            collection: !empty($data['collection']) ? new Document($data['collection']) : null,
-            document: !empty($data['document']) ? new Document($data['document']) : null,
-            database: !empty($data['database']) ? new Document($data['database']) : null,
+            table: Payload::documentOrNull($data['table'] ?? null),
+            row: Payload::documentOrNull($data['row'] ?? null),
+            collection: Payload::documentOrNull($data['collection'] ?? null),
+            document: Payload::documentOrNull($data['document'] ?? null),
+            database: Payload::documentOrNull($data['database'] ?? null),
             events: $data['events'] ?? [],
         );
     }

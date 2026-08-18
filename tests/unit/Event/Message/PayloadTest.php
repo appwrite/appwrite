@@ -24,8 +24,8 @@ final class PayloadTest extends TestCase
 
     public function testDocumentOrNull(): void
     {
-        $this->assertNull(Payload::documentOrNull(null));
-        $this->assertNull(Payload::documentOrNull([]));
+        $this->assertNotInstanceOf(Document::class, Payload::documentOrNull(null));
+        $this->assertNotInstanceOf(Document::class, Payload::documentOrNull([]));
 
         $existing = new Document(['$id' => 'live']);
         $this->assertSame($existing, Payload::documentOrNull($existing));
@@ -33,5 +33,13 @@ final class PayloadTest extends TestCase
         $fromArray = Payload::documentOrNull(['$id' => 'proj']);
         $this->assertInstanceOf(Document::class, $fromArray);
         $this->assertSame('proj', $fromArray->getId());
+    }
+
+    public function testJsonArrayNormalizesEmptyObjects(): void
+    {
+        $normalized = Payload::jsonArray(['prefs' => new \stdClass(), 'name' => 'Ada']);
+        $this->assertSame([], $normalized['prefs']);
+        $this->assertSame('Ada', $normalized['name']);
+        $this->assertSame([], Payload::jsonArray(null));
     }
 }

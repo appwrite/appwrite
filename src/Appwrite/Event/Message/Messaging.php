@@ -34,10 +34,10 @@ final class Messaging extends Base
     {
         return new self(
             type: $data['type'] ?? '',
-            project: new Document($data['project'] ?? []),
-            user: !empty($data['user']) ? new Document($data['user']) : null,
+            project: Payload::document($data['project'] ?? []),
+            user: Payload::documentOrNull($data['user'] ?? null),
             messageId: $data['messageId'] ?? null,
-            message: !empty($data['message']) ? new Document($data['message']) : null,
+            message: Payload::documentOrNull($data['message'] ?? null),
             recipients: $data['recipients'] ?? null,
             providerType: $data['providerType'] ?? null,
         );
