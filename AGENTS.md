@@ -48,10 +48,15 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. Nesting: [`src/Appwrite/Platform/AGENTS.md`](src/Appwrite/Platform/AGENTS.md)
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
 - **src/Utopia/** -- Composer PSR-4 overrides of Utopia packages (currently `Bus` only)
-- **app/init.php** -- bootstrap; **app/init/** -- configs, constants, locales, models, registers, resources, span, database filters/formats
-- **app/http.php**, **app/worker.php**, **app/realtime.php** -- process entry harnesses
+- **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
+- **app/assets/** -- bundled data (fonts, common-password dictionary)
+- **app/views/** -- server-side templates (installer, errors, proxy)
+- **app/init.php** -- bootstrap; **app/init/** -- constants, models, registers, resources, span, database filters/formats
+- **app/http.php**, **app/worker.php**, **app/realtime.php**, **app/cli.php** -- process entry harnesses
+- **app/controllers/** -- leftover HTTP controllers; new endpoints go in modules
 - **bin/** -- CLI entry points (`worker`, `worker-*`, `schedule`, `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, …)
-- **tests/e2e/**, **tests/unit/** -- tests; **public/** -- static assets and generated SDKs
+- **docs/** -- API specs, references, tutorials
+- **tests/e2e/**, **tests/unit/** -- tests; **public/** -- fonts, images, generated SDKs
 
 ## Libraries
 
