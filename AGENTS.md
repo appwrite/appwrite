@@ -6,7 +6,8 @@ Self-hosted Backend-as-a-Service platform. Hybrid monolithic-microservice archit
 
 | Command | Purpose |
 |---------|---------|
-| `docker compose up -d --force-recreate --build` | Build and start all services |
+| `docker compose up -d --force-recreate --build` | Build and start all services (combined worker + scheduler by default) |
+| `docker compose -f docker-compose.yml -f docker-compose.separate.yml --profile separate up -d` | Start per-queue worker and scheduler containers instead |
 | `docker compose exec appwrite test tests/e2e/Services/[Service]` | Run E2E tests for a service |
 | `docker compose exec appwrite test tests/e2e/Services/[Service] --filter=[Method]` | Run a single test method |
 | `docker compose exec appwrite test tests/unit/` | Run unit tests |
@@ -31,12 +32,13 @@ _Note: When running `composer check` or `composer analyze`, be aware that runnin
 
 ## Project layout
 
+- **src/Utopia/** -- Composer PSR-4 overrides of Utopia libraries (currently `Bus` only). Combined-worker queue/platform APIs live in utopia-php/monorepo `packages/queue` and `packages/platform`.
 - **src/Appwrite/Platform/Modules/** -- feature modules (Account, Avatars, Compute, Console, Databases, Functions, Health, Project, Projects, Proxy, Sites, Storage, Teams, Tokens, Users, VCS, Webhooks)
 - **src/Appwrite/Platform/Workers/** -- background job workers
 - **src/Appwrite/Platform/Tasks/** -- CLI tasks
 - **app/init.php** -- bootstrap (registers services, resources, listeners)
 - **app/init/** -- configs, constants, locales, models, registers, resources, span, database filters/formats
-- **bin/** -- CLI entry points: `worker-*` (14 workers), `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, `upgrade`, `ssl`, `vars`, `maintenance`, `interval`, `specs`, `sdks`, etc.
+- **bin/** -- CLI entry points: `worker` (combined), `worker-*` (per-queue), `schedule` (combined), `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, `upgrade`, `ssl`, `vars`, `maintenance`, `interval`, `specs`, `sdks`, etc.
 - **tests/e2e/** -- end-to-end tests per service
 - **tests/unit/** -- unit tests
 - **public/** -- static assets and generated SDKs

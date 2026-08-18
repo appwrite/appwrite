@@ -344,7 +344,7 @@ class Functions extends Action
         }
     }
 
-    private function updateProjectAccess(Document $project, Database $dbForPlatform): void
+    protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
     {
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);

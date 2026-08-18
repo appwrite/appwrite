@@ -22,6 +22,14 @@ abstract class ScheduleBase extends Action
 
     protected array $schedules = [];
 
+    /**
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function getSchedules(): array
+    {
+        return $this->schedules;
+    }
+
     protected BrokerPool $publisher;
     protected BrokerPool $publisherMigrations;
     protected BrokerPool $publisherFunctions;
@@ -92,9 +100,27 @@ abstract class ScheduleBase extends Action
      */
     public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): never
     {
-        Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
-        Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
+        $this->setup(
+            $publisher,
+            $publisherMigrations,
+            $publisherFunctions,
+            $publisherMessaging,
+            $telemetry,
+        );
+        $this->start($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
+        $this->listen($dbForPlatform, $getProjectDB);
+    }
 
+    /**
+     * Wire publishers and telemetry. Safe to call once before start().
+     */
+    public function setup(
+        BrokerPool $publisher,
+        BrokerPool $publisherMigrations,
+        BrokerPool $publisherFunctions,
+        BrokerPool $publisherMessaging,
+        Telemetry $telemetry,
+    ): void {
         $this->publisher = $publisher;
         $this->publisherMigrations = $publisherMigrations;
         $this->publisherFunctions = $publisherFunctions;
@@ -104,30 +130,51 @@ abstract class ScheduleBase extends Action
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
         $this->collectSchedulesTelemetryCount = $telemetry->createGauge('task.schedule.collect_schedules.count');
         $this->enqueueDelayTelemetry = $telemetry->createHistogram('task.schedule.enqueue_delay', 's');
+    }
+
+    /**
+     * Initial schedule load + sync timer. Combined mode runs this serially so
+     * resource types do not contend for a shared size-1 console/cache pool.
+     */
+    public function start(Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked): void
+    {
+        $resource = static::getSupportedResource();
+
+        Console::title(\ucfirst($resource) . ' scheduler V1');
+        Console::success(APP_NAME . ' ' . \ucfirst($resource) . ' scheduler v1 has started');
 
         // start with "0" to load all active documents.
         $lastSyncUpdate = "0";
         $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $getIsResourceBlocked);
 
-        Console::success("Starting timers at " . DateTime::now());
+        Console::success("Starting {$resource} sync timer (" . static::UPDATE_TIMER . "s) at " . DateTime::now());
         /**
          * The timer synchronize $schedules copy with database collection.
          */
-        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate, $getIsResourceBlocked) {
+        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate, $getIsResourceBlocked, $resource) {
             $time = DateTime::now();
-            Console::log("Sync tick: Running at $time");
+            Console::log("[{$resource}] Sync tick: Running at $time");
             $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $getIsResourceBlocked);
         });
+    }
+
+    /**
+     * Blocking enqueue loop. Extracted so a combined scheduler can bootstrap
+     * serially, then run each resource type's loop in its own coroutine.
+     */
+    public function listen(Database $dbForPlatform, callable $getProjectDB): never
+    {
+        $resource = static::getSupportedResource();
+        Console::success("[{$resource}] Enqueue loop started (every " . static::ENQUEUE_TIMER . 's)');
 
         while (true) {
             try {
                 go(fn () => $this->enqueueResources($dbForPlatform, $getProjectDB));
-                $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
+                $this->scheduleTelemetryCount?->record(count($this->schedules), ['resourceType' => $resource]);
                 sleep(static::ENQUEUE_TIMER);
             } catch (\Throwable $th) {
-                Console::error('Failed to enqueue resources: ' . $th->getMessage());
+                Console::error("[{$resource}] Failed to enqueue resources: " . $th->getMessage());
             }
-
         }
     }
 

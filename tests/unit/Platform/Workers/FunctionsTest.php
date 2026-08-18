@@ -88,6 +88,7 @@ final class FunctionsTest extends TestCase
         $this->assertSame('/path', $message->path);
         $this->assertSame(['x-test' => 'value'], $message->headers);
         $this->assertSame('PATCH', $message->method);
+        $this->assertSame(1, $worker->projectAccessUpdates);
     }
 
     #[DataProvider('inactiveScheduleProvider')]
@@ -184,8 +185,15 @@ final class FunctionsTest extends TestCase
 
 final class TestFunctions extends Functions
 {
+    public int $projectAccessUpdates = 0;
+
     public function schedule(Database $dbForPlatform, Document $project, Document $execution, string $functionId, callable $enqueue): bool
     {
         return $this->enqueueScheduledExecution($dbForPlatform, $project, $execution, $functionId, $enqueue);
+    }
+
+    protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
+    {
+        $this->projectAccessUpdates++;
     }
 }
