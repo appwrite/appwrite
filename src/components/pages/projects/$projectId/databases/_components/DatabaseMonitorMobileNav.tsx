@@ -1,3 +1,4 @@
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import { useMemo, useCallback } from 'react'
 import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import { Button } from '@/components/ui/button'
@@ -42,7 +43,7 @@ export function DatabaseMonitorMobileNav({
     null
   const specId = getEffectiveDatabaseSpecIdForMonitoring(
     databaseType,
-    dedicated?.specification?.trim() || productSpecId?.trim() || null,
+    coerceTrimmedString(dedicated?.specification) || coerceTrimmedString(productSpecId) || null,
   )
   const serverless = isServerlessDatabaseMonitoring(databaseType, specId)
 

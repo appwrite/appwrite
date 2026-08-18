@@ -9,8 +9,27 @@ on:
 
 jobs:
   e2e:
+    name: ${{ matrix.project }}
     runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7i/spot=price-capacity-optimized/retry=when-interrupted/extras=otel
-    timeout-minutes: 30
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: website
+            timeout: 15
+          - project: console
+            timeout: 15
+          - project: console-mysql
+            timeout: 40
+          - project: console-postgres
+            timeout: 40
+          - project: console-tablesdb
+            timeout: 25
+          - project: console-documentsdb
+            timeout: 40
+          - project: console-vectorsdb
+            timeout: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -48,11 +67,11 @@ jobs:
           E2E_TEST_SESSION_SECRET: ${{ secrets.E2E_TEST_SESSION_SECRET }}
           E2E_ORG_ID: ${{ secrets.E2E_ORG_ID }}
           E2E_PROJECT_ID: ${{ secrets.E2E_PROJECT_ID }}
-        run: bun run e2e
+        run: bun run e2e -- --project=${{ matrix.project }}
 
       - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
+        if: ${{ failure() && !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.project }}
           path: playwright-report/
           retention-days: 7

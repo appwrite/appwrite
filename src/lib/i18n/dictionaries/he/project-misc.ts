@@ -38,7 +38,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   // pragma: allowlist secret
   'Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.':
     'צרו מפתח API כדי לאמת את האפליקציות שלכם ולגשת לשירותי Appwrite. מפתחות API מספקים גישה מאובטחת למשאבי הפרויקט שלכם.', // pragma: allowlist secret
-  'Create API key for your language': 'צרו מפתח API לשפה שלכם',
+  'Get started with your language of choice': 'התחילו עם השפה לבחירתכם',
   'No API keys match your search': 'אין מפתחות API התואמים לחיפוש שלכם',
   'Delete API key': 'מחיקת מפתח API',
   'this API key': 'מפתח API זה',
@@ -98,6 +98,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Map your app's hostname or bundle ID so the SDK can reach this project.":
     'מפו את שם המארח או מזהה החבילה של האפליקציה כדי שה-SDK יוכל להגיע לפרויקט הזה.',
   'Add platform': 'הוספת פלטפורמה',
+  Manage: 'ניהול',
   'Manage apps': 'ניהול אפליקציות',
   'Create a server API key': 'יצירת מפתח API לשרת',
   'Add a scoped secret for servers and CI; client apps use sessions instead.':
@@ -373,6 +374,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Site ID': 'מזהה אתר',
   'Request limit': 'מגבלת בקשות',
   'Interval (seconds)': 'מרווח (שניות)',
+  'Fixed window': 'חלון קבוע',
+  'Sliding window': 'חלון נע',
+  'Token bucket': 'דלי טוקנים',
+  'Max bucket size': 'גודל דלי מרבי',
+  'The largest burst allowed. Defaults to the request limit when left unset.':
+    'הפרץ הגדול ביותר המותר. כברירת מחדל שווה למגבלת הבקשות כשלא הוגדר.',
+  'Rate limit strategy illustration': 'איור אסטרטגיית מגבלת קצב',
+  'first request': 'בקשה ראשונה',
+  per: 'לכל',
+  'each request takes one token': 'כל בקשה צורכת טוקן אחד',
+  'Windows align to the clock. Rate limit resets for everyone when the next time interval starts.':
+    'החלונות מיושרים לפי השעון. מגבלת הקצב מתאפסת לכולם כשמרווח הזמן הבא מתחיל.',
+  "Windows align to the user. Helps prevent traffic spikes since the reset doesn't occur for all users at the same time.":
+    'החלונות מיושרים לפי המשתמש. כך נמנעות קפיצות בתנועה, מכיוון שהאיפוס אינו מתרחש אצל כל המשתמשים בו-זמנית.',
+  'Windows align to human behaviour. Allows accumulated short bursts, and refills for sustained pace.':
+    'החלונות מיושרים לפי התנהגות אנושית. מאפשר פרצים קצרים שנצברו, ומתמלא מחדש לקצב מתמשך.',
   'Redirect location': 'יעד הפניה',
   'Status code': 'קוד סטטוס',
   'Match requests when all conditions are true.':
@@ -635,6 +652,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Email: 'אימייל',
   'Actor ID': 'מזהה מבצע',
   'Actor type': 'סוג מבצע',
+  'Via MCP': 'דרך MCP',
   'Resource type (API)': 'סוג משאב (API)',
   'Resource path': 'נתיב משאב',
   'Resource parent': 'משאב אב',
@@ -2159,6 +2177,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Global variables': 'משתנים גלובליים',
   'GraphQL API access for queries and mutations.':
     'גישת API של GraphQL לשאילתות ולמוטציות.',
+  'Manage project variables': 'ניהול משתני פרויקט',
   'Import all deployments that are not currently active.':
     'ייבוא כל הפריסות שאינן פעילות כרגע.',
   'Import all environment variables.': 'ייבוא כל משתני הסביבה.',
@@ -2252,6 +2271,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Project Settings → Database': 'Project Settings → Database',
   'Project name has been updated': 'שם הפרויקט עודכן',
   'Project not found': 'הפרויקט לא נמצא',
+  'Project variables': 'משתני פרויקט',
   Protocol: 'פרוטוקול',
   'Protocol settings control access through REST, GraphQL, and WebSocket APIs independently from service-level access.':
     'הגדרות הפרוטוקול שולטות בגישה דרך ממשקי REST, GraphQL ו-WebSocket ללא תלות בגישה ברמת השירות.',
@@ -2307,6 +2327,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הגדירו את האירועים שיפעילו את ה-webhook שלכם. מקסימום',
   'Set up webhooks to receive real-time notifications about events in your project':
     'הגדירו webhooks כדי לקבל התראות בזמן אמת על אירועים בפרויקט שלכם',
+  'Shared with all Functions and Sites in this project.':
+    'משותפים לכל הפונקציות והאתרים בפרויקט הזה.',
   'Showing first': 'מוצגות',
   Since: 'מכיוון ש-',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':

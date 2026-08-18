@@ -103,6 +103,18 @@ const DEFAULT_SESSION_PROPS: AnalyticsSessionProps = {
 let sessionProps: AnalyticsSessionProps = { ...DEFAULT_SESSION_PROPS }
 
 /**
+ * Custom events must not create Plausible visits before the first pageview.
+ * Waiting on auth/plan for pageviews while clicks/dialogs fire immediately
+ * produced visitors with 0 pageviews (views/visit < 1, ~1s duration).
+ */
+let hasTrackedPageview = false
+type PendingAnalyticsEvent = {
+  eventName: string
+  options?: PlausibleOptions
+}
+const pendingAnalyticsEvents: PendingAnalyticsEvent[] = []
+
+/**
  * Sync auth/plan/lang from React (account + active org plan + i18n).
  * Call during render so pageviews/events in the same commit see fresh values.
  */
@@ -178,9 +190,24 @@ function getGlobalAnalyticsProps(routePath?: string): AnalyticsProps {
   }
 }
 
+function flushPendingAnalyticsEvents() {
+  if (typeof window === 'undefined' || !window.plausible) return
+  while (pendingAnalyticsEvents.length > 0) {
+    const pending = pendingAnalyticsEvents.shift()
+    if (!pending) break
+    window.plausible(pending.eventName, pending.options)
+  }
+}
+
+const MAX_PENDING_ANALYTICS_EVENTS = 20
+
 export function trackPageView(routePath: string) {
   if (!isAnalyticsAllowed() || typeof window === 'undefined') return
-  window.plausible?.('pageview', {
+  // Plausible's init stub queues until the script loads; without it, skip so we
+  // do not mark the session as pageviewed and drop later real pageviews.
+  if (!window.plausible) return
+
+  window.plausible('pageview', {
     url: getAnalyticsRouteUrl(routePath),
     props: normalizeAnalyticsProps({
       route: routePath,
@@ -188,6 +215,8 @@ export function trackPageView(routePath: string) {
       ...getGlobalAnalyticsProps(routePath),
     }),
   })
+  hasTrackedPageview = true
+  flushPendingAnalyticsEvents()
 }
 
 export function trackEvent(
@@ -198,7 +227,7 @@ export function trackEvent(
   if (!isAnalyticsAllowed() || typeof window === 'undefined') return
 
   const routePath = options.routePath
-  window.plausible?.(eventName, {
+  const plausibleOptions: PlausibleOptions = {
     url:
       options.url ?? (routePath ? getAnalyticsRouteUrl(routePath) : undefined),
     props: normalizeAnalyticsProps({
@@ -209,7 +238,16 @@ export function trackEvent(
       // Session dimensions win so callers cannot accidentally override them.
       ...getGlobalAnalyticsProps(routePath),
     }),
-  })
+  }
+
+  if (!hasTrackedPageview) {
+    if (pendingAnalyticsEvents.length < MAX_PENDING_ANALYTICS_EVENTS) {
+      pendingAnalyticsEvents.push({ eventName, options: plausibleOptions })
+    }
+    return
+  }
+
+  window.plausible?.(eventName, plausibleOptions)
 }
 
 export function getSafeInternalPathParts(pathname: string) {

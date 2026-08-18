@@ -10,6 +10,63 @@ export type FaviconVariant =
   | 'theme-blue'
   | 'theme-red'
 
+/**
+ * Who last applied the tab favicon. Used by the debug menu so a blue/green/red
+ * status dot can be traced back to its trigger.
+ */
+export type FaviconStatusSource =
+  | 'default'
+  | 'debug-menu'
+  | 'build-notifications'
+  | 'agent-conversation'
+  | 'legacy-theme'
+  | 'dynamic-favicon'
+  | 'unknown'
+
+export type FaviconApplyMeta = {
+  source?: FaviconStatusSource
+  /** Short human-readable explanation of why this variant is active. */
+  reason?: string
+  /** Optional extra detail (IDs, counts, status strings). */
+  detail?: string
+  /** Structured debug context (project, resources, conversation). */
+  context?: FaviconStatusContext
+  /**
+   * Explicit variant when applying a raw href that is not in {@link FAVICON_MAP}
+   * (e.g. legacy theme icon).
+   */
+  variant?: FaviconVariant
+}
+
+/** Structured fields for the debug favicon status panel. */
+export type FaviconStatusResource = {
+  type: string
+  id: string
+  name?: string
+  status?: string
+  deploymentId?: string
+}
+
+export type FaviconStatusContext = {
+  projectId?: string
+  projectName?: string
+  organizationId?: string
+  conversationId?: string
+  pathname?: string
+  resources?: FaviconStatusResource[]
+  /** Free-form key/value rows for source-specific fields. */
+  fields?: Array<{ label: string; value: string }>
+}
+
+export type FaviconStatus = {
+  variant: FaviconVariant
+  source: FaviconStatusSource
+  reason: string
+  detail?: string
+  context?: FaviconStatusContext
+  updatedAt: number
+}
+
 type ThemeStatusVariant = 'theme-green' | 'theme-blue' | 'theme-red'
 
 /** Base paths; status variants resolve to PNGs via {@link resolveFaviconHref}. */
@@ -22,6 +79,27 @@ export const FAVICON_MAP: Record<FaviconVariant, string> = {
   'theme-green': '/favicons/logo-theme-green-light.png',
   'theme-blue': '/favicons/logo-theme-blue-light.png',
   'theme-red': '/favicons/logo-theme-red-light.png',
+}
+
+export const FAVICON_VARIANT_LABELS: Record<FaviconVariant, string> = {
+  default: 'Default',
+  green: 'Green',
+  blue: 'Blue',
+  red: 'Red',
+  theme: 'Theme',
+  'theme-green': 'Theme + Green',
+  'theme-blue': 'Theme + Blue',
+  'theme-red': 'Theme + Red',
+}
+
+export const FAVICON_SOURCE_LABELS: Record<FaviconStatusSource, string> = {
+  default: 'Default',
+  'debug-menu': 'Debug menu',
+  'build-notifications': 'Build notifications',
+  'agent-conversation': 'Agent conversation',
+  'legacy-theme': 'Legacy theme',
+  'dynamic-favicon': 'Theme-aware host',
+  unknown: 'Unknown',
 }
 
 const THEME_STATUS_FAVICONS: Record<
@@ -51,7 +129,18 @@ const STATUS_VARIANTS = new Set<FaviconVariant>([
   'theme-red',
 ])
 
+const BLUE_VARIANTS = new Set<FaviconVariant>(['blue', 'theme-blue'])
+
 let activeStatusVariant: FaviconVariant | null = null
+
+let faviconStatus: FaviconStatus = {
+  variant: 'default',
+  source: 'default',
+  reason: 'Idle (default favicon)',
+  updatedAt: 0,
+}
+
+const faviconStatusListeners = new Set<(status: FaviconStatus) => void>()
 
 function isThemeStatusVariant(variant: FaviconVariant): variant is ThemeStatusVariant {
   return variant in THEME_STATUS_FAVICONS
@@ -64,6 +153,68 @@ function prefersDarkColorScheme(): boolean {
 
 function faviconMimeType(href: string): string {
   return href.endsWith('.png') ? 'image/png' : 'image/svg+xml'
+}
+
+function notifyFaviconStatusListeners(): void {
+  for (const listener of faviconStatusListeners) {
+    listener(faviconStatus)
+  }
+}
+
+function recordFaviconStatus(
+  variant: FaviconVariant,
+  meta?: FaviconApplyMeta,
+): void {
+  if (meta?.source || meta?.reason || meta?.detail !== undefined || meta?.context) {
+    faviconStatus = {
+      variant,
+      source: meta.source ?? 'unknown',
+      reason: meta.reason ?? 'Favicon updated',
+      detail: meta.detail,
+      context: meta.context,
+      updatedAt: Date.now(),
+    }
+  } else {
+    // Silent re-apply (e.g. light/dark theme status PNG swap) keeps the
+    // existing trigger explanation and only refreshes the active variant.
+    faviconStatus = {
+      ...faviconStatus,
+      variant,
+    }
+  }
+  notifyFaviconStatusListeners()
+}
+
+export function getFaviconStatus(): FaviconStatus {
+  return faviconStatus
+}
+
+export function subscribeFaviconStatus(
+  listener: (status: FaviconStatus) => void,
+): () => void {
+  faviconStatusListeners.add(listener)
+  listener(faviconStatus)
+  return () => {
+    faviconStatusListeners.delete(listener)
+  }
+}
+
+export function isBlueFaviconVariant(variant: FaviconVariant | null | undefined): boolean {
+  return !!variant && BLUE_VARIANTS.has(variant)
+}
+
+export function isStatusFaviconVariant(
+  variant: FaviconVariant | null | undefined,
+): boolean {
+  return !!variant && STATUS_VARIANTS.has(variant)
+}
+
+export function formatFaviconStatusSummary(status: FaviconStatus): string {
+  const variantLabel = FAVICON_VARIANT_LABELS[status.variant] ?? status.variant
+  if (status.source === 'default' && !isStatusFaviconVariant(status.variant)) {
+    return variantLabel
+  }
+  return `${variantLabel} · ${status.reason}`
 }
 
 export function resolveFaviconHref(variant: FaviconVariant): {
@@ -110,7 +261,7 @@ export function variantFromPathname(pathname: string): FaviconVariant | null {
  */
 export function applyFaviconHref(
   href: string,
-  options?: { type?: string; cacheBust?: boolean },
+  options?: { type?: string; cacheBust?: boolean } & FaviconApplyMeta,
 ): void {
   if (typeof document === 'undefined') return
 
@@ -129,23 +280,48 @@ export function applyFaviconHref(
       node.type = type
       node.href = resolvedHref
     })
-    return
+  } else {
+    const link = document.createElement('link')
+    link.rel = 'icon'
+    link.type = type
+    link.href = resolvedHref
+    document.head.appendChild(link)
   }
 
-  const link = document.createElement('link')
-  link.rel = 'icon'
-  link.type = type
-  link.href = resolvedHref
-  document.head.appendChild(link)
+  // Only callers that pass status meta record a trigger. Prefer
+  // {@link applyFaviconVariant} when the variant is known.
+  if (
+    options?.source ||
+    options?.reason ||
+    options?.detail !== undefined ||
+    options?.context
+  ) {
+    let pathname = resolvedHref
+    try {
+      pathname = new URL(resolvedHref, window.location.origin).pathname
+    } catch {
+      // Keep raw href for variantFromPathname suffix matching.
+    }
+    recordFaviconStatus(
+      options.variant ??
+        variantFromPathname(pathname) ??
+        faviconStatus.variant,
+      options,
+    )
+  }
 }
 
 export function applyFaviconVariant(
   variant: FaviconVariant,
-  options?: { cacheBust?: boolean },
+  options?: { cacheBust?: boolean } & FaviconApplyMeta,
 ): void {
   activeStatusVariant = STATUS_VARIANTS.has(variant) ? variant : null
   const { href, type } = resolveFaviconHref(variant)
-  applyFaviconHref(href, { type, cacheBust: options?.cacheBust })
+  recordFaviconStatus(variant, options)
+  applyFaviconHref(href, {
+    type,
+    cacheBust: options?.cacheBust,
+  })
 }
 
 export function getDefaultFaviconVariant(): FaviconVariant {
@@ -153,6 +329,13 @@ export function getDefaultFaviconVariant(): FaviconVariant {
 }
 
 if (typeof window !== 'undefined') {
+  faviconStatus = {
+    variant: getDefaultFaviconVariant(),
+    source: 'default',
+    reason: 'Idle (default favicon)',
+    updatedAt: 0,
+  }
+
   window
     .matchMedia('(prefers-color-scheme: dark)')
     .addEventListener('change', () => {

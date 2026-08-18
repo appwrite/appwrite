@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
+import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
   Loader2,
@@ -282,6 +283,11 @@ export type VariablesSettingsCardSettingsProps = VariablesCardSharedProps & {
   projectVariableKeysForWarning?: Set<string>
   /** Tooltip for the duplicate project key warning; defaults to a message using `scopeLabel`. */
   duplicateProjectKeyTooltip?: string
+  /**
+   * When set (function/site variables), show a left-column shortcut to project-level variables.
+   * Omit on the project variables page itself.
+   */
+  projectVariablesProjectId?: string | null
 }
 
 export type VariablesSettingsCardWizardProps = VariablesCardSharedProps & {
@@ -332,6 +338,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
   const duplicateProjectKeyTooltip = isWizard
     ? undefined
     : props.duplicateProjectKeyTooltip
+  const projectVariablesProjectId = isWizard
+    ? undefined
+    : props.projectVariablesProjectId
 
   const actionsDisabled = isWizard ? wizardDisabled : isLoading
   const dialogContentClass = (extra?: string) =>
@@ -866,11 +875,28 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
           <div
             className={cn(!isWizard && 'flex gap-6 @[600px]:flex-row flex-col')}
           >
-            {description ? (
-              <div className="@[600px]:w-64 shrink-0">
-                <p className="text-[13px] text-muted-foreground">
-                  {t(description)}
-                </p>
+            {description || projectVariablesProjectId ? (
+              <div className="@[600px]:w-64 shrink-0 space-y-4">
+                {description ? (
+                  <p className="text-[13px] text-muted-foreground">
+                    {t(description)}
+                  </p>
+                ) : null}
+                {projectVariablesProjectId ? (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-full text-[13px]"
+                  >
+                    <Link
+                      to="/projects/$projectId/settings/variables"
+                      params={{ projectId: projectVariablesProjectId }}
+                    >
+                      {t('Manage project variables')}
+                    </Link>
+                  </Button>
+                ) : null}
               </div>
             ) : null}
             <div className="flex-1 min-w-0">

@@ -46,7 +46,7 @@ function Home({
 
   return (
     <>
-      <IonText>Hello, {user.name}</IonText>
+      <IonText>{`Hello, ${user.name}`}</IonText>
       <IonButton onClick={handleSignOut}>Sign out</IonButton>
     </>
   )

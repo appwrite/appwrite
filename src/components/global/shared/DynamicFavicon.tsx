@@ -13,7 +13,11 @@ export function DynamicFavicon() {
     if (typeof window === 'undefined' || !mounted) return
     if (!usesThemeAwareFaviconHost()) return
 
-    applyFaviconHref('/logo-theme.svg')
+    applyFaviconHref('/logo-theme.svg', {
+      source: 'dynamic-favicon',
+      reason: 'Theme-aware favicon host (dev/local)',
+      variant: 'theme',
+    })
   }, [mounted])
 
   return null

@@ -20,7 +20,12 @@ import { getConsoleRouteIds } from '@/lib/utils/page-title'
 
 /**
  * Keeps Plausible session custom properties (auth, plan, lang) in sync and
- * records pageviews once auth (and plan, when an org is known) have settled.
+ * records pageviews once auth has settled.
+ *
+ * Do not wait for org plan before the first pageview: the global click/dialog
+ * tracker can fire earlier, and custom events without a pageview create
+ * Plausible visits with 0 pageviews (views/visit < 1). Plan is still synced
+ * onto later events as soon as it loads.
  */
 export function AnalyticsSessionPropsSync() {
   const location = useLocation()
@@ -44,7 +49,7 @@ export function AnalyticsSessionPropsSync() {
   // On project routes, wait for project so teamId (org) is known before plan.
   const orgIdResolved = !projectId || !isAuthenticated || !projectLoading
 
-  const { data: orgPlan, isFetched: planFetched } = useQuery({
+  const { data: orgPlan } = useQuery({
     ...organizationPlanQueryOptions(currentOrgId),
     enabled:
       isAuthenticated &&
@@ -65,11 +70,6 @@ export function AnalyticsSessionPropsSync() {
     lang: language,
   })
 
-  const sessionReady =
-    isFetched &&
-    orgIdResolved &&
-    (auth === 'guest' || !currentOrgId || planFetched)
-
   useEffect(() => {
     return subscribeCookieConsent(() => {
       setConsentTick((tick) => tick + 1)
@@ -77,7 +77,7 @@ export function AnalyticsSessionPropsSync() {
   }, [])
 
   useEffect(() => {
-    if (!canTrackAnalytics() || typeof window === 'undefined' || !sessionReady)
+    if (!canTrackAnalytics() || typeof window === 'undefined' || !isFetched)
       return
 
     const routePath = getAnalyticsRoutePath(
@@ -85,7 +85,7 @@ export function AnalyticsSessionPropsSync() {
       location.pathname,
     )
     trackPageView(routePath)
-  }, [sessionReady, consentTick, leafRoute?.routeId, location.pathname])
+  }, [isFetched, consentTick, leafRoute?.routeId, location.pathname])
 
   return null
 }

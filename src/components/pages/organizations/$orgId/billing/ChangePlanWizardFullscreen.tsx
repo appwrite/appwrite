@@ -33,6 +33,7 @@ import {
   organizationsQueryOptions,
   organizationQueryOptions,
   organizationPlanQueryOptions,
+  billingPlansQueryOptions,
 } from '@/lib/react-query/hooks'
 import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import { deleteProject } from '@/lib/react-query/hooks/projects'
@@ -67,6 +68,7 @@ import {
 } from './change-plan/OrganizationSetupProgress'
 import { Textarea } from '@/components/ui/textarea'
 import { confirmPayment } from '@/lib/utils/stripe'
+import { isPaymentAuthentication } from '@/lib/billing/addons'
 import {
   compareBillingPlanRefs,
   getBillingPlanDisplayLabel,
@@ -94,6 +96,30 @@ const DOWNGRADE_PROJECT_DELETE_PAGE_SIZE = 100
 
 function usesFreeOrganizationSlot(org: { plan?: string; billingPlanDowngrade?: unknown }) {
   return org.plan === 'free' || !!org.billingPlanDowngrade
+}
+
+function isOrganizationWriteResult(
+  value: unknown,
+): value is Models.Organization {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    typeof (value as { $id?: unknown }).$id === 'string' &&
+    !isPaymentAuthentication(value)
+  )
+}
+
+function catalogPlanForId(
+  queryClient: ReturnType<typeof useQueryClient>,
+  planId: string | undefined,
+): Models.BillingPlan | undefined {
+  if (!planId) return undefined
+  const catalog = queryClient.getQueryData<{
+    plans?: Record<string, Models.BillingPlan>
+  }>(billingPlansQueryOptions().queryKey)
+  return resolveBillingPlanRecord(planId, catalog?.plans) as
+    | Models.BillingPlan
+    | undefined
 }
 
 function getInitialDowngradeProgressPhase({
@@ -144,18 +170,93 @@ export function ChangePlanWizardFullscreen() {
   const isCreateMode = !orgId
   const queryClient = useQueryClient()
   const refreshOrganizationBillingResources = useCallback(
-    async (organizationId: string) => {
+    async (
+      organizationId: string,
+      seedOrganization?: Models.Organization,
+      targetPlanId?: string,
+    ) => {
+      // Drop in-flight org/plan refetches started by mutation onSuccess
+      // (those often still see Free while 3DS / validate is in progress).
+      await Promise.all([
+        queryClient.cancelQueries({
+          queryKey: ['organization', organizationId],
+        }),
+        queryClient.cancelQueries({
+          queryKey: ['organization', 'plan', organizationId],
+        }),
+        queryClient.cancelQueries({
+          queryKey: ['organizations', 'console'],
+        }),
+      ])
+
+      if (seedOrganization?.$id) {
+        queryClient.setQueryData(
+          ['organization', seedOrganization.$id],
+          seedOrganization,
+        )
+      }
+
+      // Member/project limits read this query. Seed from the plan catalog so
+      // seats unlock even if getPlan still returns the previous Free plan.
+      const planId = targetPlanId || seedOrganization?.billingPlan
+      const catalogPlan = catalogPlanForId(queryClient, planId)
+      if (catalogPlan) {
+        queryClient.setQueryData(
+          ['organization', 'plan', organizationId],
+          catalogPlan,
+        )
+      }
+
       // Critical path: always populate/refresh these so the destination org page
       // never mounts without the new org (avoids a bounce back to /upgrade).
       // fetchQuery is required for organization detail after create: refetchQueries
       // is a no-op when that query has never been observed.
-      await Promise.all([
-        queryClient.fetchQuery(organizationsQueryOptions()),
+      const [fetchedOrganization, , fetchedPlan] = await Promise.all([
         queryClient.fetchQuery(organizationQueryOptions(organizationId)),
+        queryClient.fetchQuery(organizationsQueryOptions()),
         queryClient
           .fetchQuery(organizationPlanQueryOptions(organizationId))
-          .catch(() => {}),
+          .catch(() => undefined),
       ])
+
+      // List/get can lag the plan write. Keep the validate/update payload when
+      // it already has the new billingPlan so billing settings doesn't flash Free.
+      if (
+        seedOrganization?.billingPlan &&
+        fetchedOrganization?.billingPlan !== seedOrganization.billingPlan
+      ) {
+        queryClient.setQueryData(
+          ['organization', organizationId],
+          seedOrganization,
+        )
+        queryClient.setQueryData(
+          ['organizations', 'console'],
+          (
+            previous:
+              | { teams?: Array<{ $id: string }>; total?: number }
+              | undefined,
+          ) => {
+            if (!previous?.teams) return previous
+            return {
+              ...previous,
+              teams: previous.teams.map((team) =>
+                team.$id === organizationId
+                  ? { ...team, ...seedOrganization }
+                  : team,
+              ),
+            }
+          },
+        )
+      }
+
+      // getPlan can lag the same way. Keep catalog seats/limits so invite
+      // and member-limit UI unlock without a hard reload.
+      if (catalogPlan && fetchedPlan?.$id !== catalogPlan.$id) {
+        queryClient.setQueryData(
+          ['organization', 'plan', organizationId],
+          catalogPlan,
+        )
+      }
 
       // Supporting billing data: never fail the setup flow if these error.
       await Promise.allSettled([
@@ -397,11 +498,21 @@ export function ChangePlanWizardFullscreen() {
         invites: string[],
       ) => {
         try {
-          await validateOrganizationMutation.mutateAsync({
+          const validatedOrganization =
+            await validateOrganizationMutation.mutateAsync({
+              organizationId,
+              invites,
+            })
+          await refreshOrganizationBillingResources(
             organizationId,
-            invites,
-          })
-          await refreshOrganizationBillingResources(organizationId)
+            isOrganizationWriteResult(validatedOrganization)
+              ? validatedOrganization
+              : undefined,
+            (search?.plan as string | undefined) ||
+              (isOrganizationWriteResult(validatedOrganization)
+                ? validatedOrganization.billingPlan
+                : undefined),
+          )
           toast.success(t('Payment confirmed successfully'))
           navigate({
             to: '/organizations/$orgId/settings/billing',
@@ -936,12 +1047,9 @@ export function ChangePlanWizardFullscreen() {
           clientSecret: resultObj.clientSecret,
           paymentMethod: selectedMethod?.providerMethodId || undefined,
         })
-        // Refresh org + invoice state now that the payment intent has been
-        // authenticated; otherwise subsequent reads see the stale
-        // requires_action state.
-        await queryClient.invalidateQueries({
-          queryKey: ['organization', orgId],
-        })
+        // Don't refetch the org here: it is still Free until validatePayment.
+        // A refetch would cache Free and win a race against the post-validate
+        // refresh (billing settings then keeps showing the Free plan).
         await queryClient.invalidateQueries({
           queryKey: ['invoices', 'organization', orgId],
         })
@@ -953,11 +1061,23 @@ export function ChangePlanWizardFullscreen() {
           prev ? { ...prev, phase: 'activating' } : prev,
         )
       }
-      await validateOrganizationMutation.mutateAsync({
-        organizationId: orgId,
-        invites: [],
-      })
-      await refreshOrganizationBillingResources(orgId)
+      const validatedOrganization =
+        await validateOrganizationMutation.mutateAsync({
+          organizationId: orgId,
+          invites: [],
+        })
+      const seedOrganization = isOrganizationWriteResult(
+        validatedOrganization,
+      )
+        ? validatedOrganization
+        : isOrganizationWriteResult(result)
+          ? result
+          : undefined
+      await refreshOrganizationBillingResources(
+        orgId,
+        seedOrganization,
+        selectedPlan,
+      )
 
       setSetupProgress((prev) =>
         prev ? { ...prev, phase: 'complete' } : prev,
@@ -1086,7 +1206,7 @@ export function ChangePlanWizardFullscreen() {
       setSetupProgress((prev) =>
         prev ? { ...prev, phase: 'updating-plan' } : prev,
       )
-      await updatePlanMutation.mutateAsync({
+      const downgradeResult = await updatePlanMutation.mutateAsync({
         organizationId: orgId,
         billingPlan: selectedPlan,
         paymentMethodId,
@@ -1109,7 +1229,13 @@ export function ChangePlanWizardFullscreen() {
           toPlanId: selectedPlan,
         })
       }
-      await refreshOrganizationBillingResources(orgId)
+      await refreshOrganizationBillingResources(
+        orgId,
+        isOrganizationWriteResult(downgradeResult)
+          ? downgradeResult
+          : undefined,
+        selectedPlan,
+      )
 
       setSetupProgress((prev) =>
         prev ? { ...prev, phase: 'complete' } : prev,
@@ -1211,21 +1337,30 @@ export function ChangePlanWizardFullscreen() {
           clientSecret: resultObj.clientSecret,
           paymentMethod: selectedMethod?.providerMethodId || undefined,
         })
-        await queryClient.invalidateQueries({
-          queryKey: ['organization', createdOrgId],
-        })
       }
 
+      let createdSeedOrganization: Models.Organization | undefined
+      if (isOrganizationWriteResult(result)) {
+        createdSeedOrganization = result
+      }
       if (showActivationStep) {
         setSetupProgress((prev) =>
           prev ? { ...prev, phase: 'activating' } : prev,
         )
-        await validateOrganizationMutation.mutateAsync({
-          organizationId: createdOrgId,
-          invites: [],
-        })
+        const validatedOrganization =
+          await validateOrganizationMutation.mutateAsync({
+            organizationId: createdOrgId,
+            invites: [],
+          })
+        if (isOrganizationWriteResult(validatedOrganization)) {
+          createdSeedOrganization = validatedOrganization
+        }
       }
-      await refreshOrganizationBillingResources(createdOrgId)
+      await refreshOrganizationBillingResources(
+        createdOrgId,
+        createdSeedOrganization,
+        selectedPlan,
+      )
       // Warm the org overview cache before leaving /upgrade so the destination
       // loader is a cache hit and the progress UI is not replaced by a remount
       // of the create form (or a bounce back to /upgrade).

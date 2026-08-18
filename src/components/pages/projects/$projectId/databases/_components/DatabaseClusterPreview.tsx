@@ -56,6 +56,7 @@ const NODE_LABEL_FONT = '500 11px ui-sans-serif, system-ui, sans-serif'
 export type ClusterNodeStatus =
   | 'active'
   | 'provisioning'
+  | 'scaling'
   | 'starting'
   | 'failed'
   | 'pending'
@@ -129,13 +130,10 @@ function normalizeClusterNodeStatus(status?: string | null): ClusterNodeStatus {
     .trim()
     .toLowerCase()
   if (normalized === 'active' || normalized === 'ready') return 'active'
-  if (
-    normalized === 'provisioning' ||
-    normalized === 'scaling' ||
-    normalized === 'restoring'
-  ) {
+  if (normalized === 'provisioning' || normalized === 'restoring') {
     return 'provisioning'
   }
+  if (normalized === 'scaling') return 'scaling'
   if (normalized === 'starting') return 'starting'
   if (
     normalized === 'failed' ||
@@ -155,6 +153,22 @@ function normalizeClusterNodeStatus(status?: string | null): ClusterNodeStatus {
   if (normalized === 'adding') return 'adding'
   if (normalized === 'removing') return 'removing'
   return 'unknown'
+}
+
+/**
+ * Compute-tier scaling keeps the cluster available, so existing nodes should
+ * keep live metrics and only switch the status dot to amber. Leave draft
+ * add/remove and failed states alone.
+ */
+function overlayScalingLifecycle(
+  status: ClusterNodeStatus,
+  lifecycleStatus: ClusterNodeStatus,
+): ClusterNodeStatus {
+  if (lifecycleStatus !== 'scaling') return status
+  if (status === 'adding' || status === 'removing' || status === 'failed') {
+    return status
+  }
+  return 'scaling'
 }
 
 /**
@@ -190,14 +204,20 @@ export function clusterNodeStatusesFromMembers(
   )
 
   const statuses: ClusterNodeStatus[] = [
-    normalizeClusterNodeStatus(primary?.status ?? fallback),
+    overlayScalingLifecycle(
+      normalizeClusterNodeStatus(primary?.status ?? fallback),
+      fallback,
+    ),
   ]
 
   for (let index = 0; index < safeReplicaCount; index += 1) {
     const member = replicas[index]
     statuses.push(
       member
-        ? normalizeClusterNodeStatus(member.status)
+        ? overlayScalingLifecycle(
+            normalizeClusterNodeStatus(member.status),
+            fallback,
+          )
         : 'provisioning',
     )
   }
@@ -231,7 +251,7 @@ export function clusterReplicaChangePreview(
       : null
 
   const resolveLiveStatus = (index: number): ClusterNodeStatus =>
-    liveStatuses?.[index] ?? fallback
+    overlayScalingLifecycle(liveStatuses?.[index] ?? fallback, fallback)
 
   const nodeStatuses: ClusterNodeStatus[] = [resolveLiveStatus(0)]
 
@@ -255,6 +275,7 @@ function clusterNodeStatusDotClass(status: ClusterNodeStatus): string {
     case 'active':
       return 'bg-emerald-500 dark:bg-emerald-400'
     case 'provisioning':
+    case 'scaling':
     case 'starting':
     case 'pending':
     case 'adding':
@@ -277,6 +298,8 @@ function clusterNodeStatusLabel(
       return t('Active')
     case 'provisioning':
       return t('Provisioning')
+    case 'scaling':
+      return t('Scaling')
     case 'starting':
       return t('Starting')
     case 'failed':
@@ -505,6 +528,7 @@ function CompactClusterNode({
   const t = useT()
   const statusLabel = clusterNodeStatusLabel(status, t)
   const isPreviewChange = status === 'adding' || status === 'removing'
+  // Scaling nodes stay available, so keep CPU/memory (or connections) visible.
   const showStatusBody =
     isPreviewChange ||
     status === 'provisioning' ||

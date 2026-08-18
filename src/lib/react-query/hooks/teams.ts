@@ -15,6 +15,7 @@ import { Query } from '@appwrite.io/console'
 import type { Team, TeamMember } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import { hasConsoleImpersonationSessionTarget } from '@/lib/console-impersonation'
+import { hasProjectSpecificRoles } from '@/lib/console-project-roles'
 import { useOrganizations } from './organizations'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 
@@ -141,6 +142,12 @@ export function mapOrganizationMembershipsToTeamMembers(
         role = firstRole as typeof role
       } else if (firstRole === 'owner') role = 'owner'
       else if (firstRole === 'admin') role = 'admin'
+      else if (hasProjectSpecificRoles(m.roles)) {
+        // Project-scoped members have no single org-wide role. The backend
+        // reports them as analyst outside a project, so mirror that here
+        // rather than falling through to the generic 'member'.
+        role = 'analyst'
+      }
     } else if (m.role) {
       const roleValue = m.role
       if (

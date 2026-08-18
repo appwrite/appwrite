@@ -17,8 +17,12 @@ import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType,
 import { DatabaseType, coerceDatabaseType, toSdkDatabaseType } from '@/lib/databases/database-type'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  getActiveProfileId,
+} from '@/lib/console-profiles'
 import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
 import { SERVERLESS_DATABASE_SPEC_ID, isServerlessDatabaseSpecId } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
@@ -30,11 +34,14 @@ import {
   dedicatedDatabaseSourceFromRouteKind,
   dedicatedDatabaseSourceKey,
   POSTGRES_DATABASE_SPECS_SOURCE,
+  MYSQL_DATABASE_SPECS_SOURCE,
   type DedicatedDatabaseSource,
 } from '@/lib/databases/dedicated-database-source'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
+import { ensureConsoleSqlApiStatements } from '@/lib/databases/sql-api-statements'
 import {
   DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
+  coerceTrimmedString,
   shouldPollDedicatedDatabaseStatus,
 } from '@/lib/databases/dedicated-database-status'
 import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
@@ -70,6 +77,14 @@ import {
 } from './constants'
 
 const MERGED_DATABASE_LIST_LIMIT = 500
+
+/**
+ * Cloud exposes `console.listDatabases` (unified list across products).
+ * Self-hosted does not have that endpoint; use TablesDB `list` instead.
+ */
+function hasConsoleUnifiedDatabaseList(): boolean {
+  return getActiveProfileId() !== 'self-hosted'
+}
 
 /**
  * DocumentsDB/VectorsDB endpoints only exist on deployments with the matching
@@ -170,14 +185,21 @@ const DATABASE_LIFECYCLE_FAILED_STATUSES = new Set([
 ])
 
 function isDatabaseLifecycleFailed(status: string | null | undefined): boolean {
-  const normalized = status?.trim().toLowerCase()
+  const normalized = coerceTrimmedString(status).toLowerCase()
   return !!normalized && DATABASE_LIFECYCLE_FAILED_STATUSES.has(normalized)
 }
 
 function isDatabaseLifecycleReady(status: string | null | undefined): boolean {
-  const normalized = status?.trim().toLowerCase()
+  const normalized = coerceTrimmedString(status).toLowerCase()
   return !!normalized && DEDICATED_DATABASE_READY_STATUSES.has(normalized)
 }
+
+/**
+ * Dedicated compute often takes several minutes. 180 attempts with 500ms→3s
+ * backoff covers about 8–9 minutes before the wizard gives up.
+ */
+const CREATED_DATABASE_READY_ATTEMPTS = 180
+const CREATED_DATABASE_WORKSPACE_ATTEMPTS = 90
 
 /** Poll dedicated database status until ready or timeout. */
 export async function waitForDedicatedDatabaseReady(
@@ -186,7 +208,7 @@ export async function waitForDedicatedDatabaseReady(
   source:
     | { type: 'product'; dbKind: DatabaseRouteKind }
     | { type: 'engine'; engine: string },
-  maxAttempts = 60,
+  maxAttempts = CREATED_DATABASE_READY_ATTEMPTS,
 ): Promise<boolean> {
   let intervalMs = 500
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -201,6 +223,16 @@ export async function waitForDedicatedDatabaseReady(
         return false
       }
       if (isDatabaseLifecycleReady(status)) {
+        if (source.type === 'engine' && database) {
+          await ensureConsoleSqlApiStatements(
+            projectId,
+            databaseId,
+            source.engine,
+            database,
+          ).catch(() => {
+            /* Console DDL still retries on first write if this PATCH fails */
+          })
+        }
         return true
       }
     } catch {
@@ -228,7 +260,7 @@ export async function waitForCreatedDatabaseLifecycleReady(
   projectId: string,
   databaseId: string,
   kind: CreatedDatabaseWorkspaceKind,
-  maxAttempts = 60,
+  maxAttempts = CREATED_DATABASE_READY_ATTEMPTS,
 ): Promise<boolean> {
   if (!projectId || !databaseId) return false
 
@@ -341,7 +373,7 @@ export async function waitForCreatedDatabaseWorkspaceReady(
   projectId: string,
   databaseId: string,
   kind: CreatedDatabaseWorkspaceKind,
-  maxAttempts = 40,
+  maxAttempts = CREATED_DATABASE_WORKSPACE_ATTEMPTS,
 ): Promise<boolean> {
   let intervalMs = 500
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -805,7 +837,8 @@ export async function fetchProjectProductDatabases(
 /**
  * Fetch paginated databases via the Console unified list API
  * (`projectSdk.console.listDatabases`), which returns every database across
- * product APIs in a single call.
+ * product APIs in a single call. Self-hosted has no console/databases
+ * endpoint, so the TablesDB list is used instead.
  */
 export async function fetchProjectConsoleDatabases(
   projectId: string,
@@ -818,17 +851,38 @@ export async function fetchProjectConsoleDatabases(
     return { databases: [], total: 0 }
   }
 
+  if (!hasConsoleUnifiedDatabaseList()) {
+    return fetchProjectProductDatabases(
+      projectId,
+      DatabaseType.Tablesdb,
+      page,
+      limit,
+      search,
+      filterQueries,
+    )
+  }
+
   const projectSdk = sdk.forProject(projectId)
-  const searchArg = search?.trim() || undefined
+  const trimmedSearch = search?.trim() || ''
+
+  // Console list has no text `search` param; match name or `$id` in one list call.
+  const searchQueries = trimmedSearch
+    ? [
+        Query.or([
+          Query.contains('name', trimmedSearch),
+          Query.startsWith('$id', trimmedSearch),
+        ]),
+      ]
+    : []
+
   const queries = [
     ...(filterQueries ?? []),
-    ...(searchArg ? [Query.contains('name', searchArg)] : []),
+    ...searchQueries,
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  // Same `/console/databases` list path used by All Databases.
   const response = await projectSdk.console.listDatabases({ queries })
 
   const databases = (response.databases ?? []).map((db) =>
@@ -1766,6 +1820,7 @@ export {
   dedicatedDatabaseSourceFromEngine,
   dedicatedDatabaseSourceFromRouteKind,
   POSTGRES_DATABASE_SPECS_SOURCE,
+  MYSQL_DATABASE_SPECS_SOURCE,
 }
 
 /** True when at least one native DB engine (PostgreSQL/MySQL/MongoDB) is available. */
@@ -2315,11 +2370,11 @@ export async function fetchProjectTables(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...buildAttributePrefixSearchQueries(['name', '$id'], search),
     order === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const searchArg = search?.trim() || undefined
 
   const kind = resolveProjectDatabaseType(dbKind)
 
@@ -2328,7 +2383,6 @@ export async function fetchProjectTables(
       const response = await projectSdk.documentsDB.listCollections({
         databaseId,
         queries,
-        search: searchArg,
       })
       return {
         tables: response.collections ?? [],
@@ -2344,7 +2398,6 @@ export async function fetchProjectTables(
       const response = await projectSdk.vectorsDB.listCollections({
         databaseId,
         queries,
-        search: searchArg,
       })
       return {
         tables: response.collections ?? [],
@@ -2360,7 +2413,6 @@ export async function fetchProjectTables(
     response = await projectSdk.tablesDB.listTables({
       databaseId,
       queries,
-      search: searchArg,
     })
   } catch {
     response = { tables: [], total: 0 }
@@ -4072,8 +4124,8 @@ export function productDatabasesQueryOptions(
 }
 
 /**
- * Query options for the Console unified database list
- * (`projectSdk.console.listDatabases`).
+ * Query options for the unified database list. Cloud uses
+ * `projectSdk.console.listDatabases`; self-hosted uses TablesDB `list`.
  */
 export function consoleDatabasesQueryOptions(
   projectId: string | null | undefined,
@@ -4664,7 +4716,8 @@ export function useProjectProductDatabases(
 }
 
 /**
- * Hook to fetch the Console unified database list for a project.
+ * Hook to fetch the unified database list for a project (console.listDatabases
+ * on cloud, TablesDB list on self-hosted).
  */
 export function useProjectConsoleDatabases(
   projectId: string | null | undefined,

@@ -110,6 +110,7 @@ import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
+import { Route as ApiDebugIpRouteImport } from './routes/_api/debug.ip'
 import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changelog/rss[.]xml'
 import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
@@ -265,6 +266,7 @@ import { Route as PublicProjectsProjectIdFunctionsFunctionIdSecurityRouteImport 
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdExecutionsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.executions'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId'
@@ -296,6 +298,7 @@ import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdIndexRouteI
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.index'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.index'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.index'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.index'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.index'
 import { Route as PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport } from './routes/_public/projects.$projectId.sites.create.templates.$template'
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.runtime'
@@ -326,6 +329,15 @@ import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRouteIm
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.connections'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.connect'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.backups'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.visualizer'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.sql'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.roles'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.monitor'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.enums'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.connections'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.connect'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.backups'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.visualizer'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings'
@@ -347,6 +359,7 @@ import { Route as PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport } fr
 import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments.$deploymentId.index'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.deployments.$deploymentId.index'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.index'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.index'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.index'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.overview.index'
 import { Route as PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRouteImport } from './routes/_public/projects.$projectId.sites.create.repositories.$installationId.$repositoryId'
@@ -358,6 +371,13 @@ import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsNetw
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.maintenance'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.extensions'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.compute'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.storage'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.replication'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.pitr'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.network'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.maintenance'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.compute'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.specification'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.security'
@@ -370,6 +390,11 @@ import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableI
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.rows'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.indexes'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.columns'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.settings'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.security'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.rows'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.indexes'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.columns'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.visualizer'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.settings'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.security'
@@ -908,6 +933,11 @@ const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
 const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
   id: '/_api/generator/cover',
   path: '/generator/cover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDebugIpRoute = ApiDebugIpRouteImport.update({
+  id: '/_api/debug/ip',
+  path: '/debug/ip',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChangelogRssDotxmlRoute = ApiChangelogRssDotxmlRouteImport.update({
@@ -1830,6 +1860,12 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute =
     path: '/postgres/$databaseId',
     getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
   } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport.update({
+    id: '/mysql/$databaseId',
+    path: '/mysql/$databaseId',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
+  } as any)
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute =
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport.update({
     id: '/$dbKind/$databaseId',
@@ -2019,6 +2055,12 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute =
     path: '/',
     getParentRoute: () =>
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
   } as any)
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute =
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRouteImport.update({
@@ -2232,6 +2274,60 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute =
     getParentRoute: () =>
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
   } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRouteImport.update({
+    id: '/visualizer',
+    path: '/visualizer',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRouteImport.update({
+    id: '/sql',
+    path: '/sql',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRouteImport.update({
+    id: '/roles',
+    path: '/roles',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport.update({
+    id: '/monitor',
+    path: '/monitor',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRouteImport.update({
+    id: '/enums',
+    path: '/enums',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRouteImport.update({
+    id: '/connect',
+    path: '/connect',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRouteImport.update({
+    id: '/backups',
+    path: '/backups',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRoute =
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRouteImport.update({
     id: '/visualizer',
@@ -2372,6 +2468,15 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRoute =
         PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
     } as any,
   )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRouteImport.update(
+    {
+      id: '/',
+      path: '/',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute =
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport.update(
     {
@@ -2468,6 +2573,69 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRoute =
       path: '/compute',
       getParentRoute: () =>
         PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteImport.update(
+    {
+      id: '/tables/$tableId',
+      path: '/tables/$tableId',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRouteImport.update(
+    {
+      id: '/storage',
+      path: '/storage',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRouteImport.update(
+    {
+      id: '/replication',
+      path: '/replication',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRouteImport.update(
+    {
+      id: '/pitr',
+      path: '/pitr',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRouteImport.update(
+    {
+      id: '/network',
+      path: '/network',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRouteImport.update(
+    {
+      id: '/maintenance',
+      path: '/maintenance',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRouteImport.update(
+    {
+      id: '/compute',
+      path: '/compute',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
     } as any,
   )
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute =
@@ -2576,6 +2744,51 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRout
       path: '/columns',
       getParentRoute: () =>
         PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRouteImport.update(
+    {
+      id: '/settings',
+      path: '/settings',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRouteImport.update(
+    {
+      id: '/security',
+      path: '/security',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRouteImport.update(
+    {
+      id: '/rows',
+      path: '/rows',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRouteImport.update(
+    {
+      id: '/indexes',
+      path: '/indexes',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRouteImport.update(
+    {
+      id: '/columns',
+      path: '/columns',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
     } as any,
   )
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRoute =
@@ -2855,6 +3068,7 @@ export interface FileRoutesByFullPath {
   '/generator/': typeof GeneratorIndexRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
+  '/debug/ip': typeof ApiDebugIpRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
@@ -3027,6 +3241,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
   '/projects/$projectId/auth/users/$userId': typeof PublicProjectsProjectIdAuthUsersUserIdRouteWithChildren
   '/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren
+  '/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren
   '/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteWithChildren
   '/projects/$projectId/functions/$functionId/domains': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteWithChildren
   '/projects/$projectId/functions/$functionId/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute
@@ -3089,6 +3304,15 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteWithChildren
   '/projects/$projectId/databases/$dbKind/$databaseId/tables': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteWithChildren
   '/projects/$projectId/databases/$dbKind/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRoute
+  '/projects/$projectId/databases/mysql/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute
+  '/projects/$projectId/databases/mysql/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute
+  '/projects/$projectId/databases/mysql/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute
+  '/projects/$projectId/databases/mysql/$databaseId/enums': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute
+  '/projects/$projectId/databases/mysql/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute
+  '/projects/$projectId/databases/mysql/$databaseId/roles': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteWithChildren
+  '/projects/$projectId/databases/mysql/$databaseId/sql': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute
+  '/projects/$projectId/databases/mysql/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRoute
   '/projects/$projectId/databases/postgres/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute
   '/projects/$projectId/databases/postgres/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute
   '/projects/$projectId/databases/postgres/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute
@@ -3119,6 +3343,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
   '/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
+  '/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
   '/projects/$projectId/functions/$functionId/domains/': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute
   '/projects/$projectId/functions/$functionId/settings/': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute
@@ -3132,6 +3357,13 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteWithChildren
+  '/projects/$projectId/databases/mysql/$databaseId/settings/compute': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/maintenance': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/network': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/pitr': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/storage': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteWithChildren
   '/projects/$projectId/databases/postgres/$databaseId/settings/compute': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings/extensions': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings/maintenance': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRoute
@@ -3143,6 +3375,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId': typeof PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/overview': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRoute
   '/projects/$projectId/functions/$functionId/deployments/$deploymentId': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
   '/projects/$projectId/sites/$siteId/deployments/$deploymentId/': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute
@@ -3170,6 +3403,11 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute
@@ -3234,6 +3472,7 @@ export interface FileRoutesByTo {
   '/generator': typeof GeneratorIndexRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
+  '/debug/ip': typeof ApiDebugIpRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
@@ -3428,6 +3667,14 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/$dbKind/$databaseId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteWithChildren
   '/projects/$projectId/databases/$dbKind/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRoute
+  '/projects/$projectId/databases/mysql/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute
+  '/projects/$projectId/databases/mysql/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute
+  '/projects/$projectId/databases/mysql/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute
+  '/projects/$projectId/databases/mysql/$databaseId/enums': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute
+  '/projects/$projectId/databases/mysql/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute
+  '/projects/$projectId/databases/mysql/$databaseId/roles': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute
+  '/projects/$projectId/databases/mysql/$databaseId/sql': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute
+  '/projects/$projectId/databases/mysql/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRoute
   '/projects/$projectId/databases/postgres/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute
   '/projects/$projectId/databases/postgres/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute
   '/projects/$projectId/databases/postgres/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute
@@ -3456,6 +3703,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
   '/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
   '/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
+  '/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
   '/projects/$projectId/functions/$functionId/domains': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute
   '/projects/$projectId/functions/$functionId/settings': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute
@@ -3467,6 +3715,13 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/compute': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/maintenance': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/network': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/pitr': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings/storage': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteWithChildren
   '/projects/$projectId/databases/postgres/$databaseId/settings/compute': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings/extensions': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings/maintenance': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRoute
@@ -3478,6 +3733,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId': typeof PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/overview': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute
+  '/projects/$projectId/databases/mysql/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRoute
   '/projects/$projectId/functions/$functionId/deployments/$deploymentId': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
   '/projects/$projectId/sites/$siteId/deployments/$deploymentId': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute
@@ -3505,6 +3761,11 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRoute
+  '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute
@@ -3578,6 +3839,7 @@ export interface FileRoutesById {
   '/generator/': typeof GeneratorIndexRoute
   '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/_api/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
+  '/_api/debug/ip': typeof ApiDebugIpRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
@@ -3750,6 +4012,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
   '/_public/projects/$projectId/auth/users/$userId': typeof PublicProjectsProjectIdAuthUsersUserIdRouteWithChildren
   '/_public/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren
+  '/_public/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren
   '/_public/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteWithChildren
   '/_public/projects/$projectId/functions/$functionId/domains': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteWithChildren
   '/_public/projects/$projectId/functions/$functionId/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute
@@ -3812,6 +4075,15 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteWithChildren
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteWithChildren
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/enums': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/roles': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteWithChildren
+  '/_public/projects/$projectId/databases/mysql/$databaseId/sql': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute
@@ -3842,6 +4114,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
   '/_public/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
   '/_public/projects/$projectId/functions/$functionId/domains/': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute
   '/_public/projects/$projectId/functions/$functionId/settings/': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute
@@ -3855,6 +4128,13 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteWithChildren
+  '/_public/projects/$projectId/databases/mysql/$databaseId/settings/compute': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/settings/maintenance': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/settings/network': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/settings/pitr': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/settings/storage': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteWithChildren
   '/_public/projects/$projectId/databases/postgres/$databaseId/settings/compute': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/settings/extensions': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/settings/maintenance': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRoute
@@ -3866,6 +4146,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/create/repositories/$installationId/$repositoryId': typeof PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/overview/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/settings/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/settings/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRoute
   '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
   '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId/': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute
@@ -3893,6 +4174,11 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRoute
+  '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute
@@ -3963,6 +4249,7 @@ export interface FileRouteTypes {
     | '/generator/'
     | '/blog/rss.xml'
     | '/changelog/rss.xml'
+    | '/debug/ip'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
@@ -4135,6 +4422,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/teams/$teamId'
     | '/projects/$projectId/auth/users/$userId'
     | '/projects/$projectId/databases/$dbKind/$databaseId'
+    | '/projects/$projectId/databases/mysql/$databaseId'
     | '/projects/$projectId/databases/postgres/$databaseId'
     | '/projects/$projectId/functions/$functionId/domains'
     | '/projects/$projectId/functions/$functionId/executions'
@@ -4197,6 +4485,15 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables'
     | '/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
+    | '/projects/$projectId/databases/mysql/$databaseId/backups'
+    | '/projects/$projectId/databases/mysql/$databaseId/connect'
+    | '/projects/$projectId/databases/mysql/$databaseId/connections'
+    | '/projects/$projectId/databases/mysql/$databaseId/enums'
+    | '/projects/$projectId/databases/mysql/$databaseId/monitor'
+    | '/projects/$projectId/databases/mysql/$databaseId/roles'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings'
+    | '/projects/$projectId/databases/mysql/$databaseId/sql'
+    | '/projects/$projectId/databases/mysql/$databaseId/visualizer'
     | '/projects/$projectId/databases/postgres/$databaseId/backups'
     | '/projects/$projectId/databases/postgres/$databaseId/connect'
     | '/projects/$projectId/databases/postgres/$databaseId/connections'
@@ -4227,6 +4524,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/settings/runtime'
     | '/projects/$projectId/sites/create/templates/$template'
     | '/projects/$projectId/databases/$dbKind/$databaseId/'
+    | '/projects/$projectId/databases/mysql/$databaseId/'
     | '/projects/$projectId/databases/postgres/$databaseId/'
     | '/projects/$projectId/functions/$functionId/domains/'
     | '/projects/$projectId/functions/$functionId/settings/'
@@ -4240,6 +4538,13 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/compute'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/maintenance'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/network'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/pitr'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/replication'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/storage'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId'
     | '/projects/$projectId/databases/postgres/$databaseId/settings/compute'
     | '/projects/$projectId/databases/postgres/$databaseId/settings/extensions'
     | '/projects/$projectId/databases/postgres/$databaseId/settings/maintenance'
@@ -4251,6 +4556,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId'
     | '/projects/$projectId/databases/$dbKind/$databaseId/overview'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/'
     | '/projects/$projectId/databases/postgres/$databaseId/settings/'
     | '/projects/$projectId/functions/$functionId/deployments/$deploymentId'
     | '/projects/$projectId/sites/$siteId/deployments/$deploymentId/'
@@ -4278,6 +4584,11 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
@@ -4342,6 +4653,7 @@ export interface FileRouteTypes {
     | '/generator'
     | '/blog/rss.xml'
     | '/changelog/rss.xml'
+    | '/debug/ip'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
@@ -4536,6 +4848,14 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables'
     | '/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
+    | '/projects/$projectId/databases/mysql/$databaseId/backups'
+    | '/projects/$projectId/databases/mysql/$databaseId/connect'
+    | '/projects/$projectId/databases/mysql/$databaseId/connections'
+    | '/projects/$projectId/databases/mysql/$databaseId/enums'
+    | '/projects/$projectId/databases/mysql/$databaseId/monitor'
+    | '/projects/$projectId/databases/mysql/$databaseId/roles'
+    | '/projects/$projectId/databases/mysql/$databaseId/sql'
+    | '/projects/$projectId/databases/mysql/$databaseId/visualizer'
     | '/projects/$projectId/databases/postgres/$databaseId/backups'
     | '/projects/$projectId/databases/postgres/$databaseId/connect'
     | '/projects/$projectId/databases/postgres/$databaseId/connections'
@@ -4564,6 +4884,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/settings/runtime'
     | '/projects/$projectId/sites/create/templates/$template'
     | '/projects/$projectId/databases/$dbKind/$databaseId'
+    | '/projects/$projectId/databases/mysql/$databaseId'
     | '/projects/$projectId/databases/postgres/$databaseId'
     | '/projects/$projectId/functions/$functionId/domains'
     | '/projects/$projectId/functions/$functionId/settings'
@@ -4575,6 +4896,13 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/compute'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/maintenance'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/network'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/pitr'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/replication'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings/storage'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId'
     | '/projects/$projectId/databases/postgres/$databaseId/settings/compute'
     | '/projects/$projectId/databases/postgres/$databaseId/settings/extensions'
     | '/projects/$projectId/databases/postgres/$databaseId/settings/maintenance'
@@ -4586,6 +4914,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId'
     | '/projects/$projectId/databases/$dbKind/$databaseId/overview'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings'
+    | '/projects/$projectId/databases/mysql/$databaseId/settings'
     | '/projects/$projectId/databases/postgres/$databaseId/settings'
     | '/projects/$projectId/functions/$functionId/deployments/$deploymentId'
     | '/projects/$projectId/sites/$siteId/deployments/$deploymentId'
@@ -4613,6 +4942,11 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security'
+    | '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
@@ -4685,6 +5019,7 @@ export interface FileRouteTypes {
     | '/generator/'
     | '/_api/blog/rss.xml'
     | '/_api/changelog/rss.xml'
+    | '/_api/debug/ip'
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
@@ -4857,6 +5192,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/auth/teams/$teamId'
     | '/_public/projects/$projectId/auth/users/$userId'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId'
     | '/_public/projects/$projectId/databases/postgres/$databaseId'
     | '/_public/projects/$projectId/functions/$functionId/domains'
     | '/_public/projects/$projectId/functions/$functionId/executions'
@@ -4919,6 +5255,15 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/backups'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/connect'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/connections'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/enums'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/monitor'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/roles'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/settings'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/sql'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/visualizer'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/backups'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/connect'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/connections'
@@ -4949,6 +5294,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/settings/runtime'
     | '/_public/projects/$projectId/sites/create/templates/$template'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/'
     | '/_public/projects/$projectId/functions/$functionId/domains/'
     | '/_public/projects/$projectId/functions/$functionId/settings/'
@@ -4962,6 +5308,13 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/settings/compute'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/settings/maintenance'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/settings/network'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/settings/pitr'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/settings/replication'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/settings/storage'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/settings/compute'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/settings/extensions'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/settings/maintenance'
@@ -4973,6 +5326,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/create/repositories/$installationId/$repositoryId'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/overview/'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/settings/'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/settings/'
     | '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
     | '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId/'
@@ -5000,6 +5354,11 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security'
+    | '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
@@ -5034,6 +5393,7 @@ export interface RootRouteChildren {
   LlmsTxtRoute: typeof LlmsTxtRoute
   ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
   ApiChangelogRssDotxmlRoute: typeof ApiChangelogRssDotxmlRoute
+  ApiDebugIpRoute: typeof ApiDebugIpRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
@@ -5752,6 +6112,13 @@ declare module '@tanstack/react-router' {
       path: '/generator/cover'
       fullPath: '/generator/cover'
       preLoaderRoute: typeof ApiGeneratorCoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/debug/ip': {
+      id: '/_api/debug/ip'
+      path: '/debug/ip'
+      fullPath: '/debug/ip'
+      preLoaderRoute: typeof ApiDebugIpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/changelog/rss.xml': {
@@ -6839,6 +7206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
     }
+    '/_public/projects/$projectId/databases/mysql/$databaseId': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId'
+      path: '/mysql/$databaseId'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
+    }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId'
       path: '/$dbKind/$databaseId'
@@ -7056,6 +7430,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
     }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/'
+      path: '/'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/'
       path: '/'
@@ -7266,6 +7647,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
     }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/visualizer': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/visualizer'
+      path: '/visualizer'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/visualizer'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/sql': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/sql'
+      path: '/sql'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/sql'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/roles': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/roles'
+      path: '/roles'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/roles'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/monitor': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/monitor'
+      path: '/monitor'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/monitor'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/enums': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/enums'
+      path: '/enums'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/enums'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/connections': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/connections'
+      path: '/connections'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/connections'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/connect': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/connect'
+      path: '/connect'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/connect'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/backups': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/backups'
+      path: '/backups'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/backups'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/visualizer': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
       path: '/visualizer'
@@ -7413,6 +7857,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
     }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/'
+      path: '/'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/'
       path: '/'
@@ -7489,6 +7940,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/compute'
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId'
+      path: '/tables/$tableId'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/storage': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/storage'
+      path: '/storage'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/storage'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/replication': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/replication'
+      path: '/replication'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/replication'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/pitr': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/pitr'
+      path: '/pitr'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/pitr'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/network': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/network'
+      path: '/network'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/network'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/maintenance': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/maintenance'
+      path: '/maintenance'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/maintenance'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/compute': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/compute'
+      path: '/compute'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/compute'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
     }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
@@ -7573,6 +8073,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security'
+      path: '/security'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows'
+      path: '/rows'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes'
+      path: '/indexes'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns'
+      path: '/columns'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
     }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer'
@@ -8574,6 +9109,111 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren =
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteChildren,
   )
 
+interface PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteChildren {
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute
+}
+
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteChildren: PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteChildren =
+  {
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute,
+  }
+
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteWithChildren =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute._addFileChildren(
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteChildren,
+  )
+
+interface PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteChildren {
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRoute
+}
+
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteChildren: PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteChildren =
+  {
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRoute,
+  }
+
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteWithChildren =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute._addFileChildren(
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteChildren,
+  )
+
+interface PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteChildren {
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteWithChildren
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteWithChildren
+}
+
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteChildren: PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteChildren =
+  {
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteWithChildren,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteWithChildren,
+  }
+
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute._addFileChildren(
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteChildren,
+  )
+
 interface PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteChildren {
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRoute
@@ -8690,6 +9330,7 @@ interface PublicProjectsProjectIdDatabasesRouteChildren {
   PublicProjectsProjectIdDatabasesCreateRoute: typeof PublicProjectsProjectIdDatabasesCreateRoute
   PublicProjectsProjectIdDatabasesIndexRoute: typeof PublicProjectsProjectIdDatabasesIndexRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteWithChildren
 }
 
@@ -8703,6 +9344,8 @@ const PublicProjectsProjectIdDatabasesRouteChildren: PublicProjectsProjectIdData
       PublicProjectsProjectIdDatabasesIndexRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute:
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren,
+    PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute:
+      PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren,
     PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute:
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteWithChildren,
   }
@@ -9477,6 +10120,7 @@ const rootRouteChildren: RootRouteChildren = {
   LlmsTxtRoute: LlmsTxtRoute,
   ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,
   ApiChangelogRssDotxmlRoute: ApiChangelogRssDotxmlRoute,
+  ApiDebugIpRoute: ApiDebugIpRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,

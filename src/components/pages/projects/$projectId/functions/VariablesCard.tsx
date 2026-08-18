@@ -44,7 +44,7 @@ export function FunctionVariablesCard({
     <VariablesSettingsCard
       title={t('Variables')}
       description={t(
-        'Set the environment variables or secret keys that will be passed to this function.',
+        'Configure environment variables for your function. Function-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this function.',
       )}
       variables={variables}
       total={total}
@@ -62,6 +62,7 @@ export function FunctionVariablesCard({
       }}
       itemLabel="variables"
       projectVariableKeysForWarning={projectVariableKeysForWarning}
+      projectVariablesProjectId={projectId}
     />
   )
 }

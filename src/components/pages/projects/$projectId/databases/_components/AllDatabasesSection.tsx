@@ -15,6 +15,7 @@ import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   dedicatedDatabaseHomeLink,
   isDatabaseRouteKind,
+  isDatabaseTypeFeatureEnabled,
   isNativeDedicatedDatabase,
   productDatabaseListLink,
   type DatabaseRouteKind,
@@ -38,6 +39,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   RESOURCE_CARD_GRID_CLASSNAME,
   RESOURCE_CARD_INTERACTIVE_CLASSNAME,
@@ -65,6 +71,7 @@ import {
   type ResolveDatabaseComputeLabelOptions,
 } from '@/lib/databases/database-compute'
 import { engineFromDatabaseTypeValue } from '@/lib/databases/database-type'
+import { DEDICATED_FEATURE_UNAVAILABLE } from '@/lib/databases/dedicated-engine'
 import { mapDedicatedDatabaseSpecifications } from '@/lib/database-specs'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
@@ -95,6 +102,13 @@ function databaseComputeHints(db: DatabaseWithBackup) {
     replicas: db.replicas,
     specification: db.specification,
   }
+}
+
+function isListedDatabaseTypeUnavailable(
+  db: Pick<DatabaseWithBackup, 'apiType' | 'databaseType'>,
+  features: Parameters<typeof isDatabaseTypeFeatureEnabled>[1],
+): boolean {
+  return !isDatabaseTypeFeatureEnabled(db.apiType ?? db.databaseType, features)
 }
 
 /**
@@ -182,7 +196,97 @@ function AllDatabasesGridCardShell({
   computeLabelOptions?: ResolveDatabaseComputeLabelOptions
 }) {
   const t = useT()
+  const { features } = useConsoleProfile()
   const cardLink = databaseCardLink(projectId, db, dedicated)
+  const computeLabel = resolveDatabaseComputeLabel(
+    databaseComputeHints(db),
+    dedicated,
+    t,
+    computeLabelOptions,
+  )
+  const showFooter = Boolean(computeLabel || connectionsLabel)
+  const typeUnavailable = isListedDatabaseTypeUnavailable(db, features)
+  const appearDisabled = typeUnavailable || db.enabled === false
+
+  const card = (
+    <div
+      className={cn(
+        RESOURCE_CARD_PADDED_CLASSNAME,
+        typeUnavailable
+          ? 'cursor-not-allowed opacity-60'
+          : RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+        showFooter && 'pb-0',
+      )}
+    >
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0 overflow-hidden">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <h3 className="truncate text-[14px] font-medium text-foreground">
+              {db.name}
+            </h3>
+            {shouldShowNoBackupWarning(hasBackupPolicy, showBackups) ? (
+              <NoBackupPoliciesWarningIcon />
+            ) : null}
+            <DedicatedDatabaseStatusBadge
+              status={dedicated?.status ?? db.status}
+              onlyWhenNotReady
+            />
+            {appearDisabled ? (
+              <Badge
+                variant="error"
+                className="text-[10px] font-medium shrink-0"
+              >
+                {t('Disabled')}
+              </Badge>
+            ) : null}
+          </div>
+          <div className="mt-1.5">
+            <CopyableId id={db.$id} size="xs" maxWidth={120} />
+          </div>
+        </div>
+        <DatabaseTypeBadge
+          apiType={db.apiType ?? db.databaseType}
+          engine={dedicated?.engine}
+          product={dedicated?.api}
+          className="shrink-0"
+        />
+      </div>
+
+      {midContent}
+
+      {showFooter ? (
+        <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
+            {computeLabel ? (
+              <span className="truncate text-muted-foreground">
+                {computeLabel}
+              </span>
+            ) : null}
+            {connectionsLabel ? (
+              <span className="truncate tabular-nums text-muted-foreground">
+                {connectionsLabel}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+
+  const cardBody = typeUnavailable ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="block min-w-0">{card}</div>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs text-[12px]">
+        {t(DEDICATED_FEATURE_UNAVAILABLE)}
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    <Link {...cardLink} className="block min-w-0">
+      {card}
+    </Link>
+  )
 
   return (
     <DatabaseContextMenu
@@ -196,66 +300,7 @@ function AllDatabasesGridCardShell({
       showMonitor={showMonitor}
       showBackups={showBackups}
     >
-      <Link {...cardLink} className="block min-w-0">
-        <div
-          className={cn(
-            RESOURCE_CARD_PADDED_CLASSNAME,
-            RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-            'pb-0',
-          )}
-        >
-          <div className="min-w-0 overflow-hidden">
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-              <h3 className="truncate text-[14px] font-medium text-foreground">
-                {db.name}
-              </h3>
-              {shouldShowNoBackupWarning(hasBackupPolicy, showBackups) ? (
-                <NoBackupPoliciesWarningIcon />
-              ) : null}
-              <DedicatedDatabaseStatusBadge
-                status={dedicated?.status ?? db.status}
-                onlyWhenNotReady
-              />
-              {db.enabled === false ? (
-                <Badge
-                  variant="error"
-                  className="text-[10px] font-medium shrink-0"
-                >
-                  {t('Disabled')}
-                </Badge>
-              ) : null}
-            </div>
-            <div className="mt-1.5">
-              <CopyableId id={db.$id} size="xs" maxWidth={120} />
-            </div>
-          </div>
-
-          {midContent}
-
-          <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
-            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
-              <DatabaseTypeBadge
-                apiType={db.apiType ?? db.databaseType}
-                engine={dedicated?.engine}
-                product={dedicated?.api}
-              />
-              <span className="truncate text-muted-foreground">
-                {resolveDatabaseComputeLabel(
-                  databaseComputeHints(db),
-                  dedicated,
-                  t,
-                  computeLabelOptions,
-                )}
-              </span>
-              {connectionsLabel ? (
-                <span className="truncate tabular-nums text-muted-foreground">
-                  {connectionsLabel}
-                </span>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </Link>
+      {cardBody}
     </DatabaseContextMenu>
   )
 }
@@ -505,8 +550,9 @@ export function AllDatabasesSection({
         specificationsData?.specifications,
       ),
       rawSpecifications: specificationsData?.specifications ?? null,
+      unspecifiedLabel: features.dedicatedDbsSupport ? undefined : '',
     }),
-    [specificationsData?.specifications],
+    [features.dedicatedDbsSupport, specificationsData?.specifications],
   )
 
   const listedDedicatedById = useMemo(() => {
@@ -709,39 +755,66 @@ export function AllDatabasesSection({
                 <TableBody>
                   {databases.map((db) => {
                     const dedicated = dedicatedById.get(db.$id)
+                    const typeUnavailable = isListedDatabaseTypeUnavailable(
+                      db,
+                      features,
+                    )
+                    const appearDisabled =
+                      typeUnavailable || db.enabled === false
+                    const nameContent = (
+                      <>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
+                            {db.name}
+                          </p>
+                          {shouldShowNoBackupWarning(
+                            resolveHasBackupPolicy(
+                              db,
+                              dedicated,
+                              nativeHasBackupPolicyById,
+                            ),
+                            showBackups,
+                          ) ? (
+                            <NoBackupPoliciesWarningIcon />
+                          ) : null}
+                        </div>
+                        <div className="mt-0.5">
+                          <CopyableId id={db.$id} size="xs" />
+                        </div>
+                      </>
+                    )
                     return (
                     <TableRow
                       key={db.$id}
-                      className="cursor-pointer border-b border-border/50 hover:bg-muted/30"
+                      className={cn(
+                        'border-b border-border/50',
+                        typeUnavailable
+                          ? 'cursor-not-allowed opacity-60'
+                          : 'cursor-pointer hover:bg-muted/30',
+                      )}
                     >
                       <TableCell className="px-4 py-3">
-                        <Link
-                          {...databaseCardLink(
-                            projectId,
-                            db,
-                            dedicated,
-                          )}
-                          className="block min-w-0 group"
-                        >
-                          <div className="flex min-w-0 items-center gap-1.5">
-                            <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
-                              {db.name}
-                            </p>
-                            {shouldShowNoBackupWarning(
-                              resolveHasBackupPolicy(
-                                db,
-                                dedicated,
-                                nativeHasBackupPolicyById,
-                              ),
-                              showBackups,
-                            ) ? (
-                              <NoBackupPoliciesWarningIcon />
-                            ) : null}
-                          </div>
-                          <div className="mt-0.5">
-                            <CopyableId id={db.$id} size="xs" />
-                          </div>
-                        </Link>
+                        {typeUnavailable ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="block min-w-0">{nameContent}</div>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs text-[12px]">
+                              {t(DEDICATED_FEATURE_UNAVAILABLE)}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <Link
+                            {...databaseCardLink(
+                              projectId,
+                              db,
+                              dedicated,
+                            )}
+                            className="block min-w-0 group"
+                          >
+                            {nameContent}
+                          </Link>
+                        )}
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <DatabaseTypeBadge
@@ -752,7 +825,8 @@ export function AllDatabasesSection({
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center justify-center">
-                          {(dedicated?.status || db.status) &&
+                          {!appearDisabled &&
+                          (dedicated?.status || db.status) &&
                           !isDedicatedDatabaseReady(
                             dedicated?.status || db.status,
                           ) ? (
@@ -760,7 +834,7 @@ export function AllDatabasesSection({
                               status={dedicated?.status || db.status}
                               className="text-[11px]"
                             />
-                          ) : db.enabled === false ? (
+                          ) : appearDisabled ? (
                             <Badge
                               variant="error"
                               className="text-[11px] font-medium border px-2 py-0.5"

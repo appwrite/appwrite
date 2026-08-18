@@ -179,14 +179,6 @@ export function IndexDrawer({
         }),
       )
 
-      const customRows = new Set<number>()
-      columns.forEach((entry, idx) => {
-        if (entry.column && !presetAttributeKeys.has(entry.column)) {
-          customRows.add(idx)
-        }
-      })
-      setCustomAttributeRowIndexes(customRows)
-
       setFormData({
         key: index.key || '',
         type: (index.type || 'key') as IndexType,
@@ -206,7 +198,18 @@ export function IndexDrawer({
       resetCustomAttributeRows()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, open, presetAttributeKeys])
+  }, [index, open])
+
+  useEffect(() => {
+    if (!index) return
+    const customRows = new Set<number>()
+    ;(index.columns || []).forEach((col, idx) => {
+      if (col && !presetAttributeKeys.has(col)) {
+        customRows.add(idx)
+      }
+    })
+    setCustomAttributeRowIndexes(customRows)
+  }, [index, presetAttributeKeys])
 
   useEffect(() => {
     if (!isEditMode && open) {

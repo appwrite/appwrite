@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { createCompactBytesAxisTickFormatter } from '@/lib/usage/format-metric'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
@@ -316,13 +317,15 @@ export function InboundOutboundUsageChartCard({
                           </p>
                           {showDualSeries ? (
                             <div className="space-y-0.5">
-                              <p className="text-[13px] font-medium text-foreground">
+                              <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                                <ChartSeriesDot color="var(--chart-2)" />
                                 {formatValue(data.inbound)}{' '}
                                 <span className="font-normal text-muted-foreground">
                                   {t('inbound')}
                                 </span>
                               </p>
-                              <p className="text-[13px] font-medium text-foreground">
+                              <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                                <ChartSeriesDot color="var(--chart-brand)" />
                                 {formatValue(data.outbound)}{' '}
                                 <span className="font-normal text-muted-foreground">
                                   {t('outbound')}

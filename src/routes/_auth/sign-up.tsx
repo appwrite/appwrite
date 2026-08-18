@@ -120,15 +120,17 @@ function SignUpPage() {
       email: string
       password: string
       name?: string
+      skipAccountCreate?: boolean
     }) => {
       try {
-        // Create account
-        await sdk.forConsole.account.create({
-          userId: ID.unique(),
-          email: data.email,
-          password: data.password,
-          name: data.name,
-        })
+        if (!data.skipAccountCreate) {
+          await sdk.forConsole.account.create({
+            userId: ID.unique(),
+            email: data.email,
+            password: data.password,
+            name: data.name,
+          })
+        }
 
         // Create session
         await sdk.forConsole.account.createEmailPasswordSession({
@@ -247,7 +249,12 @@ function SignUpPage() {
       <div className="w-full max-w-sm md:max-w-4xl">
         <SignIn
           mode="sign-up"
-          onSubmit={(data) => signUpMutation.mutate(data)}
+          onSubmit={(data, options) =>
+            signUpMutation.mutate({
+              ...data,
+              skipAccountCreate: options?.skipAccountCreate,
+            })
+          }
           onGitHubLogin={handleGitHubLogin}
           isLoading={signUpMutation.isPending || isOpeningMfa}
           isGitHubLoading={isGitHubLoading}

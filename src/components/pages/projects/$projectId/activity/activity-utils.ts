@@ -61,6 +61,23 @@ export function isRegularUserType(actorType: string | undefined | null): boolean
 }
 
 /**
+ * Whether this audit event was triggered by the Appwrite MCP server.
+ * The MCP server sets `x-sdk-name: mcp` (stored lowercased in `sdk`) and a
+ * `AppwriteMCP/...` user agent. Prefer `sdk`; fall back to user agent for
+ * older rows or clients that only set UA.
+ */
+export function isMcpSdkActivity(
+  event:
+    | Pick<Models.ActivityEvent, 'sdk' | 'userAgent'>
+    | null
+    | undefined,
+): boolean {
+  if (!event) return false
+  if (event.sdk?.trim().toLowerCase() === 'mcp') return true
+  return /^AppwriteMCP(?:\/|\b)/i.test(event.userAgent?.trim() ?? '')
+}
+
+/**
  * Whether this actor has a real human email worth surfacing as the secondary
  * line under their name. End-users do (their auth email); admins do (their
  * console account email). API keys and system actors don't - their `actorEmail`

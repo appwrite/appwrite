@@ -261,7 +261,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Get help from our support team': 'קבלו עזרה מצוות התמיכה שלנו',
   'Get started by creating your first item.':
     'התחילו ביצירת הפריט הראשון שלכם.',
-  'Git organization': 'ארגון Git',
+  'Organization': 'ארגון',
   'Git repository': 'Git repo',
   'GitHub Issues': 'GitHub Issues',
   'GitHub repository': 'GitHub repo',
@@ -502,22 +502,35 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search anything - pages, tabs, settings, resources...':
     'חיפוש בכל מקום - עמודים, לשוניות, הגדרות, משאבים…',
   'Search columns...': 'חיפוש עמודות…',
+  'Search columns by key or ID...': 'חיפוש עמודות לפי מפתח או מזהה…',
   'Search commands and documentation pages...':
     'חיפוש פקודות ועמודי דוקומנטציה…',
   'Search databases...': 'חיפוש מסדי נתונים…',
+  'Search databases by name or ID...': 'חיפוש מסדי נתונים לפי שם או מזהה…',
   'Search documentation...': 'חיפוש בדוקומנטציה...',
   'Search domains...': 'חיפוש דומיינים…',
+  'Search domains by name or ID...': 'חיפוש דומיינים לפי שם או מזהה…',
   'Search files...': 'חיפוש קבצים...',
+  'Search files by name or ID...': 'חיפוש קבצים לפי שם או מזהה…',
   'Search functions...': 'חיפוש פונקציות…',
+  'Search functions by name or ID...': 'חיפוש פונקציות לפי שם או מזהה…',
+  'Search indexes by key or ID...': 'חיפוש אינדקסים לפי מפתח או מזהה…',
   'Search logs...': 'חיפוש בלוגים...',
   'Search operators...': 'חיפוש אופרטורים…',
   'Search projects, settings, members...': 'חיפוש פרויקטים, הגדרות, חברי צוות…',
   'Search projects...': 'חיפוש פרויקטים…',
   'Search providers...': 'חיפוש ספקים…',
+  'Search providers by name or ID...': 'חיפוש ספקים לפי שם או מזהה…',
+  'Search rows by ID...': 'חיפוש שורות לפי מזהה…',
   'Search sites...': 'חיפוש אתרים…',
+  'Search sites by name or ID...': 'חיפוש אתרים לפי שם או מזהה…',
+  'Search tables by name or ID...': 'חיפוש טבלאות לפי שם או מזהה…',
   'Search teams...': 'חיפוש צוותים…',
+  'Search teams by name or ID...': 'חיפוש צוותים לפי שם או מזהה…',
   'Search topics...': 'חיפוש נושאים…',
+  'Search topics by name or ID...': 'חיפוש נושאים לפי שם או מזהה…',
   'Search users...': 'חיפוש משתמשים…',
+  'Search buckets by name or ID...': 'חיפוש באקטים לפי שם או מזהה…',
   'Search query tabs...': 'חיפוש לשוניות שאילתה…',
   'Search repositories...': 'חיפוש repos...',
   'Search scopes...': 'חיפוש הרשאות…',
@@ -687,15 +700,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No executions yet': 'אין הרצות עדיין',
   'Executions will appear here when your function runs.':
     'הרצות יופיעו כאן כשהפונקציה שלכם תרוץ.',
-  'Execution logs are available on Appwrite Cloud':
-    'לוגים של הרצות זמינים ב-Appwrite Cloud',
-  'Self-hosted Appwrite no longer stores execution history. Your functions still run as usual, but their executions, logs, and errors can only be viewed on Appwrite Cloud.':
-    'Appwrite באירוח עצמי כבר לא שומר היסטוריית הרצות. הפונקציות שלכם ממשיכות לרוץ כרגיל, אבל את ההרצות, הלוגים והשגיאות שלהן ניתן לראות רק ב-Appwrite Cloud.',
-  'Site logs are available on Appwrite Cloud':
-    'לוגים של האתר זמינים ב-Appwrite Cloud',
-  'Self-hosted Appwrite no longer stores site request logs. Your site still serves traffic as usual, but its logs and errors can only be viewed on Appwrite Cloud.':
-    'Appwrite באירוח עצמי כבר לא שומר לוגים של בקשות לאתר. האתר שלכם ממשיך להגיש תעבורה כרגיל, אבל את הלוגים והשגיאות שלו ניתן לראות רק ב-Appwrite Cloud.',
-  'Explore Appwrite Cloud': 'גלו את Appwrite Cloud',
   'This scope is on the API key but was not returned in the server scope list.':
     'הרשאה זו נמצאת על מפתח ה-API אך לא הוחזרה ברשימת ההרשאות מהשרת.',
   'Loading rows…': 'טוען שורות…',

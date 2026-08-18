@@ -27,6 +27,7 @@ import {
 } from '@/lib/usage/format-metric'
 import { USAGE_CHART_Y_AXIS_WIDTH } from '../../overview/chart-panel'
 import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -340,11 +341,16 @@ function VolumeTooltip({
             >
               <span
                 className={cn(
-                  'min-w-0 truncate text-[11px] font-medium leading-5 tabular-nums',
+                  'flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-5 tabular-nums',
                   isSelected ? 'text-foreground' : 'text-muted-foreground',
                 )}
               >
-                {typeof p.name === 'string' ? t(p.name) : p.name}
+                {typeof p.color === 'string' ? (
+                  <ChartSeriesDot color={p.color} />
+                ) : null}
+                <span className="min-w-0 truncate">
+                  {typeof p.name === 'string' ? t(p.name) : p.name}
+                </span>
               </span>
               <span
                 className={cn(

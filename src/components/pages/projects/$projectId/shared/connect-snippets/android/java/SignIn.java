@@ -45,14 +45,16 @@ public final class SignIn {
       error.setVisibility(View.GONE);
 
       Account account = new Account(AppwriteClient.get(context));
-      account.createEmailPasswordSession(emailValue, passwordValue,
-          new CoroutineCallback<>((session, e) -> layout.post(() -> {
-            if (e == null) {
-              onSignedIn.run();
-            } else {
-              showError(error, e, "Sign in failed");
-            }
-          })));
+      try {
+        account.createEmailPasswordSession(emailValue, passwordValue,
+            new CoroutineCallback<>((session, e) -> layout.post(() -> {
+              if (e == null) {
+                onSignedIn.run();
+              } else {
+                showError(error, e, "Sign in failed");
+              }
+            })));
+      } catch (Exception ignored) {}
     });
 
     TextView hint = new TextView(context);

@@ -1479,6 +1479,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'All columns must have a value and order selected': 'すべての列で値と順序を選択する必要があります',
   'Managed databases built into Appwrite for app data, documents, and AI workloads.': 'アプリデータ、ドキュメント、AI ワークロード向けに Appwrite に組み込まれたマネージドデータベースです。',
   'Dedicated PostgreSQL and MySQL engines for teams that need direct SQL compatibility.': '直接的な SQL 互換性が必要なチーム向けの専用 PostgreSQL および MySQL エンジンです。',
+  'A dedicated PostgreSQL engine for teams that need direct SQL compatibility.': '直接的な SQL 互換性が必要なチーム向けの専用 PostgreSQL エンジンです。',
   'Relational-style database with tables, columns, and indexes. Ideal for structured data and complex queries.': 'テーブル、列、インデックスを備えたリレーショナル形式のデータベースです。構造化データや複雑なクエリに最適です。',
   'Document-based storage with flexible schemas. Store JSON documents and query with filters and full-text search.': '柔軟なスキーマを備えたドキュメントベースのストレージです。JSON ドキュメントを保存し、フィルターや全文検索でクエリできます。',
   'Vector database for embeddings and similarity search. Ideal for semantic search and AI.': '埋め込みと類似検索向けのベクトルデータベースです。セマンティック検索や AI に最適です。',

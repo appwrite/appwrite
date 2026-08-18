@@ -33,7 +33,7 @@ export type ConsoleProfileFeatures = {
   multiTenancy: boolean
   /** Organization role selection (developer, editor, analyst, billing). When false, all members are owners and role UI is hidden. */
   orgRoles: boolean
-  /** Appwrite Cloud system status (status.appwrite.online) */
+  /** Appwrite Cloud system status (status.appwrite.online) */ // pragma: allowlist secret
   systemStatus: boolean
   /** Console account MFA (enable/disable, TOTP, email, SMS, recovery codes) */
   accountMfa: boolean
@@ -49,8 +49,8 @@ export type ConsoleProfileFeatures = {
   orgApiKeys: boolean
   /** In-app AI agent (chat panel, header button, /agent routes, and Agent docs) */
   agent: boolean
-  /** Stored execution history: function execution logs and site request logs. Self-hosted no longer persists execution documents. */
-  executionLogs: boolean
+  /** Console notifications center (header bell and inbox popover) */
+  notifications: boolean
   /** Database backup policies and archives */
   databaseBackups: boolean
   /** Global: dedicated DBs support (wizard + specs). When true, use fullscreen create wizard and show spec upgrade for supported DB types. */
@@ -70,7 +70,7 @@ export type ConsoleProfileFeatures = {
   /**
    * Edge network for Functions/Sites custom domains. When enabled, the CNAME
    * target shown in Add/Verify domain flows is the edge network host
-   * (`appwrite.network`) instead of the project endpoint host.
+   * (`appwrite.network`) instead of the project endpoint host. // pragma: allowlist secret
    */
   edgeNetwork: boolean
   /** Require console user email verification after signup (cloud: redirect to verify-email page; self-hosted: skip). */
@@ -117,7 +117,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   oauth2Server: 'OAuth2 server',
   orgApiKeys: 'Org API keys',
   agent: 'Agent',
-  executionLogs: 'Execution logs',
+  notifications: 'Notifications',
   databaseBackups: 'Database backups',
   dedicatedDbsSupport: 'Dedicated DBs (global)',
   dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
@@ -166,13 +166,13 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauth2Server: true,
       orgApiKeys: false,
       agent: true,
-      executionLogs: true,
+      notifications: false,
       databaseBackups: true,
-      dedicatedDbsSupport: false,
+      dedicatedDbsSupport: true,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
-      nativeDbsPostgres: false,
-      nativeDbsMySQL: false,
+      nativeDbsPostgres: true,
+      nativeDbsMySQL: true,
       nativeDbsMongo: false,
       multiRegion: true,
       edgeNetwork: true,
@@ -209,7 +209,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauth2Server: false,
       orgApiKeys: false,
       agent: false,
-      executionLogs: false,
+      notifications: false,
       databaseBackups: false,
       dedicatedDbsSupport: false,
       dedicatedDbsDocumentsDB: false,
@@ -234,7 +234,7 @@ const VALID_PROFILE_IDS: ConsoleProfileId[] = ['cloud', 'self-hosted']
 function isCloudEndpoint(url: string): boolean {
   try {
     const host = new URL(url).hostname.toLowerCase()
-    return host === 'cloud.appwrite.io' || host.endsWith('.cloud.appwrite.io')
+    return host === 'cloud.appwrite.io' || host.endsWith('.cloud.appwrite.io') // pragma: allowlist secret
   } catch {
     return false
   }
@@ -248,7 +248,7 @@ function detectProfileFromEndpoint(): ConsoleProfileId {
     }
   }
 
-  const envEndpoint = getRuntimeConfig().appwriteEndpoint
+  const envEndpoint = getRuntimeConfig().appwriteEndpoint // pragma: allowlist secret
   if (envEndpoint.trim()) {
     return isCloudEndpoint(envEndpoint) ? 'cloud' : 'self-hosted'
   }
@@ -325,6 +325,7 @@ function migrateStoredProfileFeatures(
     next.agent = next.aiAssistant
   }
   delete next.aiAssistant
+  delete next.executionLogs
   return next
 }
 

@@ -51,27 +51,29 @@ public final class SignUp {
       error.setVisibility(View.GONE);
 
       Account account = new Account(AppwriteClient.get(context));
-      account.create(
-          // ID.unique() from Java: the padding default must be passed.
-          ID.Companion.unique(7),
-          emailValue,
-          passwordValue,
-          // Appwrite rejects an empty name; omit it instead.
-          nameValue.isEmpty() ? null : nameValue,
-          new CoroutineCallback<>((user, e) -> {
-            if (e != null) {
-              layout.post(() -> showError(error, e, "Sign up failed"));
-              return;
-            }
-            account.createEmailPasswordSession(emailValue, passwordValue,
-                new CoroutineCallback<>((session, e2) -> layout.post(() -> {
-                  if (e2 == null) {
-                    onSignedUp.run();
-                  } else {
-                    showError(error, e2, "Sign up failed");
-                  }
-                })));
-          }));
+      try {
+        account.create(
+            ID.Companion.unique(7),
+            emailValue,
+            passwordValue,
+            nameValue.isEmpty() ? null : nameValue,
+            new CoroutineCallback<>((user, e) -> {
+              if (e != null) {
+                layout.post(() -> showError(error, e, "Sign up failed"));
+                return;
+              }
+              try {
+                account.createEmailPasswordSession(emailValue, passwordValue,
+                    new CoroutineCallback<>((session, e2) -> layout.post(() -> {
+                      if (e2 == null) {
+                        onSignedUp.run();
+                      } else {
+                        showError(error, e2, "Sign up failed");
+                      }
+                    })));
+              } catch (Exception ignored) {}
+            }));
+      } catch (Exception ignored) {}
     });
 
     TextView hint = new TextView(context);

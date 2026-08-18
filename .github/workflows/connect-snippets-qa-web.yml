@@ -17,7 +17,8 @@ defaults:
 jobs:
   qa:
     name: ${{ matrix.id }}
-    runs-on: ubuntu-latest
+    # AWS runner via RunsOn; profile defined in .github/runs-on.yml.
+    runs-on: runs-on=${{ github.run_id }}/runner=snippets-qa
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -155,6 +156,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor,
+      # which makes Chrome's sandbox crash on launch ("session not created:
+      # Chrome instance exited" from Maestro's ChromeDriver). GitHub-hosted
+      # images ship with the restriction disabled; the RunsOn AMI keeps the
+      # Ubuntu default, so lift it here.
+      - name: Allow unprivileged user namespaces (Chrome sandbox)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
       - name: Check Appwrite variables
         run: |

@@ -13,11 +13,13 @@ import {
   getActivityCountryCode,
   getActivityCountryDisplayName,
   hasHumanEmail,
+  isMcpSdkActivity,
   userTypeBadge,
 } from '@/components/pages/projects/$projectId/activity/activity-utils'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useCountryLookups } from '@/lib/react-query/hooks'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -399,9 +401,26 @@ export function ActivityLogDrawer({
                           t('Unknown')
                         }
                       />
-                      <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
-                        {formatValue(event.actorName)}
-                      </p>
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
+                          {formatValue(event.actorName)}
+                        </p>
+                        {isMcpSdkActivity(event) ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span
+                                className="inline-flex shrink-0 text-muted-foreground"
+                                aria-label={t('Via MCP')}
+                              >
+                                <McpIcon className="h-3.5 w-3.5" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              {t('Via MCP')}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : null}
+                      </div>
                     </div>
                   </DetailField>
                   <DetailField

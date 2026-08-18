@@ -5,6 +5,7 @@ import {
   activeProjectsQueryOptions,
   consoleTeamQueryOptions,
   pinnedProjectsQueryOptions,
+  organizationProjectScopeQueryOptions,
 } from '@/lib/react-query/hooks'
 import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
@@ -48,6 +49,11 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
         ?.prefs
       const pinnedIds = parsePinnedProjectIds(teamPrefs)
 
+      // Resolved first so the prefetch lands on the key the overview reads.
+      const projectScope = await queryClient
+        .ensureQueryData(organizationProjectScopeQueryOptions(orgId))
+        .catch(() => null)
+
       await Promise.all([
         queryClient.ensureQueryData(
           activeProjectsQueryOptions(
@@ -56,6 +62,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
             projectsLimit,
             '',
             pinnedIds,
+            projectScope ?? null,
           ),
         ),
         queryClient.ensureQueryData(

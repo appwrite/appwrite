@@ -147,10 +147,15 @@ import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 import { DEFAULT_STALE_TIME } from './constants'
 import {
   DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
+  coerceTrimmedString,
   shouldPollDedicatedDatabaseStatus,
 } from '@/lib/databases/dedicated-database-status'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { matchesNativeEngine } from '@/lib/databases/native-database-engines'
+import {
+  ensureConsoleSqlApiStatements,
+  isSqlApiDdlBlockedError,
+} from '@/lib/databases/sql-api-statements'
 
 function isPostgresEngine(engine: string | undefined): boolean {
   return matchesNativeEngine(engine, 'postgres')
@@ -195,12 +200,28 @@ export async function executePostgresDatabaseSql(
   sql: string,
   timeoutSeconds?: number,
 ): Promise<Models.DedicatedDatabaseExecution> {
-  const execution = await sdk.forProject(projectId).postgresql.createExecution({
-    databaseId,
-    sql: wrapPostgresSqlForDisplay(sql),
-    timeoutSeconds,
-  })
-  return normalizePostgresExecutionResult(execution)
+  const run = async () => {
+    const execution = await sdk.forProject(projectId).postgresql.createExecution({
+      databaseId,
+      sql: wrapPostgresSqlForDisplay(sql),
+      timeoutSeconds,
+    })
+    return normalizePostgresExecutionResult(execution)
+  }
+
+  try {
+    return await run()
+  } catch (error) {
+    if (!isSqlApiDdlBlockedError(error)) throw error
+    await ensureConsoleSqlApiStatements(
+      projectId,
+      databaseId,
+      'postgresql',
+    ).catch(() => {
+      /* Retry the statement even if the allow-list PATCH is a no-op */
+    })
+    return await run()
+  }
 }
 
 function parsePostgresCountTotal(
@@ -241,7 +262,9 @@ export async function fetchPostgresSchemasPage(
   ])
 
   const rows = executionResultRows<PostgresSchemaRow>(dataExecution)
-  const schemas = rows.map((row) => row.schema_name).filter(Boolean)
+  const schemas = rows
+    .map((row) => coerceTrimmedString(row.schema_name))
+    .filter(Boolean)
   const total = parsePostgresCountTotal(countExecution, schemas.length)
 
   return {
@@ -1584,6 +1607,19 @@ export function usePostgresDatabase(
   return { database: data ?? null, isLoading, error, refetch, isFetching }
 }
 
+function keepPreviousDataIfQueryPrefixMatches<T>(
+  previousData: T | undefined,
+  previousQuery: { queryKey: readonly unknown[] } | undefined,
+  queryKey: readonly unknown[],
+  prefixLength: number,
+): T | undefined {
+  if (!previousQuery) return undefined
+  for (let index = 0; index < prefixLength; index += 1) {
+    if (previousQuery.queryKey[index] !== queryKey[index]) return undefined
+  }
+  return previousData
+}
+
 export function postgresSidebarSchemasInfiniteQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -1659,6 +1695,11 @@ export function usePostgresSidebarSchemas(
   search: string,
 ) {
   const normalizedSearch = search.trim()
+  const sidebarQueryOptions = postgresSidebarSchemasInfiniteQueryOptions(
+    projectId,
+    databaseId,
+    normalizedSearch,
+  )
   const {
     data,
     isLoading,
@@ -1669,12 +1710,15 @@ export function usePostgresSidebarSchemas(
     fetchNextPage,
     hasNextPage,
   } = useInfiniteQuery({
-    ...postgresSidebarSchemasInfiniteQueryOptions(
-      projectId,
-      databaseId,
-      normalizedSearch,
-    ),
-    placeholderData: keepPreviousData,
+    ...sidebarQueryOptions,
+    // Keep previous pages while searching the same database, never across DBs.
+    placeholderData: (previousData, previousQuery) =>
+      keepPreviousDataIfQueryPrefixMatches(
+        previousData,
+        previousQuery,
+        sidebarQueryOptions.queryKey,
+        5,
+      ),
   })
 
   const schemas = useMemo(
@@ -1703,6 +1747,12 @@ export function usePostgresSidebarTables(
   search: string,
 ) {
   const normalizedSearch = search.trim()
+  const sidebarQueryOptions = postgresSidebarTablesInfiniteQueryOptions(
+    projectId,
+    databaseId,
+    schema,
+    normalizedSearch,
+  )
   const {
     data,
     isLoading,
@@ -1713,13 +1763,15 @@ export function usePostgresSidebarTables(
     fetchNextPage,
     hasNextPage,
   } = useInfiniteQuery({
-    ...postgresSidebarTablesInfiniteQueryOptions(
-      projectId,
-      databaseId,
-      schema,
-      normalizedSearch,
-    ),
-    placeholderData: keepPreviousData,
+    ...sidebarQueryOptions,
+    // Keep previous pages while searching the same schema, never across DBs.
+    placeholderData: (previousData, previousQuery) =>
+      keepPreviousDataIfQueryPrefixMatches(
+        previousData,
+        previousQuery,
+        sidebarQueryOptions.queryKey,
+        6,
+      ),
   })
 
   const tables = useMemo(
@@ -2293,6 +2345,7 @@ export function usePostgresSelectedSchema(
 ) {
   const queryClient = useQueryClient()
   const [selectedSchema, setSelectedSchemaState] = useState<string | null>(null)
+  const [selectionDatabaseId, setSelectionDatabaseId] = useState(databaseId)
   const initializedDatabaseIdRef = useRef<string | null>(null)
 
   const accountPrefs = useMemo(() => {
@@ -2304,6 +2357,12 @@ export function usePostgresSelectedSchema(
       ...(cachedPrefs ?? {}),
     } as Record<string, unknown>
   }, [account?.prefs, queryClient])
+
+  if (selectionDatabaseId !== databaseId) {
+    setSelectionDatabaseId(databaseId)
+    setSelectedSchemaState(null)
+    initializedDatabaseIdRef.current = null
+  }
 
   useEffect(() => {
     if (!databaseId) return
@@ -2318,10 +2377,6 @@ export function usePostgresSelectedSchema(
     setSelectedSchemaState(next)
     initializedDatabaseIdRef.current = databaseId
   }, [accountPrefs, databaseId, knownSchemas])
-
-  useEffect(() => {
-    initializedDatabaseIdRef.current = null
-  }, [databaseId])
 
   useEffect(() => {
     if (selectedSchema || knownSchemas.length === 0) return

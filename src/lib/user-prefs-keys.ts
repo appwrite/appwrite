@@ -19,10 +19,12 @@ import {
   AI_CHAT_CONVERSATIONS_SIDEBAR_DEFAULT_WIDTH_PX,
   clampAIChatConversationsSidebarWidthPx,
   clampCliShellSessionsSidebarWidthPx,
+  clampMysqlSqlEditorHeightPx,
   clampPostgresSqlEditorHeightPx,
   clampTableViewSidebarWidthPx,
   CLI_SHELL_SESSIONS_SIDEBAR_DEFAULT_WIDTH_PX,
   normalizeLegacySidebarWidthPrefValue,
+  MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
 } from '@/lib/resizable-layout'
@@ -861,6 +863,631 @@ export function resolvePostgresSavedQueriesScope(args: {
 }
 
 // ---------------------------------------------------------------------------
+// Databases: MySQL saved SQL queries (account + team prefs, per database)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key prefix for saved MySQL queries.
+ * Full key: `console.mysqlSavedQueries.<databaseId>`
+ * Value: JSON string of SavedMysqlQuery[].
+ */
+export const USER_PREFS_KEY_MYSQL_SAVED_QUERIES_PREFIX =
+  'console.mysqlSavedQueries'
+
+export const MAX_SAVED_MYSQL_QUERIES = 30
+export const MAX_SAVED_MYSQL_QUERY_NAME_LENGTH = 64
+export const MAX_SAVED_MYSQL_QUERY_SQL_CHARS = 48000
+
+export interface SavedMysqlQuery {
+  id: string
+  name: string
+  sql: string
+}
+
+export function getMysqlSavedQueriesKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_MYSQL_SAVED_QUERIES_PREFIX}.${databaseId}`
+}
+
+export function parseMysqlSavedQueries(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): SavedMysqlQuery[] {
+  if (!prefs || !databaseId) return []
+  const key = getMysqlSavedQueriesKey(databaseId)
+  const stored = prefs[key]
+  let raw: unknown
+  if (typeof stored === 'string') {
+    try {
+      raw = JSON.parse(stored)
+    } catch {
+      return []
+    }
+  } else if (Array.isArray(stored)) {
+    raw = stored
+  } else {
+    return []
+  }
+  if (!Array.isArray(raw)) return []
+  return raw
+    .filter(
+      (item): item is SavedMysqlQuery =>
+        item != null &&
+        typeof item === 'object' &&
+        typeof (item as SavedMysqlQuery).id === 'string' &&
+        typeof (item as SavedMysqlQuery).name === 'string' &&
+        typeof (item as SavedMysqlQuery).sql === 'string',
+    )
+    .map((item) => {
+      const query = item as SavedMysqlQuery
+      return {
+        id: query.id,
+        name: String(query.name).slice(0, MAX_SAVED_MYSQL_QUERY_NAME_LENGTH),
+        sql: String(query.sql).slice(0, MAX_SAVED_MYSQL_QUERY_SQL_CHARS),
+      }
+    })
+    .slice(0, MAX_SAVED_MYSQL_QUERIES)
+}
+
+export function buildMysqlSavedQueriesPrefs(
+  databaseId: string,
+  list: SavedMysqlQuery[],
+): UserPrefs {
+  const key = getMysqlSavedQueriesKey(databaseId)
+  return {
+    [key]: JSON.stringify(list.slice(0, MAX_SAVED_MYSQL_QUERIES)),
+  }
+}
+
+/**
+ * Preference key prefix for recent MySQL query runs.
+ * Full key: `console.mysqlQueryHistory.<databaseId>`
+ * Value: JSON string of MysqlQueryHistoryEntry[].
+ */
+export const USER_PREFS_KEY_MYSQL_QUERY_HISTORY_PREFIX =
+  'console.mysqlQueryHistory'
+
+export const MAX_MYSQL_QUERY_HISTORY_ENTRIES = 30
+
+export interface MysqlQueryHistoryEntry {
+  id: string
+  sql: string
+  ranAt: number
+}
+
+export function getMysqlQueryHistoryKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_MYSQL_QUERY_HISTORY_PREFIX}.${databaseId}`
+}
+
+export function parseMysqlQueryHistory(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): MysqlQueryHistoryEntry[] {
+  if (!prefs || !databaseId) return []
+  const key = getMysqlQueryHistoryKey(databaseId)
+  if (typeof prefs[key] !== 'string') return []
+  try {
+    const raw = JSON.parse(prefs[key] as string)
+    if (!Array.isArray(raw)) return []
+    return raw
+      .filter(
+        (item): item is MysqlQueryHistoryEntry =>
+          item != null &&
+          typeof item === 'object' &&
+          typeof (item as MysqlQueryHistoryEntry).id === 'string' &&
+          typeof (item as MysqlQueryHistoryEntry).sql === 'string' &&
+          typeof (item as MysqlQueryHistoryEntry).ranAt === 'number' &&
+          Number.isFinite((item as MysqlQueryHistoryEntry).ranAt),
+      )
+      .map((item) => {
+        const entry = item as MysqlQueryHistoryEntry
+        const sql = String(entry.sql).trim()
+        if (!sql) return null
+        return {
+          id: entry.id,
+          sql: sql.slice(0, MAX_SAVED_MYSQL_QUERY_SQL_CHARS),
+          ranAt: entry.ranAt,
+        }
+      })
+      .filter((entry): entry is MysqlQueryHistoryEntry => entry != null)
+      .slice(0, MAX_MYSQL_QUERY_HISTORY_ENTRIES)
+  } catch {
+    return []
+  }
+}
+
+export function mergeMysqlQueryHistoryIntoPrefs(
+  prefs: UserPrefs,
+  databaseId: string,
+  history: MysqlQueryHistoryEntry[],
+): UserPrefs {
+  const key = getMysqlQueryHistoryKey(databaseId)
+  return {
+    ...prefs,
+    [key]: JSON.stringify(history.slice(0, MAX_MYSQL_QUERY_HISTORY_ENTRIES)),
+  }
+}
+
+export type MysqlSavedQueryScope = 'user' | 'team'
+
+/**
+ * Preference key for the saved-queries scope toggle (For me / For team).
+ * Full key: `console.mysqlSavedQueriesScope.<databaseId>`
+ * Value: `"user"` or `"team"`.
+ */
+export const USER_PREFS_KEY_MYSQL_SAVED_QUERIES_SCOPE_PREFIX =
+  'console.mysqlSavedQueriesScope'
+
+export function getMysqlSavedQueriesScopeKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_MYSQL_SAVED_QUERIES_SCOPE_PREFIX}.${databaseId}`
+}
+
+export function parseMysqlSavedQueriesScope(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): MysqlSavedQueryScope | null {
+  if (!prefs || !databaseId) return null
+  const key = getMysqlSavedQueriesScopeKey(databaseId)
+  const value = prefs[key]
+  if (value === 'user' || value === 'team') return value
+  return null
+}
+
+export function buildMysqlSavedQueriesScopePrefs(
+  databaseId: string,
+  scope: MysqlSavedQueryScope,
+): UserPrefs {
+  return {
+    [getMysqlSavedQueriesScopeKey(databaseId)]: scope,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Databases: MySQL sidebar selected schema (account prefs, per database)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key for the schema shown in the Data sidebar panel.
+ * Full key: `console.mysqlSelectedSchema.<databaseId>`
+ * Value: schema name string (e.g. `"public"`).
+ */
+export const USER_PREFS_KEY_MYSQL_SELECTED_SCHEMA_PREFIX =
+  'console.mysqlSelectedSchema'
+
+export function getMysqlSelectedSchemaKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_MYSQL_SELECTED_SCHEMA_PREFIX}.${databaseId}`
+}
+
+export function parseMysqlSelectedSchema(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): string | null {
+  if (!prefs || !databaseId) return null
+  const key = getMysqlSelectedSchemaKey(databaseId)
+  const value = prefs[key]
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+export function buildMysqlSelectedSchemaPrefs(
+  databaseId: string,
+  schema: string,
+): UserPrefs {
+  return {
+    [getMysqlSelectedSchemaKey(databaseId)]: schema.trim(),
+  }
+}
+
+export function resolveMysqlSelectedSchema(args: {
+  schemas: string[]
+  persisted: string | null
+}): string | null {
+  const { schemas, persisted } = args
+  const normalizedSchemas = schemas
+    .map((schema) => (typeof schema === 'string' ? schema.trim() : ''))
+    .filter((schema) => schema.length > 0)
+  if (persisted) {
+    const trimmed = persisted.trim()
+    if (trimmed) return trimmed
+  }
+  if (normalizedSchemas.length === 0) return null
+
+  const systemSchemas = new Set([
+    'mysql',
+    'information_schema',
+    'performance_schema',
+    'sys',
+  ])
+  const userSchema = normalizedSchemas.find(
+    (schema) => !systemSchemas.has(schema.toLowerCase()),
+  )
+  if (userSchema) return userSchema
+
+  // MySQL has no Postgres-style `public` default; prefer it only when present.
+  if (normalizedSchemas.includes('public')) return 'public'
+  return normalizedSchemas[0] ?? null
+}
+
+// ---------------------------------------------------------------------------
+// Databases: MySQL saved queries list sort (account prefs, per database)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key for saved-queries sidebar sort order.
+ * Full key: `console.mysqlSavedQueriesSort.<databaseId>`
+ * Value: MysqlSavedQueriesSort string (e.g. `name_asc`, `saved_desc`).
+ */
+export const USER_PREFS_KEY_MYSQL_SAVED_QUERIES_SORT_PREFIX =
+  'console.mysqlSavedQueriesSort'
+
+export type MysqlSavedQueriesSort =
+  | 'saved_desc'
+  | 'saved_asc'
+  | 'name_asc'
+  | 'name_desc'
+
+export const MYSQL_SAVED_QUERIES_DEFAULT_SORT: MysqlSavedQueriesSort =
+  'saved_desc'
+
+const MYSQL_SAVED_QUERIES_SORT_VALUES: MysqlSavedQueriesSort[] = [
+  'saved_desc',
+  'saved_asc',
+  'name_asc',
+  'name_desc',
+]
+
+export const MYSQL_SAVED_QUERIES_SORT_OPTIONS: {
+  value: MysqlSavedQueriesSort
+  label: string
+}[] = [
+  { value: 'saved_desc', label: 'Newest first' },
+  { value: 'saved_asc', label: 'Oldest first' },
+  { value: 'name_asc', label: 'Name (A to Z)' },
+  { value: 'name_desc', label: 'Name (Z to A)' },
+]
+
+export function getMysqlSavedQueriesSortKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_MYSQL_SAVED_QUERIES_SORT_PREFIX}.${databaseId}`
+}
+
+export function parseMysqlSavedQueriesSort(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): MysqlSavedQueriesSort {
+  if (!prefs || !databaseId) return MYSQL_SAVED_QUERIES_DEFAULT_SORT
+  const key = getMysqlSavedQueriesSortKey(databaseId)
+  const value = prefs[key]
+  if (
+    typeof value === 'string' &&
+    MYSQL_SAVED_QUERIES_SORT_VALUES.includes(
+      value as MysqlSavedQueriesSort,
+    )
+  ) {
+    return value as MysqlSavedQueriesSort
+  }
+  return MYSQL_SAVED_QUERIES_DEFAULT_SORT
+}
+
+export function buildMysqlSavedQueriesSortPrefs(
+  databaseId: string,
+  sort: MysqlSavedQueriesSort,
+): UserPrefs {
+  return {
+    [getMysqlSavedQueriesSortKey(databaseId)]: sort,
+  }
+}
+
+export function sortSavedMysqlQueries(
+  queries: SavedMysqlQuery[],
+  sort: MysqlSavedQueriesSort,
+): SavedMysqlQuery[] {
+  switch (sort) {
+    case 'name_asc':
+      return [...queries].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+      )
+    case 'name_desc':
+      return [...queries].sort((a, b) =>
+        b.name.localeCompare(a.name, undefined, { sensitivity: 'base' }),
+      )
+    case 'saved_asc':
+      return [...queries].reverse()
+    case 'saved_desc':
+    default:
+      return queries
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Databases: MySQL Data sidebar table list sort (account prefs, per database)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key for table list sort in the Data sidebar panel.
+ * Full key: `console.mysqlSidebarTablesSort.<databaseId>`
+ * Value: MysqlSidebarTablesSort string.
+ */
+export const USER_PREFS_KEY_MYSQL_SIDEBAR_TABLES_SORT_PREFIX =
+  'console.mysqlSidebarTablesSort'
+
+export type MysqlSidebarTablesSort =
+  | 'list_desc'
+  | 'list_asc'
+  | 'name_asc'
+  | 'name_desc'
+
+export const MYSQL_SIDEBAR_TABLES_DEFAULT_SORT: MysqlSidebarTablesSort =
+  'name_asc'
+
+const MYSQL_SIDEBAR_TABLES_SORT_VALUES: MysqlSidebarTablesSort[] = [
+  'list_desc',
+  'list_asc',
+  'name_asc',
+  'name_desc',
+]
+
+export const MYSQL_SIDEBAR_TABLES_SORT_OPTIONS: {
+  value: MysqlSidebarTablesSort
+  label: string
+}[] = [
+  { value: 'name_asc', label: 'Name (A to Z)' },
+  { value: 'name_desc', label: 'Name (Z to A)' },
+  { value: 'list_desc', label: 'Default order' },
+  { value: 'list_asc', label: 'Reverse order' },
+]
+
+export function getMysqlSidebarTablesSortKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_MYSQL_SIDEBAR_TABLES_SORT_PREFIX}.${databaseId}`
+}
+
+export function parseMysqlSidebarTablesSort(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): MysqlSidebarTablesSort {
+  if (!prefs || !databaseId) return MYSQL_SIDEBAR_TABLES_DEFAULT_SORT
+  const key = getMysqlSidebarTablesSortKey(databaseId)
+  const value = prefs[key]
+  if (
+    typeof value === 'string' &&
+    MYSQL_SIDEBAR_TABLES_SORT_VALUES.includes(
+      value as MysqlSidebarTablesSort,
+    )
+  ) {
+    return value as MysqlSidebarTablesSort
+  }
+  return MYSQL_SIDEBAR_TABLES_DEFAULT_SORT
+}
+
+export function buildMysqlSidebarTablesSortPrefs(
+  databaseId: string,
+  sort: MysqlSidebarTablesSort,
+): UserPrefs {
+  return {
+    [getMysqlSidebarTablesSortKey(databaseId)]: sort,
+  }
+}
+
+export function sortMysqlSidebarTableRows<T extends { table_name: string }>(
+  tables: T[],
+  sort: MysqlSidebarTablesSort,
+): T[] {
+  switch (sort) {
+    case 'name_asc':
+      return [...tables].sort((a, b) =>
+        a.table_name.localeCompare(b.table_name, undefined, {
+          sensitivity: 'base',
+        }),
+      )
+    case 'name_desc':
+      return [...tables].sort((a, b) =>
+        b.table_name.localeCompare(a.table_name, undefined, {
+          sensitivity: 'base',
+        }),
+      )
+    case 'list_asc':
+      return [...tables].reverse()
+    case 'list_desc':
+    default:
+      return tables
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Databases: MySQL sidebar panel (Data / Queries / History)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key for the sidebar panel toggle (Data / Queries / History).
+ * Full key: `console.mysqlSidebarPanel.<databaseId>`
+ * Value: `schemas`, `queries`, or `history`.
+ */
+export const USER_PREFS_KEY_MYSQL_SIDEBAR_PANEL_PREFIX =
+  'console.mysqlSidebarPanel'
+
+export type MysqlSidebarPanelPreference = 'schemas' | 'queries' | 'history'
+
+export const MYSQL_SIDEBAR_PANEL_DEFAULT: MysqlSidebarPanelPreference =
+  'schemas'
+
+const MYSQL_SIDEBAR_PANEL_VALUES: MysqlSidebarPanelPreference[] = [
+  'schemas',
+  'queries',
+  'history',
+]
+
+export function getMysqlSidebarPanelKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_MYSQL_SIDEBAR_PANEL_PREFIX}.${databaseId}`
+}
+
+export function parseMysqlSidebarPanel(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): MysqlSidebarPanelPreference {
+  if (!prefs || !databaseId) return MYSQL_SIDEBAR_PANEL_DEFAULT
+  const key = getMysqlSidebarPanelKey(databaseId)
+  const value = prefs[key]
+  if (
+    typeof value === 'string' &&
+    MYSQL_SIDEBAR_PANEL_VALUES.includes(
+      value as MysqlSidebarPanelPreference,
+    )
+  ) {
+    return value as MysqlSidebarPanelPreference
+  }
+  return MYSQL_SIDEBAR_PANEL_DEFAULT
+}
+
+export function buildMysqlSidebarPanelPrefs(
+  databaseId: string,
+  panel: MysqlSidebarPanelPreference,
+): UserPrefs {
+  return {
+    [getMysqlSidebarPanelKey(databaseId)]: panel,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Databases: MySQL SQL editor tabs (account prefs, per database)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key for SQL editor open tabs and active tab.
+ * Full key: `console.mysqlSqlEditorState.<databaseId>`
+ * Value: JSON string of PersistedMysqlSqlEditorState.
+ */
+export const USER_PREFS_KEY_MYSQL_SQL_EDITOR_STATE_PREFIX =
+  'console.mysqlSqlEditorState'
+
+export const MAX_MYSQL_SQL_EDITOR_TABS = 20
+export const MAX_MYSQL_SQL_EDITOR_TAB_TITLE_LENGTH = 64
+
+export interface PersistedMysqlSqlEditorTab {
+  id: string
+  title: string
+  sql: string
+  tableId?: string
+}
+
+export interface PersistedMysqlSqlEditorState {
+  tabs: PersistedMysqlSqlEditorTab[]
+  activeTabId: string
+}
+
+export function getMysqlSqlEditorStateKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_MYSQL_SQL_EDITOR_STATE_PREFIX}.${databaseId}`
+}
+
+export function parseMysqlSqlEditorState(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): PersistedMysqlSqlEditorState | null {
+  if (!prefs || !databaseId) return null
+  const key = getMysqlSqlEditorStateKey(databaseId)
+  const stored = prefs[key]
+  let raw: unknown
+  if (typeof stored === 'string') {
+    try {
+      raw = JSON.parse(stored)
+    } catch {
+      return null
+    }
+  } else if (stored != null && typeof stored === 'object') {
+    raw = stored
+  } else {
+    return null
+  }
+
+  if (!raw || typeof raw !== 'object') return null
+  const record = raw as Record<string, unknown>
+  if (!Array.isArray(record.tabs)) return null
+
+  const tabs = record.tabs
+    .filter(
+      (item): item is PersistedMysqlSqlEditorTab =>
+        item != null &&
+        typeof item === 'object' &&
+        typeof (item as PersistedMysqlSqlEditorTab).id === 'string' &&
+        typeof (item as PersistedMysqlSqlEditorTab).title === 'string' &&
+        typeof (item as PersistedMysqlSqlEditorTab).sql === 'string',
+    )
+    .map((item) => {
+      const tab = item as PersistedMysqlSqlEditorTab
+      const tableId =
+        typeof tab.tableId === 'string' && tab.tableId.trim()
+          ? tab.tableId.trim()
+          : undefined
+      return {
+        id: tab.id,
+        title: String(tab.title).slice(
+          0,
+          MAX_MYSQL_SQL_EDITOR_TAB_TITLE_LENGTH,
+        ),
+        sql: String(tab.sql).slice(0, MAX_SAVED_MYSQL_QUERY_SQL_CHARS),
+        ...(tableId ? { tableId } : {}),
+      }
+    })
+    .slice(0, MAX_MYSQL_SQL_EDITOR_TABS)
+
+  if (tabs.length === 0) return null
+
+  const activeTabId =
+    typeof record.activeTabId === 'string' &&
+    tabs.some((tab) => tab.id === record.activeTabId)
+      ? record.activeTabId
+      : tabs[0].id
+
+  return { tabs, activeTabId }
+}
+
+export function buildMysqlSqlEditorStatePrefs(
+  databaseId: string,
+  state: PersistedMysqlSqlEditorState,
+): UserPrefs {
+  const key = getMysqlSqlEditorStateKey(databaseId)
+  const tabs = state.tabs.slice(0, MAX_MYSQL_SQL_EDITOR_TABS).map((tab) => ({
+    id: tab.id,
+    title: String(tab.title).slice(0, MAX_MYSQL_SQL_EDITOR_TAB_TITLE_LENGTH),
+    sql: String(tab.sql).slice(0, MAX_SAVED_MYSQL_QUERY_SQL_CHARS),
+    ...(tab.tableId ? { tableId: tab.tableId } : {}),
+  }))
+  const activeTabId = tabs.some((tab) => tab.id === state.activeTabId)
+    ? state.activeTabId
+    : (tabs[0]?.id ?? state.activeTabId)
+
+  return {
+    [key]: JSON.stringify({ tabs, activeTabId }),
+  }
+}
+
+export function mergeMysqlSqlEditorStateIntoPrefs(
+  prefs: UserPrefs,
+  databaseId: string,
+  state: PersistedMysqlSqlEditorState,
+): UserPrefs {
+  return {
+    ...prefs,
+    ...buildMysqlSqlEditorStatePrefs(databaseId, state),
+  }
+}
+
+export function resolveMysqlSavedQueriesScope(args: {
+  persisted: MysqlSavedQueryScope | null
+  hasTeamLevel: boolean
+  userQueryCount: number
+  teamQueryCount: number
+}): MysqlSavedQueryScope {
+  const { persisted, hasTeamLevel, userQueryCount, teamQueryCount } = args
+
+  if (persisted === 'user') return 'user'
+  if (persisted === 'team' && hasTeamLevel) return 'team'
+
+  if (!hasTeamLevel) return 'user'
+  if (userQueryCount > 0 && teamQueryCount === 0) return 'user'
+  if (teamQueryCount > 0 && userQueryCount === 0) return 'team'
+  return 'user'
+}
+
+// ---------------------------------------------------------------------------
 // Databases: tables sidebar width (single shared setting across all databases)
 // ---------------------------------------------------------------------------
 
@@ -976,6 +1603,43 @@ export function buildPostgresSqlEditorHeightPrefs(heightPx: number): UserPrefs {
 }
 
 export { POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX }
+
+// ---------------------------------------------------------------------------
+// MySQL: SQL editor container height (vertical split in SQL workbench)
+// ---------------------------------------------------------------------------
+
+/**
+ * Full key: `console.databases.mysqlSqlEditorHeight` - SQL editor container
+ * height in px (includes toolbar).
+ */
+export const USER_PREFS_KEY_MYSQL_SQL_EDITOR_HEIGHT =
+  'console.databases.mysqlSqlEditorHeight'
+
+export function parseMysqlSqlEditorHeightPx(
+  prefs: UserPrefs | null | undefined,
+): number | null {
+  if (!prefs) return null
+  const raw = prefs[USER_PREFS_KEY_MYSQL_SQL_EDITOR_HEIGHT]
+  let value: number | null = null
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    value = raw
+  } else if (typeof raw === 'string' && raw.length > 0) {
+    const parsed = Number(raw)
+    if (Number.isFinite(parsed)) value = parsed
+  }
+  if (value === null) return null
+  return clampMysqlSqlEditorHeightPx(value)
+}
+
+export function buildMysqlSqlEditorHeightPrefs(heightPx: number): UserPrefs {
+  return {
+    [USER_PREFS_KEY_MYSQL_SQL_EDITOR_HEIGHT]: String(
+      clampMysqlSqlEditorHeightPx(heightPx),
+    ),
+  }
+}
+
+export { MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX }
 
 // ---------------------------------------------------------------------------
 // Storage: files list column widths (account - same widths for every bucket)
@@ -2712,7 +3376,7 @@ export function mergeCommunitySupportPrefsIntoPrefs(
 
 /** @deprecated Migrated to account prefs; cleared after first sync. */
 export const LEGACY_LOCAL_STORAGE_BUILD_NOTIFICATIONS_OPTED_OUT =
-  'appwrite.buildNotifications.optedOut'
+  'appwrite.buildNotifications.optedOut' // pragma: allowlist secret
 
 export function parseBuildNotificationsOptedOut(
   prefs: UserPrefs | null | undefined,

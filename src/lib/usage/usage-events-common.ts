@@ -802,6 +802,29 @@ export async function fetchUsageMetricsBreakdownByMetric(
     return new Map()
   }
 
+  // listEvents applies `limit` to the whole request. Batching metrics (e.g.
+  // network.inbound + network.outbound) with a small top-N limit under-fills
+  // each metric and yields incomplete merged lists on the overview. Fetch each
+  // metric separately, matching fetchProjectBandwidthBreakdown on the usage page.
+  if (metrics.length > 1) {
+    const entries = await Promise.all(
+      metrics.map(async (metric) => {
+        const breakdown = await fetchUsageMetricsBreakdownByMetric(
+          projectId,
+          [metric],
+          dateRange,
+          dimensions,
+          breakdownLimit,
+          queries,
+          resourceId,
+          resourceType,
+        )
+        return [metric, breakdown.get(metric) ?? []] as const
+      }),
+    )
+    return new Map(entries)
+  }
+
   const { from, to } = resolveOverviewUsagePeriod(dateRange)
   const groupsByMetric = await listUsageEventGroupsByMetric(projectId, {
     metrics,

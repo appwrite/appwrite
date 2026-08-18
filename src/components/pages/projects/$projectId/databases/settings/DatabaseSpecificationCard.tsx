@@ -44,6 +44,7 @@ import {
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import type { ProjectDatabaseDetail } from './types'
 
 const SERVERLESS_SPEC_OPTION =
@@ -62,7 +63,7 @@ function resolveCurrentSpecId(
   dbKind: DatabaseRouteKind,
   specification: string | null | undefined,
 ): string {
-  const trimmed = specification?.trim()
+  const trimmed = coerceTrimmedString(specification)
   if (trimmed && !isServerlessDatabaseSpecId(trimmed)) return trimmed
   if (dbKind === 'tablesdb') return SERVERLESS_DATABASE_SPEC_ID
   return trimmed || ''

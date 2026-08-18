@@ -6,7 +6,7 @@
  * engines (PostgreSQL, MySQL, MongoDB). Same list is used in every workspace.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Fragment } from 'react'
 import { ChevronDown, ChevronRight, Database, Loader2, Plus, Table2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -43,8 +43,12 @@ import {
   productFromDatabaseTypeValue,
 } from '@/lib/databases/database-type'
 import { resolveDatabaseComputeSpecId } from '@/lib/databases/database-compute'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
+import { isDatabaseTypeFeatureEnabled } from '@/lib/database-routes'
+import { DEDICATED_FEATURE_UNAVAILABLE } from '@/lib/databases/dedicated-engine'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { cn } from '@/lib/utils'
 import {
@@ -140,6 +144,7 @@ export function DatabaseSelector({
   createTableDisabledTooltip = "You don't have permission to create tables.",
 }: DatabaseSelectorProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
   const showCreateActions =
     onCreateDatabaseClick != null || onCreateTableClick != null
 
@@ -187,7 +192,7 @@ export function DatabaseSelector({
     for (const dedicated of dedicatedData?.databases ?? []) {
       if (!dedicated.$id) continue
       map.set(dedicated.$id, {
-        specSlug: dedicated.specification?.trim() || null,
+        specSlug: coerceTrimmedString(dedicated.specification) || null,
         engine: dedicated.engine ?? null,
         api: dedicated.api ?? null,
         status: dedicated.status ?? null,
@@ -218,7 +223,7 @@ export function DatabaseSelector({
         databaseType: db.type,
         status: db.status,
         replicas: typeof db.replicas === 'number' ? db.replicas : null,
-        specification: db.specification?.trim() ? db.specification : null,
+        specification: coerceTrimmedString(db.specification) || null,
       }
       return {
         id: db.$id,
@@ -336,11 +341,16 @@ export function DatabaseSelector({
                   item.engine,
                   item.product,
                 )
-                return (
+                const typeUnavailable = !isDatabaseTypeFeatureEnabled(
+                  item.apiType,
+                  features,
+                )
+                const option = (
                   <button
-                    key={item.id}
                     type="button"
+                    disabled={typeUnavailable}
                     onClick={() => {
+                      if (typeUnavailable) return
                       onSelect(item.id, {
                         id: item.id,
                         apiType: item.apiType,
@@ -350,7 +360,10 @@ export function DatabaseSelector({
                       setOpen(false)
                     }}
                     className={cn(
-                      'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-start outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
+                      'flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-start outline-none transition-colors',
+                      typeUnavailable
+                        ? 'cursor-not-allowed opacity-60'
+                        : 'cursor-pointer hover:bg-accent hover:text-accent-foreground',
                       item.id === value && 'bg-accent/50',
                     )}
                   >
@@ -366,6 +379,21 @@ export function DatabaseSelector({
                       translate={t}
                     />
                   </button>
+                )
+                if (!typeUnavailable) {
+                  return (
+                    <Fragment key={item.id}>{option}</Fragment>
+                  )
+                }
+                return (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <span className="block w-full">{option}</span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs text-[12px]">
+                      {t(DEDICATED_FEATURE_UNAVAILABLE)}
+                    </TooltipContent>
+                  </Tooltip>
                 )
               })}
             </CommandGroup>

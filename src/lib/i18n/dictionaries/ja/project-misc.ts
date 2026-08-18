@@ -23,7 +23,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search API keys...': 'API キーを検索...',
   'Create API key': 'API キーの作成',
   'No API keys created': 'API キーが作成されていません',
-  'Create API key for your language': '使用する言語用の API キーを作成',
+  'Get started with your language of choice': 'お好みの言語で始めましょう',
   'No API keys match your search': '検索に一致する API キーがありません',
   'Delete API key': 'API キーの削除',
   'this API key': 'この API キー',
@@ -55,6 +55,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Expand all': 'すべて展開',
   'Register your app platform': 'アプリプラットフォームを登録',
   'Add platform': 'プラットフォームの追加',
+  Manage: '管理',
   'Manage apps': 'アプリの管理',
   'Create a server API key': 'サーバー API キーを作成',
   'Add API key': 'API キーの追加',
@@ -188,6 +189,22 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Site ID': 'サイト ID',
   'Request limit': 'リクエスト上限',
   'Interval (seconds)': '間隔 (秒)',
+  'Fixed window': '固定ウィンドウ',
+  'Sliding window': 'スライディングウィンドウ',
+  'Token bucket': 'トークンバケット',
+  'Max bucket size': 'バケットの最大サイズ',
+  'The largest burst allowed. Defaults to the request limit when left unset.':
+    '許可される最大バースト。未設定の場合はリクエスト上限が既定値になります。',
+  'Rate limit strategy illustration': 'レート制限戦略の図',
+  'first request': '最初のリクエスト',
+  per: '/',
+  'each request takes one token': 'リクエストごとにトークン1つ消費',
+  'Windows align to the clock. Rate limit resets for everyone when the next time interval starts.':
+    'ウィンドウは時計に揃えられます。次の時間間隔が始まると、全員のレート制限がリセットされます。',
+  "Windows align to the user. Helps prevent traffic spikes since the reset doesn't occur for all users at the same time.":
+    'ウィンドウはユーザーに揃えられます。リセットが全ユーザーで同時に発生しないため、トラフィックの急増を防ぎやすくなります。',
+  'Windows align to human behaviour. Allows accumulated short bursts, and refills for sustained pace.':
+    'ウィンドウは人間の行動に揃えられます。蓄積された短いバーストを許可し、持続的なペースに向けて補充されます。',
   'Redirect location': 'リダイレクト先',
   'Status code': 'ステータスコード',
   'Match requests when all conditions are true.':
@@ -367,6 +384,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Could not copy link': 'リンクをコピーできませんでした',
   'Actor ID': 'アクター ID',
   'Actor type': 'アクタータイプ',
+  'Via MCP': 'MCP 経由',
   'Resource type (API)': 'リソースタイプ (API)',
   'Resource path': 'リソースパス',
   'Resource parent': 'リソース親',
@@ -1672,6 +1690,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Global variables': 'グローバル変数',
   'GraphQL API access for queries and mutations.':
     'クエリとミューテーション用の GraphQL API アクセス。',
+  'Manage project variables': 'プロジェクト変数を管理',
   'Import all deployments that are not currently active.':
     '現在アクティブでないすべてのデプロイをインポートします。',
   'Import all environment variables.': 'すべての環境変数をインポートします。',
@@ -1770,6 +1789,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project Settings → Database': 'プロジェクト設定 → データベース',
   'Project name has been updated': 'プロジェクト名を更新しました',
   'Project not found': 'プロジェクトが見つかりません',
+  'Project variables': 'プロジェクト変数',
   Protocol: 'プロトコル',
   'Protocol settings control access through REST, GraphQL, and WebSocket APIs independently from service-level access.':
     'プロトコル設定は、サービスレベルのアクセスとは独立して、REST、GraphQL、WebSocket API 経由のアクセスを制御します。',
@@ -1827,6 +1847,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Webhook をトリガーするイベントを設定します。最大',
   'Set up webhooks to receive real-time notifications about events in your project':
     'プロジェクトのイベントに関するリアルタイム通知を受信する Webhook を設定',
+  'Shared with all Functions and Sites in this project.':
+    'このプロジェクト内のすべての Functions とサイトで共有されます。',
   'Showing first': '最初の',
   Since: '開始',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':

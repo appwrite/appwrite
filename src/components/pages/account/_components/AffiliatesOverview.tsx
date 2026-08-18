@@ -14,6 +14,7 @@ import {
   UsageChartXAxis,
   UsageChartYAxis,
 } from '@/components/global/shared/ChartXAxis'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { UsageChartIntervalToggle } from '@/components/pages/projects/$projectId/overview/UsageChartIntervalToggle'
 import { OVERVIEW_CHART_HEIGHT } from '@/components/pages/projects/$projectId/overview/chart-panel'
 import { Button } from '@/components/ui/button'
@@ -592,19 +593,22 @@ export function AffiliatesOverview({
                             {data.fullDate}
                           </p>
                           <div className="space-y-0.5">
-                            <p className="text-[13px] font-medium text-foreground">
+                            <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                              <ChartSeriesDot color={CLICKS_COLOR} />
                               {formatCompactCount(data.clicks)}{' '}
                               <span className="font-normal text-muted-foreground">
                                 {t('clicks')}
                               </span>
                             </p>
-                            <p className="text-[13px] font-medium text-foreground">
+                            <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                              <ChartSeriesDot color={SIGNUPS_COLOR} />
                               {formatCompactCount(data.signups)}{' '}
                               <span className="font-normal text-muted-foreground">
                                 {t('signups')}
                               </span>
                             </p>
-                            <p className="text-[13px] font-medium text-foreground">
+                            <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                              <ChartSeriesDot color={CONVERSIONS_COLOR} />
                               {formatCompactCount(data.conversions)}{' '}
                               <span className="font-normal text-muted-foreground">
                                 {t('conversions')}

@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { OrganizationBillingHeaderBanners } from '@/components/global/shared/OrganizationBillingHeaderBanners'
+import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
 import { mapAppToMarketplaceApp } from '@/lib/marketplace/map-app'
 import { startMarketplaceAppInstall } from '@/lib/marketplace/install-app'
 import {
@@ -103,6 +104,10 @@ export function View({ initialData }: ViewProps = {}) {
   }
 
   const CategoryIcon = MARKETPLACE_CATEGORY_ICONS[mapped.category]
+  const logoUrl = resolveAppLogoDisplayUrl(mapped.logoUri, {
+    width: 96,
+    height: 96,
+  })
 
   return (
     <ConsoleLayout
@@ -125,9 +130,9 @@ export function View({ initialData }: ViewProps = {}) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-start gap-4 min-w-0">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground overflow-hidden">
-                  {mapped.logoUri ? (
+                  {logoUrl ? (
                     <img
-                      src={mapped.logoUri}
+                      src={logoUrl}
                       alt=""
                       className="h-full w-full object-cover"
                     />

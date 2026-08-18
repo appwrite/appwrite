@@ -6,6 +6,7 @@ import {
   projectQueryOptions,
   isPostgresEngine,
 } from '@/lib/react-query/hooks'
+import { ensureConsoleSqlApiStatements } from '@/lib/databases/sql-api-statements'
 import { DatabaseTypeUnavailable } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeUnavailable'
 import { PostgresSidebarProvider } from '@/components/pages/projects/$projectId/databases/postgres/_components/PostgresSidebarContext'
 import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
@@ -44,6 +45,24 @@ export const Route = createFileRoute(
         replace: true,
       })
     }
+
+    try {
+      const { database: updated, updated: didUpdate } =
+        await ensureConsoleSqlApiStatements(
+          projectId,
+          databaseId,
+          'postgresql',
+          database,
+        )
+      if (didUpdate && updated) {
+        queryClient.setQueryData(
+          postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
+          updated,
+        )
+      }
+    } catch {
+      /* First DDL statement retries if the allow-list PATCH fails here */
+    }
   },
   component: PostgresDatabaseLayout,
 })
@@ -56,7 +75,7 @@ function PostgresDatabaseLayout() {
   }
 
   return (
-    <PostgresSidebarProvider databaseId={databaseId}>
+    <PostgresSidebarProvider key={databaseId} databaseId={databaseId}>
       <PostgresShell>
         <Outlet />
       </PostgresShell>

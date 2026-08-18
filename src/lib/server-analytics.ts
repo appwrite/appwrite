@@ -13,10 +13,8 @@
  * Vite-only constructs (`import.meta.env`, `?url` imports, path aliases).
  */
 import { getAnalyticsArea, getAnalyticsSurface } from './analytics-route.ts'
-import {
-  getClientIpFromRequest,
-  resolvePlausibleEventUrl,
-} from './plausible-proxy.ts'
+import { getClientIpFromRequest } from './client-ip.ts'
+import { resolvePlausibleEventUrl } from './plausible-proxy.ts'
 import { readRuntimeConfigFromEnv } from './runtime-config-shared.ts'
 
 export type ServerPageviewFormat = 'markdown' | 'text' | 'json'
@@ -54,6 +52,11 @@ export function trackServerPageview(
   if (!scriptSrc) return
 
   try {
+    const clientIp = getClientIpFromRequest(request)
+    // Skip when we cannot forward a real visitor IP. Otherwise Plausible would
+    // geo-locate our app server (Germany) and inflate country stats.
+    if (!clientIp) return
+
     const url = new URL(request.url)
     const origin = url.origin
     const pathname = url.pathname || '/'
@@ -62,9 +65,8 @@ export function trackServerPageview(
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'User-Agent': request.headers.get('user-agent') || 'Unknown',
+      'X-Forwarded-For': clientIp,
     }
-    const clientIp = getClientIpFromRequest(request)
-    if (clientIp) headers['X-Forwarded-For'] = clientIp
 
     const body = JSON.stringify({
       name: 'pageview',

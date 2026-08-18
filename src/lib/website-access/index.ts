@@ -1,6 +1,20 @@
 export const WEBSITE_ACCESS_COOKIE_NAME = 'aw_website_access'
 export const WEBSITE_ACCESS_PASSWORD = 'Appwrite2'
 
+/**
+ * Demo / soft-launch password gate.
+ * Unset or unrecognized `VITE_CONSOLE_WEBSITE_ACCESS` → enabled.
+ * `false` / `0` / `disabled` turns the gate off (middleware, boot cover, UI).
+ */
+export function isWebsiteAccessEnabled(
+  envValue: string | null | undefined,
+): boolean {
+  const normalized = (envValue ?? '').toLowerCase().trim()
+  if (normalized === 'false' || normalized === '0' || normalized === 'disabled')
+    return false
+  return true
+}
+
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365 // 1 year
 
 const COOKIE_PATTERN = new RegExp(

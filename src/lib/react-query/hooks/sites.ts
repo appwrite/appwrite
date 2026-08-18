@@ -14,6 +14,7 @@ import {
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { SpecificationType } from '@/lib/specifications'
 import {
@@ -63,15 +64,13 @@ export async function fetchProjectSites(
     sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
+    ...buildAttributePrefixSearchQueries(['name', '$id'], search),
     orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.sites.list({
-    queries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.sites.list({ queries })
 
   return {
     sites: response.sites || [],

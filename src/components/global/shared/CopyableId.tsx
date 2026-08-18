@@ -102,7 +102,7 @@ export function CopyableId({
           : 'gap-1.5 rounded-md border border-transparent bg-transparent text-foreground transition-[color,background-color,border-color] hover:border-border hover:bg-muted/40 hover:text-foreground',
         styles.text,
         styles.padding,
-        constrainToContainer && 'min-w-0 w-full',
+        constrainToContainer && 'min-w-0 w-fit max-w-full',
         className,
       )}
     >
@@ -110,7 +110,7 @@ export function CopyableId({
         className={cn(
           'min-w-0',
           shouldTruncate
-            ? cn('truncate', constrainToContainer && 'flex-1')
+            ? 'truncate'
             : 'break-words whitespace-normal',
         )}
         style={

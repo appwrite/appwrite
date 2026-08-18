@@ -1,57 +1,32 @@
-/** Interactive / local-only subcommands shown in the welcome message. */
+/**
+ * Commands intercepted before they reach the CLI.
+ *
+ * Nearly nothing, now. The browser build of the CLI registers its own stubs for
+ * everything that needs a host -- init, pull, push, run, login, update, generate,
+ * types -- and explains itself better than an interception here could, because it
+ * knows what it is. This list is only for the cases where the console, not the
+ * CLI, owns the answer.
+ */
+
+/** Interactive / local-only subcommands named in the welcome message. */
 export const WELCOME_BLOCKED_APPWRITE_SUBCOMMANDS = [
   'pull',
   'push',
   'init',
   'login',
   'run',
-  'deploy',
 ] as const
 
-/** Top-level Appwrite CLI commands that require prompts or a local environment. */
 const BLOCKED_APPWRITE_SUBCOMMANDS: Record<string, string> = {
-  login: [
-    'Sign-in is not available in the browser terminal.',
-    'You are already signed in with your Console session. Run appwrite whoami to verify.',
-  ].join('\n'),
   logout: [
     'Logout is not supported in the browser terminal.',
-    'Sign out from the Console account menu instead.',
-  ].join('\n'),
-  init: [
-    'Project setup is not supported in the browser terminal.',
-    'This project is already linked. appwrite.config.json is configured automatically.',
-    'To scaffold resources locally, run appwrite init in a terminal on your machine.',
-  ].join('\n'),
-  pull: [
-    'Pull is not supported in the browser terminal (interactive prompts are required).',
-    'On your machine, run: appwrite pull all --all --force --no-code',
-    'Here you can list resources instead, for example: appwrite functions list',
-  ].join('\n'),
-  push: [
-    'Push and deploy are not supported in the browser terminal (interactive prompts are required).',
-    'On your machine, run: appwrite push all --all --force',
-    'Or push a single resource: appwrite push functions --all --force',
-  ].join('\n'),
-  deploy: [
-    'appwrite deploy has been removed.',
-    'Use appwrite push on your local machine instead.',
-  ].join('\n'),
-  run: [
-    'Local function emulation is not supported in the browser terminal.',
-    'It requires Docker and interactive prompts.',
-    'On your machine, run: appwrite run functions --function-id <ID>',
-  ].join('\n'),
-  update: [
-    'CLI self-update is not supported in the browser terminal.',
-    'On your machine, run: appwrite update',
-    'Or reinstall with npm install -g appwrite-cli',
+    'This terminal signs in with your Console session. Sign out from the Console account menu instead.',
   ].join('\n'),
 }
 
 /**
- * Returns a user-facing message when a command should not run in the browser shell.
- * Message may contain multiple lines separated by \\n.
+ * Returns a user-facing message when a command should not run in the browser
+ * shell. May contain multiple lines separated by \\n.
  */
 export function getBlockedCliCommandMessage(rawCommand: string): string | null {
   const trimmed = rawCommand.trim()

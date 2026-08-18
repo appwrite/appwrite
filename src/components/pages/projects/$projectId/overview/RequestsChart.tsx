@@ -19,6 +19,7 @@ import {
 import { OverviewChartPanelError } from './OverviewChartPanelError'
 import { GbHoursUnitInfo } from './GbHoursUnitInfo'
 import { MetricValueWithUnit } from './MetricValueWithUnit'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import type { DateRange } from 'react-day-picker'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
@@ -206,13 +207,19 @@ const CustomTooltip = ({
           </p>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-6">
-              <span className="text-[11px] text-muted-foreground">{t('Inbound')}</span>
+              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <ChartSeriesDot color="var(--chart-2)" />
+                {t('Inbound')}
+              </span>
               <span className="text-[12px] font-medium text-foreground">
                 <FormattedMetricValue value={format(data.inbound)} />
               </span>
             </div>
             <div className="flex items-center justify-between gap-6">
-              <span className="text-[11px] text-muted-foreground">{t('Outbound')}</span>
+              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <ChartSeriesDot color="var(--chart-brand)" />
+                {t('Outbound')}
+              </span>
               <span className="text-[12px] font-medium text-foreground">
                 <FormattedMetricValue value={format(data.outbound)} />
               </span>

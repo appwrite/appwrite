@@ -23,6 +23,11 @@ export interface RuntimeConfig {
   cookieBanner: string
   /** Override for the profile's blogDrafts feature ('' = profile default). */
   blogDrafts: string
+  /**
+   * Demo / soft-launch website password gate (`/access`, Appwrite2 cookie).
+   * '' = enabled; `false` / `0` / `disabled` turns the gate off.
+   */
+  websiteAccess: string
 }
 
 /**
@@ -106,6 +111,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     userVerification: read('VITE_CONSOLE_USER_VERIFICATION'),
     cookieBanner: read('VITE_CONSOLE_COOKIE_BANNER'),
     blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
+    websiteAccess: read('VITE_CONSOLE_WEBSITE_ACCESS'),
   }
 }
 

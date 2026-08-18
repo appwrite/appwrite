@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useT } from '@/lib/i18n/translate'
@@ -61,23 +67,22 @@ export function CreateSchema({
   }
 
   return (
-    <BaseDrawer
-      open={open}
-      onOpenChange={onOpenChange}
-      title={t('Create schema')}
-      description={t('Create a PostgreSQL schema to organize related tables.')}
-      maxWidth="sm:max-w-md"
-    >
-      <>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogTitle>{t('Create schema')}</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            {t('Create a PostgreSQL schema to organize related tables.')}
+          </DialogDescription>
+        </DialogHeader>
         <div className="border-t border-border" />
         <form
           onSubmit={(event) => {
             event.preventDefault()
             void handleSubmit()
           }}
-          className="flex min-h-0 flex-1 flex-col"
         >
-          <div className="flex-1 space-y-4 overflow-y-auto px-6 pb-4 pt-4">
+          <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="schema-name" className="text-[12px] font-medium">
                 {t('Schema name')} <span className="text-destructive">*</span>
@@ -87,16 +92,15 @@ export function CreateSchema({
                 value={schemaName}
                 onChange={(event) => setSchemaName(event.target.value)}
                 placeholder="analytics"
+                disabled={executeSql.isPending}
+                autoFocus
               />
               <p className="text-[12px] text-muted-foreground">
                 {t('Use letters, numbers, and underscores only.')}
               </p>
             </div>
           </div>
-          <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start">
-            <Button type="submit" disabled={executeSql.isPending}>
-              {t('Create')}
-            </Button>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"
@@ -105,9 +109,12 @@ export function CreateSchema({
             >
               {t('Cancel')}
             </Button>
+            <Button type="submit" disabled={executeSql.isPending}>
+              {t('Create')}
+            </Button>
           </div>
         </form>
-      </>
-    </BaseDrawer>
+      </DialogContent>
+    </Dialog>
   )
 }

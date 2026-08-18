@@ -21,23 +21,80 @@ export type DedicatedDatabaseStatusBadgeVariant =
   | 'info'
   | 'inactive'
 
+/**
+ * Coerce API/status values to a trimmed string. Avoids `n?.trim is not a function`
+ * when a non-string (e.g. number or tagged `{ type, value }` cell) is truthy under
+ * optional chaining.
+ */
+export function coerceTrimmedString(value: unknown): string {
+  if (typeof value === 'string') return value.trim()
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value).trim()
+  }
+  if (typeof value === 'bigint') return value.toString()
+  // MySQL VARBINARY cells may arrive as JSON byte arrays before normalization.
+  if (Array.isArray(value)) {
+    if (
+      value.length > 0 &&
+      value.every(
+        (entry) =>
+          typeof entry === 'number' &&
+          Number.isInteger(entry) &&
+          entry >= 0 &&
+          entry <= 255,
+      )
+    ) {
+      try {
+        const decoded = new TextDecoder('utf-8', { fatal: false }).decode(
+          Uint8Array.from(value as number[]),
+        )
+        if (decoded && !decoded.includes('\uFFFD')) return decoded.trim()
+      } catch {
+        // fall through
+      }
+    }
+    return ''
+  }
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    for (const key of [
+      'value',
+      'Value',
+      '$value',
+      'text',
+      'Text',
+      'string',
+      'String',
+      'name',
+      'Name',
+    ]) {
+      const nested = record[key]
+      if (typeof nested === 'string') return nested.trim()
+      if (typeof nested === 'number' || typeof nested === 'boolean') {
+        return String(nested).trim()
+      }
+    }
+  }
+  return ''
+}
+
 export function isDedicatedDatabaseReady(
   status: string | null | undefined,
 ): boolean {
-  return status?.trim().toLowerCase() === 'ready'
+  return coerceTrimmedString(status).toLowerCase() === 'ready'
 }
 
 export function shouldPollDedicatedDatabaseStatus(
   status: string | null | undefined,
 ): boolean {
-  const normalized = status?.trim().toLowerCase()
+  const normalized = coerceTrimmedString(status).toLowerCase()
   return !!normalized && DEDICATED_DATABASE_TRANSITIONAL_STATUSES.has(normalized)
 }
 
 export function dedicatedDatabaseStatusBadgeVariant(
   status: string | null | undefined,
 ): DedicatedDatabaseStatusBadgeVariant {
-  switch (status?.trim().toLowerCase()) {
+  switch (coerceTrimmedString(status).toLowerCase()) {
     case 'ready':
       return 'success'
     case 'provisioning':
@@ -63,7 +120,7 @@ export function dedicatedDatabaseStatusBadgeVariant(
 export function dedicatedDatabaseHeaderAlertVariant(
   status: string,
 ): HeaderAlertVariant {
-  switch (status.trim().toLowerCase()) {
+  switch (coerceTrimmedString(status).toLowerCase()) {
     case 'failed':
     case 'deleted':
       return 'danger'
@@ -78,7 +135,7 @@ export function dedicatedDatabaseHeaderAlertVariant(
 export function dedicatedDatabaseStatusAlertTitleKey(
   status: string,
 ): string {
-  switch (status.trim().toLowerCase()) {
+  switch (coerceTrimmedString(status).toLowerCase()) {
     case 'scaling':
       return 'Database is scaling'
     case 'upgrading':
@@ -111,7 +168,7 @@ export function dedicatedDatabaseStatusAlertTitleKey(
 export function dedicatedDatabaseStatusAlertDescriptionKey(
   status: string,
 ): string {
-  switch (status.trim().toLowerCase()) {
+  switch (coerceTrimmedString(status).toLowerCase()) {
     case 'scaling':
       return 'A compute tier change is in progress. Your cluster remains available during this operation.'
     case 'upgrading':

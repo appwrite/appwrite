@@ -382,6 +382,7 @@ export function ConsoleHeader({
   })
   const showMarketingNav = marketingNavItems.length > 0
   const showAgent = features.agent && !showMarketingNav
+  const showNotifications = features.notifications && !showMarketingNav
   const showConnectAndCreate = canShowConnectSection(access, features)
   const canCreateProjectFlag = canCreateProject(access, features)
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
@@ -1325,10 +1326,12 @@ export function ConsoleHeader({
                 <SupportPopover orgId={orgId} />
               </div>
 
-              {/* Notifications */}
-              <div className="flex shrink-0">
-                <NotificationCenterPopover />
-              </div>
+              {/* Notifications - gated by the notifications profile feature */}
+              {showNotifications && (
+                <div className="flex shrink-0">
+                  <NotificationCenterPopover />
+                </div>
+              )}
 
               {/* Operator tools (render nothing when account is not an impersonator) */}
               <ImpersonateConsoleUserPopover />

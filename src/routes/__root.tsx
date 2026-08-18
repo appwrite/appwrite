@@ -9,6 +9,7 @@ import {
   getRuntimeConfig,
   getRuntimeConfigScript,
 } from '@/lib/runtime-config'
+import { getSsrClientIpScript } from '@/lib/ssr-client-ip'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
@@ -241,12 +242,21 @@ function LegacyThemeFavicon() {
 
   useEffect(() => {
     if (isLegacyTheme(theme, resolvedTheme)) {
-      applyFaviconHref(LEGACY_ICON_SRC, { cacheBust: false })
+      applyFaviconHref(LEGACY_ICON_SRC, {
+        cacheBust: false,
+        source: 'legacy-theme',
+        reason: 'Legacy debug theme is active',
+        variant: 'default',
+      })
       return
     }
 
     const variant = getDefaultFaviconVariant()
-    applyFaviconVariant(variant, { cacheBust: false })
+    applyFaviconVariant(variant, {
+      cacheBust: false,
+      source: 'default',
+      reason: 'Idle (default favicon)',
+    })
   }, [theme, resolvedTheme])
 
   return null
@@ -435,6 +445,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {/* Publish runtime config to the browser before the app bundle runs.
             Must precede <Scripts /> so module-level config reads see it. */}
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
+        <ScriptOnce>{getSsrClientIpScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <ScriptOnce>{WEBSITE_ACCESS_BOOT_SCRIPT}</ScriptOnce>
         {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can

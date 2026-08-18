@@ -10,6 +10,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useEffect,
   useMemo,
   ReactNode,
 } from 'react'
@@ -104,6 +105,8 @@ const defaultFormData: WizardFormData = {
   uploadFile: undefined,
 }
 
+const FORM_DATA_STORAGE_KEY = 'sites-create-wizard-form-data'
+
 /**
  * Wizard path type
  */
@@ -137,7 +140,6 @@ interface WizardContextValue {
   getFrameworkDefaults: (frameworkKey: string) => {
     installCommand: string
     buildCommand: string
-    startCommand: string
     outputDirectory: string
     buildRuntime: string
     adapter: string
@@ -167,7 +169,45 @@ export function useWizard() {
  * Wizard provider component
  */
 export function WizardProvider({ children }: { children: ReactNode }) {
-  const [formData, setFormData] = useState<WizardFormData>(defaultFormData)
+  // Reconnecting a Git installation leaves the page and comes back, and the
+  // path keeps an abandoned run out of the next site created in the same tab
+  const [formData, setFormData] = useState<WizardFormData>(() => {
+    if (typeof window === 'undefined') return defaultFormData
+    try {
+      const raw = sessionStorage.getItem(FORM_DATA_STORAGE_KEY)
+      if (!raw) return defaultFormData
+      const { path, formData: stored } = JSON.parse(raw) as {
+        path?: string
+        formData?: Partial<WizardFormData>
+      }
+      if (path !== window.location.pathname) return defaultFormData
+      return { ...defaultFormData, ...stored }
+    } catch {
+      return defaultFormData
+    }
+  })
+
+  useEffect(() => {
+    // `variables` holds values typed into secret fields; the rest are either
+    // refetched or not serialisable
+    const {
+      variables: _variables,
+      uploadFile: _uploadFile,
+      template: _template,
+      createdSiteId: _createdSiteId,
+      createdDeploymentId: _createdDeploymentId,
+      ...stored
+    } = formData
+
+    try {
+      sessionStorage.setItem(
+        FORM_DATA_STORAGE_KEY,
+        JSON.stringify({ path: window.location.pathname, formData: stored }),
+      )
+    } catch {
+      // ignore quota errors
+    }
+  }, [formData])
   const [currentPath, setCurrentPath] = useState<WizardPath | undefined>(
     undefined,
   )
@@ -191,7 +231,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   )
 
   const getFrameworkDefaults = useCallback(
-    (frameworkKey: string) => getFrameworkCreateDefaults(getFramework(frameworkKey)),
+    (frameworkKey: string) =>
+      getFrameworkCreateDefaults(getFramework(frameworkKey)),
     [getFramework],
   )
 
