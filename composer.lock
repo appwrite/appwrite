@@ -5035,12 +5035,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "cbf57939aa7f0d40c5e6ab9120e13b3247bd767a"
+                "reference": "f841df3867d6f98bfbab9faa5cd0b38a04674fb4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/cbf57939aa7f0d40c5e6ab9120e13b3247bd767a",
-                "reference": "cbf57939aa7f0d40c5e6ab9120e13b3247bd767a",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/f841df3867d6f98bfbab9faa5cd0b38a04674fb4",
+                "reference": "f841df3867d6f98bfbab9faa5cd0b38a04674fb4",
                 "shasum": ""
             },
             "require": {
@@ -5094,7 +5094,7 @@
                 "source": "https://github.com/utopia-php/vcs/tree/feat-origin",
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-08-18T12:28:48+00:00"
+            "time": "2026-08-18T13:49:34+00:00"
         },
         {
             "name": "utopia-php/websocket",
