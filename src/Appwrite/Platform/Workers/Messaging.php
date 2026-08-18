@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Message\Payload;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Status as MessageStatus;
@@ -116,7 +117,7 @@ class Messaging extends Action
 
         switch ($type) {
             case MESSAGE_SEND_TYPE_INTERNAL:
-                $message = new Document($payload['message'] ?? []);
+                $message = Payload::document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
                 $this->sendInternalSMSMessage($message, $project, $recipients, $log);

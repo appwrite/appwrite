@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\GitAction;
+use Appwrite\Event\Message\Payload;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Usage\Build as BuildUsage;
@@ -101,9 +102,9 @@ class Builds extends Action
         $type = $payload['type'] ?? '';
         Span::add('build.type', $type);
 
-        $resource = new Document($payload['resource'] ?? []);
-        $deployment = new Document($payload['deployment'] ?? []);
-        $template = new Document($payload['template'] ?? []);
+        $resource = Payload::document($payload['resource'] ?? []);
+        $deployment = Payload::document($payload['deployment'] ?? []);
+        $template = Payload::document($payload['template'] ?? []);
         $platform = $payload['platform'] ?? Config::getParam('platform', []);
 
         $log->addTag('projectId', $project->getId());

@@ -7,6 +7,7 @@ use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Message\Payload;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
@@ -223,8 +224,8 @@ class Functions extends Action
          */
         switch ($type) {
             case 'http':
-                $execution = new Document($payload['execution'] ?? []);
-                $user = new Document($payload['user'] ?? []);
+                $execution = Payload::document($payload['execution'] ?? []);
+                $user = Payload::document($payload['user'] ?? []);
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,
@@ -250,7 +251,7 @@ class Functions extends Action
                 );
                 break;
             case 'schedule':
-                $execution = new Document($payload['execution'] ?? []);
+                $execution = Payload::document($payload['execution'] ?? []);
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,

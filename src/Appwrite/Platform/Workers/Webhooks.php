@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Message\Notification as NotificationMessage;
+use Appwrite\Event\Message\Payload;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -65,7 +66,7 @@ class Webhooks extends Action
 
         $events = $payload['events'];
         $webhookPayload = json_encode($payload['payload']);
-        $user = new Document($payload['user'] ?? []);
+        $user = Payload::document($payload['user'] ?? []);
 
         $log->addTag('projectId', $project->getId());
 

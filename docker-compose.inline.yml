@@ -13,9 +13,11 @@ services:
   appwrite:
     environment:
       - _APP_QUEUE_ADAPTER=inline
+      - _APP_WORKER_MAX_COROUTINES=8
   appwrite-realtime:
     environment:
       - _APP_QUEUE_ADAPTER=inline
+      - _APP_WORKER_MAX_COROUTINES=8
   appwrite-task-scheduler:
     environment:
       - _APP_QUEUE_ADAPTER=inline

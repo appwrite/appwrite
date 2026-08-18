@@ -334,11 +334,12 @@ class Event
         $trimmed = [];
 
         if ($this->project) {
-            $trimmed['project'] = new Document([
+            // Arrays so Redis JSON and the Inline adapter deliver the same shape.
+            $trimmed['project'] = [
                 '$id' => $this->project->getId(),
                 '$sequence' => $this->project->getSequence(),
                 'database' => $this->project->getAttribute('database')
-            ]);
+            ];
         }
 
         return $trimmed;
@@ -381,8 +382,8 @@ class Event
     protected function preparePayload(): array
     {
         return [
-            'project' => $this->project,
-            'user' => $this->user,
+            'project' => $this->project?->getArrayCopy(),
+            'user' => $this->user?->getArrayCopy(),
             'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
