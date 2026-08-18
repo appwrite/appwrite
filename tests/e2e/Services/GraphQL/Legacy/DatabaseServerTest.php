@@ -10,6 +10,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\GraphQL\Base;
+use Tests\E2E\Services\GraphQL\QueryJoinCombos;
 use Tests\E2E\Services\GraphQL\QueryJoinPermissions;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
@@ -24,6 +25,7 @@ final class DatabaseServerTest extends Scope
     use SideServer;
     use Base;
     use QueryJoinPermissions;
+    use QueryJoinCombos;
 
     /**
      * Static cache for database data
