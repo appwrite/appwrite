@@ -1,22 +1,21 @@
 <?php
 
-namespace Appwrite\Schedule;
+namespace Appwrite\Schedule\Source;
 
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\Cron;
 use Utopia\Schedule\Trigger\Shifted;
 
-final class FunctionSchedule extends DatabaseSchedule
+final class Functions extends Database
 {
     /**
-     * @param callable(Document): Database $getProjectDB
+     * @param callable(Document): \Utopia\Database\Database $getProjectDB
      * @param callable(Document, string, string): bool $isResourceBlocked
      * @param \Closure(array<string, mixed>): int $spread seconds to spread a
      */
     public function __construct(
-        Database $dbForPlatform,
+        \Utopia\Database\Database $dbForPlatform,
         mixed $getProjectDB,
         mixed $isResourceBlocked,
         private readonly \Closure $spread,

@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
-use Appwrite\Schedule\ExecutionSchedule;
+use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -37,7 +37,7 @@ class ScheduleExecutions extends Action
 
     public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
-        $source = new ExecutionSchedule($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
+        $source = new Source\Executions($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
 
         $scheduler = new Scheduler(
             source: $source,

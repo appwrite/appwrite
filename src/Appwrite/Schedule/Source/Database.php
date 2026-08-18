@@ -1,8 +1,7 @@
 <?php
 
-namespace Appwrite\Schedule;
+namespace Appwrite\Schedule\Source;
 
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -14,17 +13,17 @@ use Utopia\Schedule\Trigger;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
-abstract class DatabaseSchedule implements Source, Changes
+abstract class Database implements Source, Changes
 {
     /** @var array<string, Document> */
     private array $projects = [];
 
     /**
-     * @param callable(Document): Database $getProjectDB
+     * @param callable(Document): \Utopia\Database\Database $getProjectDB
      * @param callable(Document, string, string): bool $isResourceBlocked
      */
     public function __construct(
-        protected readonly Database $dbForPlatform,
+        protected readonly \Utopia\Database\Database $dbForPlatform,
         protected readonly mixed $getProjectDB,
         protected readonly mixed $isResourceBlocked,
     ) {
@@ -95,7 +94,7 @@ abstract class DatabaseSchedule implements Source, Changes
     /**
      * @param array<string, mixed> $schedule
      */
-    protected function resource(Database $projectDB, array $schedule): Document
+    protected function resource(\Utopia\Database\Database $projectDB, array $schedule): Document
     {
         return $projectDB->getDocument($this->collection(), $schedule['resourceId']);
     }

@@ -1,13 +1,12 @@
 <?php
 
-namespace Appwrite\Schedule;
+namespace Appwrite\Schedule\Source;
 
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\At;
 
-final class ExecutionSchedule extends DatabaseSchedule
+final class Executions extends Database
 {
     #[\Override]
     protected function type(): string
@@ -28,7 +27,7 @@ final class ExecutionSchedule extends DatabaseSchedule
     }
 
     #[\Override]
-    protected function resource(Database $projectDB, array $schedule): Document
+    protected function resource(\Utopia\Database\Database $projectDB, array $schedule): Document
     {
         try {
             $resource = $projectDB->getDocument($this->collection(), $schedule['resourceId']);

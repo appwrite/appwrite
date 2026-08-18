@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
-use Appwrite\Schedule\MessageSchedule;
+use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -37,7 +37,7 @@ class ScheduleMessages extends Action
 
     public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
-        $source = new MessageSchedule($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
+        $source = new Source\Messages($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
 
         $scheduler = new Scheduler(
             source: $source,

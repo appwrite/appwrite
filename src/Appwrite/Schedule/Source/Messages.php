@@ -1,11 +1,11 @@
 <?php
 
-namespace Appwrite\Schedule;
+namespace Appwrite\Schedule\Source;
 
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\At;
 
-final class MessageSchedule extends DatabaseSchedule
+final class Messages extends Database
 {
     #[\Override]
     protected function type(): string
