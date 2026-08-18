@@ -217,7 +217,7 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ```mermaid
 flowchart TB
-  Flutter & iOS & Android & Web & Agents --> Appwrite
+  Console & Flutter & iOS & Android & Web & Agents --> Appwrite
   Appwrite --> REST & Realtime & GraphQL & MCP & CLI & SDKs
   REST & Realtime & GraphQL & MCP & CLI & SDKs --> securityLayer[Security layer]
 ```
