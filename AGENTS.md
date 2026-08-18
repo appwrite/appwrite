@@ -113,6 +113,8 @@ Do not create a class unless it is a well-defined domain concept. Every new clas
 
 Do not optimize for reuse at all costs. A little duplication is better than an abstraction that is harder to follow. Prioritize readability and consistency with existing patterns over extracting every repeated line.
 
+Do not use dependency injection as a reuse hack. Inject **object dependencies** (`Database $dbForProject`, `Event $queueForEvents`, `User $user` in [`Teams/Http/Teams/Create.php`](src/Appwrite/Platform/Modules/Teams/Http/Teams/Create.php)), registered in [`app/init/resources.php`](app/init/resources.php). Never inject a `callable` / `Closure` to share a procedure, and never add a global function, static `Utils` method, or any other global-shaped hook to make code reusable. Put shared behavior on the domain object, a domain library, or a private/base method — or duplicate it.
+
 Actions should read like a story. The `action()` method is the plot: [`Teams/Http/Teams/Create.php`](src/Appwrite/Platform/Modules/Teams/Http/Teams/Create.php) creates the team, then the membership, then events, then the response. Do not jump through extra layers. Extract a method only when it improves clarity, encapsulates meaningful domain behavior, or has genuine reuse — not because a block is used once.
 
 ## Conventions
@@ -153,7 +155,7 @@ Follow PSR-12/PSR-4 unless noted. These apply to code, paths, labels, tests, and
 - **Paths:** lowercase, kebab-case where needed, plural resources. Route params camelCase; `Id` suffix when multiple IDs appear (`:teamId`, `:deploymentId`). JSON camelCase; system fields keep `$` prefixes (`$id`, `$createdAt`).
 - **Scopes:** `{resource}.{read|write}`; special scopes `account`, `public`. **Events:** `teams.[teamId].create`. **Audits:** `audits.event` `{resource}.{action}`; `audits.resource` `{type}/{id}`.
 - **Collections:** lowercase plural. Attributes camelCase; do not prefix with the collection name. `resourceType` is usually plural (`functions`, `sites`, `deployments`).
-- **DI:** `{role}For{Target}` only when multiple of that role coexist (`dbForProject` / `dbForPlatform`). Register new injections in `app/init/resources.php` and `app/init/resources/request.php`.
+- **DI:** inject object dependencies only (`$dbForProject`, `$queueForEvents`, `$user`). `{role}For{Target}` only when multiple of that role coexist (`dbForProject` / `dbForPlatform`). Register new resources in `app/init/resources.php` and `app/init/resources/request.php`. Never inject callbacks or global-shaped functions to reuse logic — see [Reuse](#reuse).
 - **Models:** class PascalCase; `getName()` matches. `Response::MODEL_*` constants `SCREAMING_SNAKE_CASE`; values camelCase singular (`team`) or `{name}List`.
 - **Env:** `_APP_` + `SCREAMING_SNAKE_CASE`.
 - **Spans:** in handlers only `Span::add($key, $value)` — never `Span::init`, `setError`, or `Span::finish`. Keys `snake_case`; dots only for child relationships (`project.id`, `storage.bucket.id`). Cross-cutting ids (`project.id`, `function.id`, `user.id`) stay at top level, not under a subsystem.
