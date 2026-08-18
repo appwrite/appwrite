@@ -1,61 +1,55 @@
 ---
 name: appwrite-testing
-description: Choose, write, and review tests in the Appwrite server repository using a pragmatic test pyramid. Use when adding or changing PHPUnit tests, deciding between unit and e2e coverage, moving duplicated high-level coverage lower, testing API endpoints, workers, queues, permissions, auth/scopes, persistence, serialization, retry logic, validators, security regressions, or Swoole-sensitive behavior.
+description: Choose, write, and review tests in the Appwrite server repository. Use when adding or changing PHPUnit tests, deciding between unit and e2e coverage, testing API endpoints, workers, queues, permissions, auth/scopes, persistence, serialization, validators, or security regressions.
 ---
 
 # Appwrite Testing
 
 ## Core Rule
 
-Keep the test suite pyramid-shaped: many fast unit tests, fewer service/API e2e tests, and very few broad workflow tests. Push each assertion to the lowest level that still proves the behavior.
+E2E covers the HTTP/API surface (success and failure). Unit tests cover local `src/` libraries only. Do not unit-test route actions, CLI tasks, or workers.
 
-Prefer fast feedback over formal labels. A narrow integration-style unit test with deterministic fakes is better than a slow e2e test when it proves the same behavior.
+Canonical policy: root `AGENTS.md` (Tests).
 
 ## Choose The Test Level
 
-Use `tests/unit/...` for:
-
-- Pure validators, helpers, mappers, parsers, filters, retry classifiers, event builders, URL/security checks, and branching logic.
-- Worker building blocks that can be called with fake adapters, in-memory collaborators, or scripted test doubles.
-- Regression cases where inputs and observable outputs can be asserted without HTTP, Docker services, queues, Swoole coroutines, or real network calls.
-- Boundary serialization/deserialization when the external side can be represented with a deterministic fake response or document.
-
 Use `tests/e2e/Services/{Service}` for:
 
-- HTTP route behavior, status codes, headers, cookies, response shape, SDK-visible contracts, and request validation through the real API path.
+- Every HTTP route: status codes, headers, cookies, response shape, SDK-visible contracts, and request validation through the real API path — **both success and failure**.
 - Auth, scope, permission, project mode, platform, and side-specific behavior that depends on Appwrite's request lifecycle.
-- Persistence, queue-visible behavior, worker integration, database adapter behavior, and DI/wiring that unit tests cannot prove.
-- A small number of high-value service workflows that represent user-visible behavior across multiple Appwrite subsystems.
+- Persistence, queue-visible behavior, worker and CLI-task integration, database adapter behavior, and DI/wiring.
+- Cross-subsystem workflows that represent user-visible behavior.
 
-Avoid broad e2e coverage for every edge case. Cover edge cases in unit tests and keep e2e focused on the integration contract that lower layers cannot exercise.
+Use `tests/unit/...` only for local src libraries (`src/Appwrite/Auth`, `Network`, `URL`, validators, mappers, parsers, filters, event builders):
+
+- Pure branching logic and boundary serialization that can be asserted without HTTP, Docker, queues, or Swoole.
+- Regression cases on library inputs and outputs with deterministic fakes.
+
+Do **not** add unit tests for `Platform/Modules/**/Http` actions, `Platform/Tasks`, `Platform/Workers`, or module workers. Exercise those through e2e; unit-test the libraries they call.
 
 ## Appwrite Patterns
 
-Structure tests as Arrange, Act, Assert. Test observable behavior, not the order of private calls or internal implementation details.
+Structure tests as Arrange, Act, Assert. Test observable behavior, not the order of private calls or internal implementation details. Never use reflection to reach private members.
 
-Write unit tests with `PHPUnit\Framework\TestCase` under the matching namespace in `tests/unit`. Use data providers for matrices. Prefer named fake classes over anonymous mocks when PHPStan clarity matters.
+Write unit tests with `PHPUnit\Framework\TestCase` under the matching namespace in `tests/unit` (path mirrors `src/`). Use data providers for matrices. Prefer named fake classes over anonymous mocks when PHPStan clarity matters.
 
-Write service e2e tests with `Tests\E2E\Client` and the existing scope traits such as `Scope`, `ProjectCustom`, `SideClient`, `SideServer`, or `ProjectConsole`. Reuse local service base traits when they exist.
+Write service e2e tests with `Tests\E2E\Client` and the existing scope traits such as `Scope`, `ProjectCustom`, `SideClient`, `SideServer`, or `ProjectConsole`. Reuse local `{Service}Base` traits. Group assertions under `Test for SUCCESS` / `Test for FAILURE` blocks.
 
-Use deterministic test doubles for network, queue, mail, storage, database, and third-party boundaries whenever the point of the test is local behavior. Never call production third-party services from automated tests.
+Use deterministic test doubles for network, queue, mail, storage, database, and third-party boundaries in **unit** tests. Never call production third-party services from automated tests.
 
 Generate unique IDs, emails, and names for e2e data to survive parallel runs. Cache setup data only when the test does not require precise counts or fresh state.
 
-Keep assertions precise: status code, body fields, error type/message, permission outcome, retry count, adapter call count, or persisted value. Avoid asserting incidental full documents when a sparse behavior assertion is enough.
+Keep assertions precise: status code, body fields, error type/message, permission outcome, or persisted value. Avoid asserting incidental full documents when a sparse behavior assertion is enough.
 
 ## Duplication Policy
 
-If a higher-level test finds a bug and no lower-level test fails, add a lower-level regression test where practical.
+If an e2e test finds a bug in a src library and no unit test fails, add a unit regression on that library.
 
-Do not repeat all conditional branches at e2e level once unit tests cover them. The e2e test should prove routing, auth, serialization, persistence, or wiring only.
-
-Delete or avoid high-level tests that no longer add confidence beyond lower-level coverage. Keep tests readable even if that means some local duplication in setup.
+Do not unit-test route/task/worker orchestration to avoid duplicating e2e. Keep tests readable even if that means some local duplication in setup.
 
 ## Swoole And Workers
 
-Be careful with Swoole coroutines in unit tests. Do not run coroutine integrations inside the shared unit process unless existing nearby tests prove the pattern is safe.
-
-For workers, unit-test pure pieces such as batching, classification, cursor construction, retry/backoff decisions, and adapter interaction with fakes. Cover coroutine scheduling, queues, and full worker lifecycle through e2e or existing integration patterns.
+Do not run Swoole coroutine integrations inside the shared unit process. Cover workers, queues, and full worker lifecycle through e2e.
 
 Avoid sleeps and timing-sensitive assertions. If timing is unavoidable, isolate it, make it generous, and prefer polling helpers already used in the suite.
 

@@ -39,6 +39,12 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 - **bin/** -- CLI entry points (`worker`, `worker-*`, `schedule`, `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, …)
 - **tests/e2e/**, **tests/unit/** -- tests; **public/** -- static assets and generated SDKs
 
+## Libraries
+
+`src/Appwrite/` is domain libraries, not a dumping ground. Each directory solves **one problem** (`Auth`, `Event`, `Network`, `URL`, `SDK`, `Migration`). Do not grow a library into a second concern; add a new directory instead.
+
+Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it belongs in the `utopia-php` ecosystem as a Composer dependency, not under `src/Appwrite/`. Overrides of Utopia packages live in `src/Utopia/` (currently `Bus` only).
+
 ## HTTP actions
 
 Action files must be `Get.php`, `Create.php`, `Update.php`, `Delete.php`, or `XList.php` (`List` is reserved). Model non-CRUD work as a property update (`Teams/Http/Memberships/Status/Update.php` → `PATCH /v1/teams/:teamId/memberships/:membershipId/status`). Never RPC-style files (`Verify.php`, `Block.php`).
@@ -114,8 +120,13 @@ Follow PSR-12/PSR-4 unless noted. These apply to code, paths, labels, tests, and
 - **DI:** `{role}For{Target}` only when multiple of that role coexist (`dbForProject` / `dbForPlatform`). Register new injections in `app/init/resources.php` and `app/init/resources/request.php`.
 - **Models:** class PascalCase; `getName()` matches. `Response::MODEL_*` constants `SCREAMING_SNAKE_CASE`; values camelCase singular (`team`) or `{name}List`.
 - **Env:** `_APP_` + `SCREAMING_SNAKE_CASE`.
-- **Tests:** E2E under `tests/e2e/Services/{Service}/`; methods `test{Verb}` or `test{Verb}{Qualifier}`. Unit path mirrors source; class `{ClassUnderTest}Test`. Never use reflection to reach private members.
 - **Spans:** in handlers only `Span::add($key, $value)` — never `Span::init`, `setError`, or `Span::finish`. Keys `snake_case`; dots only for child relationships (`project.id`, `storage.bucket.id`). Cross-cutting ids (`project.id`, `function.id`, `user.id`) stay at top level, not under a subsystem.
+
+## Tests
+
+**E2E** (`tests/e2e/Services/{Service}/`) is the contract for the HTTP/API surface. Cover every route for **success and failure** (auth, scopes, validation, 4xx, permissions) through the real API. Shared logic in `{Service}Base` traits; suites `{Feature}{ConsoleClientTest|CustomClientTest|CustomServerTest}`. Methods `test{Verb}` or `test{Verb}{Qualifier}`. Group assertions under `Test for SUCCESS` / `Test for FAILURE` blocks.
+
+**Unit** (`tests/unit/`) covers **local src libraries only** (`src/Appwrite/Auth`, `Network`, `URL`, …). Path mirrors source; class `{ClassUnderTest}Test`. Do **not** unit-test HTTP route actions, CLI tasks, or workers — e2e covers those surfaces, and unit tests cover the libraries they call. Never use reflection to reach private members.
 
 ## SDK specs
 
@@ -129,7 +140,7 @@ Preview builds set the flag on **both** the `specs` and `sdks` steps in `.github
 ## See also
 
 - Modules (HTTP nesting, hooks, registration): [`src/Appwrite/Platform/AGENTS.md`](src/Appwrite/Platform/AGENTS.md)
-- Testing pyramid: [`.codex/skills/appwrite-testing/SKILL.md`](.codex/skills/appwrite-testing/SKILL.md)
+- Testing: [`.codex/skills/appwrite-testing/SKILL.md`](.codex/skills/appwrite-testing/SKILL.md)
 - Patch version bump: [`.claude/skills/patch-release-checklist/SKILL.md`](.claude/skills/patch-release-checklist/SKILL.md)
 - Self-hosted RC / release gates: [`.agents/skills/self-hosted-release/SKILL.md`](.agents/skills/self-hosted-release/SKILL.md)
 - Human contributor setup: [`CONTRIBUTING.md`](CONTRIBUTING.md)
