@@ -71,41 +71,12 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Codebase client ID is not configured. Please configure VCS (Version Control System) variables in .env file.');
         }
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = $platform['consoleHostname'] ?? '';
-
-        $callback = $protocol . '://' . $hostname . '/v1/vcs/codebase/callback';
-
-        $query = [
+        // Codebase ignores a redirect parameter on the install URL; the
+        // callback URL is taken from the app's own configuration on Cursor.
+        $url = 'https://cursor.com/codebase/apps/install?' . \http_build_query([
             'client_id' => $clientId,
             'source' => 'app-metadata',
-        ];
-
-        // The correct redirect parameter name is undocumented, so send the
-        // callback URL under every plausible spelling -- Codebase should honor
-        // whichever one it recognises and ignore the rest.
-        // TODO: Narrow to the single correct parameter once confirmed.
-        foreach ([
-            'redirect_uri',
-            'redirect_url',
-            'redirectUri',
-            'redirectUrl',
-            'callback_uri',
-            'callback_url',
-            'callbackUri',
-            'callbackUrl',
-            'callback',
-            'return_uri',
-            'return_url',
-            'returnUri',
-            'returnUrl',
-            'return_to',
-            'returnTo',
-        ] as $param) {
-            $query[$param] = $callback;
-        }
-
-        $url = 'https://cursor.com/codebase/apps/install?' . \http_build_query($query);
+        ]);
 
         // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
         Console::log('[CODEBASE DEBUG] Authorize for project "' . $project->getId() . '" (success: "' . $success . '", failure: "' . $failure . '")');
