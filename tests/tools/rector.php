@@ -5,15 +5,18 @@ declare(strict_types=1);
 use Rector\Config\RectorConfig;
 use Rector\PHPUnit\Set\PHPUnitSetList;
 
+$root = dirname(__DIR__, 2);
+
 return RectorConfig::configure()
     ->withBootstrapFiles([
-        __DIR__ . '/app/init/constants.php',
+        $root . '/app/init/constants.php',
     ])
     ->withPaths([
-        __DIR__ . '/tests',
+        $root . '/tests',
     ])
-    ->withSkipPath(__DIR__ . '/vendor')
-    ->withSkipPath(__DIR__ . '/tests/resources')
+    ->withSkipPath($root . '/vendor')
+    ->withSkipPath($root . '/tests/resources')
+    ->withSkipPath($root . '/tests/tools')
     ->withSets([
         PHPUnitSetList::PHPUNIT_CODE_QUALITY,
     ]);
