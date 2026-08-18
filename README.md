@@ -229,6 +229,7 @@ flowchart TB
     Messaging
     Storage
     Avatars
+    Locale
   end
   services --> Executor & Queue & Cache & Browser & SMTP & Embeddings
   Cache --> Database
