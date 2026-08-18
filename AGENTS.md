@@ -1,6 +1,6 @@
 # Appwrite
 
-Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on PHP 8.3+ and Swoole, delivered as Docker containers.
+Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on PHP 8.5+ and Swoole 6, delivered as Docker containers.
 
 ## Commands
 
@@ -14,7 +14,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 | `composer format` | Auto-format code (Pint, PSR-12) |
 | `composer format <file>` | Format a specific file |
 | `composer lint <file>` | Check formatting of a file |
-| `composer analyze` | Static analysis (PHPStan level 4) |
+| `composer analyze` | Static analysis (PHPStan 2, level 4) |
 | `composer check` | Same as `analyze` |
 | `composer refactor:check` | Rector dry-run over `tests/` (CI "Refactor" check) |
 | `composer refactor` | Apply Rector fixes |
@@ -23,11 +23,11 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 
 ## Stack
 
-- PHP 8.3+, Swoole 6.x (async runtime, replaces PHP-FPM)
+- PHP 8.5+, Swoole 6.x (async runtime, replaces PHP-FPM)
 - Utopia PHP (HTTP routing, CLI, DI, queue)
-- PostgreSQL (default); adapters: postgresql, mariadb, mongodb via utopia-php/database
-- Redis (cache, queue, pub/sub); Docker + Traefik
-- PHPUnit 12, Pint (PSR-12), PHPStan level 4, Rector
+- PostgreSQL (default platform DB); adapters: postgresql, mariadb, mongodb via utopia-php/database. DocumentsDB defaults to mongodb; VectorsDB to postgresql
+- Redis 7.x (cache, queue, pub/sub); Docker + Traefik 3.x
+- PHPUnit 12, Pint 1 (PSR-12), PHPStan 2 (level 4), Rector 2
 
 ## Layout
 
