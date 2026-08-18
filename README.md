@@ -230,21 +230,28 @@ flowchart TB
   traefik --> realtimeApi[Realtime API]
 
   subgraph services [Services]
-    Account
-    Users
-    Teams
-    Databases
-    TablesDB
-    Storage
-    Functions
-    Sites
-    Messaging
-    Avatars
-    Locale
-    Health
-    VCS
-    Webhooks
-    Tokens
+    direction TB
+    subgraph servicesRow1[" "]
+      direction LR
+      Account
+      Users
+      Teams
+      Databases
+      TablesDB
+      Storage
+      Functions
+      Sites
+    end
+    subgraph servicesRow2[" "]
+      direction LR
+      Messaging
+      Avatars
+      Locale
+      Health
+      VCS
+      Webhooks
+      Tokens
+    end
   end
 
   restApi --> services
