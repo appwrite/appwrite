@@ -244,7 +244,6 @@ flowchart TB
   securityLayer --> executor["Executor (Open-Runtimes)"]
   securityLayer --> cache["Cache (Redis)"]
   securityLayer --> queue["Queue (Redis)"]
-  securityLayer --> antivirus["AntiVirus (ClamAV)"]
   cache --> securityLayer
 
   executor --> dockerK8s["Docker / K8S"]
