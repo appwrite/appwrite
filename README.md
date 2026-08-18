@@ -215,7 +215,83 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ## Architecture
 
-![Appwrite Architecture showing how Appwrite is built and the services and tools it uses](docs/specs/overview.drawio.svg)
+```mermaid
+flowchart TB
+  Web --> Appwrite
+  Flutter --> Appwrite
+  iOS --> Appwrite
+  Android --> Appwrite
+  Servers --> Appwrite
+
+  Appwrite --> Loadbalancer
+  Loadbalancer --> sslGateway[SSL Gateway]
+  Loadbalancer --> Console
+  Loadbalancer --> graphqlApi["GraphQL API (Coming Soon)"]
+  Loadbalancer --> restApi[REST API]
+  Loadbalancer --> realtimeApi[Realtime API]
+
+  restApi --> apiFunctions[Functions]
+  restApi --> apiUsers[Users]
+  restApi --> apiAccount[Account]
+  restApi --> apiTeams[Teams]
+  restApi --> apiDatabase[Database]
+  restApi --> apiStorage[Storage]
+  restApi --> apiLocalization[Localization]
+  restApi --> apiAvatars[Avatars]
+  restApi --> apiHealth[Health]
+
+  graphqlApi --> securityLayer[Security Layer]
+  restApi --> securityLayer
+  realtimeApi --> securityLayer
+
+  securityLayer --> executor["Executor (Open-Runtimes)"]
+  securityLayer --> cache["Cache (Redis)"]
+  securityLayer --> queue["Queue (Redis)"]
+  securityLayer --> antivirus["AntiVirus (ClamAV)"]
+  cache --> securityLayer
+
+  executor --> dockerK8s["Docker / K8S"]
+  cache --> database[Database]
+
+  subgraph workers [Workers]
+    Scheduler
+    Usage
+    Maintenance
+    Builds
+    Audits
+    Mails
+    workerDatabase[Database]
+    Webhooks
+    workerFunctions[Functions]
+    Certs
+    Deletes
+  end
+
+  queue --> Builds
+  queue --> Audits
+  queue --> Mails
+  queue --> workerDatabase
+  queue --> Webhooks
+  queue --> workerFunctions
+  queue --> Certs
+  queue --> Deletes
+
+  executor --> Builds
+  workerFunctions --> executor
+  Usage --> database
+  Maintenance --> database
+  Builds --> database
+  Audits --> database
+  workerDatabase --> database
+  Webhooks --> database
+  workerFunctions --> database
+  Certs --> database
+  Deletes --> database
+
+  Mails --> SMTP
+  Certs --> Letsencrypt
+  Letsencrypt --> Loadbalancer
+```
 
 Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
 

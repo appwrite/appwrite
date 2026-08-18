@@ -55,7 +55,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 - **app/http.php**, **app/worker.php**, **app/realtime.php**, **app/cli.php** -- process entry harnesses
 - **app/controllers/** -- leftover HTTP controllers; new endpoints go in modules
 - **bin/** -- CLI entry points (`worker`, `worker-*`, `schedule`, `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, …)
-- **docs/** -- API specs, references, tutorials
+- **docs/** -- references, tutorials, SDK getting-started notes
 - **tests/e2e/**, **tests/unit/** -- tests; **public/** -- fonts, images, generated SDKs
 
 ## Libraries
