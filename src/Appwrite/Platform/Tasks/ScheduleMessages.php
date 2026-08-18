@@ -37,15 +37,7 @@ class ScheduleMessages extends Action
         return 'schedule-messages';
     }
 
-    public static function getSupportedResource(): string
-    {
-        return SCHEDULE_RESOURCE_TYPE_MESSAGE;
-    }
 
-    public static function getCollectionId(): string
-    {
-        return RESOURCE_TYPE_MESSAGES;
-    }
 
     public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
@@ -53,9 +45,9 @@ class ScheduleMessages extends Action
             dbForPlatform: $dbForPlatform,
             getProjectDB: $getProjectDB,
             isResourceBlocked: $getIsResourceBlocked,
-            resourceType: self::getSupportedResource(),
-            collectionId: self::getCollectionId(),
-            resource: fn (Database $projectDB, array $schedule): Document => $projectDB->getDocument(self::getCollectionId(), $schedule['resourceId']),
+            resourceType: SCHEDULE_RESOURCE_TYPE_MESSAGE,
+            collectionId: RESOURCE_TYPE_MESSAGES,
+            resource: fn (Database $projectDB, array $schedule): Document => $projectDB->getDocument(RESOURCE_TYPE_MESSAGES, $schedule['resourceId']),
             entry: fn (array $schedule): Entry => new Entry(new At(new \DateTimeImmutable((string) $schedule['schedule'])), $schedule),
         );
 

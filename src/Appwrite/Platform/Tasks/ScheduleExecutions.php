@@ -37,15 +37,7 @@ class ScheduleExecutions extends Action
         return 'schedule-executions';
     }
 
-    public static function getSupportedResource(): string
-    {
-        return SCHEDULE_RESOURCE_TYPE_EXECUTION;
-    }
 
-    public static function getCollectionId(): string
-    {
-        return RESOURCE_TYPE_EXECUTIONS;
-    }
 
     public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
@@ -53,8 +45,8 @@ class ScheduleExecutions extends Action
             dbForPlatform: $dbForPlatform,
             getProjectDB: $getProjectDB,
             isResourceBlocked: $getIsResourceBlocked,
-            resourceType: self::getSupportedResource(),
-            collectionId: self::getCollectionId(),
+            resourceType: SCHEDULE_RESOURCE_TYPE_EXECUTION,
+            collectionId: RESOURCE_TYPE_EXECUTIONS,
             resource: $this->resource(...),
             entry: fn (array $schedule): Entry => new Entry(new At(new \DateTimeImmutable((string) $schedule['schedule'])), $schedule),
         );
@@ -101,7 +93,7 @@ class ScheduleExecutions extends Action
     protected function resource(Database $projectDB, array $schedule): Document
     {
         try {
-            $resource = $projectDB->getDocument(self::getCollectionId(), $schedule['resourceId']);
+            $resource = $projectDB->getDocument(RESOURCE_TYPE_EXECUTIONS, $schedule['resourceId']);
         } catch (\Throwable) {
             $resource = new Document();
         }

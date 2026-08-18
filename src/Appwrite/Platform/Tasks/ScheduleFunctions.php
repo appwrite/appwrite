@@ -37,15 +37,7 @@ class ScheduleFunctions extends Action
         return 'schedule-functions';
     }
 
-    public static function getSupportedResource(): string
-    {
-        return SCHEDULE_RESOURCE_TYPE_FUNCTION;
-    }
 
-    public static function getCollectionId(): string
-    {
-        return RESOURCE_TYPE_FUNCTIONS;
-    }
 
     public static function spreadOffset(string $resourceId, int $window): int
     {
@@ -58,9 +50,9 @@ class ScheduleFunctions extends Action
             dbForPlatform: $dbForPlatform,
             getProjectDB: $getProjectDB,
             isResourceBlocked: $getIsResourceBlocked,
-            resourceType: self::getSupportedResource(),
-            collectionId: self::getCollectionId(),
-            resource: fn (Database $projectDB, array $schedule): Document => $projectDB->getDocument(self::getCollectionId(), $schedule['resourceId']),
+            resourceType: SCHEDULE_RESOURCE_TYPE_FUNCTION,
+            collectionId: RESOURCE_TYPE_FUNCTIONS,
+            resource: fn (Database $projectDB, array $schedule): Document => $projectDB->getDocument(RESOURCE_TYPE_FUNCTIONS, $schedule['resourceId']),
             entry: fn (array $schedule): Entry => new Entry(
                 // Spreading is part of the schedule: the shifted time is what
                 // the window covers and the watermark commits.
