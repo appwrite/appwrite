@@ -26,18 +26,8 @@ export const LIMIT_UNLIMITED = -1
  * The response is already scoped to one organization, so the org-level caps sit
  * alongside `canChangePlan` rather than under a wrapper, and the per-project
  * array is `projectCompliance` so `projects` can carry the org-level cap.
- *
- * Declared locally because the console SDK is regenerated from the cloud spec on
- * its own cadence and still carries the older shape. Drop this once it catches
- * up.
  */
-export type PlanChangeLimits = Omit<
-  Models.PlanChangeLimits,
-  'projects' | 'totalProjects'
-> &
-  Record<OrganizationResourceType, PlanChangeResourceCompliance> & {
-    projectCompliance: PlanChangeProjectCompliance[]
-  }
+export type PlanChangeLimits = Models.PlanChangeLimits
 
 const SELECTABLE_RESOURCE_TYPES = new Set<string>(
   DOWNGRADE_RESOURCE_TYPES.map(({ id }) => id),
