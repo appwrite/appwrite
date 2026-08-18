@@ -2617,7 +2617,7 @@ Http::get('/v1/messaging/topics')
             $cursor->setValue($cursorDocument[0]);
         }
         try {
-            // Safe to skip subquery, Does not return in Resonse
+            // Safe to skip subquery, Does not return in Response
             $topics = $dbForProject->skipFilters(
                 fn () => $dbForProject->find('topics', $queries),
                 ['subQueryTopicTargets']
