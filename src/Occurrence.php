@@ -13,6 +13,8 @@ final readonly class Occurrence
         public string $id,
         public \DateTimeImmutable $due,
         public mixed $payload = null,
+        /** The definition this run was selected against; see {@see Scheduler::isCurrent()}. */
+        public string $version = '',
     ) {}
 
     /**

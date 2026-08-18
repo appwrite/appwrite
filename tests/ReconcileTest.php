@@ -333,7 +333,37 @@ final class ReconcileTest extends TestCase
         $this->assertSame([], $scheduler->tick());
     }
 
-    public function testCoverageFromActiveFromDoesNotRedeliverAfterCommit(): void
+    public function testCountReportsWhatIsLoaded(): void
+    {
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));
+        $set = new RowSet([new Row('a', 'v1'), new Row('b', 'v1'), new Row('gone', 'v1')]);
+        $scheduler = new Scheduler(
+            source: new SnapshotSource(
+                snapshot: $set->list(...),
+                make: function (Row $row): Entry {
+                    if ($row->id === 'gone') {
+                        throw new \InvalidArgumentException('resource not found');
+                    }
+
+                    return new Entry(new Interval(60));
+                },
+            ),
+            store: new MemoryStore(),
+            clock: $clock,
+            onError: function (\Throwable $error): void {},
+        );
+
+        $this->assertSame(0, $scheduler->count(), 'nothing is loaded before the first sync');
+
+        $scheduler->reconcile();
+        $this->assertSame(2, $scheduler->count(), 'a row that cannot be made is not loaded');
+
+        $set->rows = [new Row('a', 'v1')];
+        $scheduler->reconcile(full: true);
+        $this->assertSame(1, $scheduler->count(), 'removals are reflected');
+    }
+
+    public function testARowDiscoveredBetweenSyncsIsCoveredFromWhenItTookEffect(): void
     {
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:05:10.000000'));
         $set = new RowSet();
@@ -346,25 +376,208 @@ final class ReconcileTest extends TestCase
             clock: $clock,
         );
 
+        // A sync has already happened, so the scheduler knows when it last
+        // looked: anything appearing after that is genuinely new to it.
+        $scheduler->reconcile();
         $scheduler->tick();
         $scheduler->commit(); // watermark at 03:05:10
 
-        $set->rows = [new Row('a', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:03:30'))];
+        $clock->advance(50.0); // 03:06:00
+        $set->rows = [new Row('a', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:05:30'))];
         $scheduler->reconcile();
-        $clock->advance(5.0); // 03:05:15
+        $clock->advance(15.0); // 03:06:15
 
-        $this->assertSame(
-            ['03:04:00', '03:05:00'],
-            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
-            'the first tick covers back to activeFrom, past the watermark',
-        );
-        $scheduler->commit();
-
-        $clock->advance(60.0); // 03:06:15
         $this->assertSame(
             ['03:06:00'],
             array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
+            'coverage reaches back to activeFrom, past the watermark it missed',
+        );
+        $scheduler->commit();
+
+        $clock->advance(60.0); // 03:07:15
+        $this->assertSame(
+            ['03:07:00'],
+            array_map(fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'), $scheduler->tick()),
             'after commit the entry rides the watermark: no re-delivery',
+        );
+    }
+
+    public function testASyncAfterATickDoesNotClaimThatTickSawIt(): void
+    {
+        // A driver that reconciles between tick() and commit() — the pattern
+        // the two-phase API invites — must not have the commit claim the
+        // window was selected from that newer read. The replacement below
+        // appeared after the window was chosen, so nothing in the pending
+        // tick covers it, and a successor has to know that.
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:05:00.000000'));
+        $store = new MemoryStore();
+        $set = new RowSet([new Row('a', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:00:00'))]);
+        $build = fn(string $token): Scheduler => new Scheduler(
+            source: new SnapshotSource(
+                snapshot: $set->list(...),
+                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+            ),
+            store: $store,
+            tickSeconds: 60,
+            leadSeconds: 120,
+            recoverSeconds: 600,
+            leaseSeconds: 360,
+            token: $token,
+            clock: $clock,
+        );
+
+        $predecessor = $build('predecessor');
+        $predecessor->reconcile();   // read at 03:05:00
+        $predecessor->tick();        // window selected here, out to 03:07:00
+
+        $clock->advance(20.0);       // 03:05:20
+        $set->rows = [new Row('a', 'v2', activeFrom: new \DateTimeImmutable('2026-08-18 03:05:20'))];
+        $predecessor->reconcile();   // read at 03:05:20 — after the window was chosen
+        $predecessor->commit();      // coverage to 03:07:00, from the 03:05:00 read
+
+        $clock->advance(400.0);      // 03:12:00 — the claim has expired
+        $successor = $build('successor');
+        $successor->reconcile();
+
+        $this->assertContains(
+            '03:06:00',
+            array_map(
+                fn(Occurrence $occurrence): string => $occurrence->due->format('H:i:s'),
+                $successor->tick(),
+            ),
+            'the replacement is owed the runs inside a window that was chosen before it existed',
+        );
+    }
+
+    public function testASuccessorDoesNotReplayWhatItsPredecessorAlreadyRan(): void
+    {
+        // Coverage runs past the last read of the source: the predecessor read
+        // at 03:05:00 and committed coverage to 03:07:00, so it dispatched
+        // 03:06:00 and 03:07:00 for a schedule it already held. A successor
+        // must not run those again just because they sit after that read.
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:05:00.000000'));
+        $store = new MemoryStore();
+        $set = new RowSet([new Row('known', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:01:00'))]);
+        $build = fn(string $token): Scheduler => new Scheduler(
+            source: new SnapshotSource(
+                snapshot: $set->list(...),
+                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+            ),
+            store: $store,
+            tickSeconds: 60,
+            leaseSeconds: 120,
+            token: $token,
+            clock: $clock,
+        );
+
+        $predecessor = $build('predecessor');
+        $predecessor->reconcile();   // source read at 03:05:00
+        $clock->advance(120.0);      // 03:07:00
+        $predecessor->tick();        // dispatches 03:05:00 and 03:06:00
+        $predecessor->commit();      // coverage to 03:07:00, read to 03:05:00
+
+        $clock->advance(130.0);      // 03:09:10 — the claim has expired
+        $successor = $build('successor');
+        $successor->reconcile();
+
+        $this->assertSame(
+            // 03:07:00 belongs to the successor: windows are half-open, so the
+            // predecessor's ended just before it.
+            ['known@03:07:00', 'known@03:08:00', 'known@03:09:00'],
+            array_map(
+                fn(Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
+                $successor->tick(),
+            ),
+            'a schedule the predecessor held resumes at the watermark, not at its last read',
+        );
+    }
+
+    public function testASuccessorCoversWhatItsPredecessorNeverSaw(): void
+    {
+        // The window a single watermark cannot describe: a predecessor
+        // committed coverage up to 03:07:00, but its last read of the source
+        // was at 03:05:00, so a schedule created at 03:05:30 was never in its
+        // view. Its 03:06:00 run falls inside the committed window, and
+        // treating that window as covered for this row would drop it.
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:05:00.000000'));
+        $store = new MemoryStore();
+        $set = new RowSet();
+        $build = fn(string $token): Scheduler => new Scheduler(
+            source: new SnapshotSource(
+                snapshot: $set->list(...),
+                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+            ),
+            store: $store,
+            tickSeconds: 60,
+            leaseSeconds: 120,
+            token: $token,
+            clock: $clock,
+        );
+
+        $predecessor = $build('predecessor');
+        $predecessor->reconcile();   // reads an empty source at 03:05:00
+        $clock->advance(120.0);      // 03:07:00
+        $predecessor->tick();
+        $predecessor->commit();      // coverage to 03:07:00, source read to 03:05:00
+
+        // Created inside that gap, and due inside it too.
+        $set->rows = [new Row('late', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:05:30'))];
+
+        $clock->advance(130.0);      // 03:09:10 — the predecessor is gone, its claim expired
+        $successor = $build('successor');
+        $successor->reconcile();
+
+        $this->assertSame(
+            ['late@03:06:00', 'late@03:07:00', 'late@03:08:00', 'late@03:09:00'],
+            array_map(
+                fn(Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
+                $successor->tick(),
+            ),
+            'the successor owes every run since the row appeared, starting inside the committed window',
+        );
+    }
+
+    public function testAColdStartDoesNotReplayHistoryForEverySchedule(): void
+    {
+        // The watermark is what a predecessor committed, and it already
+        // covered the schedules it held. Reaching back to each row's own
+        // activeFrom on the first sync would re-run everything edited within
+        // the lookback, for the whole fleet, on every restart.
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:05:10.000000'));
+        $store = new MemoryStore();
+        $set = new RowSet();
+        $build = fn(): Scheduler => new Scheduler(
+            source: new SnapshotSource(
+                snapshot: $set->list(...),
+                make: fn(Row $row): Entry => new Entry(new Cron('* * * * *')),
+            ),
+            store: $store,
+            token: 'replacement',
+            clock: $clock,
+        );
+
+        // Rows edited well before the watermark, and read by the predecessor.
+        $set->rows = [
+            new Row('a', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:01:00')),
+            new Row('b', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 02:00:00')),
+        ];
+
+        $predecessor = $build();
+        $predecessor->reconcile();
+        $predecessor->tick();
+        $predecessor->commit(); // watermark at 03:05:10, source read at 03:05:10
+
+        $replacement = $build();
+        $replacement->reconcile();
+        $clock->advance(65.0); // 03:06:15
+
+        $this->assertSame(
+            ['a@03:06:00', 'b@03:06:00'],
+            array_map(
+                fn(Occurrence $occurrence): string => $occurrence->id . '@' . $occurrence->due->format('H:i:s'),
+                $replacement->tick(),
+            ),
+            'each schedule is covered from the watermark, not from its own last edit',
         );
     }
 
@@ -390,30 +603,34 @@ final class ReconcileTest extends TestCase
             clock: $clock,
         );
 
+        // A sync first, so the row below is one the scheduler discovers
+        // between syncs rather than on a cold start.
+        $scheduler->reconcile();
         $scheduler->tick();
         $scheduler->commit(); // watermark at 03:05:10
 
-        $set->rows = [new Row('a', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:03:30'))];
+        $clock->advance(50.0); // 03:06:00
+        $set->rows = [new Row('a', 'v1', activeFrom: new \DateTimeImmutable('2026-08-18 03:05:30'))];
         $scheduler->reconcile();
-        $clock->advance(5.0); // 03:05:15
+        $clock->advance(15.0); // 03:06:15
 
         $underV1 = $scheduler->tick();
-        $this->assertSame(['03:04:00', '03:05:00'], $this->dues($underV1));
+        $this->assertSame(['03:06:00'], $this->dues($underV1));
 
         // The source replaces the row before the commit lands.
-        $set->rows = [new Row('a', 'v2', activeFrom: new \DateTimeImmutable('2026-08-18 03:04:30'))];
+        $set->rows = [new Row('a', 'v2', activeFrom: new \DateTimeImmutable('2026-08-18 03:05:45'))];
         $scheduler->reconcile();
-        $scheduler->commit(); // watermark advances to 03:05:15 regardless
+        $scheduler->commit(); // watermark advances to 03:06:15 regardless
 
-        $clock->advance(60.0); // 03:06:15
+        $clock->advance(60.0); // 03:07:15
         $underV2 = $scheduler->tick();
         $this->assertSame(
-            ['03:05:00', '03:06:00'],
+            ['03:06:00', '03:07:00'],
             $this->dues($underV2),
             'the replacement runs from its own change time, repeating one already-committed run',
         );
         $this->assertSame(
-            $underV1[1]->key(),
+            $underV1[0]->key(),
             $underV2[0]->key(),
             'the repeat is the same run, so a consumer keyed on it deduplicates',
         );
@@ -422,7 +639,7 @@ final class ReconcileTest extends TestCase
         // Bounded to one span: the coverage is consumed, so it does not
         // reach back again on later ticks.
         $clock->advance(60.0);
-        $this->assertSame(['03:07:00'], $this->dues($scheduler->tick()));
+        $this->assertSame(['03:08:00'], $this->dues($scheduler->tick()));
     }
 
     public function testOneShotReplacedBetweenTickAndCommitSurvives(): void

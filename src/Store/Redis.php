@@ -37,7 +37,7 @@ final readonly class Redis implements Store
             return 0
         end
 
-        redis.call('hset', KEYS[1], 'token', ARGV[3], 'expiresAt', ARGV[4], 'windowEnd', ARGV[5])
+        redis.call('hset', KEYS[1], 'token', ARGV[3], 'expiresAt', ARGV[4], 'coveredUntil', ARGV[5], 'syncedUntil', ARGV[6])
 
         return 1
         LUA;
@@ -56,12 +56,17 @@ final readonly class Redis implements Store
             return null;
         }
 
-        $windowEnd = (string) ($record['windowEnd'] ?? '');
+        // Redis hash fields are strings, so the record's moments are written
+        // and read back at fixed precision rather than through float casts of
+        // whatever the client hands over.
+        $coveredUntil = (string) ($record['coveredUntil'] ?? '');
+        $syncedUntil = (string) ($record['syncedUntil'] ?? '');
 
         return new Claim(
             $record['token'],
             (float) $record['expiresAt'],
-            $windowEnd === '' ? null : $windowEnd,
+            $coveredUntil === '' ? null : (float) $coveredUntil,
+            $syncedUntil === '' ? null : (float) $syncedUntil,
         );
     }
 
@@ -76,7 +81,8 @@ final readonly class Redis implements Store
             $expected ?? '',
             $next->token,
             \sprintf('%.6F', $next->expiresAt),
-            $next->windowEnd ?? '',
+            $next->coveredUntil === null ? '' : \sprintf('%.6F', $next->coveredUntil),
+            $next->syncedUntil === null ? '' : \sprintf('%.6F', $next->syncedUntil),
         ], 1);
 
         return \in_array($result, [1, '1'], true);

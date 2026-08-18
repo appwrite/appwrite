@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Schedule\Trigger\At;
 use Utopia\Schedule\Trigger\Cron;
 use Utopia\Schedule\Trigger\Interval;
+use Utopia\Schedule\Trigger\Shifted;
 
 final class ScheduleTest extends TestCase
 {
@@ -323,6 +324,65 @@ final class ScheduleTest extends TestCase
         $this->assertSame(['16:00:30'], $this->format($at->occurrencesBetween(
             new \DateTimeImmutable('2026-08-17 16:00:29.000000'),
             new \DateTimeImmutable('2026-08-17 16:00:31.000000'),
+        )));
+    }
+
+    public function testShiftedMovesEveryOccurrence(): void
+    {
+        $shifted = new Shifted(new Cron('*/15 * * * *'), 40);
+
+        $this->assertSame(['03:00:40', '03:15:40'], $this->format($shifted->occurrencesBetween(
+            new \DateTimeImmutable('2026-08-18 03:00:00.000000'),
+            new \DateTimeImmutable('2026-08-18 03:16:00.000000'),
+        )));
+    }
+
+    /**
+     * The window is shifted back and the results forward, so a shifted
+     * occurrence still belongs to exactly one window. Getting this backwards
+     * drops runs on one side of every boundary and duplicates them on the
+     * other, which no fleet notices until it is a support ticket.
+     */
+    public function testShiftedOccurrencesStillTileAcrossConsecutiveWindows(): void
+    {
+        $shifted = new Shifted(new Cron('* * * * *'), 30);
+        $seen = [];
+
+        // Boundaries that fall between the true minute and the shifted one.
+        foreach (['03:00:15', '03:01:15', '03:02:15'] as $index => $edge) {
+            $seen = [...$seen, ...$this->format($shifted->occurrencesBetween(
+                new \DateTimeImmutable("2026-08-18 {$edge}.000000"),
+                new \DateTimeImmutable('2026-08-18 ' . ['03:01:15', '03:02:15', '03:03:15'][$index] . '.000000'),
+            ))];
+        }
+
+        $this->assertSame(['03:00:30', '03:01:30', '03:02:30'], $seen);
+    }
+
+    public function testShiftedKeepsTheKindOfScheduleItWraps(): void
+    {
+        $this->assertTrue((new Shifted(new Cron('* * * * *'), 5))->recurring());
+        $this->assertFalse((new Shifted(new At(new \DateTimeImmutable('2026-08-18 03:00:00')), 5))->recurring());
+    }
+
+    public function testShiftedByNothingChangesNothing(): void
+    {
+        $window = [new \DateTimeImmutable('2026-08-18 03:00:00.000000'), new \DateTimeImmutable('2026-08-18 03:02:00.000000')];
+        $cron = new Cron('* * * * *');
+
+        $this->assertSame(
+            $this->format($cron->occurrencesBetween(...$window)),
+            $this->format((new Shifted($cron, 0))->occurrencesBetween(...$window)),
+        );
+    }
+
+    public function testShiftedAcceptsANegativeShift(): void
+    {
+        $shifted = new Shifted(new Cron('0 * * * *'), -10);
+
+        $this->assertSame(['02:59:50'], $this->format($shifted->occurrencesBetween(
+            new \DateTimeImmutable('2026-08-18 02:59:00.000000'),
+            new \DateTimeImmutable('2026-08-18 03:00:00.000000'),
         )));
     }
 

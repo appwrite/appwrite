@@ -56,9 +56,9 @@ final class ReliabilityTest extends TestCase
                 make: fn(Row $row): Entry => new Entry($triggers[$row->id]),
             ),
             store: new MemoryStore(),
+            tickSeconds: 60,
+            leaseSeconds: 600,
             clock: $clock,
-            interval: 60,
-            lease: 600,
         );
         $scheduler->reconcile();
 
@@ -191,11 +191,11 @@ final class ReliabilityTest extends TestCase
                 make: fn(Row $row): Entry => new Entry(new Interval(60)),
             ),
             store: $store,
-            clock: $clock,
-            interval: 60,
-            lookback: 600,
-            lease: 240,
+            tickSeconds: 60,
+            recoverSeconds: 600,
+            leaseSeconds: 240,
             token: $token,
+            clock: $clock,
         );
 
         $a = $build('a');

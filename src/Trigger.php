@@ -14,7 +14,8 @@ namespace Utopia\Schedule;
  * caller's loop has been running when the trigger is evaluated.
  *
  * Implementations live alongside this interface: {@see Trigger\Cron},
- * {@see Trigger\Interval}, {@see Trigger\At}.
+ * {@see Trigger\Interval}, {@see Trigger\At} and {@see Trigger\Shifted},
+ * which moves another trigger's occurrences by a fixed offset.
  */
 interface Trigger
 {

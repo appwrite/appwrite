@@ -64,9 +64,9 @@ $clock = new TestClock(new DateTimeImmutable('2026-08-18 12:00:30.250000'));
 $scheduler = new Scheduler(
     source: $source,
     store: new MemoryStore(),
+    tickSeconds: INTERVAL,
+    leaseSeconds: 600,
     clock: $clock,
-    interval: INTERVAL,
-    lease: 600,
 );
 
 /** @var list<array{string, string, float, float}> $results */
