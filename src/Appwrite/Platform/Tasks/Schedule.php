@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Coroutine as Co;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -22,7 +23,7 @@ class Schedule extends Action
             ->desc('Execute functions, executions, and messages scheduled in Appwrite')
             ->inject('publisher')
             ->inject('publisherMigrations')
-            ->inject('publisherFunctions')
+            ->inject('publisherForFunctions')
             ->inject('publisherMessaging')
             ->inject('getIsResourceBlocked')
             ->inject('dbForPlatform')
@@ -34,7 +35,7 @@ class Schedule extends Action
     public function action(
         BrokerPool $publisher,
         BrokerPool $publisherMigrations,
-        BrokerPool $publisherFunctions,
+        FunctionPublisher $publisherForFunctions,
         BrokerPool $publisherMessaging,
         callable $getIsResourceBlocked,
         Database $dbForPlatform,
@@ -66,7 +67,7 @@ class Schedule extends Action
             $task->setup(
                 $publisher,
                 $publisherMigrations,
-                $publisherFunctions,
+                $publisherForFunctions,
                 $publisherMessaging,
                 $telemetry,
             );

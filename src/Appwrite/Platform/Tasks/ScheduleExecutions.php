@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Func as FunctionMessage;
-use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Coroutine as Co;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -64,11 +63,6 @@ class ScheduleExecutions extends ScheduleBase
         try {
             $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
-            $publisherForFunctions = new FunctionPublisher(
-                $this->publisherFunctions,
-                new \Utopia\Queue\Queue(\Utopia\System\System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', \Appwrite\Event\Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', \Appwrite\Event\Event::FUNCTIONS_QUEUE_TTL)
-            );
-
             $schedules = [];
             foreach ($this->schedules as $schedule) {
                 if (!$schedule['active']) {
@@ -94,7 +88,7 @@ class ScheduleExecutions extends ScheduleBase
                         Co::sleep($delay);
                     }
 
-                    $publisherForFunctions->enqueue(new FunctionMessage(
+                    $this->publisherForFunctions->enqueue(new FunctionMessage(
                         project: $schedule['project'],
                         functionId: $schedule['resource']->getAttribute('resourceId', ''),
                         execution: new Document([
