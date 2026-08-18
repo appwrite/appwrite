@@ -17,8 +17,8 @@
         "bench": "vendor/bin/phpbench run --report=benchmark",
         "check": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G",
         "dead-code": "./vendor/bin/phpstan analyse -c phpstan-deadcode.neon --memory-limit=2G",
-        "refactor": "vendor/bin/rector process",
-        "refactor:check": "vendor/bin/rector process --dry-run",
+        "refactor": "vendor/bin/rector process --config tests/tools/rector.php",
+        "refactor:check": "vendor/bin/rector process --dry-run --config tests/tools/rector.php",
         "installer:clean": "php src/Appwrite/Platform/Installer/Server.php --clean",
         "installer:dev": "docker compose build && composer installer:clean && php src/Appwrite/Platform/Installer/Server.php --docker"
     },
