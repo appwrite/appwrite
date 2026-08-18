@@ -22,10 +22,6 @@ use Utopia\Telemetry\Adapter as Telemetry;
 
 class ScheduleFunctions extends Action
 {
-    public const UPDATE_TIMER = 10; // seconds between reconciliations
-    public const ENQUEUE_TIMER = 60; // seconds between ticks
-    public const ENQUEUE_LOOKAHEAD = 60; // seconds of lead time, so a dispatch can sleep to the second
-
     public function __construct()
     {
         $this
@@ -82,9 +78,6 @@ class ScheduleFunctions extends Action
         $scheduler = new Scheduler(
             source: $source,
             store: new ClaimStore($pools->get('lock')->pop()->resource, 'utopia-schedule-' . self::getName()),
-            tickSeconds: self::ENQUEUE_TIMER,
-            syncSeconds: self::UPDATE_TIMER,
-            leadSeconds: self::ENQUEUE_LOOKAHEAD,
             telemetry: $telemetry,
             onError: function (\Throwable $error): void {
                 Span::init('schedule.functions.reconcile');

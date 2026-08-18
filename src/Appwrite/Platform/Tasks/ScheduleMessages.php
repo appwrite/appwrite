@@ -21,8 +21,6 @@ use Utopia\Telemetry\Adapter as Telemetry;
 class ScheduleMessages extends Action
 {
     public const UPDATE_TIMER = 3; // seconds between reconciliations
-    public const ENQUEUE_TIMER = 4; // seconds between ticks
-    public const ENQUEUE_LOOKAHEAD = 0; // no lead time: a message must not go out early
 
     public function __construct()
     {
@@ -67,9 +65,7 @@ class ScheduleMessages extends Action
         $scheduler = new Scheduler(
             source: $source,
             store: new ClaimStore($pools->get('lock')->pop()->resource, 'utopia-schedule-' . self::getName()),
-            tickSeconds: self::ENQUEUE_TIMER,
             syncSeconds: self::UPDATE_TIMER,
-            leadSeconds: self::ENQUEUE_LOOKAHEAD,
             telemetry: $telemetry,
             onError: function (\Throwable $error): void {
                 Span::init('schedule.messages.reconcile');
