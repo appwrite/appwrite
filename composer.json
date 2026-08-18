@@ -42,32 +42,6 @@
         {
             "type": "package",
             "package": {
-                "name": "utopia-php/queue",
-                "version": "1.2.999",
-                "source": {
-                    "url": "https://github.com/utopia-php/monorepo.git",
-                    "type": "git",
-                    "reference": "cursor/multi-job-queue-platform-f0c8"
-                },
-                "autoload": {
-                    "psr-4": {
-                        "Utopia\\Queue\\": "packages/queue/src/Queue"
-                    }
-                },
-                "require": {
-                    "php": ">=8.5",
-                    "utopia-php/di": "^0.3",
-                    "utopia-php/lock": "^0.3",
-                    "utopia-php/servers": "^0.4",
-                    "utopia-php/pools": "^2.0",
-                    "utopia-php/telemetry": "^0.4",
-                    "utopia-php/validators": "^0.4 || ^0.5"
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
                 "name": "utopia-php/platform",
                 "version": "1.0.999",
                 "source": {
@@ -143,7 +117,7 @@
         "utopia-php/platform": "1.0.999",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "3.0.*",
-        "utopia-php/queue": "1.2.999",
+        "utopia-php/queue": "^1.3.0",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "^4.0",
