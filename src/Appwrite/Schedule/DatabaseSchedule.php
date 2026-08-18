@@ -88,21 +88,6 @@ final class DatabaseSchedule implements Source, Changes
         return ($this->entry)($schedule);
     }
 
-    public static function touchProject(Document $project, Database $dbForPlatform): void
-    {
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return;
-        }
-
-        $accessedAt = $project->getAttribute('accessedAt', 0);
-        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-            $now = DateTime::now();
-            $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'accessedAt' => $now
-            ]));
-            $project->setAttribute('accessedAt', $now);
-        }
-    }
 
     /**
      * @return iterable<Row>

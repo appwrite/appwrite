@@ -6,6 +6,7 @@ use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Schedule\DatabaseSchedule;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
@@ -84,7 +85,18 @@ class ScheduleExecutions extends Action
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
     {
-        DatabaseSchedule::touchProject($project, $dbForPlatform);
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return;
+        }
+
+        $accessedAt = $project->getAttribute('accessedAt', 0);
+        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+            $now = DateTime::now();
+            $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'accessedAt' => $now
+            ]));
+            $project->setAttribute('accessedAt', $now);
+        }
     }
 
     /**
