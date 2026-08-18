@@ -1082,10 +1082,6 @@ trait QueryJoinCombos
         $this->assertSame(200, $firstPage['headers']['status-code']);
         $firstRows = $this->joinHardcoreRows($firstPage);
         $this->assertSame(1, \count($firstRows));
-        $firstId = $this->joinHardcoreCursorId($firstRows[0]);
-        if ($firstId === '') {
-            $this->assertNotSame($cursorId, $firstId);
-        }
 
         $after = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
             ...$orderQueries,
@@ -1094,37 +1090,35 @@ trait QueryJoinCombos
         ]);
         $this->assertSame(200, $after['headers']['status-code']);
         $afterRows = $this->joinHardcoreRows($after);
-        $this->assertLessThanOrEqual(1, \count($afterRows));
+        $this->assertSame(1, \count($afterRows));
+        $afterId = $afterRows[0]['$id'] ?? '';
+        $this->assertNotSame('', $afterId);
+        $this->assertNotSame($cursorId, $afterId);
         $afterEncoded = (string) \json_encode($after['body']);
 
         if ($this->getSide() === 'client') {
             $this->assertJoinHardcoreClientHidden($afterEncoded, $this->joinComboAmounts($afterRows));
         }
 
-        if ($afterRows !== []) {
-            $afterAmount = $this->joinHardcoreField($afterRows[0], 'amount');
-            $cursorAmount = $this->joinHardcoreField($cursorRow, 'amount');
-            if (\is_numeric($afterAmount) && \is_numeric($cursorAmount)) {
-                $this->assertSame(true, (int) $afterAmount >= (int) $cursorAmount);
-            }
+        $afterAmount = $this->joinHardcoreField($afterRows[0], 'amount');
+        $cursorAmount = $this->joinHardcoreField($cursorRow, 'amount');
+        if (\is_numeric($afterAmount) && \is_numeric($cursorAmount)) {
+            $this->assertSame(true, (int) $afterAmount >= (int) $cursorAmount);
+        }
 
-            $beforeId = $this->joinHardcoreCursorId($afterRows[0]);
-            if ($beforeId !== '') {
-                $before = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-                    ...$orderQueries,
-                    Query::cursorBefore(new Document(['$id' => $beforeId]))->toString(),
-                    Query::limit(1)->toString(),
-                ]);
-                $this->assertSame(200, $before['headers']['status-code']);
-                $beforeRows = $this->joinHardcoreRows($before);
-                $this->assertLessThanOrEqual(1, \count($beforeRows));
-                if ($this->getSide() === 'client') {
-                    $this->assertJoinHardcoreClientHidden(
-                        (string) \json_encode($before['body']),
-                        $this->joinComboAmounts($beforeRows),
-                    );
-                }
-            }
+        $before = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
+            ...$orderQueries,
+            Query::cursorBefore(new Document(['$id' => $afterId]))->toString(),
+            Query::limit(1)->toString(),
+        ]);
+        $this->assertSame(200, $before['headers']['status-code']);
+        $beforeRows = $this->joinHardcoreRows($before);
+        $this->assertLessThanOrEqual(1, \count($beforeRows));
+        if ($this->getSide() === 'client') {
+            $this->assertJoinHardcoreClientHidden(
+                (string) \json_encode($before['body']),
+                $this->joinComboAmounts($beforeRows),
+            );
         }
     }
 
@@ -1240,8 +1234,9 @@ trait QueryJoinCombos
         $this->assertSame(1, \count($afterRows));
         $afterName = (string) ($afterRows[0]['name'] ?? '');
         $this->assertSame(true, $afterName >= 'Alice');
-        $afterId = $this->joinHardcoreCursorId($afterRows[0]);
+        $afterId = $afterRows[0]['$id'] ?? '';
         $this->assertNotSame('', $afterId);
+        $this->assertNotSame($cursorId, $afterId);
         $this->assertSame(false, \in_array($afterId, $data['orderIds'], true));
 
         if ($this->getSide() === 'client') {
