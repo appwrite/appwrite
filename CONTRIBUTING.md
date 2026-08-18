@@ -126,13 +126,21 @@ docker compose build
 docker compose up -d
 ```
 
-By default the stack runs a **combined** worker (`appwrite-worker`) and scheduler (`appwrite-task-scheduler`). To run one container per queue instead:
+The development stack (`docker-compose.override.yml`) sets `_APP_QUEUE_ADAPTER=inline` and does not start `appwrite-worker`. Jobs run in the API (and scheduler) process when they are published.
+
+The production compose file still defaults to Redis plus a **combined** worker (`appwrite-worker`) and scheduler (`appwrite-task-scheduler`). To run one container per queue instead:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.separate.yml --profile separate up -d
 ```
 
-Do not start combined and separate workers at the same time — they would consume the same queues twice.
+To run a production-style stack without worker containers:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.inline.yml up -d
+```
+
+Do not start combined and separate workers at the same time — they would consume the same queues twice. Do not start the inline overlay together with worker containers — leftover Redis jobs would sit unconsumed while new work runs inline.
 
 
 ### Code Autocompletion
@@ -184,7 +192,7 @@ Learn more at our [Technology Stack](#technology-stack) section.
 ##### Container Namespace Conventions
 To keep our services easy to understand within Docker we follow a naming convention for all our containers depending on its intended use.
 
-`appwrite-worker` - Combined worker (all queues; the Compose default)
+`appwrite-worker` - Combined worker (all queues; production Compose default; omitted when `_APP_QUEUE_ADAPTER=inline`)
 `appwrite-worker-X` - Separate per-queue workers (`src/Appwrite/Platform/Workers/*`)
 `appwrite-task-scheduler` - Combined scheduler (functions + executions + messages)
 `appwrite-task-X` - Tasks (`src/Appwrite/Platform/Tasks/*`)

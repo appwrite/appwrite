@@ -1,0 +1,36 @@
+# Workerless stack: HTTP and CLI run jobs on enqueue via Adapter\Inline.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.inline.yml up -d
+#
+# The combined worker is hidden. Schedulers stay and also use the inline
+# adapter so a tick runs the job in that process. Do not start this overlay
+# together with the default worker — leftover Redis jobs would sit unconsumed
+# while new work runs inline.
+services:
+  appwrite-worker:
+    profiles:
+      - workers
+  appwrite:
+    environment:
+      - _APP_QUEUE_ADAPTER=inline
+  appwrite-realtime:
+    environment:
+      - _APP_QUEUE_ADAPTER=inline
+  appwrite-task-scheduler:
+    environment:
+      - _APP_QUEUE_ADAPTER=inline
+  appwrite-task-maintenance:
+    environment:
+      - _APP_QUEUE_ADAPTER=inline
+  appwrite-task-interval:
+    environment:
+      - _APP_QUEUE_ADAPTER=inline
+  appwrite-task-scheduler-functions:
+    environment:
+      - _APP_QUEUE_ADAPTER=inline
+  appwrite-task-scheduler-executions:
+    environment:
+      - _APP_QUEUE_ADAPTER=inline
+  appwrite-task-scheduler-messages:
+    environment:
+      - _APP_QUEUE_ADAPTER=inline

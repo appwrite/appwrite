@@ -4,7 +4,7 @@
 
 ### Notable changes
 
-* Combined worker and scheduler containers are the default Docker Compose topology. Separate per-queue containers remain available via `--profile separate` / `--topology=separate`. Multi-queue worker APIs live in [utopia-php/monorepo](https://github.com/utopia-php/monorepo) (`packages/queue`, `packages/platform`); see [utopia-php/monorepo#136](https://github.com/utopia-php/monorepo/pull/136).
+* Combined worker and scheduler containers are the default Docker Compose topology. Separate per-queue containers remain available via `--profile separate` / `--topology=separate`. `_APP_QUEUE_ADAPTER=inline` runs jobs in the publishing process so the stack can omit worker containers (`docker-compose.inline.yml`; the development override uses this). Multi-queue worker APIs live in [utopia-php/monorepo](https://github.com/utopia-php/monorepo) (`packages/queue`, `packages/platform`); see [utopia-php/monorepo#136](https://github.com/utopia-php/monorepo/pull/136).
 * Add PostgreSQL database adapter in [#9772](https://github.com/appwrite/appwrite/pull/9772) and [#11293](https://github.com/appwrite/appwrite/pull/11293)
 * Add MongoDB support in [#11312](https://github.com/appwrite/appwrite/pull/11312)
 * Add new webhooks API in [#11033](https://github.com/appwrite/appwrite/pull/11033) and [#11566](https://github.com/appwrite/appwrite/pull/11566)

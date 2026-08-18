@@ -6,7 +6,7 @@ use Swoole\Coroutine as Co;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
-use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Publisher;
 use Utopia\Telemetry\Adapter as Telemetry;
 
 class Schedule extends Action
@@ -32,10 +32,10 @@ class Schedule extends Action
     }
 
     public function action(
-        BrokerPool $publisher,
-        BrokerPool $publisherMigrations,
-        BrokerPool $publisherFunctions,
-        BrokerPool $publisherMessaging,
+        Publisher $publisher,
+        Publisher $publisherMigrations,
+        Publisher $publisherFunctions,
+        Publisher $publisherMessaging,
         callable $getIsResourceBlocked,
         Database $dbForPlatform,
         callable $getProjectDB,

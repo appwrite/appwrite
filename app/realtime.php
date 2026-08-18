@@ -47,7 +47,7 @@ use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
-use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -88,27 +88,15 @@ if (!$container->has('pools')) {
 }
 
 if (!$container->has('publisherForUsage')) {
-    $container->set('publisherForUsage', function (Group $pools): UsagePublisher {
-        $statsUsageConnection = System::getEnv('_APP_CONNECTIONS_QUEUE_STATS_USAGE', '');
-        $publisherPoolName = 'publisher';
-
-        if (!empty($statsUsageConnection)) {
-            try {
-                $pools->get('publisher_' . $statsUsageConnection);
-                $publisherPoolName = 'publisher_' . $statsUsageConnection;
-            } catch (Throwable) {
-                // Fallback to default publisher pool when custom one is unavailable.
-            }
-        }
-
+    $container->set('publisherForUsage', function (Publisher $publisher): UsagePublisher {
         return new UsagePublisher(
-            new BrokerPool(publisher: $pools->get($publisherPoolName)),
+            $publisher,
             new Queue(System::getEnv(
                 '_APP_STATS_USAGE_QUEUE_NAME',
                 QueueEvent::STATS_USAGE_QUEUE_NAME
             ))
         );
-    }, ['pools']);
+    }, ['publisher']);
 }
 
 // Allows overriding
@@ -298,12 +286,8 @@ if (!function_exists('getQueueForEvents')) {
         $ctx = Coroutine::getContext();
 
         if (!isset($ctx['queueForEvents'])) {
-            global $register;
-            /** @var Group $pools */
-            $pools = $register->get('pools');
-            $ctx['queueForEvents'] = new QueueEvent(new BrokerPool(
-                publisher: $pools->get('publisher')
-            ));
+            global $container;
+            $ctx['queueForEvents'] = new QueueEvent($container->get('publisher'));
         }
 
         return $ctx['queueForEvents'];

@@ -9,7 +9,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
-use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Publisher;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Gauge;
@@ -30,10 +30,10 @@ abstract class ScheduleBase extends Action
         return $this->schedules;
     }
 
-    protected BrokerPool $publisher;
-    protected BrokerPool $publisherMigrations;
-    protected BrokerPool $publisherFunctions;
-    protected BrokerPool $publisherMessaging;
+    protected Publisher $publisher;
+    protected Publisher $publisherMigrations;
+    protected Publisher $publisherFunctions;
+    protected Publisher $publisherMessaging;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -98,7 +98,7 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): never
+    public function action(Publisher $publisher, Publisher $publisherMigrations, Publisher $publisherFunctions, Publisher $publisherMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): never
     {
         $this->setup(
             $publisher,
@@ -115,10 +115,10 @@ abstract class ScheduleBase extends Action
      * Wire publishers and telemetry. Safe to call once before start().
      */
     public function setup(
-        BrokerPool $publisher,
-        BrokerPool $publisherMigrations,
-        BrokerPool $publisherFunctions,
-        BrokerPool $publisherMessaging,
+        Publisher $publisher,
+        Publisher $publisherMigrations,
+        Publisher $publisherFunctions,
+        Publisher $publisherMessaging,
         Telemetry $telemetry,
     ): void {
         $this->publisher = $publisher;
