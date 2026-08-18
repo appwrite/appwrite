@@ -32,8 +32,7 @@ final class ScheduleLifecycleTest extends TestCase
     public function testEachTaskExposesTheCombinedLifecycle(string $task): void
     {
         $expected = [
-            'setup' => 2,        // publisher, telemetry
-            'start' => 4,        // dbForPlatform, getProjectDB, isResourceBlocked, pools
+            'start' => 6,        // publisher, telemetry, dbForPlatform, getProjectDB, isResourceBlocked, pools
             'listen' => 0,
             'scheduleCount' => 0,
         ];
@@ -57,7 +56,7 @@ final class ScheduleLifecycleTest extends TestCase
         (new $task())->listen();
     }
 
-    public function testTheCombinedTaskStillOnlyNeedsThoseFourMethods(): void
+    public function testTheCombinedTaskStillOnlyNeedsThoseThreeMethods(): void
     {
         $source = \file_get_contents(__DIR__ . '/../../../../src/Appwrite/Platform/Tasks/Schedule.php');
         $this->assertIsString($source);
@@ -66,6 +65,6 @@ final class ScheduleLifecycleTest extends TestCase
         $called = \array_values(\array_unique($matches[1]));
         \sort($called);
 
-        $this->assertSame(['listen', 'scheduleCount', 'setup', 'start'], $called);
+        $this->assertSame(['listen', 'scheduleCount', 'start'], $called);
     }
 }

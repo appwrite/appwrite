@@ -65,8 +65,7 @@ final class ScheduleSource implements Source, Changes
     {
         $this->snapshotted = 0;
 
-        // A snapshot is the whole truth, so the live view is rebuilt from it
-        // rather than accumulated.
+        // A snapshot is the whole truth: the live view is rebuilt, not added to.
         $this->live = [];
 
         foreach ($this->rows(null) as $row) {
@@ -87,13 +86,8 @@ final class ScheduleSource implements Source, Changes
     }
 
     /**
-     * Whether this exact definition is still the one the source reports.
-     *
-     * A dispatch that sleeps — to hit an exact second, or to spread load over
-     * a window — holds a schedule that may since have been disabled, deleted
-     * or edited. Publishing it anyway runs a resource the user has already
-     * cancelled, so deferred work asks this first. The answer is as fresh as
-     * the last read of the collection, which is what the sync cadence buys.
+     * Whether this exact definition is still the one the source reports, as
+     * fresh as the last read of the collection.
      */
     public function isLive(string $id, string $version): bool
     {
@@ -242,12 +236,9 @@ final class ScheduleSource implements Source, Changes
     }
 
     /**
-     * The moment a definition takes effect, for rows that changed recently
-     * enough that the committed window may already have passed them: without
-     * it, a schedule created between two syncs would have its first
-     * occurrences skipped. Older rows return null and ride the watermark, so
-     * loading a fleet on startup does not replay a lookback of history for
-     * every schedule in it.
+     * When a recently changed definition takes effect, so its first
+     * occurrences are not skipped by a window that has already passed them.
+     * Older rows ride the watermark instead of replaying on startup.
      */
     private function activeFrom(Document $schedule): ?\DateTimeImmutable
     {

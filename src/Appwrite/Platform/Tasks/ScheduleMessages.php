@@ -14,8 +14,6 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Queue;
 use Utopia\Schedule\Occurrence;
-use Utopia\Schedule\Scheduler;
-use Utopia\Schedule\Source\Entry;
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\At;
 use Utopia\System\System;
@@ -23,33 +21,21 @@ use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Histogram;
 
 /**
- * ScheduleMessages
- *
  * Sends scheduled messages at the moment they were scheduled for, and never
- * before: this task takes no lead time, so a message is handed over once it
- * is due rather than a tick early.
+ * before: this task takes no lead time, so a message is handed over once it is
+ * due rather than a tick early.
  */
 class ScheduleMessages extends Action
 {
     public const UPDATE_TIMER = 3; // seconds between reconciliations
     public const ENQUEUE_TIMER = 4; // seconds between ticks
+    public const ENQUEUE_LOOKAHEAD = 0; // seconds of lead time
 
-    /** A message must not go out early, so the dispatch gets no lead time. */
-    public const ENQUEUE_LOOKAHEAD = 0; // seconds
+    private ?Schedules $schedules = null;
 
-    public const ENQUEUE_LOOKBACK = 300; // seconds
-
-    protected BrokerPool $publisherMessaging;
-
-    private ?MessagingPublisher $publisherForMessaging = null;
+    private ?MessagingPublisher $publisher = null;
 
     private ?Histogram $enqueueDelay = null;
-
-    private ?Telemetry $telemetry = null;
-
-    private ?Scheduler $scheduler = null;
-
-    private ?ScheduleSource $source = null;
 
     private ?Database $dbForPlatform = null;
 
@@ -86,100 +72,52 @@ class ScheduleMessages extends Action
         Console::title('Message scheduler V1');
         Console::success(APP_NAME . ' message scheduler v1 has started');
 
-        $this->setup($publisherMessaging, $telemetry);
-        $this->start($dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
+        $this->start($publisherMessaging, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
         $this->listen();
 
-        // The loop returns only when something asks it to stop, and nothing
-        // here does. Exiting non-zero has the supervisor restart the task
-        // rather than leaving a live process that schedules nothing.
+        // Nothing here stops the loop, so a return means the supervisor
+        // should restart the task rather than leave it scheduling nothing.
         Console::error('Scheduler loop returned unexpectedly');
         exit(1);
     }
 
-    /**
-     * Wire the publisher and telemetry. Safe to call once before start().
-     */
-    public function setup(BrokerPool $publisherMessaging, Telemetry $telemetry): void
+    public function start(BrokerPool $publisherMessaging, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
     {
-        $this->publisherMessaging = $publisherMessaging;
+        $this->publisher = new MessagingPublisher(
+            $publisherMessaging,
+            new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
+        );
         $this->enqueueDelay = $telemetry->createHistogram('task.schedule.enqueue_delay', 's');
-        $this->telemetry = $telemetry;
-    }
-
-    /**
-     * Build the scheduler and load the schedules once. Combined mode runs this
-     * serially per resource type so they do not contend for the shared
-     * console and cache pools.
-     */
-    public function start(Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
-    {
-        $source = new ScheduleSource(
+        $this->dbForPlatform = $dbForPlatform;
+        $this->schedules = new Schedules(
+            name: self::getName(),
+            resourceType: self::getSupportedResource(),
+            collectionId: self::getCollectionId(),
+            sync: self::UPDATE_TIMER,
+            tick: self::ENQUEUE_TIMER,
+            lookahead: self::ENQUEUE_LOOKAHEAD,
             dbForPlatform: $dbForPlatform,
             getProjectDB: $getProjectDB,
             isResourceBlocked: $getIsResourceBlocked,
-            resourceType: self::getSupportedResource(),
-            collectionId: self::getCollectionId(),
-            resource: fn (Database $projectDB, array $schedule): Document => $projectDB->getDocument(self::getCollectionId(), $schedule['resourceId']),
-            entry: fn (array $schedule): Entry => new Entry($this->trigger($schedule), $schedule),
-            recency: self::UPDATE_TIMER * 3,
+            pools: $pools,
+            trigger: $this->trigger(...),
+            telemetry: $telemetry,
         );
-
-        $scheduler = new Scheduler(
-            source: $source,
-            // The claim carries leadership and the committed window in one
-            // record, so replicas elect a single dispatcher and a replacement
-            // resumes coverage where its predecessor stopped.
-            store: new ScheduleStore($pools, 'utopia-schedule-' . self::getName()),
-            interval: self::ENQUEUE_TIMER,
-            sync: self::UPDATE_TIMER,
-            // A change feed cannot report a hard delete, so a full snapshot
-            // still runs periodically to converge removals.
-            relist: self::UPDATE_TIMER * 30,
-            lookahead: self::ENQUEUE_LOOKAHEAD,
-            lookback: self::ENQUEUE_LOOKBACK,
-            lease: 60,
-            telemetry: $this->telemetry ?? new \Utopia\Telemetry\Adapter\None(),
-            onError: function (\Throwable $error): void {
-                // A failed sync leaves the last good view dispatching: stale
-                // schedules beat a stopped scheduler.
-                Console::error('Failed to reconcile message schedules: ' . $error->getMessage());
-            },
-        );
-
-        $scheduler->reconcile();
-
-        $this->source = $source;
-        $this->scheduler = $scheduler;
-        $this->dbForPlatform = $dbForPlatform;
+        $this->schedules->load();
     }
 
-    /**
-     * How many active schedules the last full snapshot reported.
-     */
     public function scheduleCount(): int
     {
-        return $this->source?->snapshotted() ?? 0;
+        return $this->schedules?->count() ?? 0;
     }
 
-    /**
-     * Run the loop. Blocks, so combined mode gives each task its own
-     * coroutine.
-     */
     public function listen(): void
     {
-        $scheduler = $this->scheduler;
-        $dbForPlatform = $this->dbForPlatform;
-
-        if ($scheduler === null || $dbForPlatform === null) {
-            throw new \LogicException('start() must run before listen()');
-        }
+        $schedules = $this->schedules ?? throw new \LogicException('start() must run before listen()');
 
         Console::success('Starting message scheduler at ' . DateTime::now());
 
-        $scheduler->run(function (array $occurrences) use ($dbForPlatform): void {
-            $this->dispatch($occurrences, $dbForPlatform);
-        });
+        $schedules->run($this->dispatch(...));
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
@@ -187,7 +125,10 @@ class ScheduleMessages extends Action
         ScheduleSource::touchProject($project, $dbForPlatform);
     }
 
-    protected function trigger(array $schedule): Trigger
+    /**
+     * @param array<string, mixed> $schedule
+     */
+    public function trigger(array $schedule): Trigger
     {
         return new At(new \DateTimeImmutable((string) $schedule['schedule']));
     }
@@ -195,16 +136,18 @@ class ScheduleMessages extends Action
     /**
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, Database $dbForPlatform): void
+    private function dispatch(array $occurrences): void
     {
+        $dbForPlatform = $this->dbForPlatform ?? throw new \LogicException('start() must run before dispatch()');
+
         foreach ($occurrences as $occurrence) {
             $schedule = $occurrence->payload;
 
-            \go(function () use ($schedule, $occurrence, $dbForPlatform) {
+            \go(function () use ($schedule, $occurrence, $dbForPlatform): void {
                 try {
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $this->publisher()->enqueue(new MessagingMessage(
+                    $this->publisher?->enqueue(new MessagingMessage(
                         type: MESSAGE_SEND_TYPE_EXTERNAL,
                         project: $schedule['project'],
                         messageId: $schedule['resourceId'],
@@ -223,13 +166,5 @@ class ScheduleMessages extends Action
                 }
             });
         }
-    }
-
-    private function publisher(): MessagingPublisher
-    {
-        return $this->publisherForMessaging ??= new MessagingPublisher(
-            $this->publisherMessaging,
-            new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
-        );
     }
 }
