@@ -703,10 +703,7 @@ trait QueryJoinCombos
      */
     protected function joinHardcoreRows(array $result): array
     {
-        $rows = $this->joinListRecords($result);
-        $this->assertSame(true, \is_array($rows));
-
-        return $rows;
+        return $this->joinListRecords($result);
     }
 
     protected function joinHardcoreTotal(array $result): int
