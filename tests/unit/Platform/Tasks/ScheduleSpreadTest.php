@@ -9,12 +9,18 @@ use PHPUnit\Framework\TestCase;
 
 final class ScheduleSpreadTest extends TestCase
 {
-    public function testSpreadOffsetIsDeterministic(): void
+    /**
+     * A resource keeps its slot across deploys, which is the point of
+     * deriving it from the id. Changing how the offset is derived moves every
+     * schedule at once — the burst this spread exists to prevent — so the
+     * values are pinned rather than compared to themselves.
+     */
+    public function testSpreadOffsetIsStableForAnId(): void
     {
-        $this->assertSame(
-            ScheduleFunctions::spreadOffset('64f5c8e2a1b3d4e5f6a7b8c9', 60),
-            ScheduleFunctions::spreadOffset('64f5c8e2a1b3d4e5f6a7b8c9', 60)
-        );
+        $this->assertSame(33, ScheduleFunctions::spreadOffset('64f5c8e2a1b3d4e5f6a7b8c9', 60));
+        $this->assertSame(213, ScheduleFunctions::spreadOffset('64f5c8e2a1b3d4e5f6a7b8c9', 300));
+        $this->assertSame(16, ScheduleFunctions::spreadOffset('hourly-report', 60));
+        $this->assertSame(24, ScheduleFunctions::spreadOffset('nightly-backup', 60));
     }
 
     public function testSpreadOffsetIsBounded(): void
