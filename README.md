@@ -229,7 +229,6 @@ flowchart TB
     Messaging
     Storage
     Avatars
-    productRealtime[Realtime]
   end
   services --> Executor & Queue & Cache & Browser & SMTP & Embeddings
   Cache --> Database
