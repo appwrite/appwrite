@@ -223,22 +223,31 @@ flowchart TB
   Android --> Appwrite
   Servers --> Appwrite
 
-  Appwrite --> Loadbalancer
-  Loadbalancer --> sslGateway[SSL Gateway]
-  Loadbalancer --> Console
-  Loadbalancer --> graphqlApi["GraphQL API (Coming Soon)"]
-  Loadbalancer --> restApi[REST API]
-  Loadbalancer --> realtimeApi[Realtime API]
+  Appwrite --> traefik[Traefik]
+  traefik --> Console
+  traefik --> restApi[REST API]
+  traefik --> graphqlApi[GraphQL API]
+  traefik --> realtimeApi[Realtime API]
 
-  restApi --> apiFunctions[Functions]
-  restApi --> apiUsers[Users]
-  restApi --> apiAccount[Account]
-  restApi --> apiTeams[Teams]
-  restApi --> apiDatabase[Database]
-  restApi --> apiStorage[Storage]
-  restApi --> apiLocalization[Localization]
-  restApi --> apiAvatars[Avatars]
-  restApi --> apiHealth[Health]
+  subgraph services [Services]
+    Account
+    Users
+    Teams
+    Databases
+    TablesDB
+    Storage
+    Functions
+    Sites
+    Messaging
+    Avatars
+    Locale
+    Health
+    VCS
+    Webhooks
+    Tokens
+  end
+
+  restApi --> services
 
   graphqlApi --> securityLayer[Security Layer]
   restApi --> securityLayer
@@ -250,15 +259,19 @@ flowchart TB
   cache --> securityLayer
 
   executor --> dockerK8s["Docker / K8S"]
-  cache --> database[Database]
+  cache --> postgresql[PostgreSQL]
+  cache --> mongodb[MongoDB]
+  embedding[Embedding] --> postgresql
 
   queue --> workers[Workers]
   executor --> workers
   workers --> executor
-  workers --> database
+  workers --> postgresql
+  workers --> mongodb
+  workers --> browser[Browser]
   workers --> SMTP
   workers --> Letsencrypt
-  Letsencrypt --> Loadbalancer
+  Letsencrypt --> traefik
 ```
 
 Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
