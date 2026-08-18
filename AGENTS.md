@@ -306,9 +306,8 @@ When bumping a patch (e.g. `1.9.0` → `1.9.1`):
 - [`app/init/constants.php`](app/init/constants.php) — set `APP_VERSION_STABLE`; increment `APP_CACHE_BUSTER` by 1
 - [`README.md`](README.md) and [`README-CN.md`](README-CN.md) — `appwrite/appwrite:X.Y.Z` in all three install blocks each
 - [`src/Appwrite/Migration/Migration.php`](src/Appwrite/Migration/Migration.php) — add the version to `$versions`, mapping to a new migration class or the same class as the previous version
-- [`CHANGES.md`](CHANGES.md) — new `# Version X.Y.Z` with `### Notable changes`, `### Fixes`, `### Miscellaneous`
 
-Ask the user to review, fill `CHANGES.md` with PRs, generate specs if the API changed, and add request/response filters if needed.
+Ask the user to review, publish notes on the [Appwrite changelog](https://appwrite.io/changelog), generate specs if the API changed, and add request/response filters if needed.
 
 ### Self-hosted RC / final
 
@@ -318,6 +317,6 @@ A release is not ready until a **fresh install** and an **upgrade from the previ
 
 **Upgrade:** install the previous stable image, seed broad data (empty values, long strings, relationships, mixed permissions), keep volumes, switch to the target image, run migrate. Migration must complete, be idempotent, and preserve seeded data through public API reads/writes.
 
-**Metadata:** `APP_VERSION_STABLE` / `APP_CACHE_BUSTER`; Appwrite and console tags in `docker-compose.yml` and [`app/views/install/compose.phtml`](app/views/install/compose.phtml); README install snippets; `Migration.php` `$versions`; `CHANGES.md`. For public API breaks: request filters in `src/Appwrite/Utopia/Request/Filters/V*.php`, response filters in `src/Appwrite/Utopia/Response/Filters/V*.php`, registered in [`app/controllers/general.php`](app/controllers/general.php) for `x-appwrite-response-format`. Unit-test filters under `tests/unit/Utopia/{Request,Response}/Filters`; add e2e with that header when routing, auth, or persistence is involved.
+**Metadata:** `APP_VERSION_STABLE` / `APP_CACHE_BUSTER`; Appwrite and console tags in `docker-compose.yml` and [`app/views/install/compose.phtml`](app/views/install/compose.phtml); README install snippets; `Migration.php` `$versions`; [changelog](https://appwrite.io/changelog). For public API breaks: request filters in `src/Appwrite/Utopia/Request/Filters/V*.php`, response filters in `src/Appwrite/Utopia/Response/Filters/V*.php`, registered in [`app/controllers/general.php`](app/controllers/general.php) for `x-appwrite-response-format`. Unit-test filters under `tests/unit/Utopia/{Request,Response}/Filters`; add e2e with that header when routing, auth, or persistence is involved.
 
-Do not approve an RC/final until both gates pass, metadata matches the target, and unintended public breaks have filters (or the owner documents the break in `CHANGES.md`).
+Do not approve an RC/final until both gates pass, metadata matches the target, and unintended public breaks have filters (or the owner documents the break on the changelog).
