@@ -2,7 +2,9 @@
 
 We would :heart: you to contribute to Appwrite and help make it better. All contributions are welcome: issues, docs, code, blog posts, workshops, and more.
 
-Coding conventions, architecture, tests, and how to run the stack live in [AGENTS.md](AGENTS.md). Extra how-tos are in [docs/tutorials/](docs/tutorials/). The Console UI is a [separate repository](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md).
+Coding conventions, architecture, tests, and how to run the stack live in [AGENTS.md](AGENTS.md). That file is the coding contract for every contributor, human or agent. Using AI does not lower the bar: you own the pull request, you must follow those standards, and you must review and oversee any agent-generated work against them. The same rules apply whether you write the code yourself or with an assistant.
+
+Extra how-tos are in [docs/tutorials/](docs/tutorials/). The Console UI is a [separate repository](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md).
 
 ## Here for Hacktoberfest?
 
@@ -38,7 +40,7 @@ Every PR needs a commit message that describes the change.
 
 1. Fork the repo and keep your default branch up to date (`git pull`).
 2. Create a branch from `master` with the naming convention above.
-3. Make commits on that branch. Follow [AGENTS.md](AGENTS.md) for format, tests, and architecture.
+3. Make commits on that branch. Follow [AGENTS.md](AGENTS.md) for format, tests, and architecture — including when an agent drafted the change. You still review it.
 4. Push and open a pull request against this repository.
 5. Wait for a core developer to review. After approval, the PR can be merged; GitHub deletes the branch.
 
