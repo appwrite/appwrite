@@ -103,7 +103,7 @@ class VideoRendition extends Model
             ])
             ->addRule('output', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Streaming output format: either `hls` or `dash`.',
+                'description' => 'Streaming output format: `hls`, `dash`, or `cmaf`.',
                 'default' => '',
                 'example' => 'hls',
             ])

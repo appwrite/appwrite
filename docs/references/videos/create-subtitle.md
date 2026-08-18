@@ -1,1 +1,1 @@
-Add a subtitle track to a video from a WebVTT or SubRip file in a storage bucket. The file is normalised to WebVTT and segmented in the background.
+Add a subtitle track to a video from a WebVTT or SubRip file in a storage bucket. The file is normalised to WebVTT and segmented in the background. Uploaded tracks override any auto-extracted embedded subtitle with the same language code.

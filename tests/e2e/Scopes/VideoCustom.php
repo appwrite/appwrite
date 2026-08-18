@@ -21,6 +21,9 @@ trait VideoCustom
     protected static array $videoBucket = [];
     protected static array $videoFile = [];
     protected static array $subtitleFile = [];
+    protected static array $videoFileWithSubtitles = [];
+    protected static array $videoFileWithTwoSubtitles = [];
+    protected static array $overrideSubtitleFile = [];
 
     /**
      * Bucket holding the source media, readable by anyone so the client-side
@@ -163,6 +166,167 @@ trait VideoCustom
         self::$subtitleFile = ['$id' => $file['body']['$id']];
 
         return self::$subtitleFile;
+    }
+
+    /**
+     * Uploads the short MP4 that carries a soft `mov_text` English track with the
+     * cue text `EMBEDDED CUE` (see `video-with-subs.mp4`).
+     */
+    public function getVideoFileWithSubtitles(): array
+    {
+        if (!empty(self::$videoFileWithSubtitles)) {
+            return self::$videoFileWithSubtitles;
+        }
+
+        $source = \realpath(__DIR__ . '/../../resources/disk-a/video-with-subs.mp4');
+        $this->assertNotFalse($source);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new \CURLFile($source, 'video/mp4', 'video-with-subs.mp4'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        self::$videoFileWithSubtitles = [
+            '$id' => $file['body']['$id'],
+            'sizeOriginal' => $file['body']['sizeOriginal'],
+        ];
+
+        return self::$videoFileWithSubtitles;
+    }
+
+    /**
+     * Uploads the short MP4 with two soft `mov_text` tracks: English
+     * (`EMBEDDED CUE EN`) and French (`EMBEDDED CUE FR`).
+     */
+    public function getVideoFileWithTwoSubtitles(): array
+    {
+        if (!empty(self::$videoFileWithTwoSubtitles)) {
+            return self::$videoFileWithTwoSubtitles;
+        }
+
+        $source = \realpath(__DIR__ . '/../../resources/disk-a/video-with-2-subs.mp4');
+        $this->assertNotFalse($source);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new \CURLFile($source, 'video/mp4', 'video-with-2-subs.mp4'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        self::$videoFileWithTwoSubtitles = [
+            '$id' => $file['body']['$id'],
+            'sizeOriginal' => $file['body']['sizeOriginal'],
+        ];
+
+        return self::$videoFileWithTwoSubtitles;
+    }
+
+    /**
+     * Uploads the SubRip fixture whose single cue is `OVERRIDE CUE`.
+     */
+    public function getOverrideSubtitleFile(): array
+    {
+        if (!empty(self::$overrideSubtitleFile)) {
+            return self::$overrideSubtitleFile;
+        }
+
+        $source = \realpath(__DIR__ . '/../../resources/disk-a/video-override.srt');
+        $this->assertNotFalse($source);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new \CURLFile($source, 'text/plain', 'video-override.srt'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        self::$overrideSubtitleFile = ['$id' => $file['body']['$id']];
+
+        return self::$overrideSubtitleFile;
+    }
+
+    /**
+     * Polls until at least one ready subtitle with an empty fileId appears
+     * (auto-extracted from the source), or the timeout elapses.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function waitForEmbeddedSubtitle(string $videoId, int $timeout = 300): ?array
+    {
+        $deadline = \time() + $timeout;
+
+        while (\time() < $deadline) {
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            foreach ($response['body']['subtitles'] ?? [] as $subtitle) {
+                $fileId = $subtitle['fileId'] ?? '';
+                if (($subtitle['status'] ?? '') === 'ready' && ($fileId === null || $fileId === '')) {
+                    return $subtitle;
+                }
+            }
+
+            \usleep(500000);
+        }
+
+        return null;
+    }
+
+    /**
+     * Polls until at least $count ready embedded subtitles (empty fileId) exist.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function waitForEmbeddedSubtitles(string $videoId, int $count = 1, int $timeout = 300): array
+    {
+        $deadline = \time() + $timeout;
+        $embedded = [];
+
+        while (\time() < $deadline) {
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $embedded = [];
+            foreach ($response['body']['subtitles'] ?? [] as $subtitle) {
+                $fileId = $subtitle['fileId'] ?? '';
+                if (($subtitle['status'] ?? '') === 'ready' && ($fileId === null || $fileId === '')) {
+                    $embedded[] = $subtitle;
+                }
+            }
+
+            if (\count($embedded) >= $count) {
+                return $embedded;
+            }
+
+            \usleep(500000);
+        }
+
+        return $embedded;
     }
 
     /**

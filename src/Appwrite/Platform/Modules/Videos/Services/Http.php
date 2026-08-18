@@ -5,6 +5,9 @@ namespace Appwrite\Platform\Modules\Videos\Services;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Create as CreateVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Delete as DeleteVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Get as GetVideo;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\DASH\Manifest\Get as GetCmafDashManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\HLS\Manifest\Get as GetCmafHlsManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\Renditions\Streams\Manifest\Get as GetCmafStreamManifest;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\DASH\Manifest\Get as GetDashManifest;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\HLS\Manifest\Get as GetHlsManifest;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Segments\Get as GetSegment;
@@ -59,12 +62,15 @@ class Http extends Service
         $this->addAction(ListRenditions::getName(), new ListRenditions());
         $this->addAction(DeleteRendition::getName(), new DeleteRendition());
 
-        // Playback. HLS and DASH master manifests get separate routes so the URL
-        // keeps its .m3u8/.mpd extension for players that infer the container from
-        // it (ExoPlayer, AVURLAsset).
+        // Playback. HLS, DASH, and CMAF master manifests get separate routes so the
+        // URL keeps its .m3u8/.mpd extension for players that infer the container
+        // from it (ExoPlayer, AVURLAsset).
         $this->addAction(GetHlsManifest::getName(), new GetHlsManifest());
         $this->addAction(GetDashManifest::getName(), new GetDashManifest());
+        $this->addAction(GetCmafHlsManifest::getName(), new GetCmafHlsManifest());
+        $this->addAction(GetCmafDashManifest::getName(), new GetCmafDashManifest());
         $this->addAction(GetStreamManifest::getName(), new GetStreamManifest());
+        $this->addAction(GetCmafStreamManifest::getName(), new GetCmafStreamManifest());
         $this->addAction(GetSegment::getName(), new GetSegment());
         $this->addAction(GetSubtitleManifest::getName(), new GetSubtitleManifest());
         $this->addAction(GetSubtitleSegment::getName(), new GetSubtitleSegment());

@@ -3,6 +3,8 @@ services:
     build:
       context: .
       target: development
+      ssh:
+        - default
       args:
         DEBUG: false
         TESTING: true

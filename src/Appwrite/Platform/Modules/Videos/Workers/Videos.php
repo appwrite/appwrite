@@ -7,6 +7,7 @@ use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Platform\Modules\Videos\Adapter\LoggingFFmpeg;
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Video as VideoUsage;
@@ -14,10 +15,12 @@ use Captioning\Format\SubripFile;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
+use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
@@ -27,10 +30,10 @@ use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
-use Utopia\Video\Adapter\FFmpeg;
 use Utopia\Video\Encoder;
 use Utopia\Video\Format\X264;
 use Utopia\Video\Info;
+use Utopia\Video\Output\Cmaf;
 use Utopia\Video\Output\Dash;
 use Utopia\Video\Output\Hls;
 use Utopia\Video\Package;
@@ -38,6 +41,7 @@ use Utopia\Video\Packager;
 use Utopia\Video\Progress;
 use Utopia\Video\Representation;
 use Utopia\Video\Tile;
+use Utopia\Video\Track;
 use Utopia\Video\Variant;
 
 /**
@@ -49,6 +53,22 @@ use Utopia\Video\Variant;
  */
 class Videos extends Action
 {
+    /**
+     * Soft text subtitle codecs that ffmpeg can convert to WebVTT.
+     * Image-based streams (PGS, VobSub, …) are skipped.
+     *
+     * @var list<string>
+     */
+    private const TEXT_SUBTITLE_CODECS = [
+        'subrip',
+        'srt',
+        'webvtt',
+        'mov_text',
+        'text',
+        'ass',
+        'ssa',
+    ];
+
     /**
      * Must be exactly 'videos': app/worker.php derives the queue name
      * (`v1-videos`) and looks the action up by this key.
@@ -143,6 +163,7 @@ class Videos extends Action
 
         try {
             $video = $videoMessage->video;
+            Console::info('Videos worker: timeline started for video ' . $video->getId());
             $file = $this->resolveFile($dbForProject, $video->getAttribute('bucketId', ''), $video->getAttribute('fileId', ''));
             $inPath = $this->download($deviceForFiles, $file, $workspace['inDir']);
 
@@ -152,18 +173,24 @@ class Videos extends Action
                 $video = $this->probe($dbForProject, $video, $file, $inPath, $encoder);
             }
 
-            if (empty($video->getAttribute('videoBitRate'))) {
-                Console::warning('Videos worker: source has no video track; skipping timeline for ' . $video->getId());
-                return;
-            }
-
+            // Prefer dimensions over bitrate: many containers (VBR MKV, some DivX)
+            // report width/height but leave bitrate as 0, and empty(0) is true in PHP.
             $width = (int) $video->getAttribute('width', 0);
             $height = (int) $video->getAttribute('height', 0);
 
             if ($width <= 0 || $height <= 0) {
-                Console::warning('Videos worker: source has no dimensions; skipping timeline for ' . $video->getId());
+                Console::warning('Videos worker: source has no video track; skipping timeline for ' . $video->getId());
                 return;
             }
+
+            $this->extractEmbeddedSubtitles(
+                $dbForProject,
+                $deviceForVideos,
+                $video,
+                $inPath,
+                $workspace['outDir'],
+                $encoder
+            );
 
             // Wipe previous sprites so a source-file update can regenerate cleanly
             // against the UNIQUE (videoId, type, name) index.
@@ -187,6 +214,7 @@ class Videos extends Action
 
             // Appwrite rewrites sheet URLs to preview endpoints, so skip the
             // library-written VTT and render our own from cues().
+            Console::info('Videos worker: encoder=' . $encoder->getName() . ' tiling sprites for video ' . $video->getId());
             $sheet = $encoder->tile(
                 $inPath,
                 \rtrim($workspace['outDir'], '/'),
@@ -260,15 +288,6 @@ class Videos extends Action
                 $video = $this->probe($dbForProject, $video, $sourceFile, $inPath);
             }
 
-            $segments = $dbForProject->find('videos_subtitles_segments', [
-                Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]);
-
-            foreach ($segments as $segment) {
-                $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId());
-            }
-
             $subtitle = $dbForProject->updateDocument(
                 'videos_subtitles',
                 $subtitle->getId(),
@@ -287,8 +306,7 @@ class Videos extends Action
             $subtitlePath = $workspace['inDir'] . $subtitle->getId() . '.vtt';
 
             if ($ext === 'srt') {
-                $srt = new SubripFile($downloaded);
-                $srt->convertTo('webvtt')->save($subtitlePath);
+                $this->subripToWebvtt($downloaded, $subtitlePath);
             } elseif (\in_array($ext, ['vtt', 'webvtt'], true)) {
                 if (!\copy($downloaded, $subtitlePath)) {
                     throw new \Exception('Failed to stage WebVTT subtitle');
@@ -297,8 +315,7 @@ class Videos extends Action
                 // text/plain and application/x-subrip without a .srt extension: try
                 // Subrip parsing, then fall back to a straight copy.
                 try {
-                    $srt = new SubripFile($downloaded);
-                    $srt->convertTo('webvtt')->save($subtitlePath);
+                    $this->subripToWebvtt($downloaded, $subtitlePath);
                 } catch (\Throwable) {
                     if (!\copy($downloaded, $subtitlePath)) {
                         throw new \Exception('Failed to stage subtitle as WebVTT');
@@ -306,35 +323,7 @@ class Videos extends Action
                 }
             }
 
-            $dir = $deviceForVideos->getPath($video->getId()) . '/subtitles/';
-            $fileName = $subtitle->getId() . '.vtt';
-            $fullPath = $dir . $fileName;
-            $duration = (string) \number_format(((int) $video->getAttribute('duration', 0)) / 1000, 1);
-
-            $dbForProject->createDocument('videos_subtitles_segments', new Document([
-                'subtitleId' => $subtitle->getId(),
-                'subtitleInternalId' => $subtitle->getSequence(),
-                'fileName' => $fileName,
-                'path' => $dir,
-                'duration' => $duration,
-            ]));
-
-            Console::info('Uploading ' . $fileName);
-            $deviceForVideos->write(
-                $fullPath,
-                (new Local('/'))->read($subtitlePath),
-                'text/vtt'
-            );
-
-            $dbForProject->updateDocument(
-                'videos_subtitles',
-                $subtitle->getId(),
-                new Document([
-                    'targetDuration' => $duration,
-                    'status' => Base::STATUS_READY,
-                    'path' => $fullPath,
-                ])
-            );
+            $this->persistSubtitleVtt($dbForProject, $deviceForVideos, $video, $subtitle, $subtitlePath);
         } catch (\Throwable $th) {
             $dbForProject->updateDocument(
                 'videos_subtitles',
@@ -392,7 +381,7 @@ class Videos extends Action
             );
             $inPath = $this->download($deviceForFiles, $file, $workspace['inDir']);
 
-            $ffmpeg = new FFmpeg(threads: 4);
+            $ffmpeg = new LoggingFFmpeg(threads: 4);
             $packager = new Packager($ffmpeg);
 
             if (empty($video->getAttribute('duration'))) {
@@ -433,9 +422,18 @@ class Videos extends Action
                 ->keyframe(2.0)
                 ->params(['-dn', '-sn']);
 
-            $target = $output === Base::OUTPUT_DASH
-                ? (new Dash())->template(false)->timeline(false)->segment(6)->manifests(false)
-                : (new Hls())->segment(6)->manifests(false);
+            $target = match ($output) {
+                Base::OUTPUT_DASH => (new Dash())->template(false)->timeline(false)->segment(6)->manifests(false),
+                Base::OUTPUT_CMAF => (new Cmaf())->segment(6)->manifests(false),
+                default => (new Hls())->segment(6)->manifests(false),
+            };
+
+            Console::info(
+                'Videos worker: packager=' . $packager->getName()
+                . ' output=' . $output
+                . ' video=' . $video->getId()
+                . ' rendition=' . $rendition->getId()
+            );
 
             $package = $packager
                 ->open($inPath)
@@ -461,6 +459,11 @@ class Videos extends Action
                         ])
                     );
                     $this->notify($queueForRealtime, $project, $rendition, 'update');
+                })
+                ->on(Packager::LOG, function (mixed $line) {
+                    if (\is_string($line) && \trim($line) !== '') {
+                        Console::info('Videos worker: packager: ' . \trim($line));
+                    }
                 })
                 ->pack(\rtrim($workspace['outDir'], '/'));
 
@@ -572,6 +575,380 @@ class Videos extends Action
             }
 
             $this->cleanup($workspace['basePath']);
+        }
+    }
+
+    /**
+     * Convert a SubRip file to WebVTT on disk.
+     *
+     * Calls build() before save(): Captioning\File::save() does trim($fileContent)
+     * while content is still null after convertTo(), which emits a PHP 8.1+
+     * deprecation in vendor/captioning.
+     */
+    private function subripToWebvtt(string $srtPath, string $vttPath): void
+    {
+        $webvtt = (new SubripFile($srtPath))->convertTo('webvtt');
+        $webvtt->build();
+        $webvtt->save($vttPath);
+    }
+
+    /**
+     * Write a staged WebVTT file as the subtitle's single segment and mark ready.
+     */
+    private function persistSubtitleVtt(
+        Database $dbForProject,
+        Device $deviceForVideos,
+        Document $video,
+        Document $subtitle,
+        string $vttPath
+    ): Document {
+        $segments = $dbForProject->find('videos_subtitles_segments', [
+            Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        foreach ($segments as $segment) {
+            $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId());
+        }
+
+        $dir = $deviceForVideos->getPath($video->getId()) . '/subtitles/';
+        $fileName = $subtitle->getId() . '.vtt';
+        $fullPath = $dir . $fileName;
+        $duration = (string) \number_format(((int) $video->getAttribute('duration', 0)) / 1000, 1);
+
+        $dbForProject->createDocument('videos_subtitles_segments', new Document([
+            'subtitleId' => $subtitle->getId(),
+            'subtitleInternalId' => $subtitle->getSequence(),
+            'fileName' => $fileName,
+            'path' => $dir,
+            'duration' => $duration,
+        ]));
+
+        Console::info('Uploading ' . $fileName);
+        $deviceForVideos->write(
+            $fullPath,
+            (new Local('/'))->read($vttPath),
+            'text/vtt'
+        );
+
+        return $dbForProject->updateDocument(
+            'videos_subtitles',
+            $subtitle->getId(),
+            new Document([
+                'targetDuration' => $duration,
+                'status' => Base::STATUS_READY,
+                'path' => $fullPath,
+            ])
+        );
+    }
+
+    /**
+     * Replace auto-extracted text subtitle tracks from the source container.
+     *
+     * Uploaded tracks (non-empty fileId) always win for a given language code.
+     * Image-based streams are skipped. One failed track does not fail the timeline.
+     */
+    private function extractEmbeddedSubtitles(
+        Database $dbForProject,
+        Device $deviceForVideos,
+        Document $video,
+        string $inPath,
+        string $outDir,
+        Encoder $encoder
+    ): void {
+        Console::info('Videos worker: extracting embedded subtitles for video ' . $video->getId());
+
+        $wiped = $this->wipeEmbeddedSubtitles($dbForProject, $deviceForVideos, $video);
+        if ($wiped > 0) {
+            Console::info(
+                'Videos worker: wiped ' . $wiped
+                . ' prior embedded subtitle(s) on video ' . $video->getId()
+            );
+        }
+
+        $existing = $dbForProject->find('videos_subtitles', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        $uploadedCodes = [];
+        $hasDefault = false;
+
+        foreach ($existing as $subtitle) {
+            if (!empty($subtitle->getAttribute('fileId', ''))) {
+                $uploadedCodes[$subtitle->getAttribute('code', '')] = true;
+            }
+            if ($subtitle->getAttribute('default', false)) {
+                $hasDefault = true;
+            }
+        }
+
+        if (!empty($uploadedCodes)) {
+            Console::info(
+                'Videos worker: upload-owned languages on video ' . $video->getId()
+                . ': ' . \implode(', ', \array_keys($uploadedCodes))
+            );
+        }
+
+        try {
+            $info = $encoder->probe($inPath);
+        } catch (\Throwable $th) {
+            Console::warning('Videos worker: subtitle probe failed for ' . $video->getId() . ': ' . $th->getMessage());
+            return;
+        }
+
+        $tracks = $info->tracks(Track::SUBTITLE);
+        Console::info(
+            'Videos worker: found ' . \count($tracks)
+            . ' subtitle stream(s) in source for video ' . $video->getId()
+        );
+
+        $assignedDefault = false;
+        $registered = 0;
+        $skipped = 0;
+
+        foreach ($tracks as $track) {
+            $codec = \strtolower((string) ($track->codec ?? ''));
+            $language = $track->language ?? 'und';
+
+            Console::info(
+                'Videos worker: subtitle stream index=' . $track->index
+                . ' codec=' . ($track->codec ?? 'unknown')
+                . ' language=' . $language
+                . ' default=' . ($track->default ? 'yes' : 'no')
+                . ' title=' . ($track->title ?? '')
+                . ' video=' . $video->getId()
+            );
+
+            if ($codec === '' || !\in_array($codec, self::TEXT_SUBTITLE_CODECS, true)) {
+                Console::warning(
+                    'Videos worker: skipping non-text subtitle stream '
+                    . $track->index . ' (' . ($track->codec ?? 'unknown') . ') on video '
+                    . $video->getId()
+                );
+                $skipped++;
+                continue;
+            }
+
+            $code = $this->subtitleLanguageCode($track->language);
+
+            if (isset($uploadedCodes[$code])) {
+                Console::info(
+                    'Videos worker: skipping embedded ' . $code
+                    . ' — upload already owns that language on video ' . $video->getId()
+                );
+                $skipped++;
+                continue;
+            }
+
+            $vttPath = \rtrim($outDir, '/') . '/sub_' . $track->index . '.vtt';
+
+            try {
+                Console::info(
+                    'Videos worker: ffmpeg extract map 0:' . $track->index
+                    . ' -> webvtt for video ' . $video->getId()
+                );
+                $this->ffmpegExtractSubtitle($inPath, $track->index, $vttPath);
+            } catch (\Throwable $th) {
+                Console::warning(
+                    'Videos worker: failed extracting subtitle stream '
+                    . $track->index . ' on video ' . $video->getId() . ': ' . $th->getMessage()
+                );
+                $skipped++;
+                continue;
+            }
+
+            if (!\is_file($vttPath) || \filesize($vttPath) === 0) {
+                Console::warning(
+                    'Videos worker: empty VTT for subtitle stream '
+                    . $track->index . ' on video ' . $video->getId()
+                );
+                $skipped++;
+                continue;
+            }
+
+            $name = $track->title
+                ?? ($track->language !== null && $track->language !== '' ? $track->language : null)
+                ?? ('Track ' . $track->index);
+
+            $isDefault = false;
+            if (!$hasDefault && !$assignedDefault) {
+                if ($track->default) {
+                    $isDefault = true;
+                    $assignedDefault = true;
+                }
+            }
+
+            try {
+                $subtitle = $dbForProject->createDocument('videos_subtitles', new Document([
+                    '$id' => ID::unique(),
+                    'videoId' => $video->getId(),
+                    'videoInternalId' => $video->getSequence(),
+                    'name' => $name,
+                    'code' => $code,
+                    'default' => $isDefault,
+                    'status' => Base::STATUS_STARTED,
+                ]));
+
+                $this->persistSubtitleVtt($dbForProject, $deviceForVideos, $video, $subtitle, $vttPath);
+                $registered++;
+                Console::info(
+                    'Videos worker: registered embedded subtitle ' . $subtitle->getId()
+                    . ' code=' . $code
+                    . ' name=' . $name
+                    . ' default=' . ($isDefault ? 'yes' : 'no')
+                    . ' bytes=' . \filesize($vttPath)
+                    . ' for video ' . $video->getId()
+                );
+            } catch (\Throwable $th) {
+                Console::warning(
+                    'Videos worker: failed registering embedded subtitle stream '
+                    . $track->index . ' on video ' . $video->getId() . ': ' . $th->getMessage()
+                );
+                $skipped++;
+            }
+        }
+
+        // If no stream was flagged default, promote the first extracted track
+        // when no upload already claims default.
+        if (!$hasDefault && !$assignedDefault) {
+            $embedded = $dbForProject->find('videos_subtitles', [
+                Query::equal('videoInternalId', [$video->getSequence()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
+
+            foreach ($embedded as $subtitle) {
+                if (!empty($subtitle->getAttribute('fileId', ''))) {
+                    continue;
+                }
+
+                $dbForProject->updateDocument(
+                    'videos_subtitles',
+                    $subtitle->getId(),
+                    new Document(['default' => true])
+                );
+                Console::info(
+                    'Videos worker: set default embedded subtitle ' . $subtitle->getId()
+                    . ' on video ' . $video->getId()
+                );
+                break;
+            }
+        }
+
+        Console::info(
+            'Videos worker: embedded subtitle extract done for video ' . $video->getId()
+            . ' registered=' . $registered
+            . ' skipped=' . $skipped
+            . ' streams=' . \count($tracks)
+        );
+    }
+
+    /**
+     * Delete auto-extracted (empty fileId) subtitle rows and their artifacts.
+     *
+     * @return int number of embedded rows removed
+     */
+    private function wipeEmbeddedSubtitles(
+        Database $dbForProject,
+        Device $deviceForVideos,
+        Document $video
+    ): int {
+        $existing = $dbForProject->find('videos_subtitles', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        $wiped = 0;
+
+        foreach ($existing as $subtitle) {
+            if (!empty($subtitle->getAttribute('fileId', ''))) {
+                continue;
+            }
+
+            Console::info(
+                'Videos worker: removing embedded subtitle ' . $subtitle->getId()
+                . ' code=' . $subtitle->getAttribute('code', '')
+                . ' on video ' . $video->getId()
+            );
+            $this->deleteSubtitleArtifacts($dbForProject, $deviceForVideos, $subtitle);
+            $wiped++;
+        }
+
+        return $wiped;
+    }
+
+    /**
+     * Remove segment rows, the subtitle document, and the device VTT path.
+     */
+    private function deleteSubtitleArtifacts(
+        Database $dbForProject,
+        Device $deviceForVideos,
+        Document $subtitle
+    ): void {
+        $segments = $dbForProject->find('videos_subtitles_segments', [
+            Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        foreach ($segments as $segment) {
+            $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId());
+        }
+
+        $path = $subtitle->getAttribute('path', '');
+        $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId());
+
+        if (!empty($path) && $deviceForVideos->exists($path)) {
+            try {
+                $deviceForVideos->delete($path);
+            } catch (\Throwable) {
+                // Best-effort; the DB row is the source of truth.
+            }
+        }
+    }
+
+    /**
+     * Map a container language tag to an ISO 639-2 code2 used by the API.
+     */
+    private function subtitleLanguageCode(?string $language): string
+    {
+        if ($language === null || $language === '') {
+            return 'und';
+        }
+
+        $tag = \strtolower(\str_replace('_', '-', \trim($language)));
+        $primary = \explode('-', $tag)[0];
+
+        foreach (Config::getParam('locale-languages') as $entry) {
+            if (($entry['code'] ?? '') === $primary || ($entry['code2'] ?? '') === $primary) {
+                return $entry['code2'];
+            }
+        }
+
+        if (\strlen($primary) === 3 && \ctype_alpha($primary)) {
+            return $primary;
+        }
+
+        return 'und';
+    }
+
+    /**
+     * Extract one subtitle stream to WebVTT with the container ffmpeg binary.
+     */
+    private function ffmpegExtractSubtitle(string $inPath, int $streamIndex, string $outPath): void
+    {
+        $stdout = '';
+        $stderr = '';
+        $command = 'ffmpeg -y -i ' . \escapeshellarg($inPath)
+            . ' -map 0:' . $streamIndex
+            . ' -c:s webvtt '
+            . \escapeshellarg($outPath);
+
+        Console::info('Videos worker: ffmpeg command: ' . $command);
+
+        $code = Console::execute($command, '', $stdout, $stderr, 60);
+
+        if ($code !== 0) {
+            throw new \Exception(\trim($stderr) !== '' ? \trim($stderr) : 'ffmpeg exit ' . $code);
         }
     }
 
@@ -763,15 +1140,16 @@ class Videos extends Action
             $streams[] = $this->streamMeta($variant, $streamId);
 
             foreach ($variant->segments as $segment) {
+                $needsDuration = !$segment->init
+                    && ($output === Base::OUTPUT_HLS || $output === Base::OUTPUT_CMAF);
+
                 $dbForProject->createDocument('videos_renditions_segments', new Document(\array_filter([
                     'renditionId' => $rendition->getId(),
                     'renditionInternalId' => $rendition->getSequence(),
                     'streamId' => $streamId,
                     'fileName' => $segment->file,
                     'path' => $path,
-                    'duration' => $output === Base::OUTPUT_HLS && !$segment->init
-                        ? (string) $segment->duration
-                        : null,
+                    'duration' => $needsDuration ? (string) $segment->duration : null,
                     'isInit' => $segment->init ? 1 : 0,
                 ], fn ($value) => $value !== null)));
             }
@@ -781,16 +1159,18 @@ class Videos extends Action
             }
         }
 
-        if ($output === Base::OUTPUT_HLS) {
+        if ($output === Base::OUTPUT_HLS || $output === Base::OUTPUT_CMAF) {
             $metaTarget = $package->metadata()['targetDuration'] ?? null;
             if ($targetDuration === null && $metaTarget !== null && (float) $metaTarget > 0) {
                 $targetDuration = (string) (int) \ceil((float) $metaTarget);
             }
-
-            return [['hls' => $streams], $targetDuration];
         }
 
-        return [['mpd' => $this->mpdMeta($package)], $targetDuration];
+        return match ($output) {
+            Base::OUTPUT_HLS => [['hls' => $streams], $targetDuration],
+            Base::OUTPUT_CMAF => [['hls' => $streams, 'mpd' => $this->mpdMeta($package)], $targetDuration],
+            default => [['mpd' => $this->mpdMeta($package)], $targetDuration],
+        };
     }
 
     /**
@@ -855,6 +1235,11 @@ class Videos extends Action
 
             $segmentListAttrs = \array_filter([
                 'timescale' => $variant->timescale > 0 ? (string) $variant->timescale : null,
+                // SegmentList@duration is in timescale ticks — required for dash.js to
+                // schedule SegmentURL entries when addressing is list-based.
+                'duration' => ($variant->timescale > 0 && $variant->target > 0)
+                    ? (string) (int) \round($variant->target * $variant->timescale)
+                    : null,
                 'startNumber' => $variant->startNumber > 0 ? (string) $variant->startNumber : null,
             ], fn ($value) => $value !== null);
 
@@ -922,7 +1307,7 @@ class Videos extends Action
 
     private function encoder(): Encoder
     {
-        return new Encoder(new FFmpeg(threads: 4));
+        return new Encoder(new LoggingFFmpeg(threads: 4));
     }
 
     /**

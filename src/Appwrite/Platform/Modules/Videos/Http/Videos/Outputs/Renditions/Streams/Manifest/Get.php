@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Streams\Manifest;
 
-use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Manifest\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -13,7 +12,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -76,53 +74,16 @@ class Get extends Base
         User $user,
         Authorization $authorization
     ): void {
-        $video = $this->authorizeVideo($dbForProject, $authorization, $user, $videoId);
-
-        // Loaded by id and then checked against the video, rather than the
-        // pre-merge `Query::equal('_uid', ...)` which reached for a raw internal
-        // column and never verified the rendition belonged to this video.
-        $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions', $renditionId));
-
-        if (
-            $rendition->isEmpty()
-            || $rendition->getAttribute('videoInternalId') !== $video->getSequence()
-            || $rendition->getAttribute('status') !== self::STATUS_READY
-        ) {
-            throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
-        }
-
-        $segments = $authorization->skip(fn () => $dbForProject->find('videos_renditions_segments', [
-            Query::equal('renditionInternalId', [$rendition->getSequence()]),
-            Query::equal('streamId', [$streamId]),
-            Query::orderAsc('$sequence'),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
-
-        if (empty($segments)) {
-            throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
-        }
-
-        $baseUri = $this->baseUri($video, self::OUTPUT_HLS)
-            . '/renditions/' . $rendition->getId() . '/segments/';
-
-        $entries = [];
-
-        foreach ($segments as $segment) {
-            if ((int) $segment->getAttribute('isInit', 0) === 1) {
-                continue;
-            }
-
-            $entries[] = [
-                'duration' => $segment->getAttribute('duration', 0),
-                'url' => $this->withProject($baseUri . $segment->getId(), $project),
-            ];
-        }
-
-        $manifest = $this->renderView('hls', [
-            'targetDuration' => $rendition->getAttribute('targetDuration', 0),
-            'segments' => $entries,
-        ]);
-
-        $this->sendManifest($response, $manifest, 'application/x-mpegurl');
+        $this->sendStreamPlaylist(
+            $videoId,
+            $renditionId,
+            $streamId,
+            self::OUTPUT_HLS,
+            $response,
+            $dbForProject,
+            $project,
+            $user,
+            $authorization
+        );
     }
 }

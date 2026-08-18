@@ -3,7 +3,7 @@ $mpd = $this->getParam('mpd', []);
 echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
 <MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xlink="http://www.w3.org/1999/xlink"
      xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
-     profiles="<?php if (isset($mpd['profiles'])): echo ($mpd['profiles']); endif;?>" type="<?php if (isset($mpd['type'])): echo ($mpd['type']); endif;?>" mediaPresentationDuration="<?php if (isset($mpd['maxSegmentDuration'])): echo ($mpd['mediaPresentationDuration']); endif;?>" maxSegmentDuration="<?php if (isset($mpd['maxSegmentDuration'])): echo ($mpd['maxSegmentDuration']); endif;?>" minBufferTime="<?php if (isset($mpd['minBufferTime'])): echo ($mpd['minBufferTime']); endif;?>">
+     profiles="<?php if (isset($mpd['profiles'])): echo ($mpd['profiles']); endif;?>" type="<?php if (isset($mpd['type'])): echo ($mpd['type']); endif;?>" mediaPresentationDuration="<?php if (isset($mpd['mediaPresentationDuration'])): echo ($mpd['mediaPresentationDuration']); endif;?>" maxSegmentDuration="<?php if (isset($mpd['maxSegmentDuration'])): echo ($mpd['maxSegmentDuration']); endif;?>" minBufferTime="<?php if (isset($mpd['minBufferTime'])): echo ($mpd['minBufferTime']); endif;?>">
     <ProgramInformation></ProgramInformation>
     <ServiceDescription id="0"></ServiceDescription>
     <Period id="0" start="PT0.0S">

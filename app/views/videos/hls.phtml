@@ -1,8 +1,11 @@
 #EXTM3U
-#EXT-X-VERSION:4
+#EXT-X-VERSION:<?php echo $this->getParam('map') ? 7 : 4; ?><?php echo PHP_EOL?>
 #EXT-X-ALLOW-CACHE:YES
 #EXT-X-TARGETDURATION:<?php echo $this->getParam('targetDuration', 0)?><?php echo PHP_EOL?>
 #EXT-X-MEDIA-SEQUENCE:0
+<?php if ($this->getParam('map')): ?>
+#EXT-X-MAP:URI="<?php echo $this->getParam('map'); ?>"<?php echo PHP_EOL?>
+<?php endif; ?>
 <?php foreach ($this->getParam('segments', []) as $segment): ?>
 #EXTINF:<?php echo $segment['duration']; ?>,<?php echo PHP_EOL?>
 <?php echo $segment['url']; ?><?php echo PHP_EOL?>

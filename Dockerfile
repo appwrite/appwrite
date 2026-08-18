@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 FROM composer:2 AS composer
 
 ARG TESTING=false
@@ -8,9 +9,15 @@ WORKDIR /usr/local/src/
 COPY composer.lock /usr/local/src/
 COPY composer.json /usr/local/src/
 
-RUN composer install --ignore-platform-reqs --optimize-autoloader \
-    --no-plugins --no-scripts --prefer-dist \
-    `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
+# Private VCS deps (shimonewman/streaming) need git over SSH; GitHub zipballs
+# 404 without a token. Forward the host agent: docker compose build --ssh default
+RUN --mount=type=ssh \
+    mkdir -p -m 0700 /root/.ssh \
+    && ssh-keyscan github.com >> /root/.ssh/known_hosts \
+    && composer config --global --no-interaction github-protocols ssh \
+    && composer install --ignore-platform-reqs --optimize-autoloader \
+        --no-plugins --no-scripts --prefer-source \
+        `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
 FROM appwrite/base:1.4.4 AS base
 

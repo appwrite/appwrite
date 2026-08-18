@@ -7,9 +7,11 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\View;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Platform\Action as UtopiaAction;
+use Utopia\Storage\Device;
 
 /**
  * Shared behaviour for the Videos module.
@@ -22,9 +24,10 @@ abstract class Base extends UtopiaAction
 {
     public const OUTPUT_HLS = 'hls';
     public const OUTPUT_DASH = 'dash';
+    public const OUTPUT_CMAF = 'cmaf';
 
     /** Outputs a rendition can be packaged into. */
-    public const OUTPUTS = [self::OUTPUT_HLS, self::OUTPUT_DASH];
+    public const OUTPUTS = [self::OUTPUT_HLS, self::OUTPUT_DASH, self::OUTPUT_CMAF];
 
     /**
      * Lifecycle of a rendition or subtitle, shared with the videos worker.
@@ -175,5 +178,57 @@ abstract class Base extends UtopiaAction
         );
 
         return $video;
+    }
+
+    /**
+     * Remove auto-extracted subtitle tracks that share a language code with an
+     * upload. Uploaded rows (non-empty fileId) are never deleted here.
+     *
+     * @param string|null $exceptId subtitle id to leave alone (e.g. the row being updated)
+     */
+    protected function deleteEmbeddedSubtitlesForCode(
+        Database $dbForProject,
+        Authorization $authorization,
+        Device $deviceForVideos,
+        Document $video,
+        string $code,
+        ?string $exceptId = null
+    ): void {
+        $existing = $authorization->skip(fn () => $dbForProject->find('videos_subtitles', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::equal('code', [$code]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
+
+        foreach ($existing as $subtitle) {
+            if ($exceptId !== null && $subtitle->getId() === $exceptId) {
+                continue;
+            }
+
+            if (!empty($subtitle->getAttribute('fileId', ''))) {
+                continue;
+            }
+
+            $segments = $authorization->skip(fn () => $dbForProject->find('videos_subtitles_segments', [
+                Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+
+            foreach ($segments as $segment) {
+                $authorization->skip(fn () => $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId()));
+            }
+
+            $authorization->skip(fn () => $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId()));
+
+            $path = $subtitle->getAttribute('path', '');
+
+            if (!empty($path)) {
+                try {
+                    $deviceForVideos->delete($path);
+                } catch (\Throwable) {
+                    // Row is gone; stale device bytes are cleaned up with the video.
+                }
+            }
+        }
     }
 }

@@ -501,7 +501,12 @@ class VideosCustomServerTest extends Scope
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
 
-        foreach (['/videos/' . $videoId . '/outputs/hls/master.m3u8', '/videos/' . $videoId . '/outputs/dash/master.mpd'] as $path) {
+        foreach ([
+            '/videos/' . $videoId . '/outputs/hls/master.m3u8',
+            '/videos/' . $videoId . '/outputs/dash/master.mpd',
+            '/videos/' . $videoId . '/outputs/cmaf/master.m3u8',
+            '/videos/' . $videoId . '/outputs/cmaf/master.mpd',
+        ] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->headers());
             $this->assertEquals(404, $response['headers']['status-code'], $path);
             $this->assertEquals('video_rendition_not_found', $response['body']['type'], $path);
@@ -598,6 +603,69 @@ class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('<Initialization', $mpd['body']);
         $this->assertStringContainsString('<SegmentURL', $mpd['body']);
 
+        // CMAF: one encode, dual HLS + DASH masters over shared fMP4 segments.
+        $cmafCreate = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'cmaf',
+        ]);
+        $this->assertEquals(202, $cmafCreate['headers']['status-code']);
+        $cmafRenditionId = $cmafCreate['body']['$id'];
+        $cmafBody = $this->waitForRenditionTerminalState($videoId, $cmafRenditionId);
+        $this->assertEquals('ready', $cmafBody['status']);
+
+        $cmafList = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'output' => 'cmaf',
+        ]);
+        $this->assertEquals(200, $cmafList['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $cmafList['body']['total']);
+        $this->assertContains($cmafRenditionId, \array_column($cmafList['body']['renditions'], '$id'));
+
+        $cmafMaster = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/cmaf/master.m3u8', $this->headers());
+        $this->assertEquals(200, $cmafMaster['headers']['status-code']);
+        $this->assertStringContainsString('#EXT-X-STREAM-INF', $cmafMaster['body']);
+        $this->assertMatchesRegularExpression(
+            '#/videos/' . \preg_quote($videoId, '#') . '/outputs/cmaf/renditions/' . \preg_quote($cmafRenditionId, '#') . '/streams/\d+/playlist\.m3u8#',
+            $cmafMaster['body']
+        );
+
+        if (\preg_match('#renditions/' . \preg_quote($cmafRenditionId, '#') . '/streams/(\d+)/playlist\.m3u8#', $cmafMaster['body'], $cmafStreamMatch) !== 1) {
+            $this->fail('CMAF HLS master did not reference a stream playlist');
+        }
+        $cmafStreamId = $cmafStreamMatch[1];
+
+        $cmafVariant = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/cmaf/renditions/' . $cmafRenditionId . '/streams/' . $cmafStreamId . '/playlist.m3u8',
+            $this->headers()
+        );
+        $this->assertEquals(200, $cmafVariant['headers']['status-code']);
+        $this->assertStringContainsString('#EXTINF', $cmafVariant['body']);
+        $this->assertStringContainsString('#EXT-X-MAP:URI=', $cmafVariant['body']);
+        $this->assertMatchesRegularExpression(
+            '#/videos/' . \preg_quote($videoId, '#') . '/outputs/cmaf/renditions/' . \preg_quote($cmafRenditionId, '#') . '/segments/#',
+            $cmafVariant['body']
+        );
+
+        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', $cmafVariant['body'], $cmafSegmentMatch) !== 1) {
+            $this->fail('CMAF stream playlist did not reference a segment');
+        }
+        $cmafSegmentId = $cmafSegmentMatch[1];
+
+        $cmafSegment = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/cmaf/renditions/' . $cmafRenditionId . '/segments/' . $cmafSegmentId,
+            $this->headers()
+        );
+        $this->assertEquals(200, $cmafSegment['headers']['status-code']);
+        $this->assertNotEmpty($cmafSegment['body']);
+        $this->assertStringContainsString('video/iso.segment', $cmafSegment['headers']['content-type'] ?? '');
+
+        $cmafMpd = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/cmaf/master.mpd', $this->headers());
+        $this->assertEquals(200, $cmafMpd['headers']['status-code']);
+        $this->assertStringContainsString('<SegmentList', $cmafMpd['body']);
+        $this->assertStringContainsString('<SegmentURL', $cmafMpd['body']);
+        $this->assertStringContainsString('<Initialization', $cmafMpd['body']);
+
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', $timeline['body']);
@@ -611,6 +679,214 @@ class VideosCustomServerTest extends Scope
             $this->assertEquals(200, $preview['headers']['status-code']);
             $this->assertNotEmpty($preview['body']);
         }
+    }
+
+    // ---------------------------------------------------- embedded subtitles
+
+    /**
+     * Timeline extract registers soft text tracks from the source as ready
+     * `videos_subtitles` rows (empty fileId) and advertises them on the HLS master.
+     */
+    public function testExtractEmbeddedSubtitles(): array
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFileWithSubtitles()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+
+        $this->waitForTimeline($videoId);
+        $embedded = $this->waitForEmbeddedSubtitle($videoId);
+        $this->assertNotNull($embedded, 'Expected an auto-extracted subtitle after timeline');
+        $this->assertEquals('ready', $embedded['status']);
+        $this->assertEquals('eng', $embedded['code']);
+        $this->assertTrue(($embedded['fileId'] ?? '') === '' || ($embedded['fileId'] ?? null) === null);
+
+        // GET list: confirm the extracted track is registered on the video.
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $list['body']['total']);
+        $ids = \array_column($list['body']['subtitles'], '$id');
+        $this->assertContains($embedded['$id'], $ids);
+
+        $registered = null;
+        foreach ($list['body']['subtitles'] as $subtitle) {
+            if ($subtitle['$id'] === $embedded['$id']) {
+                $registered = $subtitle;
+                break;
+            }
+        }
+        $this->assertNotNull($registered);
+        $this->assertEquals('ready', $registered['status']);
+        $this->assertEquals('eng', $registered['code']);
+        $this->assertTrue(($registered['fileId'] ?? '') === '' || ($registered['fileId'] ?? null) === null);
+
+        $vtt = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/dash/subtitles/' . $embedded['$id'] . '/manifest',
+            $this->headers()
+        );
+        $this->assertEquals(200, $vtt['headers']['status-code']);
+        $this->assertStringContainsString('WEBVTT', $vtt['body']);
+        $this->assertStringContainsString('EMBEDDED CUE', $vtt['body']);
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profile = null;
+        foreach ($profiles['body']['profiles'] as $candidate) {
+            if (($candidate['name'] ?? '') === '360p') {
+                $profile = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($profile, 'Seeded 360p profile missing');
+
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $body = $this->waitForRenditionTerminalState($videoId, $rendition['body']['$id']);
+        $this->assertEquals('ready', $body['status'], 'Short fixture encode should succeed');
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $this->assertStringContainsString('#EXT-X-MEDIA:TYPE=SUBTITLES', $master['body']);
+        $this->assertStringContainsString('/subtitles/' . $embedded['$id'] . '/manifest', $master['body']);
+
+        return [
+            'videoId' => $videoId,
+            'subtitleId' => $embedded['$id'],
+            'renditionId' => $rendition['body']['$id'],
+        ];
+    }
+
+    /**
+     * A source with two soft text tracks registers both languages after timeline.
+     */
+    public function testExtractTwoEmbeddedSubtitles(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFileWithTwoSubtitles()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+
+        $this->waitForTimeline($videoId);
+        $embedded = $this->waitForEmbeddedSubtitles($videoId, 2);
+        $this->assertCount(2, $embedded, 'Expected eng and fra auto-extracted subtitles');
+
+        $byCode = [];
+        foreach ($embedded as $subtitle) {
+            $byCode[$subtitle['code']] = $subtitle;
+            $this->assertEquals('ready', $subtitle['status']);
+            $this->assertTrue(($subtitle['fileId'] ?? '') === '' || ($subtitle['fileId'] ?? null) === null);
+        }
+
+        $this->assertArrayHasKey('eng', $byCode);
+        $this->assertArrayHasKey('fra', $byCode);
+        $this->assertTrue($byCode['eng']['default'] || $byCode['fra']['default']);
+        $this->assertFalse($byCode['eng']['default'] && $byCode['fra']['default'], 'Only one default track');
+
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(2, $list['body']['total']);
+        $this->assertEqualsCanonicalizing(
+            ['eng', 'fra'],
+            \array_values(\array_unique(\array_column($list['body']['subtitles'], 'code')))
+        );
+
+        $engVtt = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/dash/subtitles/' . $byCode['eng']['$id'] . '/manifest',
+            $this->headers()
+        );
+        $this->assertEquals(200, $engVtt['headers']['status-code']);
+        $this->assertStringContainsString('EMBEDDED CUE EN', $engVtt['body']);
+
+        $fraVtt = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/dash/subtitles/' . $byCode['fra']['$id'] . '/manifest',
+            $this->headers()
+        );
+        $this->assertEquals(200, $fraVtt['headers']['status-code']);
+        $this->assertStringContainsString('EMBEDDED CUE FR', $fraVtt['body']);
+    }
+
+    /**
+     * An uploaded track for the same language replaces the auto-extracted row
+     * and is what the master advertises.
+     */
+    #[Depends('testExtractEmbeddedSubtitles')]
+    public function testUploadOverridesExtractedSubtitle(array $extracted): array
+    {
+        $videoId = $extracted['videoId'];
+        $embeddedId = $extracted['subtitleId'];
+
+        $create = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getOverrideSubtitleFile()['$id'],
+            'name' => 'English upload',
+            'code' => 'eng',
+            'default' => true,
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $uploadId = $create['body']['$id'];
+
+        $ready = $this->waitForSubtitleTerminalState($videoId, $uploadId);
+        $this->assertEquals('ready', $ready['status']);
+        $this->assertEquals($this->getOverrideSubtitleFile()['$id'], $ready['fileId']);
+
+        // GET list: uploaded track is registered and replaced the embedded eng row.
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertContains($uploadId, \array_column($list['body']['subtitles'], '$id'));
+        $this->assertNotContains($embeddedId, \array_column($list['body']['subtitles'], '$id'));
+
+        $eng = \array_values(\array_filter(
+            $list['body']['subtitles'] ?? [],
+            fn (array $subtitle): bool => ($subtitle['code'] ?? '') === 'eng'
+        ));
+        $this->assertCount(1, $eng, 'Upload should replace the embedded eng track');
+        $this->assertEquals($uploadId, $eng[0]['$id']);
+        $this->assertEquals('ready', $eng[0]['status']);
+        $this->assertEquals($this->getOverrideSubtitleFile()['$id'], $eng[0]['fileId']);
+        $this->assertEquals('English upload', $eng[0]['name']);
+        $this->assertNotEquals($embeddedId, $eng[0]['$id']);
+
+        $vtt = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/dash/subtitles/' . $uploadId . '/manifest',
+            $this->headers()
+        );
+        $this->assertEquals(200, $vtt['headers']['status-code']);
+        $this->assertStringContainsString('OVERRIDE CUE', $vtt['body']);
+        $this->assertStringNotContainsString('EMBEDDED CUE', $vtt['body']);
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $this->assertStringContainsString('/subtitles/' . $uploadId . '/manifest', $master['body']);
+        $this->assertStringNotContainsString('/subtitles/' . $embeddedId . '/manifest', $master['body']);
+
+        // Re-pointing the source re-runs timeline extract; the upload must still win.
+        $update = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFileWithSubtitles()['$id'],
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->waitForTimeline($videoId);
+
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $eng = \array_values(\array_filter(
+            $list['body']['subtitles'] ?? [],
+            fn (array $subtitle): bool => ($subtitle['code'] ?? '') === 'eng'
+        ));
+        $this->assertCount(1, $eng);
+        $this->assertEquals($uploadId, $eng[0]['$id']);
+        $this->assertEquals($this->getOverrideSubtitleFile()['$id'], $eng[0]['fileId']);
+
+        return $extracted;
     }
 
     // ------------------------------------------------------------------ delete

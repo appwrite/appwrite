@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\HLS\Manifest;
+namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\Renditions\Streams\Manifest;
 
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Manifest\Base;
 use Appwrite\SDK\AuthType;
@@ -16,6 +16,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Range;
 
 class Get extends Base
 {
@@ -23,15 +24,15 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getHlsManifest';
+        return 'getCmafStreamManifest';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/:videoId/outputs/hls/master.m3u8')
-            ->desc('Get HLS manifest')
+            ->setHttpPath('/v1/videos/:videoId/outputs/cmaf/renditions/:renditionId/streams/:streamId/playlist.m3u8')
+            ->desc('Get CMAF stream manifest')
             ->groups(['api', 'videos'])
             ->label('scope', 'videos.read')
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
@@ -39,8 +40,8 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'playback',
-                name: 'getHlsManifest',
-                description: '/docs/references/videos/get-manifest.md',
+                name: 'getCmafStreamManifest',
+                description: '/docs/references/videos/get-stream-manifest.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -53,6 +54,8 @@ class Get extends Base
                 locationAuth: ['Project', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
+            ->param('renditionId', '', new UID(), 'Rendition unique ID.')
+            ->param('streamId', 0, new Range(0, 10), 'Stream index within the rendition.')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -63,12 +66,24 @@ class Get extends Base
 
     public function action(
         string $videoId,
+        string $renditionId,
+        int $streamId,
         Response $response,
         Database $dbForProject,
         Document $project,
         User $user,
         Authorization $authorization
     ): void {
-        $this->sendHlsMaster($videoId, self::OUTPUT_HLS, $response, $dbForProject, $project, $user, $authorization);
+        $this->sendStreamPlaylist(
+            $videoId,
+            $renditionId,
+            $streamId,
+            self::OUTPUT_CMAF,
+            $response,
+            $dbForProject,
+            $project,
+            $user,
+            $authorization
+        );
     }
 }

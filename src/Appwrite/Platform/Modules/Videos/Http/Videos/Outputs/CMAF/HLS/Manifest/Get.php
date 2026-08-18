@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\HLS\Manifest;
+namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\HLS\Manifest;
 
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Manifest\Base;
 use Appwrite\SDK\AuthType;
@@ -23,15 +23,15 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getHlsManifest';
+        return 'getCmafHlsManifest';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/:videoId/outputs/hls/master.m3u8')
-            ->desc('Get HLS manifest')
+            ->setHttpPath('/v1/videos/:videoId/outputs/cmaf/master.m3u8')
+            ->desc('Get CMAF HLS manifest')
             ->groups(['api', 'videos'])
             ->label('scope', 'videos.read')
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
@@ -39,7 +39,7 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'playback',
-                name: 'getHlsManifest',
+                name: 'getCmafHlsManifest',
                 description: '/docs/references/videos/get-manifest.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -69,6 +69,6 @@ class Get extends Base
         User $user,
         Authorization $authorization
     ): void {
-        $this->sendHlsMaster($videoId, self::OUTPUT_HLS, $response, $dbForProject, $project, $user, $authorization);
+        $this->sendHlsMaster($videoId, self::OUTPUT_CMAF, $response, $dbForProject, $project, $user, $authorization);
     }
 }

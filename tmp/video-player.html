@@ -98,10 +98,20 @@
     .badge.waiting, .badge.started, .badge.ended, .badge.uploading { background: #2a2410; color: #f5c542; }
     .badge.error, .badge.missing { background: #301414; color: #ff8e8e; }
     video {
+      display: block;
+      margin-inline: auto;
       width: 100%;
+      height: auto;
+      max-height: min(70vh, 720px);
       background: #000;
       border-radius: 8px;
-      aspect-ratio: 16 / 9;
+      aspect-ratio: var(--video-ar, 16 / 9);
+      object-fit: contain;
+    }
+    video.portrait {
+      width: auto;
+      height: min(70vh, 720px);
+      max-width: 100%;
     }
     .timeline {
       position: relative;
@@ -153,7 +163,7 @@
 <body>
   <main>
     <h1>Appwrite Videos player</h1>
-    <p class="muted">Authenticate with the Web SDK, enter a video ID, and the page polls the Videos API for rendition/sprite status and plays HLS when ready.</p>
+    <p class="muted">Authenticate with the Web SDK, enter a video ID, and the page polls the Videos API for rendition/sprite status. Encode and play HLS, DASH, or CMAF (shared fMP4 with both masters).</p>
 
     <section class="panel">
       <h2>Connection &amp; auth <span class="muted">(Appwrite Web SDK)</span></h2>
@@ -203,9 +213,17 @@
           <input id="apiKey" type="password" placeholder="standard API key with buckets.write + files.write" autocomplete="off" />
         </label>
         <label class="full">
-          HLS profile names
+          Profile names
           <input id="profileNames" value="360p, 480p, 720p" />
         </label>
+        <fieldset class="full" style="border:0;padding:0;margin:0">
+          <legend class="muted" style="font-size:0.8rem;padding:0;margin-bottom:0.35rem">Encode outputs</legend>
+          <div class="actions">
+            <label style="display:inline-flex;align-items:center;gap:0.4rem;opacity:1;grid:none"><input type="checkbox" id="encodeHls" checked /> HLS</label>
+            <label style="display:inline-flex;align-items:center;gap:0.4rem;opacity:1;grid:none"><input type="checkbox" id="encodeDash" /> DASH</label>
+            <label style="display:inline-flex;align-items:center;gap:0.4rem;opacity:1;grid:none"><input type="checkbox" id="encodeCmaf" /> CMAF</label>
+          </div>
+        </fieldset>
       </div>
       <div class="actions">
         <button type="button" class="secondary" id="createBucketBtn" disabled>Create public bucket</button>
@@ -218,9 +236,18 @@
     <section class="panel">
       <h2>Video</h2>
       <div class="grid2">
-        <label class="full">
+        <label>
           Video ID
           <input id="videoId" placeholder="videoId" required autocomplete="off" />
+        </label>
+        <label>
+          Playback stream
+          <select id="playback">
+            <option value="hls">HLS · /outputs/hls/master.m3u8</option>
+            <option value="dash">DASH · /outputs/dash/master.mpd</option>
+            <option value="cmaf-hls">CMAF HLS · /outputs/cmaf/master.m3u8</option>
+            <option value="cmaf-dash">CMAF DASH · /outputs/cmaf/master.mpd</option>
+          </select>
         </label>
       </div>
       <div class="actions">
@@ -281,6 +308,7 @@
     const uploadInfo = $('uploadInfo');
     const loadBtn = $('loadBtn');
     const stopBtn = $('stopBtn');
+    const playbackSelect = $('playback');
 
     let account = null;
     let storage = null;
@@ -289,18 +317,65 @@
     let jwtMintedAt = 0;
     let pollTimer = null;
     let hls = null;
+    let dashPlayer = null;
+    let dashjsLib = null;
     let playingKey = null;
-    let selectedLevel = -1; // -1 = Auto
+    let selectedLevel = -1; // -1 = Auto (HLS / CMAF-HLS)
     let cues = [];
     let spriteReady = false;
     let lastStatus = null; // last poll payload, so we can re-render after manifest loads
     const spriteBlobs = new Map();
+    const spriteSizes = new Map();
+    const THUMB_MAX_W = 160;
+    const THUMB_MAX_H = 120;
 
-    // Prefill from URL ?endpoint=&projectId=&videoId= or localStorage.
+    // Prefill from URL ?endpoint=&projectId=&videoId=&playback= or localStorage.
     const params = new URLSearchParams(location.search);
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     for (const key of ['endpoint', 'projectId', 'videoId', 'bucketId']) {
       $(key).value = params.get(key) || saved[key] || $(key).value || '';
+    }
+    playbackSelect.value = params.get('playback') || saved.playback || 'hls';
+    if (saved.encode) {
+      $('encodeHls').checked = !!saved.encode.hls;
+      $('encodeDash').checked = !!saved.encode.dash;
+      $('encodeCmaf').checked = !!saved.encode.cmaf;
+    }
+
+    function playbackMode() {
+      return playbackSelect.value || 'hls';
+    }
+
+    /** API `output` value for the selected playback stream. */
+    function outputForMode(mode = playbackMode()) {
+      if (mode === 'dash') return 'dash';
+      if (mode === 'cmaf-hls' || mode === 'cmaf-dash') return 'cmaf';
+      return 'hls';
+    }
+
+    function isHlsMode(mode = playbackMode()) {
+      return mode === 'hls' || mode === 'cmaf-hls';
+    }
+
+    function masterPath(videoId, mode = playbackMode()) {
+      switch (mode) {
+        case 'dash':
+          return `/videos/${videoId}/outputs/dash/master.mpd`;
+        case 'cmaf-hls':
+          return `/videos/${videoId}/outputs/cmaf/master.m3u8`;
+        case 'cmaf-dash':
+          return `/videos/${videoId}/outputs/cmaf/master.mpd`;
+        default:
+          return `/videos/${videoId}/outputs/hls/master.m3u8`;
+      }
+    }
+
+    function encodeOutputs() {
+      const outs = [];
+      if ($('encodeHls').checked) outs.push('hls');
+      if ($('encodeDash').checked) outs.push('dash');
+      if ($('encodeCmaf').checked) outs.push('cmaf');
+      return outs;
     }
 
     function config() {
@@ -309,11 +384,51 @@
         projectId: $('projectId').value.trim(),
         videoId: $('videoId').value.trim(),
         bucketId: $('bucketId').value.trim(),
+        playback: playbackMode(),
+        encode: {
+          hls: $('encodeHls').checked,
+          dash: $('encodeDash').checked,
+          cmaf: $('encodeCmaf').checked,
+        },
       };
+    }
+
+    async function ensureDashJs() {
+      if (dashjsLib) return dashjsLib;
+      if (window.dashjs) {
+        dashjsLib = window.dashjs;
+        return dashjsLib;
+      }
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/dashjs@4.7.4/dist/dash.all.min.js';
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('failed to load dash.js'));
+        document.head.appendChild(script);
+      });
+      dashjsLib = window.dashjs;
+      if (!dashjsLib) throw new Error('dash.js did not register on window');
+      return dashjsLib;
     }
 
     function persistConfig() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(config()));
+    }
+
+    /** Keep the watch form, localStorage, and URL query in sync with a new video id. */
+    function setVideoId(videoId) {
+      const id = String(videoId || '').trim();
+      // Guard against accidental event objects from click listeners.
+      if (!id || id.includes('[object ') || id.length > 36) return;
+      $('videoId').value = id;
+      try {
+        const url = new URL(location.href);
+        url.searchParams.set('videoId', id);
+        history.replaceState({}, '', url);
+      } catch { /* ignore bad URL environments */ }
+      persistConfig();
+      lastStatus = null;
+      statusRows.innerHTML = `<div class="muted">Loading video <span class="mono">${id}</span>…</div>`;
     }
 
     function sdk() {
@@ -578,10 +693,27 @@
           bucketId,
           fileId: storedFile.$id,
         });
+        const newVideoId = videoDoc?.$id;
+        if (!newVideoId) {
+          throw new Error('create video returned no $id');
+        }
 
-        // Push the new video into the watch form immediately.
-        $('videoId').value = videoDoc.$id;
-        persistConfig();
+        // Prefer the first encode output the user ticked, so Load/watch matches
+        // what we just queued (avoids sitting on HLS while only CMAF was encoded).
+        const outputs = encodeOutputs();
+        if (!outputs.length) {
+          throw new Error('pick at least one encode output (HLS / DASH / CMAF)');
+        }
+        const preferred = outputs[0];
+        if (preferred === 'cmaf' && !playbackMode().startsWith('cmaf')) {
+          playbackSelect.value = 'cmaf-hls';
+        } else if (preferred === 'dash') {
+          playbackSelect.value = 'dash';
+        } else if (preferred === 'hls') {
+          playbackSelect.value = 'hls';
+        }
+
+        setVideoId(newVideoId);
         $('videoId').focus();
         $('videoId').scrollIntoView({ block: 'center', behavior: 'smooth' });
 
@@ -591,12 +723,16 @@
           wantedProfiles.includes(String(profile.name || '').toLowerCase())
         );
 
+        let queued = 0;
         for (const profile of selected) {
-          uploadInfo.textContent = `queueing ${profile.name}…`;
-          await apiPost(`/videos/${videoDoc.$id}/renditions`, {
-            profileId: profile.$id,
-            output: 'hls',
-          });
+          for (const output of outputs) {
+            uploadInfo.textContent = `queueing ${profile.name} · ${output}…`;
+            await apiPost(`/videos/${newVideoId}/renditions`, {
+              profileId: profile.$id,
+              output,
+            });
+            queued += 1;
+          }
         }
 
         const missing = wantedProfiles.filter((name) =>
@@ -604,9 +740,10 @@
         );
 
         uploadInfo.textContent = missing.length
-          ? `created ${videoDoc.$id}; missing profiles: ${missing.join(', ')}`
-          : `created ${videoDoc.$id}; queued ${selected.length} HLS renditions`;
-        startPolling();
+          ? `created ${newVideoId}; missing profiles: ${missing.join(', ')}`
+          : `created ${newVideoId}; queued ${queued} renditions (${outputs.join(', ')})`;
+        // Pass the id explicitly so polling cannot race on a stale input value.
+        startPolling(newVideoId);
       } catch (err) {
         const msg = String(err?.message || err);
         uploadInfo.textContent = /No permissions provided for action 'create'/i.test(msg)
@@ -623,16 +760,142 @@
       return `<span class="badge ${s}">${s}</span>`;
     }
 
-    function levelForRendition(renditionId) {
-      if (!hls) return -1;
-      const needle = `/renditions/${renditionId}/`;
-      return hls.levels.findIndex((level) => {
-        const urls = Array.isArray(level.url) ? level.url : [level.url];
-        return urls.some((u) => String(u || '').includes(needle));
+    function heightFromRenditionName(name) {
+      const m = String(name || '').match(/X(\d+)@/i);
+      return m ? Number(m[1]) : 0;
+    }
+
+    /** Map an Appwrite rendition row to an hls.js level index. */
+    function levelForRendition(rendition) {
+      if (!hls?.levels?.length) return -1;
+      const id = typeof rendition === 'string' ? rendition : rendition.$id;
+      const name = typeof rendition === 'string' ? '' : String(rendition.name || '');
+      const height = heightFromRenditionName(name);
+
+      const urlsOf = (level) => []
+        .concat(level.url ?? [], level.uri ?? [])
+        .flat()
+        .map((u) => String(u || ''));
+
+      let idx = hls.levels.findIndex((level) =>
+        urlsOf(level).some((u) => u.includes(`/renditions/${id}/`))
+      );
+      if (idx >= 0) return idx;
+
+      if (name) {
+        idx = hls.levels.findIndex((level) => String(level.name || '') === name);
+        if (idx >= 0) return idx;
+      }
+
+      if (height > 0) {
+        idx = hls.levels.findIndex((level) => Number(level.height) === height);
+        if (idx >= 0) return idx;
+      }
+
+      return -1;
+    }
+
+    function readyRenditionsForPlayback(renditions, output = outputForMode()) {
+      return (renditions || []).filter((r) => r.output === output && r.status === 'ready');
+    }
+
+    /** Playback <select> value that can play a given rendition.output. */
+    function modeForOutput(output) {
+      if (output === 'dash') return 'dash';
+      if (output === 'cmaf') {
+        // Stay on CMAF DASH if already there; otherwise prefer CMAF HLS.
+        return playbackMode() === 'cmaf-dash' ? 'cmaf-dash' : 'cmaf-hls';
+      }
+      return 'hls';
+    }
+
+    function selectRendition(renditionId) {
+      const renditions = lastStatus?.renditions || [];
+      const rendition = renditions.find((r) => r.$id === renditionId);
+      if (!rendition || rendition.status !== 'ready') return;
+
+      const targetMode = modeForOutput(rendition.output);
+      const switchingOutput = outputForMode() !== rendition.output
+        || playbackMode() !== targetMode;
+
+      if (switchingOutput) {
+        playbackSelect.value = targetMode;
+        persistConfig();
+        statusEl.textContent = `Switching to ${targetMode} · ${rendition.name || rendition.$id}…`;
+        playRendition(rendition).catch((err) => {
+          statusEl.textContent = `Play failed: ${err.message}`;
+        });
+        return;
+      }
+
+      // Same output: lock quality inside the current player.
+      if (isHlsMode() && hls) {
+        let level = levelForRendition(rendition);
+        if (level < 0) {
+          const ready = readyRenditionsForPlayback(renditions, rendition.output);
+          const order = ready.findIndex((r) => r.$id === renditionId);
+          if (order >= 0 && order < hls.levels.length) level = order;
+        }
+        if (level < 0) {
+          statusEl.textContent = `Could not map ${rendition.name || renditionId} to an HLS level (${hls.levels.length} levels)`;
+          return;
+        }
+        selectLevel(level);
+        return;
+      }
+
+      loadDashRendition(rendition.$id).catch((err) => {
+        statusEl.textContent = `DASH quality switch failed: ${err.message}`;
       });
     }
 
+    async function playRendition(rendition) {
+      const cfg = config();
+      const mode = playbackMode();
+      destroyPlayer();
+      await ensureJwt();
+
+      const ready = readyRenditionsForPlayback(lastStatus?.renditions || [], rendition.output);
+      selectedLevel = Math.max(0, ready.findIndex((r) => r.$id === rendition.$id));
+
+      if (isHlsMode(mode)) {
+        await startHlsPlayback(cfg, mode);
+        // After master parse, lock to this rendition if possible.
+        const lock = () => {
+          const level = levelForRendition(rendition);
+          if (level >= 0) selectLevel(level);
+        };
+        if (hls) {
+          hls.once(Hls.Events.MANIFEST_PARSED, lock);
+        }
+      } else {
+        await startDashPlayback(cfg, mode, rendition.$id);
+      }
+
+      playingKey = `${cfg.projectId}:${cfg.videoId}:${mode}`;
+      if (lastStatus) renderStatus(lastStatus);
+    }
+
+    async function loadDashRendition(renditionId) {
+      const cfg = config();
+      const mode = playbackMode();
+      if (isHlsMode(mode)) return;
+
+      const ready = readyRenditionsForPlayback(lastStatus?.renditions || []);
+      const rendition = ready.find((r) => r.$id === renditionId) || ready[0];
+      if (!rendition) {
+        throw new Error('no ready DASH/CMAF rendition');
+      }
+
+      selectedLevel = ready.findIndex((r) => r.$id === rendition.$id);
+      statusEl.textContent = `Loading ${mode} · ${rendition.name || rendition.$id}…`;
+      await startDashPlayback(cfg, mode, rendition.$id);
+      playingKey = `${cfg.projectId}:${cfg.videoId}:${mode}`;
+      if (lastStatus) renderStatus(lastStatus);
+    }
+
     function renderStatus({ videoDoc, renditions, sprite }) {
+      applyVideoAspect(videoDoc?.width, videoDoc?.height);
       const rows = [];
       rows.push(`
         <div class="row">
@@ -642,8 +905,13 @@
         </div>
       `);
 
-      // Always start on Auto; click a ready rendition to lock quality.
-      if (hls) {
+      const mode = playbackMode();
+      const activeOutput = outputForMode(mode);
+      const playerReady = isHlsMode(mode) ? !!hls : !!dashPlayer;
+      const activeDashId = (!isHlsMode(mode) && dashPlayer?.__renditionId) ? dashPlayer.__renditionId : null;
+
+      // Always start on Auto; click a ready rendition to lock quality / switch output.
+      if (playerReady && isHlsMode(mode)) {
         const autoActive = selectedLevel < 0 ? ' row--active' : '';
         rows.push(`
           <div class="row row--clickable${autoActive}" data-action="auto">
@@ -657,18 +925,38 @@
       if (!renditions.length) {
         rows.push(`<div class="row"><span>renditions</span><span></span>${badge('missing')}</div>`);
       } else {
-        for (const r of renditions) {
+        // Stable order: active output first, then hls / dash / cmaf, then name.
+        const orderOf = (out) => (out === activeOutput ? 0 : ({ hls: 1, dash: 2, cmaf: 3 }[out] ?? 9));
+        const sorted = [...renditions].sort((a, b) => {
+          const byOut = orderOf(a.output) - orderOf(b.output);
+          if (byOut !== 0) return byOut;
+          return String(a.name || '').localeCompare(String(b.name || ''));
+        });
+
+        for (const r of sorted) {
           const progress = r.status === 'ready' ? '' : (r.progress ? `${r.progress}%` : '');
-          const ready = r.status === 'ready' && r.output === 'hls';
-          const level = ready ? levelForRendition(r.$id) : -1;
-          const clickable = ready && level >= 0;
-          const active = clickable && selectedLevel === level ? ' row--active' : '';
+          const matchesPlayback = r.output === activeOutput;
+          const clickable = r.status === 'ready';
+          let active = false;
+          if (clickable && matchesPlayback) {
+            if (hls && selectedLevel >= 0) {
+              active = levelForRendition(r) === selectedLevel;
+            } else if (activeDashId) {
+              active = r.$id === activeDashId;
+            } else if (!isHlsMode(mode) && selectedLevel >= 0) {
+              const readyList = readyRenditionsForPlayback(renditions, r.output);
+              active = readyList.findIndex((x) => x.$id === r.$id) === selectedLevel;
+            }
+          }
           const attrs = clickable
-            ? ` class="row row--clickable${active}" data-action="level" data-level="${level}" data-rendition="${r.$id}"`
+            ? ` class="row row--clickable${active ? ' row--active' : ''}" data-action="rendition" data-rendition="${r.$id}"`
             : ' class="row"';
+          const hint = r.status !== 'ready'
+            ? ''
+            : (matchesPlayback ? '' : ' · click to switch output');
           rows.push(`
             <div${attrs}>
-              <span>${r.output || '?'} · ${r.name || r.$id}</span>
+              <span>${r.output || '?'} · ${r.name || r.$id}${hint}</span>
               <span>${progress}</span>
               ${badge(r.status)}
             </div>
@@ -697,7 +985,19 @@
       if (!row) return;
       const action = row.dataset.action;
       if (action === 'auto') {
-        selectLevel(-1);
+        if (hls) {
+          selectLevel(-1);
+        } else if (!isHlsMode()) {
+          const ready = readyRenditionsForPlayback(lastStatus?.renditions || []);
+          if (ready[0]) {
+            selectedLevel = 0;
+            loadDashRendition(ready[0].$id).catch((err) => {
+              statusEl.textContent = `DASH auto failed: ${err.message}`;
+            });
+          }
+        }
+      } else if (action === 'rendition') {
+        selectRendition(row.dataset.rendition);
       } else if (action === 'level') {
         selectLevel(Number(row.dataset.level));
       } else if (action === 'sprite') {
@@ -718,14 +1018,7 @@
       // Auto-start after a rendition switch (restart if the video already ended).
       if (video.ended) video.currentTime = 0;
       video.play().catch(() => {});
-      // Re-render so the active highlight updates without waiting for the next poll.
-      const active = statusRows.querySelectorAll('.row--clickable[data-action="auto"], .row--clickable[data-action="level"]');
-      active.forEach((el) => el.classList.remove('row--active'));
-      if (level < 0) {
-        statusRows.querySelector('[data-action="auto"]')?.classList.add('row--active');
-      } else {
-        statusRows.querySelector(`[data-action="level"][data-level="${level}"]`)?.classList.add('row--active');
-      }
+      if (lastStatus) renderStatus(lastStatus);
     }
 
     function toggleSpriteSheet() {
@@ -768,11 +1061,30 @@
       renderStatus({ videoDoc, renditions, sprite });
       lastStatus = { videoDoc, renditions, sprite };
 
-      const readyHls = renditions.filter((r) => r.output === 'hls' && r.status === 'ready');
-      pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · ${readyHls.length} ready / ${renditions.length} renditions`;
+      const mode = playbackMode();
+      const activeOutput = outputForMode(mode);
+      const readyForPlayback = renditions.filter((r) => r.output === activeOutput && r.status === 'ready');
+      const readyByOutput = {};
+      for (const r of renditions) {
+        if (r.status !== 'ready') continue;
+        readyByOutput[r.output] = (readyByOutput[r.output] || 0) + 1;
+      }
+      const readySummary = Object.entries(readyByOutput).map(([out, n]) => `${n} ${out}`).join(', ') || 'none ready';
+      pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · ${mode} · ${readyForPlayback.length} ready / ${renditions.length} total (${readySummary})`;
 
-      if (readyHls.length && playingKey !== `${cfg.projectId}:${cfg.videoId}`) {
+      const key = `${cfg.projectId}:${cfg.videoId}:${mode}`;
+      if (readyForPlayback.length && playingKey !== key) {
         await startPlayback(cfg);
+      } else if (!readyForPlayback.length && Object.keys(readyByOutput).length) {
+        // Encoded something else than the selected playback stream — don't look "stuck".
+        const hint = Object.keys(readyByOutput)
+          .map((out) => {
+            if (out === 'cmaf') return 'CMAF HLS / CMAF DASH';
+            if (out === 'dash') return 'DASH';
+            return 'HLS';
+          })
+          .join(' or ');
+        statusEl.textContent = `No ready ${activeOutput} renditions for this playback mode. Switch Playback stream to ${hint}.`;
       }
 
       if (sprite.status === 'ready' && !cues.length) {
@@ -781,12 +1093,32 @@
     }
 
     async function startPlayback(cfg) {
+      const mode = playbackMode();
+      destroyPlayer();
+      await ensureJwt();
+
+      if (isHlsMode(mode)) {
+        selectedLevel = -1;
+        await startHlsPlayback(cfg, mode);
+      } else {
+        const ready = readyRenditionsForPlayback(lastStatus?.renditions || []);
+        const pick = ready[0];
+        if (!pick) {
+          statusEl.textContent = `No ready ${outputForMode(mode)} renditions to play`;
+          return;
+        }
+        selectedLevel = 0;
+        await startDashPlayback(cfg, mode, pick.$id);
+      }
+
+      playingKey = `${cfg.projectId}:${cfg.videoId}:${mode}`;
+    }
+
+    async function startHlsPlayback(cfg, mode) {
       if (!Hls.isSupported()) {
         statusEl.textContent = 'This browser cannot play HLS via hls.js';
         return;
       }
-
-      destroyPlayer();
 
       hls = new Hls({
         enableWorker: false,
@@ -798,20 +1130,19 @@
       });
 
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
-        // Always begin on Auto; ready rendition rows become the quality picker.
         selectedLevel = -1;
         hls.currentLevel = -1;
-        statusEl.textContent = `Playing master · Auto · ${data.levels?.length ?? 0} qualities`;
+        statusEl.textContent = `Playing ${mode} · Auto · ${data.levels?.length ?? 0} qualities`;
         if (lastStatus) renderStatus(lastStatus);
         video.play().catch(() => {
-          statusEl.textContent = 'Master loaded — press play';
+          statusEl.textContent = `${mode} loaded — press play`;
         });
       });
 
       hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
         const level = hls.levels[data.level];
-        const mode = selectedLevel < 0 ? 'Auto' : 'locked';
-        statusEl.textContent = `${mode}: ${level?.height ?? '?'}p · level ${data.level}`;
+        const label = selectedLevel < 0 ? 'Auto' : 'locked';
+        statusEl.textContent = `${mode} · ${label}: ${level?.height ?? '?'}p · level ${data.level}`;
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
@@ -820,18 +1151,108 @@
       });
 
       hls.attachMedia(video);
-      window.hlsDebug = hls; // demo tool: expose for console inspection
+      window.hlsDebug = hls;
 
-      // Normalize master (absolute /v1 paths + codec fix) until the API image is rebuilt.
       const text = normalizeMaster(
-        await api(`/videos/${cfg.videoId}/outputs/hls/master.m3u8`, { accept: 'application/x-mpegurl' }),
+        await api(masterPath(cfg.videoId, mode), { accept: 'application/x-mpegurl' }),
         new URL(cfg.endpoint).origin
       );
       const blobUrl = URL.createObjectURL(new Blob([text], { type: 'application/vnd.apple.mpegurl' }));
       hls.loadSource(blobUrl);
       hls.on(Hls.Events.DESTROYING, () => URL.revokeObjectURL(blobUrl));
+    }
 
-      playingKey = `${cfg.projectId}:${cfg.videoId}`;
+    async function startDashPlayback(cfg, mode, renditionId) {
+      const dashjs = await ensureDashJs();
+      await ensureJwt();
+
+      if (dashPlayer) {
+        try {
+          if (dashPlayer.__blobUrl) URL.revokeObjectURL(dashPlayer.__blobUrl);
+          dashPlayer.reset();
+        } catch { /* already torn down */ }
+        dashPlayer = null;
+      }
+
+      const origin = new URL(cfg.endpoint).origin;
+      let mpd = normalizeMpd(
+        await api(masterPath(cfg.videoId, mode), { accept: 'application/dash+xml' }),
+        origin
+      );
+      mpd = filterMpdForRendition(mpd, renditionId);
+      if (!/<AdaptationSet\b/i.test(mpd)) {
+        throw new Error(`DASH MPD has no AdaptationSet for rendition ${renditionId || '(none)'}`);
+      }
+
+      const blobUrl = URL.createObjectURL(new Blob([mpd], { type: 'application/dash+xml' }));
+
+      dashPlayer = dashjs.MediaPlayer().create();
+      dashPlayer.updateSettings({
+        streaming: {
+          abortRequestByTimeEnabled: true,
+          cacheLoadThresholds: { video: 50, audio: 5 },
+        },
+      });
+      dashPlayer.extend('RequestModifier', () => ({
+        modifyRequestHeader(xhr) {
+          xhr.setRequestHeader('X-Appwrite-Project', cfg.projectId);
+          xhr.setRequestHeader('X-Appwrite-JWT', jwt);
+          return xhr;
+        },
+        modifyRequestURL(url) {
+          return url;
+        },
+      }), true);
+
+      const describeDashError = (e) => {
+        const err = e?.error ?? e;
+        if (!err) return 'unknown';
+        if (typeof err === 'string') return err;
+        return err.message || err.code || JSON.stringify(err).slice(0, 180);
+      };
+
+      dashPlayer.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, () => {
+        statusEl.textContent = `Playing ${mode} · manifest loaded · starting stream…`;
+        if (lastStatus) renderStatus(lastStatus);
+      });
+      dashPlayer.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, () => {
+        const tracks = dashPlayer.getTracksFor('video') || [];
+        statusEl.textContent = `Playing ${mode} · ${renditionId || 'auto'} · ${tracks.length} video track(s)`;
+        video.muted = true;
+        video.play().catch(() => {
+          statusEl.textContent = `${mode} ready — press play`;
+        });
+        if (lastStatus) renderStatus(lastStatus);
+      });
+      dashPlayer.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, () => {
+        statusEl.textContent = `Playing ${mode}${renditionId ? ` · ${renditionId.slice(0, 8)}…` : ''}`;
+      });
+      dashPlayer.on(dashjs.MediaPlayer.events.PLAYBACK_ERROR, (e) => {
+        statusEl.textContent = `DASH playback error: ${describeDashError(e)}`;
+      });
+      dashPlayer.on(dashjs.MediaPlayer.events.ERROR, (e) => {
+        statusEl.textContent = `DASH error: ${describeDashError(e)}`;
+        console.error('dash.js error', e);
+      });
+
+      dashPlayer.initialize(video, blobUrl, true);
+      window.dashDebug = dashPlayer;
+      dashPlayer.__blobUrl = blobUrl;
+      dashPlayer.__renditionId = renditionId || '';
+    }
+
+    /**
+     * Keep only AdaptationSets that belong to one Appwrite rendition (plus VTT).
+     * Merged multi-quality masters confuse dash.js when each quality is its own set.
+     */
+    function filterMpdForRendition(mpd, renditionId) {
+      if (!renditionId) return mpd;
+      const needle = `/renditions/${renditionId}/`;
+      return mpd.replace(/<AdaptationSet\b[\s\S]*?<\/AdaptationSet>/gi, (block) => {
+        if (block.includes(needle)) return block;
+        if (/mimeType\s*=\s*"text\/vtt"/i.test(block)) return block;
+        return '';
+      });
     }
 
     function normalizeMaster(text, apiOrigin) {
@@ -843,7 +1264,11 @@
           if (!trimmed.startsWith('#EXT-X-STREAM-INF:')) {
             return line.replace(/URI="(\/v1\/[^"]+)"/g, `URI="${apiOrigin}$1"`);
           }
-          line = line.replace(/BANDWIDTH="(\d+)"/g, 'BANDWIDTH=$1');
+          // HLS forbids quotes on RESOLUTION/BANDWIDTH; quoted values make hls.js
+          // drop sibling variants so only one quality stays selectable.
+          line = line
+            .replace(/BANDWIDTH="(\d+)"/g, 'BANDWIDTH=$1')
+            .replace(/RESOLUTION="(\d+x\d+)"/g, 'RESOLUTION=$1');
           if (/,AUDIO=/.test(line)) {
             line = line
               .replace(/CODECS="([^"]*)"/, (_, codecs) => {
@@ -859,27 +1284,55 @@
         .join('\n');
     }
 
+    function normalizeMpd(text, apiOrigin) {
+      return text.replace(/(["'= >])(\/v1\/[^"'<\s]+)/g, `$1${apiOrigin}$2`);
+    }
+
     function destroyPlayer() {
       if (hls) {
         hls.destroy();
         hls = null;
       }
+      if (dashPlayer) {
+        try {
+          if (dashPlayer.__blobUrl) URL.revokeObjectURL(dashPlayer.__blobUrl);
+          dashPlayer.reset();
+        } catch { /* already torn down */ }
+        dashPlayer = null;
+      }
       playingKey = null;
       selectedLevel = -1;
       video.removeAttribute('src');
       video.load();
+      resetVideoAspect();
+    }
+
+    function applyVideoAspect(width, height) {
+      const w = Number(width) || 0;
+      const h = Number(height) || 0;
+      if (w <= 0 || h <= 0) return;
+      video.style.setProperty('--video-ar', `${w} / ${h}`);
+      video.classList.toggle('portrait', h > w);
+    }
+
+    function resetVideoAspect() {
+      video.style.removeProperty('--video-ar');
+      video.classList.remove('portrait');
     }
 
     function hmsToSeconds(hms) {
-      const [h, m, s] = hms.split(':').map(Number);
-      return h * 3600 + m * 60 + s;
+      const [h, m, rest] = hms.split(':');
+      return (Number(h) * 3600) + (Number(m) * 60) + Number(rest);
     }
 
     function parseTimeline(vtt) {
       const out = [];
       const lines = vtt.split('\n').map((l) => l.trim());
+      // Utopia\Video cues use HH:MM:SS.mmm; older workers wrote HH:MM:SS.
+      const stamp = '(\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?)';
+      const timeRe = new RegExp(`^${stamp}\\s*-->\\s*${stamp}`);
       for (let i = 0; i < lines.length; i++) {
-        const time = lines[i].match(/^(\d{2}:\d{2}:\d{2})\s*-->\s*(\d{2}:\d{2}:\d{2})/);
+        const time = lines[i].match(timeRe);
         if (!time) continue;
         const m = (lines[i + 1] || '').match(/previews\/(\w+)#xywh=(\d+),(\d+),(\d+),(\d+)/);
         if (!m) continue;
@@ -907,6 +1360,27 @@
       return objectUrl;
     }
 
+    async function spriteSheetSize(previewId, url) {
+      if (spriteSizes.has(previewId)) return spriteSizes.get(previewId);
+      const size = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ nw: img.naturalWidth, nh: img.naturalHeight });
+        img.onerror = () => reject(new Error(`sprite size ${previewId}`));
+        img.src = url;
+      });
+      spriteSizes.set(previewId, size);
+      return size;
+    }
+
+    function thumbDisplay(cue) {
+      const scale = Math.min(1, THUMB_MAX_W / cue.w, THUMB_MAX_H / cue.h);
+      return {
+        w: Math.max(1, Math.round(cue.w * scale)),
+        h: Math.max(1, Math.round(cue.h * scale)),
+        scale,
+      };
+    }
+
     async function loadSprites() {
       try {
         const vtt = await api(`/videos/${config().videoId}/timeline`, { accept: 'text/vtt' });
@@ -929,13 +1403,15 @@
     async function renderThumb(cue, clientX) {
       if (!cue) return;
       const url = await spriteUrl(cue.previewId);
-      thumbImg.style.width = `${cue.w}px`;
-      thumbImg.style.height = `${cue.h}px`;
+      const { nw, nh } = await spriteSheetSize(cue.previewId, url);
+      const { w, h, scale } = thumbDisplay(cue);
+      thumbImg.style.width = `${w}px`;
+      thumbImg.style.height = `${h}px`;
       thumbImg.style.backgroundImage = `url("${url}")`;
-      thumbImg.style.backgroundPosition = `-${cue.x}px -${cue.y}px`;
-      thumbImg.style.backgroundSize = 'auto';
+      thumbImg.style.backgroundPosition = `-${cue.x * scale}px -${cue.y * scale}px`;
+      thumbImg.style.backgroundSize = `${nw * scale}px ${nh * scale}px`;
       const rect = timeline.getBoundingClientRect();
-      const half = cue.w / 2;
+      const half = w / 2;
       const clamped = Math.max(rect.left + half, Math.min(clientX, rect.right - half));
       thumb.style.left = `${clamped - rect.left}px`;
       thumbTime.textContent = formatTime(cue.start);
@@ -966,6 +1442,11 @@
       if (!video.duration) return;
       played.style.width = `${(video.currentTime / video.duration) * 100}%`;
     });
+    video.addEventListener('loadedmetadata', () => {
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        applyVideoAspect(video.videoWidth, video.videoHeight);
+      }
+    });
 
     function stopPolling() {
       if (pollTimer) {
@@ -976,18 +1457,26 @@
       pollInfo.textContent = 'idle';
     }
 
-    function startPolling() {
+    function startPolling(forceVideoId) {
+      // loadBtn uses this as a click listener, so the first arg may be a PointerEvent.
+      if (typeof forceVideoId === 'string' && forceVideoId.trim() !== '') {
+        setVideoId(forceVideoId.trim());
+      }
       stopPolling();
       destroyPlayer();
       cues = [];
       spriteReady = false;
+      for (const url of spriteBlobs.values()) URL.revokeObjectURL(url);
+      spriteBlobs.clear();
+      spriteSizes.clear();
       sheet.removeAttribute('src');
       sheetPanel.classList.remove('open');
       timeline.classList.add('disabled');
       thumb.classList.remove('visible');
+      playingKey = null;
 
       stopBtn.disabled = false;
-      statusEl.textContent = 'Polling…';
+      statusEl.textContent = `Polling ${config().videoId || '…'}…`;
       persistConfig();
 
       const tick = async () => {
@@ -1004,6 +1493,18 @@
 
     loadBtn.addEventListener('click', startPolling);
     stopBtn.addEventListener('click', stopPolling);
+
+    playbackSelect.addEventListener('change', async () => {
+      persistConfig();
+      if (!pollTimer) return;
+      destroyPlayer();
+      statusEl.textContent = `Switching to ${playbackMode()}…`;
+      try {
+        await pollOnce();
+      } catch (err) {
+        statusEl.textContent = `Switch error: ${err.message}`;
+      }
+    });
   </script>
 </body>
 </html>

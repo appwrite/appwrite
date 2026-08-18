@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\DASH\Manifest;
 
-use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Manifest\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -13,7 +12,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -71,89 +69,6 @@ class Get extends Base
         User $user,
         Authorization $authorization
     ): void {
-        $video = $this->authorizeVideo($dbForProject, $authorization, $user, $videoId);
-
-        $renditions = $this->getReadyRenditions($dbForProject, $authorization, $video, self::OUTPUT_DASH);
-        $subtitles = $this->getReadySubtitles($dbForProject, $authorization, $video);
-
-        $baseUri = $this->baseUri($video, self::OUTPUT_DASH);
-
-        $mpd = [];
-        $adaptations = [];
-
-        foreach ($renditions as $rendition) {
-            $metadata = $rendition->getAttribute('metadata', []);
-            $parsed = $metadata['mpd'] ?? null;
-
-            if (empty($parsed)) {
-                continue;
-            }
-
-            // Presentation-level attributes are identical across renditions of the
-            // same video, so the last one wins.
-            $mpd = $parsed['attributes'] ?? $mpd;
-
-            foreach ($parsed['adaptations'] ?? [] as $adaptation) {
-                $streamId = (int) ($adaptation['id'] ?? 0);
-
-                $segments = $authorization->skip(fn () => $dbForProject->find('videos_renditions_segments', [
-                    Query::equal('renditionInternalId', [$rendition->getSequence()]),
-                    Query::equal('streamId', [$streamId]),
-                    Query::orderAsc('$sequence'),
-                    Query::limit(APP_LIMIT_SUBQUERY),
-                ]));
-
-                $init = '';
-                $media = [];
-
-                foreach ($segments as $segment) {
-                    // Relative to <BaseURL>, which is what the MPD resolves against.
-                    $uri = $this->withProject($segment->getId(), $project);
-
-                    if ((int) $segment->getAttribute('isInit', 0) === 1) {
-                        $init = $uri;
-                        continue;
-                    }
-
-                    $media[] = $uri;
-                }
-
-                $representation = $adaptation['representation'] ?? [];
-                $representation['segmentList'] = ($representation['segmentList'] ?? []) + ['attributes' => []];
-                $representation['segmentList']['init'] = $init;
-                $representation['segmentList']['media'] = $media;
-
-                $adaptations[] = [
-                    'id' => $streamId,
-                    'attributes' => $adaptation['attributes'] ?? [],
-                    'representation' => $representation,
-                    // Trailing slash matters: the init/media values above are resolved
-                    // against this as a directory.
-                    'baseUrl' => $baseUri . '/renditions/' . $rendition->getId() . '/segments/',
-                ];
-            }
-        }
-
-        if (empty($adaptations)) {
-            throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
-        }
-
-        $subtitleEntries = [];
-
-        foreach ($subtitles as $subtitle) {
-            $subtitleEntries[] = [
-                'id' => $subtitle->getId(),
-                'name' => $subtitle->getAttribute('code', ''),
-                'baseUrl' => $this->withProject($baseUri . '/subtitles/' . $subtitle->getId() . '/manifest', $project),
-            ];
-        }
-
-        $manifest = $this->renderView('dash', [
-            'mpd' => $mpd,
-            'renditions' => $adaptations,
-            'subtitles' => $subtitleEntries,
-        ]);
-
-        $this->sendManifest($response, $manifest, 'application/dash+xml');
+        $this->sendDashMaster($videoId, self::OUTPUT_DASH, $response, $dbForProject, $project, $user, $authorization);
     }
 }

@@ -21,6 +21,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -72,6 +73,7 @@ class Update extends Base
             ->inject('project')
             ->inject('user')
             ->inject('authorization')
+            ->inject('deviceForVideos')
             ->inject('queueForEvents')
             ->inject('publisherForVideos')
             ->callback($this->action(...));
@@ -90,6 +92,7 @@ class Update extends Base
         Document $project,
         User $user,
         Authorization $authorization,
+        Device $deviceForVideos,
         Event $queueForEvents,
         VideoPublisher $publisherForVideos
     ): void {
@@ -106,6 +109,16 @@ class Update extends Base
         if (!\in_array($file->getAttribute('mimeType', ''), self::SUBTITLE_MIME_TYPES, true)) {
             throw new Exception(Exception::VIDEO_SUBTITLE_NOT_VALID);
         }
+
+        // Uploads win over auto-extracted tracks for the same language.
+        $this->deleteEmbeddedSubtitlesForCode(
+            $dbForProject,
+            $authorization,
+            $deviceForVideos,
+            $video,
+            $code,
+            $subtitle->getId()
+        );
 
         $sourceChanged = $subtitle->getAttribute('fileId') !== $file->getId();
 
