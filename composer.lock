@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b27c93dff511ca9e9ad186197b1964df",
+    "content-hash": "2ec48bbb683ffcbbb72c7b37bd30b8b6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4640,16 +4640,16 @@
         },
         {
             "name": "utopia-php/schedule",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/schedule.git",
-                "reference": "52ec08d841e7b38c91dd0e9128f0c1fc41fb356c"
+                "reference": "17ca067f310440d9785fee1ecd7a8f52432d0be4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/schedule/zipball/52ec08d841e7b38c91dd0e9128f0c1fc41fb356c",
-                "reference": "52ec08d841e7b38c91dd0e9128f0c1fc41fb356c",
+                "url": "https://api.github.com/repos/utopia-php/schedule/zipball/17ca067f310440d9785fee1ecd7a8f52432d0be4",
+                "reference": "17ca067f310440d9785fee1ecd7a8f52432d0be4",
                 "shasum": ""
             },
             "require": {
@@ -4693,9 +4693,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/schedule/issues",
-                "source": "https://github.com/utopia-php/schedule/tree/0.1.0"
+                "source": "https://github.com/utopia-php/schedule/tree/0.2.0"
             },
-            "time": "2026-08-18T15:49:19+00:00"
+            "time": "2026-08-18T21:56:57+00:00"
         },
         {
             "name": "utopia-php/servers",
