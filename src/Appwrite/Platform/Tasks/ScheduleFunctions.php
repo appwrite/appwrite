@@ -56,9 +56,9 @@ class ScheduleFunctions extends Action
 
     private ?Telemetry $telemetry = null;
 
-    private ?Scheduler $scheduler = null;
-
     private ?ScheduleSource $source = null;
+
+    private ?Scheduler $scheduler = null;
 
     private ?Database $dbForPlatform = null;
 
@@ -230,6 +230,8 @@ class ScheduleFunctions extends Action
      */
     private function dispatch(array $occurrences, Database $dbForPlatform): void
     {
+        $source = $this->source ?? throw new \LogicException('start() must run before dispatch()');
+
         $timerStart = \microtime(true);
 
         $delayed = []; // Group runs sharing a delay so they share one coroutine
@@ -248,13 +250,19 @@ class ScheduleFunctions extends Action
         }
 
         foreach ($delayed as $delay => $batch) {
-            \go(function () use ($delay, $batch, $dbForPlatform) {
+            \go(function () use ($delay, $batch, $dbForPlatform, $source) {
                 if ($delay > 0) {
                     \sleep($delay); // in seconds
                 }
 
                 foreach ($batch as $due) {
                     $schedule = $due['schedule'];
+
+                    // Disabled, deleted or edited while this coroutine slept:
+                    // the run belongs to a definition that no longer exists.
+                    if (!$source->isLive((string) $schedule['$sequence'], (string) $schedule['resourceUpdatedAt'])) {
+                        continue;
+                    }
 
                     Span::init('schedule.functions.enqueue');
                     try {

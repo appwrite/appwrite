@@ -28,6 +28,9 @@ final class ScheduleSource implements Source, Changes
     /** @var array<string, Document> projects already resolved, by project id */
     private array $projects = [];
 
+    /** @var array<string, string> the version of each live schedule, by id, as last read */
+    private array $live = [];
+
     private int $snapshotted = 0;
 
     /**
@@ -62,6 +65,10 @@ final class ScheduleSource implements Source, Changes
     {
         $this->snapshotted = 0;
 
+        // A snapshot is the whole truth, so the live view is rebuilt from it
+        // rather than accumulated.
+        $this->live = [];
+
         foreach ($this->rows(null) as $row) {
             $this->snapshotted++;
 
@@ -77,6 +84,20 @@ final class ScheduleSource implements Source, Changes
     public function snapshotted(): int
     {
         return $this->snapshotted;
+    }
+
+    /**
+     * Whether this exact definition is still the one the source reports.
+     *
+     * A dispatch that sleeps — to hit an exact second, or to spread load over
+     * a window — holds a schedule that may since have been disabled, deleted
+     * or edited. Publishing it anyway runs a resource the user has already
+     * cancelled, so deferred work asks this first. The answer is as fresh as
+     * the last read of the collection, which is what the sync cadence buys.
+     */
+    public function isLive(string $id, string $version): bool
+    {
+        return ($this->live[$id] ?? null) === $version;
     }
 
     /**
@@ -198,9 +219,18 @@ final class ScheduleSource implements Source, Changes
             $sum = \count($schedules);
 
             foreach ($schedules as $schedule) {
+                $id = (string) $schedule->getSequence();
+                $version = (string) $schedule->getAttribute('resourceUpdatedAt', '');
+
+                if ($schedule->getAttribute('active', false)) {
+                    $this->live[$id] = $version;
+                } else {
+                    unset($this->live[$id]);
+                }
+
                 yield new Row(
-                    id: (string) $schedule->getSequence(),
-                    version: (string) $schedule->getAttribute('resourceUpdatedAt', ''),
+                    id: $id,
+                    version: $version,
                     data: $schedule,
                     active: (bool) $schedule->getAttribute('active', false),
                     activeFrom: $this->activeFrom($schedule),

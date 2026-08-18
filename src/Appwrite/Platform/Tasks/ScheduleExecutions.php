@@ -48,9 +48,9 @@ class ScheduleExecutions extends Action
 
     private ?Telemetry $telemetry = null;
 
-    private ?Scheduler $scheduler = null;
-
     private ?ScheduleSource $source = null;
+
+    private ?Scheduler $scheduler = null;
 
     private ?Database $dbForPlatform = null;
 
@@ -216,14 +216,21 @@ class ScheduleExecutions extends Action
      */
     private function dispatch(array $occurrences, Database $dbForPlatform): void
     {
+        $source = $this->source ?? throw new \LogicException('start() must run before dispatch()');
+
         foreach ($occurrences as $occurrence) {
             $schedule = $occurrence->payload;
             $delay = $occurrence->due->getTimestamp() - \time();
 
-            \go(function () use ($schedule, $occurrence, $delay, $dbForPlatform) {
+            \go(function () use ($schedule, $occurrence, $delay, $dbForPlatform, $source) {
                 try {
                     if ($delay > 0) {
                         Co::sleep($delay);
+                    }
+
+                    // Cancelled while this coroutine slept.
+                    if (!$source->isLive((string) $schedule['$sequence'], (string) $schedule['resourceUpdatedAt'])) {
+                        return;
                     }
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
