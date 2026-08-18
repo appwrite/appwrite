@@ -98,6 +98,23 @@ class Create extends Action
 
 Common injections: `$response`, `$request`, `$dbForProject`, `$dbForPlatform`, `$user`, `$project`, `$queueForEvents`, `$queueForMails`, `$queueForDeletes`.
 
+## Reuse
+
+Follow existing patterns fanatically. Match the nearest module that already does the job (`Teams/Http/Teams/Create.php`, `Users/Http/Users/Create.php`, `Compute/Base.php`). Do not invent a parallel style.
+
+Favor reuse through existing domain structures over new abstractions. Preferred, in order:
+
+1. **Private methods on the action** when the logic is only for that action. Example: `cancel()` in [`Functions/Http/Deployments/Status/Update.php`](src/Appwrite/Platform/Modules/Functions/Http/Deployments/Status/Update.php); `handlePushEvent()` in [`VCS/Http/GitHub/Events/Create.php`](src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php).
+2. **Shared action base** only when sibling actions share a real domain step. Example: [`Users/Base.php`](src/Appwrite/Platform/Modules/Users/Base.php) `createUser()` used by [`Users/Http/Users/Create.php`](src/Appwrite/Platform/Modules/Users/Http/Users/Create.php) and the hash-specific creates; [`Compute/Base.php`](src/Appwrite/Platform/Modules/Compute/Base.php) shared by Functions and Sites. Keep inheritance flat — GitHub/Gitea/GitLab/Bitbucket event handlers duplicate similar private methods rather than a deep `Events/Base`.
+3. **Domain libraries** at `src/Appwrite/{Concept}/` for a clear business concept. Example: [`src/Appwrite/Event`](src/Appwrite/Event) (queue publishers), [`src/Appwrite/Auth`](src/Appwrite/Auth) (password and OAuth validators), [`src/Appwrite/Network`](src/Appwrite/Network), [`src/Appwrite/Deployment`](src/Appwrite/Deployment).
+4. **Extend existing documents** when the behavior belongs on the entity. Example: [`Documents/User.php`](src/Appwrite/Utopia/Database/Documents/User.php) (`isPrivileged()`, `isKey()`, `getRoles()`, `tokenVerify()`) used from [`Teams/Http/Teams/Create.php`](src/Appwrite/Platform/Modules/Teams/Http/Teams/Create.php) — not a `UserHelper`.
+
+Do not create a class unless it is a well-defined domain concept. Every new class adds cognitive load. If you cannot explain its purpose in the domain, it should not exist. Do not create `Helper`, `Utils`, or similarly named classes or methods — that usually means the domain is not modeled.
+
+Do not optimize for reuse at all costs. A little duplication is better than an abstraction that is harder to follow. Prioritize readability and consistency with existing patterns over extracting every repeated line.
+
+Actions should read like a story. The `action()` method is the plot: [`Teams/Http/Teams/Create.php`](src/Appwrite/Platform/Modules/Teams/Http/Teams/Create.php) creates the team, then the membership, then events, then the response. Do not jump through extra layers. Extract a method only when it improves clarity, encapsulates meaningful domain behavior, or has genuine reuse — not because a block is used once.
+
 ## Conventions
 
 - PSR-12 (Pint), PSR-4 autoloading. Avoid dependencies outside the `utopia-php` ecosystem. Never hardcode credentials — use env vars. Code changes may require a container restart; logs live on the relevant container.
