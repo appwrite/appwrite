@@ -217,57 +217,7 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ```mermaid
 flowchart TB
-  Web --> Appwrite
-  Flutter --> Appwrite
-  iOS --> Appwrite
-  Android --> Appwrite
-  Servers --> Appwrite
-
-  Appwrite --> traefik[Traefik]
-  traefik --> Console
-
-  subgraph apis [APIs]
-    direction LR
-    restApi[REST API]
-    graphqlApi[GraphQL API]
-    realtimeApi[Realtime API]
-  end
-
-  traefik --> apis
-  apis --> securityLayer[Security Layer]
-  securityLayer --> services
-
-  subgraph services [Services]
-    Account
-    Users
-    Teams
-    Databases
-    TablesDB
-    Storage
-    Functions
-    Sites
-    Messaging
-    Avatars
-    Locale
-    Health
-    VCS
-    Webhooks
-    Tokens
-  end
-
-  Functions --> executor["Executor (Open-Runtimes)"]
-  executor --> dockerK8s["Docker / K8S"]
-
-  services --> cache["Cache (Redis)"]
-  services --> queue["Queue (Redis)"]
-  services --> browser[Browser]
-  services --> SMTP
-  queue --> workers[Workers]
-  cache --> database["PostgreSQL / MariaDB / MySQL / MongoDB"]
-  embedding[Embedding] --> database
-  workers --> database
-  workers --> Letsencrypt
-  Letsencrypt --> traefik
+  Flutter & iOS & Android & Web & Agents --> Appwrite
 ```
 
 Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.

@@ -214,57 +214,7 @@ docker run -it --rm `
 
 ```mermaid
 flowchart TB
-  Web --> Appwrite
-  Flutter --> Appwrite
-  iOS --> Appwrite
-  Android --> Appwrite
-  Servers --> Appwrite
-
-  Appwrite --> traefik[Traefik]
-  traefik --> Console
-
-  subgraph apis [APIs]
-    direction LR
-    restApi[REST API]
-    graphqlApi[GraphQL API]
-    realtimeApi[Realtime API]
-  end
-
-  traefik --> apis
-  apis --> securityLayer[Security Layer]
-  securityLayer --> services
-
-  subgraph services [Services]
-    Account
-    Users
-    Teams
-    Databases
-    TablesDB
-    Storage
-    Functions
-    Sites
-    Messaging
-    Avatars
-    Locale
-    Health
-    VCS
-    Webhooks
-    Tokens
-  end
-
-  Functions --> executor["Executor (Open-Runtimes)"]
-  executor --> dockerK8s["Docker / K8S"]
-
-  services --> cache["Cache (Redis)"]
-  services --> queue["Queue (Redis)"]
-  services --> browser[Browser]
-  services --> SMTP
-  queue --> workers[Workers]
-  cache --> database["PostgreSQL / MariaDB / MySQL / MongoDB"]
-  embedding[Embedding] --> database
-  workers --> database
-  workers --> Letsencrypt
-  Letsencrypt --> traefik
+  Flutter & iOS & Android & Web & Agents --> Appwrite
 ```
 
 Appwrite 使用高拓展性的微服务架构。此外，Appwrite 支持多种 API（REST、WebSocket 和 GraphQL），来迎合您的个性化开发习惯。
