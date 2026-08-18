@@ -128,8 +128,11 @@ class Comment
 
         $i = 0;
         foreach ($projects as $projectId => $project) {
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $hostname = $this->platform['consoleHostname'] ?? '';
+            // TODO: Temporarily hardcoded so comment images resolve over real
+            // HTTPS while verifying the Origin integration - restore the
+            // env-driven protocol and platform hostname afterwards.
+            $protocol = 'https';
+            $hostname = 'cloud.appwrite.io';
 
             $text .= "## {$project['name']}\n\n";
             $text .= "Project ID: `{$projectId}`\n\n";
@@ -258,8 +261,11 @@ class Comment
 
     public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
     {
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = $this->platform['consoleHostname'] ?? '';
+        // TODO: Temporarily hardcoded so comment images resolve over real
+        // HTTPS while verifying the Origin integration - restore the
+        // env-driven protocol and platform hostname afterwards.
+        $protocol = 'https';
+        $hostname = 'cloud.appwrite.io';
 
         $imageLight = $protocol . '://' . $hostname . $pathLight;
         $imageDark = $protocol . '://' . $hostname . $pathDark;
