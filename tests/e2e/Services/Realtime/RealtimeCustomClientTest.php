@@ -2459,21 +2459,18 @@ final class RealtimeCustomClientTest extends Scope
 
         $executionId = $execution['body']['$id'];
 
-        // The async execution first emits a `create` event, then a terminal `update`
-        // once the runtime finishes. That `update` only arrives after worker pickup,
-        // runtime cold start, and the function's execution timeout, so it can easily
-        // exceed a single read timeout. Skip unrelated frames and wait generously for
-        // each expected event instead of assuming they are the next two frames.
-        $response = $this->receiveUntilEvent(
-            $client,
-            fn (array $message): bool => ($message['type'] ?? null) === 'event'
-                && \in_array("functions.{$functionId}.executions.{$executionId}.create", $message['data']['events'] ?? [], true)
-        );
-        $responseUpdate = $this->receiveUntilEvent(
-            $client,
-            fn (array $message): bool => ($message['type'] ?? null) === 'event'
-                && \in_array("functions.{$functionId}.executions.{$executionId}.update", $message['data']['events'] ?? [], true)
-        );
+        // Async executions emit `create` (HTTP) and a terminal `update` (worker).
+        // Redis usually publishes create first; Inline can invert that because
+        // enqueue() runs the worker before the HTTP response event. Collect both
+        // without assuming order — a sequential wait for create would consume
+        // an earlier update. The update also waits on runtime cold start plus
+        // this function's timeout, so allow both events a shared long deadline.
+        $frames = $this->receiveEventFrames($client, [
+            'create' => "functions.{$functionId}.executions.{$executionId}.create",
+            'update' => "functions.{$functionId}.executions.{$executionId}.update",
+        ], 120_000);
+        $response = $frames['create'];
+        $responseUpdate = $frames['update'];
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);

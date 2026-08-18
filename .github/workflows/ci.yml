@@ -578,7 +578,7 @@ jobs:
             wait: ''
           - label: Screenshots
             group: screenshots
-            path: /usr/src/code/tests/e2e/Services/Sites
+            path: /usr/src/code/tests/e2e
             options_abuse: disabled
             storage_antivirus: disabled
             compose_profiles: ''

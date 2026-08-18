@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Avatars;
 
 use Appwrite\Extend\Exception;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 
 trait AvatarsBase
@@ -576,6 +577,7 @@ trait AvatarsBase
         $this->assertSame('PNG', $image->getImageFormat());
     }
 
+    #[Group('screenshots')]
     public function testGetScreenshot(): array
     {
         /**
@@ -1315,6 +1317,7 @@ trait AvatarsBase
         return [];
     }
 
+    #[Group('screenshots')]
     public function testGetScreenshotComparison(): array
     {
         /**

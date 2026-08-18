@@ -10,35 +10,62 @@ use WebSocket\TimeoutException;
 trait RealtimeBase
 {
     /**
-     * Read the next event frames and return them keyed by an exact event name.
+     * Collect event frames keyed by an exact event name, in any arrival order.
      *
-     * Schema mutations publish a completion event from the database worker and
-     * a create/delete event from the HTTP request. Redis workers usually emit
-     * HTTP first; Inline can invert that. Tests must accept either order.
+     * Schema mutations and async executions publish a worker completion event
+     * and an HTTP create/delete event. Redis workers usually emit HTTP first;
+     * Inline can invert that. Unrelated project-scoped frames are skipped.
      *
      * @param array<string, string> $needles result key => exact event name
      * @return array<string, array<string, mixed>>
      */
-    private function receiveEventFrames(WebSocketClient $client, array $needles): array
-    {
+    private function receiveEventFrames(
+        WebSocketClient $client,
+        array $needles,
+        int $timeoutMs = 60000,
+        int $pollMs = 50
+    ): array {
         $found = [];
         $remaining = $needles;
+        $lastMessage = [];
 
-        for ($i = 0, $n = \count($needles); $i < $n; $i++) {
-            $frame = \json_decode($client->receive(), true);
-            $this->assertIsArray($frame);
-            $events = $frame['data']['events'] ?? [];
-
-            foreach ($remaining as $key => $needle) {
-                if (\in_array($needle, $events, true)) {
-                    $found[$key] = $frame;
-                    unset($remaining[$key]);
-                    break;
+        try {
+            $this->assertEventually(function () use ($client, &$found, &$remaining, &$lastMessage): void {
+                try {
+                    $frame = $client->receive();
+                } catch (TimeoutException) {
+                    throw new \Exception('No websocket frame received within read timeout.');
+                } catch (ConnectionException $e) {
+                    throw new Critical('WebSocket connection closed while waiting for expected frames: ' . $e->getMessage());
                 }
-            }
-        }
 
-        $this->assertSame([], $remaining, 'Missing realtime events: ' . \implode(', ', $remaining));
+                $message = \json_decode($frame, true);
+                if (\is_array($message)) {
+                    $lastMessage = $message;
+                }
+
+                $events = \is_array($message) ? ($message['data']['events'] ?? []) : [];
+                foreach ($remaining as $key => $needle) {
+                    if (\in_array($needle, $events, true)) {
+                        $found[$key] = $message;
+                        unset($remaining[$key]);
+                        break;
+                    }
+                }
+
+                if ($remaining !== []) {
+                    throw new \Exception('Websocket frame did not complete expected events.');
+                }
+            }, $timeoutMs, $pollMs);
+        } catch (Critical $e) {
+            $this->fail($e->getMessage() . ' Last frame: ' . \json_encode($lastMessage));
+        } catch (\Exception) {
+            $this->fail(
+                'Timed out waiting for expected websocket frames. Missing: '
+                . \implode(', ', $remaining)
+                . ' Last frame: ' . \json_encode($lastMessage)
+            );
+        }
 
         return $found;
     }

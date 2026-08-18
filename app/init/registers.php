@@ -251,9 +251,11 @@ $register->set('pools', function () {
     $poolSize = max($poolSize, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1));
 
     // Inline enqueue runs jobs in the publishing process. The HTTP/CLI
-    // request already holds a pool connection, and nested jobs may hold more.
+    // request already holds a pool connection, and nested jobs may hold more
+    // than `_APP_WORKER_MAX_COROUTINES` slots (request + N in-flight jobs).
     if (System::getEnv('_APP_QUEUE_ADAPTER', 'redis') === 'inline') {
-        $poolSize = max($poolSize, 8);
+        $coroutines = (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1);
+        $poolSize = max($poolSize, $coroutines + 8);
     }
 
     $poolTimeout = (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10);

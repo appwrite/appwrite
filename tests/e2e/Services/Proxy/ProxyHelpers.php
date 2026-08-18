@@ -251,6 +251,8 @@ trait ProxyHelpers
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
+            $this->assertSame(200, $function['headers']['status-code'], 'GET function failed: ' . \json_encode($function['body'], JSON_PRETTY_PRINT));
+            $this->assertIsArray($function['body']);
             $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
