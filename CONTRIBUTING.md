@@ -4,7 +4,7 @@ We would :heart: you to contribute to Appwrite and help make it better. All cont
 
 Coding conventions, architecture, tests, and how to run the stack live in [AGENTS.md](AGENTS.md). That file is the coding contract for every contributor, human or agent. Using AI does not lower the bar: you own the pull request, you must follow those standards, and you must review and oversee any agent-generated work against them. The same rules apply whether you write the code yourself or with an assistant.
 
-Extra how-tos are in [docs/tutorials/](docs/tutorials/). The Console UI is a [separate repository](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md).
+The SDK release how-to is in [docs/tutorials/release-sdks.md](docs/tutorials/release-sdks.md). The Console UI is a [separate repository](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md).
 
 ## Here for Hacktoberfest?
 
