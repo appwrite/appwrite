@@ -132,18 +132,19 @@ class Update extends Base
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
-        $authorization->skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $authorization, $bus) {
-            $rule = $rule
-                ->setAttribute('deploymentId', $deployment->getId())
-                ->setAttribute('deploymentInternalId', $deployment->getSequence());
+        $updatedRules = [];
+        $authorization->skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$updatedRules) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
 
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $rule->getAttribute('deploymentId'),
-                'deploymentInternalId' => $rule->getAttribute('deploymentInternalId'),
-            ])));
-
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            $updatedRules[] = $rule->getArrayCopy();
         }, $queries));
+
+        foreach ($updatedRules as $rule) {
+            $bus->dispatch(new RuleUpdated($rule));
+        }
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
