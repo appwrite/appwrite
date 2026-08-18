@@ -4640,16 +4640,16 @@
         },
         {
             "name": "utopia-php/schedule",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/schedule.git",
-                "reference": "17ca067f310440d9785fee1ecd7a8f52432d0be4"
+                "reference": "4953f034e0c878511a6542a3f3b3e78772f18772"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/schedule/zipball/17ca067f310440d9785fee1ecd7a8f52432d0be4",
-                "reference": "17ca067f310440d9785fee1ecd7a8f52432d0be4",
+                "url": "https://api.github.com/repos/utopia-php/schedule/zipball/4953f034e0c878511a6542a3f3b3e78772f18772",
+                "reference": "4953f034e0c878511a6542a3f3b3e78772f18772",
                 "shasum": ""
             },
             "require": {
@@ -4693,9 +4693,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/schedule/issues",
-                "source": "https://github.com/utopia-php/schedule/tree/0.2.0"
+                "source": "https://github.com/utopia-php/schedule/tree/0.2.1"
             },
-            "time": "2026-08-18T21:56:57+00:00"
+            "time": "2026-08-18T23:30:55+00:00"
         },
         {
             "name": "utopia-php/servers",
