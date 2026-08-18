@@ -2844,8 +2844,10 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
                 default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
             };
 
-            // increaseDocumentAttribute reloads the topic internally, so it pays the same
-            // sub-query cost as the read above unless the filter is skipped here too.
+            // increaseDocumentAttribute reloads the topic internally and pays the same sub-query
+            // cost as the read above. Safe to skip because that reload is forUpdate, which neither
+            // reads nor writes the document cache, so no reader can observe a topic decoded
+            // without `targets`.
             $authorization->skip(fn () => $dbForProject->skipFilters(
                 fn () => $dbForProject->increaseDocumentAttribute(
                     'topics',
@@ -3056,6 +3058,8 @@ Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
+        // Mirrors the skip in createSubscriber: the reload inside is forUpdate, so nothing it
+        // decodes reaches the document cache.
         $authorization->skip(fn () => $dbForProject->skipFilters(
             fn () => $dbForProject->decreaseDocumentAttribute(
                 'topics',
