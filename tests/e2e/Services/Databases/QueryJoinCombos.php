@@ -189,11 +189,74 @@ trait QueryJoinCombos
         return $amounts;
     }
 
+    protected function encodedJsonContainsScalar(string $encoded, int $needle): bool
+    {
+        $decoded = \json_decode($encoded, true);
+        if (!\is_array($decoded)) {
+            return false;
+        }
+
+        return $this->jsonContainsScalar($decoded, $needle);
+    }
+
+    protected function jsonContainsScalar(mixed $value, int $needle, string|int|null $key = null): bool
+    {
+        if (\is_int($value) || \is_float($value) || (\is_string($value) && \is_numeric($value))) {
+            if ($this->isIgnoredJoinSecretKey($key)) {
+                return false;
+            }
+
+            return (int) $value === $needle;
+        }
+
+        if (\is_string($value)) {
+            $decoded = \json_decode($value, true);
+            if (\is_array($decoded)) {
+                return $this->jsonContainsScalar($decoded, $needle);
+            }
+
+            return false;
+        }
+
+        if (!\is_array($value)) {
+            return false;
+        }
+
+        foreach ($value as $childKey => $child) {
+            if ($this->jsonContainsScalar($child, $needle, $childKey)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function isIgnoredJoinSecretKey(string|int|null $key): bool
+    {
+        $name = \is_string($key) && \str_contains($key, '.')
+            ? \substr($key, (int) \strrpos($key, '.') + 1)
+            : $key;
+
+        return \in_array($name, [
+            '$sequence',
+            '$createdAt',
+            '$updatedAt',
+            '$tenant',
+            '$version',
+            '$collection',
+            '$distance',
+            '$deletedAt',
+            '$internalId',
+            '$skipPermissionsUpdate',
+        ], true);
+    }
+
     protected function assertJoinComboClientHidden(string $encoded, array $amounts): void
     {
         $this->assertStringNotContainsString('combo-secret-alpha', $encoded);
         $this->assertStringNotContainsString('user:combo-hidden', $encoded);
         $this->assertSame(false, \in_array(777, $amounts, true));
+        $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 777));
     }
 
     public function testJoinComboListLeftAndInnerOmitsSecret(): void
@@ -277,10 +340,13 @@ trait QueryJoinCombos
 
         $this->assertSame(200, $result['headers']['status-code']);
         $rows = $result['body'][$this->getRecordResource()] ?? [];
-        $amounts = $this->joinComboAmounts(\is_array($rows) ? $rows : []);
+        $this->assertSame(true, \is_array($rows));
+        $amounts = $this->joinComboAmounts($rows);
         $encoded = (string) \json_encode($result['body']);
 
         if ($this->getSide() === 'client') {
+            $this->assertSame(0, \count($rows));
+            $this->assertSame(0, (int) ($result['body']['total'] ?? 0));
             $this->assertJoinComboClientHidden($encoded, $amounts);
         }
     }
