@@ -137,18 +137,24 @@ class Update extends Base
             throw new \LogicException('rules query list must not be empty');
         }
 
-        $updatedRules = [];
-        $authorization->skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$updatedRules) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
+        /** @var list<array<string, mixed>> $updatedRules */
+        $updatedRules = $authorization->skip(function () use ($dbForPlatform, $deployment, $queries): array {
+            $collected = [];
+            $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$collected) {
+                $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    'deploymentId' => $deployment->getId(),
+                    'deploymentInternalId' => $deployment->getSequence(),
+                ]));
+                $collected[] = $rule->getArrayCopy();
+            }, $queries);
 
-            $updatedRules[] = $rule->getArrayCopy();
-        }, $queries));
+            return $collected;
+        });
 
-        foreach ($updatedRules as $rule) {
-            $bus->dispatch(new RuleUpdated($rule));
+        if ($updatedRules !== []) {
+            foreach ($updatedRules as $rule) {
+                $bus->dispatch(new RuleUpdated($rule));
+            }
         }
 
         $queueForEvents
