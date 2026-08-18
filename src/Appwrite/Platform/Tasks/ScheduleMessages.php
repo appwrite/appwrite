@@ -94,8 +94,6 @@ class ScheduleMessages extends Action
                     messageId: $schedule['resourceId'],
                 ));
 
-                // The row is the retirement record: dropping it is what stops
-                // a later snapshot from listing this message again.
                 $dbForPlatform->deleteDocument('schedules', $schedule['$id']);
             } catch (\Throwable $th) {
                 $error = $th;

@@ -85,9 +85,6 @@ class ScheduleFunctions extends Action
     /**
      * @param list<Occurrence> $occurrences
      */
-    /**
-     * @param list<Occurrence> $occurrences
-     */
     private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions, Database $dbForPlatform): null
     {
         foreach ($occurrences as $occurrence) {

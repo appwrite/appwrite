@@ -14,14 +14,6 @@ use Utopia\Schedule\Trigger;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
-/**
- * The platform `schedules` collection, read as a schedule source.
- *
- * Reading it is the same work for every kind of schedule: page the rows for
- * this region and type, resolve the project, load the resource, drop what no
- * longer exists. What differs is the type, the collection the resource lives
- * in, and what the stored expression means — which is what a subclass says.
- */
 abstract class DatabaseSchedule implements Source, Changes
 {
     /** @var array<string, Document> */
@@ -38,15 +30,11 @@ abstract class DatabaseSchedule implements Source, Changes
     ) {
     }
 
-    /** The `resourceType` of the rows this reads. */
     abstract protected function type(): string;
 
-    /** The project collection the resource lives in. */
     abstract protected function collection(): string;
 
     /**
-     * When the stored expression says to run.
-     *
      * @param array<string, mixed> $schedule
      */
     abstract protected function trigger(array $schedule): Trigger;
@@ -105,8 +93,6 @@ abstract class DatabaseSchedule implements Source, Changes
     }
 
     /**
-     * The resource a schedule points at.
-     *
      * @param array<string, mixed> $schedule
      */
     protected function resource(Database $projectDB, array $schedule): Document
@@ -165,7 +151,6 @@ abstract class DatabaseSchedule implements Source, Changes
         }
     }
 
-    /** A malformed stamp rides the watermark rather than failing the sync. */
     private function moment(string $stamp): ?\DateTimeImmutable
     {
         try {

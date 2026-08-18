@@ -27,11 +27,6 @@ final class ExecutionSchedule extends DatabaseSchedule
         return new At(new \DateTimeImmutable((string) $schedule['schedule']));
     }
 
-    /**
-     * Executions are not persisted; the schedule carries what the worker
-     * needs. Schedules from before the executions collection was dropped can
-     * still resolve their document for the functionId their data lacks.
-     */
     #[\Override]
     protected function resource(Database $projectDB, array $schedule): Document
     {

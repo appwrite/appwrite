@@ -14,7 +14,6 @@ final class FunctionSchedule extends DatabaseSchedule
      * @param callable(Document): Database $getProjectDB
      * @param callable(Document, string, string): bool $isResourceBlocked
      * @param \Closure(array<string, mixed>): int $spread seconds to spread a
-     *        due second's worth of functions over, per schedule
      */
     public function __construct(
         Database $dbForPlatform,
@@ -37,11 +36,6 @@ final class FunctionSchedule extends DatabaseSchedule
         return RESOURCE_TYPE_FUNCTIONS;
     }
 
-    /**
-     * A cron expression, shifted so a fleet sharing one expression does not
-     * share one second. The shift belongs to the schedule: the window covers
-     * the shifted time and the watermark commits it.
-     */
     #[\Override]
     protected function trigger(array $schedule): Trigger
     {
