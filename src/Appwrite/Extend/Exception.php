@@ -355,6 +355,7 @@ class Exception extends \Exception
     /** GraphqQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';
     public const string GRAPHQL_TOO_MANY_QUERIES = 'graphql_too_many_queries';
+    public const string GRAPHQL_METHOD_UNSUPPORTED = 'graphql_method_unsupported';
 
     /** Migrations */
     public const string MIGRATION_NOT_FOUND = 'migration_not_found';
