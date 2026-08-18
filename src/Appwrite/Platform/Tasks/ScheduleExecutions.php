@@ -9,6 +9,7 @@ use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Lock\Semaphore;
 
 /**
  * ScheduleExecutions
@@ -20,6 +21,10 @@ class ScheduleExecutions extends ScheduleBase
 {
     public const UPDATE_TIMER = 3; // seconds
     public const ENQUEUE_TIMER = 4; // seconds
+    protected const ENQUEUE_CONCURRENCY = 10;
+
+    private ?Semaphore $enqueueSemaphore = null;
+    private array $enqueuing = [];
 
     public static function getName(): string
     {
@@ -77,60 +82,81 @@ class ScheduleExecutions extends ScheduleBase
                 continue;
             }
 
-            $data = $dbForPlatform->getDocument(
-                'schedules',
-                $schedule['$id'],
-            )->getAttribute('data', []);
-
-            $functionId = $data['functionId'] ?? $schedule['resource']->getAttribute('resourceId', '');
-
-            if (empty($functionId)) {
-                Console::error("Missing functionId for scheduled execution {$schedule['resourceId']}, skipping");
-
-                $dbForPlatform->deleteDocument(
-                    'schedules',
-                    $schedule['$id'],
-                );
-
-                unset($this->schedules[$schedule['$sequence']]);
+            $sequence = $schedule['$sequence'];
+            if (isset($this->enqueuing[$sequence])) {
                 continue;
             }
 
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
+            $this->enqueuing[$sequence] = true;
 
-            $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay, $dbForPlatform, $sequence) {
+                try {
+                    if ($delay > 0) {
+                        Co::sleep($delay);
+                    }
 
-            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay, $data, $functionId, $dbForPlatform) {
-                if ($delay > 0) {
-                    Co::sleep($delay);
+                    $this->withEnqueueSlot(function () use ($publisherForFunctions, $schedule, $scheduledAt, $dbForPlatform, $sequence) {
+                        $data = $dbForPlatform->getDocument(
+                            'schedules',
+                            $schedule['$id'],
+                        )->getAttribute('data', []);
+
+                        $functionId = $data['functionId'] ?? $schedule['resource']->getAttribute('resourceId', '');
+
+                        if (empty($functionId)) {
+                            Console::error("Missing functionId for scheduled execution {$schedule['resourceId']}, skipping");
+
+                            $dbForPlatform->deleteDocument(
+                                'schedules',
+                                $schedule['$id'],
+                            );
+
+                            unset($this->schedules[$sequence]);
+                            return;
+                        }
+
+                        $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+
+                        // Atomically claim the schedule before publishing. A
+                        // cancellation takes the same lock, so exactly one path can
+                        // claim the scheduled execution.
+                        $enqueued = $this->enqueueIfActive(
+                            $dbForPlatform,
+                            $schedule['$id'],
+                            fn () => $publisherForFunctions->enqueue(new FunctionMessage(
+                                project: $schedule['project'],
+                                userId: $data['userId'] ?? '',
+                                functionId: $functionId,
+                                execution: $schedule['resource'],
+                                type: 'schedule',
+                                body: $data['body'] ?? '',
+                                path: $data['path'] ?? '/',
+                                headers: $data['headers'] ?? [],
+                                method: $data['method'] ?? 'POST',
+                            )),
+                        );
+
+                        if ($enqueued) {
+                            $this->recordEnqueueDelay($scheduledAt);
+                        }
+
+                        unset($this->schedules[$sequence]);
+                    });
+                } catch (\Throwable $th) {
+                    Console::error("Failed to enqueue scheduled execution {$schedule['resourceId']}: {$th->getMessage()}");
+                } finally {
+                    unset($this->enqueuing[$sequence]);
                 }
-
-                // Atomically claim the schedule before publishing. A
-                // cancellation takes the same lock, so exactly one path can
-                // claim the scheduled execution.
-                $enqueued = $this->enqueueIfActive(
-                    $dbForPlatform,
-                    $schedule['$id'],
-                    fn () => $publisherForFunctions->enqueue(new FunctionMessage(
-                        project: $schedule['project'],
-                        userId: $data['userId'] ?? '',
-                        functionId: $functionId,
-                        execution: $schedule['resource'],
-                        type: 'schedule',
-                        body: $data['body'] ?? '',
-                        path: $data['path'] ?? '/',
-                        headers: $data['headers'] ?? [],
-                        method: $data['method'] ?? 'POST',
-                    )),
-                );
-
-                if ($enqueued) {
-                    $this->recordEnqueueDelay($scheduledAt);
-                }
-
-                unset($this->schedules[$schedule['$sequence']]);
             });
         }
+    }
+
+    protected function withEnqueueSlot(callable $callback): mixed
+    {
+        $this->enqueueSemaphore ??= new Semaphore(static::ENQUEUE_CONCURRENCY);
+
+        return $this->enqueueSemaphore->withLock($callback);
     }
 
     protected function enqueueIfActive(Database $dbForPlatform, string $scheduleId, callable $enqueue): bool

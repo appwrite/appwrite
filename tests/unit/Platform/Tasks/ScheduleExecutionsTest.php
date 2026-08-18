@@ -7,6 +7,8 @@ namespace Tests\Unit\Platform\Tasks;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine as Co;
+use Swoole\Coroutine\WaitGroup;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -146,6 +148,38 @@ final class ScheduleExecutionsTest extends TestCase
         }
     }
 
+    public function testEnqueueConcurrencyIsBounded(): void
+    {
+        $task = $this->task();
+        $active = 0;
+        $peak = 0;
+
+        \Swoole\Coroutine\run(function () use ($task, &$active, &$peak): void {
+            $waitGroup = new WaitGroup();
+
+            for ($i = 0; $i < $task->concurrency() + 5; $i++) {
+                $waitGroup->add();
+
+                \go(function () use ($task, $waitGroup, &$active, &$peak): void {
+                    try {
+                        $task->withSlot(function () use (&$active, &$peak): void {
+                            $active++;
+                            $peak = max($peak, $active);
+                            Co::sleep(0.01);
+                            $active--;
+                        });
+                    } finally {
+                        $waitGroup->done();
+                    }
+                });
+            }
+
+            $waitGroup->wait();
+        });
+
+        $this->assertSame($task->concurrency(), $peak);
+    }
+
     /**
      * @return \Iterator<string, array{\Utopia\Database\Document}>
      */
@@ -166,5 +200,15 @@ final class TestScheduleExecutions extends ScheduleExecutions
     public function enqueue(Database $dbForPlatform, string $scheduleId, callable $enqueue): bool
     {
         return $this->enqueueIfActive($dbForPlatform, $scheduleId, $enqueue);
+    }
+
+    public function withSlot(callable $callback): mixed
+    {
+        return $this->withEnqueueSlot($callback);
+    }
+
+    public function concurrency(): int
+    {
+        return self::ENQUEUE_CONCURRENCY;
     }
 }
