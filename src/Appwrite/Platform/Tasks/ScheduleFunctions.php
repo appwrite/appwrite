@@ -9,7 +9,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
 use Utopia\Schedule\Source\Entry;
@@ -31,7 +30,7 @@ class ScheduleFunctions extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
-            ->inject('pools')
+            ->inject('getRedisForLocks')
             ->callback($this->action(...));
     }
 
@@ -55,7 +54,10 @@ class ScheduleFunctions extends Action
         return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
     }
 
-    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): void
+    /**
+     * @param callable(): \Redis $getRedisForLocks
+     */
+    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, callable $getRedisForLocks): void
     {
         $source = new DatabaseSchedule(
             dbForPlatform: $dbForPlatform,
@@ -77,7 +79,7 @@ class ScheduleFunctions extends Action
 
         $scheduler = new Scheduler(
             source: $source,
-            store: new ClaimStore($pools->get('lock')->pop()->resource, 'utopia-schedule-' . self::getName()),
+            store: new ClaimStore($getRedisForLocks(), 'utopia-schedule-' . self::getName()),
             telemetry: $telemetry,
             onError: function (\Throwable $error): void {
                 Span::init('schedule.functions.reconcile');

@@ -7,7 +7,6 @@ use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
 use Utopia\Span\Span;
 use Utopia\Telemetry\Adapter as Telemetry;
 
@@ -28,10 +27,13 @@ class Schedule extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
-            ->inject('pools')
+            ->inject('getRedisForLocks')
             ->callback($this->action(...));
     }
 
+    /**
+     * @param callable(): \Redis $getRedisForLocks
+     */
     public function action(
         FunctionPublisher $publisherForFunctions,
         MessagingPublisher $publisherForMessaging,
@@ -39,11 +41,11 @@ class Schedule extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         Telemetry $telemetry,
-        Group $pools,
+        callable $getRedisForLocks,
     ): never {
-        $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
-        $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
-        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $getRedisForLocks));
+        $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $getRedisForLocks));
+        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $getRedisForLocks));
 
         while (true) {
             sleep(3600);

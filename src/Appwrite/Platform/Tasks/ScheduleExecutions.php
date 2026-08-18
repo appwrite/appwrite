@@ -9,7 +9,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
 use Utopia\Schedule\Source\Entry;
@@ -31,7 +30,7 @@ class ScheduleExecutions extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
-            ->inject('pools')
+            ->inject('getRedisForLocks')
             ->callback($this->action(...));
     }
 
@@ -50,7 +49,10 @@ class ScheduleExecutions extends Action
         return RESOURCE_TYPE_EXECUTIONS;
     }
 
-    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): void
+    /**
+     * @param callable(): \Redis $getRedisForLocks
+     */
+    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, callable $getRedisForLocks): void
     {
         $source = new DatabaseSchedule(
             dbForPlatform: $dbForPlatform,
@@ -64,7 +66,7 @@ class ScheduleExecutions extends Action
 
         $scheduler = new Scheduler(
             source: $source,
-            store: new ClaimStore($pools->get('lock')->pop()->resource, 'utopia-schedule-' . self::getName()),
+            store: new ClaimStore($getRedisForLocks(), 'utopia-schedule-' . self::getName()),
             syncSeconds: self::UPDATE_TIMER,
             telemetry: $telemetry,
             onError: function (\Throwable $error): void {
