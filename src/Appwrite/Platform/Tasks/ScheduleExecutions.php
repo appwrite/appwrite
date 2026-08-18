@@ -7,7 +7,6 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Coroutine as Co;
 use Utopia\Console;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 
 /**
@@ -63,11 +62,6 @@ class ScheduleExecutions extends ScheduleBase
 
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
-                $dbForPlatform->deleteDocument(
-                    'schedules',
-                    $schedule['$id'],
-                );
-
                 unset($this->schedules[$schedule['$sequence']]);
                 continue;
             }
@@ -77,112 +71,30 @@ class ScheduleExecutions extends ScheduleBase
                 continue;
             }
 
-            $data = $dbForPlatform->getDocument(
-                'schedules',
-                $schedule['$id'],
-            )->getAttribute('data', []);
-
-            $functionId = $data['functionId'] ?? $schedule['resource']->getAttribute('resourceId', '');
-
-            if (empty($functionId)) {
-                Console::error("Missing functionId for scheduled execution {$schedule['resourceId']}, skipping");
-
-                $dbForPlatform->deleteDocument(
-                    'schedules',
-                    $schedule['$id'],
-                );
-
-                unset($this->schedules[$schedule['$sequence']]);
-                continue;
-            }
-
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
-            $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay) {
+                try {
+                    if ($delay > 0) {
+                        Co::sleep($delay);
+                    }
 
-            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay, $data, $functionId, $dbForPlatform) {
-                if ($delay > 0) {
-                    Co::sleep($delay);
-                }
-
-                // Atomically claim the schedule before publishing. A
-                // cancellation takes the same lock, so exactly one path can
-                // claim the scheduled execution.
-                $enqueued = $this->enqueueIfActive(
-                    $dbForPlatform,
-                    $schedule['$id'],
-                    fn () => $publisherForFunctions->enqueue(new FunctionMessage(
+                    $publisherForFunctions->enqueue(new FunctionMessage(
                         project: $schedule['project'],
-                        userId: $data['userId'] ?? '',
-                        functionId: $functionId,
-                        execution: $schedule['resource'],
+                        functionId: $schedule['resource']->getAttribute('resourceId', ''),
+                        execution: new Document([
+                            '$id' => $schedule['resourceId'],
+                            'scheduleId' => $schedule['$id'],
+                        ]),
                         type: 'schedule',
-                        body: $data['body'] ?? '',
-                        path: $data['path'] ?? '/',
-                        headers: $data['headers'] ?? [],
-                        method: $data['method'] ?? 'POST',
-                    )),
-                );
+                    ));
 
-                if ($enqueued) {
                     $this->recordEnqueueDelay($scheduledAt);
+                    unset($this->schedules[$schedule['$sequence']]);
+                } catch (\Throwable $th) {
+                    Console::error("Failed to enqueue scheduled execution {$schedule['resourceId']}: {$th->getMessage()}");
                 }
-
-                unset($this->schedules[$schedule['$sequence']]);
             });
-        }
-    }
-
-    protected function enqueueIfActive(Database $dbForPlatform, string $scheduleId, callable $enqueue): bool
-    {
-        $claimed = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
-            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
-
-            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
-                return false;
-            }
-
-            $schedule = $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
-                'resourceUpdatedAt' => DateTime::now(),
-                'active' => false,
-            ]));
-
-            return !$schedule->isEmpty();
-        });
-
-        if (!$claimed) {
-            return false;
-        }
-
-        $published = false;
-        try {
-            return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId, $enqueue, &$published) {
-                $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
-
-                if ($schedule->isEmpty()) {
-                    return false;
-                }
-
-                $enqueue();
-                $published = true;
-
-                if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
-                    throw new \RuntimeException('Failed to remove claimed execution schedule');
-                }
-
-                return true;
-            });
-        } catch (\Throwable $error) {
-            // A failed publish releases the claim for a later retry. Once the
-            // publish succeeds, keep the schedule inactive even if cleanup
-            // fails so another scheduler cannot publish it again.
-            if (!$published) {
-                $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
-                    'resourceUpdatedAt' => DateTime::now(),
-                    'active' => true,
-                ]));
-            }
-            throw $error;
         }
     }
 }
