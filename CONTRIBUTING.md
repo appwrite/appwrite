@@ -126,6 +126,15 @@ docker compose build
 docker compose up -d
 ```
 
+By default the stack runs a **combined** worker (`appwrite-worker`) and scheduler (`appwrite-task-scheduler`). To run one container per queue instead:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.separate.yml --profile separate up -d
+```
+
+Do not start combined and separate workers at the same time — they would consume the same queues twice.
+
+
 ### Code Autocompletion
 
 To get proper autocompletion for all the different functions and classes in the codebase, you'll need to install Appwrite dependencies on your local machine. You can easily do that with PHP's package manager, [Composer](https://getcomposer.org/). If you don't have Composer installed, you can use the Docker Hub image to get the same result:
@@ -175,7 +184,9 @@ Learn more at our [Technology Stack](#technology-stack) section.
 ##### Container Namespace Conventions
 To keep our services easy to understand within Docker we follow a naming convention for all our containers depending on its intended use.
 
-`appwrite-worker-X` - Workers (`src/Appwrite/Platform/Workers/*`)
+`appwrite-worker` - Combined worker (all queues; the Compose default)
+`appwrite-worker-X` - Separate per-queue workers (`src/Appwrite/Platform/Workers/*`)
+`appwrite-task-scheduler` - Combined scheduler (functions + executions + messages)
 `appwrite-task-X` - Tasks (`src/Appwrite/Platform/Tasks/*`)
 
 Other containers should be named the same as their service, for example `redis` should just be called `redis`.

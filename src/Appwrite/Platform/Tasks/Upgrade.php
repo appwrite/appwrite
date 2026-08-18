@@ -7,6 +7,7 @@ use Appwrite\Docker\Env;
 use Utopia\Console;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Upgrade extends Install
 {
@@ -30,6 +31,7 @@ class Upgrade extends Install
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->param('database', 'mongodb', new Text(length: 0), 'Database to use (mongodb|mariadb|postgresql)', true)
+            ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
             ->param('migrate', false, new Boolean(true), 'Run database migration after upgrade', true)
             ->callback($this->action(...));
     }
@@ -42,6 +44,7 @@ class Upgrade extends Install
         string $interactive,
         bool $noStart,
         string $database,
+        string $topology = 'combined',
         bool $migrate = false,
     ): void {
         $this->isUpgrade = true;
@@ -88,7 +91,7 @@ class Upgrade extends Install
 
         $this->lockedDatabase = $database;
 
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
+        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database, $topology);
     }
 
     protected function startWebServer(
