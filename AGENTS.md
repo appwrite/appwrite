@@ -146,8 +146,25 @@ Follow PSR-12/PSR-4 unless noted. These apply to code, paths, labels, tests, and
 |---------|-------|--------|
 | `Modules/Teams/Http/Teams/` | `createTeam`, `listTeams` | `create`, `list` |
 | SDK `namespace: 'teams'` | `name: 'createTeam'` | `name: 'create'` |
-| Injected `$project` | `$projectDocument` | `$project` |
+| `Modules/Functions/Http/Deployments/` | `createFunctionDeployment` | `create` / `createTemplateDeployment` |
+| `Modules/Project/.../Platforms/Android/` | `createProjectAndroidPlatform` | `create`; SDK `createAndroidPlatform` |
+| Block a user | `blockUser`, `Block.php` | `updateStatus`, `Users/Status/Update.php` |
+| Membership confirm | `confirmMembership`, `Confirm.php` | `updateMembershipStatus`, `Memberships/Status/Update.php` |
+| Session expiry | `expireSession`, `logoutSession` | `updateSession`, `PATCH .../sessions/:sessionId` |
 | Domain/user verification | `verifyDomain`, `Verify.php` | `createVerification` / `updateVerification` |
+| Type-specific column | `createColumn` | `createStringColumn`, `Columns/String/Create.php` |
+| Injected `$project` | `$projectDocument`, `$currentProject` | `$project` |
+| Several publishers in one handler | `$publisher` | `$publisherForBuilds`, `$publisherForDatabase` |
+| Several storage devices | `$device` | `$deviceForLocal`, `$deviceForSites` |
+| Two IDs on one route | `:id` | `:teamId`, `:membershipId` |
+| Attribute on a team document | `teamName` | `name` |
+| Event label | `teams.teams.[teamId].create` | `teams.[teamId].create` |
+| E2E method in a Teams test class | `testCreateTeamsTeam` | `testCreateTeam` |
+| Span key | `functionId`, `realtime.project.id` | `function.id`, `project.id` |
+| Env var | `REDIS_HOST` | `_APP_REDIS_HOST` |
+| `bin/` script | `functions-worker` | `worker-functions` |
+
+Add a qualifier only when the verb or single name is ambiguous (`createStringColumn`, `:deploymentId`, `publisherForBuilds`).
 
 - **PHP:** namespaces PSR-4 mirroring `src/`; classes PascalCase; methods/variables camelCase; constants `SCREAMING_SNAKE_CASE`.
 - **Modules:** PascalCase, prefer one word (`Teams`, `Storage`); standard abbreviations OK (`VCS`, `JWT`, `SMTP`). Workers/tasks: PascalCase domain noun. `bin/` entry points: kebab-case with a role prefix (`worker-functions`).
