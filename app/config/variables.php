@@ -1393,8 +1393,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_VCS_CODEBASE_CLIENT_ID',
-                'description' => 'Codebase app client ID. You can find it in your Codebase app details on Cursor.',
+                'name' => '_APP_VCS_ORIGIN_CLIENT_ID',
+                'description' => 'Origin app client ID. You can find it in your Origin app details on Cursor.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,
@@ -1402,8 +1402,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_VCS_CODEBASE_PRIVATE_KEY',
-                'description' => 'Codebase app private key. You can generate private keys from your Codebase app settings on Cursor.',
+                'name' => '_APP_VCS_ORIGIN_PRIVATE_KEY',
+                'description' => 'Origin app private key. You can generate private keys from your Origin app settings on Cursor.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,

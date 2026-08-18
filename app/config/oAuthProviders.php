@@ -101,17 +101,6 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Box',
     ],
-    'cursor' => [
-        'name' => 'Cursor',
-        'developers' => 'https://cursor.com/docs/api',
-        'icon' => 'icon-cursor',
-        'enabled' => true,
-        'sandbox' => false,
-        'form' => false,
-        'beta' => false,
-        'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Cursor',
-    ],
     'dailymotion' => [
         'name' => 'Dailymotion',
         'developers' => 'https://developers.dailymotion.com/api/',

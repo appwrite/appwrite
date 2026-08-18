@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\VCS\Http\Codebase\Authorize;
+namespace Appwrite\Platform\Modules\VCS\Http\Origin\Authorize;
 
 use Appwrite\Auth\OAuth2\Cursor as OAuth2Cursor;
 use Appwrite\Extend\Exception;
@@ -22,23 +22,23 @@ class Get extends Action
 
     public static function getName()
     {
-        return 'getVCSCodebaseAuthorize';
+        return 'getVCSOriginAuthorize';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/vcs/codebase/authorize')
-            ->desc('Create Codebase app installation')
+            ->setHttpPath('/v1/vcs/origin/authorize')
+            ->desc('Create Origin app installation')
             ->groups(['api', 'vcs'])
             ->label('scope', 'vcs.read')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->label('sdk', new Method(
                 namespace: 'vcs',
                 group: 'installations',
-                name: 'createCodebaseInstallation',
-                description: 'Begin Appwrite\'s Codebase app installation to set up version control integration. This endpoint responds with a redirect URL to the Codebase app\'s installation page on Cursor. The Codebase app must be configured in your environment for this endpoint to work.',
+                name: 'createOriginInstallation',
+                description: 'Begin Appwrite\'s Origin app installation to set up version control integration. This endpoint responds with a redirect URL to the Origin app\'s installation page on Cursor. The Origin app must be configured in your environment for this endpoint to work.',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -66,18 +66,19 @@ class Get extends Action
         Document $project,
         array $platform
     ) {
-        $clientId = System::getEnv('_APP_VCS_CODEBASE_CLIENT_ID');
+        $clientId = System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID');
 
         if (empty($clientId)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Codebase client ID is not configured. Please configure VCS (Version Control System) variables in .env file.');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Origin client ID is not configured. Please configure VCS (Version Control System) variables in .env file.');
         }
 
-        $oauth2 = new OAuth2Cursor($clientId, System::getEnv('_APP_VCS_CODEBASE_PRIVATE_KEY', ''), '');
+        // The Cursor adapter expects its secret as a JSON object.
+        $oauth2 = new OAuth2Cursor($clientId, \json_encode(['privateKey' => System::getEnv('_APP_VCS_ORIGIN_PRIVATE_KEY', '')]), '');
         $url = $oauth2->getLoginURL();
 
-        // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
-        Console::log('[CODEBASE DEBUG] Authorize for project "' . $project->getId() . '" (success: "' . $success . '", failure: "' . $failure . '")');
-        Console::log('[CODEBASE DEBUG] Redirecting to install URL: ' . $url);
+        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
+        Console::log('[ORIGIN DEBUG] Authorize for project "' . $project->getId() . '" (success: "' . $success . '", failure: "' . $failure . '")');
+        Console::log('[ORIGIN DEBUG] Redirecting to install URL: ' . $url);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

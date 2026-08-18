@@ -327,7 +327,6 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_OKTA = 'oAuth2Okta';
     public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
     public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
-    public const MODEL_OAUTH2_CURSOR = 'oAuth2Cursor';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health

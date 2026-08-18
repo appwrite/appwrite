@@ -319,7 +319,6 @@ abstract class Base extends Action
             'kick' => Kick\Update::class,
             'apple' => Apple\Update::class,
             'microsoft' => Microsoft\Update::class,
-            'cursor' => Cursor\Update::class,
         ];
     }
 

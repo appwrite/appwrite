@@ -27,7 +27,6 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Autodesk\Update as Upd
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitbucket\Update as UpdateOAuth2Bitbucket;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitly\Update as UpdateOAuth2Bitly;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Box\Update as UpdateOAuth2Box;
-use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Cursor\Update as UpdateOAuth2Cursor;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Dailymotion\Update as UpdateOAuth2Dailymotion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Discord\Update as UpdateOAuth2Discord;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Disqus\Update as UpdateOAuth2Disqus;
@@ -230,6 +229,5 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Kick::getName(), new UpdateOAuth2Kick());
         $this->addAction(UpdateOAuth2Apple::getName(), new UpdateOAuth2Apple());
         $this->addAction(UpdateOAuth2Microsoft::getName(), new UpdateOAuth2Microsoft());
-        $this->addAction(UpdateOAuth2Cursor::getName(), new UpdateOAuth2Cursor());
     }
 }

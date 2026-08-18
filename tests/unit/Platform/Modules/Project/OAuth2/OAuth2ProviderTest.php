@@ -38,7 +38,7 @@ final class OAuth2ProviderTest extends TestCase
 
         $expected = [
             'amazon', 'apple', 'appwrite', 'auth0', 'authentik', 'autodesk',
-            'bitbucket', 'bitly', 'box', 'cursor', 'dailymotion', 'discord', 'disqus',
+            'bitbucket', 'bitly', 'box', 'dailymotion', 'discord', 'disqus',
             'dropbox', 'etsy', 'facebook', 'figma', 'fusionauth', 'github',
             'gitlab', 'google', 'keycloak', 'kick', 'linkedin', 'microsoft',
             'notion', 'oidc', 'okta', 'paypal', 'paypalSandbox', 'podio',
@@ -135,7 +135,6 @@ final class OAuth2ProviderTest extends TestCase
         yield 'dailymotion' => ['dailymotion', $actions['dailymotion'], 'apiKey', 'apiSecret'];
         yield 'bitbucket' => ['bitbucket', $actions['bitbucket'], 'key', 'secret'];
         yield 'dropbox' => ['dropbox', DropboxUpdate::class, 'appKey', 'appSecret'];
-        yield 'cursor' => ['cursor', $actions['cursor'], 'clientId', 'privateKey'];
         yield 'etsy' => ['etsy', $actions['etsy'], 'keyString', 'sharedSecret'];
         yield 'facebook' => ['facebook', $actions['facebook'], 'appId', 'appSecret'];
         yield 'notion' => ['notion', $actions['notion'], 'oauthClientId', 'oauthClientSecret'];

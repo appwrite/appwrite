@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\VCS\Http\Codebase\Callback;
+namespace Appwrite\Platform\Modules\VCS\Http\Origin\Callback;
 
 use Appwrite\Auth\OAuth2\Cursor as OAuth2Cursor;
 use Appwrite\Extend\Exception;
@@ -24,21 +24,21 @@ class Get extends Action
 
     public static function getName()
     {
-        return 'getVCSCodebaseCallback';
+        return 'getVCSOriginCallback';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/vcs/codebase/callback')
-            ->desc('Get installation from Codebase app')
+            ->setHttpPath('/v1/vcs/origin/callback')
+            ->desc('Get installation from Origin app')
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
-            ->param('installation_id', '', new Text(256, 0), 'Codebase installation ID', true)
-            ->param('installation_receipt', '', new Text(4096, 0), 'Codebase installation receipt JWT, signed by Cursor.', true)
-            ->param('state', '', new Text(2048), 'Codebase state. Contains info sent when starting the installation flow.', true)
+            ->param('installation_id', '', new Text(256, 0), 'Origin installation ID', true)
+            ->param('installation_receipt', '', new Text(4096, 0), 'Origin installation receipt JWT, signed by Cursor.', true)
+            ->param('state', '', new Text(2048), 'Origin state. Contains info sent when starting the installation flow.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -55,25 +55,25 @@ class Get extends Action
         Database $dbForPlatform,
         array $platform
     ) {
-        // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
+        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
         $params = $request->getParams();
-        Console::log('[CODEBASE DEBUG] Callback received');
-        Console::log('[CODEBASE DEBUG] Callback params: ' . \json_encode($params));
-        Console::log('[CODEBASE DEBUG] Callback headers: ' . \json_encode($request->getHeaders()));
-        Console::log('[CODEBASE DEBUG] Callback installation_id: "' . $providerInstallationId . '"');
+        Console::log('[ORIGIN DEBUG] Callback received');
+        Console::log('[ORIGIN DEBUG] Callback params: ' . \json_encode($params));
+        Console::log('[ORIGIN DEBUG] Callback headers: ' . \json_encode($request->getHeaders()));
+        Console::log('[ORIGIN DEBUG] Callback installation_id: "' . $providerInstallationId . '"');
 
         // Surface anything that looks like an OAuth2 token flow (e.g. a code
-        // exchange), since Codebase is not expected to send one.
+        // exchange), since Origin is not expected to send one.
         $oauthParams = \array_intersect_key($params, \array_flip([
             'code', 'token', 'access_token', 'refresh_token', 'expires_in', 'token_type', 'scope', 'id_token', 'setup_action', 'authuser', 'session_state',
         ]));
         if (!empty($oauthParams)) {
-            Console::log('[CODEBASE DEBUG] Possible OAuth2 flow params detected: ' . \json_encode($oauthParams));
+            Console::log('[ORIGIN DEBUG] Possible OAuth2 flow params detected: ' . \json_encode($oauthParams));
         } else {
-            Console::log('[CODEBASE DEBUG] No OAuth2 flow params detected');
+            Console::log('[ORIGIN DEBUG] No OAuth2 flow params detected');
         }
 
-        // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
+        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
         // Decode only -- the EdDSA signature is not verified, so the claims
         // must not be trusted for authorization decisions yet.
         if (!empty($installationReceipt)) {
@@ -81,13 +81,13 @@ class Get extends Action
             if (\count($segments) === 3) {
                 $receiptHeader = \json_decode(\base64_decode(\strtr($segments[0], '-_', '+/')), true) ?? [];
                 $receiptClaims = \json_decode(\base64_decode(\strtr($segments[1], '-_', '+/')), true) ?? [];
-                Console::log('[CODEBASE DEBUG] Receipt JWT header: ' . \json_encode($receiptHeader));
-                Console::log('[CODEBASE DEBUG] Receipt JWT claims: ' . \json_encode($receiptClaims));
+                Console::log('[ORIGIN DEBUG] Receipt JWT header: ' . \json_encode($receiptHeader));
+                Console::log('[ORIGIN DEBUG] Receipt JWT claims: ' . \json_encode($receiptClaims));
             } else {
-                Console::log('[CODEBASE DEBUG] installation_receipt is not a JWT: ' . $installationReceipt);
+                Console::log('[ORIGIN DEBUG] installation_receipt is not a JWT: ' . $installationReceipt);
             }
         } else {
-            Console::log('[CODEBASE DEBUG] No installation_receipt received');
+            Console::log('[ORIGIN DEBUG] No installation_receipt received');
         }
 
         if (empty($state)) {
@@ -98,20 +98,20 @@ class Get extends Action
         $redirectFailure = $state['failure'] ?? '';
         $projectId = $state['projectId'] ?? '';
 
-        // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
-        Console::log('[CODEBASE DEBUG] Decoded state: ' . \json_encode($state));
+        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
+        Console::log('[ORIGIN DEBUG] Decoded state: ' . \json_encode($state));
 
-        // This endpoint is public and Codebase performs no token exchange --
+        // This endpoint is public and Origin performs no token exchange --
         // without verifying the signature the Authorize action put in state,
         // anyone could pass an arbitrary projectId here and attach an
         // installation to another project.
         $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
         if (!\hash_equals($signature, $state['signature'] ?? '')) {
-            // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
-            Console::log('[CODEBASE DEBUG] State signature mismatch, rejecting callback');
+            // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
+            Console::log('[ORIGIN DEBUG] State signature mismatch, rejecting callback');
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
-        Console::log('[CODEBASE DEBUG] State signature valid');
+        Console::log('[ORIGIN DEBUG] State signature valid');
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -134,17 +134,18 @@ class Get extends Action
         $redirectFailure = $state['failure'] ?? '';
 
         if (empty($providerInstallationId)) {
-            $this->failure($response, $redirectFailure, 'Codebase installation ID is missing.');
+            $this->failure($response, $redirectFailure, 'Origin installation ID is missing.');
             return;
         }
 
         // Authenticate the callback by verifying the installation receipt
         // against Cursor's published JWKS. This proves the request genuinely
-        // originates from Codebase (the callback is public and has no token
+        // originates from Origin (the callback is public and has no token
         // exchange) before any installation is created.
+        // The Cursor adapter expects its secret as a JSON object.
         $oauth2 = new OAuth2Cursor(
-            System::getEnv('_APP_VCS_CODEBASE_CLIENT_ID', ''),
-            System::getEnv('_APP_VCS_CODEBASE_PRIVATE_KEY', ''),
+            System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', ''),
+            \json_encode(['privateKey' => System::getEnv('_APP_VCS_ORIGIN_PRIVATE_KEY', '')]),
             ''
         );
 
@@ -158,21 +159,21 @@ class Get extends Action
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Receipt subject does not match installation ID');
             }
         } catch (\Throwable $e) {
-            Console::log('[CODEBASE DEBUG] Receipt verification failed: ' . $e->getMessage());
-            $this->failure($response, $redirectFailure, 'Could not verify the Codebase installation receipt.');
+            Console::log('[ORIGIN DEBUG] Receipt verification failed: ' . $e->getMessage());
+            $this->failure($response, $redirectFailure, 'Could not verify the Origin installation receipt.');
             return;
         }
 
         // The Cursor namespace (team/workspace) owning the installation.
         $organization = $receiptClaims['namespace_id'] ?? '';
-        Console::log('[CODEBASE DEBUG] Receipt verified, namespace_id: "' . $organization . '"');
+        Console::log('[ORIGIN DEBUG] Receipt verified, namespace_id: "' . $organization . '"');
 
         $projectInternalId = $project->getSequence();
 
         $installation = $dbForPlatform->findOne('installations', [
             Query::equal('providerInstallationId', [$providerInstallationId]),
             Query::equal('projectInternalId', [$projectInternalId]),
-            Query::equal('provider', ['codebase']),
+            Query::equal('provider', ['origin']),
         ]);
 
         if ($installation->isEmpty()) {
@@ -184,22 +185,22 @@ class Get extends Action
                 'providerInstallationId' => $providerInstallationId,
                 'projectId' => $projectId,
                 'projectInternalId' => $projectInternalId,
-                'provider' => 'codebase',
+                'provider' => 'origin',
                 'organization' => $organization,
                 'personal' => false,
             ]));
 
-            // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
-            Console::log('[CODEBASE DEBUG] Created installation "' . $installation->getId() . '" for project "' . $projectId . '"');
+            // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
+            Console::log('[ORIGIN DEBUG] Created installation "' . $installation->getId() . '" for project "' . $projectId . '"');
         } else {
             $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
                 'organization' => $organization,
             ]));
 
-            Console::log('[CODEBASE DEBUG] Installation already exists: "' . $installation->getId() . '"');
+            Console::log('[ORIGIN DEBUG] Installation already exists: "' . $installation->getId() . '"');
         }
 
-        Console::log('[CODEBASE DEBUG] Redirecting to success URL: ' . $redirectSuccess);
+        Console::log('[ORIGIN DEBUG] Redirecting to success URL: ' . $redirectSuccess);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -212,8 +213,8 @@ class Get extends Action
      */
     private function failure(Response $response, string $redirect, string $error, string $type = Exception::GENERAL_ARGUMENT_INVALID): void
     {
-        // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
-        Console::log('[CODEBASE DEBUG] Callback failed: ' . $error . ' (redirect: "' . $redirect . '")');
+        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
+        Console::log('[ORIGIN DEBUG] Callback failed: ' . $error . ' (redirect: "' . $redirect . '")');
 
         if (empty($redirect)) {
             throw new Exception($type, $error);

@@ -11,7 +11,12 @@ use Appwrite\Auth\OAuth2;
 // Cursor Origin apps are not a user-login provider: installs are approved on
 // cursor.com and confirmed with an EdDSA-signed installation receipt instead
 // of an authorization code, and API access tokens are minted from an app JWT
-// signed with the app's Ed25519 private key ($appSecret holds the PKCS#8 PEM).
+// signed with the app's Ed25519 private key.
+//
+// Like Apple, the secret is a JSON object: `{"privateKey": "..."}` with the
+// PKCS#8 PEM. The private key is only needed to mint tokens -- an empty
+// object `{}` is valid configuration for starting an install flow, which
+// only requires the app ID.
 class Cursor extends OAuth2
 {
     /**
@@ -57,6 +62,7 @@ class Cursor extends OAuth2
             $params['scope'] = \implode(' ', $this->getScopes());
         }
 
+        // The Origin console still lives under the /codebase path on cursor.com.
         return 'https://cursor.com/codebase/apps/install?' . \http_build_query($params);
     }
 
@@ -218,21 +224,6 @@ class Cursor extends OAuth2
     }
 
     /**
-     * End-to-end credential check used when enabling the provider: signing
-     * the app JWT proves the private key is well-formed, and the zero-cost
-     * rate-limit endpoint rejects it with a 401 unless the app ID and key
-     * match a registered app.
-     *
-     * @throws Exception
-     */
-    public function verifyCredentials(): void
-    {
-        $this->request('GET', $this->endpoint . '/rate_limit', [
-            'Authorization: Bearer ' . $this->getAppJWT(),
-        ]);
-    }
-
-    /**
      * Cursor Origin apps act as an installation, never as a user, so there is
      * no user identity behind an access token.
      */
@@ -285,15 +276,23 @@ class Cursor extends OAuth2
     }
 
     /**
-     * Ed25519 secret key derived from the PKCS#8 PEM in $appSecret.
+     * Ed25519 secret key derived from the PKCS#8 PEM in the secret's
+     * `privateKey` field.
      *
      * @throws Exception
      */
     protected function getSigningKey(): string
     {
+        $secret = \json_decode($this->appSecret, true);
+        $pem = \is_array($secret) ? ($secret['privateKey'] ?? '') : '';
+
+        if (empty($pem) || !\is_string($pem)) {
+            throw new Exception('Private key is not configured');
+        }
+
         // Keys configured through environment variables carry literal \n
         // sequences instead of newlines.
-        $pem = \str_replace(['\n', '-----BEGIN PRIVATE KEY-----', '-----END PRIVATE KEY-----'], '', $this->appSecret);
+        $pem = \str_replace(['\n', '-----BEGIN PRIVATE KEY-----', '-----END PRIVATE KEY-----'], '', $pem);
         $der = \base64_decode(\preg_replace('/\s+/', '', $pem) ?? '', true);
 
         // RFC 8410 PKCS#8 wraps the 32-byte Ed25519 seed in a nested octet
