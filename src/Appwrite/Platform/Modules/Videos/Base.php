@@ -82,8 +82,8 @@ abstract class Base extends UtopiaAction
         $view = new View(__DIR__ . '/../../../../../app/views/videos/' . $template . '.phtml');
 
         foreach ($params as $key => $value) {
-            // Escaping is left to the templates, which call $this->escape() on the
-            // fields that need it; blanket-escaping would corrupt URLs and XML.
+            // Escaping is left to the templates, which call $this->print($value, self::FILTER_ESCAPE)
+            // on the fields that need it; blanket-escaping would corrupt URLs and XML.
             $view->setParam($key, $value, false);
         }
 
