@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "67feeac1b02502832a0b63edcb15d0b2",
+    "content-hash": "b27c93dff511ca9e9ad186197b1964df",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4639,6 +4639,65 @@
             "time": "2021-03-10T10:45:22+00:00"
         },
         {
+            "name": "utopia-php/schedule",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/schedule.git",
+                "reference": "52ec08d841e7b38c91dd0e9128f0c1fc41fb356c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/schedule/zipball/52ec08d841e7b38c91dd0e9128f0c1fc41fb356c",
+                "reference": "52ec08d841e7b38c91dd0e9128f0c1fc41fb356c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3",
+                "utopia-php/telemetry": "^0.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^12"
+            },
+            "suggest": {
+                "ext-opentelemetry": "Required by utopia-php/telemetry when using OpenTelemetry metrics",
+                "ext-protobuf": "Required by utopia-php/telemetry when using OpenTelemetry metrics",
+                "ext-redis": "Required when using Store\\Redis to share the claim across replicas"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Schedule\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Team Appwrite",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "An opinionated scheduler that reconciles schedules from a source of truth and dispatches cron, interval, delayed and fixed-time occurrences without silently skipping a run",
+            "keywords": [
+                "cron",
+                "framework",
+                "interval",
+                "php",
+                "schedule",
+                "scheduler",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/schedule/issues",
+                "source": "https://github.com/utopia-php/schedule/tree/0.1.0"
+            },
+            "time": "2026-08-18T15:49:19+00:00"
+        },
+        {
             "name": "utopia-php/servers",
             "version": "0.4.8",
             "source": {
@@ -8399,5 +8458,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
