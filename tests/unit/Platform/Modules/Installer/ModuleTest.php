@@ -134,7 +134,7 @@ final class ModuleTest extends TestCase
         $this->assertSame('/install', $action->getHttpPath());
         $this->assertSame(Action::TYPE_DEFAULT, $action->getType());
         $this->assertActionParams($action, [
-            'appDomain', 'httpPort', 'httpsPort', 'emailCertificates', 'opensslKey',
+            'appDomain', 'httpPort', 'httpsPort', 'forceHttps', 'emailCertificates', 'opensslKey',
             'assistantOpenAIKey', 'accountEmail', 'accountPassword', 'database',
             'topology', 'installId', 'retryStep', 'migrate',
         ]);

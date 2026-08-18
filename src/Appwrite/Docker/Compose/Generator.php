@@ -45,6 +45,7 @@ class Generator
                     'appwrite-worker-jobs',
                     'appwrite-worker-screenshots',
                     'appwrite-worker-certificates',
+                    'appwrite-worker-executions',
                     'appwrite-worker-functions',
                     'appwrite-worker-mails',
                     'appwrite-worker-notifications',

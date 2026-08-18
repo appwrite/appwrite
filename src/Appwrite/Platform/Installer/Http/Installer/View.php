@@ -49,6 +49,7 @@ class View extends Action
         $isLocalInstall = $config->isLocal();
 
         $defaultEmailCertificates = $vars['_APP_EMAIL_CERTIFICATES']['default'] ?? '';
+        $defaultForceHttps = ($vars['_APP_OPTIONS_FORCE_HTTPS']['default'] ?? 'disabled') === 'enabled';
         if ($isLocalInstall && empty($defaultEmailCertificates)) {
             $defaultEmailCertificates = 'walterobrien@example.com';
         }

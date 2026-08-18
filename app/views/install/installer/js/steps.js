@@ -63,6 +63,16 @@
         update();
     };
 
+    const bindCheckboxToState = (input, key) => {
+        if (!input) return;
+        const update = () => {
+            formState[key] = input.checked;
+            dispatchStateChange?.(key);
+        };
+        input.addEventListener('change', update);
+        update();
+    };
+
     const lockDatabaseSelection = (root, lockedDatabase) => {
         if (lockedDatabase) {
             const radios = root.querySelectorAll('input[name="database"]');
@@ -111,6 +121,7 @@
         State.setStateIfEmpty?.('httpPort', root.querySelector('#http-port')?.value);
         State.setStateIfEmpty?.('httpsPort', root.querySelector('#https-port')?.value);
         State.setStateIfEmpty?.('emailCertificates', root.querySelector('#ssl-email')?.value);
+        State.setStateIfEmpty?.('forceHttps', root.querySelector('#force-https')?.checked);
         State.setStateIfEmpty?.('assistantOpenAIKey', root.querySelector('#assistant-openai-key')?.value);
     };
 
@@ -126,6 +137,11 @@
 
         const sslEmail = root.querySelector('#ssl-email');
         if (sslEmail && formState.emailCertificates) sslEmail.value = formState.emailCertificates;
+
+        const forceHttps = root.querySelector('#force-https');
+        if (forceHttps && typeof formState.forceHttps === 'boolean') {
+            forceHttps.checked = formState.forceHttps;
+        }
 
         const assistantKey = root.querySelector('#assistant-openai-key');
         if (assistantKey && formState.assistantOpenAIKey) {
@@ -188,12 +204,14 @@
         const httpPort = root.querySelector('#http-port');
         const httpsPort = root.querySelector('#https-port');
         const sslEmail = root.querySelector('#ssl-email');
+        const forceHttps = root.querySelector('#force-https');
         const assistantKey = root.querySelector('#assistant-openai-key');
 
         bindInputToState(hostname, 'appDomain');
         bindInputToState(httpPort, 'httpPort');
         bindInputToState(httpsPort, 'httpsPort');
         bindInputToState(sslEmail, 'emailCertificates');
+        bindCheckboxToState(forceHttps, 'forceHttps');
         bindInputToState(assistantKey, 'assistantOpenAIKey');
 
         bindErrorClear?.(hostname);

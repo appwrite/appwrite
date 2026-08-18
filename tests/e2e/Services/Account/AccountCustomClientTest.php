@@ -1776,11 +1776,25 @@ final class AccountCustomClientTest extends Scope
     {
         $data = $this->setupAccountWithVerifiedEmail();
 
+        // testDeleteAccountSessions deletes every session on the shared cached
+        // account, so sign in again rather than reusing $data['session'].
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
         $response = $this->client->call(Client::METHOD_POST, '/account/jwt', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $data['session'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);

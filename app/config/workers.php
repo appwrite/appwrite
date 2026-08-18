@@ -46,6 +46,11 @@ return [
         'queueEnv' => '_APP_CERTIFICATES_QUEUE_NAME',
         'maxCoroutines' => 8,
     ],
+    'executions' => [
+        'queue' => Event::EXECUTIONS_QUEUE_NAME,
+        'queueEnv' => '_APP_EXECUTIONS_QUEUE_NAME',
+        'maxCoroutines' => 8,
+    ],
     'functions' => [
         'queue' => Event::FUNCTIONS_QUEUE_NAME,
         'queueEnv' => '_APP_FUNCTIONS_QUEUE_NAME',

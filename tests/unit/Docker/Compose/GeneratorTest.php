@@ -71,6 +71,7 @@ final class GeneratorTest extends TestCase
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler']);
         $this->assertArrayNotHasKey('appwrite-worker-screenshots', $compose['services']);
+        $this->assertArrayNotHasKey('appwrite-worker-executions', $compose['services']);
         $this->assertArrayNotHasKey('appwrite-worker-functions', $compose['services']);
         $this->assertArrayNotHasKey('appwrite-task-scheduler-functions', $compose['services']);
     }
@@ -84,6 +85,7 @@ final class GeneratorTest extends TestCase
         $this->assertArrayNotHasKey('appwrite-worker', $compose['services']);
         $this->assertArrayNotHasKey('appwrite-task-scheduler', $compose['services']);
         $this->assertArrayHasKey('appwrite-worker-screenshots', $compose['services']);
+        $this->assertArrayHasKey('appwrite-worker-executions', $compose['services']);
         $this->assertArrayHasKey('appwrite-worker-functions', $compose['services']);
         $this->assertArrayHasKey('appwrite-task-scheduler-functions', $compose['services']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker-functions']);

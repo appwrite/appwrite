@@ -16,6 +16,7 @@
         httpPort: null,
         httpsPort: null,
         emailCertificates: null,
+        forceHttps: null,
         opensslKey: null,
         assistantOpenAIKey: null,
         topology: 'combined',
@@ -45,6 +46,7 @@
         setStateIfEmpty('httpPort', data.defaultHttpPort);
         setStateIfEmpty('httpsPort', data.defaultHttpsPort);
         setStateIfEmpty('emailCertificates', data.defaultEmailCertificates);
+        setStateIfEmpty('forceHttps', data.defaultForceHttps === 'true');
         setStateIfEmpty('opensslKey', data.defaultSecretKey);
         setStateIfEmpty('assistantOpenAIKey', data.defaultAssistantOpenaiKey);
         if (data.lockedDatabase) {
@@ -139,6 +141,7 @@
         setStateIfEmpty('httpPort', payload.httpPort);
         setStateIfEmpty('httpsPort', payload.httpsPort);
         setStateIfEmpty('emailCertificates', payload.emailCertificates);
+        setStateIfEmpty('forceHttps', payload.forceHttps);
         setStateIfEmpty('accountEmail', payload.accountEmail);
     };
 

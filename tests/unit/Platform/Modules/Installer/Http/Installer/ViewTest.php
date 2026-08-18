@@ -23,6 +23,26 @@ final class ViewTest extends TestCase
         $this->assertLessThan($mongo, $maria);
     }
 
+    public function testHttpsDefaultsToDisabled(): void
+    {
+        $html = $this->render();
+
+        $this->assertStringContainsString('data-default-force-https="false"', $html);
+        $this->assertDoesNotMatchRegularExpression('/id="force-https"[^>]*checked/', $html);
+    }
+
+    public function testHttpsUsesExistingInstallerSetting(): void
+    {
+        $html = $this->render([
+            'vars' => [
+                '_APP_OPTIONS_FORCE_HTTPS' => ['default' => 'enabled'],
+            ],
+        ]);
+
+        $this->assertStringContainsString('data-default-force-https="true"', $html);
+        $this->assertMatchesRegularExpression('/id="force-https"[^>]*checked/', $html);
+    }
+
     public function testUpgradeWithoutDetectedDatabaseRemainsSelectable(): void
     {
         $html = $this->render([

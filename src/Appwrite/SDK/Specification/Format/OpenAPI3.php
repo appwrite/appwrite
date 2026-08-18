@@ -144,7 +144,6 @@ class OpenAPI3 extends Format
                 'responses' => [],
                 'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
-                    'method' => $methodName,
                     'group' => $sdk->getGroup(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
@@ -811,7 +810,6 @@ class OpenAPI3 extends Format
                 if (\count($methods) > 1 && $index > 0) {
                     $suffix = \ucfirst(\strtolower($method));
                     $methodTemp['operationId'] .= $suffix;
-                    $methodTemp['x-appwrite']['method'] .= $suffix;
                 }
                 $body = [
                     'content' => [
