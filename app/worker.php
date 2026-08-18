@@ -5,6 +5,7 @@ $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Queue\Connection\Pool as CommandsPool;
 use Appwrite\Workers\Jobs;
 use Swoole\Runtime;
 use Utopia\Config\Config;
@@ -14,9 +15,10 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
+use Utopia\Pools\Adapter\Swoole as SwoolePool;
+use Utopia\Pools\Pool;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Redis as BrokerRedis;
-use Utopia\Queue\Connection\Locking;
 use Utopia\Queue\Connection\Redis as RedisConnection;
 use Utopia\Queue\Server;
 use Utopia\Span\Span;
@@ -88,7 +90,17 @@ $jobs = Jobs::resolve($workers, $workersConfig, System::getEnv(...));
 
 $redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
 $redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);
-$commands = new Locking(new RedisConnection($redisHost, $redisPort));
+
+// Receive stays per-consumer (blocking pop needs a dedicated socket).
+// Commands go through a pool so combined workers can ack/publish in
+// parallel instead of queuing on one Locking connection.
+$commands = new CommandsPool(new Pool(
+    new SwoolePool(),
+    'worker-commands',
+    Jobs::commandPoolSize($jobs),
+    static fn (): RedisConnection => new RedisConnection($redisHost, $redisPort),
+    (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10),
+));
 
 $createConsumer = static function () use ($redisHost, $redisPort, $commands): BrokerRedis {
     return new BrokerRedis(

@@ -81,6 +81,28 @@ final class JobsTest extends TestCase
         $this->assertSame(8, $jobs['functions']['maxCoroutines']);
     }
 
+    public function testCommandPoolCoversEveryInFlightCoroutine(): void
+    {
+        $jobs = Jobs::resolve(
+            \array_keys($this->config),
+            $this->config,
+            $this->env([]),
+        );
+
+        $this->assertSame(
+            (int) array_sum(array_column($jobs, 'maxCoroutines')),
+            Jobs::commandPoolSize($jobs),
+        );
+        $this->assertGreaterThan(
+            1,
+            Jobs::commandPoolSize($jobs),
+            'combined workers must not share a single command connection',
+        );
+        $this->assertSame(1, Jobs::commandPoolSize([
+            'databases' => ['queue' => 'database_db_main', 'maxCoroutines' => 1],
+        ]));
+    }
+
     public function testQueueEnvOverrideStillApplies(): void
     {
         $jobs = Jobs::resolve(
