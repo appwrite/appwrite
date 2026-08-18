@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c7acee2d0fe6b2299e47df05257a7225",
+    "content-hash": "f22cd38378c2891b4656c4c756478e6c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5031,16 +5031,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "5.1.2",
+            "version": "dev-feat-origin",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "abdb5763221d7e4900174c280244f83638e3133e"
+                "reference": "cbf57939aa7f0d40c5e6ab9120e13b3247bd767a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/abdb5763221d7e4900174c280244f83638e3133e",
-                "reference": "abdb5763221d7e4900174c280244f83638e3133e",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/cbf57939aa7f0d40c5e6ab9120e13b3247bd767a",
+                "reference": "cbf57939aa7f0d40c5e6ab9120e13b3247bd767a",
                 "shasum": ""
             },
             "require": {
@@ -5091,10 +5091,10 @@
                 "vcs"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/vcs/tree/5.1.2",
+                "source": "https://github.com/utopia-php/vcs/tree/feat-origin",
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-08-07T12:32:15+00:00"
+            "time": "2026-08-18T12:28:48+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -8401,7 +8401,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
-        "utopia-php/platform": 5
+        "utopia-php/platform": 5,
+        "utopia-php/vcs": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

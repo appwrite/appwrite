@@ -5,8 +5,8 @@ namespace Appwrite\Platform\Modules\VCS\Http\Origin\Callback;
 use Appwrite\Auth\OAuth2\Cursor as OAuth2Cursor;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -37,12 +37,12 @@ class Get extends Action
             ->label('scope', 'public')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->param('installation_id', '', new Text(256, 0), 'Origin installation ID', true)
-            ->param('installation_receipt', '', new Text(4096, 0), 'Origin installation receipt JWT, signed by Cursor.', true)
-            ->param('state', '', new Text(2048), 'Origin state. Contains info sent when starting the installation flow.', true)
-            ->inject('request')
+            ->param('installation_receipt', '', new Text(8192, 0), 'Origin installation receipt JWT, signed by Cursor.', true)
+            ->param('state', '', new Text(2048, 0), 'Origin state. Contains info sent when starting the installation flow.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('vcsFactory')
             ->callback($this->action(...));
     }
 
@@ -50,68 +50,57 @@ class Get extends Action
         string $providerInstallationId,
         string $installationReceipt,
         string $state,
-        Request $request,
         Response $response,
         Database $dbForPlatform,
-        array $platform
+        array $platform,
+        VcsFactory $vcsFactory,
     ) {
-        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
-        $params = $request->getParams();
-        Console::log('[ORIGIN DEBUG] Callback received');
-        Console::log('[ORIGIN DEBUG] Callback params: ' . \json_encode($params));
-        Console::log('[ORIGIN DEBUG] Callback headers: ' . \json_encode($request->getHeaders()));
-        Console::log('[ORIGIN DEBUG] Callback installation_id: "' . $providerInstallationId . '"');
-
-        // Surface anything that looks like an OAuth2 token flow (e.g. a code
-        // exchange), since Origin is not expected to send one.
-        $oauthParams = \array_intersect_key($params, \array_flip([
-            'code', 'token', 'access_token', 'refresh_token', 'expires_in', 'token_type', 'scope', 'id_token', 'setup_action', 'authuser', 'session_state',
-        ]));
-        if (!empty($oauthParams)) {
-            Console::log('[ORIGIN DEBUG] Possible OAuth2 flow params detected: ' . \json_encode($oauthParams));
-        } else {
-            Console::log('[ORIGIN DEBUG] No OAuth2 flow params detected');
+        if (empty($installationReceipt)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing installation receipt. Please restart the installation from the Appwrite Console.');
         }
 
-        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
-        // Decode only -- the EdDSA signature is not verified, so the claims
-        // must not be trusted for authorization decisions yet.
-        if (!empty($installationReceipt)) {
-            $segments = \explode('.', $installationReceipt);
-            if (\count($segments) === 3) {
-                $receiptHeader = \json_decode(\base64_decode(\strtr($segments[0], '-_', '+/')), true) ?? [];
-                $receiptClaims = \json_decode(\base64_decode(\strtr($segments[1], '-_', '+/')), true) ?? [];
-                Console::log('[ORIGIN DEBUG] Receipt JWT header: ' . \json_encode($receiptHeader));
-                Console::log('[ORIGIN DEBUG] Receipt JWT claims: ' . \json_encode($receiptClaims));
-            } else {
-                Console::log('[ORIGIN DEBUG] installation_receipt is not a JWT: ' . $installationReceipt);
-            }
-        } else {
-            Console::log('[ORIGIN DEBUG] No installation_receipt received');
+        // Authenticate the callback before trusting anything else on it: the
+        // endpoint is public and Origin performs no token exchange, so the
+        // EdDSA-signed receipt is the only proof the request came from Cursor.
+        // The Cursor adapter expects its secret as a JSON object.
+        $oauth2 = new OAuth2Cursor(
+            System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', ''),
+            \json_encode(['privateKey' => System::getEnv('_APP_VCS_ORIGIN_PRIVATE_KEY', '')]),
+            ''
+        );
+
+        try {
+            $receiptClaims = $oauth2->verifyReceipt($installationReceipt);
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not verify the Origin installation receipt. Please restart the installation from the Appwrite Console.');
         }
 
+        // The receipt's subject is the authoritative installation id; a
+        // separately passed installation_id may only confirm it.
+        $receiptInstallationId = \strval($receiptClaims['sub'] ?? '');
+        if (!empty($providerInstallationId) && $providerInstallationId !== $receiptInstallationId) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Receipt subject does not match the installation ID.');
+        }
+        $providerInstallationId = $receiptInstallationId;
+
+        // Cursor echoes the state given to the install URL as a receipt claim;
+        // accept a query parameter carrying the same value as a fallback.
+        $state = !empty($state) ? $state : \strval($receiptClaims['state'] ?? '');
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
         }
 
         $state = \json_decode($state, true) ?? [];
-        $redirectFailure = $state['failure'] ?? '';
         $projectId = $state['projectId'] ?? '';
+        $redirectFailure = $state['failure'] ?? '';
 
-        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
-        Console::log('[ORIGIN DEBUG] Decoded state: ' . \json_encode($state));
-
-        // This endpoint is public and Origin performs no token exchange --
-        // without verifying the signature the Authorize action put in state,
-        // anyone could pass an arbitrary projectId here and attach an
-        // installation to another project.
+        // The receipt authenticates Cursor, and this HMAC authenticates the
+        // Appwrite Console that started the flow -- without it anyone could
+        // attach an installation to an arbitrary projectId.
         $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
         if (!\hash_equals($signature, $state['signature'] ?? '')) {
-            // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
-            Console::log('[ORIGIN DEBUG] State signature mismatch, rejecting callback');
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
-        Console::log('[ORIGIN DEBUG] State signature valid');
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -138,35 +127,18 @@ class Get extends Action
             return;
         }
 
-        // Authenticate the callback by verifying the installation receipt
-        // against Cursor's published JWKS. This proves the request genuinely
-        // originates from Origin (the callback is public and has no token
-        // exchange) before any installation is created.
-        // The Cursor adapter expects its secret as a JSON object.
-        $oauth2 = new OAuth2Cursor(
-            System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', ''),
-            \json_encode(['privateKey' => System::getEnv('_APP_VCS_ORIGIN_PRIVATE_KEY', '')]),
-            ''
-        );
-
+        // The receipt names the workspace by its stable id; the owner slug the
+        // rest of the integration works with comes from the installation itself.
+        $organization = \strval($receiptClaims['namespace_id'] ?? '');
         try {
-            $receiptClaims = $oauth2->verifyReceipt($installationReceipt);
-
-            // Bind the receipt to the installation id in the callback so a
-            // valid receipt cannot be replayed to attach a different
-            // installation.
-            if (($receiptClaims['sub'] ?? '') !== $providerInstallationId) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Receipt subject does not match installation ID');
-            }
+            $adapter = $vcsFactory->fromInstallation(new Document([
+                'provider' => 'origin',
+                'providerInstallationId' => $providerInstallationId,
+            ]));
+            $organization = $adapter->getOwnerName($providerInstallationId);
         } catch (\Throwable $e) {
-            Console::log('[ORIGIN DEBUG] Receipt verification failed: ' . $e->getMessage());
-            $this->failure($response, $redirectFailure, 'Could not verify the Origin installation receipt.');
-            return;
+            Console::warning('Failed to resolve Origin installation owner: ' . $e->getMessage());
         }
-
-        // The Cursor namespace (team/workspace) owning the installation.
-        $organization = $receiptClaims['namespace_id'] ?? '';
-        Console::log('[ORIGIN DEBUG] Receipt verified, namespace_id: "' . $organization . '"');
 
         $projectInternalId = $project->getSequence();
 
@@ -189,18 +161,11 @@ class Get extends Action
                 'organization' => $organization,
                 'personal' => false,
             ]));
-
-            // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
-            Console::log('[ORIGIN DEBUG] Created installation "' . $installation->getId() . '" for project "' . $projectId . '"');
         } else {
             $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
                 'organization' => $organization,
             ]));
-
-            Console::log('[ORIGIN DEBUG] Installation already exists: "' . $installation->getId() . '"');
         }
-
-        Console::log('[ORIGIN DEBUG] Redirecting to success URL: ' . $redirectSuccess);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -213,9 +178,6 @@ class Get extends Action
      */
     private function failure(Response $response, string $redirect, string $error, string $type = Exception::GENERAL_ARGUMENT_INVALID): void
     {
-        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
-        Console::log('[ORIGIN DEBUG] Callback failed: ' . $error . ' (redirect: "' . $redirect . '")');
-
         if (empty($redirect)) {
             throw new Exception($type, $error);
         }
@@ -226,5 +188,4 @@ class Get extends Action
             ->addHeader('Pragma', 'no-cache')
             ->redirect($redirect . $separator . \http_build_query(['error' => $error]));
     }
-
 }

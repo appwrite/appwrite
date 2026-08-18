@@ -5,6 +5,7 @@
  */
 
 use Appwrite\Auth\OAuth2\Bitbucket as OAuth2Bitbucket;
+use Appwrite\Auth\OAuth2\Cursor as OAuth2Cursor;
 use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
@@ -12,6 +13,7 @@ use Utopia\VCS\Adapter\Git\Bitbucket;
 use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Adapter\Git\GitLab;
+use Utopia\VCS\Adapter\Git\Origin;
 
 return [
     'github' => [
@@ -60,6 +62,26 @@ return [
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_SECRET'],
             'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_WEBHOOK_SECRET'],
+        ],
+    ],
+    'origin' => [
+        'adapter' => Origin::class,
+        // Origin apps authenticate like GitHub Apps (an app-signed JWT minting
+        // installation tokens), so the same Ed25519 private key doubles as the
+        // OAuth2 secret. Auth\OAuth2\Cursor expects it JSON-wrapped, the way
+        // Apple does.
+        'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Cursor($clientId, \json_encode([
+            'privateKey' => $clientSecret,
+        ]), ''),
+        'variables' => [
+            'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_CLIENT_ID'],
+            // Factory::fromInstallation() reads appId + privateKey; the app id
+            // and OAuth2 client id are the same value on Origin.
+            'appId' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_CLIENT_ID'],
+            'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_PRIVATE_KEY'],
+            'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_PRIVATE_KEY'],
+            // No webhookSecret: Origin signs deliveries with its own Ed25519
+            // key, verified against its published JWKS instead of a shared secret.
         ],
     ],
     'bitbucket' => [

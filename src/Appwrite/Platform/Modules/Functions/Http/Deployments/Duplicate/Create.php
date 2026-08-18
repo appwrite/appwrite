@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\SourceArchive;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
@@ -67,6 +68,7 @@ class Create extends Action
             ->inject('deployments')
             ->inject('deviceForFunctions')
             ->inject('vcsFactory')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -81,6 +83,7 @@ class Create extends Action
         Deployments $deployments,
         Device $deviceForFunctions,
         VcsFactory $vcsFactory,
+        array $platform,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -157,12 +160,13 @@ class Create extends Action
             $github = $vcsFactory->fromInstallation($installation);
 
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
+            [$sourceUrl, $sourceHeaders] = SourceArchive::presign($github, $installation->getAttribute('providerInstallationId', ''), $owner, $repository, $ref, $platform);
             $deployment = $deployments->createFromUrl(
                 $function,
                 $deployment,
-                $github->getRepositoryPresignedUrl($owner, $repository, $ref),
+                $sourceUrl,
                 $deployment->getAttribute('providerRootDirectory', ''),
-                $github->getRepositoryPresignedUrlHeaders(),
+                $sourceHeaders,
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,

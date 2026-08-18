@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
+use Appwrite\Vcs\SourceArchive;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -391,13 +392,14 @@ trait Deployment
 
                 // The Deployments service is built per repository: a webhook fans out to
                 // many tenant projects, each with its own database.
+                [$sourceUrl, $sourceHeaders] = SourceArchive::presign($vcs, $providerInstallationId, $providerRepositoryOwner, $providerRepositoryName, $providerCommitHash, $platform);
                 $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
                     ->createFromUrl(
                         $resource,
                         $deployment,
-                        $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
+                        $sourceUrl,
                         $resource->getAttribute('providerRootDirectory', ''),
-                        $vcs->getRepositoryPresignedUrlHeaders(),
+                        $sourceHeaders,
                     ));
 
                 if ($resource->getCollection() === 'sites') {

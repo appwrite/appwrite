@@ -11,7 +11,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -19,6 +18,22 @@ use Utopia\System\System;
 class Get extends Action
 {
     use HTTP;
+
+    /**
+     * Everything the integration touches: cloning sources, pushing templates,
+     * deploying from pull requests, commenting on them, and reporting build
+     * checks. repository:metadata:read is granted implicitly.
+     */
+    public const SCOPES = [
+        'repository:contents:read',
+        'repository:contents:write',
+        'repository:pull_requests:read',
+        'repository:pull_requests:write',
+        'repository:pull_requests:reviews:read',
+        'repository:pull_requests:reviews:write',
+        'repository:checks:read',
+        'repository:checks:write',
+    ];
 
     public static function getName()
     {
@@ -38,7 +53,7 @@ class Get extends Action
                 namespace: 'vcs',
                 group: 'installations',
                 name: 'createOriginInstallation',
-                description: 'Begin Appwrite\'s Origin app installation to set up version control integration. This endpoint responds with a redirect URL to the Origin app\'s installation page on Cursor. The Origin app must be configured in your environment for this endpoint to work.',
+                description: '/docs/references/vcs/create-origin-installation.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -56,6 +71,7 @@ class Get extends Action
             ->inject('response')
             ->inject('project')
             ->inject('platform')
+            ->inject('vcsConfigured')
             ->callback($this->action(...));
     }
 
@@ -64,25 +80,40 @@ class Get extends Action
         string $failure,
         Response $response,
         Document $project,
-        array $platform
+        array $platform,
+        callable $vcsConfigured,
     ) {
-        $clientId = System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID');
-
-        if (empty($clientId)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Origin client ID is not configured. Please configure VCS (Version Control System) variables in .env file.');
+        if (!$vcsConfigured('origin')) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'This endpoint is not implemented on this server. Please configure VCS (Version Control System) variables in .env file.');
         }
 
-        // The Cursor adapter expects its secret as a JSON object.
-        $oauth2 = new OAuth2Cursor($clientId, \json_encode(['privateKey' => System::getEnv('_APP_VCS_ORIGIN_PRIVATE_KEY', '')]), '');
-        $url = $oauth2->getLoginURL();
+        $projectId = $project->getId();
 
-        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
-        Console::log('[ORIGIN DEBUG] Authorize for project "' . $project->getId() . '" (success: "' . $success . '", failure: "' . $failure . '")');
-        Console::log('[ORIGIN DEBUG] Redirecting to install URL: ' . $url);
+        // The callback is public and Origin performs no token exchange, so the
+        // state carries an HMAC binding the redirect targets to this project.
+        $state = [
+            'projectId' => $projectId,
+            'success' => $success,
+            'failure' => $failure,
+            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+        ];
+
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $callback = $protocol . '://' . ($platform['consoleHostname'] ?? '') . '/v1/vcs/origin/callback';
+
+        // The Cursor adapter expects its secret as a JSON object; starting an
+        // install only needs the app ID, so the key may be left out here.
+        $oauth2 = new OAuth2Cursor(
+            System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', ''),
+            \json_encode(['privateKey' => System::getEnv('_APP_VCS_ORIGIN_PRIVATE_KEY', '')]),
+            $callback,
+            $state,
+            self::SCOPES
+        );
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($url);
+            ->redirect($oauth2->getLoginURL());
     }
 }

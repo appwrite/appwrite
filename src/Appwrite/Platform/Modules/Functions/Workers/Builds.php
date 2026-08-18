@@ -9,6 +9,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\SourceArchive;
 use Exception;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -401,12 +402,13 @@ class Builds extends Action
             // jobs-service like any other VCS commit, via the same Deployments
             // service the HTTP endpoints use.
             $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
+            [$sourceUrl, $sourceHeaders] = SourceArchive::presign($providerAdapter, $providerInstallationId, $cloneOwner, $cloneRepository, $ref, $platform);
             $deployments->createFromUrl(
                 $resource,
                 $deployment,
-                $providerAdapter->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
+                $sourceUrl,
                 $resource->getAttribute('providerRootDirectory', ''),
-                $providerAdapter->getRepositoryPresignedUrlHeaders(),
+                $sourceHeaders,
             );
 
             Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);

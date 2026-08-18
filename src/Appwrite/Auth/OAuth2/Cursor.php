@@ -47,8 +47,6 @@ class Cursor extends OAuth2
 
     public function getLoginURL(): string
     {
-        // The install page ignores redirect_uri and state parameters -- the
-        // callback URL is taken from the app's own configuration on Cursor.
         $params = [
             'client_id' => $this->appID,
         ];
@@ -60,6 +58,16 @@ class Cursor extends OAuth2
             $params['source'] = 'app-metadata';
         } else {
             $params['scope'] = \implode(' ', $this->getScopes());
+        }
+
+        // The callback must exactly match a redirect URI registered on the
+        // app; Cursor echoes state back as the receipt's `state` claim.
+        if (!empty($this->callback)) {
+            $params['redirect_uri'] = $this->callback;
+        }
+
+        if (!empty($this->state)) {
+            $params['state'] = \json_encode($this->state);
         }
 
         // The Origin console still lives under the /codebase path on cursor.com.
