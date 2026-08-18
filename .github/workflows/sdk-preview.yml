@@ -48,11 +48,11 @@ jobs:
 
       - name: Generate Specs
         run: |
-          docker compose exec appwrite specs --version=latest --mode=normal --git=no
+          docker compose exec -e _APP_SDK_PREVIEW=enabled appwrite specs --version=latest --mode=normal --git=no
 
       - name: Generate SDK
         run: |
-          docker compose exec appwrite sdks --platform=${{ steps.set-sdk.outputs.platform }} --sdk=${{ steps.set-sdk.outputs.sdk_type }} --version=latest --git=no
+          docker compose exec -e _APP_SDK_PREVIEW=enabled appwrite sdks --platform=${{ steps.set-sdk.outputs.platform }} --sdk=${{ steps.set-sdk.outputs.sdk_type }} --version=latest --git=no
           sudo chown -R $USER:$USER ./app/sdks/${{ steps.set-sdk.outputs.platform }}-${{ steps.set-sdk.outputs.sdk_type }}
 
       - name: Build and Publish SDK

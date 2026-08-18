@@ -126,6 +126,7 @@ trait ProjectCustom
                     'documents.write',
                     'rows.read',
                     'rows.write',
+                    'embeddings.write',
                     'files.read',
                     'files.write',
                     'buckets.read',

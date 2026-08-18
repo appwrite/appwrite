@@ -16,6 +16,7 @@ use Appwrite\Utopia\Response\Model\Any;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Spatial;
 use Utopia\Platform\Enum;
 use Utopia\Validator;
@@ -85,6 +86,7 @@ class OpenAPI3 extends Format
             'Project' => '<YOUR_PROJECT_ID>',
             'ProjectPath' => '<YOUR_PROJECT_ID>',
             'Key' => '<YOUR_API_KEY>',
+            'Organization' => '<YOUR_ORGANIZATION_ID>',
             'JWT' => '<YOUR_JWT>',
             'Locale' => 'en',
             'Mode' => '',
@@ -142,7 +144,6 @@ class OpenAPI3 extends Format
                 'responses' => [],
                 'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
-                    'method' => $methodName,
                     'group' => $sdk->getGroup(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
@@ -456,12 +457,10 @@ class OpenAPI3 extends Format
 
                 $class = \get_class($validator);
 
-                $base = \get_parent_class($class);
-
-                switch ($base) {
-                    case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
-                        $class = $base;
-                        break;
+                // Every Queries validator serialises to an array of query strings, so
+                // normalise the whole hierarchy instead of enumerating each subclass.
+                if (\is_subclass_of($class, Queries::class)) {
+                    $class = Queries::class;
                 }
 
                 if ($class === \Utopia\Validator\AnyOf::class) {
@@ -568,10 +567,15 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'https://example.com';
                         break;
                     case \Utopia\Validator\JSON::class:
+                    case \Utopia\Validator\JSON\ObjectValidator::class:
                     case \Utopia\Validator\Assoc::class:
                         $node['schema']['type'] = 'object';
                         $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '{}';
+                        break;
+                    case \Utopia\Validator\JSON\ArrayValidator::class:
+                        $node['schema']['type'] = 'array';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '[]';
                         break;
                     case \Appwrite\Utopia\Request\Validator\File::class:
                         $consumes = ['multipart/form-data'];
@@ -588,36 +592,7 @@ class OpenAPI3 extends Format
                             $node['schema']['x-example'] = $param['example'];
                         }
                         break;
-                    case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Columns::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Attributes::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Buckets::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Tables::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Collections::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Databases::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Deployments::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Executions::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Files::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Functions::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Identities::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Indexes::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Installations::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Branches::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Memberships::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Messages::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Migrations::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Projects::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Providers::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Rules::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Subscribers::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Targets::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Teams::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Topics::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Users::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Variables::class:
-                    case \Utopia\Database\Validator\Queries::class:
-                    case \Utopia\Database\Validator\Queries\Document::class:
-                    case \Utopia\Database\Validator\Queries\Documents::class:
+                    case Queries::class:
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',
@@ -832,15 +807,9 @@ class OpenAPI3 extends Format
             $methods = \array_values($route->getMethods());
             foreach ($methods as $index => $method) {
                 $methodTemp = $temp;
-                if (\count($methods) > 1) {
+                if (\count($methods) > 1 && $index > 0) {
                     $suffix = \ucfirst(\strtolower($method));
                     $methodTemp['operationId'] .= $suffix;
-
-                    // Keep the first method's SDK name stable while ensuring
-                    // additional HTTP methods generate unique SDK methods.
-                    if ($index > 0) {
-                        $methodTemp['x-appwrite']['method'] .= $suffix;
-                    }
                 }
                 $body = [
                     'content' => [
@@ -861,6 +830,13 @@ class OpenAPI3 extends Format
 
                     if ($parameterNode['path']) { // Param is in URL path (directly or through alias)
                         $node['in'] = 'path';
+                        // A route only matches when every path segment is present, so a
+                        // path parameter is always supplied whatever the PHP param says.
+                        // OpenAPI requires `required: true` here, and generators emit a
+                        // bare identifier for the path substitution — an optional one
+                        // becomes an undefined reference (Go) or interpolates the
+                        // absent value into the URL (Python).
+                        $node['required'] = true;
                         $methodTemp['parameters'][] = $node;
                     } elseif (\in_array($method, ['GET', 'DELETE'], true)) { // Param is in query
                         $node['in'] = 'query';

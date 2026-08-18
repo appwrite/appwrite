@@ -18,11 +18,6 @@ class XList extends TransactionsList
         return 'listDocumentsDBTransactions';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION_LIST;
-    }
-
     public function __construct()
     {
         $this

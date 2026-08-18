@@ -62,11 +62,6 @@ class ScheduleExecutions extends ScheduleBase
 
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
-                $dbForPlatform->deleteDocument(
-                    'schedules',
-                    $schedule['$id'],
-                );
-
                 unset($this->schedules[$schedule['$sequence']]);
                 continue;
             }
@@ -76,53 +71,29 @@ class ScheduleExecutions extends ScheduleBase
                 continue;
             }
 
-            $data = $dbForPlatform->getDocument(
-                'schedules',
-                $schedule['$id'],
-            )->getAttribute('data', []);
-
-            $functionId = $data['functionId'] ?? $schedule['resource']->getAttribute('resourceId', '');
-
-            if (empty($functionId)) {
-                Console::error("Missing functionId for scheduled execution {$schedule['resourceId']}, skipping");
-
-                $dbForPlatform->deleteDocument(
-                    'schedules',
-                    $schedule['$id'],
-                );
-
-                unset($this->schedules[$schedule['$sequence']]);
-                continue;
-            }
-
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
-            $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay) {
+                try {
+                    if ($delay > 0) {
+                        Co::sleep($delay);
+                    }
 
-            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay, $data, $functionId, $dbForPlatform) {
-                if ($delay > 0) {
-                    Co::sleep($delay);
+                    $publisherForFunctions->enqueue(new FunctionMessage(
+                        project: $schedule['project'],
+                        functionId: $schedule['resource']->getAttribute('resourceId', ''),
+                        execution: new Document([
+                            '$id' => $schedule['resourceId'],
+                            'scheduleId' => $schedule['$id'],
+                        ]),
+                        type: 'schedule',
+                    ));
+
+                    $this->recordEnqueueDelay($scheduledAt);
+                    unset($this->schedules[$schedule['$sequence']]);
+                } catch (\Throwable $th) {
+                    Console::error("Failed to enqueue scheduled execution {$schedule['resourceId']}: {$th->getMessage()}");
                 }
-
-                $publisherForFunctions->enqueue(new FunctionMessage(
-                    project: $schedule['project'],
-                    userId: $data['userId'] ?? '',
-                    functionId: $functionId,
-                    execution: $schedule['resource'],
-                    type: 'schedule',
-                    body: $data['body'] ?? '',
-                    path: $data['path'] ?? '/',
-                    headers: $data['headers'] ?? [],
-                    method: $data['method'] ?? 'POST',
-                ));
-
-                $dbForPlatform->deleteDocument(
-                    'schedules',
-                    $schedule['$id'],
-                );
-
-                $this->recordEnqueueDelay($scheduledAt);
-                unset($this->schedules[$schedule['$sequence']]);
             });
         }
     }

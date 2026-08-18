@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Deployment\Detection;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
@@ -17,6 +18,7 @@ use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -30,8 +32,7 @@ use Utopia\System\System;
 /**
  * Applies open-runtimes jobs-service callbacks to a deployment. The API
  * callback endpoint verifies + enqueues the CloudEvent; this worker owns the
- * deployment state transitions (log streaming and the ready/failed outcome)
- * that the executor path performs inline in the Builds worker.
+ * deployment state transitions: log streaming and the ready/failed outcome.
  *
  * Callbacks arrive concurrently and out of order (one log line each), so
  * processing for a deployment is serialized under a per-deployment lock — that
@@ -77,6 +78,7 @@ class Jobs extends Action
             ->inject('locks')
             ->inject('platform')
             ->inject('plan')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -98,6 +100,7 @@ class Jobs extends Action
         callable $locks,
         array $platform,
         array $plan,
+        Bus $bus,
     ): void {
         $event = JobsMessage::fromArray($message->getPayload());
 
@@ -106,7 +109,7 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId): void {
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -124,9 +127,9 @@ class Jobs extends Action
 
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $vcsFactory, $platform),
-                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan),
-                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan),
+                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $deployment,
             };
 
@@ -205,6 +208,7 @@ class Jobs extends Action
         Cache $cache,
         array $platform,
         array $plan,
+        Bus $bus,
     ): Document {
         if (($data['artifactId'] ?? '') === 'manifest') {
             // A failed manifest degrades to an empty listing (detection
@@ -213,7 +217,7 @@ class Jobs extends Action
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
             $cache->save('jobs-manifest-' . $deployment->getId(), ['files' => \array_values($files)]);
 
-            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan);
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
 
         if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
@@ -253,14 +257,15 @@ class Jobs extends Action
         Cache $cache,
         array $platform,
         array $plan,
+        Bus $bus,
     ): Document {
         if ($exitCode !== 0) {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         $cache->save('jobs-exit-' . $deployment->getId(), true);
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan);
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
     }
 
     /**
@@ -280,10 +285,11 @@ class Jobs extends Action
         Cache $cache,
         array $platform,
         array $plan,
+        Bus $bus,
     ): Document {
         $cache->save('jobs-complete-' . $deployment->getId(), true);
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan);
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
     }
 
     /**
@@ -303,6 +309,7 @@ class Jobs extends Action
         Cache $cache,
         array $platform,
         array $plan,
+        Bus $bus,
     ): Document {
         if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
             return $deployment; // already finalized
@@ -323,13 +330,13 @@ class Jobs extends Action
         if ($isSite) {
             [$deployment, $mismatch] = $this->detect($dbForProject, $deployment, (array) ($manifest['files'] ?? []));
             if ($mismatch !== null) {
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $mismatch, $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform);
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $mismatch, $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
         }
 
         $path = (string) $deployment->getAttribute('buildPath', '');
         if ($path === '' || ! $deviceForBuilds->exists($path)) {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         $size = $deviceForBuilds->getFileSize($path);
@@ -340,10 +347,10 @@ class Jobs extends Action
         if ($limit !== 0 && $size > $limit) {
             $deviceForBuilds->delete($path);
 
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
-        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $size);
+        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus, $size);
     }
 
     /**
@@ -397,6 +404,7 @@ class Jobs extends Action
         ScreenshotPublisher $publisherForScreenshots,
         VcsFactory $vcsFactory,
         array $platform,
+        Bus $bus,
         int $buildSize = 0,
     ): Document {
         $collection = $deployment->getAttribute('resourceType', 'functions');
@@ -427,13 +435,13 @@ class Jobs extends Action
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
         if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
-            $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment);
+            $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
         }
 
         if ($applied > 0 && $success && $collection === 'sites' && ! $resource->isEmpty()) {
             // Every successful site build, activated or not, repoints the
             // branch preview rule and refreshes the console screenshots.
-            Base::activateBranchPreviewRule($project, $resource, $deployment, $dbForPlatform, $platform['sitesDomain']);
+            Base::activateBranchPreviewRule($project, $resource, $deployment, $dbForPlatform, $bus, $platform['sitesDomain']);
             $publisherForScreenshots->enqueue(new \Appwrite\Event\Message\Screenshot(
                 project: $project,
                 deploymentId: $deployment->getId(),
@@ -524,7 +532,7 @@ class Jobs extends Action
      * Point the resource at this deployment (auto-activate). Mirrors the
      * essential activation from the Builds worker.
      */
-    protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment): void
+    protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
     {
         $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
             'live' => true,
@@ -533,11 +541,12 @@ class Jobs extends Action
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ]));
 
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
-            $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'deploymentId' => $deployment->getId(),
                 'deploymentInternalId' => $deployment->getSequence(),
             ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
         }, [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),

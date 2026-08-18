@@ -54,7 +54,7 @@ return [
             ],
             [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
-                'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443, and you have set up wildcard certificates with DNS challenge.',
+                'description' => 'Controls whether Appwrite generates HTTPS API URLs and enforces HTTPS for incoming API requests. Set to \'enabled\' whenever the public API is served over HTTPS, including when TLS is terminated by a reverse proxy. When enabled, HTTP GET requests are redirected to HTTPS and other HTTP requests are rejected. The default value is \'disabled\' to support local and plain HTTP installations.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
@@ -84,6 +84,15 @@ return [
                 'description' => 'Protects server from serving requests from unknown hostnames, and from serving Console for custom project domains. By default, set to \'disabled\'. To start router protection, set to \'enabled\'. It is recommended to enable this variable on production environment.',
                 'introduction' => '1.4.4',
                 'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ROUTER_AUTO_CERTIFICATES',
+                'description' => 'Allows Appwrite to automatically issue TLS certificates for function and site domains. By default, set to \'enabled\'. Set to \'disabled\' when a wildcard TLS certificate already covers those domains, for example one issued through Traefik\'s DNS challenge.',
+                'introduction' => '',
+                'default' => 'enabled',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -207,7 +216,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
-                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.',
+                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses or wildcard domains, such as *@appwrite.io, separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -318,6 +327,15 @@ return [
                 'description' => 'This variable allows you to enable logging errors to third party providers. This value is empty by default, set a DSN value to one of the following `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`, , `logowl://SERVICE_TICKET@SERIVCE_HOST/` `raygun://RAYGUN_API_KEY/`, `appSignal://API_KEY/` to enable the logger.\n\nFor versions prior `1.5.6` you can use the old syntax.\n\nOld syntax: If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
                 'introduction' => '0.12.0',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LOGGING_FORMAT',
+                'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
+                'introduction' => '1.9.6',
+                'default' => 'pretty',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -989,17 +1007,17 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_BUILDS_BACKEND',
-                'description' => 'Backend that builds manual-upload function deployments: "executor" (default; the open-runtimes executor, via the Builds worker) or "orchestrator" (the open-runtimes jobs-service, submitted in the request flow). Other build flows always use the executor.',
-                'introduction' => '1.9.0',
-                'default' => 'executor',
+                'name' => '_APP_EXECUTOR_CONNECTION_STORAGE',
+                'description' => "DSN for Open Runtimes executor storage. When `_APP_STORAGE_DEVICE` is not local, point this at the same backend so the executor can read deployment artifacts. Defaults to `local://localhost`.\n\nExamples:\n- Local: `local://localhost`\n- AWS S3: `s3://ACCESS_KEY:SECRET@BUCKET.s3.REGION.amazonaws.com?region=REGION`\n- S3-compatible: `s3://ACCESS_KEY:SECRET@localhost/BUCKET?region=REGION&url=http%3A%2F%2Fminio%3A9000`",
+                'introduction' => '1.9.5',
+                'default' => 'local://localhost',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_BUILDS_VOLUME',
-                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by. Only used when _APP_BUILDS_BACKEND is "orchestrator".',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
                 'introduction' => '1.9.0',
                 'default' => 'appwrite-builds',
                 'required' => false,
@@ -1182,6 +1200,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_FUNCTIONS_SCHEDULE_SPREAD',
+                'description' => 'Number of seconds over which scheduled executions sharing the same cron slot are spread, using a stable per-function offset, so they don\'t all start in the same second. Each function keeps a consistent slot within the window, preserving exact run intervals. The default value is 0 (disabled): every execution is enqueued at the exact cron time.',
+                'introduction' => '2.0.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
@@ -1332,6 +1359,33 @@ return [
             [
                 'name' => '_APP_VCS_GITLAB_WEBHOOK_SECRET',
                 'description' => 'Secret used to validate incoming GitLab webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_CLIENT_ID',
+                'description' => 'Bitbucket OAuth2 consumer key. You can generate one in your Bitbucket workspace under Settings > OAuth consumers.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_CLIENT_SECRET',
+                'description' => 'Bitbucket OAuth2 consumer secret. You can generate one in your Bitbucket workspace under Settings > OAuth consumers.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming Bitbucket webhook payloads.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,

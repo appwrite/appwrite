@@ -31,6 +31,9 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10_000;
+const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
+const APP_LIMIT_USER_SESSIONS_MAX = 100;
+const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20_000_000; //20MB
 const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
 const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
@@ -52,7 +55,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4326;
-const APP_VERSION_STABLE = '1.9.5';
+const APP_VERSION_STABLE = '1.9.6';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -111,6 +114,7 @@ const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_VCS_GITEA_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_VCS_GITLAB_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
+const APP_VCS_BITBUCKET_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Embeddings
@@ -274,6 +278,7 @@ const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
+const APP_AUTH_TYPE_ORGANIZATION = 'Organization';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 const APP_LIMIT_UPLOAD_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB

@@ -72,7 +72,7 @@ class Create extends Action
                 Database::RELATION_MANY_TO_ONE,
                 Database::RELATION_MANY_TO_MANY,
                 Database::RELATION_ONE_TO_MANY
-            ], true), 'Relation type', enum: new Enum(name: 'RelationshipType'))
+            ], true), 'Relationship type. Possible values are: oneToOne, oneToMany, manyToOne, manyToMany.', enum: new Enum(name: 'RelationshipType'))
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
             ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Attribute Key.', true, ['dbForProject'])
             ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Attribute Key.', true, ['dbForProject'])
@@ -80,7 +80,7 @@ class Create extends Action
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
                 Database::RELATION_MUTATE_SET_NULL
-            ], true), 'Constraints option', true, enum: new Enum(name: 'RelationMutate'))
+            ], true), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDatabase')

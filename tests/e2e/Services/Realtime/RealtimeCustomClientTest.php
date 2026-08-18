@@ -3180,8 +3180,22 @@ final class RealtimeCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]);
 
-        $response = json_decode($client->receive(), true);
+        // The row seed above fires an async .create broadcast on the channels just
+        // subscribed to, and its fanout can land on this connection before the
+        // connected frame is written. Skip event frames until the handshake; any
+        // other frame type falls through to the assertions below.
+        $response = null;
+        $deadline = \time() + 10;
+        while (\time() < $deadline) {
+            $frame = json_decode($client->receive(), true);
+            if (($frame['type'] ?? '') === 'event') {
+                continue;
+            }
+            $response = $frame;
+            break;
+        }
 
+        $this->assertNotNull($response, 'Timed out waiting for the connected frame');
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('connected', $response['type']);

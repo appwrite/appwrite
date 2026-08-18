@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
+use Appwrite\Auth\Key;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -55,7 +56,7 @@ class Create extends Base
                 
                 You can also create an ephemeral API key if you need a short-lived key instead.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -72,6 +73,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -85,7 +87,13 @@ class Create extends Base
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
+        ?Key $apiKey,
     ) {
+        // Dynamic supported for backwards compatibility
+        if ($apiKey !== null && \in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_EPHEMERAL, 'dynamic'], true)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         $keyId = ($keyId == 'unique()') ? ID::unique() : $keyId;
 
         $key = new Document([

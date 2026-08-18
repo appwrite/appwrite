@@ -101,6 +101,7 @@ services:
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
+      - _APP_ROUTER_AUTO_CERTIFICATES
       - _APP_OPENSSL_KEY_V1
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
@@ -172,12 +173,12 @@ services:
       - _APP_DOMAIN_SITES
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_BUILDS_BACKEND
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
       - _APP_JOBS_ENDPOINT
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_LOCKING_ENABLED
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -207,6 +208,9 @@ services:
       - _APP_VCS_GITLAB_CLIENT_ID
       - _APP_VCS_GITLAB_CLIENT_SECRET
       - _APP_VCS_GITLAB_WEBHOOK_SECRET
+      - _APP_VCS_BITBUCKET_CLIENT_ID
+      - _APP_VCS_BITBUCKET_CLIENT_SECRET
+      - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -229,7 +233,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:0.3.32
+    image: appwrite/new:0.5.5
     restart: unless-stopped
     networks:
       - appwrite
@@ -301,6 +305,7 @@ services:
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
       - _APP_POOL_ADAPTER=swoole
@@ -339,6 +344,7 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_CONSOLE_URL_SCHEME=root
@@ -405,6 +411,7 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_DATABASE_SHARED_TABLES
@@ -450,6 +457,7 @@ services:
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-builds:
@@ -491,6 +499,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
@@ -502,6 +511,9 @@ services:
       - _APP_VCS_GITLAB_CLIENT_ID
       - _APP_VCS_GITLAB_CLIENT_SECRET
       - _APP_VCS_GITLAB_WEBHOOK_SECRET
+      - _APP_VCS_BITBUCKET_CLIENT_ID
+      - _APP_VCS_BITBUCKET_CLIENT_SECRET
+      - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_WEBHOOK_URL
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
@@ -540,7 +552,6 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
       - _APP_DOMAIN_SITES
-      - _APP_BUILDS_BACKEND
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
@@ -584,6 +595,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -614,6 +626,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -757,6 +770,43 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
+      - _APP_DATABASE_SHARED_TABLES
+
+  appwrite-worker-executions:
+    entrypoint: worker-executions
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker-executions
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - ${_APP_DB_HOST:-postgresql}
+      - appwrite-embedding
+    environment:
+      - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
+      - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-functions:
@@ -802,6 +852,7 @@ services:
       - _APP_DOCKER_HUB_USERNAME
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_LOGGING_PROVIDER
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-mails:
@@ -817,7 +868,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -844,6 +895,7 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
@@ -862,7 +914,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -887,6 +939,7 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
@@ -924,6 +977,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
       - _APP_SMS_PROJECTS_DENY_LIST
@@ -992,6 +1046,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_DATABASE_SHARED_TABLES
@@ -999,7 +1054,7 @@ services:
       - _APP_MIGRATION_HOST
   appwrite-task-maintenance:
     entrypoint: maintenance
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1014,6 +1069,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_DOMAIN
@@ -1023,6 +1079,8 @@ services:
       - _APP_DOMAIN_TARGET_CAA
       - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
+      - _APP_EDITION
+      - _APP_ROUTER_AUTO_CERTIFICATES
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -1046,7 +1104,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-interval:
     entrypoint: interval
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1061,6 +1119,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_DOMAIN
@@ -1088,7 +1147,7 @@ services:
 
   appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1104,6 +1163,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1125,9 +1185,10 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_FUNCTIONS_SCHEDULE_SPREAD
   appwrite-task-scheduler-executions:
     entrypoint: schedule-executions
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1143,6 +1204,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1166,7 +1228,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1182,6 +1244,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1216,7 +1279,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: appwrite/geo:0.3.0
+    image: appwrite/geo:0.3.1
     restart: unless-stopped
     networks:
       - appwrite
@@ -1249,8 +1312,6 @@ services:
       - appwrite-sites:/storage/sites:rw
       - /tmp:/tmp:rw
     environment:
-      - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
-      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
       - OPR_EXECUTOR_IMAGES=$_APP_EXECUTOR_IMAGES
       - OPR_EXECUTOR_INACTIVE_THRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
@@ -1263,28 +1324,8 @@ services:
       - OPR_EXECUTOR_RUNTIME_VERSIONS=v5
       - OPEN_RUNTIMES_NFT=$_APP_OPEN_RUNTIMES_NFT
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
-      - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
-      - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
-      - OPR_EXECUTOR_STORAGE_S3_SECRET=$_APP_STORAGE_S3_SECRET
-      - OPR_EXECUTOR_STORAGE_S3_REGION=$_APP_STORAGE_S3_REGION
-      - OPR_EXECUTOR_STORAGE_S3_BUCKET=$_APP_STORAGE_S3_BUCKET
-      - OPR_EXECUTOR_STORAGE_S3_ENDPOINT=$_APP_STORAGE_S3_ENDPOINT
-      - OPR_EXECUTOR_STORAGE_DO_SPACES_ACCESS_KEY=$_APP_STORAGE_DO_SPACES_ACCESS_KEY
-      - OPR_EXECUTOR_STORAGE_DO_SPACES_SECRET=$_APP_STORAGE_DO_SPACES_SECRET
-      - OPR_EXECUTOR_STORAGE_DO_SPACES_REGION=$_APP_STORAGE_DO_SPACES_REGION
-      - OPR_EXECUTOR_STORAGE_DO_SPACES_BUCKET=$_APP_STORAGE_DO_SPACES_BUCKET
-      - OPR_EXECUTOR_STORAGE_BACKBLAZE_ACCESS_KEY=$_APP_STORAGE_BACKBLAZE_ACCESS_KEY
-      - OPR_EXECUTOR_STORAGE_BACKBLAZE_SECRET=$_APP_STORAGE_BACKBLAZE_SECRET
-      - OPR_EXECUTOR_STORAGE_BACKBLAZE_REGION=$_APP_STORAGE_BACKBLAZE_REGION
-      - OPR_EXECUTOR_STORAGE_BACKBLAZE_BUCKET=$_APP_STORAGE_BACKBLAZE_BUCKET
-      - OPR_EXECUTOR_STORAGE_LINODE_ACCESS_KEY=$_APP_STORAGE_LINODE_ACCESS_KEY
-      - OPR_EXECUTOR_STORAGE_LINODE_SECRET=$_APP_STORAGE_LINODE_SECRET
-      - OPR_EXECUTOR_STORAGE_LINODE_REGION=$_APP_STORAGE_LINODE_REGION
-      - OPR_EXECUTOR_STORAGE_LINODE_BUCKET=$_APP_STORAGE_LINODE_BUCKET
-      - OPR_EXECUTOR_STORAGE_WASABI_ACCESS_KEY=$_APP_STORAGE_WASABI_ACCESS_KEY
-      - OPR_EXECUTOR_STORAGE_WASABI_SECRET=$_APP_STORAGE_WASABI_SECRET
-      - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
-      - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
+      - OPR_EXECUTOR_CONNECTION_STORAGE=${_APP_EXECUTOR_CONNECTION_STORAGE:-local://localhost}
+      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
     healthcheck:
       test:
         - CMD-SHELL
@@ -1303,7 +1344,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.13.0
+    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.18.0
     restart: unless-stopped
     user: root
     networks:
@@ -1314,7 +1355,7 @@ services:
       - ORCHESTRATOR_BACKEND=docker
       - ORCHESTRATOR_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator-jobs:8080
-      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.13.0
+      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.18.0
 
   mariadb:
     image: mariadb:10.11
@@ -1354,7 +1395,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    restart: on-failure:3
+    restart: unless-stopped
     networks:
       - appwrite
     volumes:

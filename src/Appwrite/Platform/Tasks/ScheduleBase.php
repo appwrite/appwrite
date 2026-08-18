@@ -36,6 +36,18 @@ abstract class ScheduleBase extends Action
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
 
+    /**
+     * Deterministic per-resource offset, in seconds, within [0, $window).
+     *
+     * Schedules that share a cron slot are spread across the window instead
+     * of all being enqueued in the same second, while each resource keeps a
+     * stable slot so run intervals stay exact.
+     */
+    public static function spreadOffset(string $resourceId, int $window): int
+    {
+        return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
+    }
+
     protected function loadResource(Document $project, callable $getProjectDB, array $schedule): Document
     {
         return $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
@@ -124,6 +136,8 @@ abstract class ScheduleBase extends Action
         $initialLoad = $lastSyncUpdate === "0";
         $loadStart = microtime(true);
         $time = DateTime::now();
+
+        Console::info("[schedule-timing] collectSchedules start (initial=" . ($initialLoad ? 'true' : 'false') . ")");
 
         $limit = 10_000;
         $sum = $limit;
@@ -230,19 +244,35 @@ abstract class ScheduleBase extends Action
             $batchSize = APP_DATABASE_QUERY_MAX_VALUES_WORKER;
             $batches = array_chunk($projectIdsToLoad, $batchSize);
             $projectsLoadStart = microtime(true);
+            $dbQueryDuration = 0;
+            $transformDuration = 0;
 
             foreach ($batches as $batch) {
-                $documents = $dbForPlatform->find('projects', [
-                    Query::equal('$id', $batch),
-                    Query::limit(count($batch)),
-                ]);
+                $dbStart = microtime(true);
+                // The project's subquery attributes cost one query each, per project — five
+                // thousand extra queries for a batch of a thousand projects — and no
+                // schedule task reads them. The only attributes used here are accessedAt,
+                // teamId, database and the sequence, and the documents enqueued for the
+                // workers are reloaded there by id, so the stripped arrays never reach the
+                // code that needs them. Same group Action::$filters marks as Project.
+                $documents = $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->find('projects', [
+                        Query::equal('$id', $batch),
+                        Query::limit(count($batch)),
+                    ]),
+                    ['subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryBlocks', 'subQueryDevKeys']
+                );
+                $dbQueryDuration += microtime(true) - $dbStart;
 
+                $transformStart = microtime(true);
                 foreach ($documents as $document) {
                     $map[$document->getId()] = $document;
                 }
+                $transformDuration += microtime(true) - $transformStart;
             }
 
             $projectsLoadDuration = microtime(true) - $projectsLoadStart;
+            Console::info("[schedule-timing] projects load: batch size=" . count($projectIdsToLoad) . " db query=" . round($dbQueryDuration * 1000) . "ms transform=" . round($transformDuration * 1000) . "ms total=" . round($projectsLoadDuration * 1000) . "ms");
             Console::success("Projects map loaded in " . $projectsLoadDuration . " seconds with " . count($projectIdsToLoad) . " new projects (total: " . count($map) . " projects)");
         } else {
             Console::success("No new projects to load (using " . count($map) . " cached projects)");
@@ -307,6 +337,7 @@ abstract class ScheduleBase extends Action
         $duration = microtime(true) - $loadStart;
         $this->collectSchedulesTelemetryDuration->record($duration, ['initial' => $initialLoad, 'resourceType' => static::getSupportedResource()]);
         $this->collectSchedulesTelemetryCount->record($total, ['initial' => $initialLoad, 'resourceType' => static::getSupportedResource()]);
+        Console::info("[schedule-timing] collectSchedules total: " . round($duration * 1000) . "ms (initial=" . ($initialLoad ? 'true' : 'false') . ", {$total} " . static::getName() . ")");
         Console::success("Timer loaded {$total} " . static::getName() . " in " . $duration . " seconds");
     }
 

@@ -234,6 +234,12 @@ class Specs extends Action
                     'description' => 'Your secret API key',
                     'in' => 'header',
                 ],
+                'Organization' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Organization',
+                    'description' => 'Your organization ID',
+                    'in' => 'header',
+                ],
                 'JWT' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-JWT',
@@ -325,6 +331,12 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Key',
                     'description' => 'Your secret API key',
+                    'in' => 'header',
+                ],
+                'Organization' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Organization',
+                    'description' => 'Your organization ID',
                     'in' => 'header',
                 ],
                 'JWT' => [
@@ -767,7 +779,10 @@ class Specs extends Action
                     $parsedSpecs = $specs->parse();
                     $this->verifyParsedSpec($parsedSpecs);
                 } catch (\RuntimeException $e) {
-                    throw new \RuntimeException("Spec generation failed for {$platform} ({$format}): " . $e->getMessage(), 0, $e);
+                    // A throw is reported and carried on from, so stop here
+                    Console::error("Spec generation failed for {$platform} ({$format}): " . $e->getMessage());
+                    Console::exit(1);
+                    return;
                 }
 
                 $encodedSpecs = \json_encode($parsedSpecs, JSON_PRETTY_PRINT);

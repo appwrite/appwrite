@@ -163,6 +163,10 @@ return [
         'description' => 'Access to create, update, and delete database table rows',
         'category' => 'Databases',
     ],
+    'embeddings.write' => [
+        'description' => 'Access to generate vector embeddings',
+        'category' => 'Databases',
+    ],
     'collections.read' => [
         'description' => 'Access to read database collections',
         'category' => 'Databases',

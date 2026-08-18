@@ -1160,7 +1160,7 @@ trait MessagingBase
         ]);
         $this->assertEquals(201, $response2['headers']['status-code']);
         $this->assertEquals('my-app2', $response2['body']['name']);
-        $this->assertEquals(1, \count($response2['body']['subscribe']));
+        $this->assertSame(1, \count($response2['body']['subscribe']));
     }
 
     public function testUpdateTopic(): void
@@ -1221,7 +1221,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(0, \count($response['body']['topics']));
+        $this->assertSame(0, \count($response['body']['topics']));
 
         return $topicId;
     }
@@ -1571,7 +1571,7 @@ trait MessagingBase
 
         $targetList = $response['body'];
         $this->assertEquals(2, $targetList['total']);
-        $this->assertEquals(2, count($targetList['targets']));
+        $this->assertSame(2, count($targetList['targets']));
         $this->assertEquals($message['targets'][0], $targetList['targets'][0]['$id']);
         $this->assertEquals($message['targets'][1], $targetList['targets'][1]['$id']);
 
@@ -1588,7 +1588,7 @@ trait MessagingBase
             ]
         ]);
         $this->assertEquals(2, $response['body']['total']);
-        $this->assertEquals(1, count($response['body']['targets']));
+        $this->assertSame(1, count($response['body']['targets']));
         $this->assertEquals($targetList['targets'][1]['$id'], $response['body']['targets'][0]['$id']);
 
         // Test for empty targets
@@ -1617,7 +1617,7 @@ trait MessagingBase
 
         $targetList = $response['body'];
         $this->assertEquals(0, $targetList['total']);
-        $this->assertEquals(0, count($targetList['targets']));
+        $this->assertSame(0, count($targetList['targets']));
     }
 
     public function testCreateDraftEmail(): void
@@ -1638,7 +1638,7 @@ trait MessagingBase
 
         $user1 = $response['body'];
 
-        $this->assertEquals(1, \count($user1['targets']));
+        $this->assertSame(1, \count($user1['targets']));
         $targetId1 = $user1['targets'][0]['$id'];
 
         // Create User 2
@@ -1656,7 +1656,7 @@ trait MessagingBase
         $this->assertEquals(201, $response['headers']['status-code'], "Error creating user: " . var_export($response['body'], true));
         $user2 = $response['body'];
 
-        $this->assertEquals(1, \count($user2['targets']));
+        $this->assertSame(1, \count($user2['targets']));
         $targetId2 = $user2['targets'][0]['$id'];
 
         // Create Email
@@ -1692,7 +1692,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(201, $user['headers']['status-code'], "Error creating user: " . var_export($user['body'], true));
-        $this->assertEquals(1, \count($user['body']['targets']));
+        $this->assertSame(1, \count($user['body']['targets']));
 
         // Create push target
         $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
@@ -1939,7 +1939,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
-        $this->assertEquals(
+        $this->assertSame(
             (new \DateTime($scheduledAt))->getTimestamp(),
             (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
         );
@@ -1990,7 +1990,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
-        $this->assertEquals(
+        $this->assertSame(
             (new \DateTime($scheduledAt))->getTimestamp(),
             (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
         );
@@ -2007,7 +2007,7 @@ trait MessagingBase
             ]);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals(MessageStatus::SCHEDULED, $response['body']['status']);
-            $this->assertEquals(
+            $this->assertSame(
                 (new \DateTime($scheduledAt))->getTimestamp(),
                 (new \DateTime($response['body']['scheduledAt']))->getTimestamp()
             );
@@ -2119,7 +2119,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
 
         return [
             'message' => $email['body'],
@@ -2190,7 +2190,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testSendSMS(): void
@@ -2308,7 +2308,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testUpdateSMS(): void
@@ -2371,7 +2371,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testSendPushNotification(): void
@@ -2486,7 +2486,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testCreatePushNotificationWithUsersRecipients(): void
@@ -2663,7 +2663,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     /**
@@ -2689,7 +2689,7 @@ trait MessagingBase
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        // Test for FAILURE
+        // A message already handed to the worker stays deletable.
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2701,14 +2701,17 @@ trait MessagingBase
             'content' => 'Test content',
         ]);
 
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $response = $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $response['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
+        // Test for FAILURE
         $response = $this->client->call(Client::METHOD_DELETE, '/messaging/messages/does_not_exist', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

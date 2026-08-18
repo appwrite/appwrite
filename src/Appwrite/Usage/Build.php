@@ -8,9 +8,9 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 
 /**
- * Emits build usage/billing metrics for a completed deployment. Shared by both
- * build backends — the executor (Builds worker) and the jobs-service (Jobs
- * worker) — so a build is counted identically however it was produced.
+ * Emits build usage/billing metrics for a completed deployment. Shared by the
+ * Jobs worker and the Builds worker, so a build is counted identically whether
+ * it finished on the jobs-service or failed before reaching it.
  */
 final class Build
 {

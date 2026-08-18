@@ -56,7 +56,7 @@ final class FunctionsScheduleTest extends Scope
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'timeout' => 10,
+            'timeout' => 30,
             'logging' => true,
         ]);
         $this->setupDeployment($functionId, [
@@ -99,6 +99,18 @@ final class FunctionsScheduleTest extends Scope
         $this->assertCount(1, $execution['body']['requestHeaders']);
         $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
         $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
+
+        $this->assertEventually(function () use ($functionId, $executionId) {
+            $execution = $this->getExecution($functionId, $executionId);
+
+            $this->assertEquals(200, $execution['headers']['status-code']);
+            $this->assertEquals('completed', $execution['body']['status']);
+            $this->assertStringContainsString('body-is-custom-body', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('custom-header-is-custom-value', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('method-is-patch', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('path-is-/custom-path', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('error-log-works', (string) $execution['body']['errors']);
+        }, 240000, 1000);
 
         /* Test for FAILURE */
         // Schedule synchronous execution
@@ -179,6 +191,74 @@ final class FunctionsScheduleTest extends Scope
             $this->assertEquals(404, $execution['headers']['status-code']);
         }, 15000, 500);
 
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testDeleteScheduledExecutionRequiresOwnership(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+            'logging' => true,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true
+        ]);
+
+        // A second function the scheduled execution does not belong to. It needs
+        // no deployment; the ownership guard runs before anything is executed.
+        $otherFunctionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Other',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT10H'));
+        $futureTime->setTime((int) $futureTime->format('H'), (int) $futureTime->format('i'), 0, 0);
+
+        $execution = $this->createExecution($functionId, [
+            'async' => true,
+            'scheduledAt' => $futureTime->format('Y-m-d H:i:s'),
+        ]);
+
+        $this->assertEquals(202, $execution['headers']['status-code']);
+
+        $executionId = $execution['body']['$id'] ?? '';
+        $this->assertNotEmpty($executionId);
+
+        /**
+         * Test for FAILURE
+         */
+        // Cancelling through a function that does not own the execution
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $otherFunctionId . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $execution['headers']['status-code']);
+        $this->assertEquals('execution_not_found', $execution['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // The execution is untouched, so the owning function can still cancel it
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $execution['headers']['status-code']);
+
+        $this->cleanupFunction($otherFunctionId);
         $this->cleanupFunction($functionId);
     }
 }
