@@ -233,6 +233,9 @@ flowchart TB
     productRealtime[Realtime]
   end
   services --> Executor & Queue & Cache & Browser & SMTP & Embeddings
+  Cache --> Database
+  Queue --> Workers
+  Executor --> openRuntimes[Open Runtimes]
 ```
 
 Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
