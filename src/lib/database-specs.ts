@@ -31,7 +31,7 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     memory: '-',
     storage: '-',
     connections: '-',
-    price: 'Pay as you go',
+    price: 'No compute fee',
   },
   {
     id: 'micro',
@@ -417,6 +417,13 @@ export function parseDatabaseMaxConnections(
 /** First enabled spec slug, if any. */
 export function getDefaultEnabledSpecId(specs: SpecOption[]): string | null {
   return specs.find((spec) => !spec.comingSoon)?.id ?? null
+}
+
+/** True when at least one dedicated (non-serverless) spec can be selected. */
+export function hasEnabledDedicatedComputeOptions(specs: SpecOption[]): boolean {
+  return specs.some(
+    (spec) => !spec.comingSoon && !isServerlessDatabaseSpecId(spec.id),
+  )
 }
 
 /** True when the spec list includes tiers that are not yet selectable. */

@@ -25,6 +25,7 @@ import {
   resolveDatabaseComputeSpecId,
 } from '@/lib/databases/database-compute'
 import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
+import { planSupportsDedicatedDatabases } from '@/lib/databases/dedicated-database-plan'
 import {
   projectSupportsDedicatedDatabaseCompute,
   formatDedicatedDatabaseRegionUnavailableDescription,
@@ -38,6 +39,7 @@ import {
   MYSQL_DATABASE_SPECS_SOURCE,
   dedicatedDatabaseSourceFromRouteKind,
   useDatabaseSpecifications,
+  useOrganizationPlan,
   useOrganizationScopes,
   usePostgresDatabase,
   useMysqlDatabase,
@@ -106,6 +108,7 @@ export function DatabaseSidebarComputeSpec({
   const t = useT()
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { access } = useOrganizationScopes(project?.teamId)
   const specificationsSource =
     mode === 'postgres'
@@ -142,8 +145,10 @@ export function DatabaseSidebarComputeSpec({
     [specificationsData?.specifications],
   )
 
-  const supportsDedicatedDatabaseCompute =
+  const regionSupportsDedicatedCompute =
     projectSupportsDedicatedDatabaseCompute(project?.region)
+  const planSupportsDedicatedCompute =
+    planSupportsDedicatedDatabases(organizationPlan)
   const canManageCompute = canCreateDatabase(access, features)
   const billingEnabled = getActiveProfileFeatures().billing
 
@@ -286,15 +291,19 @@ export function DatabaseSidebarComputeSpec({
   )
 
   // Prefer compute/spec settings when available; /upgrade only as a fallback.
+  const showUpgradeComingSoon =
+    !regionSupportsDedicatedCompute &&
+    (resolved.serverless || !!nextEnabledSpec || !!nextLockedSpec)
   const showComputeUpgrade =
-    supportsDedicatedDatabaseCompute &&
+    regionSupportsDedicatedCompute &&
+    planSupportsDedicatedCompute === true &&
     canManageCompute &&
     (!!nextEnabledSpec || !!nextLockedSpec || resolved.serverless)
   const showPlanUpgrade =
-    !showComputeUpgrade && !!nextLockedSpec && billingEnabled
-  const showUpgradeComingSoon =
-    supportsDedicatedDatabaseCompute === false &&
-    (resolved.serverless || !!nextEnabledSpec || !!nextLockedSpec)
+    !showUpgradeComingSoon &&
+    !showComputeUpgrade &&
+    billingEnabled &&
+    (planSupportsDedicatedCompute === false || !!nextLockedSpec)
 
   if (!isDedicatedDbFeatureEnabled(dbKind, features) && mode === 'product') {
     return null

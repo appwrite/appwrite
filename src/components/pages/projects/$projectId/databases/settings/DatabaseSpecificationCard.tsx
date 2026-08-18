@@ -11,21 +11,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
+import { ServerlessSpecPrice } from '../_components/ServerlessSpecPrice'
 import { DedicatedDatabaseRegionUnavailableBadge } from '../_components/DedicatedDatabaseRegionUnavailableCard'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import {
   formatDedicatedDatabaseRegionUnavailableDescription,
   projectSupportsDedicatedDatabaseCompute,
 } from '@/lib/databases/dedicated-database-regions'
+import { planSupportsDedicatedDatabases } from '@/lib/databases/dedicated-database-plan'
 import {
   SERVERLESS_DATABASE_SPEC_ID,
   TABLE_DB_SPEC_OPTIONS,
+  hasEnabledDedicatedComputeOptions,
   hasLockedDatabaseSpecifications,
   isServerlessDatabaseSpecId,
   mapDedicatedDatabaseSpecifications,
@@ -39,6 +37,7 @@ import {
   seedDatabaseProductRouteKind,
   updateProductDatabaseSpecification,
   useDatabaseSpecifications,
+  useOrganizationPlan,
   useProject,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -79,14 +78,15 @@ export function DatabaseSpecificationCard({
   const t = useT()
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
-  const supportsDedicatedDatabaseCompute =
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const regionSupportsDedicatedCompute =
     projectSupportsDedicatedDatabaseCompute(project?.region)
+  const planSupportsDedicatedCompute =
+    planSupportsDedicatedDatabases(organizationPlan)
 
   const specsSource = dedicatedDatabaseSourceFromRouteKind(dbKind)
-  const { data: specificationsData } = useDatabaseSpecifications(
-    projectId,
-    specsSource,
-  )
+  const { data: specificationsData, isSuccess: specificationsLoaded } =
+    useDatabaseSpecifications(projectId, specsSource)
 
   const apiSpecs = useMemo(
     () =>
@@ -143,7 +143,7 @@ export function DatabaseSpecificationCard({
     },
   })
 
-  if (!supportsDedicatedDatabaseCompute) {
+  if (!regionSupportsDedicatedCompute) {
     return (
       <div
         data-card-id="specification"
@@ -158,6 +158,50 @@ export function DatabaseSpecificationCard({
           </div>
           <p className="text-[13px] text-muted-foreground mt-2">
             {formatDedicatedDatabaseRegionUnavailableDescription(t)}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (planSupportsDedicatedCompute === false) {
+    return (
+      <div
+        data-card-id="specification"
+        className="rounded-xl border border-border bg-card/50 overflow-hidden"
+      >
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Specification')}
+          </h3>
+          <p className="text-[13px] text-muted-foreground mt-2">
+            {t('Dedicated compute is not available on your current plan.')}{' '}
+            <UpgradePlanLink orgId={project?.teamId} />{' '}
+            {t('to unlock dedicated databases.')}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (
+    dbKind !== 'tablesdb' &&
+    specificationsLoaded &&
+    !hasEnabledDedicatedComputeOptions(apiSpecs)
+  ) {
+    return (
+      <div
+        data-card-id="specification"
+        className="rounded-xl border border-border bg-card/50 overflow-hidden"
+      >
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Specification')}
+          </h3>
+          <p className="text-[13px] text-muted-foreground mt-2">
+            {t('Not available on your current plan.')}{' '}
+            <UpgradePlanLink orgId={project?.teamId} />{' '}
+            {t('to unlock this database type.')}
           </p>
         </div>
       </div>
@@ -270,22 +314,7 @@ export function DatabaseSpecificationCard({
                 </TableCell>
                 <TableCell className="px-4 py-3 text-end text-[13px] font-medium tabular-nums text-foreground">
                   {isServerlessDatabaseSpecId(spec.id) ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
-                            {t(spec.price)}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-[240px]">
-                          <p className="text-[12px]">
-                            {t(
-                              'Billed for disk storage and database operations.',
-                            )}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <ServerlessSpecPrice plan={organizationPlan} />
                   ) : (
                     spec.price
                   )}
