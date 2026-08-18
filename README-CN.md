@@ -215,7 +215,7 @@ docker run -it --rm `
 ```mermaid
 flowchart TB
   Flutter & iOS & Android & Web & Agents --> Appwrite
-  Appwrite --> REST & Realtime & GraphQL & MCP & CLI
+  Appwrite --> REST & Realtime & GraphQL & MCP & CLI & SDKs
 ```
 
 Appwrite 使用高拓展性的微服务架构。此外，Appwrite 支持多种 API（REST、WebSocket 和 GraphQL），来迎合您的个性化开发习惯。
