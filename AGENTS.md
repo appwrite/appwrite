@@ -321,9 +321,3 @@ A release is not ready until a **fresh install** and an **upgrade from the previ
 **Metadata:** `APP_VERSION_STABLE` / `APP_CACHE_BUSTER`; Appwrite and console tags in `docker-compose.yml` and [`app/views/install/compose.phtml`](app/views/install/compose.phtml); README install snippets; `Migration.php` `$versions`; `CHANGES.md`. For public API breaks: request filters in `src/Appwrite/Utopia/Request/Filters/V*.php`, response filters in `src/Appwrite/Utopia/Response/Filters/V*.php`, registered in [`app/controllers/general.php`](app/controllers/general.php) for `x-appwrite-response-format`. Unit-test filters under `tests/unit/Utopia/{Request,Response}/Filters`; add e2e with that header when routing, auth, or persistence is involved.
 
 Do not approve an RC/final until both gates pass, metadata matches the target, and unintended public breaks have filters (or the owner documents the break in `CHANGES.md`).
-
-## See also
-
-- Community process: [`CONTRIBUTING.md`](CONTRIBUTING.md)
-
-Appwrite is the base server for `appwrite/cloud`. Changes to the Action pattern, module structure, DI system, or response models affect cloud.
