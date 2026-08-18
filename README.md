@@ -266,15 +266,13 @@ flowchart TB
   cache --> securityLayer
 
   executor --> dockerK8s["Docker / K8S"]
-  cache --> postgresql[PostgreSQL]
-  cache --> mongodb[MongoDB]
-  embedding[Embedding] --> postgresql
+  cache --> database["PostgreSQL / MariaDB / MySQL / MongoDB"]
+  embedding[Embedding] --> database
 
   queue --> workers[Workers]
   executor --> workers
   workers --> executor
-  workers --> postgresql
-  workers --> mongodb
+  workers --> database
   workers --> browser[Browser]
   workers --> SMTP
   workers --> Letsencrypt
