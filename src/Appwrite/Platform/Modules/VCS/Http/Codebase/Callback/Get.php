@@ -36,6 +36,7 @@ class Get extends Action
             ->label('scope', 'public')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->param('installation_id', '', new Text(256, 0), 'Codebase installation ID', true)
+            ->param('installation_receipt', '', new Text(4096, 0), 'Codebase installation receipt JWT, signed by Cursor.', true)
             ->param('state', '', new Text(2048), 'Codebase state. Contains info sent when starting the installation flow.', true)
             ->inject('request')
             ->inject('response')
@@ -46,6 +47,7 @@ class Get extends Action
 
     public function action(
         string $providerInstallationId,
+        string $installationReceipt,
         string $state,
         Request $request,
         Response $response,
@@ -68,6 +70,23 @@ class Get extends Action
             Console::log('[CODEBASE DEBUG] Possible OAuth2 flow params detected: ' . \json_encode($oauthParams));
         } else {
             Console::log('[CODEBASE DEBUG] No OAuth2 flow params detected');
+        }
+
+        // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
+        // Decode only -- the EdDSA signature is not verified, so the claims
+        // must not be trusted for authorization decisions yet.
+        if (!empty($installationReceipt)) {
+            $segments = \explode('.', $installationReceipt);
+            if (\count($segments) === 3) {
+                $receiptHeader = \json_decode(\base64_decode(\strtr($segments[0], '-_', '+/')), true) ?? [];
+                $receiptClaims = \json_decode(\base64_decode(\strtr($segments[1], '-_', '+/')), true) ?? [];
+                Console::log('[CODEBASE DEBUG] Receipt JWT header: ' . \json_encode($receiptHeader));
+                Console::log('[CODEBASE DEBUG] Receipt JWT claims: ' . \json_encode($receiptClaims));
+            } else {
+                Console::log('[CODEBASE DEBUG] installation_receipt is not a JWT: ' . $installationReceipt);
+            }
+        } else {
+            Console::log('[CODEBASE DEBUG] No installation_receipt received');
         }
 
         if (empty($state)) {

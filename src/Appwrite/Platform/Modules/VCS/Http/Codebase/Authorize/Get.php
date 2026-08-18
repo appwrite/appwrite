@@ -71,25 +71,41 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Codebase client ID is not configured. Please configure VCS (Version Control System) variables in .env file.');
         }
 
-        // The callback endpoint is public and Codebase performs no token
-        // exchange, so the callback verifies this signature before trusting
-        // the projectId and redirect URLs in state.
-        $state = \json_encode([
-            'projectId' => $project->getId(),
-            'success' => $success,
-            'failure' => $failure,
-            'signature' => \hash_hmac('sha256', \json_encode([$project->getId(), $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
-        ]);
-
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $platform['consoleHostname'] ?? '';
 
-        $url = 'https://cursor.com/codebase/apps/install?' . \http_build_query([
+        $callback = $protocol . '://' . $hostname . '/v1/vcs/codebase/callback';
+
+        $query = [
             'client_id' => $clientId,
             'source' => 'app-metadata',
-            'state' => $state,
-            'redirect_uri' => $protocol . '://' . $hostname . '/v1/vcs/codebase/callback',
-        ]);
+        ];
+
+        // The correct redirect parameter name is undocumented, so send the
+        // callback URL under every plausible spelling -- Codebase should honor
+        // whichever one it recognises and ignore the rest.
+        // TODO: Narrow to the single correct parameter once confirmed.
+        foreach ([
+            'redirect_uri',
+            'redirect_url',
+            'redirectUri',
+            'redirectUrl',
+            'callback_uri',
+            'callback_url',
+            'callbackUri',
+            'callbackUrl',
+            'callback',
+            'return_uri',
+            'return_url',
+            'returnUri',
+            'returnUrl',
+            'return_to',
+            'returnTo',
+        ] as $param) {
+            $query[$param] = $callback;
+        }
+
+        $url = 'https://cursor.com/codebase/apps/install?' . \http_build_query($query);
 
         // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
         Console::log('[CODEBASE DEBUG] Authorize for project "' . $project->getId() . '" (success: "' . $success . '", failure: "' . $failure . '")');
