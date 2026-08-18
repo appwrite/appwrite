@@ -250,43 +250,12 @@ flowchart TB
   executor --> dockerK8s["Docker / K8S"]
   cache --> database[Database]
 
-  subgraph workers [Workers]
-    Scheduler
-    Usage
-    Maintenance
-    Builds
-    Audits
-    Mails
-    workerDatabase[Database]
-    Webhooks
-    workerFunctions[Functions]
-    Certs
-    Deletes
-  end
-
-  queue --> Builds
-  queue --> Audits
-  queue --> Mails
-  queue --> workerDatabase
-  queue --> Webhooks
-  queue --> workerFunctions
-  queue --> Certs
-  queue --> Deletes
-
-  executor --> Builds
-  workerFunctions --> executor
-  Usage --> database
-  Maintenance --> database
-  Builds --> database
-  Audits --> database
-  workerDatabase --> database
-  Webhooks --> database
-  workerFunctions --> database
-  Certs --> database
-  Deletes --> database
-
-  Mails --> SMTP
-  Certs --> Letsencrypt
+  queue --> workers[Workers]
+  executor --> workers
+  workers --> executor
+  workers --> database
+  workers --> SMTP
+  workers --> Letsencrypt
   Letsencrypt --> Loadbalancer
 ```
 
