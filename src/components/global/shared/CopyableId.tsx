@@ -21,7 +21,7 @@ interface CopyableIdProps {
   size?: CopyableIdSize
   /** Maximum width for truncation. Default: 140px */
   maxWidth?: number
-  /** When true, truncates to the parent width instead of a fixed pixel max. */
+  /** When true, size to the value and truncate if the parent is narrower. */
   constrainToContainer?: boolean
   /** When true, the copy icon is hidden until hover. Defaults to true for inline. */
   showCopyOnHover?: boolean
@@ -102,7 +102,7 @@ export function CopyableId({
           : 'gap-1.5 rounded-md border border-transparent bg-transparent text-foreground transition-[color,background-color,border-color] hover:border-border hover:bg-muted/40 hover:text-foreground',
         styles.text,
         styles.padding,
-        constrainToContainer && 'min-w-0 w-fit max-w-full',
+        constrainToContainer && 'min-w-0',
         className,
       )}
     >
