@@ -31,17 +31,31 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 
 ## Layout
 
-- **src/Appwrite/Platform/Modules/** -- feature modules. Register new ones in `src/Appwrite/Platform/Appwrite.php`. HTTP nesting and hooks: [`src/Appwrite/Platform/AGENTS.md`](src/Appwrite/Platform/AGENTS.md)
-- **src/Appwrite/Platform/Workers/** -- shared background workers
-- **src/Appwrite/Platform/Tasks/** -- CLI tasks
-- **src/Utopia/** -- Composer PSR-4 overrides of Utopia libraries (currently `Bus` only)
+- **src/Appwrite/** -- domain libraries (one directory per problem). Key libraries:
+  - **Auth** -- keys, OAuth, MFA
+  - **Event** -- queue publishers (functions, mails, webhooks, deletes, …)
+  - **Network** -- CORS, origin, DNS, client platforms
+  - **SDK** -- spec and SDK method metadata
+  - **Migration** -- versioned data migrations
+  - **GraphQL** -- schema and resolvers
+  - **Messaging**, **Realtime**, **PubSub** -- realtime fan-out
+  - **Database** -- platform/project DB factory
+  - **Vcs** -- Git provider helpers
+  - **Deployment** -- build and deploy helpers
+  - **Usage** -- metrics
+  - **Utopia** -- HTTP `Request` / `Response` / models (Appwrite adapters on Utopia)
+  - **Extend** -- shared exceptions
+- **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. Nesting: [`src/Appwrite/Platform/AGENTS.md`](src/Appwrite/Platform/AGENTS.md)
+- **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
+- **src/Utopia/** -- Composer PSR-4 overrides of Utopia packages (currently `Bus` only)
 - **app/init.php** -- bootstrap; **app/init/** -- configs, constants, locales, models, registers, resources, span, database filters/formats
+- **app/http.php**, **app/worker.php**, **app/realtime.php** -- process entry harnesses
 - **bin/** -- CLI entry points (`worker`, `worker-*`, `schedule`, `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, …)
 - **tests/e2e/**, **tests/unit/** -- tests; **public/** -- static assets and generated SDKs
 
 ## Libraries
 
-`src/Appwrite/` is domain libraries, not a dumping ground. Each directory solves **one problem** (`Auth`, `Event`, `Network`, `URL`, `SDK`, `Migration`). Do not grow a library into a second concern; add a new directory instead.
+`src/Appwrite/` is domain libraries, not a dumping ground. Each directory solves **one problem**. Do not grow a library into a second concern; add a new directory instead. See [Layout](#layout) for the current set.
 
 Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it belongs in the `utopia-php` ecosystem as a Composer dependency, not under `src/Appwrite/`. Overrides of Utopia packages live in `src/Utopia/` (currently `Bus` only).
 
