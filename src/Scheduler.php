@@ -61,10 +61,9 @@ use Utopia\Telemetry\Histogram;
  * concurrently and needs no locking. Everything about *how* a tick's
  * occurrences are processed — batching them into one round trip, fanning
  * them out across coroutines, isolating a failure — belongs to the
- * handler, which receives each due moment as it arrives. Two loops over
- * one instance
- * are not supported; two loops over one {@see Store} are — that is the
- * leader election.
+ * handler, which receives each due moment as it arrives. Two loops over one
+ * instance are not supported; two loops over one {@see Store} are — that is
+ * the leader election.
  *
  * @phpstan-type Registered array{trigger: Trigger, payload: mixed, version: string, coverFrom: \DateTimeImmutable|null}
  */
@@ -444,7 +443,7 @@ final class Scheduler
             $dues = $entry['trigger']->occurrencesBetween($entryStart, $end);
 
             foreach ($dues as $due) {
-                $occurrences[] = new Occurrence($id, $due, $entry['payload'], $entry['version']);
+                $occurrences[] = new Occurrence((string) $id, $due, $entry['payload'], $entry['version']);
             }
 
             if ($entry['coverFrom'] !== null) {

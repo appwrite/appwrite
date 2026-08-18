@@ -546,6 +546,39 @@ final class SchedulerTest extends TestCase
         $this->assertSame('successor', $store->load()?->token, 'and the deposed leader did not write over its claim');
     }
 
+    public function testNumericIdsSurviveTheScheduleMap(): void
+    {
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));
+        $scheduler = $this->scheduler($clock, ['1' => new Cron('* * * * *')], tickSeconds: 60, leaseSeconds: 300);
+
+        $scheduler->tick();
+        $scheduler->commit();
+        $clock->advance(31.0);
+
+        $occurrences = $scheduler->tick();
+
+        $this->assertCount(1, $occurrences);
+        $this->assertSame('1', $occurrences[0]->id);
+        $this->assertTrue($scheduler->isCurrent($occurrences[0]));
+        $this->assertSame('1@1787022060.000000', $occurrences[0]->key());
+    }
+
+    public function testARunLoopDeliversNumericIds(): void
+    {
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));
+        $scheduler = $this->scheduler($clock, ['7' => new Interval(30)], tickSeconds: 60, leaseSeconds: 300);
+
+        $seen = [];
+        $scheduler->run(function (array $occurrences) use (&$seen, $scheduler): void {
+            foreach ($occurrences as $occurrence) {
+                $seen[] = $occurrence->id;
+            }
+            $scheduler->stop();
+        });
+
+        $this->assertSame(['7'], $seen);
+    }
+
     public function testOccurrenceKeyIsStableAcrossRedelivery(): void
     {
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));
@@ -662,7 +695,7 @@ final class SchedulerTest extends TestCase
     }
 
     /**
-     * @param array<string, Trigger> $triggers
+     * @param array<array-key, Trigger> $triggers
      */
     private function scheduler(
         TestClock $clock,
@@ -677,7 +710,7 @@ final class SchedulerTest extends TestCase
     ): Scheduler {
         $rows = [];
         foreach (array_keys($triggers) as $id) {
-            $rows[] = new Row($id, '1');
+            $rows[] = new Row((string) $id, '1');
         }
 
         $scheduler = new Scheduler(
