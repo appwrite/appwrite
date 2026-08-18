@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Timer;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -32,7 +33,7 @@ abstract class ScheduleBase extends Action
 
     protected BrokerPool $publisher;
     protected BrokerPool $publisherMigrations;
-    protected BrokerPool $publisherFunctions;
+    protected FunctionPublisher $publisherForFunctions;
     protected BrokerPool $publisherMessaging;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
@@ -70,7 +71,7 @@ abstract class ScheduleBase extends Action
             ->desc("Execute {$type}s scheduled in Appwrite")
             ->inject('publisher')
             ->inject('publisherMigrations')
-            ->inject('publisherFunctions')
+            ->inject('publisherForFunctions')
             ->inject('publisherMessaging')
             ->inject('getIsResourceBlocked')
             ->inject('dbForPlatform')
@@ -98,12 +99,12 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): never
+    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, FunctionPublisher $publisherForFunctions, BrokerPool $publisherMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): never
     {
         $this->setup(
             $publisher,
             $publisherMigrations,
-            $publisherFunctions,
+            $publisherForFunctions,
             $publisherMessaging,
             $telemetry,
         );
@@ -117,13 +118,13 @@ abstract class ScheduleBase extends Action
     public function setup(
         BrokerPool $publisher,
         BrokerPool $publisherMigrations,
-        BrokerPool $publisherFunctions,
+        FunctionPublisher $publisherForFunctions,
         BrokerPool $publisherMessaging,
         Telemetry $telemetry,
     ): void {
         $this->publisher = $publisher;
         $this->publisherMigrations = $publisherMigrations;
-        $this->publisherFunctions = $publisherFunctions;
+        $this->publisherForFunctions = $publisherForFunctions;
         $this->publisherMessaging = $publisherMessaging;
 
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
