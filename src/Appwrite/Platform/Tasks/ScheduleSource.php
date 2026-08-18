@@ -18,9 +18,6 @@ final class ScheduleSource implements Source, Changes
     /** @var array<string, Document> */
     private array $projects = [];
 
-    /** @var array<string, string> version of each live schedule, by id */
-    private array $live = [];
-
     private int $snapshotted = 0;
 
     /**
@@ -28,7 +25,6 @@ final class ScheduleSource implements Source, Changes
      * @param callable(Document, string, string): bool $isResourceBlocked
      * @param \Closure(Database, array<string, mixed>): Document $resource
      * @param \Closure(array<string, mixed>): Entry $entry
-     * @param int $recency seconds within which a changed row counts as new
      */
     public function __construct(
         private readonly Database $dbForPlatform,
@@ -38,7 +34,6 @@ final class ScheduleSource implements Source, Changes
         private readonly string $collectionId,
         private readonly \Closure $resource,
         private readonly \Closure $entry,
-        private readonly int $recency,
     ) {
     }
 
@@ -46,8 +41,6 @@ final class ScheduleSource implements Source, Changes
     public function snapshot(): iterable
     {
         $this->snapshotted = 0;
-
-        $this->live = [];
 
         foreach ($this->rows(null) as $row) {
             $this->snapshotted++;
@@ -59,11 +52,6 @@ final class ScheduleSource implements Source, Changes
     public function snapshotted(): int
     {
         return $this->snapshotted;
-    }
-
-    public function isLive(string $id, string $version): bool
-    {
-        return ($this->live[$id] ?? null) === $version;
     }
 
     #[\Override]
@@ -165,18 +153,9 @@ final class ScheduleSource implements Source, Changes
             $sum = \count($schedules);
 
             foreach ($schedules as $schedule) {
-                $id = (string) $schedule->getSequence();
-                $version = (string) $schedule->getAttribute('resourceUpdatedAt', '');
-
-                if ($schedule->getAttribute('active', false)) {
-                    $this->live[$id] = $version;
-                } else {
-                    unset($this->live[$id]);
-                }
-
                 yield new Row(
-                    id: $id,
-                    version: $version,
+                    id: (string) $schedule->getSequence(),
+                    version: (string) $schedule->getAttribute('resourceUpdatedAt', ''),
                     data: $schedule,
                     active: (bool) $schedule->getAttribute('active', false),
                     activeFrom: $this->activeFrom($schedule),
@@ -200,7 +179,7 @@ final class ScheduleSource implements Source, Changes
             return null;
         }
 
-        return $changed > (new \DateTimeImmutable())->modify("-{$this->recency} seconds") ? $changed : null;
+        return $changed;
     }
 
     private function project(string $projectId): Document

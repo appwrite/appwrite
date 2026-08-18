@@ -77,7 +77,6 @@ class ScheduleMessages extends Action
             collectionId: self::getCollectionId(),
             resource: fn (Database $projectDB, array $schedule): Document => $projectDB->getDocument(self::getCollectionId(), $schedule['resourceId']),
             entry: fn (array $schedule): Entry => new Entry(new At(new \DateTimeImmutable((string) $schedule['schedule'])), $schedule),
-            recency: self::UPDATE_TIMER * 3,
         );
 
         $scheduler = new Scheduler(
@@ -115,31 +114,29 @@ class ScheduleMessages extends Action
         foreach ($occurrences as $occurrence) {
             $schedule = $occurrence->payload;
 
-            \go(function () use ($schedule, $publisher, $dbForPlatform): void {
-                Span::init('schedule.messages.enqueue');
-                $error = null;
+            Span::init('schedule.messages.enqueue');
+            $error = null;
 
-                try {
-                    Span::add('project.id', $schedule['project']->getId());
-                    Span::add('schedule.id', $schedule['$id'] ?? '');
+            try {
+                Span::add('project.id', $schedule['project']->getId());
+                Span::add('schedule.id', $schedule['$id'] ?? '');
 
-                    $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+                $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $publisher->enqueue(new MessagingMessage(
-                        type: MESSAGE_SEND_TYPE_EXTERNAL,
-                        project: $schedule['project'],
-                        messageId: $schedule['resourceId'],
-                    ));
+                $publisher->enqueue(new MessagingMessage(
+                    type: MESSAGE_SEND_TYPE_EXTERNAL,
+                    project: $schedule['project'],
+                    messageId: $schedule['resourceId'],
+                ));
 
-                    // The row is the retirement record: dropping it is what
-                    // stops a later snapshot from listing this message again.
-                    $dbForPlatform->deleteDocument('schedules', $schedule['$id']);
-                } catch (\Throwable $th) {
-                    $error = $th;
-                } finally {
-                    Span::current()?->finish(error: $error);
-                }
-            });
+                // The row is the retirement record: dropping it is what stops
+                // a later snapshot from listing this message again.
+                $dbForPlatform->deleteDocument('schedules', $schedule['$id']);
+            } catch (\Throwable $th) {
+                $error = $th;
+            } finally {
+                Span::current()?->finish(error: $error);
+            }
         }
 
         return null;

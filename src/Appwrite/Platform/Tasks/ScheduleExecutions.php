@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
-use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -78,7 +77,6 @@ class ScheduleExecutions extends Action
             collectionId: self::getCollectionId(),
             resource: $this->resource(...),
             entry: fn (array $schedule): Entry => new Entry(new At(new \DateTimeImmutable((string) $schedule['schedule'])), $schedule),
-            recency: self::UPDATE_TIMER * 3,
         );
 
         $scheduler = new Scheduler(
@@ -100,7 +98,7 @@ class ScheduleExecutions extends Action
         Span::add('schedule.executions.loaded', $source->snapshotted());
         Span::current()?->finish();
 
-        return fn (): null => $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $source, $publisher, $dbForPlatform));
+        return fn (): null => $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisher, $dbForPlatform));
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
@@ -129,25 +127,12 @@ class ScheduleExecutions extends Action
     }
 
     /**
-     * Published one at a time, in the order the tick selected them: a
-     * coroutine per execution let a later one overtake an earlier one on the
-     * queue.
-     *
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, ScheduleSource $source, FunctionPublisher $publisher, Database $dbForPlatform): null
+    private function dispatch(array $occurrences, FunctionPublisher $publisher, Database $dbForPlatform): null
     {
         foreach ($occurrences as $occurrence) {
             $schedule = $occurrence->payload;
-            $delay = $occurrence->due->getTimestamp() - \time();
-
-            if ($delay > 0) {
-                Co::sleep($delay);
-            }
-
-            if (!$source->isLive((string) $schedule['$sequence'], (string) $schedule['resourceUpdatedAt'])) {
-                continue;
-            }
 
             Span::init('schedule.executions.enqueue');
             $error = null;

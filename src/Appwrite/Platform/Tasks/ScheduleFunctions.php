@@ -13,6 +13,7 @@ use Utopia\Schedule\Scheduler;
 use Utopia\Schedule\Source\Entry;
 use Utopia\Schedule\Store\Redis as ClaimStore;
 use Utopia\Schedule\Trigger\Cron;
+use Utopia\Schedule\Trigger\Shifted;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -82,8 +83,15 @@ class ScheduleFunctions extends Action
             resourceType: self::getSupportedResource(),
             collectionId: self::getCollectionId(),
             resource: fn (Database $projectDB, array $schedule): Document => $projectDB->getDocument(self::getCollectionId(), $schedule['resourceId']),
-            entry: fn (array $schedule): Entry => new Entry(new Cron((string) $schedule['schedule']), $schedule),
-            recency: self::UPDATE_TIMER * 3,
+            entry: fn (array $schedule): Entry => new Entry(
+                // Spreading is part of the schedule: the shifted time is what
+                // the window covers and the watermark commits.
+                new Shifted(
+                    new Cron((string) $schedule['schedule']),
+                    self::spreadOffset($schedule['resourceId'], $this->spreadWindow($schedule, $dbForPlatform)),
+                ),
+                $schedule,
+            ),
         );
 
         $scheduler = new Scheduler(
@@ -105,7 +113,7 @@ class ScheduleFunctions extends Action
         Span::add('schedule.functions.loaded', $source->snapshotted());
         Span::current()?->finish();
 
-        return fn (): null => $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $source, $publisher, $dbForPlatform));
+        return fn (): null => $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisher, $dbForPlatform));
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
@@ -124,54 +132,36 @@ class ScheduleFunctions extends Action
     /**
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, ScheduleSource $source, FunctionPublisher $publisher, Database $dbForPlatform): null
+    /**
+     * @param list<Occurrence> $occurrences
+     */
+    private function dispatch(array $occurrences, FunctionPublisher $publisher, Database $dbForPlatform): null
     {
-        $delayed = [];
-
         foreach ($occurrences as $occurrence) {
             $schedule = $occurrence->payload;
-            $offset = self::spreadOffset($schedule['resourceId'], $this->spreadWindow($schedule, $dbForPlatform));
 
-            // Clamped, so a run recovered from a gap goes out now instead of
-            // sleeping backwards.
-            $delayed[\max(0, $occurrence->due->getTimestamp() - \time() + $offset)][] = $schedule;
-        }
+            Span::init('schedule.functions.enqueue');
+            $error = null;
 
-        foreach ($delayed as $delay => $batch) {
-            \go(function () use ($delay, $batch, $source, $publisher, $dbForPlatform): void {
-                if ($delay > 0) {
-                    \sleep($delay);
-                }
+            try {
+                Span::add('project.id', $schedule['project']->getId());
+                Span::add('function.id', $schedule['resource']->getId());
+                Span::add('schedule.id', $schedule['$id'] ?? '');
 
-                foreach ($batch as $schedule) {
-                    if (!$source->isLive((string) $schedule['$sequence'], (string) $schedule['resourceUpdatedAt'])) {
-                        continue;
-                    }
+                $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    Span::init('schedule.functions.enqueue');
-                    $error = null;
-
-                    try {
-                        Span::add('project.id', $schedule['project']->getId());
-                        Span::add('function.id', $schedule['resource']->getId());
-                        Span::add('schedule.id', $schedule['$id'] ?? '');
-
-                        $this->updateProjectAccess($schedule['project'], $dbForPlatform);
-
-                        $publisher->enqueue(new FunctionMessage(
-                            project: $schedule['project'],
-                            function: $schedule['resource'],
-                            type: 'schedule',
-                            method: 'POST',
-                            path: '/',
-                        ));
-                    } catch (\Throwable $th) {
-                        $error = $th;
-                    } finally {
-                        Span::current()?->finish(error: $error);
-                    }
-                }
-            });
+                $publisher->enqueue(new FunctionMessage(
+                    project: $schedule['project'],
+                    function: $schedule['resource'],
+                    type: 'schedule',
+                    method: 'POST',
+                    path: '/',
+                ));
+            } catch (\Throwable $th) {
+                $error = $th;
+            } finally {
+                Span::current()?->finish(error: $error);
+            }
         }
 
         return null;
