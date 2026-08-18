@@ -142,9 +142,7 @@ class Messaging extends Action
                     throw new \Exception('Unknown message type: ' . $type);
             }
         } finally {
-            if ($previousHookFlags !== null) {
-                Runtime::setHookFlags($previousHookFlags);
-            }
+            Runtime::setHookFlags($previousHookFlags);
         }
     }
 

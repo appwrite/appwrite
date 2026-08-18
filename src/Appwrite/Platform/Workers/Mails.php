@@ -235,9 +235,7 @@ class Mails extends Action
 
             Span::add('mail.status', 'success');
         } finally {
-            if ($previousHookFlags !== null) {
-                Runtime::setHookFlags($previousHookFlags);
-            }
+            Runtime::setHookFlags($previousHookFlags);
         }
     }
 }
