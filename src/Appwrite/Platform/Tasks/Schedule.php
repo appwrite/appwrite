@@ -2,12 +2,13 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Swoole\Coroutine as Co;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
-use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Telemetry\Adapter as Telemetry;
 
 class Schedule extends Action
@@ -21,8 +22,8 @@ class Schedule extends Action
     {
         $this
             ->desc('Execute functions, executions, and messages scheduled in Appwrite')
-            ->inject('publisherFunctions')
-            ->inject('publisherMessaging')
+            ->inject('publisherForFunctions')
+            ->inject('publisherForMessaging')
             ->inject('getIsResourceBlocked')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
@@ -32,8 +33,8 @@ class Schedule extends Action
     }
 
     public function action(
-        BrokerPool $publisherFunctions,
-        BrokerPool $publisherMessaging,
+        FunctionPublisher $publisherForFunctions,
+        MessagingPublisher $publisherForMessaging,
         callable $getIsResourceBlocked,
         Database $dbForPlatform,
         callable $getProjectDB,
@@ -45,9 +46,9 @@ class Schedule extends Action
         Console::info('Bootstrap runs serially (shared console/cache pools), then enqueue loops in parallel');
 
         $tasks = [
-            [new ScheduleFunctions(), $publisherFunctions, ScheduleFunctions::getSupportedResource()],
-            [new ScheduleExecutions(), $publisherFunctions, ScheduleExecutions::getSupportedResource()],
-            [new ScheduleMessages(), $publisherMessaging, ScheduleMessages::getSupportedResource()],
+            [new ScheduleFunctions(), $publisherForFunctions, ScheduleFunctions::getSupportedResource()],
+            [new ScheduleExecutions(), $publisherForFunctions, ScheduleExecutions::getSupportedResource()],
+            [new ScheduleMessages(), $publisherForMessaging, ScheduleMessages::getSupportedResource()],
         ];
 
         foreach ($tasks as [$task, $publisher, $resource]) {

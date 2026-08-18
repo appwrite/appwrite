@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Coroutine as Co;
@@ -12,12 +11,9 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
-use Utopia\Queue\Broker\Pool as BrokerPool;
-use Utopia\Queue\Queue;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\At;
-use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Histogram;
 
@@ -44,7 +40,7 @@ class ScheduleExecutions extends Action
     {
         $this
             ->desc('Execute executions scheduled in Appwrite')
-            ->inject('publisherFunctions')
+            ->inject('publisherForFunctions')
             ->inject('getIsResourceBlocked')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
@@ -68,12 +64,12 @@ class ScheduleExecutions extends Action
         return RESOURCE_TYPE_EXECUTIONS;
     }
 
-    public function action(BrokerPool $publisherFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): never
+    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): never
     {
         Console::title('Execution scheduler V1');
         Console::success(APP_NAME . ' execution scheduler v1 has started');
 
-        $this->start($publisherFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
+        $this->start($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
         $this->listen();
 
         // Nothing here stops the loop, so a return means the supervisor
@@ -82,12 +78,9 @@ class ScheduleExecutions extends Action
         exit(1);
     }
 
-    public function start(BrokerPool $publisherFunctions, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
+    public function start(FunctionPublisher $publisherForFunctions, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
     {
-        $this->publisher = new FunctionPublisher(
-            $publisherFunctions,
-            new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
-        );
+        $this->publisher = $publisherForFunctions;
         $this->enqueueDelay = $telemetry->createHistogram('task.schedule.enqueue_delay', 's');
         $this->dbForPlatform = $dbForPlatform;
         $this->schedules = new Schedules(
@@ -163,40 +156,48 @@ class ScheduleExecutions extends Action
         $dbForPlatform = $this->dbForPlatform ?? throw new \LogicException('start() must run before dispatch()');
         $schedules = $this->schedules ?? throw new \LogicException('start() must run before dispatch()');
 
+        // Publishing runs here, one execution at a time, in the order the tick
+        // selected them — oldest first. A coroutine per execution let a later
+        // one overtake an earlier one on the queue, and two ticks overlapping
+        // let them interleave, which is what the ordering fix on main removed.
+        // No re-entrancy guard is needed: the scheduler's loop is sequential
+        // and cannot call this again until it returns.
         foreach ($occurrences as $occurrence) {
             $schedule = $occurrence->payload;
             $delay = $occurrence->due->getTimestamp() - \time();
 
-            \go(function () use ($schedule, $occurrence, $delay, $dbForPlatform, $schedules): void {
-                try {
-                    if ($delay > 0) {
-                        Co::sleep($delay);
-                    }
+            if ($delay > 0) {
+                Co::sleep($delay);
+            }
 
-                    if (!$schedules->isLive($schedule)) {
-                        return;
-                    }
+            if (!$schedules->isLive($schedule)) {
+                continue;
+            }
 
-                    $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+            try {
+                $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $this->publisher?->enqueue(new FunctionMessage(
-                        project: $schedule['project'],
-                        functionId: $schedule['resource']->getAttribute('resourceId', ''),
-                        execution: new Document([
-                            '$id' => $schedule['resourceId'],
-                            'scheduleId' => $schedule['$id'],
-                        ]),
-                        type: 'schedule',
-                    ));
+                $this->publisher?->enqueue(new FunctionMessage(
+                    project: $schedule['project'],
+                    functionId: $schedule['resource']->getAttribute('resourceId', ''),
+                    execution: new Document([
+                        '$id' => $schedule['resourceId'],
+                        'scheduleId' => $schedule['$id'],
+                    ]),
+                    type: 'schedule',
+                ));
 
-                    $this->enqueueDelay?->record(
-                        \time() - $occurrence->due->getTimestamp(),
-                        ['resourceType' => self::getSupportedResource()]
-                    );
-                } catch (\Throwable $th) {
-                    Console::error("Failed to enqueue scheduled execution {$schedule['resourceId']}: {$th->getMessage()}");
-                }
-            });
+                $this->enqueueDelay?->record(
+                    \time() - $occurrence->due->getTimestamp(),
+                    ['resourceType' => self::getSupportedResource()]
+                );
+            } catch (\Throwable $th) {
+                // Stop rather than skip: everything behind this is later than
+                // it, and publishing those now would reorder the queue.
+                Console::error("Failed to enqueue scheduled execution {$schedule['resourceId']}: {$th->getMessage()}");
+
+                break;
+            }
         }
     }
 }

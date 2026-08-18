@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Event;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Utopia\Console;
@@ -11,12 +10,9 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
-use Utopia\Queue\Broker\Pool as BrokerPool;
-use Utopia\Queue\Queue;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\At;
-use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Histogram;
 
@@ -43,7 +39,7 @@ class ScheduleMessages extends Action
     {
         $this
             ->desc('Execute messages scheduled in Appwrite')
-            ->inject('publisherMessaging')
+            ->inject('publisherForMessaging')
             ->inject('getIsResourceBlocked')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
@@ -67,12 +63,12 @@ class ScheduleMessages extends Action
         return RESOURCE_TYPE_MESSAGES;
     }
 
-    public function action(BrokerPool $publisherMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): never
+    public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): never
     {
         Console::title('Message scheduler V1');
         Console::success(APP_NAME . ' message scheduler v1 has started');
 
-        $this->start($publisherMessaging, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
+        $this->start($publisherForMessaging, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
         $this->listen();
 
         // Nothing here stops the loop, so a return means the supervisor
@@ -81,12 +77,9 @@ class ScheduleMessages extends Action
         exit(1);
     }
 
-    public function start(BrokerPool $publisherMessaging, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
+    public function start(MessagingPublisher $publisherForMessaging, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
     {
-        $this->publisher = new MessagingPublisher(
-            $publisherMessaging,
-            new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
-        );
+        $this->publisher = $publisherForMessaging;
         $this->enqueueDelay = $telemetry->createHistogram('task.schedule.enqueue_delay', 's');
         $this->dbForPlatform = $dbForPlatform;
         $this->schedules = new Schedules(

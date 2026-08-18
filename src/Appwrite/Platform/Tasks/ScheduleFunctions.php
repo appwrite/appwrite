@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Utopia\Console;
@@ -11,8 +10,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
-use Utopia\Queue\Broker\Pool as BrokerPool;
-use Utopia\Queue\Queue;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\Cron;
@@ -47,7 +44,7 @@ class ScheduleFunctions extends Action
     {
         $this
             ->desc('Execute functions scheduled in Appwrite')
-            ->inject('publisherFunctions')
+            ->inject('publisherForFunctions')
             ->inject('getIsResourceBlocked')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
@@ -82,12 +79,12 @@ class ScheduleFunctions extends Action
         return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
     }
 
-    public function action(BrokerPool $publisherFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): never
+    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): never
     {
         Console::title('Functions scheduler V1');
         Console::success(APP_NAME . ' functions scheduler v1 has started');
 
-        $this->start($publisherFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
+        $this->start($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
         $this->listen();
 
         // Nothing here stops the loop, so a return means the supervisor
@@ -96,12 +93,9 @@ class ScheduleFunctions extends Action
         exit(1);
     }
 
-    public function start(BrokerPool $publisherFunctions, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
+    public function start(FunctionPublisher $publisherForFunctions, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
     {
-        $this->publisher = new FunctionPublisher(
-            $publisherFunctions,
-            new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
-        );
+        $this->publisher = $publisherForFunctions;
         $this->enqueueDelay = $telemetry->createHistogram('task.schedule.enqueue_delay', 's');
         $this->dbForPlatform = $dbForPlatform;
         $this->schedules = new Schedules(

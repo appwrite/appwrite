@@ -67,4 +67,23 @@ final class ScheduleLifecycleTest extends TestCase
 
         $this->assertSame(['listen', 'scheduleCount', 'start'], $called);
     }
+
+    /**
+     * Scheduled executions must reach the queue in the order they were due.
+     *
+     * A coroutine per execution let a later one overtake an earlier one, and
+     * that reordering is what #13270 fixed on main. The scheduler hands the
+     * batch over oldest-first, so publishing inline preserves it — spawning
+     * here would silently undo the fix, and the failure is a queue order no
+     * unit test observes directly.
+     */
+    public function testScheduledExecutionsArePublishedInline(): void
+    {
+        $source = \file_get_contents(__DIR__ . '/../../../../src/Appwrite/Platform/Tasks/ScheduleExecutions.php');
+        $this->assertIsString($source);
+
+        $dispatch = \strstr($source, 'private function dispatch(');
+        $this->assertIsString($dispatch, 'the dispatch is where publishing happens');
+        $this->assertStringNotContainsString('\go(', $dispatch);
+    }
 }
