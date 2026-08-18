@@ -133,7 +133,7 @@ class ScheduleExecutions extends Action
     /**
      * Published one at a time, in the order the tick selected them: a
      * coroutine per execution let a later one overtake an earlier one on the
-     * queue, and a failure stops the rest rather than reordering around it.
+     * queue.
      *
      * @param list<Occurrence> $occurrences
      */
@@ -173,10 +173,6 @@ class ScheduleExecutions extends Action
                 $error = $th;
             } finally {
                 Span::current()?->finish(error: $error);
-            }
-
-            if ($error instanceof \Throwable) {
-                break;
             }
         }
 
