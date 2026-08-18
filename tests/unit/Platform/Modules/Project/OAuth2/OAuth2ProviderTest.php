@@ -135,6 +135,7 @@ final class OAuth2ProviderTest extends TestCase
         yield 'dailymotion' => ['dailymotion', $actions['dailymotion'], 'apiKey', 'apiSecret'];
         yield 'bitbucket' => ['bitbucket', $actions['bitbucket'], 'key', 'secret'];
         yield 'dropbox' => ['dropbox', DropboxUpdate::class, 'appKey', 'appSecret'];
+        yield 'cursor' => ['cursor', $actions['cursor'], 'clientId', 'privateKey'];
         yield 'etsy' => ['etsy', $actions['etsy'], 'keyString', 'sharedSecret'];
         yield 'facebook' => ['facebook', $actions['facebook'], 'appId', 'appSecret'];
         yield 'notion' => ['notion', $actions['notion'], 'oauthClientId', 'oauthClientSecret'];
