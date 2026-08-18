@@ -281,9 +281,22 @@ class Functions extends Action
     protected function enqueueScheduledExecution(Database $dbForPlatform, Document $project, Document $execution, string $functionId, callable $enqueue): bool
     {
         $scheduleId = $execution->getAttribute('scheduleId', '');
-        $schedule = $dbForPlatform->getDocument('schedules', $scheduleId);
+        $schedule = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
+            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
 
-        if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+                return new Document();
+            }
+
+            $claimed = $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                'resourceUpdatedAt' => DateTime::now(),
+                'active' => false,
+            ]));
+
+            return $claimed->isEmpty() ? new Document() : $schedule;
+        });
+
+        if ($schedule->isEmpty()) {
             return false;
         }
 
@@ -296,12 +309,10 @@ class Functions extends Action
             return false;
         }
 
-        $this->updateProjectAccess($project, $dbForPlatform);
-
-        return $this->enqueueIfActive(
-            $dbForPlatform,
-            $scheduleId,
-            fn () => $enqueue(new FunctionMessage(
+        $published = false;
+        try {
+            $this->updateProjectAccess($project, $dbForPlatform);
+            $enqueue(new FunctionMessage(
                 project: $project,
                 userId: $data['userId'] ?? '',
                 functionId: $functionId,
@@ -311,49 +322,14 @@ class Functions extends Action
                 path: $data['path'] ?? '/',
                 headers: $data['headers'] ?? [],
                 method: $data['method'] ?? 'POST',
-            )),
-        );
-    }
+            ));
+            $published = true;
 
-    protected function enqueueIfActive(Database $dbForPlatform, string $scheduleId, callable $enqueue): bool
-    {
-        $claimed = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
-            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
-
-            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
-                return false;
+            if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
+                throw new \RuntimeException('Failed to remove claimed execution schedule');
             }
 
-            $schedule = $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
-                'resourceUpdatedAt' => DateTime::now(),
-                'active' => false,
-            ]));
-
-            return !$schedule->isEmpty();
-        });
-
-        if (!$claimed) {
-            return false;
-        }
-
-        $published = false;
-        try {
-            return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId, $enqueue, &$published) {
-                $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
-
-                if ($schedule->isEmpty()) {
-                    return false;
-                }
-
-                $enqueue();
-                $published = true;
-
-                if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
-                    throw new \RuntimeException('Failed to remove claimed execution schedule');
-                }
-
-                return true;
-            });
+            return true;
         } catch (\Throwable $error) {
             // A failed publish releases the claim for a later retry. Once the
             // publish succeeds, keep the schedule inactive even if cleanup

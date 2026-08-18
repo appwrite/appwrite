@@ -16,140 +16,6 @@ require_once __DIR__ . '/../../../../app/init.php';
 
 final class FunctionsTest extends TestCase
 {
-    public function testActiveScheduleIsClaimedBeforeItIsEnqueuedAndRemoved(): void
-    {
-        $worker = $this->worker();
-        $dbForPlatform = $this->createMock(Database::class);
-        $claimed = false;
-        $dbForPlatform
-            ->expects($this->exactly(2))
-            ->method('withTransaction')
-            ->willReturnCallback(fn (callable $callback): mixed => $callback());
-        $dbForPlatform
-            ->expects($this->exactly(2))
-            ->method('getDocument')
-            ->with('schedules', 'schedule-id', [], true)
-            ->willReturnOnConsecutiveCalls(
-                new Document(['$id' => 'schedule-id', 'active' => true]),
-                new Document(['$id' => 'schedule-id', 'active' => false]),
-            );
-        $dbForPlatform
-            ->expects($this->once())
-            ->method('updateDocument')
-            ->with('schedules', 'schedule-id', $this->callback(function (Document $schedule) use (&$claimed): bool {
-                $claimed = $schedule->getAttribute('active') === false;
-                return $claimed;
-            }))
-            ->willReturn(new Document(['$id' => 'schedule-id', 'active' => false]));
-        $dbForPlatform
-            ->expects($this->once())
-            ->method('deleteDocument')
-            ->with('schedules', 'schedule-id')
-            ->willReturn(true);
-
-        $enqueued = false;
-        $this->assertTrue($worker->enqueue($dbForPlatform, 'schedule-id', function () use (&$claimed, &$enqueued): void {
-            $this->assertTrue($claimed, 'Schedule must be claimed before it is published');
-            $enqueued = true;
-        }));
-        $this->assertTrue($enqueued);
-    }
-
-    #[DataProvider('inactiveScheduleProvider')]
-    public function testCancelledOrMissingScheduleIsNotEnqueued(Document $schedule): void
-    {
-        $worker = $this->worker();
-        $dbForPlatform = $this->createMock(Database::class);
-        $dbForPlatform
-            ->expects($this->once())
-            ->method('withTransaction')
-            ->willReturnCallback(fn (callable $callback): mixed => $callback());
-        $dbForPlatform
-            ->expects($this->once())
-            ->method('getDocument')
-            ->with('schedules', 'schedule-id', [], true)
-            ->willReturn($schedule);
-        $dbForPlatform->expects($this->never())->method('updateDocument');
-        $dbForPlatform->expects($this->never())->method('deleteDocument');
-
-        $this->assertFalse($worker->enqueue(
-            $dbForPlatform,
-            'schedule-id',
-            fn () => $this->fail('Cancelled schedule was enqueued'),
-        ));
-    }
-
-    public function testCancellationAfterClaimPreventsPublish(): void
-    {
-        $worker = $this->worker();
-        $dbForPlatform = $this->createMock(Database::class);
-        $dbForPlatform
-            ->expects($this->exactly(2))
-            ->method('withTransaction')
-            ->willReturnCallback(fn (callable $callback): mixed => $callback());
-        $dbForPlatform
-            ->expects($this->exactly(2))
-            ->method('getDocument')
-            ->with('schedules', 'schedule-id', [], true)
-            ->willReturnOnConsecutiveCalls(
-                new Document(['$id' => 'schedule-id', 'active' => true]),
-                new Document(),
-            );
-        $dbForPlatform
-            ->expects($this->once())
-            ->method('updateDocument')
-            ->willReturn(new Document(['$id' => 'schedule-id', 'active' => false]));
-        $dbForPlatform->expects($this->never())->method('deleteDocument');
-
-        $this->assertFalse($worker->enqueue(
-            $dbForPlatform,
-            'schedule-id',
-            fn () => $this->fail('Cancelled schedule was enqueued'),
-        ));
-    }
-
-    public function testFailedPublishReleasesScheduleClaim(): void
-    {
-        $worker = $this->worker();
-        $dbForPlatform = $this->createMock(Database::class);
-        $updates = [];
-        $dbForPlatform
-            ->expects($this->exactly(2))
-            ->method('withTransaction')
-            ->willReturnCallback(fn (callable $callback): mixed => $callback());
-        $dbForPlatform
-            ->expects($this->exactly(2))
-            ->method('getDocument')
-            ->with('schedules', 'schedule-id', [], true)
-            ->willReturnOnConsecutiveCalls(
-                new Document(['$id' => 'schedule-id', 'active' => true]),
-                new Document(['$id' => 'schedule-id', 'active' => false]),
-            );
-        $dbForPlatform
-            ->expects($this->exactly(2))
-            ->method('updateDocument')
-            ->willReturnCallback(function (string $collection, string $id, Document $schedule) use (&$updates): Document {
-                $this->assertSame('schedules', $collection);
-                $this->assertSame('schedule-id', $id);
-                $updates[] = $schedule->getAttribute('active');
-                return new Document(['$id' => $id, 'active' => $schedule->getAttribute('active')]);
-            });
-        $dbForPlatform->expects($this->never())->method('deleteDocument');
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Queue unavailable');
-
-        try {
-            $worker->enqueue(
-                $dbForPlatform,
-                'schedule-id',
-                fn () => throw new \RuntimeException('Queue unavailable'),
-            );
-        } finally {
-            $this->assertSame([false, true], $updates);
-        }
-    }
-
     #[DataProvider('functionIdProvider')]
     public function testScheduledExecutionIsHydratedBeforeItIsEnqueued(array $scheduleData, string $fallbackFunctionId, string $expectedFunctionId): void
     {
@@ -166,23 +32,24 @@ final class FunctionsTest extends TestCase
                 'method' => 'PATCH',
             ], $scheduleData),
         ]);
+        $claimed = false;
 
         $dbForPlatform
-            ->expects($this->exactly(3))
+            ->expects($this->once())
             ->method('getDocument')
-            ->willReturnOnConsecutiveCalls(
-                $schedule,
-                $schedule,
-                new Document(['$id' => 'schedule-id', 'active' => false]),
-            );
+            ->with('schedules', 'schedule-id', [], true)
+            ->willReturn($schedule);
         $dbForPlatform
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('withTransaction')
             ->willReturnCallback(fn (callable $callback): mixed => $callback());
         $dbForPlatform
             ->expects($this->once())
             ->method('updateDocument')
-            ->with('schedules', 'schedule-id', $this->isInstanceOf(Document::class))
+            ->with('schedules', 'schedule-id', $this->callback(function (Document $schedule) use (&$claimed): bool {
+                $claimed = $schedule->getAttribute('active') === false;
+                return $claimed;
+            }))
             ->willReturn(new Document(['$id' => 'schedule-id', 'active' => false]));
         $dbForPlatform
             ->expects($this->once())
@@ -205,7 +72,8 @@ final class FunctionsTest extends TestCase
             $project,
             $execution,
             $fallbackFunctionId,
-            function (FunctionMessage $candidate) use (&$message): void {
+            function (FunctionMessage $candidate) use (&$claimed, &$message): void {
+                $this->assertTrue($claimed, 'Schedule must be claimed before it is published');
                 $message = $candidate;
             },
         ));
@@ -220,6 +88,74 @@ final class FunctionsTest extends TestCase
         $this->assertSame('/path', $message->path);
         $this->assertSame(['x-test' => 'value'], $message->headers);
         $this->assertSame('PATCH', $message->method);
+    }
+
+    #[DataProvider('inactiveScheduleProvider')]
+    public function testCancelledOrMissingScheduleIsNotEnqueued(Document $schedule): void
+    {
+        $worker = $this->worker();
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform
+            ->expects($this->once())
+            ->method('withTransaction')
+            ->willReturnCallback(fn (callable $callback): mixed => $callback());
+        $dbForPlatform
+            ->expects($this->once())
+            ->method('getDocument')
+            ->with('schedules', 'schedule-id', [], true)
+            ->willReturn($schedule);
+        $dbForPlatform->expects($this->never())->method('updateDocument');
+        $dbForPlatform->expects($this->never())->method('deleteDocument');
+
+        $this->assertFalse($worker->schedule(
+            $dbForPlatform,
+            new Document(['$id' => 'project-id']),
+            new Document(['$id' => 'execution-id', 'scheduleId' => 'schedule-id']),
+            'function-id',
+            fn () => $this->fail('Cancelled schedule was enqueued'),
+        ));
+    }
+
+    public function testFailedPublishReleasesScheduleClaim(): void
+    {
+        $worker = $this->worker();
+        $dbForPlatform = $this->createMock(Database::class);
+        $updates = [];
+        $dbForPlatform
+            ->expects($this->once())
+            ->method('withTransaction')
+            ->willReturnCallback(fn (callable $callback): mixed => $callback());
+        $dbForPlatform
+            ->expects($this->once())
+            ->method('getDocument')
+            ->willReturn(new Document([
+                '$id' => 'schedule-id',
+                'active' => true,
+                'data' => ['functionId' => 'function-id'],
+            ]));
+        $dbForPlatform
+            ->expects($this->exactly(2))
+            ->method('updateDocument')
+            ->willReturnCallback(function (string $collection, string $id, Document $schedule) use (&$updates): Document {
+                $updates[] = $schedule->getAttribute('active');
+                return new Document(['$id' => $id, 'active' => $schedule->getAttribute('active')]);
+            });
+        $dbForPlatform->expects($this->never())->method('deleteDocument');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Queue unavailable');
+
+        try {
+            $worker->schedule(
+                $dbForPlatform,
+                new Document(['$id' => 'project-id', 'accessedAt' => DateTime::now()]),
+                new Document(['$id' => 'execution-id', 'scheduleId' => 'schedule-id']),
+                '',
+                fn () => throw new \RuntimeException('Queue unavailable'),
+            );
+        } finally {
+            $this->assertSame([false, true], $updates);
+        }
     }
 
     /**
@@ -248,11 +184,6 @@ final class FunctionsTest extends TestCase
 
 final class TestFunctions extends Functions
 {
-    public function enqueue(Database $dbForPlatform, string $scheduleId, callable $enqueue): bool
-    {
-        return $this->enqueueIfActive($dbForPlatform, $scheduleId, $enqueue);
-    }
-
     public function schedule(Database $dbForPlatform, Document $project, Document $execution, string $functionId, callable $enqueue): bool
     {
         return $this->enqueueScheduledExecution($dbForPlatform, $project, $execution, $functionId, $enqueue);
