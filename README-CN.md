@@ -302,7 +302,7 @@ Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应�
 
 ## 安全
 
-为了保护您的隐私，请避免在 GitHub 上发布安全问题。发送问题至 security@appwrite.io，我们将为您做更细致的解答。
+请通过 [SECURITY.md](SECURITY.md) 报告安全漏洞。请勿在 GitHub 上公开提交安全问题。
 
 ## 订阅我们
 
