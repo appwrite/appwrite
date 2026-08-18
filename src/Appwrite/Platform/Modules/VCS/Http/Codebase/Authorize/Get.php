@@ -37,7 +37,7 @@ class Get extends Action
                 namespace: 'vcs',
                 group: 'installations',
                 name: 'createCodebaseInstallation',
-                description: '/docs/references/vcs/create-codebase-installation.md',
+                description: 'Begin Appwrite\'s Codebase app installation to set up version control integration. This endpoint responds with a redirect URL to the Codebase app\'s installation page on Cursor. The Codebase app must be configured in your environment for this endpoint to work.',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
