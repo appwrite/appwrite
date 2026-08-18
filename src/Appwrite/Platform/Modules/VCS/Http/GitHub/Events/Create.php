@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -44,6 +45,7 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('getProjectDB')
             ->inject('deploymentsFactory')
             ->inject('platform')
@@ -57,6 +59,7 @@ class Create extends Action
         Response $response,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         callable $deploymentsFactory,
         array $platform
@@ -84,8 +87,8 @@ class Create extends Action
         foreach ($parsedPayloads as $parsedPayload) {
             match ($event) {
                 GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
-                GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
-                GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
+                GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                 default => null,
             };
         }
@@ -207,6 +210,7 @@ class Create extends Action
         VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         array $platform,
         callable $deploymentsFactory,
@@ -245,7 +249,7 @@ class Create extends Action
         // Create new deployment only on push (not committed by us) and not when branch is deleted
         if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchDeleted) {
             $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
-            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
+            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
         }
     }
 
@@ -254,6 +258,7 @@ class Create extends Action
         VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         array $platform,
         callable $deploymentsFactory,
@@ -310,7 +315,7 @@ class Create extends Action
                 Query::orderDesc('$createdAt')
             ]));
 
-            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
+            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
         } elseif ($action == "closed") {
             // Allowed external contributions cleanup
 
