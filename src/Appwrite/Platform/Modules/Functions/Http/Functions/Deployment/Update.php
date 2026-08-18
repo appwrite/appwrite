@@ -133,20 +133,16 @@ class Update extends Base
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
-        if ($queries === []) {
-            throw new \LogicException('rules query list must not be empty');
-        }
-
         /** @var list<array<string, mixed>> $updatedRules */
         $updatedRules = $authorization->skip(function () use ($dbForPlatform, $deployment, $queries): array {
             $collected = [];
-            $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, &$collected) {
+            foreach ($dbForPlatform->iterate('rules', $queries) as $rule) {
                 $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                     'deploymentId' => $deployment->getId(),
                     'deploymentInternalId' => $deployment->getSequence(),
                 ]));
                 $collected[] = $rule->getArrayCopy();
-            }, $queries);
+            }
 
             return $collected;
         });

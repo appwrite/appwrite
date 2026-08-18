@@ -18,6 +18,7 @@ use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -47,6 +48,7 @@ class Functions extends Action
             ->inject('project')
             ->inject('message')
             ->inject('dbForProject')
+            ->inject('dbForPlatform')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
@@ -62,6 +64,7 @@ class Functions extends Action
         Document $project,
         Message $message,
         Database $dbForProject,
+        Database $dbForPlatform,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
@@ -101,6 +104,19 @@ class Functions extends Action
         $headers = $functionMessage->headers;
         $path = $functionMessage->path ?: '/';
         $jwt = $functionMessage->jwt;
+
+        $execution = $functionMessage->execution ?? new Document();
+        $scheduleId = $execution->getAttribute('scheduleId', '');
+        if ($type === 'schedule' && !empty($scheduleId)) {
+            $this->enqueueScheduledExecution(
+                dbForPlatform: $dbForPlatform,
+                project: $project,
+                execution: $execution,
+                functionId: $functionId,
+                enqueue: fn (FunctionMessage $message) => $publisherForFunctions->enqueue($message),
+            );
+            return;
+        }
 
         if ($user->isEmpty() && !empty($userId)) {
             $user = $dbForProject->getDocument('users', $userId);
@@ -259,6 +275,86 @@ class Functions extends Action
                     executionId: $execution->getId()
                 );
                 break;
+        }
+    }
+
+    protected function enqueueScheduledExecution(Database $dbForPlatform, Document $project, Document $execution, string $functionId, callable $enqueue): bool
+    {
+        $scheduleId = $execution->getAttribute('scheduleId', '');
+        $schedule = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
+            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
+
+            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+                return new Document();
+            }
+
+            $claimed = $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                'resourceUpdatedAt' => DateTime::now(),
+                'active' => false,
+            ]));
+
+            return $claimed->isEmpty() ? new Document() : $schedule;
+        });
+
+        if ($schedule->isEmpty()) {
+            return false;
+        }
+
+        $data = $schedule->getAttribute('data', []);
+        $functionId = $data['functionId'] ?? $functionId;
+
+        if (empty($functionId)) {
+            Console::error("Missing functionId for scheduled execution {$execution->getId()}, skipping");
+            $dbForPlatform->deleteDocument('schedules', $scheduleId);
+            return false;
+        }
+
+        $published = false;
+        try {
+            $this->updateProjectAccess($project, $dbForPlatform);
+            $enqueue(new FunctionMessage(
+                project: $project,
+                userId: $data['userId'] ?? '',
+                functionId: $functionId,
+                execution: new Document(['$id' => $execution->getId()]),
+                type: 'schedule',
+                body: $data['body'] ?? '',
+                path: $data['path'] ?? '/',
+                headers: $data['headers'] ?? [],
+                method: $data['method'] ?? 'POST',
+            ));
+            $published = true;
+
+            if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
+                throw new \RuntimeException('Failed to remove claimed execution schedule');
+            }
+
+            return true;
+        } catch (\Throwable $error) {
+            // A failed publish releases the claim for a later retry. Once the
+            // publish succeeds, keep the schedule inactive even if cleanup
+            // fails so another worker cannot publish it again.
+            if (!$published) {
+                $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'active' => true,
+                ]));
+            }
+            throw $error;
+        }
+    }
+
+    private function updateProjectAccess(Document $project, Database $dbForPlatform): void
+    {
+        if (!$project->isEmpty() && $project->getId() !== 'console') {
+            $accessedAt = $project->getAttribute('accessedAt', 0);
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                $now = DateTime::now();
+                $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'accessedAt' => $now
+                ]));
+                $project->setAttribute('accessedAt', $now);
+            }
         }
     }
 
