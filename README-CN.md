@@ -214,7 +214,7 @@ docker run -it --rm `
 
 ```mermaid
 flowchart TB
-  Console & Flutter & iOS & Android & Web & Agents & MCP & CLI & SDKs --> Appwrite
+  Console & Flutter & iOS & Android & Web & Agents & MCP & CLI & SDKs & Terraform --> Appwrite
   Appwrite --> REST & Realtime & GraphQL & S3
   REST & Realtime & GraphQL & S3 --> securityLayer[Security layer]
   securityLayer --> services
