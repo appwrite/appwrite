@@ -1,0 +1,46 @@
+//! `PATCH /v1/users/:userId/impersonator` (`updateUserImpersonator`). Rust port
+//! of `Http/Users/Impersonator/Update.php`.
+
+use serde_json::{json, Value};
+use utopia_platform::{Action, HttpMethod};
+use utopia_validators::Boolean;
+
+use crate::modules::users::base::{self, inject};
+
+/// `PATCH /v1/users/:userId/impersonator` (`updateUserImpersonator`).
+#[must_use]
+pub fn update() -> Action {
+    inject(
+        base::user_id_param(
+            Action::new()
+                .set_http_method(HttpMethod::Patch)
+                .set_http_path("/v1/users/:userId/impersonator")
+                .desc("Update user impersonator capability")
+                .groups(["api", "users"])
+                .label("scope", "users.write")
+                .label("audits.event", "user.update")
+                .label("audits.resource", "user/{response.$id}"),
+        )
+        .param(
+            "impersonator",
+            json!(false),
+            Boolean::new().loose(true),
+            "Whether the user can impersonate other users.",
+            false,
+        ),
+        &["response", "dbForProject"],
+    )
+    .http_action(|ctx| async move {
+        base::finish_blocking(ctx, 200, appwrite_response::MODEL_USER, |ctx| {
+            let db_handle = base::get_db(&ctx)?;
+            let mut db = db_handle.lock();
+            let user_id = base::param_str(&ctx, "userId")?;
+            let impersonator = ctx
+                .param_value("impersonator")
+                .and_then(Value::as_bool)
+                .unwrap_or(false);
+            base::update_user_fields(&mut db, &user_id, json!({ "impersonator": impersonator }))
+        })
+        .await
+    })
+}
