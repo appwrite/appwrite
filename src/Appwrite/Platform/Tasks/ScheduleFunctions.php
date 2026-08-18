@@ -16,7 +16,6 @@ use Utopia\Schedule\Trigger\Cron;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
-use Utopia\Telemetry\Histogram;
 
 /**
  * Runs functions on their cron schedules. Selection, the tiling windows it
@@ -35,8 +34,6 @@ class ScheduleFunctions extends Action
     private ?Schedules $schedules = null;
 
     private ?FunctionPublisher $publisher = null;
-
-    private ?Histogram $enqueueDelay = null;
 
     private ?Database $dbForPlatform = null;
 
@@ -96,7 +93,6 @@ class ScheduleFunctions extends Action
     public function start(FunctionPublisher $publisherForFunctions, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
     {
         $this->publisher = $publisherForFunctions;
-        $this->enqueueDelay = $telemetry->createHistogram('task.schedule.enqueue_delay', 's');
         $this->dbForPlatform = $dbForPlatform;
         $this->schedules = new Schedules(
             name: self::getName(),
@@ -175,9 +171,7 @@ class ScheduleFunctions extends Action
             // zero and goes out immediately instead of sleeping backwards.
             $delay = \max(0, $occurrence->due->getTimestamp() - \time() + $offset);
 
-            // The due time carries the offset so enqueue-delay telemetry
-            // measures lateness against the intended (spread) time.
-            $delayed[$delay][] = ['schedule' => $schedule, 'dueAt' => $occurrence->due->modify("+{$offset} seconds")];
+            $delayed[$delay][] = $schedule;
         }
 
         foreach ($delayed as $delay => $batch) {
@@ -186,9 +180,7 @@ class ScheduleFunctions extends Action
                     \sleep($delay); // in seconds
                 }
 
-                foreach ($batch as $due) {
-                    $schedule = $due['schedule'];
-
+                foreach ($batch as $schedule) {
                     if (!$schedules->isLive($schedule)) {
                         continue;
                     }
@@ -208,11 +200,6 @@ class ScheduleFunctions extends Action
                             method: 'POST',
                             path: '/',
                         ));
-
-                        $this->enqueueDelay?->record(
-                            \time() - $due['dueAt']->getTimestamp(),
-                            ['resourceType' => self::getSupportedResource()]
-                        );
                     } catch (\Throwable $th) {
                         Console::error("Failed to enqueue scheduled function {$schedule['resourceId']}: {$th->getMessage()}");
                     } finally {

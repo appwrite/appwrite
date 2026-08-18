@@ -15,7 +15,6 @@ use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\At;
 use Utopia\Telemetry\Adapter as Telemetry;
-use Utopia\Telemetry\Histogram;
 
 /**
  * Runs one-off executions at the moment they were scheduled for. The stored
@@ -31,8 +30,6 @@ class ScheduleExecutions extends Action
     private ?Schedules $schedules = null;
 
     private ?FunctionPublisher $publisher = null;
-
-    private ?Histogram $enqueueDelay = null;
 
     private ?Database $dbForPlatform = null;
 
@@ -81,7 +78,6 @@ class ScheduleExecutions extends Action
     public function start(FunctionPublisher $publisherForFunctions, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
     {
         $this->publisher = $publisherForFunctions;
-        $this->enqueueDelay = $telemetry->createHistogram('task.schedule.enqueue_delay', 's');
         $this->dbForPlatform = $dbForPlatform;
         $this->schedules = new Schedules(
             name: self::getName(),
@@ -186,11 +182,6 @@ class ScheduleExecutions extends Action
                     ]),
                     type: 'schedule',
                 ));
-
-                $this->enqueueDelay?->record(
-                    \time() - $occurrence->due->getTimestamp(),
-                    ['resourceType' => self::getSupportedResource()]
-                );
             } catch (\Throwable $th) {
                 // Stop rather than skip: everything behind this is later than
                 // it, and publishing those now would reorder the queue.

@@ -14,7 +14,6 @@ use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\At;
 use Utopia\Telemetry\Adapter as Telemetry;
-use Utopia\Telemetry\Histogram;
 
 /**
  * Sends scheduled messages at the moment they were scheduled for, and never
@@ -30,8 +29,6 @@ class ScheduleMessages extends Action
     private ?Schedules $schedules = null;
 
     private ?MessagingPublisher $publisher = null;
-
-    private ?Histogram $enqueueDelay = null;
 
     private ?Database $dbForPlatform = null;
 
@@ -80,7 +77,6 @@ class ScheduleMessages extends Action
     public function start(MessagingPublisher $publisherForMessaging, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
     {
         $this->publisher = $publisherForMessaging;
-        $this->enqueueDelay = $telemetry->createHistogram('task.schedule.enqueue_delay', 's');
         $this->dbForPlatform = $dbForPlatform;
         $this->schedules = new Schedules(
             name: self::getName(),
@@ -136,7 +132,7 @@ class ScheduleMessages extends Action
         foreach ($occurrences as $occurrence) {
             $schedule = $occurrence->payload;
 
-            \go(function () use ($schedule, $occurrence, $dbForPlatform): void {
+            \go(function () use ($schedule, $dbForPlatform): void {
                 try {
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
@@ -149,11 +145,6 @@ class ScheduleMessages extends Action
                     // The row is the retirement record: dropping it is what
                     // stops a later snapshot from listing this message again.
                     $dbForPlatform->deleteDocument('schedules', $schedule['$id']);
-
-                    $this->enqueueDelay?->record(
-                        \time() - $occurrence->due->getTimestamp(),
-                        ['resourceType' => self::getSupportedResource()]
-                    );
                 } catch (\Throwable $th) {
                     Console::error("Failed to enqueue scheduled message {$schedule['resourceId']}: {$th->getMessage()}");
                 }
