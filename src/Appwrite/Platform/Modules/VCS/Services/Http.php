@@ -5,6 +5,9 @@ namespace Appwrite\Platform\Modules\VCS\Services;
 use Appwrite\Platform\Modules\VCS\Http\Bitbucket\Authorize\Get as GetBitbucketAuthorize;
 use Appwrite\Platform\Modules\VCS\Http\Bitbucket\Callback\Get as GetBitbucketCallback;
 use Appwrite\Platform\Modules\VCS\Http\Bitbucket\Events\Create as CreateBitbucketEvent;
+use Appwrite\Platform\Modules\VCS\Http\Codebase\Authorize\Get as GetCodebaseAuthorize;
+use Appwrite\Platform\Modules\VCS\Http\Codebase\Callback\Get as GetCodebaseCallback;
+use Appwrite\Platform\Modules\VCS\Http\Codebase\Events\Create as CreateCodebaseEvent;
 use Appwrite\Platform\Modules\VCS\Http\Gitea\Authorize\Get as GetGiteaAuthorize;
 use Appwrite\Platform\Modules\VCS\Http\Gitea\Callback\Get as GetGiteaCallback;
 use Appwrite\Platform\Modules\VCS\Http\Gitea\Events\Create as CreateGiteaEvent;
@@ -50,6 +53,10 @@ class Http extends Service
         $this->addAction(GetBitbucketAuthorize::getName(), new GetBitbucketAuthorize());
         $this->addAction(GetBitbucketCallback::getName(), new GetBitbucketCallback());
 
+        // Codebase Authorization & Callback
+        $this->addAction(GetCodebaseAuthorize::getName(), new GetCodebaseAuthorize());
+        $this->addAction(GetCodebaseCallback::getName(), new GetCodebaseCallback());
+
         // Installations
         $this->addAction(GetInstallation::getName(), new GetInstallation());
         $this->addAction(ListInstallations::getName(), new ListInstallations());
@@ -69,5 +76,6 @@ class Http extends Service
         $this->addAction(CreateGiteaEvent::getName(), new CreateGiteaEvent());
         $this->addAction(CreateGitlabEvent::getName(), new CreateGitlabEvent());
         $this->addAction(CreateBitbucketEvent::getName(), new CreateBitbucketEvent());
+        $this->addAction(CreateCodebaseEvent::getName(), new CreateCodebaseEvent());
     }
 }
