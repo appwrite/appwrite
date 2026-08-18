@@ -238,28 +238,21 @@ flowchart TB
   securityLayer --> services
 
   subgraph services [Services]
-    direction TB
-    subgraph servicesRow1[" "]
-      direction LR
-      Account
-      Users
-      Teams
-      Databases
-      TablesDB
-      Storage
-      Functions
-      Sites
-    end
-    subgraph servicesRow2[" "]
-      direction LR
-      Messaging
-      Avatars
-      Locale
-      Health
-      VCS
-      Webhooks
-      Tokens
-    end
+    Account
+    Users
+    Teams
+    Databases
+    TablesDB
+    Storage
+    Functions
+    Sites
+    Messaging
+    Avatars
+    Locale
+    Health
+    VCS
+    Webhooks
+    Tokens
   end
 
   Functions --> executor["Executor (Open-Runtimes)"]
@@ -267,10 +260,9 @@ flowchart TB
 
   services --> cache["Cache (Redis)"]
   services --> queue["Queue (Redis)"]
+  queue --> workers[Workers]
   cache --> database["PostgreSQL / MariaDB / MySQL / MongoDB"]
   embedding[Embedding] --> database
-
-  queue --> workers[Workers]
   workers --> database
   workers --> browser[Browser]
   workers --> SMTP
