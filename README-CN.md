@@ -287,7 +287,7 @@ Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应�
 
 ## 订阅我们
 
-加入我们在世界各地不断发展的社区！请参阅我们的官方 [博客](https://medium.com/appwrite-io)。在 [Twitter](https://twitter.com/appwrite)、[Facebook 页面](https://www.facebook.com/appwrite.io)、[Facebook 群组](https://www.facebook.com/appwrite.io/groups/)、[开发者社区](https://dev.to/appwrite) 等平台订阅我们或加入我们的 [Discord 社区](https://discord.gg/GSeTUeA) 以获得更多帮助，想法和讨论。
+加入我们在世界各地不断发展的社区！请参阅我们的 [博客](https://appwrite.io/blog)，或在 [Discord](https://appwrite.io/discord)、[GitHub](https://github.com/appwrite)、[X](https://x.com/appwrite)、[LinkedIn](https://linkedin.com/company/appwrite)、[YouTube](https://youtube.com/c/appwrite)、[daily.dev](https://app.daily.dev/squads/appwrite)、[Bluesky](https://bsky.app/profile/appwrite.io)、[TikTok](https://tiktok.com/@appwrite) 和 [Instagram](https://instagram.com/appwrite.io) 关注我们。
 
 ## 版权说明
 
