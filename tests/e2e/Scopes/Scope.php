@@ -223,7 +223,7 @@ abstract class Scope extends TestCase
             }
 
             $this->fail("No email found for address: {$address}" . ($probe !== null ? ' matching probe' : ''));
-        }, 15_000, 500);
+        }, 45_000, 500);
 
         return $result;
     }

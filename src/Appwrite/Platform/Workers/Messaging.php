@@ -101,44 +101,50 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry
     ): void {
+        $previousHookFlags = Runtime::getHookFlags();
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+        try {
+            $this->telemetry = $telemetry;
+            $payload = $message->getPayload();
 
-        $this->telemetry = $telemetry;
-        $payload = $message->getPayload();
+            if (empty($payload)) {
+                throw new \Exception('Missing payload');
+            }
 
-        if (empty($payload)) {
-            throw new \Exception('Missing payload');
-        }
+            $type = $payload['type'] ?? '';
 
-        $type = $payload['type'] ?? '';
+            Span::add('message.type', $type);
 
-        Span::add('message.type', $type);
+            switch ($type) {
+                case MESSAGE_SEND_TYPE_INTERNAL:
+                    $message = new Document($payload['message'] ?? []);
+                    $recipients = $payload['recipients'] ?? [];
 
-        switch ($type) {
-            case MESSAGE_SEND_TYPE_INTERNAL:
-                $message = new Document($payload['message'] ?? []);
-                $recipients = $payload['recipients'] ?? [];
+                    $this->sendInternalSMSMessage($message, $project, $recipients, $log);
+                    break;
+                case MESSAGE_SEND_TYPE_EXTERNAL:
+                    $messageId = $payload['messageId'];
+                    $message = $dbForProject->getDocument('messages', $messageId);
 
-                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
-                break;
-            case MESSAGE_SEND_TYPE_EXTERNAL:
-                $messageId = $payload['messageId'];
-                $message = $dbForProject->getDocument('messages', $messageId);
+                    try {
+                        if ($message->isEmpty()) {
+                            throw new \Exception('Message not found: ' . $messageId);
+                        }
 
-                try {
-                    if ($message->isEmpty()) {
-                        throw new \Exception('Message not found: ' . $messageId);
+                        $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
+                    } catch (\Throwable $e) {
+                        $this->markFailed($dbForProject, $messageId, $e);
+
+                        throw $e;
                     }
-
-                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
-                } catch (\Throwable $e) {
-                    $this->markFailed($dbForProject, $messageId, $e);
-
-                    throw $e;
-                }
-                break;
-            default:
-                throw new \Exception('Unknown message type: ' . $type);
+                    break;
+                default:
+                    throw new \Exception('Unknown message type: ' . $type);
+            }
+        } finally {
+            if ($previousHookFlags !== null) {
+                Runtime::setHookFlags($previousHookFlags);
+            }
         }
     }
 

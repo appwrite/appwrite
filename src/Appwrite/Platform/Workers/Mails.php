@@ -64,173 +64,180 @@ class Mails extends Action
      */
     public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
     {
+        $previousHookFlags = Runtime::getHookFlags();
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-        $payload = $message->getPayload();
+        try {
+            $payload = $message->getPayload();
 
-        if (empty($payload)) {
-            throw new Exception('Missing payload');
-        }
+            if (empty($payload)) {
+                throw new Exception('Missing payload');
+            }
 
-        $smtp = $payload['smtp'];
+            $smtp = $payload['smtp'];
 
-        if (empty($smtp) && empty(System::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
-        }
+            if (empty($smtp) && empty(System::getEnv('_APP_SMTP_HOST'))) {
+                throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
+            }
 
-        $type = empty($smtp) ? 'cloud' : 'smtp';
-        $log->addTag('type', $type);
+            $type = empty($smtp) ? 'cloud' : 'smtp';
+            $log->addTag('type', $type);
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');
 
-        $recipient = $payload['recipient'];
-        $subject = $payload['subject'];
-        $template = $payload['template'] ?? 'unknown';
-        $recipientDomain = \strtolower(\substr(\strrchr($recipient, '@') ?: '', 1));
+            $recipient = $payload['recipient'];
+            $subject = $payload['subject'];
+            $template = $payload['template'] ?? 'unknown';
+            $recipientDomain = \strtolower(\substr(\strrchr($recipient, '@') ?: '', 1));
 
-        Span::add('mail.template', $template);
-        Span::add('mail.smtp_type', $type);
-        Span::add('mail.recipient_domain', $recipientDomain);
-        $variables = $payload['variables'];
-        $variables['host'] = $protocol . '://' . $hostname;
-        $name = $payload['name'];
-        $body = $payload['body'];
-        $preview = $payload['preview'] ?? '';
+            Span::add('mail.template', $template);
+            Span::add('mail.smtp_type', $type);
+            Span::add('mail.recipient_domain', $recipientDomain);
+            $variables = $payload['variables'];
+            $variables['host'] = $protocol . '://' . $hostname;
+            $name = $payload['name'];
+            $body = $payload['body'];
+            $preview = $payload['preview'] ?? '';
 
-        $variables['subject'] = $subject;
-        $variables['heading'] = $variables['heading'] ?? $subject;
-        $variables['year'] = date("Y");
+            $variables['subject'] = $subject;
+            $variables['heading'] = $variables['heading'] ?? $subject;
+            $variables['year'] = date("Y");
 
-        $attachment = $payload['attachment'] ?? [];
-        $bodyTemplate = $payload['bodyTemplate'];
-        if (empty($bodyTemplate)) {
-            $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
-        }
-        $bodyTemplate = Template::fromFile($bodyTemplate);
-        $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
-        foreach ($variables as $key => $value) {
-            // TODO: hotfix for redirect param
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
-        }
-        foreach ($this->richTextParams as $key => $value) {
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
-        }
-
-        $previewWhitespace = '';
-
-        if (!empty($preview)) {
-            $previewTemplate = Template::fromString($preview);
+            $attachment = $payload['attachment'] ?? [];
+            $bodyTemplate = $payload['bodyTemplate'];
+            if (empty($bodyTemplate)) {
+                $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
+            }
+            $bodyTemplate = Template::fromFile($bodyTemplate);
+            $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
             foreach ($variables as $key => $value) {
-                $previewTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+                // TODO: hotfix for redirect param
+                $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+            }
+            foreach ($this->richTextParams as $key => $value) {
+                $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+
+            $previewWhitespace = '';
+
+            if (!empty($preview)) {
+                $previewTemplate = Template::fromString($preview);
+                foreach ($variables as $key => $value) {
+                    $previewTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+                }
+                // render() will return the subject in <p> tags, so use strip_tags() to remove them
+                $preview = \strip_tags($previewTemplate->render());
+
+                $previewLen = strlen($preview);
+                if ($previewLen < $this->previewMaxLen) {
+                    $previewWhitespace =  str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+                }
+            }
+
+
+            $bodyTemplate->setParam('{{preview}}', $preview);
+            $bodyTemplate->setParam('{{previewWhitespace}}', $previewWhitespace, false);
+
+            $body = $bodyTemplate->render();
+
+            $subjectTemplate = Template::fromString($subject);
+            foreach ($variables as $key => $value) {
+                $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
             }
             // render() will return the subject in <p> tags, so use strip_tags() to remove them
-            $preview = \strip_tags($previewTemplate->render());
+            $subject = \strip_tags($subjectTemplate->render());
 
-            $previewLen = strlen($preview);
-            if ($previewLen < $this->previewMaxLen) {
-                $previewWhitespace =  str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+            /** @var EmailAdapter $adapter */
+            $adapter = empty($smtp)
+                ? $register->get('smtp')
+                : new SMTP(
+                    host: $smtp['host'],
+                    port: (int) $smtp['port'],
+                    username: $smtp['username'] ?? '',
+                    password: $smtp['password'] ?? '',
+                    smtpSecure: $smtp['secure'] ?? '',
+                    smtpAutoTLS: false,
+                    xMailer: 'Appwrite Mailer',
+                    timeout: 10,
+                    keepAlive: true,
+                    timelimit: 30,
+                );
+            $adapter->setTelemetry($telemetry);
+
+            // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
+            $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+            $defaultFromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+
+            $fromEmail = !empty($smtp) ? ($smtp['senderEmail'] ?? $defaultFromEmail) : $defaultFromEmail;
+            $fromName = !empty($smtp) ? ($smtp['senderName'] ?? $defaultFromName) : $defaultFromName;
+            $replyTo = $defaultFromEmail;
+            $replyToName = $defaultFromName;
+
+            $customMailOptions = $payload['customMailOptions'] ?? [];
+
+            if (!empty($customMailOptions['senderEmail'])) {
+                $fromEmail = $customMailOptions['senderEmail'];
             }
-        }
+            if (!empty($customMailOptions['senderName'])) {
+                $fromName = $customMailOptions['senderName'];
+            }
 
+            if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
+                $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
+                $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
+            } elseif (!empty($smtp)) {
+                // Includes backwards compatibility: fall back to legacy `replyTo` key
+                $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+                $replyTo = !empty($smtpReplyToEmail) ? $smtpReplyToEmail : ($smtp['senderEmail'] ?? $replyTo);
+                $replyToName = !empty($smtp['replyToName']) ? $smtp['replyToName'] : ($smtp['senderName'] ?? $replyToName);
+            }
 
-        $bodyTemplate->setParam('{{preview}}', $preview);
-        $bodyTemplate->setParam('{{previewWhitespace}}', $previewWhitespace, false);
+            $attachments = null;
+            if (!empty($attachment['content'] ?? '')) {
+                $attachments = [
+                    new Attachment(
+                        name: $attachment['filename'] ?? 'unknown.file',
+                        path: '',
+                        type: $attachment['type'] ?? 'plain/text',
+                        content: \base64_decode($attachment['content']),
+                    ),
+                ];
+            }
 
-        $body = $bodyTemplate->render();
-
-        $subjectTemplate = Template::fromString($subject);
-        foreach ($variables as $key => $value) {
-            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
-        }
-        // render() will return the subject in <p> tags, so use strip_tags() to remove them
-        $subject = \strip_tags($subjectTemplate->render());
-
-        /** @var EmailAdapter $adapter */
-        $adapter = empty($smtp)
-            ? $register->get('smtp')
-            : new SMTP(
-                host: $smtp['host'],
-                port: (int) $smtp['port'],
-                username: $smtp['username'] ?? '',
-                password: $smtp['password'] ?? '',
-                smtpSecure: $smtp['secure'] ?? '',
-                smtpAutoTLS: false,
-                xMailer: 'Appwrite Mailer',
-                timeout: 10,
-                keepAlive: true,
-                timelimit: 30,
+            $emailMessage = new EmailMessage(
+                to: [['email' => $recipient, 'name' => $name]],
+                subject: $subject,
+                content: $body,
+                fromName: $fromName,
+                fromEmail: $fromEmail,
+                replyToName: $replyToName,
+                replyToEmail: $replyTo,
+                attachments: $attachments,
+                html: true,
             );
-        $adapter->setTelemetry($telemetry);
+            $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
-        // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
-        $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $defaultFromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+            try {
+                $result = $adapter->send($emailMessage);
 
-        $fromEmail = !empty($smtp) ? ($smtp['senderEmail'] ?? $defaultFromEmail) : $defaultFromEmail;
-        $fromName = !empty($smtp) ? ($smtp['senderName'] ?? $defaultFromName) : $defaultFromName;
-        $replyTo = $defaultFromEmail;
-        $replyToName = $defaultFromName;
+                if (($result['deliveredTo'] ?? 0) === 0) {
+                    $error = $result['results'][0]['error'] ?? ($result['error'] ?? 'Unknown error');
+                    throw new Exception($error);
+                }
+            } catch (\Throwable $error) {
+                Span::add('mail.status', 'failure');
 
-        $customMailOptions = $payload['customMailOptions'] ?? [];
-
-        if (!empty($customMailOptions['senderEmail'])) {
-            $fromEmail = $customMailOptions['senderEmail'];
-        }
-        if (!empty($customMailOptions['senderName'])) {
-            $fromName = $customMailOptions['senderName'];
-        }
-
-        if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
-            $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
-            $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
-        } elseif (!empty($smtp)) {
-            // Includes backwards compatibility: fall back to legacy `replyTo` key
-            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
-            $replyTo = !empty($smtpReplyToEmail) ? $smtpReplyToEmail : ($smtp['senderEmail'] ?? $replyTo);
-            $replyToName = !empty($smtp['replyToName']) ? $smtp['replyToName'] : ($smtp['senderName'] ?? $replyToName);
-        }
-
-        $attachments = null;
-        if (!empty($attachment['content'] ?? '')) {
-            $attachments = [
-                new Attachment(
-                    name: $attachment['filename'] ?? 'unknown.file',
-                    path: '',
-                    type: $attachment['type'] ?? 'plain/text',
-                    content: \base64_decode($attachment['content']),
-                ),
-            ];
-        }
-
-        $emailMessage = new EmailMessage(
-            to: [['email' => $recipient, 'name' => $name]],
-            subject: $subject,
-            content: $body,
-            fromName: $fromName,
-            fromEmail: $fromEmail,
-            replyToName: $replyToName,
-            replyToEmail: $replyTo,
-            attachments: $attachments,
-            html: true,
-        );
-        $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
-
-        try {
-            $result = $adapter->send($emailMessage);
-
-            if (($result['deliveredTo'] ?? 0) === 0) {
-                $error = $result['results'][0]['error'] ?? ($result['error'] ?? 'Unknown error');
-                throw new Exception($error);
+                if ($type === 'smtp') {
+                    throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
+                }
+                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
             }
-        } catch (\Throwable $error) {
-            Span::add('mail.status', 'failure');
 
-            if ($type === 'smtp') {
-                throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
+            Span::add('mail.status', 'success');
+        } finally {
+            if ($previousHookFlags !== null) {
+                Runtime::setHookFlags($previousHookFlags);
             }
-            throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
-
-        Span::add('mail.status', 'success');
     }
 }
