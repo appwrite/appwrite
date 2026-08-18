@@ -225,9 +225,17 @@ flowchart TB
 
   Appwrite --> traefik[Traefik]
   traefik --> Console
-  traefik --> restApi[REST API]
-  traefik --> graphqlApi[GraphQL API]
-  traefik --> realtimeApi[Realtime API]
+
+  subgraph apis [APIs]
+    direction LR
+    restApi[REST API]
+    graphqlApi[GraphQL API]
+    realtimeApi[Realtime API]
+  end
+
+  traefik --> apis
+  apis --> securityLayer[Security Layer]
+  securityLayer --> services
 
   subgraph services [Services]
     direction TB
@@ -254,24 +262,15 @@ flowchart TB
     end
   end
 
-  restApi --> services
-
-  graphqlApi --> securityLayer[Security Layer]
-  restApi --> securityLayer
-  realtimeApi --> securityLayer
-
-  securityLayer --> executor["Executor (Open-Runtimes)"]
-  securityLayer --> cache["Cache (Redis)"]
-  securityLayer --> queue["Queue (Redis)"]
-  cache --> securityLayer
-
+  Functions --> executor["Executor (Open-Runtimes)"]
   executor --> dockerK8s["Docker / K8S"]
+
+  services --> cache["Cache (Redis)"]
+  services --> queue["Queue (Redis)"]
   cache --> database["PostgreSQL / MariaDB / MySQL / MongoDB"]
   embedding[Embedding] --> database
 
   queue --> workers[Workers]
-  executor --> workers
-  workers --> executor
   workers --> database
   workers --> browser[Browser]
   workers --> SMTP
