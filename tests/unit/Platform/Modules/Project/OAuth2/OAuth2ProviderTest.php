@@ -38,7 +38,7 @@ final class OAuth2ProviderTest extends TestCase
 
         $expected = [
             'amazon', 'apple', 'appwrite', 'auth0', 'authentik', 'autodesk',
-            'bitbucket', 'bitly', 'box', 'dailymotion', 'discord', 'disqus',
+            'bitbucket', 'bitly', 'box', 'cursor', 'dailymotion', 'discord', 'disqus',
             'dropbox', 'etsy', 'facebook', 'figma', 'fusionauth', 'github',
             'gitlab', 'google', 'keycloak', 'kick', 'linkedin', 'microsoft',
             'notion', 'oidc', 'okta', 'paypal', 'paypalSandbox', 'podio',

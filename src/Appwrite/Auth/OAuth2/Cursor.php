@@ -218,6 +218,21 @@ class Cursor extends OAuth2
     }
 
     /**
+     * End-to-end credential check used when enabling the provider: signing
+     * the app JWT proves the private key is well-formed, and the zero-cost
+     * rate-limit endpoint rejects it with a 401 unless the app ID and key
+     * match a registered app.
+     *
+     * @throws Exception
+     */
+    public function verifyCredentials(): void
+    {
+        $this->request('GET', $this->endpoint . '/rate_limit', [
+            'Authorization: Bearer ' . $this->getAppJWT(),
+        ]);
+    }
+
+    /**
      * Cursor Origin apps act as an installation, never as a user, so there is
      * no user identity behind an access token.
      */
