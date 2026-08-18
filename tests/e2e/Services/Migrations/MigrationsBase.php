@@ -2383,7 +2383,8 @@ trait MigrationsBase
                     $payload = $message['data']['payload'] ?? null;
                     $this->assertIsArray($payload, 'Execution update has no payload: ' . json_encode($message, JSON_PRETTY_PRINT));
                     $this->assertSame($executionId, $payload['$id'] ?? null, 'Realtime returned a different execution: ' . json_encode($payload, JSON_PRETTY_PRINT));
-                    $this->assertSame($functionId, $payload['functionId'] ?? null, 'Execution ran a different function: ' . json_encode($payload, JSON_PRETTY_PRINT));
+                    $this->assertSame($functionId, $payload['resourceId'] ?? null, 'Execution ran a different function: ' . json_encode($payload, JSON_PRETTY_PRINT));
+                    $this->assertSame('functions', $payload['resourceType'] ?? null, 'Execution ran with a different resource type: ' . json_encode($payload, JSON_PRETTY_PRINT));
 
                     if (($payload['status'] ?? null) === 'failed') {
                         $this->fail('Execution failed: ' . json_encode($payload['errors'] ?? $payload, JSON_PRETTY_PRINT));
