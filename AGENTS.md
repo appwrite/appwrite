@@ -281,9 +281,11 @@ Add a qualifier only when the verb or single name is ambiguous (`createStringCol
 
 ## Tests
 
-**E2E** (`tests/e2e/Services/{Service}/`) is the contract for the HTTP/API surface. Cover every route for **success and failure** (auth, scopes, validation, 4xx, permissions) through the real API. Shared logic in `{Service}Base` traits; suites `{Feature}{ConsoleClientTest|CustomClientTest|CustomServerTest}`. Methods `test{Verb}` or `test{Verb}{Qualifier}`. Group assertions under `Test for SUCCESS` / `Test for FAILURE` blocks.
+**E2E** (`tests/e2e/Services/{Service}/`) is the contract for the HTTP/API surface. Cover every route for **success and failure** through the real API: status codes, headers, cookies, response shape, SDK-visible contracts, validation, auth, scopes, permissions, project mode, and client vs server vs console sides. Also cover persistence, queue-visible behavior, worker and CLI-task integration, and cross-subsystem workflows users can observe. Shared logic in `{Service}Base` traits; suites `{Feature}{ConsoleClientTest|CustomClientTest|CustomServerTest}`. Use `Tests\E2E\Client` and existing scope traits (`Scope`, `ProjectCustom`, `SideClient`, `SideServer`, `ProjectConsole`). Methods `test{Verb}` or `test{Verb}{Qualifier}`. Group assertions under `Test for SUCCESS` / `Test for FAILURE` blocks. Generate unique IDs, emails, and names so parallel runs do not collide.
 
-**Unit** (`tests/unit/`) covers **local src libraries only** (`src/Appwrite/Auth`, `Network`, `URL`, …). Path mirrors source; class `{ClassUnderTest}Test`. Do **not** unit-test HTTP route actions, CLI tasks, or workers — e2e covers those surfaces, and unit tests cover the libraries they call. Never use reflection to reach private members.
+**Unit** (`tests/unit/`) covers **local src libraries only** (`src/Appwrite/Auth`, `Network`, `URL`, validators, mappers, parsers, filters). Path mirrors source; class `{ClassUnderTest}Test`. Use `PHPUnit\Framework\TestCase`, data providers for matrices, and named fakes over anonymous mocks. Do **not** unit-test HTTP route actions (`Platform/Modules/**/Http`), CLI tasks, or workers — e2e covers those surfaces; unit-test the libraries they call. If an e2e test finds a library bug and no unit test fails, add a unit regression on that library. Never use reflection to reach private members. Do not run Swoole coroutine work in the shared unit process. Never call production third-party services from automated tests.
+
+Structure tests as Arrange, Act, Assert. Assert observable behavior (status, body fields, error type, permission outcome, persisted value), not private call order. Avoid full-document assertions when a sparse check is enough. Avoid sleeps; prefer existing polling helpers. Run the narrowest command that validates the change (`composer lint <file>`, a single `--filter`, one service suite) before broadening.
 
 ## SDK specs
 
@@ -294,11 +296,34 @@ Two independent ways to keep an endpoint out of a generated SDK (both lifted whe
 
 Preview builds set the flag on **both** the `specs` and `sdks` steps in `.github/workflows/sdk-preview.yml`. Read the flag inline at each `hide:` call site with a comment, never behind a helper: `hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled'`. `->label('docs', false)` is separate (mocks, OAuth callbacks) and stays unconditional.
 
+## Releases
+
+### Patch version
+
+When bumping a patch (e.g. `1.9.0` → `1.9.1`):
+
+- [`docker-compose.yml`](docker-compose.yml) — `appwrite-console` image tag (`appwrite/new:X.Y.Z`)
+- [`app/init/constants.php`](app/init/constants.php) — set `APP_VERSION_STABLE`; increment `APP_CACHE_BUSTER` by 1
+- [`README.md`](README.md) and [`README-CN.md`](README-CN.md) — `appwrite/appwrite:X.Y.Z` in all three install blocks each
+- [`src/Appwrite/Migration/Migration.php`](src/Appwrite/Migration/Migration.php) — add the version to `$versions`, mapping to a new migration class or the same class as the previous version
+- [`CHANGES.md`](CHANGES.md) — new `# Version X.Y.Z` with `### Notable changes`, `### Fixes`, `### Miscellaneous`
+
+Ask the user to review, fill `CHANGES.md` with PRs, generate specs if the API changed, and add request/response filters if needed.
+
+### Self-hosted RC / final
+
+A release is not ready until a **fresh install** and an **upgrade from the previous stable** both work with realistic data. Previous baseline = highest stable semver tag lower than the target (ignore RC/beta/alpha; prefer `git ls-remote --tags origin`).
+
+**Fresh install:** `docker compose down -v` then `up -d --force-recreate --build --wait`. Check `docker compose ps` / logs for crash loops, missing env, failed workers. Hit `/v1/health/version` on the public port. Run unit tests, `tests/e2e/General`, and service e2e. Exercise console users, projects, databases/rows, storage, and (when in scope) functions/sites through public APIs — not empty-stack health checks alone.
+
+**Upgrade:** install the previous stable image, seed broad data (empty values, long strings, relationships, mixed permissions), keep volumes, switch to the target image, run migrate. Migration must complete, be idempotent, and preserve seeded data through public API reads/writes.
+
+**Metadata:** `APP_VERSION_STABLE` / `APP_CACHE_BUSTER`; Appwrite and console tags in `docker-compose.yml` and [`app/views/install/compose.phtml`](app/views/install/compose.phtml); README install snippets; `Migration.php` `$versions`; `CHANGES.md`. For public API breaks: request filters in `src/Appwrite/Utopia/Request/Filters/V*.php`, response filters in `src/Appwrite/Utopia/Response/Filters/V*.php`, registered in [`app/controllers/general.php`](app/controllers/general.php) for `x-appwrite-response-format`. Unit-test filters under `tests/unit/Utopia/{Request,Response}/Filters`; add e2e with that header when routing, auth, or persistence is involved.
+
+Do not approve an RC/final until both gates pass, metadata matches the target, and unintended public breaks have filters (or the owner documents the break in `CHANGES.md`).
+
 ## See also
 
-- Testing: [`.codex/skills/appwrite-testing/SKILL.md`](.codex/skills/appwrite-testing/SKILL.md)
-- Patch version bump: [`.claude/skills/patch-release-checklist/SKILL.md`](.claude/skills/patch-release-checklist/SKILL.md)
-- Self-hosted RC / release gates: [`.agents/skills/self-hosted-release/SKILL.md`](.agents/skills/self-hosted-release/SKILL.md)
-- Human contributor setup: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Community process: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 Appwrite is the base server for `appwrite/cloud`. Changes to the Action pattern, module structure, DI system, or response models affect cloud.
