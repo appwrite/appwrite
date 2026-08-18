@@ -41,31 +41,32 @@ class Schedule extends Action
         Telemetry $telemetry,
         Group $pools,
     ): never {
-        // Loading runs serially, so the three do not contend for the shared
-        // console and cache pools, and only then do the loops start.
-        $loops = [
-            (new ScheduleFunctions())->boot($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools),
-            (new ScheduleExecutions())->boot($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools),
-            (new ScheduleMessages())->boot($publisherForMessaging, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools),
-        ];
+        $functions = (new ScheduleFunctions())->boot($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
+        $executions = (new ScheduleExecutions())->boot($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
+        $messages = (new ScheduleMessages())->boot($publisherForMessaging, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
 
-        foreach ($loops as $loop) {
-            Co::create(function () use ($loop): void {
-                Span::init('schedule.combined.loop');
-                $error = null;
-
-                try {
-                    $loop();
-                } catch (\Throwable $th) {
-                    $error = $th;
-                } finally {
-                    Span::current()?->finish(error: $error);
-                }
-            });
-        }
+        $this->loop($functions);
+        $this->loop($executions);
+        $this->loop($messages);
 
         while (true) {
             sleep(3600);
         }
+    }
+
+    private function loop(\Closure $dispatch): void
+    {
+        Co::create(function () use ($dispatch): void {
+            Span::init('schedule.combined.loop');
+            $error = null;
+
+            try {
+                $dispatch();
+            } catch (\Throwable $th) {
+                $error = $th;
+            } finally {
+                Span::current()?->finish(error: $error);
+            }
+        });
     }
 }

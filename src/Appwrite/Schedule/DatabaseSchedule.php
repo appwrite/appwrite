@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Tasks;
+namespace Appwrite\Schedule;
 
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -13,7 +13,7 @@ use Utopia\Schedule\Source\Row;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
-final class ScheduleSource implements Source, Changes
+final class DatabaseSchedule implements Source, Changes
 {
     /** @var array<string, Document> */
     private array $projects = [];

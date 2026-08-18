@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Schedule\DatabaseSchedule;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -21,7 +22,6 @@ class ScheduleExecutions extends Action
     public const UPDATE_TIMER = 3; // seconds between reconciliations
     public const ENQUEUE_TIMER = 4; // seconds between ticks
     public const ENQUEUE_LOOKAHEAD = 4; // seconds of lead time, so a dispatch can sleep to the second
-    public const ENQUEUE_LOOKBACK = 300; // seconds of missed runs a restart recovers
 
     public function __construct()
     {
@@ -69,7 +69,7 @@ class ScheduleExecutions extends Action
     {
         Span::init('schedule.executions.boot');
 
-        $source = new ScheduleSource(
+        $source = new DatabaseSchedule(
             dbForPlatform: $dbForPlatform,
             getProjectDB: $getProjectDB,
             isResourceBlocked: $getIsResourceBlocked,
@@ -85,7 +85,6 @@ class ScheduleExecutions extends Action
             tickSeconds: self::ENQUEUE_TIMER,
             syncSeconds: self::UPDATE_TIMER,
             leadSeconds: self::ENQUEUE_LOOKAHEAD,
-            recoverSeconds: self::ENQUEUE_LOOKBACK,
             telemetry: $telemetry,
             onError: function (\Throwable $error): void {
                 Span::init('schedule.executions.reconcile');
@@ -103,7 +102,7 @@ class ScheduleExecutions extends Action
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
     {
-        ScheduleSource::touchProject($project, $dbForPlatform);
+        DatabaseSchedule::touchProject($project, $dbForPlatform);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
+use Appwrite\Schedule\DatabaseSchedule;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -21,7 +22,6 @@ class ScheduleMessages extends Action
     public const UPDATE_TIMER = 3; // seconds between reconciliations
     public const ENQUEUE_TIMER = 4; // seconds between ticks
     public const ENQUEUE_LOOKAHEAD = 0; // no lead time: a message must not go out early
-    public const ENQUEUE_LOOKBACK = 300; // seconds of missed runs a restart recovers
 
     public function __construct()
     {
@@ -69,7 +69,7 @@ class ScheduleMessages extends Action
     {
         Span::init('schedule.messages.boot');
 
-        $source = new ScheduleSource(
+        $source = new DatabaseSchedule(
             dbForPlatform: $dbForPlatform,
             getProjectDB: $getProjectDB,
             isResourceBlocked: $getIsResourceBlocked,
@@ -85,7 +85,6 @@ class ScheduleMessages extends Action
             tickSeconds: self::ENQUEUE_TIMER,
             syncSeconds: self::UPDATE_TIMER,
             leadSeconds: self::ENQUEUE_LOOKAHEAD,
-            recoverSeconds: self::ENQUEUE_LOOKBACK,
             telemetry: $telemetry,
             onError: function (\Throwable $error): void {
                 Span::init('schedule.messages.reconcile');
@@ -103,7 +102,7 @@ class ScheduleMessages extends Action
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
     {
-        ScheduleSource::touchProject($project, $dbForPlatform);
+        DatabaseSchedule::touchProject($project, $dbForPlatform);
     }
 
     /**
