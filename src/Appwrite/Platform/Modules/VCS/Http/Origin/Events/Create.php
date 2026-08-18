@@ -12,6 +12,7 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
@@ -111,6 +112,21 @@ class Create extends Action
 
         if (!$valid) {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook payload signature. The delivery could not be verified against Origin\'s published signing keys.');
+        }
+
+        // Origin delivers at least once and retries anything not acknowledged
+        // with a 2xx in time. Processing here is synchronous and can outlast
+        // that window, so claim the delivery id before doing the work - a
+        // retry of a delivery already being processed must not deploy again.
+        // TODO: acknowledge first and process asynchronously instead.
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                '$id' => 'origin-delivery-' . $deliveryId,
+            ])));
+        } catch (Duplicate) {
+            Console::log('[ORIGIN EVENT] duplicate delivery ' . $deliveryId . ' - already processed, acknowledging without action');
+            $response->json(['events' => [], 'duplicate' => true]);
+            return;
         }
 
         $parsedPayloads = $vcs->getEvents($event, $payload);
