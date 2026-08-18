@@ -76,11 +76,9 @@ A module contains:
 - `Workers/` -- optional module-specific workers
 - `Tasks/` -- optional; most CLI tasks live in `src/Appwrite/Platform/Tasks/`
 
-Directly under `Http/` there are only service directories (and hooks). A single-service module uses one directory named after the service (`Modules/Account/Http/Account`). A multi-service module uses one per service (`Modules/Databases/Http/Databases` and `Modules/Databases/Http/TablesDB`).
+Directly under `Http/` there are only service directories. A single-service module uses one directory named after the service (`Modules/Account/Http/Account`). A multi-service module uses one per service (`Modules/Databases/Http/Databases` and `Modules/Databases/Http/TablesDB`).
 
-Hooks live in `Http/Hooks/{Init,Shutdown,Error}/`, e.g. `Modules/Functions/Http/Hooks/Init/Authentication.php`.
-
-Nest resources and properties as directories. Top-level resources in the same module are **siblings**, not nested under the parent resource folder. Template deployments live at `Modules/Functions/Http/Deployments/Template/Create.php` (`Deployments/` is a sibling of `Functions/`; `template` is a property). Action file names: [HTTP actions](#http-actions).
+Nest resources and properties as directories. Top-level resources in the same module are **siblings**, not nested under the parent resource folder. Template deployments live at `Modules/Functions/Http/Deployments/Template/Create.php` (`Deployments/` is a sibling of `Functions/`; `template` is a property). Action file names and constructor methods: [HTTP actions](#http-actions). Init/shutdown/error hooks: [Lifecycle](#lifecycle).
 
 ```
 src/Appwrite/Platform/Modules/Functions
@@ -138,6 +136,69 @@ class Create extends Action
 ```
 
 Common injections: `$response`, `$request`, `$dbForProject`, `$dbForPlatform`, `$user`, `$project`, `$queueForEvents`, `$queueForMails`, `$queueForDeletes`.
+
+HTTP actions `use Utopia\Platform\Scope\HTTP`. Constructor methods (chain on `$this`):
+
+| Method | Role |
+|--------|------|
+| `setHttpMethod()` | `HTTP_REQUEST_METHOD_GET` / `POST` / `PATCH` / `PUT` / `DELETE` |
+| `setHttpPath()` | Route, with `:param` segments (`/v1/teams/:teamId`) |
+| `httpAlias()` | Extra path that hits the same action (legacy URLs) |
+| `desc()` | Short human description |
+| `groups()` | Hook buckets. Almost always include `api`; add the service (`teams`, `functions`) so matching init/shutdown hooks run. Extra groups opt into extra hooks (`session` → session-limit shutdown) |
+| `label()` | Metadata (see below) |
+| `param($key, $default, $validator, $description, $optional = false, $injections = [])` | Request/route/CLI argument. 5th arg `true` = optional. 6th = inject names when the validator is a closure (e.g. `['dbForProject']`). Named: `optional: true`, `skipValidation: true` |
+| `inject()` | Object dependency from the container — see [Reuse](#reuse) |
+| `callback()` | Handler. Use `$this->action(...)` |
+
+Common `label()` keys: `scope` (`teams.write`), `event` (`teams.[teamId].create`), `audits.event` / `audits.resource`, `sdk` (`new Method(...)`), `resourceType`, `usage.resource` / `usage.metric` / `usage.params`, `abuse-key` / `abuse-limit` / `abuse-time`, `docs` (`false` for non-public routes). Example: [`Teams/Http/Teams/Create.php`](src/Appwrite/Platform/Modules/Teams/Http/Teams/Create.php); aliases: [`Webhooks/Http/Webhooks/XList.php`](src/Appwrite/Platform/Modules/Webhooks/Http/Webhooks/XList.php); abuse/usage: [`Tokens/Http/Tokens/Buckets/Files/Create.php`](src/Appwrite/Platform/Modules/Tokens/Http/Tokens/Buckets/Files/Create.php).
+
+Workers and tasks are also `Action` classes, without HTTP path/method. Workers: `desc` + `inject('message')` + other objects + `callback` — [`Workers/Mails.php`](src/Appwrite/Platform/Workers/Mails.php). Tasks: `desc` + CLI `param`s + `inject` + `callback` — [`Tasks/QueueRetry.php`](src/Appwrite/Platform/Tasks/QueueRetry.php).
+
+## Lifecycle
+
+Three process entrypoints load `app/init.php`, then register that process type:
+
+| Process | Entrypoint | `platform->init(...)` |
+|---------|------------|------------------------|
+| HTTP | [`app/http.php`](app/http.php) | `Service::TYPE_HTTP` (from [`app/controllers/general.php`](app/controllers/general.php)) |
+| Worker | [`app/worker.php`](app/worker.php) | `Service::TYPE_WORKER` |
+| CLI task | [`app/cli.php`](app/cli.php) | `Service::TYPE_TASK` |
+
+**HTTP request:** matching `Http::init()` hooks (by `groups`) → action → matching `Http::shutdown()` hooks. On exception, `Http::error()` runs instead of remaining shutdown work. CORS/router/locale live in [`app/controllers/general.php`](app/controllers/general.php); auth, scopes, abuse, and event enqueue live in [`app/controllers/shared/api.php`](app/controllers/shared/api.php) (`groups(['api'])`). Add a new cross-cutting hook next to those files with `Http::init()` / `shutdown()` / `error()`, `->groups([...])` matching the actions it should wrap, `->inject(...)`, and `->action(...)`. Do not inject callables; do not invent global functions.
+
+**Worker job:** [`app/worker.php`](app/worker.php) `$worker->init()` (per-message resources, span) → worker action (`inject('message')`) → `$worker->shutdown()`. `$worker->error()` logs failures.
+
+**CLI task:** [`app/cli.php`](app/cli.php) runs the named task action. `$cli->error()` logs; `$cli->shutdown()` clears timers. Tasks do not run HTTP init/shutdown groups.
+
+```mermaid
+flowchart TD
+  boot[init.php container]
+  http[http.php TYPE_HTTP]
+  worker[worker.php TYPE_WORKER]
+  cli[cli.php TYPE_TASK]
+  initHooks[Http::init by groups]
+  action[HTTP action]
+  shutdownHooks[Http::shutdown by groups]
+  errHttp[Http::error]
+  wInit[worker init]
+  wAction[worker action]
+  wShut[worker shutdown]
+  wErr[worker error]
+  tAction[task action]
+  tErr[cli error]
+  boot --> http
+  boot --> worker
+  boot --> cli
+  http --> initHooks --> action --> shutdownHooks
+  initHooks --> errHttp
+  action --> errHttp
+  worker --> wInit --> wAction --> wShut
+  wInit --> wErr
+  wAction --> wErr
+  cli --> tAction
+  tAction --> tErr
+```
 
 ## Reuse
 
