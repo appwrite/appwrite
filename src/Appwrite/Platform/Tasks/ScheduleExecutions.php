@@ -5,33 +5,24 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Coroutine as Co;
-use Utopia\Console;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Schedule\Occurrence;
-use Utopia\Schedule\Trigger;
+use Utopia\Schedule\Scheduler;
+use Utopia\Schedule\Source\Entry;
+use Utopia\Schedule\Store\Redis as ClaimStore;
 use Utopia\Schedule\Trigger\At;
+use Utopia\Span\Span;
 use Utopia\Telemetry\Adapter as Telemetry;
 
-/**
- * Runs one-off executions at the moment they were scheduled for. The stored
- * schedule is a fixed time rather than a recurrence, so each one is retired
- * after it has been handed over.
- */
 class ScheduleExecutions extends Action
 {
     public const UPDATE_TIMER = 3; // seconds between reconciliations
     public const ENQUEUE_TIMER = 4; // seconds between ticks
-    public const ENQUEUE_LOOKAHEAD = 4; // handed over a tick early, to sleep to the exact second
-
-    private ?Schedules $schedules = null;
-
-    private ?FunctionPublisher $publisher = null;
-
-    private ?Database $dbForPlatform = null;
+    public const ENQUEUE_LOOKAHEAD = 4; // seconds of lead time, so a dispatch can sleep to the second
+    public const ENQUEUE_LOOKBACK = 300; // seconds of missed runs a restart recovers
 
     public function __construct()
     {
@@ -63,65 +54,60 @@ class ScheduleExecutions extends Action
 
     public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): never
     {
-        Console::title('Execution scheduler V1');
-        Console::success(APP_NAME . ' execution scheduler v1 has started');
+        ($this->boot($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools))();
 
-        $this->start($publisherForFunctions, $telemetry, $dbForPlatform, $getProjectDB, $getIsResourceBlocked, $pools);
-        $this->listen();
+        Span::init('schedule.executions.stopped');
+        Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
 
-        // Nothing here stops the loop, so a return means the supervisor
-        // should restart the task rather than leave it scheduling nothing.
-        Console::error('Scheduler loop returned unexpectedly');
         exit(1);
     }
 
-    public function start(FunctionPublisher $publisherForFunctions, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): void
+    /**
+     * Load the schedules and return the loop that dispatches them, so the
+     * combined task can load all three before running any.
+     */
+    public function boot(FunctionPublisher $publisher, Telemetry $telemetry, Database $dbForPlatform, callable $getProjectDB, callable $getIsResourceBlocked, Group $pools): \Closure
     {
-        $this->publisher = $publisherForFunctions;
-        $this->dbForPlatform = $dbForPlatform;
-        $this->schedules = new Schedules(
-            name: self::getName(),
-            resourceType: self::getSupportedResource(),
-            collectionId: self::getCollectionId(),
-            sync: self::UPDATE_TIMER,
-            tick: self::ENQUEUE_TIMER,
-            lookahead: self::ENQUEUE_LOOKAHEAD,
+        Span::init('schedule.executions.boot');
+
+        $source = new ScheduleSource(
             dbForPlatform: $dbForPlatform,
             getProjectDB: $getProjectDB,
             isResourceBlocked: $getIsResourceBlocked,
-            pools: $pools,
-            trigger: $this->trigger(...),
+            resourceType: self::getSupportedResource(),
+            collectionId: self::getCollectionId(),
             resource: $this->resource(...),
-            telemetry: $telemetry,
+            entry: fn (array $schedule): Entry => new Entry(new At(new \DateTimeImmutable((string) $schedule['schedule'])), $schedule),
+            recency: self::UPDATE_TIMER * 3,
         );
-        $this->schedules->load();
-    }
 
-    public function scheduleCount(): int
-    {
-        return $this->schedules?->count() ?? 0;
-    }
+        $scheduler = new Scheduler(
+            source: $source,
+            store: new ClaimStore($pools->get('lock')->pop()->resource, 'utopia-schedule-' . self::getName()),
+            interval: self::ENQUEUE_TIMER,
+            sync: self::UPDATE_TIMER,
+            relist: self::UPDATE_TIMER * 30,
+            lookahead: self::ENQUEUE_LOOKAHEAD,
+            lookback: self::ENQUEUE_LOOKBACK,
+            lease: self::ENQUEUE_TIMER * 15,
+            telemetry: $telemetry,
+            onError: function (\Throwable $error): void {
+                Span::init('schedule.executions.reconcile');
+                Span::current()?->finish(error: $error);
+            },
+        );
 
-    public function listen(): void
-    {
-        $schedules = $this->schedules ?? throw new \LogicException('start() must run before listen()');
+        $scheduler->reconcile();
 
-        Console::success('Starting execution scheduler at ' . DateTime::now());
+        Span::add('schedule.executions.loaded', $source->snapshotted());
+        Span::current()?->finish();
 
-        $schedules->run($this->dispatch(...));
+        return fn (): null => $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $source, $publisher, $dbForPlatform));
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
     {
         ScheduleSource::touchProject($project, $dbForPlatform);
-    }
-
-    /**
-     * @param array<string, mixed> $schedule
-     */
-    public function trigger(array $schedule): Trigger
-    {
-        return new At(new \DateTimeImmutable((string) $schedule['schedule']));
     }
 
     /**
@@ -145,19 +131,14 @@ class ScheduleExecutions extends Action
     }
 
     /**
+     * Published one at a time, in the order the tick selected them: a
+     * coroutine per execution let a later one overtake an earlier one on the
+     * queue, and a failure stops the rest rather than reordering around it.
+     *
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences): void
+    private function dispatch(array $occurrences, ScheduleSource $source, FunctionPublisher $publisher, Database $dbForPlatform): null
     {
-        $dbForPlatform = $this->dbForPlatform ?? throw new \LogicException('start() must run before dispatch()');
-        $schedules = $this->schedules ?? throw new \LogicException('start() must run before dispatch()');
-
-        // Publishing runs here, one execution at a time, in the order the tick
-        // selected them — oldest first. A coroutine per execution let a later
-        // one overtake an earlier one on the queue, and two ticks overlapping
-        // let them interleave, which is what the ordering fix on main removed.
-        // No re-entrancy guard is needed: the scheduler's loop is sequential
-        // and cannot call this again until it returns.
         foreach ($occurrences as $occurrence) {
             $schedule = $occurrence->payload;
             $delay = $occurrence->due->getTimestamp() - \time();
@@ -166,14 +147,20 @@ class ScheduleExecutions extends Action
                 Co::sleep($delay);
             }
 
-            if (!$schedules->isLive($schedule)) {
+            if (!$source->isLive((string) $schedule['$sequence'], (string) $schedule['resourceUpdatedAt'])) {
                 continue;
             }
 
+            Span::init('schedule.executions.enqueue');
+            $error = null;
+
             try {
+                Span::add('project.id', $schedule['project']->getId());
+                Span::add('schedule.id', $schedule['$id'] ?? '');
+
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                $this->publisher?->enqueue(new FunctionMessage(
+                $publisher->enqueue(new FunctionMessage(
                     project: $schedule['project'],
                     functionId: $schedule['resource']->getAttribute('resourceId', ''),
                     execution: new Document([
@@ -183,12 +170,16 @@ class ScheduleExecutions extends Action
                     type: 'schedule',
                 ));
             } catch (\Throwable $th) {
-                // Stop rather than skip: everything behind this is later than
-                // it, and publishing those now would reorder the queue.
-                Console::error("Failed to enqueue scheduled execution {$schedule['resourceId']}: {$th->getMessage()}");
+                $error = $th;
+            } finally {
+                Span::current()?->finish(error: $error);
+            }
 
+            if ($error instanceof \Throwable) {
                 break;
             }
         }
+
+        return null;
     }
 }
