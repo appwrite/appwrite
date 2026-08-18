@@ -119,19 +119,6 @@ $container->set('dbForPlatform', function ($pools, $cache, $authorization) {
     return $dbForPlatform;
 }, ['pools', 'cache', 'authorization']);
 
-$container->set('getRedisForLocks', fn (Group $pools) => function () use ($pools): \Redis {
-    // A connection per caller, not a shared one: the combined scheduler runs
-    // three loops as three coroutines, and phpredis interleaves replies when
-    // two of them issue commands over the same socket.
-    $connection = $pools->get('lock')->pop()->resource;
-
-    if (!$connection instanceof \Redis) {
-        throw new Exception('The lock pool did not yield a Redis connection.');
-    }
-
-    return $connection;
-}, ['pools']);
-
 $container->set(
     'getIsResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false,

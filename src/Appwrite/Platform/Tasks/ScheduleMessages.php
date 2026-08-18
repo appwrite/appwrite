@@ -12,7 +12,6 @@ use Utopia\Platform\Action;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
 use Utopia\Schedule\Source\Entry;
-use Utopia\Schedule\Store\Redis as ClaimStore;
 use Utopia\Schedule\Trigger\At;
 use Utopia\Span\Span;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -30,7 +29,6 @@ class ScheduleMessages extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
-            ->inject('getRedisForLocks')
             ->callback($this->action(...));
     }
 
@@ -49,10 +47,7 @@ class ScheduleMessages extends Action
         return RESOURCE_TYPE_MESSAGES;
     }
 
-    /**
-     * @param callable(): \Redis $getRedisForLocks
-     */
-    public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, callable $getRedisForLocks): void
+    public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
         $source = new DatabaseSchedule(
             dbForPlatform: $dbForPlatform,
@@ -66,7 +61,6 @@ class ScheduleMessages extends Action
 
         $scheduler = new Scheduler(
             source: $source,
-            store: new ClaimStore($getRedisForLocks(), 'utopia-schedule-' . self::getName()),
             syncSeconds: self::UPDATE_TIMER,
             telemetry: $telemetry,
             onError: function (\Throwable $error): void {

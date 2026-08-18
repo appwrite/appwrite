@@ -12,7 +12,6 @@ use Utopia\Platform\Action;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
 use Utopia\Schedule\Source\Entry;
-use Utopia\Schedule\Store\Redis as ClaimStore;
 use Utopia\Schedule\Trigger\Cron;
 use Utopia\Schedule\Trigger\Shifted;
 use Utopia\Span\Span;
@@ -30,7 +29,6 @@ class ScheduleFunctions extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
-            ->inject('getRedisForLocks')
             ->callback($this->action(...));
     }
 
@@ -54,10 +52,7 @@ class ScheduleFunctions extends Action
         return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
     }
 
-    /**
-     * @param callable(): \Redis $getRedisForLocks
-     */
-    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, callable $getRedisForLocks): void
+    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
         $source = new DatabaseSchedule(
             dbForPlatform: $dbForPlatform,
@@ -79,7 +74,6 @@ class ScheduleFunctions extends Action
 
         $scheduler = new Scheduler(
             source: $source,
-            store: new ClaimStore($getRedisForLocks(), 'utopia-schedule-' . self::getName()),
             telemetry: $telemetry,
             onError: function (\Throwable $error): void {
                 Span::init('schedule.functions.reconcile');

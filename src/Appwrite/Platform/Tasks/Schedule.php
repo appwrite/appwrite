@@ -27,13 +27,9 @@ class Schedule extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
-            ->inject('getRedisForLocks')
             ->callback($this->action(...));
     }
 
-    /**
-     * @param callable(): \Redis $getRedisForLocks
-     */
     public function action(
         FunctionPublisher $publisherForFunctions,
         MessagingPublisher $publisherForMessaging,
@@ -41,11 +37,10 @@ class Schedule extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         Telemetry $telemetry,
-        callable $getRedisForLocks,
     ): never {
-        $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $getRedisForLocks));
-        $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $getRedisForLocks));
-        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $getRedisForLocks));
+        $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
+        $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
+        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
 
         while (true) {
             sleep(3600);
