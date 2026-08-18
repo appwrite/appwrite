@@ -13,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -78,6 +79,7 @@ class Create extends Base
             ->inject('vcsFactory')
             ->inject('authorization')
             ->inject('deployments')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -97,6 +99,7 @@ class Create extends Base
         VcsFactory $vcsFactory,
         Authorization $authorization,
         Deployments $deployments,
+        Bus $bus,
         array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -126,6 +129,7 @@ class Create extends Base
             activate: $activate,
             authorization: $authorization,
             deployments: $deployments,
+            bus: $bus,
             reference: $reference,
             referenceType: $type,
             platform: $platform
