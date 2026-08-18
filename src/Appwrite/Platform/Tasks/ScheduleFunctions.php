@@ -4,16 +4,13 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
-use Appwrite\Schedule\DatabaseSchedule;
+use Appwrite\Schedule\FunctionSchedule;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
-use Utopia\Schedule\Source\Entry;
-use Utopia\Schedule\Trigger\Cron;
-use Utopia\Schedule\Trigger\Shifted;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -37,31 +34,13 @@ class ScheduleFunctions extends Action
         return 'schedule-functions';
     }
 
-
-
-    public static function spreadOffset(string $resourceId, int $window): int
-    {
-        return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
-    }
-
     public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
-        $source = new DatabaseSchedule(
-            dbForPlatform: $dbForPlatform,
-            getProjectDB: $getProjectDB,
-            isResourceBlocked: $getIsResourceBlocked,
-            resourceType: SCHEDULE_RESOURCE_TYPE_FUNCTION,
-            collectionId: RESOURCE_TYPE_FUNCTIONS,
-            resource: fn (Database $projectDB, array $schedule): Document => $projectDB->getDocument(RESOURCE_TYPE_FUNCTIONS, $schedule['resourceId']),
-            entry: fn (array $schedule): Entry => new Entry(
-                // Spreading is part of the schedule: the shifted time is what
-                // the window covers and the watermark commits.
-                new Shifted(
-                    new Cron((string) $schedule['schedule']),
-                    self::spreadOffset($schedule['resourceId'], $this->spreadWindow($schedule, $dbForPlatform)),
-                ),
-                $schedule,
-            ),
+        $source = new FunctionSchedule(
+            $dbForPlatform,
+            $getProjectDB,
+            $getIsResourceBlocked,
+            fn (array $schedule): int => $this->spreadWindow($schedule, $dbForPlatform),
         );
 
         $scheduler = new Scheduler(

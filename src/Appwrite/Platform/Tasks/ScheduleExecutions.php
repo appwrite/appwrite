@@ -4,15 +4,13 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
-use Appwrite\Schedule\DatabaseSchedule;
+use Appwrite\Schedule\ExecutionSchedule;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
-use Utopia\Schedule\Source\Entry;
-use Utopia\Schedule\Trigger\At;
 use Utopia\Span\Span;
 use Utopia\Telemetry\Adapter as Telemetry;
 
@@ -37,19 +35,9 @@ class ScheduleExecutions extends Action
         return 'schedule-executions';
     }
 
-
-
     public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
-        $source = new DatabaseSchedule(
-            dbForPlatform: $dbForPlatform,
-            getProjectDB: $getProjectDB,
-            isResourceBlocked: $getIsResourceBlocked,
-            resourceType: SCHEDULE_RESOURCE_TYPE_EXECUTION,
-            collectionId: RESOURCE_TYPE_EXECUTIONS,
-            resource: $this->resource(...),
-            entry: fn (array $schedule): Entry => new Entry(new At(new \DateTimeImmutable((string) $schedule['schedule'])), $schedule),
-        );
+        $source = new ExecutionSchedule($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
 
         $scheduler = new Scheduler(
             source: $source,
@@ -81,26 +69,6 @@ class ScheduleExecutions extends Action
             ]));
             $project->setAttribute('accessedAt', $now);
         }
-    }
-
-    /**
-     * Executions are not persisted; the schedule carries what the worker
-     * needs. Schedules from before the executions collection was dropped can
-     * still resolve their document for the functionId their data lacks.
-     *
-     * @param array<string, mixed> $schedule
-     */
-    protected function resource(Database $projectDB, array $schedule): Document
-    {
-        try {
-            $resource = $projectDB->getDocument(RESOURCE_TYPE_EXECUTIONS, $schedule['resourceId']);
-        } catch (\Throwable) {
-            $resource = new Document();
-        }
-
-        return $resource->isEmpty()
-            ? new Document(['$id' => $schedule['resourceId']])
-            : $resource;
     }
 
     /**

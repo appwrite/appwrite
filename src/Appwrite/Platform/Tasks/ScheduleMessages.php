@@ -4,15 +4,13 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
-use Appwrite\Schedule\DatabaseSchedule;
+use Appwrite\Schedule\MessageSchedule;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
-use Utopia\Schedule\Source\Entry;
-use Utopia\Schedule\Trigger\At;
 use Utopia\Span\Span;
 use Utopia\Telemetry\Adapter as Telemetry;
 
@@ -37,19 +35,9 @@ class ScheduleMessages extends Action
         return 'schedule-messages';
     }
 
-
-
     public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
-        $source = new DatabaseSchedule(
-            dbForPlatform: $dbForPlatform,
-            getProjectDB: $getProjectDB,
-            isResourceBlocked: $getIsResourceBlocked,
-            resourceType: SCHEDULE_RESOURCE_TYPE_MESSAGE,
-            collectionId: RESOURCE_TYPE_MESSAGES,
-            resource: fn (Database $projectDB, array $schedule): Document => $projectDB->getDocument(RESOURCE_TYPE_MESSAGES, $schedule['resourceId']),
-            entry: fn (array $schedule): Entry => new Entry(new At(new \DateTimeImmutable((string) $schedule['schedule'])), $schedule),
-        );
+        $source = new MessageSchedule($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
 
         $scheduler = new Scheduler(
             source: $source,

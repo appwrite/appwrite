@@ -10,10 +10,19 @@ use Utopia\Schedule\Changes;
 use Utopia\Schedule\Source;
 use Utopia\Schedule\Source\Entry;
 use Utopia\Schedule\Source\Row;
+use Utopia\Schedule\Trigger;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
-final class DatabaseSchedule implements Source, Changes
+/**
+ * The platform `schedules` collection, read as a schedule source.
+ *
+ * Reading it is the same work for every kind of schedule: page the rows for
+ * this region and type, resolve the project, load the resource, drop what no
+ * longer exists. What differs is the type, the collection the resource lives
+ * in, and what the stored expression means — which is what a subclass says.
+ */
+abstract class DatabaseSchedule implements Source, Changes
 {
     /** @var array<string, Document> */
     private array $projects = [];
@@ -21,19 +30,26 @@ final class DatabaseSchedule implements Source, Changes
     /**
      * @param callable(Document): Database $getProjectDB
      * @param callable(Document, string, string): bool $isResourceBlocked
-     * @param \Closure(Database, array<string, mixed>): Document $resource
-     * @param \Closure(array<string, mixed>): Entry $entry
      */
     public function __construct(
-        private readonly Database $dbForPlatform,
-        private readonly mixed $getProjectDB,
-        private readonly mixed $isResourceBlocked,
-        private readonly string $resourceType,
-        private readonly string $collectionId,
-        private readonly \Closure $resource,
-        private readonly \Closure $entry,
+        protected readonly Database $dbForPlatform,
+        protected readonly mixed $getProjectDB,
+        protected readonly mixed $isResourceBlocked,
     ) {
     }
+
+    /** The `resourceType` of the rows this reads. */
+    abstract protected function type(): string;
+
+    /** The project collection the resource lives in. */
+    abstract protected function collection(): string;
+
+    /**
+     * When the stored expression says to run.
+     *
+     * @param array<string, mixed> $schedule
+     */
+    abstract protected function trigger(array $schedule): Trigger;
 
     #[\Override]
     public function snapshot(): iterable
@@ -72,12 +88,12 @@ final class DatabaseSchedule implements Source, Changes
             throw new \InvalidArgumentException("Project not found: {$schedule['projectId']}");
         }
 
-        if (($this->isResourceBlocked)($project, $this->collectionId, $schedule['resourceId'])) {
+        if (($this->isResourceBlocked)($project, $this->collection(), $schedule['resourceId'])) {
             throw new \InvalidArgumentException("Resource blocked: {$schedule['resourceId']}");
         }
 
         $schedule['project'] = $project;
-        $schedule['resource'] = ($this->resource)(($this->getProjectDB)($project), $schedule);
+        $schedule['resource'] = $this->resource(($this->getProjectDB)($project), $schedule);
 
         if ($schedule['resource']->isEmpty()) {
             $this->deleteOrphan($document->getId());
@@ -85,9 +101,18 @@ final class DatabaseSchedule implements Source, Changes
             throw new \InvalidArgumentException("Resource not found: {$schedule['resourceId']}");
         }
 
-        return ($this->entry)($schedule);
+        return new Entry($this->trigger($schedule), $schedule);
     }
 
+    /**
+     * The resource a schedule points at.
+     *
+     * @param array<string, mixed> $schedule
+     */
+    protected function resource(Database $projectDB, array $schedule): Document
+    {
+        return $projectDB->getDocument($this->collection(), $schedule['resourceId']);
+    }
 
     /**
      * @return iterable<Row>
@@ -108,7 +133,7 @@ final class DatabaseSchedule implements Source, Changes
             $queries = [
                 Query::limit($limit),
                 Query::equal('region', $regions),
-                Query::equal('resourceType', [$this->resourceType]),
+                Query::equal('resourceType', [$this->type()]),
             ];
 
             if ($since === null) {
@@ -125,12 +150,14 @@ final class DatabaseSchedule implements Source, Changes
             $sum = \count($schedules);
 
             foreach ($schedules as $schedule) {
+                $updatedAt = (string) $schedule->getAttribute('resourceUpdatedAt', '');
+
                 yield new Row(
                     id: (string) $schedule->getSequence(),
-                    version: (string) $schedule->getAttribute('resourceUpdatedAt', ''),
+                    version: $updatedAt,
                     data: $schedule,
                     active: (bool) $schedule->getAttribute('active', false),
-                    activeFrom: $this->activeFrom($schedule),
+                    activeFrom: $this->moment($updatedAt),
                 );
             }
 
@@ -138,20 +165,14 @@ final class DatabaseSchedule implements Source, Changes
         }
     }
 
-    private function activeFrom(Document $schedule): ?\DateTimeImmutable
+    /** A malformed stamp rides the watermark rather than failing the sync. */
+    private function moment(string $stamp): ?\DateTimeImmutable
     {
-        $updatedAt = $schedule->getAttribute('resourceUpdatedAt');
-        if (!\is_string($updatedAt) || $updatedAt === '') {
-            return null;
-        }
-
         try {
-            $changed = new \DateTimeImmutable($updatedAt);
+            return $stamp === '' ? null : new \DateTimeImmutable($stamp);
         } catch (\Throwable) {
             return null;
         }
-
-        return $changed;
     }
 
     private function project(string $projectId): Document
