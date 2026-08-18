@@ -6,7 +6,6 @@ namespace Tests\Unit\Platform\Tasks;
 
 use Appwrite\Platform\Tasks\ScheduleBase;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Database;
 
 final class ScheduleBaseTest extends TestCase
 {
@@ -47,37 +46,6 @@ final class ScheduleBaseTest extends TestCase
         $this->assertGreaterThan(10, count(array_unique($offsets)));
     }
 
-    public function testRunOnceSkipsAnOverlappingOperation(): void
-    {
-        $task = new TestScheduleBase();
-        $calls = 0;
-
-        $this->assertTrue($task->once('enqueue', function () use ($task, &$calls): void {
-            $calls++;
-            $this->assertFalse($task->once('enqueue', function () use (&$calls): void {
-                $calls++;
-            }));
-        }));
-
-        $this->assertSame(1, $calls);
-        $this->assertTrue($task->once('enqueue', function () use (&$calls): void {
-            $calls++;
-        }));
-        $this->assertSame(2, $calls);
-    }
-
-    public function testRunOnceReleasesAnOperationAfterFailure(): void
-    {
-        $task = new TestScheduleBase();
-
-        try {
-            $task->once('sync', fn () => throw new \RuntimeException('Sync failed'));
-            $this->fail('Expected the operation to fail');
-        } catch (\RuntimeException) {
-            $this->assertTrue($task->once('sync', static fn () => null));
-        }
-    }
-
     /**
      * @return string[]
      */
@@ -89,32 +57,5 @@ final class ScheduleBaseTest extends TestCase
         }
 
         return $ids;
-    }
-}
-
-final class TestScheduleBase extends ScheduleBase
-{
-    public static function getName(): string
-    {
-        return 'test-schedule';
-    }
-
-    public static function getSupportedResource(): string
-    {
-        return 'tests';
-    }
-
-    public static function getCollectionId(): string
-    {
-        return 'tests';
-    }
-
-    protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
-    {
-    }
-
-    public function once(string $operation, callable $callback): bool
-    {
-        return $this->runOnce($operation, $callback);
     }
 }

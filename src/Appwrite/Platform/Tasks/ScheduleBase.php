@@ -22,8 +22,6 @@ abstract class ScheduleBase extends Action
 
     protected array $schedules = [];
 
-    private array $operations = [];
-
     protected BrokerPool $publisher;
     protected BrokerPool $publisherMigrations;
     protected BrokerPool $publisherFunctions;
@@ -118,26 +116,12 @@ abstract class ScheduleBase extends Action
         Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate, $getIsResourceBlocked) {
             $time = DateTime::now();
             Console::log("Sync tick: Running at $time");
-            $sync = function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate, $getIsResourceBlocked): void {
-                $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $getIsResourceBlocked);
-            };
-
-            if (!$this->runOnce('sync', $sync)) {
-                Console::warning('Skipping sync tick because the previous tick is still running');
-            }
+            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $getIsResourceBlocked);
         });
 
         while (true) {
             try {
-                go(function () use ($dbForPlatform, $getProjectDB) {
-                    try {
-                        if (!$this->runOnce('enqueue', fn () => $this->enqueueResources($dbForPlatform, $getProjectDB))) {
-                            Console::warning('Skipping enqueue tick because the previous tick is still running');
-                        }
-                    } catch (\Throwable $th) {
-                        Console::error('Failed to enqueue resources: ' . $th->getMessage());
-                    }
-                });
+                go(fn () => $this->enqueueResources($dbForPlatform, $getProjectDB));
                 $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
                 sleep(static::ENQUEUE_TIMER);
             } catch (\Throwable $th) {
@@ -145,23 +129,6 @@ abstract class ScheduleBase extends Action
             }
 
         }
-    }
-
-    protected function runOnce(string $operation, callable $callback): bool
-    {
-        if (isset($this->operations[$operation])) {
-            return false;
-        }
-
-        $this->operations[$operation] = true;
-
-        try {
-            $callback();
-        } finally {
-            unset($this->operations[$operation]);
-        }
-
-        return true;
     }
 
     private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate, callable $getIsResourceBlocked): void
