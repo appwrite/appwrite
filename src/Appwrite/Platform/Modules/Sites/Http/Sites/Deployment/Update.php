@@ -105,6 +105,7 @@ class Update extends Base
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ])));
 
+        /** @var list<Query> $queries */
         $queries = [
             Query::equal('trigger', ['manual']),
             Query::equal('type', ['deployment']),

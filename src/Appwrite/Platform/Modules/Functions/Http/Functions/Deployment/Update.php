@@ -119,6 +119,7 @@ class Update extends Base
             'active' => $schedule->getAttribute('active'),
         ])));
 
+        /** @var list<Query> $queries */
         $queries = [
             Query::equal('trigger', ['manual']),
             Query::equal('type', ['deployment']),
