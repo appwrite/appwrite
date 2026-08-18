@@ -84,12 +84,10 @@ class ScheduleExecutions extends Action
         $scheduler = new Scheduler(
             source: $source,
             store: new ClaimStore($pools->get('lock')->pop()->resource, 'utopia-schedule-' . self::getName()),
-            interval: self::ENQUEUE_TIMER,
-            sync: self::UPDATE_TIMER,
-            relist: self::UPDATE_TIMER * 30,
-            lookahead: self::ENQUEUE_LOOKAHEAD,
-            lookback: self::ENQUEUE_LOOKBACK,
-            lease: self::ENQUEUE_TIMER * 15,
+            tickSeconds: self::ENQUEUE_TIMER,
+            syncSeconds: self::UPDATE_TIMER,
+            leadSeconds: self::ENQUEUE_LOOKAHEAD,
+            recoverSeconds: self::ENQUEUE_LOOKBACK,
             telemetry: $telemetry,
             onError: function (\Throwable $error): void {
                 Span::init('schedule.executions.reconcile');
