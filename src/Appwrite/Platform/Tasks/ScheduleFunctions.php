@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Func as FunctionMessage;
-use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Cron\CronExpression;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -117,18 +116,13 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $publisherForFunctions = new FunctionPublisher(
-                        $this->publisherFunctions,
-                        new \Utopia\Queue\Queue(\Utopia\System\System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', \Appwrite\Event\Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', \Appwrite\Event\Event::FUNCTIONS_QUEUE_TTL)
-                    );
-
                     Span::init('schedule.functions.enqueue');
                     try {
                         Span::add('project.id', $schedule['project']->getId());
                         Span::add('function.id', $schedule['resource']->getId());
                         Span::add('schedule.id', $schedule['$id'] ?? '');
 
-                        $publisherForFunctions->enqueue(new FunctionMessage(
+                        $this->publisherForFunctions->enqueue(new FunctionMessage(
                             project: $schedule['project'],
                             function: $schedule['resource'],
                             type: 'schedule',
