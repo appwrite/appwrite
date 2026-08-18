@@ -260,12 +260,12 @@ flowchart TB
 
   services --> cache["Cache (Redis)"]
   services --> queue["Queue (Redis)"]
+  services --> browser[Browser]
+  services --> SMTP
   queue --> workers[Workers]
   cache --> database["PostgreSQL / MariaDB / MySQL / MongoDB"]
   embedding[Embedding] --> database
   workers --> database
-  workers --> browser[Browser]
-  workers --> SMTP
   workers --> Letsencrypt
   Letsencrypt --> traefik
 ```
