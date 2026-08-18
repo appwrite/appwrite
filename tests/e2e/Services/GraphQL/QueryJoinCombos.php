@@ -242,6 +242,7 @@ trait QueryJoinCombos
             : $key;
 
         return \in_array($name, [
+            '$id',
             '$sequence',
             '$createdAt',
             '$updatedAt',

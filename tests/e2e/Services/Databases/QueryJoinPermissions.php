@@ -460,8 +460,8 @@ trait QueryJoinPermissions
             $this->assertContains(100, $amounts);
             $this->assertNotContains(9999, $amounts);
             $this->assertNotContains(8888, $amounts);
-            $this->assertStringNotContainsString('9999', $encoded);
-            $this->assertStringNotContainsString('8888', $encoded);
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 9999));
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 8888));
         } else {
             $this->assertContains(100, $amounts);
             $this->assertContains(9999, $amounts);
@@ -501,8 +501,8 @@ trait QueryJoinPermissions
             $this->assertContains(100, $amounts);
             $this->assertNotContains(9999, $amounts);
             $this->assertNotContains(8888, $amounts);
-            $this->assertStringNotContainsString('9999', $encoded);
-            $this->assertStringNotContainsString('8888', $encoded);
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 9999));
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 8888));
         } else {
             $this->assertContains(100, $amounts);
             $this->assertContains(9999, $amounts);
@@ -534,8 +534,8 @@ trait QueryJoinPermissions
 
         if ($this->getSide() === 'client') {
             $this->assertSame(100, (int) $amount);
-            $this->assertStringNotContainsString('9999', $encoded);
-            $this->assertStringNotContainsString('8888', $encoded);
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 9999));
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 8888));
         } else {
             $this->assertContains((int) $amount, [100, 9999]);
         }
@@ -606,8 +606,8 @@ trait QueryJoinPermissions
             $this->assertContains(100, $amounts);
             $this->assertNotContains(9999, $amounts);
             $this->assertNotContains(8888, $amounts);
-            $this->assertStringNotContainsString('9999', $encoded);
-            $this->assertStringNotContainsString('8888', $encoded);
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 9999));
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 8888));
             $this->assertStringNotContainsString('classified-join-data', $encoded);
         } else {
             $this->assertContains(100, $amounts);
@@ -640,8 +640,8 @@ trait QueryJoinPermissions
 
         if ($this->getSide() === 'client') {
             $this->assertSame(100, (int) $amount);
-            $this->assertStringNotContainsString('9999', $encoded);
-            $this->assertStringNotContainsString('8888', $encoded);
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 9999));
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 8888));
             $this->assertStringNotContainsString('classified-join-data', $encoded);
         } else {
             $this->assertContains((int) $amount, [100, 9999]);
@@ -684,8 +684,8 @@ trait QueryJoinPermissions
             }
             $this->assertNotContains(9999, $amounts);
             $this->assertNotContains(8888, $amounts);
-            $this->assertStringNotContainsString('9999', $encoded);
-            $this->assertStringNotContainsString('8888', $encoded);
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 9999));
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 8888));
             $this->assertStringNotContainsString('classified-join-data', $encoded);
         } else {
             $this->assertContains(100, $amounts);
@@ -816,8 +816,8 @@ trait QueryJoinPermissions
             );
             $this->assertNotSame(9999, is_numeric($amount) ? (int) $amount : $amount);
             $this->assertNotSame(8888, is_numeric($amount) ? (int) $amount : $amount);
-            $this->assertStringNotContainsString('9999', $encoded);
-            $this->assertStringNotContainsString('8888', $encoded);
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 9999));
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 8888));
             $this->assertStringNotContainsString('classified-join-data', $encoded);
         } else {
             $this->assertTrue($amount === null || $amount === '' || in_array((int) $amount, [100, 9999], true));
@@ -856,8 +856,8 @@ trait QueryJoinPermissions
         if ($this->getSide() === 'client') {
             $this->assertSame([100], array_values(array_unique($amounts)));
             $this->assertNotContains(9999, $amounts);
-            $this->assertStringNotContainsString('9999', $encoded);
-            $this->assertStringNotContainsString('8888', $encoded);
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 9999));
+            $this->assertSame(false, $this->encodedJsonContainsScalar($encoded, 8888));
             $this->assertStringNotContainsString('classified-join-data', $encoded);
         } else {
             $this->assertContains(100, $amounts);
