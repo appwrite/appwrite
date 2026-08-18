@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Codebase\Authorize;
 
+use Appwrite\Auth\OAuth2\Cursor as OAuth2Cursor;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -71,12 +72,8 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Codebase client ID is not configured. Please configure VCS (Version Control System) variables in .env file.');
         }
 
-        // Codebase ignores a redirect parameter on the install URL; the
-        // callback URL is taken from the app's own configuration on Cursor.
-        $url = 'https://cursor.com/codebase/apps/install?' . \http_build_query([
-            'client_id' => $clientId,
-            'source' => 'app-metadata',
-        ]);
+        $oauth2 = new OAuth2Cursor($clientId, System::getEnv('_APP_VCS_CODEBASE_PRIVATE_KEY', ''), '');
+        $url = $oauth2->getLoginURL();
 
         // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
         Console::log('[CODEBASE DEBUG] Authorize for project "' . $project->getId() . '" (success: "' . $success . '", failure: "' . $failure . '")');
