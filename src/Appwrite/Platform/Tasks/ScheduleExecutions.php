@@ -69,6 +69,7 @@ class ScheduleExecutions extends ScheduleBase
                 new \Utopia\Queue\Queue(\Utopia\System\System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', \Appwrite\Event\Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', \Appwrite\Event\Event::FUNCTIONS_QUEUE_TTL)
             );
 
+            $schedules = [];
             foreach ($this->schedules as $schedule) {
                 if (!$schedule['active']) {
                     unset($this->schedules[$schedule['$sequence']]);
@@ -80,6 +81,12 @@ class ScheduleExecutions extends ScheduleBase
                     continue;
                 }
 
+                $schedules[] = [$scheduledAt, $schedule];
+            }
+
+            usort($schedules, static fn (array $first, array $second) => $first[0] <=> $second[0]);
+
+            foreach ($schedules as [$scheduledAt, $schedule]) {
                 $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
                 try {
