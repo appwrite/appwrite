@@ -1,1 +1,1 @@
-Check the Appwrite Antivirus server is up and connection is successful.
+Check the Appwrite Antivirus server is up and connection is successful. Appwrite uses [Defender](https://github.com/appwrite/defender) as the antivirus HTTP scanner.

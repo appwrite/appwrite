@@ -589,7 +589,7 @@ jobs:
             options_abuse: disabled
             storage_antivirus: enabled
             compose_profiles: antivirus
-            wait: clamav
+            wait: defender
     env:
       # Shared tables mode connects every pool at boot, including the MongoDB-only DocumentsDB.
       COMPOSE_PROFILES: ${{ matrix.mode == 'shared' && format('mongodb,{0}', matrix.config.compose_profiles) || matrix.config.compose_profiles }}
@@ -630,7 +630,7 @@ jobs:
               done
 
       - name: Load and Start Appwrite
-        timeout-minutes: ${{ matrix.config.wait == 'clamav' && 15 || 5 }}
+        timeout-minutes: ${{ matrix.config.wait == 'defender' && 10 || 5 }}
         env:
           _APP_OPTIONS_ABUSE: ${{ matrix.config.options_abuse }}
           _APP_STORAGE_ANTIVIRUS: ${{ matrix.config.storage_antivirus }}
@@ -638,8 +638,8 @@ jobs:
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
         run: |
-          if [ "${{ matrix.config.wait }}" = "clamav" ]; then
-            docker compose up -d --quiet-pull --wait --wait-timeout 780
+          if [ "${{ matrix.config.wait }}" = "defender" ]; then
+            docker compose up -d --quiet-pull --wait --wait-timeout 480
           else
             docker compose up -d --quiet-pull --wait
           fi
@@ -653,26 +653,20 @@ jobs:
             sleep 1
           done
 
-      - name: Wait for ClamAV
-        if: matrix.config.wait == 'clamav'
-        timeout-minutes: 10
+      - name: Wait for Defender
+        if: matrix.config.wait == 'defender'
+        timeout-minutes: 5
         run: |
-          for attempt in $(seq 1 120); do
-            if docker compose exec -T appwrite php -r '
-              require "/usr/src/code/vendor/autoload.php";
-              $host = getenv("_APP_STORAGE_ANTIVIRUS_HOST") ?: "clamav";
-              $port = (int) (getenv("_APP_STORAGE_ANTIVIRUS_PORT") ?: 3310);
-              $av = new Appwrite\ClamAV\Network($host, $port);
-              exit(@$av->ping() ? 0 : 1);
-            '; then
-              echo "ClamAV is ready"
+          for attempt in $(seq 1 60); do
+            if docker compose exec -T appwrite-defender curl -fsS http://127.0.0.1:8080/ready; then
+              echo "Defender is ready"
               exit 0
             fi
-            echo "Waiting for ClamAV (attempt ${attempt}/120)"
+            echo "Waiting for Defender (attempt ${attempt}/60)"
             sleep 5
           done
-          echo "::error::ClamAV did not become ready"
-          docker compose logs --timestamps clamav || true
+          echo "::error::Defender did not become ready"
+          docker compose logs --timestamps appwrite-defender || true
           exit 1
 
       - name: Run tests
@@ -687,9 +681,9 @@ jobs:
         run: |
           echo "=== Appwrite Logs ==="
           docker compose logs --timestamps
-          if [ "${{ matrix.config.wait }}" = "clamav" ]; then
-            echo "=== ClamAV Logs ==="
-            docker compose logs --timestamps clamav || true
+          if [ "${{ matrix.config.wait }}" = "defender" ]; then
+            echo "=== Defender Logs ==="
+            docker compose logs --timestamps appwrite-defender || true
           fi
 
   benchmark:

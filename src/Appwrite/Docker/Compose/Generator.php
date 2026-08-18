@@ -27,6 +27,11 @@ class Generator
 
     private const array OPTIONAL_SERVICES = [
         'enableAssistant' => 'appwrite-assistant',
+        'enableAntivirus' => 'appwrite-defender',
+    ];
+
+    private const array OPTIONAL_VOLUMES = [
+        'enableAntivirus' => ['appwrite-defender'],
     ];
 
     private const array TOPOLOGY_SERVICE_GROUPS = [
@@ -76,6 +81,7 @@ class Generator
         'database' => 'postgresql',
         'hostPath' => '',
         'enableAssistant' => false,
+        'enableAntivirus' => false,
         'topology' => 'combined',
     ];
 
@@ -242,6 +248,14 @@ class Generator
                     continue;
                 }
 
+                foreach ($names as $name) {
+                    unset($volumes[$name]);
+                }
+            }
+        }
+
+        foreach (self::OPTIONAL_VOLUMES as $param => $names) {
+            if (empty($this->params[$param])) {
                 foreach ($names as $name) {
                     unset($volumes[$name]);
                 }

@@ -1632,6 +1632,28 @@ services:
       - appwrite-models:/home/embedder/models
     networks:
       - appwrite
+  appwrite-defender:
+    profiles:
+      - antivirus
+    image: appwrite/defender:latest
+    container_name: appwrite-defender
+    restart: unless-stopped
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-defender:/var/lib/defender/db
+    environment:
+      - DEFENDER_MAX_BYTES=20000000
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -fsS
+        - http://127.0.0.1:8080/ready
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 120s
   redis:
     image: redis:7.4.7-alpine
     logging:
@@ -1685,4 +1707,5 @@ volumes:
     name: appwrite-builds
   appwrite-config: null
   appwrite-models: null
+  appwrite-defender: null
   openruntimes-node-modules-cache: null

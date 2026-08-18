@@ -60,6 +60,22 @@ final class GeneratorTest extends TestCase
         $this->assertArrayHasKey('appwrite-assistant', $enabled['services']);
     }
 
+    public function testTogglesAntivirusService(): void
+    {
+        $disabled = $this->render([
+            'enableAntivirus' => false,
+        ]);
+        $enabled = $this->render([
+            'enableAntivirus' => true,
+        ]);
+
+        $this->assertArrayNotHasKey('appwrite-defender', $disabled['services']);
+        $this->assertArrayNotHasKey('appwrite-defender', $disabled['volumes']);
+        $this->assertArrayHasKey('appwrite-defender', $enabled['services']);
+        $this->assertArrayHasKey('appwrite-defender', $enabled['volumes']);
+        $this->assertArrayNotHasKey('profiles', $enabled['services']['appwrite-defender']);
+    }
+
     public function testKeepsProductionWorkers(): void
     {
         $compose = $this->render();
@@ -68,6 +84,7 @@ final class GeneratorTest extends TestCase
         $this->assertArrayHasKey('appwrite-task-scheduler', $compose['services']);
         $this->assertArrayHasKey('appwrite-task-interval', $compose['services']);
         $this->assertArrayHasKey('appwrite-embedding', $compose['services']);
+        $this->assertArrayNotHasKey('appwrite-defender', $compose['services']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler']);
         $this->assertArrayNotHasKey('appwrite-worker-screenshots', $compose['services']);

@@ -374,7 +374,7 @@ final class StorageCustomServerTest extends Scope
     /**
      * Regression for chunked uploads under the antivirus size limit.
      *
-     * Requires ClamAV (compose profile `antivirus`) and
+     * Requires Defender (compose profile `antivirus`) and
      * `_APP_STORAGE_ANTIVIRUS=enabled`. File must be >5MB (chunked) and
      * ≤20MB (`APP_LIMIT_ANTIVIRUS`) so the last chunk triggers a scan.
      */
@@ -391,7 +391,7 @@ final class StorageCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $health['headers']['status-code']);
-        $this->assertEquals('pass', $health['body']['status'], 'ClamAV must be reachable when antivirus is enabled.');
+        $this->assertEquals('pass', $health['body']['status'], 'Defender must be reachable when antivirus is enabled.');
 
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
             'content-type' => 'application/json',
@@ -456,5 +456,61 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals($totalSize, $file['body']['sizeOriginal']);
         $this->assertEquals($file['body']['chunksTotal'], $file['body']['chunksUploaded']);
         $this->assertNotEmpty($file['body']['mimeType']);
+    }
+
+    /**
+     * EICAR must be rejected when Defender is enabled for the bucket.
+     */
+    #[Group('antivirus')]
+    public function testCreateBucketFileRejectsEicar(): void
+    {
+        if (System::getEnv('_APP_STORAGE_ANTIVIRUS', 'disabled') === 'disabled') {
+            $this->markTestSkipped('Antivirus is disabled.');
+        }
+
+        $health = $this->client->call(Client::METHOD_GET, '/health/anti-virus', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $health['headers']['status-code']);
+        $this->assertEquals('pass', $health['body']['status'], 'Defender must be reachable when antivirus is enabled.');
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Antivirus EICAR Bucket',
+            'fileSecurity' => true,
+            'antivirus' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $path = \tempnam(\sys_get_temp_dir(), 'eicar');
+        $this->assertNotFalse($path);
+        \file_put_contents($path, 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*');
+
+        try {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile($path, 'text/plain', 'eicar.com'),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+        } finally {
+            @\unlink($path);
+        }
+
+        $this->assertEquals(403, $file['headers']['status-code']);
+        $this->assertEquals('storage_invalid_file', $file['body']['type']);
     }
 }

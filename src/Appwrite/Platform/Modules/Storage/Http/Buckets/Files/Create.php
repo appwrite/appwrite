@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
-use Appwrite\ClamAV\Network;
+use Appwrite\Antivirus\Client as Antivirus;
+use Appwrite\Antivirus\Exception as AntivirusException;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
@@ -98,6 +99,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('authorization')
             ->inject('locks')
+            ->inject('antivirus')
             ->callback($this->action(...));
     }
 
@@ -116,7 +118,8 @@ class Create extends Action
         Device $deviceForFiles,
         Device $deviceForLocal,
         Authorization $authorization,
-        callable $locks
+        callable $locks,
+        Antivirus $antivirus,
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -331,7 +334,7 @@ class Create extends Action
             return;
         }
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($antivirus, $authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -361,12 +364,14 @@ class Create extends Action
                 $deviceForFiles->finalize($path, $chunks, $metadata);
 
                 if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === DeviceType::Local) {
-                    $antivirus = new Network(
-                        System::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                        (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
-                    );
+                    try {
+                        $infected = $antivirus->scanPath($path)->isInfected();
+                    } catch (AntivirusException) {
+                        $deviceForFiles->delete($path);
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Antivirus is not available');
+                    }
 
-                    if (!$antivirus->fileScanInStream($path)) {
+                    if ($infected) {
                         $deviceForFiles->delete($path);
                         throw new Exception(Exception::STORAGE_INVALID_FILE);
                     }

@@ -2,8 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\AntiVirus;
 
-use Appwrite\ClamAV\Network;
-use Appwrite\Extend\Exception;
+use Appwrite\Antivirus\Client as Antivirus;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -28,10 +27,11 @@ class Get extends Action
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
             ->inject('response')
+            ->inject('antivirus')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response): void
+    public function action(Response $response, Antivirus $antivirus): void
     {
         $output = [
             'status' => '',
@@ -42,17 +42,8 @@ class Get extends Action
             $output['status'] = 'disabled';
             $output['version'] = '';
         } else {
-            $antivirus = new Network(
-                System::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
-            );
-
-            try {
-                $output['version'] = @$antivirus->version();
-                $output['status'] = (@$antivirus->ping()) ? 'pass' : 'fail';
-            } catch (\Throwable) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Antivirus is not available');
-            }
+            $output['version'] = $antivirus->version();
+            $output['status'] = $antivirus->ping() ? 'pass' : 'fail';
         }
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_ANTIVIRUS);

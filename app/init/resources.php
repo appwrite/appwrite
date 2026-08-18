@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Antivirus\Client as AntivirusClient;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
@@ -95,6 +96,17 @@ $container->set('screenshots', function () {
         ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 30));
 
     return new ScreenshotsClient($client);
+}, []);
+
+$container->set('antivirus', function () {
+    $host = System::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'appwrite-defender');
+    $port = (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', '8080');
+    $client = (new Client(new CurlAdapter()))
+        ->withBaseUri('http://' . $host . ':' . $port)
+        ->withTimeout(30)
+        ->withConnectTimeout(5);
+
+    return new AntivirusClient($client);
 }, []);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
