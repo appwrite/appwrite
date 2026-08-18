@@ -129,6 +129,10 @@ class Update extends Base
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
+        if ($queries === []) {
+            throw new \LogicException('rules query list must not be empty');
+        }
+
         $authorization->skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $authorization) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
