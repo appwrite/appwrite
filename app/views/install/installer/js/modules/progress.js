@@ -370,6 +370,7 @@
             database: formState?.database || 'postgresql',
             appDomain: normalizedDomain,
             emailCertificates: normalizedEmail,
+            forceHttps: formState?.forceHttps === true,
             opensslKey: (formState?.opensslKey || '').trim(),
             assistantOpenAIKey: normalizedAssistantKey,
             accountEmail: normalizedAccountEmail,

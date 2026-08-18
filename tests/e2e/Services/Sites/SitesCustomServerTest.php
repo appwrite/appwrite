@@ -25,6 +25,86 @@ final class SitesCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
+    private function waitForSiteLog(string $siteId, string $requestPath): array
+    {
+        $logs = [];
+        $start = \time();
+
+        while (\time() - $start < 120) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', [$requestPath])->toString(),
+                Query::limit(1)->toString(),
+            ]);
+
+            if (!empty($logs['body']['executions'][0]['logs']) && !empty($logs['body']['executions'][0]['errors'])) {
+                return $logs['body']['executions'][0];
+            }
+
+            \usleep(500000);
+        }
+
+        $this->assertNotEmpty($logs['body']['executions'] ?? [], 'Site execution log was not available within timeout');
+        $this->assertNotEmpty($logs['body']['executions'][0]['logs'] ?? '', 'Site execution log content was not populated within timeout');
+
+        return $logs['body']['executions'][0];
+    }
+
+    public function testSSRLogsPersistAndCanBeManaged(): void
+    {
+        $siteId = '';
+
+        try {
+            $siteId = $this->setupSite([
+                'siteId' => ID::unique(),
+                'name' => 'SSR site logs',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm ci',
+                'fallbackFile' => '',
+            ]);
+
+            $this->setupSiteDomain($siteId);
+
+            $deploymentId = $this->setupDeployment($siteId, [
+                'code' => $this->packageSite('astro'),
+                'activate' => 'true',
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $this->getSiteDomain($siteId));
+
+            $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
+            $this->assertEquals(200, $response['headers']['status-code']);
+
+            $log = $this->waitForSiteLog($siteId, '/logs-inline');
+            $this->assertEquals($deploymentId, $log['deploymentId']);
+            $this->assertEquals('GET', $log['requestMethod']);
+            $this->assertStringContainsString('Log1', (string) $log['logs']);
+            $this->assertStringContainsString('Error1', (string) $log['errors']);
+
+            $logId = $log['$id'];
+            $stored = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs/' . $logId, \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(200, $stored['headers']['status-code']);
+
+            $deleted = $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId . '/logs/' . $logId, \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(204, $deleted['headers']['status-code']);
+        } finally {
+            if ($siteId !== '') {
+                $this->cleanupSite($siteId);
+            }
+        }
+    }
+
     public function testListSpecs(): void
     {
         $specifications = $this->listSpecifications(['type' => 'runtimes']);

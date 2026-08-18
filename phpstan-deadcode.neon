@@ -38,7 +38,6 @@ parameters:
         - '#^Unused Appwrite\\Event\\Database::getDatabase$#'
         - '#^Unused Appwrite\\Event\\Database::setDatabase$#'
         - '#^Unused Appwrite\\Event\\Database::setTable$#'
-        - '#^Unused Appwrite\\Event\\Event::EXECUTIONS_QUEUE_NAME$#'
         - '#^Unused Appwrite\\Event\\Event::setPaused$#'
         - '#^Unused Appwrite\\Event\\Event::setPlatform$#'
         - '#^Unused Appwrite\\Event\\Message\\Audit::fromArray$#'

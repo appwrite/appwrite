@@ -860,7 +860,7 @@ final class MessagingTest extends TestCase
             event: 'functions.function_id.executions.execution_id.create',
             payload: new Document([
                 '$id' => ID::custom('execution_id'),
-                'functionId' => 'function_id',
+                'resourceId' => 'function_id',
                 '$read' => [Role::any()->toString()],
                 '$permissions' => [Permission::read(Role::any())],
             ]),
