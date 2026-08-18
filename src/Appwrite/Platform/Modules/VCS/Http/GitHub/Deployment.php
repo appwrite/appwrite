@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
+use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -44,6 +46,7 @@ trait Deployment
         bool $external,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         array $platform,
         callable $deploymentsFactory,
@@ -408,7 +411,7 @@ trait Deployment
                     $domain = ID::unique() . "." . $sitesDomain;
                     $ruleId = md5($domain);
                     $previewRuleId = $ruleId;
-                    $authorization->skip(
+                    $rule = $authorization->skip(
                         fn () => $dbForPlatform->createDocument('rules', new Document([
                             '$id' => $ruleId,
                             'projectId' => $project->getId(),
@@ -429,6 +432,7 @@ trait Deployment
                             'region' => $project->getAttribute('region')
                         ]))
                     );
+                    $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
                     // VCS branch preview
                     if (!empty($providerBranch)) {
@@ -440,7 +444,7 @@ trait Deployment
                         ]);
                         $ruleId = md5($domain);
                         try {
-                            $authorization->skip(
+                            $rule = $authorization->skip(
                                 fn () => $dbForPlatform->createDocument('rules', new Document([
                                     '$id' => $ruleId,
                                     'projectId' => $project->getId(),
@@ -461,6 +465,7 @@ trait Deployment
                                     'region' => $project->getAttribute('region')
                                 ]))
                             );
+                            $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
                         } catch (Duplicate $err) {
                             // Ignore, rule already exists; will be updated by builds worker
                         }
@@ -471,7 +476,7 @@ trait Deployment
                         $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
                         $ruleId = md5($domain);
                         try {
-                            $authorization->skip(
+                            $rule = $authorization->skip(
                                 fn () => $dbForPlatform->createDocument('rules', new Document([
                                     '$id' => $ruleId,
                                     'projectId' => $project->getId(),
@@ -492,6 +497,7 @@ trait Deployment
                                     'region' => $project->getAttribute('region')
                                 ]))
                             );
+                            $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
                         } catch (Duplicate $err) {
                             // Ignore, rule already exists; will be updated by builds worker
                         }
