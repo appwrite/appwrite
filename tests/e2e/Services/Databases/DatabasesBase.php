@@ -26,6 +26,7 @@ trait DatabasesBase
     use QueryJoinTypes;
     use QueryJoinOperators;
     use QueryJoinPermissions;
+    use QueryJoinCombos;
     use QueryJoinProjection;
     use QueryStatisticalAggregates;
     use QueryRejectedMethods;
