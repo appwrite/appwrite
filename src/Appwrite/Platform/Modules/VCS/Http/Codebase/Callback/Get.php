@@ -11,6 +11,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Fetch\Client as FetchClient;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -20,6 +21,18 @@ class Get extends Action
 {
     use HTTP;
     use AppwritePermission;
+
+    /**
+     * Issuer and JWKS endpoint published by Cursor's OIDC discovery document at
+     * https://api.cursor.com/v1/origin/.well-known/openid-configuration
+     */
+    private const RECEIPT_ISSUER = 'https://api.cursor.com/v1/origin';
+    private const RECEIPT_JWKS_URL = 'https://api.cursor.com/v1/origin/keys';
+
+    /**
+     * Clock-skew tolerance, in seconds, applied to receipt exp/nbf checks.
+     */
+    private const RECEIPT_LEEWAY = 60;
 
     public static function getName()
     {
@@ -137,6 +150,22 @@ class Get extends Action
             return;
         }
 
+        // Authenticate the callback by verifying the installation receipt
+        // against Cursor's published JWKS. This proves the request genuinely
+        // originates from Codebase (the callback is public and has no token
+        // exchange) before any installation is created.
+        try {
+            $receiptClaims = $this->verifyReceipt($installationReceipt, $providerInstallationId);
+        } catch (\Throwable $e) {
+            Console::log('[CODEBASE DEBUG] Receipt verification failed: ' . $e->getMessage());
+            $this->failure($response, $redirectFailure, 'Could not verify the Codebase installation receipt.');
+            return;
+        }
+
+        // The Cursor namespace (team/workspace) owning the installation.
+        $organization = $receiptClaims['namespace_id'] ?? '';
+        Console::log('[CODEBASE DEBUG] Receipt verified, namespace_id: "' . $organization . '"');
+
         $projectInternalId = $project->getSequence();
 
         $installation = $dbForPlatform->findOne('installations', [
@@ -155,13 +184,17 @@ class Get extends Action
                 'projectId' => $projectId,
                 'projectInternalId' => $projectInternalId,
                 'provider' => 'codebase',
-                'organization' => '',
+                'organization' => $organization,
                 'personal' => false,
             ]));
 
             // TODO: Temporary debug logging while the Codebase integration is verified -- remove afterwards.
             Console::log('[CODEBASE DEBUG] Created installation "' . $installation->getId() . '" for project "' . $projectId . '"');
         } else {
+            $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
+                'organization' => $organization,
+            ]));
+
             Console::log('[CODEBASE DEBUG] Installation already exists: "' . $installation->getId() . '"');
         }
 
@@ -190,5 +223,109 @@ class Get extends Action
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($redirect . $separator . \http_build_query(['error' => $error]));
+    }
+
+    /**
+     * Verify a Codebase installation receipt (an EdDSA-signed JWT) against
+     * Cursor's published JWKS and validate its claims. Returns the verified
+     * claims, or throws on any failure.
+     *
+     * @return array<string, mixed>
+     */
+    private function verifyReceipt(string $jwt, string $expectedInstallationId): array
+    {
+        if (empty($jwt)) {
+            throw new \Exception('receipt is missing');
+        }
+
+        $segments = \explode('.', $jwt);
+        if (\count($segments) !== 3) {
+            throw new \Exception('receipt is not a JWT');
+        }
+
+        [$headerB64, $payloadB64, $signatureB64] = $segments;
+        $header = \json_decode($this->base64UrlDecode($headerB64), true);
+        $claims = \json_decode($this->base64UrlDecode($payloadB64), true);
+        $signature = $this->base64UrlDecode($signatureB64);
+
+        if (!\is_array($header) || !\is_array($claims)) {
+            throw new \Exception('receipt segments are not valid JSON');
+        }
+
+        if (($header['alg'] ?? '') !== 'EdDSA') {
+            throw new \Exception('unexpected signing algorithm');
+        }
+
+        $kid = $header['kid'] ?? '';
+        if (empty($kid)) {
+            throw new \Exception('receipt is missing key id');
+        }
+
+        $publicKey = null;
+        foreach ($this->fetchJwks() as $key) {
+            if (($key['kid'] ?? '') === $kid && ($key['kty'] ?? '') === 'OKP' && ($key['crv'] ?? '') === 'Ed25519') {
+                $publicKey = $this->base64UrlDecode($key['x'] ?? '');
+                break;
+            }
+        }
+
+        if ($publicKey === null || \strlen($publicKey) !== SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES) {
+            throw new \Exception('no matching signing key in JWKS');
+        }
+
+        if (!\sodium_crypto_sign_verify_detached($signature, $headerB64 . '.' . $payloadB64, $publicKey)) {
+            throw new \Exception('signature is invalid');
+        }
+
+        if (($claims['iss'] ?? '') !== self::RECEIPT_ISSUER) {
+            throw new \Exception('unexpected issuer');
+        }
+
+        $clientId = System::getEnv('_APP_VCS_CODEBASE_CLIENT_ID', '');
+        if (($claims['aud'] ?? '') !== $clientId) {
+            throw new \Exception('receipt audience does not match this app');
+        }
+
+        // Bind the receipt to the installation id in the callback so a valid
+        // receipt cannot be replayed to attach a different installation.
+        if (($claims['sub'] ?? '') !== $expectedInstallationId) {
+            throw new \Exception('receipt subject does not match installation id');
+        }
+
+        $now = \time();
+        if (isset($claims['exp']) && $now >= (int)$claims['exp'] + self::RECEIPT_LEEWAY) {
+            throw new \Exception('receipt has expired');
+        }
+        if (isset($claims['nbf']) && $now < (int)$claims['nbf'] - self::RECEIPT_LEEWAY) {
+            throw new \Exception('receipt is not yet valid');
+        }
+
+        return $claims;
+    }
+
+    /**
+     * Fetch Cursor's origin JWKS (the Ed25519 public keys that sign receipts).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchJwks(): array
+    {
+        $client = new FetchClient();
+        $client->addHeader('Accept', 'application/json');
+
+        $response = $client->fetch(url: self::RECEIPT_JWKS_URL, method: FetchClient::METHOD_GET);
+        $body = \json_decode($response->getBody(), true);
+
+        return \is_array($body) && isset($body['keys']) && \is_array($body['keys']) ? $body['keys'] : [];
+    }
+
+    private function base64UrlDecode(string $data): string
+    {
+        $remainder = \strlen($data) % 4;
+        if ($remainder > 0) {
+            $data .= \str_repeat('=', 4 - $remainder);
+        }
+
+        return (string)\base64_decode(\strtr($data, '-_', '+/'), true);
     }
 }
