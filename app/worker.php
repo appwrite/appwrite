@@ -5,7 +5,6 @@ $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
-use Appwrite\Queue\Connection\Pool as CommandsPool;
 use Appwrite\Workers\Jobs;
 use Swoole\Runtime;
 use Utopia\Config\Config;
@@ -15,11 +14,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
-use Utopia\Pools\Adapter\Swoole as SwoolePool;
-use Utopia\Pools\Pool;
 use Utopia\Queue\Adapter\Swoole;
-use Utopia\Queue\Broker\Redis as BrokerRedis;
-use Utopia\Queue\Connection\Redis as RedisConnection;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Server;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -88,24 +84,15 @@ if ($requested === [] || \in_array('all', $requested, true)) {
 // For many, each queue keeps its own cap so databases stays at 1.
 $jobs = Jobs::resolve($workers, $workersConfig, System::getEnv(...));
 
-$redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
-$redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);
+// Receive and commands borrow from the existing publisher pool so concurrent
+// workers do not serialize on one Locking Redis connection. Combined Compose
+// sets `_APP_WORKER_MAX_COROUTINES` to size that pool.
+$createConsumer = static function () use ($container): BrokerPool {
+    $publisher = $container->get('pools')->get('publisher');
 
-// Receive stays per-consumer (blocking pop needs a dedicated socket).
-// Commands go through a pool so combined workers can ack/publish in
-// parallel instead of queuing on one Locking connection.
-$commands = new CommandsPool(new Pool(
-    new SwoolePool(),
-    'worker-commands',
-    Jobs::commandPoolSize($jobs),
-    static fn (): RedisConnection => new RedisConnection($redisHost, $redisPort),
-    (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10),
-));
-
-$createConsumer = static function () use ($redisHost, $redisPort, $commands): BrokerRedis {
-    return new BrokerRedis(
-        receive: new RedisConnection($redisHost, $redisPort),
-        commands: $commands,
+    return new BrokerPool(
+        publisher: $publisher,
+        consumer: $publisher,
     );
 };
 

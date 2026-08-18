@@ -56,15 +56,4 @@ final class Jobs
 
         return $jobs;
     }
-
-    /**
-     * Command-connection pool size so every in-flight coroutine can
-     * ack/publish without waiting on a sibling worker's lock.
-     *
-     * @param array<string, array{maxCoroutines: int}> $jobs
-     */
-    public static function commandPoolSize(array $jobs): int
-    {
-        return max(1, (int) array_sum(array_column($jobs, 'maxCoroutines')));
-    }
 }
