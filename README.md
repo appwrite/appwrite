@@ -220,6 +220,18 @@ flowchart TB
   Console & Flutter & iOS & Android & Web & Agents --> Appwrite
   Appwrite --> REST & Realtime & GraphQL & MCP & CLI & SDKs
   REST & Realtime & GraphQL & MCP & CLI & SDKs --> securityLayer[Security layer]
+  securityLayer --> services
+  subgraph services [Services]
+    Auth
+    Databases
+    Functions
+    Sites
+    Messaging
+    Storage
+    Avatars
+    Network
+    productRealtime[Realtime]
+  end
 ```
 
 Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
