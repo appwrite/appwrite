@@ -86,6 +86,7 @@ class Get extends Action
 
         $url = 'https://cursor.com/codebase/apps/install?' . \http_build_query([
             'client_id' => $clientId,
+            'source' => 'app-metadata',
             'state' => $state,
             'redirect_uri' => $protocol . '://' . $hostname . '/v1/vcs/codebase/callback',
         ]);
