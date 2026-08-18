@@ -133,7 +133,7 @@ class Get extends Base
                 ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT)
-                ->send($deviceForVideos->read($path, $start, ($end - $start + 1)));
+                ->send((string) $deviceForVideos->read($path, $start, ($end - $start + 1)));
 
             return;
         }
@@ -141,7 +141,7 @@ class Get extends Base
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < \ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceForVideos->read(
+                    (string) $deviceForVideos->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         \min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -153,6 +153,6 @@ class Get extends Base
             return;
         }
 
-        $response->send($deviceForVideos->read($path));
+        $response->send((string) $deviceForVideos->read($path));
     }
 }

@@ -94,6 +94,6 @@ class Get extends Base
         $response
             ->setContentType('text/vtt')
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-            ->send($deviceForVideos->read($path));
+            ->send((string) $deviceForVideos->read($path));
     }
 }

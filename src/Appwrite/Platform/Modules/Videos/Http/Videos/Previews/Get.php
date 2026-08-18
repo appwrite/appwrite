@@ -119,7 +119,7 @@ class Get extends Base
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unsupported output format');
         }
 
-        $source = $deviceForVideos->read($path);
+        $source = (string) $deviceForVideos->read($path);
 
         if ($width > 0 || $height > 0) {
             $image = new Image($source);

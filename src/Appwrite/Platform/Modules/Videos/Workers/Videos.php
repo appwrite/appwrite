@@ -25,6 +25,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
@@ -250,7 +251,7 @@ class Videos extends Action
             if (!empty($urls)) {
                 $vtt = $sheet->render(fn (string $file): string => $urls[$file] ?? $file);
                 $vttPath = $deviceForVideos->getPath($video->getId() . '/timeline') . '/timeline.vtt';
-                $deviceForVideos->write($vttPath, $vtt, 'text/vtt');
+                $deviceForVideos->write($vttPath, new Stream($vtt), 'text/vtt');
                 Console::info('Uploaded timeline vtt for video ' . $video->getId());
             }
         } finally {
@@ -1032,7 +1033,7 @@ class Videos extends Action
         $local = new Local('/');
 
         if ($hasEncryption || $hasCompression) {
-            $data = $deviceForFiles->read($fullPath);
+            $data = (string) $deviceForFiles->read($fullPath);
 
             if ($hasEncryption) {
                 $data = OpenSSL::decrypt(
@@ -1053,10 +1054,10 @@ class Videos extends Action
                 };
             }
 
-            if (!$local->write($localPath, $data, $file->getAttribute('mimeType'))) {
+            if (!$local->write($localPath, new Stream($data), $file->getAttribute('mimeType'))) {
                 throw new \Exception('Unable to write decrypted source to ' . $localPath);
             }
-        } elseif (!$deviceForFiles->transfer($fullPath, $localPath, $local)) {
+        } elseif (!$deviceForFiles->copy($fullPath, $localPath, $local)) {
             throw new \Exception('Unable to transfer source to ' . $localPath);
         }
 
@@ -1287,7 +1288,7 @@ class Videos extends Action
             }
 
             $data = $local->read($localPath);
-            $bytes += \strlen($data);
+            $bytes += $data->getSize() ?? (\filesize($localPath) ?: 0);
             $fileName = \basename($localPath);
 
             Console::info('Uploading ' . $fileName);

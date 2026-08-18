@@ -101,6 +101,6 @@ class Get extends Base
         $response
             ->setContentType('text/vtt')
             ->addHeader('Cache-Control', 'public, max-age=31536000, immutable')
-            ->send($deviceForVideos->read($path));
+            ->send((string) $deviceForVideos->read($path));
     }
 }
