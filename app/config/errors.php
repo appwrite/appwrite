@@ -1281,6 +1281,11 @@ return [
         'description' => 'Too many queries.',
         'code' => 400,
     ],
+    Exception::GRAPHQL_METHOD_UNSUPPORTED => [
+        'name' => Exception::GRAPHQL_METHOD_UNSUPPORTED,
+        'description' => 'GET requests only support GraphQL query operations.',
+        'code' => 405,
+    ],
 
     /** Migrations */
     Exception::MIGRATION_NOT_FOUND => [
