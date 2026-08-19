@@ -6,7 +6,6 @@ use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Usage\Context as UsageContext;
-use Swoole\Runtime;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -42,7 +41,6 @@ use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Priority;
-use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
@@ -53,7 +51,7 @@ use Utopia\Telemetry\Adapter as Telemetry;
 
 use function Swoole\Coroutine\batch;
 
-class Messaging extends Action
+class Messaging extends Blocking
 {
     private ?SMSAdapter $adapter = null;
 
@@ -101,8 +99,24 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry
     ): void {
-        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+        $this->disableTcpHook();
 
+        try {
+            $this->process($message, $project, $log, $dbForProject, $deviceForFiles, $publisherForUsage, $telemetry);
+        } finally {
+            $this->restoreTcpHook();
+        }
+    }
+
+    private function process(
+        Message $message,
+        Document $project,
+        Log $log,
+        Database $dbForProject,
+        Device $deviceForFiles,
+        UsagePublisher $publisherForUsage,
+        Telemetry $telemetry
+    ): void {
         $this->telemetry = $telemetry;
         $payload = $message->getPayload();
 
