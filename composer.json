@@ -114,7 +114,7 @@
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.1",
         "utopia-php/migration": "^2.0.0",
-        "utopia-php/platform": "1.0.999",
+        "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "3.0.*",
         "utopia-php/queue": "^1.3.0",

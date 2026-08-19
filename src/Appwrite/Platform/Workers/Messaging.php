@@ -41,6 +41,7 @@ use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Priority;
+use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
@@ -51,7 +52,7 @@ use Utopia\Telemetry\Adapter as Telemetry;
 
 use function Swoole\Coroutine\batch;
 
-class Messaging extends Blocking
+class Messaging extends Action
 {
     private ?SMSAdapter $adapter = null;
 
@@ -91,24 +92,6 @@ class Messaging extends Blocking
      * @throws \Exception
      */
     public function action(
-        Message $message,
-        Document $project,
-        Log $log,
-        Database $dbForProject,
-        Device $deviceForFiles,
-        UsagePublisher $publisherForUsage,
-        Telemetry $telemetry
-    ): void {
-        $this->disableTcpHook();
-
-        try {
-            $this->process($message, $project, $log, $dbForProject, $deviceForFiles, $publisherForUsage, $telemetry);
-        } finally {
-            $this->restoreTcpHook();
-        }
-    }
-
-    private function process(
         Message $message,
         Document $project,
         Log $log,
