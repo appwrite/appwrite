@@ -4,21 +4,19 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Template\Template;
 use Exception;
-use Swoole\Runtime;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
-use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
-class Mails extends Action
+class Mails extends Blocking
 {
     protected int $previewMaxLen = 150;
 
@@ -64,13 +62,12 @@ class Mails extends Action
      */
     public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
     {
-        $previousHookFlags = Runtime::getHookFlags();
-        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+        $this->disableTcpHook();
 
         try {
             $this->process($message, $project, $register, $log, $telemetry);
         } finally {
-            Runtime::setHookFlags($previousHookFlags);
+            $this->restoreTcpHook();
         }
     }
 
