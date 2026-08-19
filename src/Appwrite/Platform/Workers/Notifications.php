@@ -57,17 +57,6 @@ class Notifications extends Blocking
 
     public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, Log $log): void
     {
-        $this->disableTcpHook();
-
-        try {
-            $this->process($message, $project, $register, $dbForPlatform, $log);
-        } finally {
-            $this->restoreTcpHook();
-        }
-    }
-
-    private function process(Message $message, Document $project, Registry $register, Database $dbForPlatform, Log $log): void
-    {
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -353,7 +342,7 @@ class Notifications extends Blocking
         );
 
         try {
-            $adapter->send($emailMessage);
+            $this->send($adapter, $emailMessage);
         } catch (Throwable $error) {
             throw new Exception('Error sending notification: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
         }

@@ -99,24 +99,6 @@ class Messaging extends Blocking
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry
     ): void {
-        $this->disableTcpHook();
-
-        try {
-            $this->process($message, $project, $log, $dbForProject, $deviceForFiles, $publisherForUsage, $telemetry);
-        } finally {
-            $this->restoreTcpHook();
-        }
-    }
-
-    private function process(
-        Message $message,
-        Document $project,
-        Log $log,
-        Database $dbForProject,
-        Device $deviceForFiles,
-        UsagePublisher $publisherForUsage,
-        Telemetry $telemetry
-    ): void {
         $this->telemetry = $telemetry;
         $payload = $message->getPayload();
 
@@ -671,7 +653,7 @@ class Messaging extends Blocking
             // expired-device-token cleanup below is isolated in its own try so a DB hiccup there can never be
             // misattributed as a send failure.
             try {
-                $response = $adapter->send($data);
+                $response = $this->send($adapter, $data);
             } catch (\Throwable $e) {
                 if ($hasRetriesLeft && $this->isRetryableError($e->getMessage())) {
                     $retry = $pending;

@@ -62,17 +62,6 @@ class Mails extends Blocking
      */
     public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
     {
-        $this->disableTcpHook();
-
-        try {
-            $this->process($message, $project, $register, $log, $telemetry);
-        } finally {
-            $this->restoreTcpHook();
-        }
-    }
-
-    private function process(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
-    {
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -224,7 +213,7 @@ class Mails extends Blocking
         $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
         try {
-            $result = $adapter->send($emailMessage);
+            $result = $this->send($adapter, $emailMessage);
 
             if (($result['deliveredTo'] ?? 0) === 0) {
                 $error = $result['results'][0]['error'] ?? ($result['error'] ?? 'Unknown error');

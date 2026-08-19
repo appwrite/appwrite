@@ -3,6 +3,9 @@
 namespace Appwrite\Platform\Workers;
 
 use Swoole\Runtime;
+use Utopia\Messaging\Adapter;
+use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Message;
 use Utopia\Platform\Action;
 
 abstract class Blocking extends Action
@@ -10,10 +13,10 @@ abstract class Blocking extends Action
     private static int $jobs = 0;
     private static ?int $hookFlags = null;
 
-    protected function disableTcpHook(): void
+    protected function send(Adapter $adapter, Message $message): array
     {
-        if (!\class_exists(Runtime::class)) {
-            return;
+        if (!$adapter instanceof SMTP || !\class_exists(Runtime::class)) {
+            return $adapter->send($message);
         }
 
         if (self::$jobs === 0) {
@@ -22,19 +25,16 @@ abstract class Blocking extends Action
         }
 
         self::$jobs++;
-    }
 
-    protected function restoreTcpHook(): void
-    {
-        if (!\class_exists(Runtime::class)) {
-            return;
-        }
+        try {
+            return $adapter->send($message);
+        } finally {
+            self::$jobs--;
 
-        self::$jobs--;
-
-        if (self::$jobs === 0 && self::$hookFlags !== null) {
-            Runtime::setHookFlags(self::$hookFlags);
-            self::$hookFlags = null;
+            if (self::$jobs === 0 && self::$hookFlags !== null) {
+                Runtime::setHookFlags(self::$hookFlags);
+                self::$hookFlags = null;
+            }
         }
     }
 }
