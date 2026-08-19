@@ -20,7 +20,10 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
     depends_on:
-      - coredns
+      coredns:
+        condition: service_started
+      appwrite-usage-setup:
+        condition: service_completed_successfully
     ports:
       - 9501:80
     dns:
