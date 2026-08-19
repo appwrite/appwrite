@@ -92,6 +92,10 @@ class Functions extends Action
         Span::add('queue.name', $message->getQueue());
         Span::add('message.timestamp', (string) $message->getTimestamp());
 
+        // Recorded on consume, not on publish: the schedulers hand over a due
+        // second one occurrence at a time, so a write there delays the rest.
+        $this->updateProjectAccess($project, $dbForPlatform);
+
         $events = $functionMessage->events;
         $data = $functionMessage->body;
         $eventData = $functionMessage->payload;
@@ -311,7 +315,6 @@ class Functions extends Action
 
         $published = false;
         try {
-            $this->updateProjectAccess($project, $dbForPlatform);
             $enqueue(new FunctionMessage(
                 project: $project,
                 userId: $data['userId'] ?? '',
