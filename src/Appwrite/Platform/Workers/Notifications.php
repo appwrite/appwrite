@@ -21,11 +21,12 @@ use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
+use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
-class Notifications extends Blocking
+class Notifications extends Action
 {
     protected int $previewMaxLen = 150;
     protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
@@ -56,17 +57,6 @@ class Notifications extends Blocking
     }
 
     public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, Log $log): void
-    {
-        $this->disableTcpHook();
-
-        try {
-            $this->process($message, $project, $register, $dbForPlatform, $log);
-        } finally {
-            $this->restoreTcpHook();
-        }
-    }
-
-    private function process(Message $message, Document $project, Registry $register, Database $dbForPlatform, Log $log): void
     {
         $payload = $message->getPayload();
 
