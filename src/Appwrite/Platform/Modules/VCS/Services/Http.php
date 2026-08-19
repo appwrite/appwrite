@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\VCS\Services;
 
-use Appwrite\Platform\Modules\VCS\Http\Archives\Get as GetArchive;
 use Appwrite\Platform\Modules\VCS\Http\Bitbucket\Authorize\Get as GetBitbucketAuthorize;
 use Appwrite\Platform\Modules\VCS\Http\Bitbucket\Callback\Get as GetBitbucketCallback;
 use Appwrite\Platform\Modules\VCS\Http\Bitbucket\Events\Create as CreateBitbucketEvent;
@@ -63,9 +62,6 @@ class Http extends Service
         $this->addAction(ListInstallations::getName(), new ListInstallations());
         $this->addAction(DeleteInstallation::getName(), new DeleteInstallation());
         $this->addAction(ListNamespaces::getName(), new ListNamespaces());
-
-        // Archives
-        $this->addAction(GetArchive::getName(), new GetArchive());
 
         // Repositories
         $this->addAction(CreateRepository::getName(), new CreateRepository());
