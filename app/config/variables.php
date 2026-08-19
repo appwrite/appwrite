@@ -1393,6 +1393,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VCS_ORIGIN_CLIENT_ID',
+                'description' => 'Origin app client ID. You can find it in your Origin app details on Cursor.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ORIGIN_PRIVATE_KEY',
+                'description' => 'Origin app private key. You can generate private keys from your Origin app settings on Cursor.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_VCS_WEBHOOK_URL',
                 'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
                 'introduction' => '2.0.0',

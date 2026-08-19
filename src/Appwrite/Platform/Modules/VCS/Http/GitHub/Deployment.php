@@ -395,12 +395,14 @@ trait Deployment
                 // The Deployments service is built per repository: a webhook fans out to
                 // many tenant projects, each with its own database.
                 $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
-                    ->createFromUrl(
+                    ->createFromVcs(
                         $resource,
                         $deployment,
-                        $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
+                        $vcs,
+                        $providerRepositoryOwner,
+                        $providerRepositoryName,
+                        $providerCommitHash,
                         $resource->getAttribute('providerRootDirectory', ''),
-                        $vcs->getRepositoryPresignedUrlHeaders(),
                     ));
 
                 if ($resource->getCollection() === 'sites') {
