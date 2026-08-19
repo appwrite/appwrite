@@ -7,7 +7,7 @@ namespace Tests\Unit\Usage;
 use Appwrite\Usage\Context;
 use PHPUnit\Framework\TestCase;
 
-class ContextTest extends TestCase
+final class ContextTest extends TestCase
 {
     public function testMetricKeepsMetadataFromEmissionAndFinalStatus(): void
     {
@@ -26,15 +26,15 @@ class ContextTest extends TestCase
         $context->setStatus(201)->setResourcePath('buckets/bucket');
 
         $metric = $context->getMetrics()[0];
-        self::assertSame('/v1/storage/buckets/bucket/files', $metric['path']);
-        self::assertSame('POST', $metric['method']);
-        self::assertSame(201, $metric['status']);
-        self::assertSame('storage', $metric['service']);
-        self::assertSame('bucket', $metric['resourceType']);
-        self::assertSame('bucket', $metric['resourceId']);
-        self::assertSame('buckets/bucket', $metric['resourcePath']);
-        self::assertSame('us', $metric['country']);
-        self::assertSame('example.com', $metric['hostname']);
+        $this->assertSame('/v1/storage/buckets/bucket/files', $metric['path']);
+        $this->assertSame('POST', $metric['method']);
+        $this->assertSame(201, $metric['status']);
+        $this->assertSame('storage', $metric['service']);
+        $this->assertSame('bucket', $metric['resourceType']);
+        $this->assertSame('bucket', $metric['resourceId']);
+        $this->assertSame('buckets/bucket', $metric['resourcePath']);
+        $this->assertSame('us', $metric['country']);
+        $this->assertSame('example.com', $metric['hostname']);
     }
 
     public function testResetClearsMetricsAndMetadata(): void
@@ -46,10 +46,10 @@ class ContextTest extends TestCase
             ->addMetric('network.requests', 1)
             ->reset();
 
-        self::assertTrue($context->isEmpty());
-        self::assertSame('', $context->getService());
-        self::assertSame('', $context->getResourceId());
-        self::assertSame('', $context->getIp());
+        $this->assertTrue($context->isEmpty());
+        $this->assertSame('', $context->getService());
+        $this->assertSame('', $context->getResourceId());
+        $this->assertSame('', $context->getIp());
     }
 
     public function testFillMissingResourceDoesNotOverwriteSpecificResource(): void
@@ -64,10 +64,10 @@ class ContextTest extends TestCase
             ->fillMissingResource('project', 'project', '42');
 
         [$resource, $project] = $context->getMetrics();
-        self::assertSame('bucket', $resource['resourceType']);
-        self::assertSame('bucket', $resource['resourceId']);
-        self::assertSame('project', $project['resourceType']);
-        self::assertSame('project', $project['resourceId']);
-        self::assertSame('42', $project['resourceInternalId']);
+        $this->assertSame('bucket', $resource['resourceType']);
+        $this->assertSame('bucket', $resource['resourceId']);
+        $this->assertSame('project', $project['resourceType']);
+        $this->assertSame('project', $project['resourceId']);
+        $this->assertSame('42', $project['resourceInternalId']);
     }
 }

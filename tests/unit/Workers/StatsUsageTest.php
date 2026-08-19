@@ -33,10 +33,10 @@ final class StatsUsageTest extends TestCase
 
         (new StatsUsage())->action($message, $project, $connection);
 
-        self::assertCount(1, $adapter->batches);
-        self::assertSame(Usage::TYPE_EVENT, $adapter->batches[0]['type']);
-        self::assertSame(['42', '42'], array_column($adapter->batches[0]['metrics'], 'tenant'));
-        self::assertSame([1, -1], array_column($adapter->batches[0]['metrics'], 'value'));
+        $this->assertCount(1, $adapter->batches);
+        $this->assertSame(Usage::TYPE_EVENT, $adapter->batches[0]['type']);
+        $this->assertSame(['42', '42'], array_column($adapter->batches[0]['metrics'], 'tenant'));
+        $this->assertSame([1, -1], array_column($adapter->batches[0]['metrics'], 'value'));
     }
 
     public function testGaugeWorkerUsesResolvedTenantAndDimensions(): void
@@ -62,11 +62,11 @@ final class StatsUsageTest extends TestCase
             $connection,
         );
 
-        self::assertCount(1, $adapter->batches);
-        self::assertSame(Usage::TYPE_GAUGE, $adapter->batches[0]['type']);
-        self::assertSame('42', $adapter->batches[0]['metrics'][0]['tenant']);
-        self::assertSame('bucket', $adapter->batches[0]['metrics'][0]['tags']['resourceType']);
-        self::assertSame('bucket', $adapter->batches[0]['metrics'][0]['tags']['resourceId']);
+        $this->assertCount(1, $adapter->batches);
+        $this->assertSame(Usage::TYPE_GAUGE, $adapter->batches[0]['type']);
+        $this->assertSame('42', $adapter->batches[0]['metrics'][0]['tenant']);
+        $this->assertSame('bucket', $adapter->batches[0]['metrics'][0]['tags']['resourceType']);
+        $this->assertSame('bucket', $adapter->batches[0]['metrics'][0]['tags']['resourceId']);
     }
 
     public function testDisabledWorkersDoNotResolveUsage(): void
@@ -80,7 +80,7 @@ final class StatsUsageTest extends TestCase
 
         (new StatsUsage())->action($message, $project, $connection);
 
-        self::assertFalse($connection->usageResolved);
+        $this->assertFalse($connection->usageResolved);
     }
 
     /** @param array<string, mixed> $payload */

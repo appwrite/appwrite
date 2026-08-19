@@ -44,7 +44,7 @@ class StatsUsage extends Action
             throw new \RuntimeException('Usage schema is not ready');
         }
 
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
         if ($payload === []) {
             throw new \RuntimeException('Missing payload');
         }
@@ -183,7 +183,7 @@ class StatsUsage extends Action
 
     protected function inferServiceFromMetric(string $metric): string
     {
-        return match (explode('.', $metric)[0] ?? '') {
+        return match (explode('.', $metric)[0]) {
             'files', 'buckets' => 'storage',
             'databases', 'collections', 'documents', 'documentsdb', 'vectorsdb' => 'databases',
             'functions', 'deployments', 'builds', 'executions' => 'functions',

@@ -10,13 +10,13 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-class ConnectionTest extends TestCase
+final class ConnectionTest extends TestCase
 {
     public function testDisabledConnectionIsHealthyWithoutClickHouse(): void
     {
         $connection = new Connection(false, '', new UnusedUsageClient());
 
-        self::assertSame([
+        $this->assertSame([
             'healthy' => true,
             'enabled' => false,
             'schemaReady' => false,
