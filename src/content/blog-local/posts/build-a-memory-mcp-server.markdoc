@@ -25,7 +25,7 @@ AI assistants forget everything between conversations. Preferences repeated on M
 This tutorial builds that service: Recall, a small memory app on Appwrite. It ships a remote MCP server hosted as an Appwrite Function, stores memories in a VectorsDB database so they can be searched by meaning, and protects everything with the project's OAuth2 server. At the end, Claude Code connects to it, asks the user for permission on a consent screen, and starts remembering things.
 
 {% info title="Companion repository" %}
-The complete project lives at [appwrite-community/memory-mcp](https://github.com/appwrite-community/memory-mcp). It pins `node-appwrite` to the latest major release and ships a prebuilt copy of the SDK generated from the latest API specification in `vendor/`, wired in through a pnpm override, because the VectorsDB service is not part of the published package yet. Once a release that includes VectorsDB is out, the override can be removed.
+The complete project lives at [appwrite-community/memory-mcp](https://github.com/appwrite-community/memory-mcp), including the web app, the consent screen, and the MCP function. It pins `node-appwrite` to the latest major release.
 {% /info %}
 
 # How the pieces fit together
@@ -64,7 +64,7 @@ Inside the database, select **Create collection**. Name it `Memories`, set the c
 
 Every VectorsDB collection provisions the same two fields automatically: `embeddings`, which holds the vector, and `metadata`, an object for anything else you want to store alongside it. Recall keeps the memory text, the owner's user ID, and a list of tags in `metadata`.
 
-Similarity search needs an index on the `embeddings` field. Index management for vector collections currently lives in the API rather than the Console wizard, so create it with the SDK:
+Similarity search needs an index on the `embeddings` field. Create it with the SDK:
 
 ```js
 import { Client, VectorsDB, VectorsDBIndexType } from 'node-appwrite'
