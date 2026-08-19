@@ -17,6 +17,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
+use Utopia\Fetch\Client as FetchClient;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -155,13 +156,11 @@ class Create extends Action
         $keys = [];
 
         try {
-            $ch = \curl_init('https://api.cursor.com/v1/origin/keys');
-            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            \curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-            $body = \curl_exec($ch);
-            \curl_close($ch);
+            $client = new FetchClient();
+            $client->setTimeout(15000);
+            $response = $client->fetch('https://api.cursor.com/v1/origin/keys', FetchClient::METHOD_GET);
 
-            $jwks = \is_string($body) ? \json_decode($body, true) : null;
+            $jwks = $response->getStatusCode() === 200 ? $response->json() : null;
             foreach (\is_array($jwks['keys'] ?? null) ? $jwks['keys'] : [] as $key) {
                 if (($key['kty'] ?? '') === 'OKP' && ($key['crv'] ?? '') === 'Ed25519' && !empty($key['x'])) {
                     $keys[] = \strval($key['x']);
