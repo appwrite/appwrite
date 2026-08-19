@@ -5,7 +5,6 @@ require_once __DIR__ . '/init/span.php';
 
 $setRequestContext = require __DIR__ . '/init/resources/request.php';
 
-use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
@@ -470,7 +469,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         // Usage is in ClickHouse, not the primary database, so it sets itself up
         // here. Giving up never blocks boot; reads and ingestion gate on
         // Connection::isReady() and recover once the schema lands.
-        /** @var UsageConnection $usageConnection */
+        /** @var \Appwrite\Usage\Connection $usageConnection */
         $usageConnection = $container->get('usageConnection');
 
         if ($usageConnection->isEnabled()) {
