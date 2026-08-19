@@ -36,7 +36,6 @@ services:
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _TESTS_OAUTH2_GITHUB_CLIENT_ID
       - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
-      - _APP_QUEUE_ADAPTER=inline
   appwrite-realtime:
     build:
       context: .
@@ -51,11 +50,7 @@ services:
       - ./src:/usr/src/code/src
     ports:
       - 9502:80
-    environment:
-      - _APP_QUEUE_ADAPTER=inline
   appwrite-worker:
-    profiles:
-      - workers
     build:
       context: .
       target: development
@@ -82,8 +77,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-    environment:
-      - _APP_QUEUE_ADAPTER=inline
   appwrite-worker-webhooks:
     build:
       context: .
@@ -260,8 +253,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-    environment:
-      - _APP_QUEUE_ADAPTER=inline
   appwrite-task-interval:
     build:
       context: .
@@ -274,8 +265,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-    environment:
-      - _APP_QUEUE_ADAPTER=inline
   appwrite-task-scheduler-functions:
     build:
       context: .
@@ -288,8 +277,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-    environment:
-      - _APP_QUEUE_ADAPTER=inline
   appwrite-task-scheduler-executions:
     build:
       context: .
@@ -302,8 +289,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-    environment:
-      - _APP_QUEUE_ADAPTER=inline
   appwrite-task-scheduler-messages:
     build:
       context: .
@@ -316,8 +301,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-    environment:
-      - _APP_QUEUE_ADAPTER=inline
   coredns:
     image: coredns/coredns:1.12.4
     container_name: appwrite-coredns

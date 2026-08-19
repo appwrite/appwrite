@@ -47,7 +47,7 @@ use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -88,15 +88,27 @@ if (!$container->has('pools')) {
 }
 
 if (!$container->has('publisherForUsage')) {
-    $container->set('publisherForUsage', function (Publisher $publisher): UsagePublisher {
+    $container->set('publisherForUsage', function (Group $pools): UsagePublisher {
+        $statsUsageConnection = System::getEnv('_APP_CONNECTIONS_QUEUE_STATS_USAGE', '');
+        $publisherPoolName = 'publisher';
+
+        if (!empty($statsUsageConnection)) {
+            try {
+                $pools->get('publisher_' . $statsUsageConnection);
+                $publisherPoolName = 'publisher_' . $statsUsageConnection;
+            } catch (Throwable) {
+                // Fallback to default publisher pool when custom one is unavailable.
+            }
+        }
+
         return new UsagePublisher(
-            $publisher,
+            new BrokerPool(publisher: $pools->get($publisherPoolName)),
             new Queue(System::getEnv(
                 '_APP_STATS_USAGE_QUEUE_NAME',
                 QueueEvent::STATS_USAGE_QUEUE_NAME
             ))
         );
-    }, ['publisher']);
+    }, ['pools']);
 }
 
 // Allows overriding

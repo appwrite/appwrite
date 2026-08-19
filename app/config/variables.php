@@ -350,15 +350,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_QUEUE_ADAPTER',
-                'description' => 'Queue transport. `redis` (default) publishes to Redis for worker containers. `inline` runs each job in the publishing process so the stack can run without worker containers. Inline is intended for development and tests — long jobs block the HTTP or CLI request.',
-                'introduction' => '',
-                'default' => 'redis',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_CONSOLE_SESSION_ALERTS',
                 'description' => 'This option allows you configure if a new login in the Appwrite Console should send an alert email to the user. It\'s disabled by default with value "disabled", and to enable it, pass value "enabled".',
                 'introduction' => '1.6.0',

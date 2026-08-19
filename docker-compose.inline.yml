@@ -13,12 +13,22 @@ services:
   appwrite:
     environment:
       - _APP_QUEUE_ADAPTER=inline
+      - _APP_EMAIL_CERTIFICATES
   appwrite-realtime:
     environment:
       - _APP_QUEUE_ADAPTER=inline
+      - _APP_EMAIL_CERTIFICATES
   appwrite-task-scheduler:
     environment:
       - _APP_QUEUE_ADAPTER=inline
+      # Schedulers run function/execution jobs in-process under inline.
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
+      - _APP_EXECUTOR_SECRET
+      - _APP_EXECUTOR_HOST
   appwrite-task-maintenance:
     environment:
       - _APP_QUEUE_ADAPTER=inline
@@ -28,9 +38,23 @@ services:
   appwrite-task-scheduler-functions:
     environment:
       - _APP_QUEUE_ADAPTER=inline
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
+      - _APP_EXECUTOR_SECRET
+      - _APP_EXECUTOR_HOST
   appwrite-task-scheduler-executions:
     environment:
       - _APP_QUEUE_ADAPTER=inline
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
+      - _APP_EXECUTOR_SECRET
+      - _APP_EXECUTOR_HOST
   appwrite-task-scheduler-messages:
     environment:
       - _APP_QUEUE_ADAPTER=inline
