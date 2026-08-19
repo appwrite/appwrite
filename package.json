@@ -6,8 +6,8 @@
     "url": "git+https://github.com/appwrite/appwrite.git"
   },
   "scripts": {
-    "format:compose": "prettier --write docker-compose.yml docker-compose.override.yml docker-compose.inline.yml",
-    "lint:compose": "prettier --check docker-compose.yml docker-compose.override.yml docker-compose.inline.yml"
+    "format:compose": "prettier --write docker-compose.yml docker-compose.override.yml",
+    "lint:compose": "prettier --check docker-compose.yml docker-compose.override.yml"
   },
   "files": [
     "docs/examples",

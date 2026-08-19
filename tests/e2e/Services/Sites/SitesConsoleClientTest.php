@@ -68,7 +68,7 @@ final class SitesConsoleClientTest extends Scope
             $this->assertEquals(200, $site['headers']['status-code']);
             $this->assertEquals($deployment['body']['screenshotLight'], $site['body']['deploymentScreenshotLight']);
             $this->assertEquals($deployment['body']['screenshotDark'], $site['body']['deploymentScreenshotDark']);
-        }, 60_000, 500);
+        });
 
         $this->assertNotNull($site);
         $this->assertNotNull($deployment);

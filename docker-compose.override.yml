@@ -37,7 +37,6 @@ services:
       - _TESTS_OAUTH2_GITHUB_CLIENT_ID
       - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
       - _APP_QUEUE_ADAPTER=inline
-      - _APP_WORKER_MAX_COROUTINES=8
   appwrite-realtime:
     build:
       context: .
@@ -54,7 +53,6 @@ services:
       - 9502:80
     environment:
       - _APP_QUEUE_ADAPTER=inline
-      - _APP_WORKER_MAX_COROUTINES=8
   appwrite-worker:
     profiles:
       - workers

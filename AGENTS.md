@@ -6,9 +6,8 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 
 | Command | Purpose |
 |---------|---------|
-| `docker compose up -d --force-recreate --build` | Build and start all services (inline queue, no worker container, combined scheduler by default) |
+| `docker compose up -d --force-recreate --build` | Build and start all services (combined worker + scheduler by default) |
 | `docker compose -f docker-compose.yml -f docker-compose.separate.yml --profile separate up -d` | Start per-queue worker and scheduler containers instead |
-| `docker compose -f docker-compose.yml -f docker-compose.inline.yml up -d` | Production-style stack without worker containers (`_APP_QUEUE_ADAPTER=inline`) |
 | `docker compose exec appwrite test tests/e2e/Services/[Service]` | Run E2E tests for a service |
 | `docker compose exec appwrite test tests/e2e/Services/[Service] --filter=[Method]` | Run a single test method |
 | `docker compose exec appwrite test tests/unit/` | Run unit tests |

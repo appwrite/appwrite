@@ -218,18 +218,14 @@ final class VariablesCustomServerTest extends Scope
             $this->assertSame($deploymentId, $site['body']['deploymentId'] ?? '');
         }, 120000, 500);
 
-        // 6. Verify the project variable was available during build. Log
-        // callbacks stream asynchronously, so the echoed line can land in
-        // buildLogs shortly after the deployment turns ready.
-        $this->assertEventually(function () use ($projectId, $apiKey, $siteId, $deploymentId) {
-            $deployment = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $apiKey,
-            ]);
-            $this->assertSame(200, $deployment['headers']['status-code']);
-            $this->assertStringContainsString('ProjectVarTest', (string) $deployment['body']['buildLogs']);
-        }, 30000, 500);
+        // 6. Verify the project variable was available during build
+        $deployment = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ]);
+        $this->assertSame(200, $deployment['headers']['status-code']);
+        $this->assertStringContainsString('ProjectVarTest', (string) $deployment['body']['buildLogs']);
 
         // 7. Get the domain and access the site
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([

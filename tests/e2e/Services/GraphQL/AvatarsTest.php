@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\GraphQL;
 
-use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -184,7 +183,6 @@ final class AvatarsTest extends Scope
         return $initials['body'];
     }
 
-    #[Group('screenshots')]
     public function testGetScreenshot()
     {
         $projectId = $this->getProject()['$id'];
@@ -217,7 +215,6 @@ final class AvatarsTest extends Scope
         return $screenshot['body'];
     }
 
-    #[Group('screenshots')]
     public function testGetScreenshotWithOriginalDimensions()
     {
         $projectId = $this->getProject()['$id'];
@@ -249,7 +246,6 @@ final class AvatarsTest extends Scope
         return $screenshot['body'];
     }
 
-    #[Group('screenshots')]
     public function testGetScreenshotWithNewParameters()
     {
         $projectId = $this->getProject()['$id'];
@@ -302,7 +298,6 @@ final class AvatarsTest extends Scope
         return $screenshot['body'];
     }
 
-    #[Group('screenshots')]
     public function testGetScreenshotWithViewportParameters()
     {
         $projectId = $this->getProject()['$id'];
@@ -330,7 +325,6 @@ final class AvatarsTest extends Scope
         return $screenshot['body'];
     }
 
-    #[Group('screenshots')]
     public function testGetScreenshotWithPermissions()
     {
         $projectId = $this->getProject()['$id'];

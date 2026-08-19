@@ -363,11 +363,7 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertEquals(256, $name['body']['size']);
         $this->assertTrue($name['body']['required']);
 
-        $frames = $this->receiveEventFrames($client, [
-            'create' => "databases.{$databaseId}.collections.{$actorsId}.attributes.*.create",
-            'update' => "databases.{$databaseId}.collections.{$actorsId}.attributes.*.update",
-        ]);
-        $response = $frames['create'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -388,7 +384,7 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
-        $response = $frames['update'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -481,11 +477,7 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertEquals(256, $name['body']['size']);
         $this->assertTrue($name['body']['required']);
 
-        $frames = $this->receiveEventFrames($client, [
-            'create' => "databases.{$databaseId}.tables.{$actorsId}.columns.*.create",
-            'update' => "databases.{$databaseId}.tables.{$actorsId}.columns.*.update",
-        ]);
-        $response = $frames['create'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -506,7 +498,7 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
-        $response = $frames['update'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -569,11 +561,7 @@ final class RealtimeConsoleClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
 
-        $frames = $this->receiveEventFrames($client, [
-            'create' => "databases.{$databaseId}.collections.{$actorsId}.indexes.*.create",
-            'update' => "databases.{$databaseId}.collections.{$actorsId}.indexes.*.update",
-        ]);
-        $response = $frames['create'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -592,7 +580,7 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
-        $response = $frames['update'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -653,11 +641,7 @@ final class RealtimeConsoleClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
 
-        $frames = $this->receiveEventFrames($client, [
-            'create' => "databases.{$databaseId}.tables.{$actorsId}.indexes.*.create",
-            'update' => "databases.{$databaseId}.tables.{$actorsId}.indexes.*.update",
-        ]);
-        $response = $frames['create'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -676,7 +660,7 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
-        $response = $frames['update'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -733,11 +717,7 @@ final class RealtimeConsoleClientTest extends Scope
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
 
-        $frames = $this->receiveEventFrames($client, [
-            'update' => "databases.{$databaseId}.collections.{$actorsId}.indexes.*.update",
-            'delete' => "databases.{$databaseId}.collections.{$actorsId}.indexes.*.delete",
-        ]);
-        $response = $frames['update'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -756,7 +736,7 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         /** Delete index generates two events. One from the API and one from the database worker */
-        $response = $frames['delete'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -812,11 +792,7 @@ final class RealtimeConsoleClientTest extends Scope
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
 
-        $frames = $this->receiveEventFrames($client, [
-            'update' => "databases.{$databaseId}.tables.{$actorsId}.indexes.*.update",
-            'delete' => "databases.{$databaseId}.tables.{$actorsId}.indexes.*.delete",
-        ]);
-        $response = $frames['update'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -835,7 +811,7 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         /** Delete index generates two events. One from the API and one from the database worker */
-        $response = $frames['delete'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -890,11 +866,7 @@ final class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
-        $frames = $this->receiveEventFrames($client, [
-            'update' => "databases.{$databaseId}.collections.{$actorsId}.attributes.*.update",
-            'delete' => "databases.{$databaseId}.collections.{$actorsId}.attributes.*.delete",
-        ]);
-        $response = $frames['update'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -912,7 +884,7 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $response = $frames['delete'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -967,11 +939,7 @@ final class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
-        $frames = $this->receiveEventFrames($client, [
-            'update' => "databases.{$databaseId}.tables.{$actorsId}.columns.*.update",
-            'delete' => "databases.{$databaseId}.tables.{$actorsId}.columns.*.delete",
-        ]);
-        $response = $frames['update'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -989,7 +957,7 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.tables.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $response = $frames['delete'];
+        $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
