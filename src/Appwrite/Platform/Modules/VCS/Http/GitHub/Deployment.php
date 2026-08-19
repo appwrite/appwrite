@@ -6,7 +6,6 @@ use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
-use Appwrite\Vcs\SourceArchive;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -234,7 +233,7 @@ trait Deployment
                         if ($lockAcquired) {
                             // Wrap in try/finally to ensure lock file gets deleted
                             try {
-                                $comment = new Comment($platform, $vcs->supportsCommentImages());
+                                $comment = new Comment($platform);
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
 
@@ -246,7 +245,7 @@ trait Deployment
                             }
                         }
                     } else {
-                        $comment = new Comment($platform, $vcs->supportsCommentImages());
+                        $comment = new Comment($platform);
                         $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
                         $latestCommentId = \strval($vcs->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
@@ -307,7 +306,7 @@ trait Deployment
                         if ($lockAcquired) {
                             // Wrap in try/finally to ensure lock file gets deleted
                             try {
-                                $comment = new Comment($platform, $vcs->supportsCommentImages());
+                                $comment = new Comment($platform);
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
@@ -395,14 +394,15 @@ trait Deployment
 
                 // The Deployments service is built per repository: a webhook fans out to
                 // many tenant projects, each with its own database.
-                [$sourceUrl, $sourceHeaders] = SourceArchive::presign($vcs, $providerInstallationId, $providerRepositoryOwner, $providerRepositoryName, $providerCommitHash, $platform);
                 $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
-                    ->createFromUrl(
+                    ->createFromVcs(
                         $resource,
                         $deployment,
-                        $sourceUrl,
+                        $vcs,
+                        $providerRepositoryOwner,
+                        $providerRepositoryName,
+                        $providerCommitHash,
                         $resource->getAttribute('providerRootDirectory', ''),
-                        $sourceHeaders,
                     ));
 
                 if ($resource->getCollection() === 'sites') {
@@ -537,7 +537,7 @@ trait Deployment
                             $previewUrl = !$rule->isEmpty() ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '';
 
                             if (!empty($previewUrl)) {
-                                $comment = new Comment($platform, $vcs->supportsCommentImages());
+                                $comment = new Comment($platform);
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
                                 $vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());

@@ -71,11 +71,18 @@ class ConsoleVariables extends Model
                 'example' => ['github'],
                 'array' => true,
             ])
-            ->addRule('vcsProviders', [
-                'type' => Response::MODEL_VCS_PROVIDER,
-                'description' => 'Configured VCS providers and their capabilities.',
+            ->addRule('_APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of configured VCS providers that support repository creation.',
                 'default' => [],
-                'example' => [],
+                'example' => ['github'],
+                'array' => true,
+            ])
+            ->addRule('_APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of configured VCS providers that can host public repositories.',
+                'default' => [],
+                'example' => ['github'],
                 'array' => true,
             ])
             ->addRule('_APP_DOMAIN_ENABLED', [

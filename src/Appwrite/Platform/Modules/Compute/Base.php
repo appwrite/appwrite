@@ -13,7 +13,6 @@ use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Vcs\Factory as VcsFactory;
-use Appwrite\Vcs\SourceArchive;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -176,13 +175,14 @@ class Base extends Action
         // git write and then hands the build to the jobs-service itself.
         if ($template->isEmpty()) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            [$sourceUrl, $sourceHeaders] = SourceArchive::presign($vcs, $installation->getAttribute('providerInstallationId', ''), $owner, $repositoryName, $ref, $platform);
-            $deployment = $deployments->createFromUrl(
+            $deployment = $deployments->createFromVcs(
                 $function,
                 $deployment,
-                $sourceUrl,
+                $vcs,
+                $owner,
+                $repositoryName,
+                $ref,
                 $function->getAttribute('providerRootDirectory', ''),
-                $sourceHeaders,
             );
         } else {
             $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -402,13 +402,14 @@ class Base extends Action
         // pushes go through the Builds worker (same split as redeployVcsFunction).
         if ($template->isEmpty()) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            [$sourceUrl, $sourceHeaders] = SourceArchive::presign($vcs, $installation->getAttribute('providerInstallationId', ''), $owner, $repositoryName, $ref, $platform);
-            $deployment = $deployments->createFromUrl(
+            $deployment = $deployments->createFromVcs(
                 $site,
                 $deployment,
-                $sourceUrl,
+                $vcs,
+                $owner,
+                $repositoryName,
+                $ref,
                 $site->getAttribute('providerRootDirectory', ''),
-                $sourceHeaders,
             );
         } else {
             $publisherForBuilds->enqueue(new BuildMessage(

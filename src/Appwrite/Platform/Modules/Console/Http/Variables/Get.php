@@ -76,15 +76,18 @@ class Get extends Action
 
         $providers = $vcsProviders();
         $isVcsEnabled = !empty($providers);
-        $providerCapabilities = \array_map(function (string $provider) use ($vcsFactory) {
-            $adapter = $vcsFactory->fromProvider($provider);
 
-            return new Document([
-                'name' => $provider,
-                'supportForRepositoryCreation' => $adapter->supportsRepositoryCreation(),
-                'supportForPublicRepositories' => $adapter->supportsPublicRepositories(),
-            ]);
-        }, $providers);
+        $providersWithRepositoryCreation = [];
+        $providersWithPublicRepositories = [];
+        foreach ($providers as $provider) {
+            $adapter = $vcsFactory->fromProvider($provider);
+            if ($adapter->supportsRepositoryCreation()) {
+                $providersWithRepositoryCreation[] = $provider;
+            }
+            if ($adapter->supportsPublicRepositories()) {
+                $providersWithPublicRepositories[] = $provider;
+            }
+        }
 
         $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 
@@ -101,7 +104,8 @@ class Get extends Action
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
             '_APP_VCS_PROVIDERS' => $providers,
-            'vcsProviders' => $providerCapabilities,
+            '_APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION' => $providersWithRepositoryCreation,
+            '_APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES' => $providersWithPublicRepositories,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
             '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
             '_APP_DOMAIN_SITES' => $platform['sitesDomain'],

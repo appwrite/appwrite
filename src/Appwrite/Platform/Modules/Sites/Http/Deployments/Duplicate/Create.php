@@ -11,7 +11,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
-use Appwrite\Vcs\SourceArchive;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -183,13 +182,14 @@ class Create extends Action
             $vcs = $vcsFactory->fromInstallation($installation);
 
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            [$sourceUrl, $sourceHeaders] = SourceArchive::presign($vcs, $installation->getAttribute('providerInstallationId', ''), $owner, $repository, $ref, $platform);
-            $deployment = $deployments->createFromUrl(
+            $deployment = $deployments->createFromVcs(
                 $site,
                 $deployment,
-                $sourceUrl,
+                $vcs,
+                $owner,
+                $repository,
+                $ref,
                 $deployment->getAttribute('providerRootDirectory', ''),
-                $sourceHeaders,
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,

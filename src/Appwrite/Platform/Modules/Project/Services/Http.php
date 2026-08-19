@@ -39,6 +39,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Get as GetOAuth2Provid
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\GitHub\Update as UpdateOAuth2GitHub;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Gitlab\Update as UpdateOAuth2Gitlab;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Google\Update as UpdateOAuth2Google;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\HuggingFace\Update as UpdateOAuth2HuggingFace;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as UpdateOAuth2Keycloak;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
@@ -229,5 +230,6 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Kick::getName(), new UpdateOAuth2Kick());
         $this->addAction(UpdateOAuth2Apple::getName(), new UpdateOAuth2Apple());
         $this->addAction(UpdateOAuth2Microsoft::getName(), new UpdateOAuth2Microsoft());
+        $this->addAction(UpdateOAuth2HuggingFace::getName(), new UpdateOAuth2HuggingFace());
     }
 }
