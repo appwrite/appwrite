@@ -17,7 +17,6 @@ export type MysqlTableTab =
 export type MysqlDatabaseTab =
   | 'sql'
   | 'visualizer'
-  | 'enums'
   | 'monitor'
   | 'backups'
   | 'connections'
@@ -30,7 +29,6 @@ export const MYSQL_DATABASE_TAB_LABELS: Record<
 > = {
   sql: 'SQL editor',
   visualizer: 'Visualizer',
-  enums: 'Enums',
   monitor: 'Monitor',
   backups: 'Backups',
   connections: 'Connections',
@@ -150,12 +148,6 @@ export function mysqlNav(params: MysqlNavBase) {
         base,
       )
     },
-    enums() {
-      return mysqlDatabaseTabRoute(
-        '/projects/$projectId/databases/mysql/$databaseId/enums' as const,
-        base,
-      )
-    },
     monitor() {
       return mysqlDatabaseTabRoute(
         '/projects/$projectId/databases/mysql/$databaseId/monitor' as const,
@@ -209,7 +201,6 @@ export function mysqlTableRows(params: MysqlNavParams & { tableId: string }) {
 const MYSQL_DATABASE_TAB_SEGMENTS: MysqlDatabaseTab[] = [
   'sql',
   'visualizer',
-  'enums',
   'monitor',
   'backups',
   'connections',
@@ -234,8 +225,6 @@ export function mysqlDatabaseTabLink(
       return nav.sql()
     case 'visualizer':
       return nav.visualizer()
-    case 'enums':
-      return nav.enums()
     case 'monitor':
       return nav.monitor()
     case 'backups':

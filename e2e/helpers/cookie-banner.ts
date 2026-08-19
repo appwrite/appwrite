@@ -5,7 +5,9 @@ import {
 } from '../../src/lib/cookie-consent/constants'
 
 const ACCEPT_ALL = 'Accept all'
+const SKIP_COMMUNITY_SUPPORT = /Skip for now/i
 const seededContexts = new WeakSet<BrowserContext>()
+const pagesWithOverlayHandler = new WeakSet<Page>()
 
 function acceptAllButton(page: Page) {
   return page
@@ -48,6 +50,61 @@ export async function seedAcceptedCookieConsent(
   )
 }
 
+function communitySupportSkipButton(page: Page) {
+  return page.getByRole('button', { name: SKIP_COMMUNITY_SUPPORT }).first()
+}
+
+async function clickCommunitySupportSkip(skip: {
+  click: (options?: { timeout?: number }) => Promise<void>
+  evaluate: (fn: (el: HTMLElement) => void) => Promise<void>
+  waitFor: (options: { state: 'hidden'; timeout: number }) => Promise<void>
+}): Promise<void> {
+  await skip.click({ timeout: 5_000 }).catch(async () => {
+    await skip.evaluate((el: HTMLElement) => el.click())
+  })
+  await skip.waitFor({ state: 'hidden', timeout: 8_000 }).catch(() => undefined)
+}
+
+/**
+ * Auto-dismiss the fullscreen "A note from the team" wizard whenever it
+ * appears, the same way cookie consent is seeded so it never blocks clicks.
+ */
+export async function installCommunitySupportWizardHandler(
+  page: Page,
+): Promise<void> {
+  if (pagesWithOverlayHandler.has(page)) return
+  pagesWithOverlayHandler.add(page)
+
+  await page.addLocatorHandler(communitySupportSkipButton(page), async (skip) => {
+    await clickCommunitySupportSkip(skip)
+  })
+}
+
+/**
+ * If the community-support wizard is on screen, click "Skip for now".
+ * Pass `waitMs` after login / first console navigation: prefs load async.
+ */
+export async function skipCommunitySupportWizardIfPresent(
+  page: Page,
+  options?: { waitMs?: number },
+): Promise<void> {
+  await installCommunitySupportWizardHandler(page)
+
+  const skip = communitySupportSkipButton(page)
+  const waitMs = options?.waitMs ?? 0
+  if (waitMs > 0) {
+    const appeared = await skip
+      .waitFor({ state: 'visible', timeout: waitMs })
+      .then(() => true)
+      .catch(() => false)
+    if (!appeared) return
+  } else if (!(await skip.isVisible().catch(() => false))) {
+    return
+  }
+
+  await clickCommunitySupportSkip(skip)
+}
+
 /**
  * If the GDPR cookie banner is on screen, click "Accept all" and wait for it
  * to close. No-op when the banner is absent (wrong locale, already accepted,
@@ -55,15 +112,22 @@ export async function seedAcceptedCookieConsent(
  */
 export async function acceptCookieBannerIfPresent(page: Page): Promise<void> {
   await seedAcceptedCookieConsent(page.context())
+  await installCommunitySupportWizardHandler(page)
 
   const button = acceptAllButton(page)
-  if (!(await button.isVisible().catch(() => false))) return
+  if (await button.isVisible().catch(() => false)) {
+    await button.click({ timeout: 5_000 })
+    await button
+      .waitFor({ state: 'hidden', timeout: 5_000 })
+      .catch(() => undefined)
+  }
 
-  await button.click({ timeout: 5_000 })
-  await button.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => undefined)
+  await skipCommunitySupportWizardIfPresent(page)
 }
 
 export async function newE2ePage(context: BrowserContext): Promise<Page> {
   await seedAcceptedCookieConsent(context)
-  return context.newPage()
+  const page = await context.newPage()
+  await installCommunitySupportWizardHandler(page)
+  return page
 }

@@ -702,7 +702,12 @@ export async function selectNativeColumnType(
 export async function addNativeColumnViaUi(
   page: Page,
   engine: NativeEngine,
-  options: { name: string; typeSearch: string; unique?: boolean },
+  options: {
+    name: string
+    typeSearch: string
+    unique?: boolean
+    enumValues?: string[]
+  },
 ): Promise<void> {
   const addButton = page.getByRole('button', { name: 'Add column' }).first()
   await expect(addButton).toBeVisible({ timeout: 30_000 })
@@ -716,6 +721,16 @@ export async function addNativeColumnViaUi(
 
   if (options.unique) {
     await page.locator('#column-unique').click()
+  }
+
+  if (options.enumValues?.length) {
+    const firstValue = page.getByPlaceholder('Value').first()
+    await expect(firstValue).toBeVisible({ timeout: 10_000 })
+    await firstValue.fill(options.enumValues[0]!)
+    for (const extra of options.enumValues.slice(1)) {
+      await page.getByRole('button', { name: 'Add value' }).click()
+      await page.getByPlaceholder('Value').last().fill(extra)
+    }
   }
 
   await submitNativeDdlForm(

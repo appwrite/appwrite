@@ -7,6 +7,9 @@ import {
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import {
+  SPREADSHEET_SCROLL_LAYER_CLASS,
+} from '@/lib/layout/spreadsheet-sticky'
+import {
   formatSpreadsheetCellValue,
   isSpreadsheetRtlText,
 } from '@/lib/spreadsheet-cell-formatting'
@@ -316,14 +319,17 @@ export function ReadOnlyDataSpreadsheet({
         ) : (
           <div
             ref={tableLayerRef}
-            className="relative isolate inline-block min-w-full align-top"
+            className={cn(
+              SPREADSHEET_SCROLL_LAYER_CLASS,
+              !enableColumnResize && 'min-w-max',
+            )}
+            style={enableColumnResize ? { minWidth: tableMinWidthPx } : undefined}
           >
             <table
               className={cn(
                 'relative z-0 w-full border-collapse text-start',
                 enableColumnResize ? 'table-fixed' : 'min-w-max',
               )}
-              style={enableColumnResize ? { minWidth: tableMinWidthPx } : undefined}
             >
               <colgroup>
                 {showRowNumbers ? (

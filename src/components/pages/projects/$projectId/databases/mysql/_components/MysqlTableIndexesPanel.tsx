@@ -22,6 +22,11 @@ import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenu
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
 import {
+  SPREADSHEET_FILLER_CELL_CLASS,
+  SPREADSHEET_FILLER_HEADER_CLASS,
+  SPREADSHEET_SCROLL_LAYER_CLASS,
+} from '@/lib/layout/spreadsheet-sticky'
+import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
@@ -46,6 +51,7 @@ import { localizeMysqlIndexAlgorithmLabel } from '@/lib/i18n/resource-status-lab
 import {
   matchesMysqlLocalSearch,
   parseMysqlIndexColumnsFromDefinition,
+  MYSQL_ACTIONS_COL_PX,
   MYSQL_ACTIONS_COL_STYLE,
   MYSQL_BODY_CELL_BORDER_CLASS,
   MYSQL_HEADER_CELL_BORDER_CLASS,
@@ -53,6 +59,9 @@ import {
   MYSQL_STICKY_THEAD_CLASS,
   mysqlStickyActionsCellClass,
 } from './mysql-spreadsheet-chrome'
+
+const MYSQL_INDEXES_GRID_MIN_WIDTH_PX =
+  200 + 100 + 90 + 180 + 140 + 120 + 140 + MYSQL_ACTIONS_COL_PX
 
 type MysqlTableIndexesPanelProps = {
   databaseId: string
@@ -207,6 +216,10 @@ export function MysqlTableIndexesPanel({
     <>
       <div className="flex h-full flex-col relative">
         <div className="flex-1 overflow-auto overscroll-contain">
+          <div
+            className={SPREADSHEET_SCROLL_LAYER_CLASS}
+            style={{ minWidth: MYSQL_INDEXES_GRID_MIN_WIDTH_PX }}
+          >
           <table className="w-full border-collapse">
             <thead className={MYSQL_STICKY_THEAD_CLASS}>
               <tr>
@@ -280,6 +293,7 @@ export function MysqlTableIndexesPanel({
                     {t('Comment')}
                   </span>
                 </th>
+                <th aria-hidden className={SPREADSHEET_FILLER_HEADER_CLASS} />
                 <th
                   className={MYSQL_STICKY_ACTIONS_HEADER_CLASS}
                   style={MYSQL_ACTIONS_COL_STYLE}
@@ -417,6 +431,7 @@ export function MysqlTableIndexesPanel({
                         <span className="text-[12px] text-muted-foreground">-</span>
                       )}
                     </td>
+                    <td aria-hidden className={SPREADSHEET_FILLER_CELL_CLASS} />
                     <td
                       className={mysqlStickyActionsCellClass({
                         mutedRow: isPrimary,
@@ -449,6 +464,7 @@ export function MysqlTableIndexesPanel({
               })}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 

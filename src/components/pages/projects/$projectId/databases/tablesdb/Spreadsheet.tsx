@@ -10,6 +10,9 @@ import {
   RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
 } from '@/lib/layout/horizontal-resize'
 import {
+  SPREADSHEET_FILLER_CELL_CLASS,
+  SPREADSHEET_FILLER_HEADER_CLASS,
+  SPREADSHEET_SCROLL_LAYER_CLASS,
   SPREADSHEET_STICKY_BODY_Z,
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
@@ -334,14 +337,11 @@ const stickyTheadClass = 'sticky top-0 z-20 bg-background'
 const headerCellBorderClass =
   'border-e border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
 const bodyCellBorderClass = 'border-b border-e border-border'
-const lastCellBorderClass = 'border-b border-border'
-const rowGridFillerHeaderClass =
-  'bg-background p-0 shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
-const rowsTableLayerClass =
-  'relative isolate w-full max-w-full overflow-x-clip'
 
 /** Checkbox + row-actions column width; documents list uses `table-fixed` so edges stay this size. */
 const ROWS_TABLE_EDGE_COL_PX = 40
+const COLUMNS_GRID_MIN_WIDTH_PX =
+  200 + 120 + 120 + 80 + 108 + 80 + 80 + 80 + 80 + 120 + ROWS_TABLE_EDGE_COL_PX
 const ROWS_SEQUENCE_COL_PX = 72
 const ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX = 150
 const ROWS_ID_COLUMN_DEFAULT_WIDTH_PX = 200
@@ -5023,7 +5023,7 @@ export function RowsSpreadsheet({
           ) : (
           <div
             ref={rowsTableLayerRef}
-            className={rowsTableLayerClass}
+            className={SPREADSHEET_SCROLL_LAYER_CLASS}
             style={{ minWidth: tableMinWidthPx }}
           >
           <table className="relative z-0 w-full table-fixed border-collapse">
@@ -5333,7 +5333,7 @@ export function RowsSpreadsheet({
                   </th>
                 )
               })}
-              <th aria-hidden className={rowGridFillerHeaderClass} />
+              <th aria-hidden className={SPREADSHEET_FILLER_HEADER_CLASS} />
               <th
                 className={cn(
                   stickyActionsHeaderClass,
@@ -5604,7 +5604,7 @@ export function RowsSpreadsheet({
                       </td>
                     )
                   })}
-                  <td aria-hidden className={cn(lastCellBorderClass, 'p-0')} />
+                  <td aria-hidden className={SPREADSHEET_FILLER_CELL_CLASS} />
                   <td
                     className={cn(
                       stickyActionsCellBaseClass,
@@ -6533,6 +6533,10 @@ export function ColumnsSpreadsheet({
               suggestedColumns.length > 0 && 'pb-24',
             )}
           >
+            <div
+              className={SPREADSHEET_SCROLL_LAYER_CLASS}
+              style={{ minWidth: COLUMNS_GRID_MIN_WIDTH_PX }}
+            >
             <table className="w-full border-collapse">
               <thead className={stickyTheadClass}>
                 <tr>
@@ -6636,6 +6640,7 @@ export function ColumnsSpreadsheet({
                       {t('Default')}
                     </span>
                   </th>
+                  <th aria-hidden className={SPREADSHEET_FILLER_HEADER_CLASS} />
                   <th
                     className={stickyActionsHeaderClass}
                     style={spreadsheetActionsColStyle}
@@ -6852,6 +6857,7 @@ export function ColumnsSpreadsheet({
                           </code>
                         )}
                       </td>
+                      <td aria-hidden className={SPREADSHEET_FILLER_CELL_CLASS} />
                       <td
                         className={cn(
                           stickyActionsCellBaseClass,
@@ -6893,6 +6899,7 @@ export function ColumnsSpreadsheet({
                 })}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Sticky Pagination Footer */}

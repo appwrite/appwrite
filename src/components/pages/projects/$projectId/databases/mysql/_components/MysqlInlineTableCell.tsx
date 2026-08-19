@@ -33,6 +33,7 @@ import {
   type MouseEvent,
 } from 'react'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 type MysqlInlineTableCellProps = {
   tableId: string
@@ -63,6 +64,7 @@ export function MysqlInlineTableCell({
   onCancelDrawerOpen,
   onCellClick,
 }: MysqlInlineTableCellProps) {
+  const t = useT()
   const editSession = useMysqlRowsEditSession()
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -140,7 +142,7 @@ export function MysqlInlineTableCell({
     const result = parseAndValidateMysqlCellInput(draft, column)
     if (!result.ok) {
       setValidationError(result.error)
-      toast.error(result.error)
+      toast.error(t(result.error))
       return false
     }
 

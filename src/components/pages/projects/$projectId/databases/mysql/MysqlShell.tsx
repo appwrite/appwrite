@@ -17,6 +17,8 @@ import { DedicatedDatabaseStatusHeaderAlert } from '../_components/DedicatedData
 import { DatabaseOperationsLockProvider } from '../_components/DatabaseOperationsLockContext'
 import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
+import { useRedirectIfDedicatedDatabaseProvisioning } from '../_components/useRedirectIfDedicatedDatabaseProvisioning'
+import { mysqlNav } from '@/lib/mysql-database-routes'
 import { useT } from '@/lib/i18n/translate'
 
 export type MysqlShellProps = {
@@ -108,6 +110,12 @@ function MysqlShellLayout({
   children,
 }: MysqlShellLayoutProps) {
   const selectedTableId = databaseTab ? undefined : tableId
+  const sqlHome = mysqlNav({ projectId, databaseId }).sql()
+  useRedirectIfDedicatedDatabaseProvisioning(
+    database.status,
+    sqlHome.to,
+    sqlHome.params,
+  )
   const [databaseHeaderSlot, setDatabaseHeaderSlotState] =
     useState<MysqlDatabaseHeaderSlotProps>({})
   const setDatabaseHeaderSlot = useCallback(

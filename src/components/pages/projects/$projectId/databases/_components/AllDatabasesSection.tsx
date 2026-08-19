@@ -61,7 +61,10 @@ import { DedicatedDatabaseStatusBadge } from './DedicatedDatabaseStatusBadge'
 import { DatabaseTypeBadge } from './DatabaseTypeIcon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowDatabaseSecuritySettings } from '@/lib/console-access-checks'
-import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
+import {
+  isDedicatedDatabaseProvisioning,
+  isDedicatedDatabaseReady,
+} from '@/lib/databases/dedicated-database-status'
 import {
   buildProductDedicatedCardSource,
   hasDedicatedDatabaseCompute,
@@ -207,6 +210,9 @@ function AllDatabasesGridCardShell({
   const showFooter = Boolean(computeLabel || connectionsLabel)
   const typeUnavailable = isListedDatabaseTypeUnavailable(db, features)
   const appearDisabled = typeUnavailable || db.enabled === false
+  const provisioningDisabled = isDedicatedDatabaseProvisioning(
+    dedicated?.status ?? db.status,
+  )
 
   const card = (
     <div
@@ -299,6 +305,7 @@ function AllDatabasesGridCardShell({
       showSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
       showBackups={showBackups}
+      provisioningDisabled={provisioningDisabled}
     >
       {cardBody}
     </DatabaseContextMenu>

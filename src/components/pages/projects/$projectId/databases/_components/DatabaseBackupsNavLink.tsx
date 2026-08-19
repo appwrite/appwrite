@@ -18,7 +18,11 @@ type DatabaseBackupsNavLinkProps = {
   databaseId: string
   className?: string
   labelClassName?: string
-} & Pick<LinkProps, 'to' | 'params'>
+  disabled?: boolean
+  disabledTooltip?: string
+  to?: string
+  params?: object
+}
 
 export function NoBackupPoliciesWarningIcon({
   className,
@@ -54,6 +58,8 @@ export function DatabaseBackupsNavLink({
   databaseId,
   className,
   labelClassName,
+  disabled = false,
+  disabledTooltip,
   to,
   params,
 }: DatabaseBackupsNavLinkProps) {
@@ -61,15 +67,48 @@ export function DatabaseBackupsNavLink({
   const { data: policiesData, isLoading } = useBackupPolicies(
     projectId,
     databaseId,
+    { enabled: !disabled },
   )
   const hasBackupPolicies = (policiesData?.policies?.length ?? 0) > 0
-  const showWarning = !isLoading && !hasBackupPolicies
+  const showWarning = !disabled && !isLoading && !hasBackupPolicies
 
-  return (
-    <Link to={to} params={params} className={className}>
+  const content = (
+    <>
       <Archive className="h-3.5 w-3.5 shrink-0" />
       <span className={cn('min-w-0', labelClassName)}>{t('Backups')}</span>
       {showWarning && <NoBackupPoliciesWarningIcon />}
+    </>
+  )
+
+  if (disabled) {
+    const item = (
+      <span
+        className={cn(className, 'cursor-not-allowed opacity-50')}
+        aria-disabled="true"
+      >
+        {content}
+      </span>
+    )
+    if (!disabledTooltip) return item
+    return (
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>{item}</TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            <p className="text-[13px]">{t(disabledTooltip)}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
+
+  return (
+    <Link
+      to={to as LinkProps['to']}
+      params={params as LinkProps['params']}
+      className={className}
+    >
+      {content}
     </Link>
   )
 }

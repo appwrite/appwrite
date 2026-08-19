@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import {
   Activity,
   Archive,
@@ -19,9 +18,18 @@ import {
 } from '@/lib/mysql-database-routes'
 import { canCreateDatabase } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useOrganizationScopes, useProject } from '@/lib/react-query/hooks'
+import {
+  useMysqlDatabase,
+  useOrganizationScopes,
+  useProject,
+} from '@/lib/react-query/hooks'
+import {
+  DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,
+  isDedicatedDatabaseProvisioning,
+} from '@/lib/databases/dedicated-database-status'
 import { useMysqlConnectDialog } from './_components/MysqlConnectDialogContext'
 import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComputeSpec'
+import { DatabaseSidebarNavItem } from '../_components/DatabaseSidebarNavItem'
 import { useT } from '@/lib/i18n/translate'
 
 type MysqlDatabaseNavProps = {
@@ -45,8 +53,10 @@ export function MysqlDatabaseNav({
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
+  const { database } = useMysqlDatabase(projectId, databaseId)
   const connectDialog = useMysqlConnectDialog()
   const nav = mysqlNav({ projectId, databaseId })
+  const provisioning = isDedicatedDatabaseProvisioning(database?.status)
 
   const showSettings = canCreateDatabase(access, features)
 
@@ -54,52 +64,66 @@ export function MysqlDatabaseNav({
     <div className="flex shrink-0 flex-col border-t border-border bg-background px-2.5 pt-2 pb-2 has-[*[data-sidebar-spec]]:gap-2 has-[*[data-sidebar-spec]]:pb-0">
       <div className="space-y-0.5">
       {connectDialog ? (
-        <button
-          type="button"
-          className={cn(navLinkClass(false), 'cursor-pointer')}
+        <DatabaseSidebarNavItem
+          disabled={provisioning}
+          disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
+          className={cn(navLinkClass(false), !provisioning && 'cursor-pointer')}
           onClick={connectDialog.openConnect}
         >
           <KeyRound className="h-3.5 w-3.5 shrink-0" />
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Credentials')}</span>
-        </button>
+        </DatabaseSidebarNavItem>
       ) : null}
       {features.usageStats ? (
-        <Link
-          {...nav.monitor()}
+        <DatabaseSidebarNavItem
+          disabled={provisioning}
+          disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
           className={navLinkClass(activeTab === 'monitor')}
+          {...nav.monitor()}
         >
           <Activity className="h-3.5 w-3.5 shrink-0" />
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Monitor')}</span>
-        </Link>
+        </DatabaseSidebarNavItem>
       ) : null}
-      <Link
-        {...nav.connections()}
+      <DatabaseSidebarNavItem
+        disabled={provisioning}
+        disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
         className={navLinkClass(activeTab === 'connections')}
+        {...nav.connections()}
       >
         <Cable className="h-3.5 w-3.5 shrink-0" />
         <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Connections')}</span>
-      </Link>
-      <Link {...nav.roles()} className={navLinkClass(activeTab === 'roles')}>
+      </DatabaseSidebarNavItem>
+      <DatabaseSidebarNavItem
+        disabled={provisioning}
+        disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
+        className={navLinkClass(activeTab === 'roles')}
+        {...nav.roles()}
+      >
         <Users className="h-3.5 w-3.5 shrink-0" />
         <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Roles')}</span>
-      </Link>
+      </DatabaseSidebarNavItem>
       {features.databaseBackups ? (
-        <Link
-          {...nav.backups()}
+        <DatabaseSidebarNavItem
+          disabled={provisioning}
+          disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
           className={navLinkClass(activeTab === 'backups')}
+          {...nav.backups()}
         >
           <Archive className="h-3.5 w-3.5 shrink-0" />
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Backups')}</span>
-        </Link>
+        </DatabaseSidebarNavItem>
       ) : null}
       {showSettings ? (
-        <Link
-          {...nav.settings()}
+        <DatabaseSidebarNavItem
+          disabled={provisioning}
+          disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
           className={navLinkClass(activeTab === 'settings')}
+          {...nav.settings()}
         >
           <Settings className="h-3.5 w-3.5 shrink-0" />
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Settings')}</span>
-        </Link>
+        </DatabaseSidebarNavItem>
       ) : null}
       </div>
       <DatabaseSidebarComputeSpec

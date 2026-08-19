@@ -17,6 +17,8 @@ import { DedicatedDatabaseStatusHeaderAlert } from '../_components/DedicatedData
 import { DatabaseOperationsLockProvider } from '../_components/DatabaseOperationsLockContext'
 import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
+import { useRedirectIfDedicatedDatabaseProvisioning } from '../_components/useRedirectIfDedicatedDatabaseProvisioning'
+import { postgresNav } from '@/lib/postgres-database-routes'
 import { useT } from '@/lib/i18n/translate'
 
 export type PostgresShellProps = {
@@ -108,6 +110,12 @@ function PostgresShellLayout({
   children,
 }: PostgresShellLayoutProps) {
   const selectedTableId = databaseTab ? undefined : tableId
+  const sqlHome = postgresNav({ projectId, databaseId }).sql()
+  useRedirectIfDedicatedDatabaseProvisioning(
+    database.status,
+    sqlHome.to,
+    sqlHome.params,
+  )
   const [databaseHeaderSlot, setDatabaseHeaderSlotState] =
     useState<PostgresDatabaseHeaderSlotProps>({})
   const setDatabaseHeaderSlot = useCallback(

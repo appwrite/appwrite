@@ -1180,6 +1180,16 @@ export function View() {
     return mergeStorageFilesListColumnWidthsWithDefaults(raw)
   })
 
+  const filesTableMinWidthPx = useMemo(() => {
+    const dataWidth = splitFilesTable
+      ? STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS.reduce(
+          (sum, key) => sum + fileListColumnWidths[key],
+          0,
+        )
+      : 180 + 160 + 140 + 120 + 180 + 180
+    return STORAGE_FILES_TABLE_EDGE_COL_PX * 2 + dataWidth
+  }, [fileListColumnWidths, splitFilesTable])
+
   const [resizingFileColumnKey, setResizingFileColumnKey] =
     useState<StorageFilesListResizableColumnWidthKey | null>(null)
 
@@ -1613,6 +1623,7 @@ export function View() {
                       <div
                         ref={splitFilesTable ? filesTableLayerRef : undefined}
                         className={STORAGE_SPREADSHEET_TABLE_LAYER_CLASS}
+                        style={{ minWidth: filesTableMinWidthPx }}
                       >
                     <table
                       className={cn(

@@ -2,7 +2,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { expect, test } from './fixtures'
 import { env } from './config/env'
-import { acceptCookieBannerIfPresent } from './helpers/cookie-banner'
+import {
+  acceptCookieBannerIfPresent,
+  skipCommunitySupportWizardIfPresent,
+} from './helpers/cookie-banner'
 import { withWebsiteAccessCookie } from './helpers/website-access'
 
 type StorageState = {
@@ -92,6 +95,10 @@ test('authenticate once and persist storage state', async ({
       },
       { timeout: 30_000 },
     )
+
+    // Same idea as the cookie banner: dismiss this overlay at session start
+    // so later tests are not blocked. Prefs load after login, so wait briefly.
+    await skipCommunitySupportWizardIfPresent(page, { waitMs: 8_000 })
   })
 
   // Cookie fallback (localStorage) is what the SDK uses cross-origin; storageState

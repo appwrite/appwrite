@@ -1,7 +1,11 @@
 import { expect, type Page } from '@playwright/test'
 import { env } from '../config/env'
 import { enableDatabaseFeatureFlags } from './feature-flags'
-import { acceptCookieBannerIfPresent } from './cookie-banner'
+import {
+  acceptCookieBannerIfPresent,
+  skipCommunitySupportWizardIfPresent,
+} from './cookie-banner'
+import { clickInPage } from './ui'
 
 export const MYSQL_E2E_PROJECT_REGION = 'fra'
 
@@ -51,10 +55,16 @@ export async function createE2eProject(
   // Prefer the primary create control; fall back to empty-state CTA.
   const createTriggers = page.getByRole('button', { name: 'Create project' })
   await expect(createTriggers.first()).toBeVisible({ timeout: 60_000 })
-  await createTriggers.first().click()
+  await skipCommunitySupportWizardIfPresent(page)
+  await clickInPage(createTriggers.first())
 
   const dialog = page.getByRole('dialog')
-  await expect(dialog.getByRole('heading', { name: 'Create project' })).toBeVisible({
+  const createHeading = dialog.getByRole('heading', { name: 'Create project' })
+  if (!(await createHeading.isVisible().catch(() => false))) {
+    await skipCommunitySupportWizardIfPresent(page)
+    await clickInPage(createTriggers.first())
+  }
+  await expect(createHeading).toBeVisible({
     timeout: 30_000,
   })
 

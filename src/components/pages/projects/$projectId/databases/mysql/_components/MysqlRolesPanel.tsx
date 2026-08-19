@@ -49,6 +49,7 @@ import { Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { MysqlRoleDrawer } from './MysqlRoleDrawer'
 import { matchesMysqlLocalSearch } from './mysql-spreadsheet-chrome'
 import { useT } from '@/lib/i18n/translate'
+import { SPREADSHEET_SCROLL_LAYER_CLASS } from '@/lib/layout/spreadsheet-sticky'
 import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
@@ -63,7 +64,7 @@ type MysqlRolesPanelProps = {
 
 const rolesTableClassName = 'w-full min-w-[62rem] table-fixed'
 
-const rolesTableScrollWrapperClassName = 'inline-block min-w-full align-top'
+const rolesTableScrollWrapperClassName = `${SPREADSHEET_SCROLL_LAYER_CLASS} min-w-[62rem]`
 
 const ROLES_TABLE_HEAD_CLASS =
   'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]'
@@ -222,7 +223,7 @@ export function MysqlRolesPanel({
   const filteredRoles = useMemo(() => {
     if (!searchValue.trim()) return roles
     return roles.filter((role) =>
-      matchesMysqlLocalSearch(role.role_name, searchValue),
+      matchesMysqlLocalSearch(searchValue, role.role_name),
     )
   }, [roles, searchValue])
 

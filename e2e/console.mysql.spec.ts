@@ -4,19 +4,25 @@ import { env } from './config/env'
 import {
   addMysqlColumnViaUi,
   addMysqlIndexViaUi,
+  createMysqlRoleViaUi,
   createMysqlTableViaUi,
+  deleteMysqlRoleViaUi,
   expectMysqlExecutionCell,
   expectMysqlQueryResult,
   expectMysqlSidebarTable,
   expectMysqlTabRenders,
   mysqlDatabasePath,
+  mysqlRoleName,
+  mysqlRoleRow,
   mysqlTablePath,
+  openMysqlRolesPage,
   openMysqlSqlEditor,
   quoteIdent,
   renameMysqlDatabase,
   runMysqlSql,
   selectMysqlSchema,
   typeMysqlSql,
+  updateMysqlRoleViaUi,
   waitForMysqlDatabaseShell,
   waitForMysqlSqlEditor,
 } from './helpers/mysql'
@@ -46,15 +52,6 @@ const DATABASE_TABS: Array<{
             /Select a schema in the sidebar|no user tables or views|Fit to view/i,
           ),
         )
-        .first(),
-  },
-  {
-    name: 'enums',
-    path: '/enums',
-    ready: (page) =>
-      page
-        .getByText(/No enums|Create enum/i)
-        .or(page.getByRole('button', { name: /Create enum/i }))
         .first(),
   },
   {
@@ -205,6 +202,33 @@ test.describe('console mysql', () => {
     })
   })
 
+  let e2eRoleName = ''
+
+  test('create a role via UI', async ({ page, mysqlSuite }) => {
+    const { project, database } = mysqlSuite
+    e2eRoleName = mysqlRoleName()
+    await openMysqlRolesPage(page, project.projectId, database.databaseId)
+    await createMysqlRoleViaUi(page, { name: e2eRoleName })
+    await expect(mysqlRoleRow(page, e2eRoleName)).toContainText('Unlimited')
+  })
+
+  test('update a role via UI', async ({ page, mysqlSuite }) => {
+    test.skip(!e2eRoleName, 'Role was not created')
+    const { project, database } = mysqlSuite
+    await openMysqlRolesPage(page, project.projectId, database.databaseId)
+    await updateMysqlRoleViaUi(page, {
+      name: e2eRoleName,
+      connectionLimit: 7,
+    })
+  })
+
+  test('delete a role via UI', async ({ page, mysqlSuite }) => {
+    test.skip(!e2eRoleName, 'Role was not created')
+    const { project, database } = mysqlSuite
+    await openMysqlRolesPage(page, project.projectId, database.databaseId)
+    await deleteMysqlRoleViaUi(page, e2eRoleName)
+  })
+
   test('select existing schema in the sidebar', async ({ page, mysqlSuite }) => {
     const { project, database } = mysqlSuite
     await page.goto(
@@ -329,6 +353,11 @@ test.describe('console mysql', () => {
     await addMysqlColumnViaUi(page, { name: 'amount', typeSearch: 'Integer' })
     await addMysqlColumnViaUi(page, { name: 'active', typeSearch: 'Boolean' })
     await addMysqlColumnViaUi(page, { name: 'payload', typeSearch: 'Json' })
+    await addMysqlColumnViaUi(page, {
+      name: 'status',
+      typeSearch: 'Enum',
+      enumValues: ['draft', 'published'],
+    })
   })
 
   test('create btree and unique indexes via UI', async ({ page, mysqlSuite }) => {

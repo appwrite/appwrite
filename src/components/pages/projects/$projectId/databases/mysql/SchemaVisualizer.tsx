@@ -777,6 +777,7 @@ function RelationNodeCard({
                     const Icon = getColumnIcon(column.udtName || column.dataType)
                     const typeLabel = formatMysqlColumnType({
                       data_type: column.dataType,
+                      udt_name: column.udtName,
                     })
 
                     return (

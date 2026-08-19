@@ -66,6 +66,7 @@ interface DatabaseContextMenuProps {
   showSecuritySettings: boolean
   showMonitor: boolean
   showBackups: boolean
+  provisioningDisabled?: boolean
   children: React.ReactNode
 }
 
@@ -75,6 +76,7 @@ export function DatabaseContextMenu({
   showSecuritySettings,
   showMonitor,
   showBackups,
+  provisioningDisabled = false,
   children,
 }: DatabaseContextMenuProps) {
   const t = useT()
@@ -154,6 +156,7 @@ export function DatabaseContextMenu({
           </ContextMenuItem>
           {showMonitor && (
             <ContextMenuItem
+              disabled={provisioningDisabled}
               onSelect={() =>
                 navigateToTab(
                   '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
@@ -166,6 +169,7 @@ export function DatabaseContextMenu({
           )}
           {showSecuritySettings && (
             <ContextMenuItem
+              disabled={provisioningDisabled}
               onSelect={() =>
                 navigateToTab(
                   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security',
@@ -178,6 +182,7 @@ export function DatabaseContextMenu({
           )}
           {showBackups && (
             <ContextMenuItem
+              disabled={provisioningDisabled}
               onSelect={() =>
                 navigateToTab(
                   '/projects/$projectId/databases/$dbKind/$databaseId/backups',
@@ -200,6 +205,7 @@ export function DatabaseContextMenu({
           </ContextMenuItem>
           {showSecuritySettings && (
             <ContextMenuItem
+              disabled={provisioningDisabled}
               onSelect={() =>
                 navigateToTab(
                   '/projects/$projectId/databases/$dbKind/$databaseId/settings',

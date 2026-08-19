@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Button } from '@/components/ui/button'
@@ -128,6 +128,15 @@ export function MysqlTableColumnDrawer({
   const [foreignKeyState, setForeignKeyState] = useState<MysqlForeignKeyState>(
     () => createEmptyMysqlForeignKeyState(tableSchema),
   )
+  const nameInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!open || column) return
+    const timeout = window.setTimeout(() => {
+      nameInputRef.current?.focus()
+    }, 0)
+    return () => window.clearTimeout(timeout)
+  }, [open, column])
 
   useEffect(() => {
     if (!open) return
@@ -174,7 +183,7 @@ export function MysqlTableColumnDrawer({
 
     const typeError = validateMysqlColumnTypeState(typeState)
     if (typeError) {
-      toast.error(typeError)
+      toast.error(t(typeError))
       return
     }
 
@@ -413,11 +422,13 @@ export function MysqlTableColumnDrawer({
                   {t('Name')} <span className="text-destructive">*</span>
                 </Label>
                 <Input
+                  ref={nameInputRef}
                   id="column-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   placeholder="column_name"
                   disabled={isExistingPrimaryKey}
+                  autoFocus={!isEditing}
                 />
                 <p className="text-[11px] text-muted-foreground">
                   {t(
@@ -448,6 +459,7 @@ export function MysqlTableColumnDrawer({
                 value={typeState}
                 onChange={setTypeState}
                 allowSerialTypes={!isEditing}
+                existing={isEditing}
               />
               <div className="space-y-2">
                 <Label htmlFor="column-default" className="text-[12px] font-medium">
