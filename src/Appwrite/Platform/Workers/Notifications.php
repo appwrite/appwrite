@@ -59,9 +59,22 @@ class Notifications extends Action
 
     public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, Log $log): void
     {
+        $previousHookFlags = \class_exists(Runtime::class) ? Runtime::getHookFlags() : null;
         if (\class_exists(Runtime::class)) {
             Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         }
+
+        try {
+            $this->process($message, $project, $register, $dbForPlatform, $log);
+        } finally {
+            if ($previousHookFlags !== null) {
+                Runtime::setHookFlags($previousHookFlags);
+            }
+        }
+    }
+
+    private function process(Message $message, Document $project, Registry $register, Database $dbForPlatform, Log $log): void
+    {
         $payload = $message->getPayload();
 
         if (empty($payload)) {

@@ -101,8 +101,25 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry
     ): void {
+        $previousHookFlags = Runtime::getHookFlags();
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
 
+        try {
+            $this->process($message, $project, $log, $dbForProject, $deviceForFiles, $publisherForUsage, $telemetry);
+        } finally {
+            Runtime::setHookFlags($previousHookFlags);
+        }
+    }
+
+    private function process(
+        Message $message,
+        Document $project,
+        Log $log,
+        Database $dbForProject,
+        Device $deviceForFiles,
+        UsagePublisher $publisherForUsage,
+        Telemetry $telemetry
+    ): void {
         $this->telemetry = $telemetry;
         $payload = $message->getPayload();
 

@@ -64,7 +64,18 @@ class Mails extends Action
      */
     public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
     {
+        $previousHookFlags = Runtime::getHookFlags();
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+
+        try {
+            $this->process($message, $project, $register, $log, $telemetry);
+        } finally {
+            Runtime::setHookFlags($previousHookFlags);
+        }
+    }
+
+    private function process(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
+    {
         $payload = $message->getPayload();
 
         if (empty($payload)) {
