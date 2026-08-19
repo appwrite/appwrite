@@ -50,6 +50,6 @@ class Update extends Base
 
     public static function getClientSecretExample(): string
     {
-        return '<Hugging Face OAuth app client secret>';
+        return 'oauth_app_secret_wcLhRtl000000000000000000000xbNdLt';
     }
 }
