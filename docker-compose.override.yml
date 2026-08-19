@@ -50,6 +50,33 @@ services:
       - ./src:/usr/src/code/src
     ports:
       - 9502:80
+  appwrite-worker:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - request-catcher-sms
+      - request-catcher-webhook
+  appwrite-task-scheduler:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
   appwrite-worker-webhooks:
     build:
       context: .

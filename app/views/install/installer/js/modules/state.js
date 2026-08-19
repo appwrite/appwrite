@@ -19,6 +19,7 @@
         forceHttps: null,
         opensslKey: null,
         assistantOpenAIKey: null,
+        topology: 'combined',
         accountEmail: null,
         accountPassword: null
     };
@@ -50,6 +51,9 @@
         setStateIfEmpty('assistantOpenAIKey', data.defaultAssistantOpenaiKey);
         if (data.lockedDatabase) {
             formState.database = data.lockedDatabase;
+        }
+        if (data.topology === 'combined' || data.topology === 'separate') {
+            formState.topology = data.topology;
         }
         if (!isUpgradeMode?.()) {
             setStateIfEmpty('database', data.defaultDatabase);

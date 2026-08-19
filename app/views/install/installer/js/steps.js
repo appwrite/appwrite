@@ -10,7 +10,8 @@
         INSTALLATION_STEPS,
         clampStep,
         isUpgradeMode,
-        getEnabledDatabases
+        getEnabledDatabases,
+        getTopology
     } = Context;
 
     const {
@@ -116,6 +117,7 @@
     const hydrateStep1State = (root) => {
         State.setStateIfEmpty?.('appDomain', root.querySelector('#hostname')?.value);
         State.setStateIfEmpty?.('database', root.querySelector('input[name="database"]:checked')?.value);
+        State.setStateIfEmpty?.('topology', getTopology?.() || root.querySelector('input[name="topology"]:checked')?.value || 'combined');
         State.setStateIfEmpty?.('httpPort', root.querySelector('#http-port')?.value);
         State.setStateIfEmpty?.('httpsPort', root.querySelector('#https-port')?.value);
         State.setStateIfEmpty?.('emailCertificates', root.querySelector('#ssl-email')?.value);
@@ -153,6 +155,16 @@
                 updateDatabaseSelection?.(radio, root);
             }
         }
+
+        if (formState.topology) {
+            const radio = root.querySelector(`input[name="topology"][value="${formState.topology}"]`);
+            if (radio) {
+                radio.checked = true;
+                const group = radio.closest('.selector-group');
+                group?.querySelectorAll('.selector-card').forEach((card) => card.classList.remove('selected'));
+                radio.closest('.selector-card')?.classList.add('selected');
+            }
+        }
     };
 
     const initStep1 = (root) => {
@@ -177,6 +189,16 @@
         } else {
             bindDatabaseSelection(root);
         }
+
+        const topologyRadios = root.querySelectorAll('input[name="topology"]');
+        topologyRadios.forEach((radio) => {
+            radio.addEventListener('change', () => {
+                formState.topology = radio.value;
+                const group = radio.closest('.selector-group');
+                group?.querySelectorAll('.selector-card').forEach((card) => card.classList.remove('selected'));
+                radio.closest('.selector-card')?.classList.add('selected');
+            });
+        });
 
         const hostname = root.querySelector('#hostname');
         const httpPort = root.querySelector('#http-port');

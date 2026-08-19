@@ -9,8 +9,7 @@ use Utopia\Database\Query;
 trait OAuth2Base
 {
     /**
-     * Reset only providers this compact smoke suite mutates. Most provider
-     * matrix and response-shape coverage now lives in unit tests.
+     * Reset only providers this suite mutates.
      */
     #[Before(priority: -1)]
     protected function resetProjectOAuth2(): void
