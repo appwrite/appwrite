@@ -82,7 +82,7 @@ final class Notification extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: Payload::documentOrNull($data['project'] ?? null),
+            project: !empty($data['project']) ? new Document($data['project']) : null,
             recipient: $data['recipient'] ?? '',
             recipients: $data['recipients'] ?? [],
             channels: $data['channels'] ?? [],

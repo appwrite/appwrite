@@ -33,9 +33,9 @@ final class Delete extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: Payload::documentOrNull($data['project'] ?? null),
+            project: !empty($data['project']) ? new Document($data['project']) : null,
             type: $data['type'] ?? '',
-            document: Payload::documentOrNull($data['document'] ?? null),
+            document: !empty($data['document']) ? new Document($data['document']) : null,
             resource: $data['resource'] ?? null,
             resourceType: $data['resourceType'] ?? null,
             datetime: $data['datetime'] ?? null,

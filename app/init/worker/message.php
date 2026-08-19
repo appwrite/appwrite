@@ -3,7 +3,6 @@
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Payload;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
@@ -56,7 +55,7 @@ return function (Container $container): void {
 
     $container->set('project', function ($message, Database $dbForPlatform) {
         $payload = $message->getPayload() ?? [];
-        $project = Payload::document($payload['project'] ?? []);
+        $project = new Document($payload['project'] ?? []);
 
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $project;

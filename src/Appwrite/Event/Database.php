@@ -128,14 +128,14 @@ class Database extends Event
     protected function preparePayload(): array
     {
         return [
-            'project' => $this->project?->getArrayCopy(),
-            'user' => $this->user?->getArrayCopy(),
+            'project' => $this->project,
+            'user' => $this->user,
             'type' => $this->type,
-            'table' => $this->table?->getArrayCopy(),
-            'row' => $this->row?->getArrayCopy(),
-            'collection' => $this->collection?->getArrayCopy(),
-            'document' => $this->document?->getArrayCopy(),
-            'database' => $this->database?->getArrayCopy(),
+            'table' => $this->table,
+            'row' => $this->row,
+            'collection' => $this->collection,
+            'document' => $this->document,
+            'database' => $this->database,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ];
     }

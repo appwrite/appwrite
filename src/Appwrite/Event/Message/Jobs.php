@@ -33,7 +33,7 @@ final class Jobs extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: Payload::document($data['project'] ?? []),
+            project: new Document($data['project'] ?? []),
             id: $data['id'] ?? '',
             event: $data['event'] ?? '',
             data: $data['data'] ?? [],

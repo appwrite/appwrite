@@ -27,7 +27,7 @@ final class StatsResources extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: Payload::document($data['project'] ?? []),
+            project: new Document($data['project'] ?? []),
             gauges: $data['gauges'] ?? [],
         );
     }

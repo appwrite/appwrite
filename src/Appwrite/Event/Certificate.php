@@ -65,8 +65,8 @@ class Certificate extends Event
     protected function preparePayload(): array
     {
         return [
-            'project' => $this->project?->getArrayCopy(),
-            'domain' => $this->domain?->getArrayCopy(),
+            'project' => $this->project,
+            'domain' => $this->domain,
             'skipRenewCheck' => $this->skipRenewCheck,
             'validationDomain' => $this->validationDomain,
             'action' => $this->action

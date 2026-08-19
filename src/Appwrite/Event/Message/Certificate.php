@@ -33,8 +33,8 @@ final class Certificate extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: Payload::document($data['project'] ?? []),
-            domain: Payload::document($data['domain'] ?? []),
+            project: new Document($data['project'] ?? []),
+            domain: new Document($data['domain'] ?? []),
             skipRenewCheck: $data['skipRenewCheck'] ?? false,
             validationDomain: $data['validationDomain'] ?? null,
             action: $data['action'] ?? \Appwrite\Event\Certificate::ACTION_GENERATION,

@@ -29,9 +29,9 @@ final class Executions extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: Payload::document($data['project'] ?? []),
+            project: new Document($data['project'] ?? []),
             executions: \array_map(
-                fn (mixed $execution) => Payload::document($execution),
+                fn (array $execution) => new Document($execution),
                 $data['executions'] ?? []
             ),
         );

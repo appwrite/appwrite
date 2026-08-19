@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Appwrite\Event\Message\Payload;
 use InvalidArgumentException;
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
@@ -335,12 +334,11 @@ class Event
         $trimmed = [];
 
         if ($this->project) {
-            // Arrays so Redis JSON and the Inline adapter deliver the same shape.
-            $trimmed['project'] = [
+            $trimmed['project'] = new Document([
                 '$id' => $this->project->getId(),
                 '$sequence' => $this->project->getSequence(),
                 'database' => $this->project->getAttribute('database')
-            ];
+            ]);
         }
 
         return $trimmed;
@@ -383,11 +381,11 @@ class Event
     protected function preparePayload(): array
     {
         return [
-            'project' => $this->project?->getArrayCopy(),
-            'user' => $this->user?->getArrayCopy(),
+            'project' => $this->project,
+            'user' => $this->user,
             'userId' => $this->userId,
-            'payload' => Payload::jsonArray($this->payload),
-            'context' => Payload::jsonArray($this->context),
+            'payload' => $this->payload,
+            'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ];
     }

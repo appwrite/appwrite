@@ -34,11 +34,11 @@ final class Build extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: Payload::document($data['project'] ?? []),
-            resource: Payload::document($data['resource'] ?? []),
-            deployment: Payload::document($data['deployment'] ?? []),
+            project: new Document($data['project'] ?? []),
+            resource: new Document($data['resource'] ?? []),
+            deployment: new Document($data['deployment'] ?? []),
             type: $data['type'] ?? '',
-            template: Payload::documentOrNull($data['template'] ?? null),
+            template: !empty($data['template']) ? new Document($data['template']) : null,
             platform: $data['platform'] ?? [],
         );
     }

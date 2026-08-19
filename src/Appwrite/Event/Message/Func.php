@@ -59,7 +59,7 @@ final class Func extends Base
             'execution' => $this->execution?->getArrayCopy(),
             'type' => $this->type,
             'jwt' => $this->jwt,
-            'payload' => Payload::jsonArray($this->payload),
+            'payload' => $this->payload,
             'events' => $this->events,
             'body' => $this->body,
             'path' => $this->path,
@@ -72,12 +72,12 @@ final class Func extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: Payload::documentOrNull($data['project'] ?? null),
-            user: Payload::documentOrNull($data['user'] ?? null),
+            project: !empty($data['project']) ? new Document($data['project']) : null,
+            user: !empty($data['user']) ? new Document($data['user']) : null,
             userId: $data['userId'] ?? null,
-            function: Payload::documentOrNull($data['function'] ?? null),
+            function: !empty($data['function']) ? new Document($data['function']) : null,
             functionId: $data['functionId'] ?? null,
-            execution: Payload::documentOrNull($data['execution'] ?? null),
+            execution: !empty($data['execution']) ? new Document($data['execution']) : null,
             type: $data['type'] ?? '',
             jwt: $data['jwt'] ?? '',
             payload: $data['payload'] ?? [],
