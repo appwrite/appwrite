@@ -79,6 +79,7 @@ services:
       - appwrite-geo
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
@@ -282,6 +283,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
@@ -516,6 +518,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -563,6 +566,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -627,6 +631,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
@@ -675,6 +680,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -773,6 +779,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -819,6 +826,7 @@ services:
       - _APP_WORKER_SCREENSHOTS_ROUTER
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -883,6 +891,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -967,6 +976,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -1015,6 +1025,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
@@ -1063,6 +1074,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1109,6 +1121,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
@@ -1173,6 +1186,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
@@ -1219,6 +1233,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
@@ -1269,6 +1284,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
@@ -1315,6 +1331,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
@@ -1358,6 +1375,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
@@ -1400,6 +1418,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER

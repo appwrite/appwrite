@@ -44,6 +44,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_MEMORY_LIMIT',
+                'description' => 'PHP memory limit applied to every Appwrite process (API, workers, and CLI tasks). By default, set to \'512M\'. Uploading or processing files close to this size can exhaust it, since the request body and any in-memory buffering during storage device I/O count against it. If you raise _APP_STORAGE_LIMIT to allow larger file uploads, raise this accordingly. Accepts any value PHP\'s memory_limit ini directive accepts (e.g. \'1024M\', \'2G\'); \'-1\' disables the limit entirely.',
+                'introduction' => '1.9.6',
+                'default' => '512M',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOCKING_ENABLED',
                 'description' => 'Enable distributed locking for platform writes. Locks coordinate concurrent updates across API pods so read-modify-write operations on shared documents do not lose updates. By default, set to \'enabled\'. Set to \'disabled\' as an emergency kill switch; locks become no-ops and concurrent writes will race.',
                 'introduction' => '1.9.3',
