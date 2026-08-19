@@ -4,7 +4,6 @@ namespace Appwrite\AvatarPhotos\Providers;
 
 use Appwrite\AvatarPhotos\Photo;
 use Utopia\Database\Document;
-use Utopia\Fetch\Client;
 
 /**
  * Gravatar provider.
@@ -41,26 +40,6 @@ class Gravatar extends Photo
             'r' => $rating,
         ]);
 
-        $client = new Client();
-
-        try {
-            $res = $client
-                ->setAllowRedirects(true)
-                ->fetch($url);
-        } catch (\Throwable) {
-            return null;
-        }
-
-        if ($res->getStatusCode() !== 200) {
-            return null;
-        }
-
-        $body = $res->getBody();
-
-        if (empty($body)) {
-            return null;
-        }
-
-        return $body;
+        return $this->fetch($url);
     }
 }
