@@ -1143,7 +1143,7 @@ class OpenAPI3 extends Format
                 }
 
                 $propertyType = $rule['array'] ? 'array' : $type;
-                if (isset($rule['example']) && ($propertyType === 'string' || $rule['example'] !== '')) {
+                if (isset($rule['example']) && (\in_array($propertyType, ['string', 'array']) || $rule['example'] !== '')) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['example'] = $this->normalizeExample($rule['example'], $propertyType);
                 }
                 if ($items) {

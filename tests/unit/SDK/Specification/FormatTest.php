@@ -22,6 +22,7 @@ use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model as ResponseModel;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
+use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Migration;
@@ -427,6 +428,34 @@ final class FormatTest extends TestCase
 
         $this->assertSame('object', $property['type']);
         $this->assertArrayNotHasKey('example', $property);
+    }
+
+    public function testExplicitEmptyArrayExampleIsPreserved(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/error'))
+            ->desc('Get error')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getError',
+                description: 'Get error.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 500,
+                        model: Response::MODEL_ERROR_DEV,
+                    ),
+                ],
+            ));
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new ErrorDev()], [], 0, 'console'))->parse();
+        $trace = $openApi['components']['schemas']['errorDev']['properties']['trace'];
+
+        $this->assertSame('array', $trace['type']);
+        $this->assertSame([], $trace['example']);
     }
 
     public function testOptionalPathParameterIsEmittedAsRequired(): void
