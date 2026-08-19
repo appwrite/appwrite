@@ -58,6 +58,30 @@ final class Adapter extends UsageAdapter
         return [];
     }
 
+    /**
+     * Rows to return per metric type, keyed by Usage::TYPE_*. Each call shifts
+     * one queued result off, so a test can script successive reads.
+     *
+     * @var array<string, array<int, array<Metric>>>
+     */
+    public array $crossTenantRows = [];
+
+    /** @var array<int, array{queries: array, type: ?string}> */
+    public array $crossTenantCalls = [];
+
+    /** @return array<Metric> */
+    public function findAcrossTenants(array $queries = [], ?string $type = null): array
+    {
+        $this->crossTenantCalls[] = ['queries' => $queries, 'type' => $type];
+
+        $queued = &$this->crossTenantRows[(string) $type];
+        if (!isset($queued) || $queued === []) {
+            return [];
+        }
+
+        return array_shift($queued);
+    }
+
     public function count(string $tenant, array $queries = [], ?string $type = null, ?int $max = null): int
     {
         return 0;
