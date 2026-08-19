@@ -5,6 +5,7 @@ require_once __DIR__ . '/init/span.php';
 
 $setRequestContext = require __DIR__ . '/init/resources/request.php';
 
+use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
@@ -463,6 +464,44 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
             }
 
             Span::add('database.collections_created', $collectionsCreated);
+            Span::current()?->finish();
+        }
+
+        // Usage lives in ClickHouse rather than the primary database, so it is
+        // set up here instead of through createDatabase(). ClickHouse may still
+        // be starting, so retry on the same ladder as the databases above.
+        // Giving up must not block boot: the API has no business failing to
+        // start because analytics storage is unreachable. Reads and ingestion
+        // both gate on Connection::isReady(), so they stay correct while the
+        // schema is missing, and `usage-setup` repairs it without a restart.
+        /** @var UsageConnection $usageConnection */
+        $usageConnection = $container->get('usageConnection');
+
+        if ($usageConnection->isEnabled()) {
+            Span::init('usage.setup');
+
+            $max = 15;
+            $sleep = 2;
+            $attempts = 0;
+
+            while (true) {
+                try {
+                    $attempts++;
+                    $usageConnection->setup();
+                    Console::success('[Setup] - Usage schema is ready');
+                    break;
+                } catch (\Throwable $e) {
+                    if ($attempts >= $max) {
+                        Span::add('usage.ready', false);
+                        Console::warning('[Setup] - Skip: usage schema is not ready: ' . $e->getMessage());
+                        break;
+                    }
+
+                    Console::warning("  └── Usage schema setup failed. Retrying ({$attempts})...");
+                    sleep($sleep);
+                }
+            }
+
             Span::current()?->finish();
         }
     });

@@ -1484,22 +1484,6 @@ services:
     networks:
       - appwrite
 
-  appwrite-usage-setup:
-    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
-    entrypoint: usage-setup
-    restart: "no"
-    networks:
-      - appwrite
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    environment:
-      - _APP_USAGE_STATS
-      - _APP_USAGE_PASS
-      - _APP_CONNECTIONS_DB_USAGE
-      - _APP_POOL_SIZE_USAGE
-      - _APP_MAINTENANCE_RETENTION_USAGE_TTL
-
   clickhouse:
     image: clickhouse/clickhouse-server:26.4.3-alpine
     restart: unless-stopped

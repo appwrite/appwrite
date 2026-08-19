@@ -20,10 +20,7 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
     depends_on:
-      coredns:
-        condition: service_started
-      appwrite-usage-setup:
-        condition: service_completed_successfully
+      - coredns
     ports:
       - 9501:80
     dns:
@@ -39,15 +36,6 @@ services:
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _TESTS_OAUTH2_GITHUB_CLIENT_ID
       - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
-  appwrite-usage-setup:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
   appwrite-realtime:
     build:
       context: .
