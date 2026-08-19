@@ -10,13 +10,14 @@ use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
+use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
-class Mails extends Blocking
+class Mails extends Action
 {
     protected int $previewMaxLen = 150;
 
@@ -61,17 +62,6 @@ class Mails extends Blocking
      * @throws Exception
      */
     public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
-    {
-        $this->disableTcpHook();
-
-        try {
-            $this->process($message, $project, $register, $log, $telemetry);
-        } finally {
-            $this->restoreTcpHook();
-        }
-    }
-
-    private function process(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
     {
         $payload = $message->getPayload();
 
