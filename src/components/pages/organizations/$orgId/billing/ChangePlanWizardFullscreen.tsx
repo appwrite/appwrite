@@ -425,6 +425,9 @@ export function ChangePlanWizardFullscreen() {
     useState<OrganizationSetupProgressState | null>(null)
   const downgradeValidationRef = useRef<DowngradeValidationHandle | null>(null)
   const [downgradeValidationValid, setDowngradeValidationValid] = useState(true)
+  const [downgradeBlockReason, setDowngradeBlockReason] = useState<
+    string | null
+  >(null)
   const [freePlanKeepChoiceId, setFreePlanKeepChoiceId] = useState<
     string | null
   >(null)
@@ -436,9 +439,16 @@ export function ChangePlanWizardFullscreen() {
     [],
   )
 
-  const handleDowngradeValidationValid = useCallback((valid: boolean) => {
-    setDowngradeValidationValid((prev) => (prev === valid ? prev : valid))
-  }, [])
+  const handleDowngradeValidationValid = useCallback(
+    (valid: boolean, reason?: string | null) => {
+      setDowngradeValidationValid((prev) => (prev === valid ? prev : valid))
+      setDowngradeBlockReason((prev) => {
+        const next = reason ?? null
+        return prev === next ? prev : next
+      })
+    },
+    [],
+  )
 
   const {
     projects: allProjects,
@@ -952,54 +962,71 @@ export function ChangePlanWizardFullscreen() {
     }
   }, [needsDowngradeValidation])
 
-  // Check if submit button should be disabled
-  const isButtonDisabled = useMemo(() => {
-    if (!selfService) return true
-    if (!selectedPlan) return true
-    if (isSubmitting) return true
+  // Why submit is unavailable, as a sentence to show the user. Returning a
+  // reason rather than a bare boolean is the point: the button was previously
+  // disabled with nothing indicating which section was holding it.
+  const submitBlockReason = useMemo<string | null>(() => {
+    if (!selfService) {
+      return t('This organization is managed by Appwrite. Contact support to change plans.')
+    }
+    if (!selectedPlan) return t('Select a plan to continue.')
+    if (isSubmitting) return null
 
-    if (isCreateMode) {
-      if (!organizationName.trim()) return true
-      if (selectedPlanIsFree && hasFreeOrgs) return true
-      if (isUpgrade) {
-        if (!paymentMethodId) return true
-        const selectedMethod = paymentMethods.find(
-          (pm: Models.PaymentMethod) => pm.$id === paymentMethodId,
-        )
-        if (!selectedMethod?.last4) return true
+    const missingCard = () => {
+      if (!paymentMethodId) return t('Add a payment method.')
+      const selectedMethod = paymentMethods.find(
+        (pm: Models.PaymentMethod) => pm.$id === paymentMethodId,
+      )
+      if (!selectedMethod?.last4) {
+        return t('Finish adding your payment method.')
       }
-      return false
+      return null
     }
 
-    if (selectedPlan === currentPlanEnum) return true
+    if (isCreateMode) {
+      if (!organizationName.trim()) return t('Enter an organization name.')
+      if (selectedPlanIsFree && hasFreeOrgs) {
+        return t('You already have a free organization.')
+      }
+      if (isUpgrade) return missingCard()
+      return null
+    }
+
+    if (selectedPlan === currentPlanEnum) {
+      return t('Select a different plan to continue.')
+    }
 
     // Issues the console cannot resolve on the user's behalf (unsupported
     // addons, resource types with no selection UI, projects the server could
     // not evaluate). The server fails closed on these, so we do too.
-    if (hasPlanChangeBlockers) return true
-
-    // For upgrades: payment method required
-    if (isUpgrade) {
-      if (!paymentMethodId) return true
-      const selectedMethod = paymentMethods.find(
-        (pm: Models.PaymentMethod) => pm.$id === paymentMethodId,
-      )
-      if (!selectedMethod?.last4) return true // Must be a completed card
+    if (hasPlanChangeBlockers) {
+      return t('Resolve the issues listed above to continue.')
     }
 
-    // For downgrades: validate project/resource selection
-    if (isDowngrade) {
-      if (needsDowngradeValidation && !downgradeValidationValid) return true
+    if (isUpgrade) {
+      const cardIssue = missingCard()
+      if (cardIssue) return cardIssue
+    }
 
-      // For free plan: feedback required (message only, like old console)
-      if (shouldCollectDowngradeFeedback) {
-        if (!feedbackMessage.trim()) return true
+    if (isDowngrade) {
+      if (needsDowngradeValidation && !downgradeValidationValid) {
+        return (
+          downgradeBlockReason ??
+          t('Finish adjusting your organization for the target plan.')
+        )
       }
 
-      if (selectedPlanIsFree && hasFreeOrgs && !orgToDelete) return true
+      // For free plan: feedback required (message only, like old console)
+      if (shouldCollectDowngradeFeedback && !feedbackMessage.trim()) {
+        return t('Tell us why you are downgrading.')
+      }
+
+      if (selectedPlanIsFree && hasFreeOrgs && !orgToDelete) {
+        return t('Choose which organization to keep.')
+      }
     }
 
-    return false
+    return null
   }, [
     selfService,
     selectedPlan,
@@ -1019,7 +1046,11 @@ export function ChangePlanWizardFullscreen() {
     organizationName,
     isSubmitting,
     hasPlanChangeBlockers,
+    downgradeBlockReason,
+    t,
   ])
+
+  const isButtonDisabled = isSubmitting || submitBlockReason !== null
 
   // Handle upgrade
   const handleUpgrade = async () => {
@@ -1544,6 +1575,14 @@ export function ChangePlanWizardFullscreen() {
       }
       footer={
         <>
+          {submitBlockReason && !isSubmitting ? (
+            <p
+              className="text-[13px] text-muted-foreground me-auto text-start"
+              role="status"
+            >
+              {submitBlockReason}
+            </p>
+          ) : null}
           <Button
             variant="outline"
             onClick={handleCancel}
@@ -1555,6 +1594,7 @@ export function ChangePlanWizardFullscreen() {
           <Button
             onClick={handleSubmit}
             disabled={isButtonDisabled}
+            title={submitBlockReason ?? undefined}
             {...analyticsAttrs(
               isCreateMode ? 'upgrade-create-org' : 'upgrade-submit',
             )}

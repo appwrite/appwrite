@@ -102,7 +102,7 @@ interface DowngradeValidationProps {
   planChangeLimits?: PlanChangeLimits | null
   planChangeLimitsLoading?: boolean
   onRef: (ref: DowngradeValidationHandle | null) => void
-  onValidityChange?: (valid: boolean) => void
+  onValidityChange?: (valid: boolean, reason?: string | null) => void
   deletedOrganizationImpact?: DeletedOrganizationImpact | null
   deletedOrganizationLoading?: boolean
   expectDeletedOrganizationImpact?: boolean
@@ -382,6 +382,9 @@ export function DowngradeValidation({
 
   const resourceRef = useRef<DowngradeResourceValidationHandle | null>(null)
   const resourceValidRef = useRef(false)
+  const [resourceBlockReason, setResourceBlockReason] = useState<string | null>(
+    null,
+  )
   const [resourceImpact, setResourceImpact] = useState<DowngradeResourceImpact>(
     {},
   )
@@ -491,11 +494,47 @@ export function DowngradeValidation({
     [domains, needsDomainSelection, domainsLimit],
   )
 
+  // A single sentence naming what is still outstanding. The submit button is
+  // otherwise disabled with no explanation of which section is holding it.
+  const blockReason = useMemo(() => {
+    if (orgSelectionsLoading) return t('Loading organization resources...')
+
+    if (!projectSelectionValid && projectsLimit !== null) {
+      return `${t('Choose the')} ${projectsLimit} ${t('projects to keep.')}`
+    }
+    if (!memberSelectionValid && membersLimit !== null) {
+      return `${t('Choose the')} ${membersLimit} ${t('members to keep.')}`
+    }
+    if (!domainSelectionValid && domainsLimit !== null) {
+      return `${t('Choose the')} ${domainsLimit} ${t('domains to keep.')}`
+    }
+    if (keptProjects.length > 0 && !resourceValidRef.current) {
+      return resourceBlockReason
+        ? t(resourceBlockReason)
+        : t('Finish adjusting project resources for the target plan.')
+    }
+    return null
+  }, [
+    t,
+    orgSelectionsLoading,
+    projectSelectionValid,
+    projectsLimit,
+    memberSelectionValid,
+    membersLimit,
+    domainSelectionValid,
+    domainsLimit,
+    keptProjects.length,
+    resourceBlockReason,
+  ])
+
+  const blockReasonRef = useRef<string | null>(null)
+  blockReasonRef.current = blockReason
+
   const syncValidity = useCallback(() => {
     const resourceValid = keptProjects.length === 0 || resourceValidRef.current
-    onValidityChange?.(
-      projectSelectionValid && orgSelectionsValid && resourceValid,
-    )
+    const valid = projectSelectionValid && orgSelectionsValid && resourceValid
+
+    onValidityChange?.(valid, valid ? null : blockReasonRef.current)
   }, [
     onValidityChange,
     projectSelectionValid,
@@ -511,16 +550,19 @@ export function DowngradeValidation({
   )
 
   const handleResourceValidityChange = useCallback(
-    (resourceValid: boolean) => {
+    (resourceValid: boolean, reason?: string | null) => {
       resourceValidRef.current = resourceValid
+      setResourceBlockReason(reason ?? null)
       syncValidity()
     },
     [syncValidity],
   )
 
   useEffect(() => {
+    // blockReason is a dependency so the wizard's explanation updates as the
+    // user works through the sections, not only when validity flips.
     syncValidity()
-  }, [projectSelectionValid, orgSelectionsValid, syncValidity])
+  }, [projectSelectionValid, orgSelectionsValid, blockReason, syncValidity])
 
   const onRefRef = useRef(onRef)
   const keptProjectsRef = useRef(keptProjects)
