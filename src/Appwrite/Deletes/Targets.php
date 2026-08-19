@@ -36,6 +36,10 @@ class Targets
             function (Document $subscriber) use ($database, $target) {
                 $topicId = $subscriber->getAttribute('topicId');
                 $topicInternalId = $subscriber->getAttribute('topicInternalId');
+
+                // Thinking what to do here , We have a bug
+                // Query::select('$sequence') Will still make the subquery
+
                 $topic = $database->getDocument('topics', $topicId);
                 if (!$topic->isEmpty() && $topic->getSequence() === $topicInternalId) {
                     $totalAttribute = match ($target->getAttribute('providerType')) {
@@ -46,12 +50,12 @@ class Targets
                     };
 
                     try {
-                        $database->decreaseDocumentAttribute(
+                        $database->skipFilters(fn () => $database->decreaseDocumentAttribute(
                             'topics',
                             $topicId,
                             $totalAttribute,
                             min: 0
-                        );
+                        ), ['subQueryTopicTargets']);
                     } catch (LimitException $e) {
                         Console::error("Delete subscribers decreaseDocumentAttribute (topicId={$topicId}): {$e->getMessage()}");
                     }
