@@ -157,6 +157,7 @@ const TOKEN_TYPE_PHONE = 6;
 const TOKEN_TYPE_OAUTH2 = 7;
 const TOKEN_TYPE_GENERIC = 8;
 const TOKEN_TYPE_EMAIL = 9; // OTP
+const TOKEN_TYPE_DELETION = 10;
 
 /**
  * Session Providers.
@@ -297,6 +298,7 @@ const NOTIFICATION_TYPE_WEBHOOK = 'webhook';
 const NOTIFICATION_TRACKING_JWT_TTL = 60 * 60 * 24 * 7;
 const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
 const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';
+const MAIL_TEMPLATE_DELETION = 'deletion';
 const MAIL_TEMPLATE_INVITATION = 'invitation';
 const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
 const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
