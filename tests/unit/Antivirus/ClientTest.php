@@ -124,26 +124,37 @@ final class ClientTest extends TestCase
         $this->assertSame('Eicar-Test-Signature', $result->signature);
     }
 
-    public function testScanPathStreamsFile(): void
+    public function testScanHashInfected(): void
     {
-        $path = \tempnam(\sys_get_temp_dir(), 'av');
-        $this->assertNotFalse($path);
-        \file_put_contents($path, 'stream-me');
+        $response = new Response(200, body: new Stream(\json_encode([
+            'result' => 'infected',
+            'signature' => 'Eicar-Test-Signature',
+            'size' => 68,
+        ])));
 
-        try {
-            $response = new Response(200, body: new Stream(\json_encode([
-                'result' => 'clean',
-                'size' => 9,
-            ])));
+        $result = $this->client($response)->scanHash('44D88612FEA8A8F36DE82E1278ABB02F', 68);
 
-            $result = $this->client($response)->scanPath($path);
+        $this->assertTrue($result->isInfected());
+        $this->assertSame('Eicar-Test-Signature', $result->signature);
+        $this->assertSame('POST', $this->request->getMethod());
+        $this->assertSame('scan/hash', (string) $this->request->getUri());
+        $this->assertSame('application/json', $this->request->getHeaderLine('Content-Type'));
+        $this->assertSame([
+            'hash' => '44d88612fea8a8f36de82e1278abb02f',
+            'size' => 68,
+        ], \json_decode((string) $this->request->getBody(), true));
+    }
 
-            $this->assertTrue($result->isClean());
-            $this->assertSame('stream-me', (string) $this->request->getBody());
-            $this->assertSame('9', $this->request->getHeaderLine('Content-Length'));
-        } finally {
-            @\unlink($path);
-        }
+    public function testScanHashOmitsSizeWhenNull(): void
+    {
+        $response = new Response(200, body: new Stream(\json_encode([
+            'result' => 'clean',
+            'size' => 0,
+        ])));
+
+        $this->client($response)->scanHash('44d88612fea8a8f36de82e1278abb02f');
+
+        $this->assertSame(['hash' => '44d88612fea8a8f36de82e1278abb02f'], \json_decode((string) $this->request->getBody(), true));
     }
 
     public function testScanError(): void
@@ -165,14 +176,6 @@ final class ClientTest extends TestCase
         $this->expectExceptionMessage('Antivirus returned an unknown verdict');
 
         $this->client($response)->scan(new Stream('x'));
-    }
-
-    public function testScanPathMissingFile(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Unable to open file for antivirus scan');
-
-        $this->client(new Response(200))->scanPath('/no/such/file');
     }
 
     public function testScanTransportFailure(): void

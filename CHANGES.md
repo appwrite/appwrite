@@ -5,7 +5,7 @@
 ### Notable changes
 
 * Combined worker and scheduler containers are the default Docker Compose topology. Separate per-queue containers remain available via `--profile separate` / `--topology=separate`. Multi-queue worker APIs live in [utopia-php/monorepo](https://github.com/utopia-php/monorepo) (`packages/queue`, `packages/platform`); see [utopia-php/monorepo#136](https://github.com/utopia-php/monorepo/pull/136).
-* Replace ClamAV with [Appwrite Defender](https://github.com/appwrite/defender) for storage antivirus scanning. Enable with `_APP_STORAGE_ANTIVIRUS=enabled` and the `antivirus` Compose profile (`_APP_STORAGE_ANTIVIRUS_HOST` default is now `appwrite-defender`, port `8080`).
+* Replace ClamAV with [Appwrite Defender](https://github.com/appwrite/defender) for storage antivirus scanning. Scans use the configured storage device (hash lookup at any size, content scan up to 20MB). Enable with `_APP_STORAGE_ANTIVIRUS=enabled` and the `antivirus` Compose profile (`_APP_STORAGE_ANTIVIRUS_HOST` default is now `appwrite-defender`, port `8080`).
 * Add PostgreSQL database adapter in [#9772](https://github.com/appwrite/appwrite/pull/9772) and [#11293](https://github.com/appwrite/appwrite/pull/11293)
 * Add MongoDB support in [#11312](https://github.com/appwrite/appwrite/pull/11312)
 * Add new webhooks API in [#11033](https://github.com/appwrite/appwrite/pull/11033) and [#11566](https://github.com/appwrite/appwrite/pull/11566)

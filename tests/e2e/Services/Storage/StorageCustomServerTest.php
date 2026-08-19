@@ -372,11 +372,12 @@ final class StorageCustomServerTest extends Scope
     }
 
     /**
-     * Regression for chunked uploads under the antivirus size limit.
+     * Regression for chunked uploads under the antivirus content-scan limit.
      *
      * Requires Defender (compose profile `antivirus`) and
      * `_APP_STORAGE_ANTIVIRUS=enabled`. File must be >5MB (chunked) and
-     * ≤20MB (`APP_LIMIT_ANTIVIRUS`) so the last chunk triggers a scan.
+     * ≤20MB (`APP_LIMIT_ANTIVIRUS`) so the last chunk runs a hash lookup
+     * and a content scan via the storage device.
      */
     #[Group('antivirus')]
     public function testCreateBucketFileChunkedUploadWithAntivirus(): void

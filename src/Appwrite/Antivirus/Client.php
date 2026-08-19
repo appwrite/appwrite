@@ -9,7 +9,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory;
-use Utopia\Psr7\Stream;
 
 class Client
 {
@@ -68,27 +67,31 @@ class Client
     }
 
     /**
-     * Stream a local file to Defender as raw bytes so hashes and body signatures
-     * are evaluated in one request without loading the file into PHP.
+     * Look up a whole-file MD5, SHA-1, or SHA-256 digest. No file bytes are sent.
      *
      * @throws Exception
      * @throws ClientExceptionInterface
      */
-    public function scanPath(string $path): Result
+    public function scanHash(string $hash, ?int $size = null): Result
     {
-        if (!\is_file($path) || !\is_readable($path)) {
-            throw new Exception('Unable to open file for antivirus scan');
+        $payload = ['hash' => \strtolower($hash)];
+        if ($size !== null) {
+            $payload['size'] = $size;
         }
 
-        $handle = \fopen($path, 'rb');
-        if ($handle === false) {
-            throw new Exception('Unable to open file for antivirus scan');
+        try {
+            $response = $this->client->sendRequest($this->factory->json(Method::POST, 'scan/hash', $payload));
+        } catch (ClientExceptionInterface $e) {
+            throw new Exception('Antivirus is not available: ' . $e->getMessage(), 0, $e);
         }
 
-        return $this->scan(Stream::fromResource($handle));
+        return $this->result($response);
     }
 
     /**
+     * Stream file bytes from a storage device so hashes and body signatures
+     * are evaluated in one request without loading the file into PHP.
+     *
      * @throws Exception
      * @throws ClientExceptionInterface
      */

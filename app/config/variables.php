@@ -663,7 +663,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
-                'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, start the Defender service with the `antivirus` Compose profile (`docker compose --profile antivirus up -d`).',
+                'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, start the Defender service with the `antivirus` Compose profile (`docker compose --profile antivirus up -d`). Scans use the configured storage device: a hash lookup at any size, then a content scan for files up to 20MB.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,

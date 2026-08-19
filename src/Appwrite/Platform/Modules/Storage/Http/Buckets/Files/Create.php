@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
 use Appwrite\Antivirus\Client as Antivirus;
 use Appwrite\Antivirus\Exception as AntivirusException;
+use Appwrite\Antivirus\Scanner;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
@@ -37,7 +38,6 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
-use Utopia\Storage\DeviceType;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
@@ -363,9 +363,11 @@ class Create extends Action
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
 
-                if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === DeviceType::Local) {
+                $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
+
+                if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true)) {
                     try {
-                        $infected = $antivirus->scanPath($path)->isInfected();
+                        $infected = (new Scanner($antivirus))->scan($deviceForFiles, $path, $fileSize, $fileHash)->isInfected();
                     } catch (AntivirusException) {
                         $deviceForFiles->delete($path);
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Antivirus is not available');
@@ -378,7 +380,6 @@ class Create extends Action
                 }
 
                 $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
-                $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
                 $data = '';
                 $iv = '';
                 $tag = null;

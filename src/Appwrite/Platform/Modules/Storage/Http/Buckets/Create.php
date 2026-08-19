@@ -72,7 +72,7 @@ class Create extends Action
             ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
             ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD], true), 'Compression algorithm chosen for compression. Can be one of ' . Compression::NONE . ',  [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Bytes::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true, enum: new Enum(name: 'Compression'))
             ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Bytes::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
-            ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Bytes::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+            ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? Known-malware hash lookups have no size limit. Content scanning is skipped for files above ' . Bytes::human(APP_LIMIT_ANTIVIRUS, 0) . '.', true)
             ->param('transformations', true, new Boolean(true), 'Are image transformations enabled?', true)
             ->inject('response')
             ->inject('dbForProject')
