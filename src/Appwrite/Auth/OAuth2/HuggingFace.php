@@ -59,8 +59,10 @@ class HuggingFace extends OAuth2
             $response = $this->request(
                 'POST',
                 'https://huggingface.co/oauth/token',
-                ['Content-Type: application/x-www-form-urlencoded',
-                 'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),],
+                [
+                    'Content-Type: application/x-www-form-urlencoded',
+                    'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+                ],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
                     'code' => $code,
@@ -85,8 +87,10 @@ class HuggingFace extends OAuth2
         $response = $this->request(
             'POST',
             'https://huggingface.co/oauth/token',
-            ['Content-Type: application/x-www-form-urlencoded',
-             'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),],
+            [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+            ],
             \http_build_query([
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
@@ -214,13 +218,13 @@ class HuggingFace extends OAuth2
                 ['Authorization: Bearer ' . \urlencode($accessToken)]
             );
 
-              $decodedUser = \json_decode($user, true);
-  
-              if (!\is_array($decodedUser) || isset($decodedUser['error'])) {
-                  throw new Exception('Hugging Face did not return valid user information.', 400);
-              }
-  
-              $this->user = $decodedUser;
+            $decodedUser = \json_decode($user, true);
+
+            if (!\is_array($decodedUser) || isset($decodedUser['error'])) {
+                throw new Exception('Hugging Face did not return valid user information.', 400);
+            }
+
+            $this->user = $decodedUser;
         }
 
         return $this->user;
