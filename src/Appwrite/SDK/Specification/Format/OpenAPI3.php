@@ -881,7 +881,7 @@ class OpenAPI3 extends Format
                         }
 
                         if ($parameter['nullable']) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['nullable'] = true;
                         }
                     }
                 }
