@@ -13,11 +13,20 @@ Appwrite uses Let's Encrypt to auto-generate TLS certificates for your Appwrite 
 
 # Debugging  {% #debugging %}
 
-If you're still struggling with your certificates, check the Appwrite certificates worker log. You can do that with the following command:
+If you're still struggling with your certificates, check the certificates worker log. The container name depends on your [worker topology](/docs/advanced/self-hosting/configuration/topologies).
 
+{% tabs %}
+{% tabsitem #logs-combined title="Combined (default)" %}
+```bash
+docker compose logs appwrite-worker
+```
+{% /tabsitem %}
+{% tabsitem #logs-separate title="Separate" %}
 ```bash
 docker compose logs appwrite-worker-certificates
 ```
+{% /tabsitem %}
+{% /tabs %}
 
 # Generation cycle {% #generation-cycle %}
 

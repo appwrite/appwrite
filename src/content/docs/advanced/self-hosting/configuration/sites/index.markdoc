@@ -62,10 +62,20 @@ docker compose exec appwrite ssl --domain="6772722a00331315adc3.sites.appwrite.m
 
 The certificate should be generated within a few seconds.
 If you encounter any issues, you can check the certificate worker logs.
+The container name depends on your [worker topology](/docs/advanced/self-hosting/configuration/topologies).
 
+{% tabs %}
+{% tabsitem #logs-combined title="Combined (default)" %}
+```bash
+docker compose logs appwrite-worker
+```
+{% /tabsitem %}
+{% tabsitem #logs-separate title="Separate" %}
 ```bash
 docker compose logs appwrite-worker-certificates
 ```
+{% /tabsitem %}
+{% /tabs %}
 
 Note that you'll need to run this command for each domain, and repeat it every time you create a new site.
 If you have many sites or frequently create new ones, consider using the automated certificate generation method below.
