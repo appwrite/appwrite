@@ -32,6 +32,9 @@ use Utopia\System\System;
 
 class Functions extends Action
 {
+    /** @var callable(string, int, callable): mixed */
+    private $locks;
+
     public static function getName(): string
     {
         return 'functions';
@@ -57,6 +60,7 @@ class Functions extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('getIsResourceBlocked')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -72,8 +76,11 @@ class Functions extends Action
         Bus $bus,
         Log $log,
         Executor $executor,
-        callable $getIsResourceBlocked
+        callable $getIsResourceBlocked,
+        callable $locks
     ): void {
+        $this->locks = $locks;
+
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -91,6 +98,16 @@ class Functions extends Action
         Span::add('queue.pid', $message->getPid());
         Span::add('queue.name', $message->getQueue());
         Span::add('message.timestamp', (string) $message->getTimestamp());
+
+        // Recorded on consume, not on publish: the schedulers hand over a due
+        // second one occurrence at a time, so a write there delays the rest.
+        // Best-effort billing metadata, so a failure here must not fail the
+        // execution the message is asking for.
+        try {
+            $this->updateProjectAccess($project, $dbForPlatform);
+        } catch (\Throwable $th) {
+            Console::warning('Failed to record project access: ' . $th->getMessage());
+        }
 
         $events = $functionMessage->events;
         $data = $functionMessage->body;
@@ -311,7 +328,6 @@ class Functions extends Action
 
         $published = false;
         try {
-            $this->updateProjectAccess($project, $dbForPlatform);
             $enqueue(new FunctionMessage(
                 project: $project,
                 userId: $data['userId'] ?? '',
@@ -350,9 +366,21 @@ class Functions extends Action
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $now = DateTime::now();
-                $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                    'accessedAt' => $now
-                ]));
+
+                // Concurrent messages each carry their own project snapshot, so
+                // every one of them reads the same stale accessedAt and would
+                // write it. The lock keeps that to one write, as the request
+                // path does; contention throws and the caller treats it as done.
+                ($this->locks)(
+                    'lock:platform:' . ($project->getSequence() ?: $project->getId()) . ':projects:' . $project->getId() . ':accessedAt',
+                    APP_PROJECT_ACCESS,
+                    function () use ($dbForPlatform, $project, $now): void {
+                        $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                            'accessedAt' => $now
+                        ]));
+                    }
+                );
+
                 $project->setAttribute('accessedAt', $now);
             }
         }
