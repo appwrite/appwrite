@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Origin\Authorize;
 
-use Appwrite\Auth\OAuth2\Cursor as OAuth2Cursor;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -11,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -75,6 +75,7 @@ class Get extends Action
             ->inject('project')
             ->inject('platform')
             ->inject('vcsConfigured')
+            ->inject('vcsFactory')
             ->callback($this->action(...));
     }
 
@@ -85,6 +86,7 @@ class Get extends Action
         Document $project,
         array $platform,
         callable $vcsConfigured,
+        VcsFactory $vcsFactory,
     ) {
         if (!$vcsConfigured('origin')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'This endpoint is not implemented on this server. Please configure VCS (Version Control System) variables in .env file.');
@@ -104,19 +106,18 @@ class Get extends Action
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $callback = $protocol . '://' . ($platform['consoleHostname'] ?? '') . '/v1/vcs/origin/callback';
 
-        // The Cursor adapter expects its secret as a JSON object; starting an
-        // install only needs the app ID, so the key may be left out here.
-        $oauth2 = new OAuth2Cursor(
+        /** @var \Utopia\VCS\Adapter\Git\Origin $vcs */
+        $vcs = $vcsFactory->fromProvider('origin');
+        $installUrl = $vcs->getInstallUrl(
             System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', ''),
-            \json_encode(['privateKey' => System::getEnv('_APP_VCS_ORIGIN_PRIVATE_KEY', '')]),
+            self::SCOPES,
             $callback,
-            $state,
-            self::SCOPES
+            \json_encode($state) ?: ''
         );
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($oauth2->getLoginURL());
+            ->redirect($installUrl);
     }
 }

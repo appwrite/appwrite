@@ -17,7 +17,6 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
-use Utopia\Fetch\Client as FetchClient;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -72,6 +71,7 @@ class Create extends Action
         callable $deploymentsFactory,
         array $platform
     ) {
+        /** @var Origin $vcs */
         $vcs = $vcsFactory->fromProvider('origin');
 
         $event = $request->getHeaderLine($vcs->getEventHeaderName(), '');
@@ -89,7 +89,7 @@ class Create extends Action
         if (!empty($deliveryId) && \ctype_digit($timestamp) && \abs(\time() - (int) $timestamp) <= 300) {
             $signedContent = $deliveryId . '.' . $timestamp . '.' . $payload;
 
-            foreach ($this->signingKeys() as $publicKey) {
+            foreach ($this->signingKeys($vcs) as $publicKey) {
                 if ($vcs->validateWebhookEvent($signedContent, $signature, $publicKey)) {
                     $valid = true;
                     break;
@@ -98,7 +98,7 @@ class Create extends Action
 
             // The key set may have rotated since it was cached.
             if (!$valid) {
-                foreach ($this->signingKeys(refresh: true) as $publicKey) {
+                foreach ($this->signingKeys($vcs, refresh: true) as $publicKey) {
                     if ($vcs->validateWebhookEvent($signedContent, $signature, $publicKey)) {
                         $valid = true;
                         break;
@@ -142,12 +142,13 @@ class Create extends Action
     }
 
     /**
-     * Origin's active Ed25519 signing keys as base64url raw key material, the
-     * shape the adapter's validateWebhookEvent() accepts.
+     * Origin's active signing keys, from the adapter, cached for the worker's
+     * lifetime - the adapter memoizes only per instance, and a new adapter is
+     * built for every delivery.
      *
      * @return array<string>
      */
-    protected function signingKeys(bool $refresh = false): array
+    protected function signingKeys(Origin $vcs, bool $refresh = false): array
     {
         if (!$refresh && self::$signingKeys !== null) {
             return self::$signingKeys;
@@ -156,16 +157,7 @@ class Create extends Action
         $keys = [];
 
         try {
-            $client = new FetchClient();
-            $client->setTimeout(15000);
-            $response = $client->fetch('https://api.cursor.com/v1/origin/keys', FetchClient::METHOD_GET);
-
-            $jwks = $response->getStatusCode() === 200 ? $response->json() : null;
-            foreach (\is_array($jwks['keys'] ?? null) ? $jwks['keys'] : [] as $key) {
-                if (($key['kty'] ?? '') === 'OKP' && ($key['crv'] ?? '') === 'Ed25519' && !empty($key['x'])) {
-                    $keys[] = \strval($key['x']);
-                }
-            }
+            $keys = $vcs->getSigningKeys($refresh);
         } catch (\Throwable $e) {
             Console::warning('Failed to fetch Origin signing keys: ' . $e->getMessage());
         }

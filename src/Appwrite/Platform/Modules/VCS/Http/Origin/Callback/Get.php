@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Origin\Callback;
 
-use Appwrite\Auth\OAuth2\Cursor as OAuth2Cursor;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
@@ -62,15 +61,11 @@ class Get extends Action
         // Authenticate the callback before trusting anything else on it: the
         // endpoint is public and Origin performs no token exchange, so the
         // EdDSA-signed receipt is the only proof the request came from Cursor.
-        // The Cursor adapter expects its secret as a JSON object.
-        $oauth2 = new OAuth2Cursor(
-            System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', ''),
-            \json_encode(['privateKey' => System::getEnv('_APP_VCS_ORIGIN_PRIVATE_KEY', '')]),
-            ''
-        );
+        /** @var \Utopia\VCS\Adapter\Git\Origin $vcs */
+        $vcs = $vcsFactory->fromProvider('origin');
 
         try {
-            $receiptClaims = $oauth2->verifyReceipt($installationReceipt);
+            $receiptClaims = $vcs->verifyReceipt($installationReceipt, System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', ''));
         } catch (\Throwable $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not verify the Origin installation receipt. Please restart the installation from the Appwrite Console.');
         }

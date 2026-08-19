@@ -66,9 +66,8 @@ return [
     'origin' => [
         'adapter' => Origin::class,
         // No 'oauth2': Origin has no OAuth2 user flow. Installs are approved
-        // on Cursor and confirmed by a signed receipt, and the dedicated
-        // Origin endpoints construct their own Auth\OAuth2\Cursor for that
-        // handshake.
+        // on Cursor and confirmed by a signed receipt, a handshake the
+        // adapter itself owns (getInstallUrl / verifyReceipt).
         'variables' => [
             // Factory::fromInstallation() reads appId + privateKey; Origin's
             // app id doubles as its client id.
