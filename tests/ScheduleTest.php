@@ -207,6 +207,56 @@ final class ScheduleTest extends TestCase
     }
 
     /**
+     * @return \Iterator<int, array{string, list<string>}>
+     */
+    public static function quartzCronProvider(): \Iterator
+    {
+        yield ['0 0 L * *', ['2026-01-31', '2026-02-28', '2026-03-31']];
+        yield ['0 0 L-2 * *', ['2026-01-29', '2026-02-26', '2026-03-29']];
+        yield ['0 0 LW * *', ['2026-01-30', '2026-02-27', '2026-03-31']];
+        // the 31st is a Tuesday, the other two months end on a weekend
+        yield ['0 0 15W * *', ['2026-01-15', '2026-02-16', '2026-03-16']];
+        // the 15th falls on a Sunday in February and March
+        yield ['0 0 1W * *', ['2026-01-01', '2026-02-02', '2026-03-02']];
+        // never steps back into the previous month
+        yield ['0 0 ? * 5L', ['2026-01-30', '2026-02-27', '2026-03-27']];
+        yield ['0 0 ? * 7L', ['2026-01-25', '2026-02-22', '2026-03-29']];
+        // 7 is Sunday here, not Quartz's Saturday
+        yield ['0 0 ? * FRI#3', ['2026-01-16', '2026-02-20', '2026-03-20']];
+        yield ['0 0 1,L * ?', ['2026-01-01', '2026-01-31', '2026-02-01', '2026-02-28', '2026-03-01', '2026-03-31']];
+    }
+
+    /**
+     * @param list<string> $expected
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('quartzCronProvider')]
+    public function testCronQuartzDayExtensions(string $expression, array $expected): void
+    {
+        $cron = new Cron($expression);
+
+        $this->assertSame(
+            $expected,
+            array_map(fn(\DateTimeImmutable $occurrence): string => $occurrence->format('Y-m-d'), $cron->occurrencesBetween(
+                new \DateTimeImmutable('2026-01-01 00:00:00.000000'),
+                new \DateTimeImmutable('2026-04-01 00:00:00.000000'),
+            )),
+        );
+    }
+
+    public function testCronQuestionMarkReadsAsAnyDay(): void
+    {
+        $questionMark = new Cron('0 0 ? * *');
+        $star = new Cron('0 0 * * *');
+
+        $window = [new \DateTimeImmutable('2026-01-01 00:00:00.000000'), new \DateTimeImmutable('2026-01-08 00:00:00.000000')];
+
+        $this->assertEquals(
+            $star->occurrencesBetween(...$window),
+            $questionMark->occurrencesBetween(...$window),
+        );
+    }
+
+    /**
      * @return \Iterator<int, array{string}>
      */
     public static function malformedCronProvider(): \Iterator
@@ -226,10 +276,14 @@ final class ScheduleTest extends TestCase
         // steps need * or a range
         yield ['5-1 * * * *'];
         // reversed range
-        yield ['* * L * *'];
-        // Quartz extension
-        yield ['* * * * 1#2'];
-        // Quartz extension
+        yield ['* * L-31 * *'];
+        // day-of-month offset past any month
+        yield ['* * 32W * *'];
+        // weekday nearest a day that cannot exist
+        yield ['* * * * 1#6'];
+        // there is no sixth Monday
+        yield ['* * * * L'];
+        // bare L means nothing in day of week
         yield ['0 0 31 2 *'];
     }
 

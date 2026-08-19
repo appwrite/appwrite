@@ -15,7 +15,20 @@ use Utopia\Schedule\Trigger;
  * lists (`,`), month and day names (`JAN`, `FRI`), `7` as Sunday, and
  * the `@hourly` … `@yearly` macros. Following vixie cron, a day matches when *either* field hits
  * if both day-of-month and day-of-week are restricted, and *both* hit
- * otherwise. Quartz extensions (`L`, `W`, `#`, `?`) are rejected.
+ * otherwise.
+ *
+ * The Quartz extensions to the two day fields are supported too, and may
+ * appear inside a list alongside plain values:
+ *
+ * | Field        | Syntax  | Meaning                                              |
+ * |--------------|---------|------------------------------------------------------|
+ * | either       | `?`     | no specific value, same as `*`                       |
+ * | day of month | `L`     | last day of the month                                |
+ * | day of month | `L-3`   | three days before the last day                       |
+ * | day of month | `LW`    | last weekday of the month                            |
+ * | day of month | `15W`   | weekday nearest the 15th, never crossing the month   |
+ * | day of week  | `5L`    | last Friday of the month                             |
+ * | day of week  | `FRI#3` | third Friday of the month                            |
  *
  * Occurrences have minute resolution. Invalid and impossible
  * expressions (a date that can never exist, like February 31st) are
@@ -66,6 +79,14 @@ final readonly class Cron implements Trigger
     /** @var array<int, true> */
     private array $daysOfWeek;
 
+    /**
+     * Quartz day rules that no plain set can express, each a
+     * [type, first argument, second argument] tuple.
+     *
+     * @var list<array{string, int, int}>
+     */
+    private array $dayRules;
+
     private bool $dayOfMonthRestricted;
 
     private bool $dayOfWeekRestricted;
@@ -87,19 +108,22 @@ final readonly class Cron implements Trigger
 
         $this->minutes = $this->parseField($minute, 0, 59, []);
         $this->hours = $this->parseField($hour, 0, 23, []);
-        $this->daysOfMonth = $this->parseField($dayOfMonth, 1, 31, []);
         $this->months = $this->parseField($month, 1, 12, self::MONTHS);
 
-        $days = $this->parseField($dayOfWeek, 0, 7, self::DAYS);
+        [$daysOfMonth, $dayOfMonthRules] = $this->parseDayField($dayOfMonth, 1, 31, [], false);
+        [$days, $dayOfWeekRules] = $this->parseDayField($dayOfWeek, 0, 7, self::DAYS, true);
+
         if (isset($days[7])) {
             unset($days[7]); // both 0 and 7 mean Sunday
             $days[0] = true;
             ksort($days);
         }
+        $this->daysOfMonth = $daysOfMonth;
         $this->daysOfWeek = $days;
+        $this->dayRules = [...$dayOfMonthRules, ...$dayOfWeekRules];
 
-        $this->dayOfMonthRestricted = $dayOfMonth !== '*';
-        $this->dayOfWeekRestricted = $dayOfWeek !== '*';
+        $this->dayOfMonthRestricted = $dayOfMonth !== '*' && $dayOfMonth !== '?';
+        $this->dayOfWeekRestricted = $dayOfWeek !== '*' && $dayOfWeek !== '?';
 
         if (!$this->nextMatch(new \DateTimeImmutable()) instanceof \DateTimeImmutable) {
             throw new \InvalidArgumentException("Cron expression \"{$expression}\" never matches a date");
@@ -191,6 +215,12 @@ final readonly class Cron implements Trigger
         $dayOfMonth = isset($this->daysOfMonth[(int) $candidate->format('j')]);
         $dayOfWeek = isset($this->daysOfWeek[(int) $candidate->format('w')]);
 
+        foreach ($this->dayRules as $rule) {
+            if ($this->ruleMatches($rule, $candidate)) {
+                return true;
+            }
+        }
+
         // Vixie cron: two restricted day fields combine with OR, so
         // "0 0 13 * 5" means the 13th *or* any Friday, not Friday the 13th.
         return $this->dayOfMonthRestricted && $this->dayOfWeekRestricted
@@ -210,6 +240,148 @@ final readonly class Cron implements Trigger
         }
 
         return null;
+    }
+
+    /**
+     * A day field, split into the plain value set and the Quartz rules
+     * that no set can express. `?` reads as `*`.
+     *
+     * @param array<string, int> $names
+     * @return array{array<int, true>, list<array{string, int, int}>}
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function parseDayField(string $field, int $min, int $max, array $names, bool $dayOfWeek): array
+    {
+        if ($field === '?') {
+            $field = '*';
+        }
+
+        $plain = [];
+        $rules = [];
+
+        foreach (explode(',', $field) as $part) {
+            $rule = $dayOfWeek ? $this->dayOfWeekRule($part) : $this->dayOfMonthRule($part);
+            if ($rule === null) {
+                $plain[] = $part;
+            } else {
+                $rules[] = $rule;
+            }
+        }
+
+        $set = $plain === [] ? [] : $this->parseField(implode(',', $plain), $min, $max, $names);
+
+        return [$set, $rules];
+    }
+
+    /**
+     * `L`, `L-n`, `LW` or `nW`, or null when the part is a plain value.
+     *
+     * @return array{string, int, int}|null
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function dayOfMonthRule(string $part): ?array
+    {
+        if ($part === 'l') {
+            return ['L', 0, 0];
+        }
+
+        if ($part === 'lw') {
+            return ['LW', 0, 0];
+        }
+
+        if (preg_match('/^l-(\d+)$/', $part, $matches) === 1) {
+            $offset = (int) $matches[1];
+            if ($offset > 30) {
+                throw new \InvalidArgumentException("Cron value \"{$part}\" is out of range L-1-L-30");
+            }
+
+            return ['L', $offset, 0];
+        }
+
+        if (preg_match('/^(\d+)w$/', $part, $matches) === 1) {
+            $day = (int) $matches[1];
+            if ($day < 1 || $day > 31) {
+                throw new \InvalidArgumentException("Cron value \"{$part}\" is out of range 1-31");
+            }
+
+            return ['W', $day, 0];
+        }
+
+        return null;
+    }
+
+    /**
+     * `dL` or `d#n`, or null when the part is a plain value.
+     *
+     * @return array{string, int, int}|null
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function dayOfWeekRule(string $part): ?array
+    {
+        if (preg_match('/^(.+)l$/', $part, $matches) === 1) {
+            return ['DOW_LAST', $this->dayOfWeekValue($matches[1]), 0];
+        }
+
+        if (preg_match('/^(.+)#(\d+)$/', $part, $matches) === 1) {
+            $nth = (int) $matches[2];
+            if ($nth < 1 || $nth > 5) {
+                throw new \InvalidArgumentException("Cron value \"{$part}\" is out of range 1-5 nth days of week");
+            }
+
+            return ['DOW_NTH', $this->dayOfWeekValue($matches[1]), $nth];
+        }
+
+        return null;
+    }
+
+    /**
+     * @throws \InvalidArgumentException
+     */
+    private function dayOfWeekValue(string $text): int
+    {
+        $day = $this->value($text, self::DAYS);
+        if ($day < 0 || $day > 7) {
+            throw new \InvalidArgumentException("Cron value \"{$text}\" is out of range 0-7");
+        }
+
+        return $day === 7 ? 0 : $day; // both 0 and 7 mean Sunday
+    }
+
+    /**
+     * @param array{string, int, int} $rule
+     */
+    private function ruleMatches(array $rule, \DateTimeImmutable $candidate): bool
+    {
+        $day = (int) $candidate->format('j');
+        $lastDay = (int) $candidate->format('t');
+        $dayOfWeek = (int) $candidate->format('w');
+
+        return match ($rule[0]) {
+            'L' => $day === $lastDay - $rule[1],
+            'LW' => $day === $this->nearestWeekday($candidate, $lastDay),
+            'W' => $rule[1] <= $lastDay && $day === $this->nearestWeekday($candidate, $rule[1]),
+            'DOW_LAST' => $dayOfWeek === $rule[1] && $day + 7 > $lastDay,
+            'DOW_NTH' => $dayOfWeek === $rule[1] && intdiv($day - 1, 7) + 1 === $rule[2],
+            default => false,
+        };
+    }
+
+    /**
+     * The weekday nearest $day inside $candidate's month: a Saturday
+     * shifts back, a Sunday forward, and neither leaves the month.
+     */
+    private function nearestWeekday(\DateTimeImmutable $candidate, int $day): int
+    {
+        $target = $candidate->setDate((int) $candidate->format('Y'), (int) $candidate->format('n'), $day);
+
+        return match ((int) $target->format('w')) {
+            6 => $day > 1 ? $day - 1 : $day + 2,
+            0 => $day < (int) $candidate->format('t') ? $day + 1 : $day - 2,
+            default => $day,
+        };
     }
 
     /**

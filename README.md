@@ -102,7 +102,7 @@ A schedule's **trigger** answers one question: which moments does this schedule 
 
 | Trigger | Fires | Notes |
 |----------|-------|-------|
-| `new Cron('*/15 * * * *')` | on cron matches | Minute resolution, zero dependencies: the portable five-field dialect (`*`, values, ranges, steps over `*` or ranges, lists, `JAN`/`FRI` names, `7` as Sunday, `@daily`-style macros, the vixie either-day rule). Invalid, never-matching, and Quartz-extension expressions throw at construction instead of becoming a silent no-op. |
+| `new Cron('*/15 * * * *')` | on cron matches | Minute resolution, zero dependencies: the portable five-field dialect (`*`, values, ranges, steps over `*` or ranges, lists, `JAN`/`FRI` names, `7` as Sunday, `@daily`-style macros, the vixie either-day rule) plus the Quartz day extensions (`?`, `L`, `L-3`, `LW`, `15W`, `5L`, `FRI#3`). Invalid and never-matching expressions throw at construction instead of becoming a silent no-op. |
 | `new Interval(900)` | every 900 seconds | Occurrences sit on a deterministic grid (anchor + k × seconds, epoch-anchored by default), so the cadence survives restarts instead of re-phasing to process boot. Pass an anchor to set the phase. |
 | `At::in(300)` | once, 300 seconds after the call | The moment is absolute from construction. |
 | `new At($dateTime)` | once, at `$dateTime` | |
