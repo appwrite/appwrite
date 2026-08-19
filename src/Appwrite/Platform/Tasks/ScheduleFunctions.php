@@ -6,8 +6,6 @@ use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
@@ -52,26 +50,10 @@ class ScheduleFunctions extends Action
             },
         );
 
-        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions, $dbForPlatform));
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions));
 
         Span::init('schedule.functions.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
-    }
-
-    protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
-    {
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return;
-        }
-
-        $accessedAt = $project->getAttribute('accessedAt', 0);
-        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-            $now = DateTime::now();
-            $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'accessedAt' => $now
-            ]));
-            $project->setAttribute('accessedAt', $now);
-        }
     }
 
     /**
@@ -85,9 +67,11 @@ class ScheduleFunctions extends Action
     /**
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions, Database $dbForPlatform): null
+    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions): null
     {
-        foreach ($occurrences as $occurrence) {
+        $batch = \count($occurrences);
+
+        foreach (\array_values($occurrences) as $index => $occurrence) {
             $schedule = $occurrence->payload;
 
             Span::init('schedule.functions.enqueue');
@@ -97,8 +81,11 @@ class ScheduleFunctions extends Action
                 Span::add('project.id', $schedule['project']->getId());
                 Span::add('function.id', $schedule['resource']->getId());
                 Span::add('schedule.id', $schedule['$id'] ?? '');
-
-                $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+                Span::add('schedule.cron', (string) ($schedule['schedule'] ?? ''));
+                Span::add('occurrence.due', $occurrence->due->format('c'));
+                Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
+                Span::add('occurrence.batch', $batch);
+                Span::add('occurrence.index', $index);
 
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $schedule['project'],
