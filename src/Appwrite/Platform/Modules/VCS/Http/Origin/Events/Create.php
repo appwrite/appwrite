@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -52,6 +53,7 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('getProjectDB')
             ->inject('deploymentsFactory')
             ->inject('platform')
@@ -64,6 +66,7 @@ class Create extends Action
         Response $response,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         callable $deploymentsFactory,
         array $platform
@@ -77,10 +80,6 @@ class Create extends Action
         $signature = $request->getHeaderLine($vcs->getSignatureHeaderName(), '');
         $deliveryId = $request->getHeaderLine('webhook-id', '');
         $timestamp = $request->getHeaderLine('webhook-timestamp', '');
-
-        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
-        Console::log('[ORIGIN EVENT] delivery=' . $deliveryId . ' type=' . $event . ' timestamp=' . $timestamp . ' signature=' . (empty($signature) ? 'missing' : 'present'));
-        Console::log('[ORIGIN EVENT] payload: ' . \mb_strimwidth($payload, 0, 8000, '...[truncated]'));
 
         // Origin signs the SHA-256 of "<webhook-id>.<webhook-timestamp>.<raw body>"
         // with its own Ed25519 key, verified against its published JWKS rather
@@ -108,7 +107,6 @@ class Create extends Action
         }
 
         Span::add('vcs.origin.event.signature.valid', $valid);
-        Console::log('[ORIGIN EVENT] signature valid: ' . \var_export($valid, true));
 
         if (!$valid) {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook payload signature. The delivery could not be verified against Origin\'s published signing keys.');
@@ -124,27 +122,17 @@ class Create extends Action
                 '$id' => 'origin-delivery-' . $deliveryId,
             ])));
         } catch (Duplicate) {
-            Console::log('[ORIGIN EVENT] duplicate delivery ' . $deliveryId . ' - already processed, acknowledging without action');
             $response->json(['events' => [], 'duplicate' => true]);
             return;
         }
 
         $parsedPayloads = $vcs->getEvents($event, $payload);
-        Console::log('[ORIGIN EVENT] parsed ' . \count($parsedPayloads) . ' event(s): ' . \json_encode($parsedPayloads));
 
         foreach ($parsedPayloads as $parsedPayload) {
-            $handler = match (true) {
-                $event === Origin::EVENT_PUSH => 'push',
-                \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => 'pull_request',
-                \str_starts_with($event, Origin::EVENT_INSTALLATION . '.') => 'installation',
-                default => 'none',
-            };
-            Console::log('[ORIGIN EVENT] dispatching to handler: ' . $handler);
-
-            match ($handler) {
-                'push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
-                'pull_request' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
-                'installation' => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
+            match (true) {
+                $event === Origin::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                \str_starts_with($event, Origin::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
                 default => null,
             };
         }
@@ -301,6 +289,7 @@ class Create extends Action
         VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         array $platform,
         callable $deploymentsFactory,
@@ -336,21 +325,10 @@ class Create extends Action
             Query::limit(100),
         ]));
 
-        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
-        Console::log('[ORIGIN EVENT] push: repo=' . $providerRepositoryId . ' branch=' . $providerBranch . ' commit=' . $providerCommitHash . ' authorEmail=' . $providerCommitAuthorEmail . ' deleted=' . \var_export($providerBranchDeleted, true));
-        Console::log('[ORIGIN EVENT] push: matched ' . \count($repositories) . ' connected repositories document(s) for providerRepositoryId=' . $providerRepositoryId);
-        foreach ($repositories as $connected) {
-            Console::log('[ORIGIN EVENT] push: connected repo doc ' . $connected->getId() . ' project=' . $connected->getAttribute('projectId') . ' resource=' . $connected->getAttribute('resourceType') . '/' . $connected->getAttribute('resourceId'));
-        }
-
         // Create new deployment only on push (not committed by us) and not when branch is deleted
         if (!\in_array($providerCommitAuthorEmail, [APP_VCS_GITHUB_EMAIL, APP_VCS_ORIGIN_EMAIL], true) && !$providerBranchDeleted) {
             $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
-            Console::log('[ORIGIN EVENT] push: creating git deployments');
-            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
-            Console::log('[ORIGIN EVENT] push: createGitDeployments finished');
-        } else {
-            Console::log('[ORIGIN EVENT] push: skipped (self-commit or branch deletion)');
+            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
         }
     }
 
@@ -359,6 +337,7 @@ class Create extends Action
         VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         array $platform,
         callable $deploymentsFactory,
@@ -416,7 +395,7 @@ class Create extends Action
                 Query::orderDesc('$createdAt')
             ]));
 
-            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, \strval($providerPullRequestId), $providerAffectedFiles, $external, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
+            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, \strval($providerPullRequestId), $providerAffectedFiles, $external, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
         }
 
         // No cleanup on close: Origin pull requests are never external, so no

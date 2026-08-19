@@ -247,10 +247,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             - If authorized, continue as if auth was not required
         */
         $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
-        // TODO: Temporarily disabled while verifying the Origin integration -
-        // preview deployments open without the auth cookie / console redirect.
-        // Remove this override to restore preview authorization.
-        $requirePreview = false;
         if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');
             $authorized = false;

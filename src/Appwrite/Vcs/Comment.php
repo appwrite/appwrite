@@ -2,7 +2,6 @@
 
 namespace Appwrite\Vcs;
 
-use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\System\System;
 
@@ -247,15 +246,6 @@ class Comment
 
         $text .= "\n<br>\n\n> [!TIP]\n> {$this->tip}\n\n";
 
-        // TODO: Temporary debug logging while the Origin integration is verified -- remove afterwards.
-        // Log every image and link URL the comment carries, to compare the
-        // scheme we send against the scheme the provider ends up rendering.
-        $urls = [];
-        if (\preg_match_all('/(?:src|srcset|href)="([^"]+)"|\]\((https?:[^)]+)\)/', $text, $matches)) {
-            $urls = \array_values(\array_filter(\array_merge($matches[1], $matches[2])));
-        }
-        Console::log('[VCS COMMENT] outgoing image/link URLs: ' . \json_encode($urls));
-
         return $text;
     }
 
@@ -265,7 +255,6 @@ class Comment
         if (!$this->withImages) {
             return '';
         }
-
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $this->platform['consoleHostname'] ?? '';
