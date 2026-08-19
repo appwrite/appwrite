@@ -1,0 +1,345 @@
+---
+layout: post
+title: "Build a memory MCP server on Appwrite"
+description: Give your AI tools a shared, persistent memory. Host a stateless MCP server on Appwrite Functions, store memories in VectorsDB, and protect it with your project's OAuth2 server.
+date: 2026-08-19
+cover: /images/blog-local/build-a-memory-mcp-server/cover.avif
+timeToRead: 14
+author: atharva
+category: tutorial
+faqs:
+  - question: "What is a memory MCP server?"
+    answer: "A memory MCP server is a Model Context Protocol server that exposes tools for storing and retrieving a user's long-term memories. AI clients such as Claude Code call tools like remember and recall over HTTP, so facts saved in one conversation are available in every later conversation and in every tool connected to the same server."
+  - question: "Why host an MCP server on Appwrite Functions?"
+    answer: "The current MCP specification is stateless: every request carries everything the server needs, with no initialization handshake or session to keep alive. That maps directly onto a serverless function, which starts, answers one request, and exits. An Appwrite Function also receives a scoped API key on every execution and gets a public domain out of the box."
+  - question: "How does vector search power the recall tool?"
+    answer: "Each memory is embedded into a 384-dimension vector with the bge-small model and stored in an Appwrite VectorsDB collection. The recall tool embeds the search query with the same model and runs a cosine-similarity query, so results match by meaning rather than by exact keywords."
+  - question: "How do AI clients authenticate with the MCP server?"
+    answer: "Through the Appwrite project's built-in OAuth2 server. The client discovers the authorization server from the MCP server's protected-resource metadata, identifies itself with a client metadata URL, and sends the user through a consent screen the app hosts. The MCP server then verifies the issued access token on every request."
+  - question: "Can users revoke an AI tool's access to their memories?"
+    answer: "Yes. Each approval is stored as a consent on the user's account. The app lists consents on a connected apps page, and deleting one stops the client from refreshing its tokens, ending access when the current short-lived token expires."
+---
+
+AI assistants forget everything between conversations. Preferences repeated on Monday are gone by Tuesday, and every tool starts from zero even when another tool already knows the answer. The fix is to move memory out of the assistant and into a service the user owns, one that any AI client can read and write with the user's permission.
+
+This tutorial builds that service: Recall, a small memory app on Appwrite. It ships a remote MCP server hosted as an Appwrite Function, stores memories in a VectorsDB database so they can be searched by meaning, and protects everything with the project's OAuth2 server. At the end, Claude Code connects to it, asks the user for permission on a consent screen, and starts remembering things.
+
+{% info title="Companion repository" %}
+The complete project lives at [appwrite-community/memory-mcp](https://github.com/appwrite-community/memory-mcp). It pins `node-appwrite` to the latest major release and ships a prebuilt copy of the SDK generated from the latest API specification in `vendor/`, wired in through a pnpm override, because the VectorsDB service is not part of the published package yet. Once a release that includes VectorsDB is out, the override can be removed.
+{% /info %}
+
+# How the pieces fit together
+
+Three Appwrite products carry the whole workload.
+
+**An Appwrite Function hosts the MCP server.** The Model Context Protocol's current revision is stateless: there is no initialization handshake and no session identifier, and every request stands on its own. That is exactly the shape of a serverless function. One HTTP handler serves protocol discovery, rejects unauthenticated requests, and answers tool calls, using `createMcpHandler` from the official `@modelcontextprotocol/server` SDK with plain JSON responses instead of a server-sent-events stream.
+
+**VectorsDB stores the memories.** Each memory is one document: the text embedded as a vector, plus a metadata object carrying the text itself, the owner's user ID, and optional tags. Appwrite's Embeddings service generates the vectors server-side with the `bge-small` model, and an HNSW cosine index makes similarity search fast. The `recall` tool is a single `listDocuments` call with a `vectorCosine` query.
+
+**The OAuth2 server handles permission.** AI clients never see an API key. Claude Code identifies itself with a hosted client metadata URL, the user approves access on a consent screen the app hosts, and Appwrite mints short-lived access tokens scoped to `memories.read` and `memories.write`. The function verifies each token's signature against the project's public keys before serving a single tool call.
+
+The repository is a pnpm monorepo: `apps/recall` is the web app (dashboard, sign-in, consent screen), and `functions/memory-mcp` is the MCP server.
+
+# Create the project
+
+![The create project dialog in the Appwrite Console with the name Recall and project ID recall](/images/blog-local/build-a-memory-mcp-server/create-project.avif)
+
+In the [Appwrite Console](https://cloud.appwrite.io), create a new project. Set the name to `Recall`, choose a custom project ID of `recall`, and pick a region close to your users. The project ID appears in every OAuth2 URL later, so a readable ID keeps the discovery documents easy to follow.
+
+# Create the vector database
+
+![The create database wizard with the VectorsDB type selected](/images/blog-local/build-a-memory-mcp-server/create-database-type.avif)
+
+Open **Databases** and select **Create database**. The wizard asks for a database type: pick **VectorsDB**, the vector database built for embeddings and similarity search. Name the database `Recall` and give it the custom ID `recall`.
+
+![The specifications step of the create database wizard showing compute tiers](/images/blog-local/build-a-memory-mcp-server/create-database-specs.avif)
+
+Select your preferred tier, then select **Create database**. The tier controls the compute and memory behind the database and can be changed later as the workload grows.
+
+# Create the memories collection
+
+![The create collection dialog with the bge-small embedding model selected](/images/blog-local/build-a-memory-mcp-server/create-collection.avif)
+
+Inside the database, select **Create collection**. Name it `Memories`, set the custom ID to `memories`, and choose the `bge-small` embedding model. The model fixes the collection's vector dimension at 384, which keeps embeddings compact and queries fast, a good fit for short personal notes.
+
+Every VectorsDB collection provisions the same two fields automatically: `embeddings`, which holds the vector, and `metadata`, an object for anything else you want to store alongside it. Recall keeps the memory text, the owner's user ID, and a list of tags in `metadata`.
+
+Similarity search needs an index on the `embeddings` field. Index management for vector collections currently lives in the API rather than the Console wizard, so create it with the SDK:
+
+```js
+import { Client, VectorsDB, VectorsDBIndexType } from 'node-appwrite'
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('recall')
+    .setKey('<YOUR_API_KEY>')
+
+const vectorsDB = new VectorsDB(client)
+
+await vectorsDB.createIndex({
+    databaseId: 'recall',
+    collectionId: 'memories',
+    key: 'embeddings_cosine',
+    type: VectorsDBIndexType.HnswCosine,
+    attributes: ['embeddings'],
+})
+```
+
+![The indexes tab of the memories collection showing the hnsw_cosine index as available](/images/blog-local/build-a-memory-mcp-server/collection-indexes.avif)
+
+The index shows up on the collection's **Indexes** tab and switches to **Available** once it finishes building. `hnsw_cosine` matches how text embeddings are usually compared; VectorsDB also supports `hnsw_dot` and `hnsw_euclidean` for models tuned to those distance functions.
+
+# Create an API key
+
+![The create API key drawer with the required scopes selected](/images/blog-local/build-a-memory-mcp-server/create-api-key.avif)
+
+The web app's server needs an API key for the operations a user session cannot perform: creating sessions during sign-in, generating embeddings, and reading the collection. Open **API Keys**, select **Create API key**, and grant it the scopes `sessions.write`, `users.read`, `apps.read`, `databases.read`, `collections.read`, `collections.write`, `documents.read`, `documents.write`, and `embeddings.write`.
+
+Copy the secret into the repository's `.env` file along with the endpoint and project ID:
+
+```bash
+APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=recall
+APPWRITE_API_KEY=<API_KEY>
+SESSION_SECRET=<A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS>
+```
+
+The MCP function itself never touches this key. Appwrite hands the function a fresh, scoped key on every execution, so the deployment carries no long-lived secret.
+
+# Enable the OAuth2 server
+
+![The OAuth2 server settings page showing the server active, the authorization URL, and the memories scopes](/images/blog-local/build-a-memory-mcp-server/oauth2-server-enabled.avif)
+
+Open **Auth**, switch to the **OAuth2 server** tab, and enable the server. Two settings connect it to Recall:
+
+- **Authorization URL**: `http://localhost:4200/oauth/consent`. When a client starts an authorization, Appwrite sends the user here. The app signs the user in if needed and renders the consent card.
+- **Scopes**: add `memories.read` and `memories.write`. These are the permissions AI clients will request, alongside the built-in `openid`, `profile`, `email`, and `phone`.
+
+After the update, the project publishes standard discovery documents, and any OAuth library can configure itself from the OIDC discovery URL shown on this page.
+
+MCP clients register themselves without any manual setup. Claude Code identifies itself with a URL pointing at its hosted client metadata, Appwrite fetches the document to learn the client's name and redirect URIs, and no pre-registration step is involved. This matters for MCP because a server has no idea which clients will connect to it ahead of time; any tool a user trusts can walk up, identify itself, and ask.
+
+# Store and search memories with VectorsDB
+
+Both the web app and the MCP server share one data model. Writing a memory is two SDK calls: embed the text, then store the document. The Embeddings service runs the model server-side, so no external embedding API is involved.
+
+```js
+import { Client, Embeddings, EmbeddingModel, ID, Permission, Role, VectorsDB } from 'node-appwrite'
+
+async function embed(embeddings, text) {
+    const result = await embeddings.createTextEmbeddings({
+        texts: [text],
+        model: EmbeddingModel.Bgesmall,
+    })
+    return result.embeddings[0].embedding
+}
+
+export async function storeMemory(client, userId, text, tags) {
+    const vectorsDB = new VectorsDB(client)
+    return vectorsDB.createDocument({
+        databaseId: 'recall',
+        collectionId: 'memories',
+        documentId: ID.unique(),
+        data: {
+            embeddings: await embed(new Embeddings(client), text),
+            metadata: { userId, text, tags },
+        },
+        permissions: [Permission.read(Role.user(userId)), Permission.delete(Role.user(userId))],
+    })
+}
+```
+
+Searching is one query. `Query.vectorCosine` ranks documents by similarity to the query vector, and a filter on `metadata.userId` keeps every user inside their own memories:
+
+```js
+import { Query } from 'node-appwrite'
+
+export async function searchMemories(client, userId, query, limit) {
+    const vectorsDB = new VectorsDB(client)
+    const result = await vectorsDB.listDocuments({
+        databaseId: 'recall',
+        collectionId: 'memories',
+        queries: [
+            Query.vectorCosine('embeddings', await embed(new Embeddings(client), query)),
+            Query.equal('metadata.userId', userId),
+            Query.limit(limit),
+        ],
+    })
+    return result.documents
+}
+```
+
+This is what makes the `recall` tool useful: a memory saved as "I prefer TypeScript over JavaScript for all new projects" comes back for the query "what language do I like?", with no keyword in common.
+
+# Build the MCP server as a Function
+
+The function is one HTTP handler with three jobs: serve OAuth discovery metadata, turn away requests without a valid token, and answer MCP requests for authenticated users.
+
+```js
+import {
+  createMcpHandler,
+  getOAuthProtectedResourceMetadataUrl,
+  oauthMetadataResponse,
+  requireBearerAuth,
+} from '@modelcontextprotocol/server'
+
+export const SCOPES = ['openid', 'memories.read', 'memories.write']
+
+const mcp = createMcpHandler(
+  ({ authInfo }) => buildServer({
+    userId: authInfo.extra.userId,
+    scopes: authInfo.scopes,
+    apiKey: authInfo.extra.apiKey,
+  }),
+  // Functions return a single response, so ask the SDK for plain JSON
+  // rather than a server-sent-events stream.
+  { responseMode: 'json' },
+)
+
+export default async ({ req, res, error }) => {
+  const request = toWebRequest(req)
+  const resourceServerUrl = new URL('/mcp', new URL(request.url).origin)
+
+  const discovery = oauthMetadataResponse(request, {
+    oauthMetadata: await getAuthServerMetadata(),
+    resourceServerUrl,
+    scopesSupported: SCOPES,
+    resourceName: 'Recall',
+  })
+  if (discovery) return send(res, discovery)
+
+  const gate = requireBearerAuth({
+    verifier: createVerifier(resourceServerUrl),
+    resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(resourceServerUrl),
+  })
+  const auth = await gate(request)
+  if (auth instanceof Response) return send(res, auth)
+
+  // The function's own key, minted by Appwrite for this execution.
+  auth.extra = { ...auth.extra, apiKey: req.headers['x-appwrite-key'] }
+  return send(res, await mcp.fetch(request, { authInfo: auth }))
+}
+```
+
+Statelessness does the heavy lifting here. Because the handler builds a fresh MCP server per request for the exact user the token belongs to, there is nothing to keep warm between calls and nothing to lose when the container recycles.
+
+Token verification uses the project's published signing keys. Access tokens are RFC 9068 JWTs typed `at+jwt`, and the verifier checks the signature, the issuer, the audience, and the type in one call:
+
+```js
+import { createRemoteJWKSet, jwtVerify } from 'jose'
+
+const ISSUER = `${process.env.APPWRITE_FUNCTION_API_ENDPOINT}/oauth2/${process.env.APPWRITE_FUNCTION_PROJECT_ID}`
+const jwks = createRemoteJWKSet(new URL(`${ISSUER}/.well-known/jwks.json`))
+
+export function createVerifier(resource) {
+  return {
+    async verifyAccessToken(token) {
+      const { payload } = await jwtVerify(token, jwks, {
+        issuer: ISSUER,
+        audience: resource.href,
+        typ: 'at+jwt',
+      })
+      return {
+        token,
+        clientId: payload.client_id ?? '',
+        scopes: (payload.scope ?? '').split(' ').filter(Boolean),
+        expiresAt: payload.exp,
+        resource,
+        extra: { userId: payload.sub },
+      }
+    },
+  }
+}
+```
+
+The server itself registers four tools, each gated on the scope the user actually approved:
+
+| Tool | Scope | What it does |
+| --- | --- | --- |
+| `remember` | `memories.write` | Embeds a fact and stores it as a new memory |
+| `recall` | `memories.read` | Searches memories by meaning with cosine similarity |
+| `list_memories` | `memories.read` | Lists the most recent memories, newest first |
+| `forget` | `memories.write` | Deletes one memory by ID, after checking ownership |
+
+Every tool call filters or verifies against the `userId` from the token, so one user's assistant can never read another user's memories, even though all memories share a collection.
+
+# Deploy the function
+
+The function is declared in `appwrite.config.json`, including the scopes for the key Appwrite mints per execution:
+
+```json
+{
+  "projectId": "recall",
+  "functions": [
+    {
+      "$id": "memory-mcp",
+      "name": "Recall MCP",
+      "runtime": "node-22",
+      "execute": ["any"],
+      "scopes": ["documents.read", "documents.write", "embeddings.write"],
+      "entrypoint": "dist/main.js",
+      "commands": "npm install && npm run build",
+      "path": "functions/memory-mcp"
+    }
+  ]
+}
+```
+
+Deploy it with the [Appwrite CLI](/docs/tooling/command-line/installation):
+
+```bash
+appwrite login
+appwrite push function --function-id memory-mcp --force --activate
+```
+
+![The function page in the Appwrite Console showing an active deployment and the function domain](/images/blog-local/build-a-memory-mcp-server/function-deployed.avif)
+
+The deploy output prints the function's domain. That domain plus `/mcp` is the MCP server URL, and it doubles as the OAuth2 resource identifier: tokens are minted for that exact URL and for nothing else, so a token stolen from one MCP server is useless against another.
+
+# Run the app and connect Claude Code
+
+Start the web app with `pnpm dev`, sign up for an account, and save a memory or two from the dashboard.
+
+![The Recall dashboard with saved memories and a semantic search box](/images/blog-local/build-a-memory-mcp-server/recall-dashboard.avif)
+
+Then register the MCP server with Claude Code, using the function domain from the deploy output:
+
+```bash
+claude mcp add --transport http recall https://<FUNCTION_DOMAIN>/mcp
+```
+
+Run `/mcp` inside Claude Code and pick **Authenticate**. Claude Code fetches the protected-resource metadata from the function, discovers the project's OAuth2 server from it, and opens the browser on Recall's consent screen.
+
+![The Recall consent screen asking the user to grant Claude Code access to their memories](/images/blog-local/build-a-memory-mcp-server/consent-screen.avif)
+
+The card shows exactly what was requested: who is asking, which permissions, and which MCP server the tokens will be limited to. After the user selects **Allow access**, Claude Code exchanges its authorization code for tokens and the tools go live:
+
+```text
+> Remember that our production API keys rotate on the first Monday of each month.
+
+⏺ recall - remember (MCP)
+  ⎿ Saved: "Production API keys rotate on the first Monday of each month"
+
+> When do our API keys rotate?
+
+⏺ recall - recall (MCP)
+  ⎿ "Production API keys rotate on the first Monday of each month"
+```
+
+Memories saved from Claude Code appear on the Recall dashboard immediately, and memories saved in the dashboard are searchable from Claude Code, because both sides read and write the same VectorsDB collection.
+
+The connection stays under the user's control. The consent is stored on their account, and the connected apps page lists it with a disconnect button that revokes future token refreshes.
+
+![The connected apps page showing Claude Code with its granted permissions and a disconnect button](/images/blog-local/build-a-memory-mcp-server/connections-page.avif)
+
+# Where to take it
+
+The whole server is around 400 lines, and most of the interesting behavior comes from the platform underneath it: Functions gave the MCP server a public HTTPS endpoint and per-execution credentials, VectorsDB turned semantic memory into two SDK calls, and the OAuth2 server handled registration, consent, tokens, and revocation without any auth code in the function beyond a JWT check.
+
+From here you can extend the memory model with tags and time-based decay, add an `update_memory` tool, or point several MCP clients at the same server so a memory saved in one shows up in all of them. The complete code, including the consent screen and the dashboard, is in the [companion repository](https://github.com/appwrite-community/memory-mcp).
+
+Further reading:
+
+- [VectorsDB documentation](/docs/products/databases/vectorsdb)
+- [Appwrite Functions documentation](/docs/products/functions)
+- [OAuth2 apps and consent documentation](/docs/partners/apps)

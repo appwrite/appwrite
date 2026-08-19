@@ -49,7 +49,10 @@ async function encodeCoverAvif(input: Buffer | string): Promise<Buffer> {
     .toBuffer()
 }
 
-async function writeAvifFromPng(outputDir: string, png: Uint8Array): Promise<void> {
+async function writeAvifFromPng(
+  outputDir: string,
+  png: Uint8Array,
+): Promise<void> {
   writeFileSync(join(outputDir, 'cover-source.png'), png)
 
   const avif = await encodeCoverAvif(Buffer.from(png))
@@ -94,9 +97,30 @@ async function generateAnnouncingAppwriteExplorerCover(
   await writeAvifFromPng(outputDir, png)
 }
 
+async function generateMemoryMcpServerCover(outputDir: string): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'simple-title',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    title: 'Build a memory MCP server on Appwrite',
+    subtitle: 'Serverless memory for your AI tools',
+    eyebrow: 'Tutorial',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
+  'build-a-memory-mcp-server': generateMemoryMcpServerCover,
 }
 
 async function main() {

@@ -11,6 +11,7 @@ export const PUBLIC_IMAGES_ROOT = join(VIBES_ROOT, 'public', 'images')
 /** Image trees copied from the website repo for docs, blog, changelog, author avatars, and integrations. */
 export const CONTENT_IMAGE_SECTIONS = [
   'blog',
+  'blog-local',
   'docs',
   'changelog',
   'avatars',
