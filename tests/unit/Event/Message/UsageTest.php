@@ -9,7 +9,7 @@ use Appwrite\Event\Message\Usage;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 
-class UsageTest extends TestCase
+final class UsageTest extends TestCase
 {
     public function testLegacyUsagePayloadRemainsReadable(): void
     {
@@ -19,9 +19,9 @@ class UsageTest extends TestCase
             'reduce' => [],
         ]);
 
-        self::assertSame('project', $message->project->getId());
-        self::assertSame('42', $message->project->getSequence());
-        self::assertSame('network.requests', $message->metrics[0]['key']);
+        $this->assertSame('project', $message->project->getId());
+        $this->assertSame('42', $message->project->getSequence());
+        $this->assertSame('network.requests', $message->metrics[0]['key']);
     }
 
     public function testUsageMetadataRoundTripsWithoutChangingEnvelope(): void
@@ -38,8 +38,8 @@ class UsageTest extends TestCase
         );
 
         $payload = $message->toArray();
-        self::assertSame('storage', $payload['metrics'][0]['service']);
-        self::assertSame(['project', 'metrics', 'reduce'], array_keys($payload));
+        $this->assertSame('storage', $payload['metrics'][0]['service']);
+        $this->assertSame(['project', 'metrics', 'reduce'], array_keys($payload));
     }
 
     public function testLegacyAndDimensionedGaugePayloadsRemainReadable(): void
@@ -58,7 +58,7 @@ class UsageTest extends TestCase
             ]],
         ]);
 
-        self::assertSame('users', $legacy->gauges[0]['metric']);
-        self::assertSame('bucket', $dimensioned->gauges[0]['resourceId']);
+        $this->assertSame('users', $legacy->gauges[0]['metric']);
+        $this->assertSame('bucket', $dimensioned->gauges[0]['resourceId']);
     }
 }

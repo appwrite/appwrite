@@ -46,7 +46,7 @@ class StatsResources extends Action
             throw new \RuntimeException('Usage schema is not ready');
         }
 
-        $statsResources = StatsResourcesMessage::fromArray($message->getPayload() ?? []);
+        $statsResources = StatsResourcesMessage::fromArray($message->getPayload());
         if ($statsResources->project->isEmpty()) {
             throw new \RuntimeException('Missing payload');
         }
@@ -68,7 +68,7 @@ class StatsResources extends Action
         try {
             $accumulator = new Accumulator($usageConnection->getUsage());
             foreach ($gauges as $gauge) {
-                $metric = (string) ($gauge['metric'] ?? '');
+                $metric = $gauge['metric'];
                 if ($metric === '') {
                     continue;
                 }
@@ -79,12 +79,12 @@ class StatsResources extends Action
                     'resourceId' => $gauge['resourceId'] ?? '',
                     'resourceInternalId' => $gauge['resourceInternalId'] ?? '',
                     'ordinal' => isset($gauge['ordinal']) ? (string) $gauge['ordinal'] : '',
-                ], static fn (mixed $value): bool => $value !== '' && $value !== null);
+                ], static fn (string $value): bool => $value !== '');
 
                 $accumulator->collect(
                     $tenant,
                     $metric,
-                    (int) ($gauge['value'] ?? 0),
+                    $gauge['value'],
                     Usage::TYPE_GAUGE,
                     $tags,
                 );
@@ -147,7 +147,7 @@ class StatsResources extends Action
 
     private function serviceForMetric(string $metric): string
     {
-        return match (explode('.', $metric)[0] ?? '') {
+        return match (explode('.', $metric)[0]) {
             'files', 'buckets' => 'storage',
             'databases', 'collections', 'documents', 'documentsdb', 'vectorsdb' => 'databases',
             'functions', 'deployments', 'builds' => 'functions',

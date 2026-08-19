@@ -36,6 +36,8 @@ services:
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _TESTS_OAUTH2_GITHUB_CLIENT_ID
       - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
+  appwrite-usage-setup:
+    image: appwrite-dev
   appwrite-realtime:
     build:
       context: .

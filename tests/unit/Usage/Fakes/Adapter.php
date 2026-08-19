@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Usage\Fakes;
 
-use Utopia\Query\Query;
 use Utopia\Usage\Adapter as UsageAdapter;
 use Utopia\Usage\Metric;
 
