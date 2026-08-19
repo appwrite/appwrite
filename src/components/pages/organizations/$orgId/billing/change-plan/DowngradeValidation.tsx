@@ -277,10 +277,11 @@ export function DowngradeValidation({
     staleTime: 30_000,
   })
   const queriedCurrentUserMembership = useMemo(
-    () => findCurrentUserMembership(
-      (currentUserMembershipData?.memberships ?? []) as Models.Membership[],
-      accountModel,
-    ),
+    () =>
+      findCurrentUserMembership(
+        (currentUserMembershipData?.memberships ?? []) as Models.Membership[],
+        accountModel,
+      ),
     [currentUserMembershipData?.memberships, accountModel],
   )
   const currentUserMembership =
@@ -491,12 +492,16 @@ export function DowngradeValidation({
   )
 
   const syncValidity = useCallback(() => {
-    const resourceValid =
-      keptProjects.length === 0 || resourceValidRef.current
+    const resourceValid = keptProjects.length === 0 || resourceValidRef.current
     onValidityChange?.(
       projectSelectionValid && orgSelectionsValid && resourceValid,
     )
-  }, [onValidityChange, projectSelectionValid, orgSelectionsValid, keptProjects.length])
+  }, [
+    onValidityChange,
+    projectSelectionValid,
+    orgSelectionsValid,
+    keptProjects.length,
+  ])
 
   const handleResourceRef = useCallback(
     (ref: DowngradeResourceValidationHandle | null) => {
@@ -636,19 +641,22 @@ export function DowngradeValidation({
 
   const orgSelectionReady = orgSelectionsValid && !orgSelectionsLoading
 
+  // The resource step only needs to know which projects are being kept. Gating
+  // it on member and domain selection too left it hidden behind unrelated
+  // sections, so picking projects appeared to do nothing. Submit validity is
+  // tracked separately and still requires every org selection.
+  const projectSelectionReady =
+    projectSelectionValid && !(needsProjectSelection && projectsLoading)
+
   const showProjectResourceValidation =
-    orgSelectionReady && keptProjects.length > 0
+    projectSelectionReady && keptProjects.length > 0
 
   const showImpactSummary =
     deletedOrganizationLoading ||
     !!deletedOrganizationImpact ||
     (orgSelectionReady && (hasOrgLevelSelections || keptProjects.length > 0))
 
-  if (
-    projects.length === 0 &&
-    !needsMemberSelection &&
-    !needsDomainSelection
-  ) {
+  if (projects.length === 0 && !needsMemberSelection && !needsDomainSelection) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -744,7 +752,7 @@ export function DowngradeValidation({
         />
       ) : null}
 
-      {hasOrgLevelSelections && !orgSelectionReady ? (
+      {hasOrgLevelSelections && !showProjectResourceValidation ? (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
@@ -753,9 +761,9 @@ export function DowngradeValidation({
             <p className="text-[13px] text-muted-foreground mt-2">
               {orgSelectionsLoading
                 ? t('Loading organization resources...')
-                : needsProjectSelection && keptProjects.length === 0
-                  ? t('Select projects above to review their resources.')
-                  : t('Complete the selections above to review project resources.')}
+                : needsProjectSelection && projectsLimit !== null
+                  ? `${t('Choose the')} ${projectsLimit} ${t('projects to keep above to review their resources.')}`
+                  : t('Select projects above to review their resources.')}
             </p>
           </div>
         </div>
