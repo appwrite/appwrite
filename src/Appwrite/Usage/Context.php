@@ -24,25 +24,25 @@ class Context
     protected string $sdk = '';
     protected string $sdkVersion = '';
 
-    public function setPath(string $path): self
+    public function setPath(string $path): static
     {
         $this->path = $path;
         return $this;
     }
 
-    public function setMethod(string $method): self
+    public function setMethod(string $method): static
     {
         $this->method = $method;
         return $this;
     }
 
-    public function setStatus(int $status): self
+    public function setStatus(int $status): static
     {
         $this->status = $status;
         return $this;
     }
 
-    public function setService(string $service): self
+    public function setService(string $service): static
     {
         $this->service = $service;
         return $this;
@@ -53,18 +53,18 @@ class Context
         return $this->service;
     }
 
-    public function setResource(string $resource): self
+    public function setResource(string $resource): static
     {
         return $this->setResourceType($resource);
     }
 
-    public function setResourceType(string $resourceType): self
+    public function setResourceType(string $resourceType): static
     {
         $this->resourceType = $resourceType;
         return $this;
     }
 
-    public function setResourceId(string $resourceId): self
+    public function setResourceId(string $resourceId): static
     {
         $this->resourceId = $resourceId;
         return $this;
@@ -75,13 +75,13 @@ class Context
         return $this->resourceId;
     }
 
-    public function setResourceInternalId(string $resourceInternalId): self
+    public function setResourceInternalId(string $resourceInternalId): static
     {
         $this->resourceInternalId = $resourceInternalId;
         return $this;
     }
 
-    public function setResourcePath(string $path): self
+    public function setResourcePath(string $path): static
     {
         $this->resourcePath = $path;
         return $this;
@@ -102,19 +102,19 @@ class Context
         return strtolower($country);
     }
 
-    public function setCountry(string $country): self
+    public function setCountry(string $country): static
     {
         $this->country = self::normalizeCountry($country);
         return $this;
     }
 
-    public function setRegion(string $region): self
+    public function setRegion(string $region): static
     {
         $this->region = $region;
         return $this;
     }
 
-    public function setHostname(string $origin): self
+    public function setHostname(string $origin): static
     {
         if ($origin === '') {
             $this->hostname = '';
@@ -138,13 +138,13 @@ class Context
         return $this;
     }
 
-    public function setUserAgent(string $userAgent): self
+    public function setUserAgent(string $userAgent): static
     {
         $this->userAgent = $userAgent;
         return $this;
     }
 
-    public function setIp(string $ip): self
+    public function setIp(string $ip): static
     {
         $this->ip = $ip;
         return $this;
@@ -155,13 +155,13 @@ class Context
         return $this->ip;
     }
 
-    public function setSdk(string $sdk): self
+    public function setSdk(string $sdk): static
     {
         $this->sdk = $sdk;
         return $this;
     }
 
-    public function setSdkVersion(string $sdkVersion): self
+    public function setSdkVersion(string $sdkVersion): static
     {
         $this->sdkVersion = $sdkVersion;
         return $this;
@@ -170,7 +170,7 @@ class Context
     /**
      * Add a metric with the metadata active at the time it was emitted.
      */
-    public function addMetric(string $key, int $value): self
+    public function addMetric(string $key, int $value): static
     {
         $this->metrics[] = [
             'key' => $key,
@@ -222,7 +222,7 @@ class Context
         return empty($this->metrics) && empty($this->reduce);
     }
 
-    public function fillMissingResource(string $resourceType, string $resourceId, string $resourceInternalId): self
+    public function fillMissingResource(string $resourceType, string $resourceId, string $resourceInternalId): static
     {
         foreach ($this->metrics as $index => $metric) {
             if (($metric['resourceType'] ?? '') === '') {
@@ -239,7 +239,7 @@ class Context
         return $this;
     }
 
-    public function reset(): self
+    public function reset(): static
     {
         $this->metrics = [];
         $this->reduce = [];

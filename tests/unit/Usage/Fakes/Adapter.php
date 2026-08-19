@@ -74,12 +74,12 @@ final class Adapter extends UsageAdapter
     {
         $this->crossTenantCalls[] = ['queries' => $queries, 'type' => $type];
 
-        $queued = &$this->crossTenantRows[(string) $type];
-        if (!isset($queued) || $queued === []) {
+        $key = (string) $type;
+        if (($this->crossTenantRows[$key] ?? []) === []) {
             return [];
         }
 
-        return array_shift($queued);
+        return array_shift($this->crossTenantRows[$key]);
     }
 
     public function count(string $tenant, array $queries = [], ?string $type = null, ?int $max = null): int
