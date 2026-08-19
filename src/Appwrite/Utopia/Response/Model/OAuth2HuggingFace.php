@@ -22,7 +22,7 @@ class OAuth2HuggingFace extends OAuth2Base
 
     public function getClientSecretExample(): string
     {
-        return 'hf_secret_1234567890abcdef1234567890abcdef';
+        return 'oauth_app_secret_wcLhRtl000000000000000000000xbNdLt';
     }
 
     /**
