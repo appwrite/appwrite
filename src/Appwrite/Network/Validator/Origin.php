@@ -73,7 +73,13 @@ class Origin extends Validator
         ];
         if (in_array($this->scheme, $webPlatforms, true)) {
             $validator = new Hostname($this->allowedHostnames);
-            return $validator->isValid($this->host);
+            if ($validator->isValid($this->host)) {
+                return true;
+            }
+
+            /* Fall back to the alias, see Platform::LOOPBACK_ALIASES */
+            return in_array($this->host, Platform::LOOPBACK_ALIASES, true)
+                && $validator->isValid(Platform::LOOPBACK_HOSTNAME);
         }
 
         if (!empty($this->scheme) && in_array($this->scheme, $this->allowedSchemes, true)) {

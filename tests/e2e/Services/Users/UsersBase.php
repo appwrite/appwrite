@@ -327,7 +327,7 @@ trait UsersBase
         // Test empty prefs is object not array
         $bodyString = $user['body'];
         $prefs = substr($bodyString, strpos($bodyString, '"prefs":') + 8, 2);
-        $this->assertEquals('{}', $prefs);
+        $this->assertSame('{}', $prefs);
 
         $body = json_decode($bodyString, true);
 
@@ -562,7 +562,7 @@ trait UsersBase
 
         $this->assertEquals(201, $token['headers']['status-code']);
         $this->assertEquals($data['userId'], $token['body']['userId']);
-        $this->assertEquals(15, strlen($token['body']['secret']));
+        $this->assertSame(15, strlen($token['body']['secret']));
         $this->assertNotEmpty($token['body']['expire']);
 
         /**
@@ -627,6 +627,145 @@ trait UsersBase
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testGetMFAChallenge(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // Enable the custom factor, which the MFA factors policy disables by default
+        $policy = $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'custom' => true,
+        ]);
+
+        $this->assertEquals(200, $policy['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => \uniqid() . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'MFA Challenge User',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $sessionSecret = $session['body']['secret'];
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $sessionSecret,
+        ], [
+            'factor' => 'custom'
+        ]);
+
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+        $this->assertArrayNotHasKey('code', $challenge['body']);
+        $challengeId = $challenge['body']['$id'];
+
+        /**
+         * Test for SUCCESS: server (API key) can read the code
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $challengeId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($challengeId, $response['body']['$id']);
+        $this->assertEquals($userId, $response['body']['userId']);
+        $this->assertNotEmpty($response['body']['code']);
+
+        /**
+         * Test for FAILURE: a client session (not a server key) must be rejected
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $challengeId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $sessionSecret,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE: a challenge belonging to a different user must not be readable
+         */
+        $otherUser = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => \uniqid() . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Other User',
+        ]);
+
+        $this->assertEquals(201, $otherUser['headers']['status-code']);
+        $otherUserId = $otherUser['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $otherUserId . '/mfa/challenges/' . $challengeId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE: nonexistent challengeId
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/nonexistent', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE: nonexistent userId
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users/nonexistent/mfa/challenges/' . $challengeId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE: a non-custom challenge (e.g. totp) must not be readable,
+         * even with valid ownership and a valid API key. Native factors deliver their
+         * own code out of band (email/SMS); this endpoint only exists to hand the
+         * 'custom' factor's code to the developer's own delivery mechanism.
+         */
+        $totpChallenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $sessionSecret,
+        ], [
+            'factor' => 'totp'
+        ]);
+
+        $this->assertEquals(201, $totpChallenge['headers']['status-code']);
+        $totpChallengeId = $totpChallenge['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $totpChallengeId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
     }
 
 
@@ -717,6 +856,19 @@ trait UsersBase
         $this->assertEmpty($response['body']['email']);
         $this->assertNotEmpty($response['body']['password']);
         $this->assertNotEmpty($response['body']['phone']);
+    }
+
+    public function testListIdentitiesInvalidSearch(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users/identities', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'identity',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $response['body']['type']);
     }
 
     public function testListUsers(): void

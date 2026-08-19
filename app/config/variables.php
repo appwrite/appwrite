@@ -54,7 +54,7 @@ return [
             ],
             [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
-                'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443, and you have set up wildcard certificates with DNS challenge.',
+                'description' => 'Controls whether Appwrite generates HTTPS API URLs and enforces HTTPS for incoming API requests. Set to \'enabled\' whenever the public API is served over HTTPS, including when TLS is terminated by a reverse proxy. When enabled, HTTP GET requests are redirected to HTTPS and other HTTP requests are rejected. The default value is \'disabled\' to support local and plain HTTP installations.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
@@ -84,6 +84,15 @@ return [
                 'description' => 'Protects server from serving requests from unknown hostnames, and from serving Console for custom project domains. By default, set to \'disabled\'. To start router protection, set to \'enabled\'. It is recommended to enable this variable on production environment.',
                 'introduction' => '1.4.4',
                 'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ROUTER_AUTO_CERTIFICATES',
+                'description' => 'Allows Appwrite to automatically issue TLS certificates for function and site domains. By default, set to \'enabled\'. Set to \'disabled\' when a wildcard TLS certificate already covers those domains, for example one issued through Traefik\'s DNS challenge.',
+                'introduction' => '',
+                'default' => 'enabled',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1191,6 +1200,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_FUNCTIONS_SCHEDULE_SPREAD',
+                'description' => 'Number of seconds over which scheduled executions sharing the same cron slot are spread, using a stable per-function offset, so they don\'t all start in the same second. Each function keeps a consistent slot within the window, preserving exact run intervals. The default value is 0 (disabled): every execution is enqueued at the exact cron time.',
+                'introduction' => '2.0.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
@@ -1341,6 +1359,33 @@ return [
             [
                 'name' => '_APP_VCS_GITLAB_WEBHOOK_SECRET',
                 'description' => 'Secret used to validate incoming GitLab webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_CLIENT_ID',
+                'description' => 'Bitbucket OAuth2 consumer key. You can generate one in your Bitbucket workspace under Settings > OAuth consumers.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_CLIENT_SECRET',
+                'description' => 'Bitbucket OAuth2 consumer secret. You can generate one in your Bitbucket workspace under Settings > OAuth consumers.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming Bitbucket webhook payloads.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,

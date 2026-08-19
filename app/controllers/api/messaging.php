@@ -46,13 +46,47 @@ use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 use function Swoole\Coroutine\batch;
+
+/**
+ * Convert a request JSON object to the associative shape messages expect while
+ * retaining empty objects at any nested depth. Returns null untouched so the
+ * caller can distinguish "not provided" from an explicit empty object.
+ */
+function normalizeJsonObject(null|array|\stdClass $data): ?array
+{
+    if (\is_null($data)) {
+        return null;
+    }
+
+    $normalizeValue = function (mixed $value) use (&$normalizeValue): mixed {
+        if ($value instanceof \stdClass) {
+            $properties = (array) $value;
+
+            return $properties === []
+                ? $value
+                : \array_map($normalizeValue, $properties);
+        }
+
+        if (\is_array($value)) {
+            return \array_map($normalizeValue, $value);
+        }
+
+        return $value;
+    };
+
+    if ($data instanceof \stdClass) {
+        $data = (array) $data;
+    }
+
+    return \array_map($normalizeValue, $data);
+}
 
 Http::post('/v1/messaging/providers/mailgun')
     ->desc('Create Mailgun provider')
@@ -982,17 +1016,17 @@ Http::post('/v1/messaging/providers/fcm')
     ])
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('serviceAccountJSON', null, new Nullable(new JSON()), 'FCM service account JSON.', true)
+    ->param('serviceAccountJSON', null, new Nullable(new JSONObject()), 'FCM service account JSON.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, array|string|null $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, array|string|\stdClass|null $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $serviceAccountJSON = \is_string($serviceAccountJSON)
             ? \json_decode($serviceAccountJSON, true)
-            : $serviceAccountJSON;
+            : normalizeJsonObject($serviceAccountJSON);
 
         $credentials = [];
 
@@ -2296,11 +2330,11 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
-    ->param('serviceAccountJSON', null, new Nullable(new JSON()), 'FCM service account JSON.', true)
+    ->param('serviceAccountJSON', null, new Nullable(new JSONObject()), 'FCM service account JSON.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, array|string|null $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, array|string|\stdClass|null $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -2319,7 +2353,7 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
         if (!\is_null($serviceAccountJSON)) {
             $serviceAccountJSON = \is_string($serviceAccountJSON)
                 ? \json_decode($serviceAccountJSON, true)
-                : $serviceAccountJSON;
+                : normalizeJsonObject($serviceAccountJSON);
 
             $provider->setAttribute('credentials', [
                 'serviceAccountJSON' => $serviceAccountJSON
@@ -3400,7 +3434,7 @@ Http::post('/v1/messaging/messages/push')
     ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
     ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
     ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
-    ->param('data', null, new Nullable(new JSON()), 'Additional key-value pair data for push notification.', true)
+    ->param('data', null, new Nullable(new JSONObject()), 'Additional key-value pair data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
     ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
@@ -3420,7 +3454,9 @@ Http::post('/v1/messaging/messages/push')
     ->inject('publisherForMessaging')
     ->inject('response')
     ->inject('platform')
-    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
+    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, null|array|\stdClass $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
+        $data = normalizeJsonObject($data);
+
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -4194,7 +4230,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
     ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('title', null, new Nullable(new Text(256)), 'Title for push notification.', true)
     ->param('body', null, new Nullable(new Text(64230)), 'Body for push notification.', true)
-    ->param('data', null, new Nullable(new JSON()), 'Additional Data for push notification.', true)
+    ->param('data', null, new Nullable(new JSONObject()), 'Additional Data for push notification.', true)
     ->param('action', null, new Nullable(new Text(256)), 'Action for push notification.', true)
     ->param('image', null, new Nullable(new CompoundUID()), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('icon', null, new Nullable(new Text(256)), 'Icon for push notification. Available only for Android and Web platforms.', true)
@@ -4214,7 +4250,9 @@ Http::patch('/v1/messaging/messages/push/:messageId')
     ->inject('publisherForMessaging')
     ->inject('response')
     ->inject('platform')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
+        $data = normalizeJsonObject($data);
+
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -4466,9 +4504,8 @@ Http::delete('/v1/messaging/messages/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
+        // Processing stays deletable: a worker that dies mid-send leaves the message there for good.
         switch ($message->getAttribute('status')) {
-            case MessageStatus::PROCESSING:
-                throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
             case MessageStatus::SCHEDULED:
                 $scheduleId = $message->getAttribute('scheduleId');
                 $scheduledAt = $message->getAttribute('scheduledAt');

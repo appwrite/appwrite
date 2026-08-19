@@ -46,9 +46,6 @@ trait Base
     public const string CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
     public const string CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
     public const string CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
-    public const string CREATE_POINT_ATTRIBUTE = 'create_point_attribute';
-    public const string CREATE_LINE_ATTRIBUTE = 'create_line_attribute';
-    public const string CREATE_POLYGON_ATTRIBUTE = 'create_polygon_attribute';
 
     public const string CREATE_RELATIONSHIP_ATTRIBUTE = 'create_relationship_attribute';
     public const string UPDATE_STRING_ATTRIBUTE = 'update_string_attribute';
@@ -60,9 +57,6 @@ trait Base
     public const string UPDATE_IP_ATTRIBUTE = 'update_ip_attribute';
     public const string UPDATE_ENUM_ATTRIBUTE = 'update_enum_attribute';
     public const string UPDATE_DATETIME_ATTRIBUTE = 'update_datetime_attribute';
-    public const string UPDATE_POINT_ATTRIBUTE = 'update_point_attribute';
-    public const string UPDATE_LINE_ATTRIBUTE = 'update_line_attribute';
-    public const string UPDATE_POLYGON_ATTRIBUTE = 'update_polygon_attribute';
 
     public const string UPDATE_RELATIONSHIP_ATTRIBUTE = 'update_relationship_attribute';
     public const string GET_ATTRIBUTES = 'get_attributes';
@@ -514,8 +508,8 @@ trait Base
 
         $this->assertNotEmpty($image->output('png'));
         $this->assertIsArray($dimensions);
-        $this->assertEquals(100, $dimensions[0]);
-        $this->assertEquals(100, $dimensions[1]);
+        $this->assertSame(100, $dimensions[0]);
+        $this->assertSame(100, $dimensions[1]);
     }
 
     public function getQuery(string $name): string
@@ -2254,7 +2248,8 @@ trait Base
                 return 'query getExecution($functionId: String!$executionId: String!) {
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
                         _id
-                        functionId
+                        resourceId
+                        resourceType
                         status
                         logs
                         errors
@@ -2266,7 +2261,8 @@ trait Base
                         total
                         executions {
                             _id
-                            functionId
+                            resourceId
+                            resourceType
                             status
                             logs
                             errors
@@ -2277,7 +2273,8 @@ trait Base
                 return 'mutation createExecution($functionId: String!, $body: String, $async: Boolean) {
                     functionsCreateExecution(functionId: $functionId, body: $body, async: $async) {
                         _id
-                        functionId
+                        resourceId
+                        resourceType
                         status
                         logs
                         errors

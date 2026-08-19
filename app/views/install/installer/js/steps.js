@@ -10,7 +10,8 @@
         INSTALLATION_STEPS,
         clampStep,
         isUpgradeMode,
-        getEnabledDatabases
+        getEnabledDatabases,
+        getTopology
     } = Context;
 
     const {
@@ -62,6 +63,16 @@
         update();
     };
 
+    const bindCheckboxToState = (input, key) => {
+        if (!input) return;
+        const update = () => {
+            formState[key] = input.checked;
+            dispatchStateChange?.(key);
+        };
+        input.addEventListener('change', update);
+        update();
+    };
+
     const lockDatabaseSelection = (root, lockedDatabase) => {
         if (lockedDatabase) {
             const radios = root.querySelectorAll('input[name="database"]');
@@ -106,9 +117,11 @@
     const hydrateStep1State = (root) => {
         State.setStateIfEmpty?.('appDomain', root.querySelector('#hostname')?.value);
         State.setStateIfEmpty?.('database', root.querySelector('input[name="database"]:checked')?.value);
+        State.setStateIfEmpty?.('topology', getTopology?.() || root.querySelector('input[name="topology"]:checked')?.value || 'combined');
         State.setStateIfEmpty?.('httpPort', root.querySelector('#http-port')?.value);
         State.setStateIfEmpty?.('httpsPort', root.querySelector('#https-port')?.value);
         State.setStateIfEmpty?.('emailCertificates', root.querySelector('#ssl-email')?.value);
+        State.setStateIfEmpty?.('forceHttps', root.querySelector('#force-https')?.checked);
         State.setStateIfEmpty?.('assistantOpenAIKey', root.querySelector('#assistant-openai-key')?.value);
     };
 
@@ -125,6 +138,11 @@
         const sslEmail = root.querySelector('#ssl-email');
         if (sslEmail && formState.emailCertificates) sslEmail.value = formState.emailCertificates;
 
+        const forceHttps = root.querySelector('#force-https');
+        if (forceHttps && typeof formState.forceHttps === 'boolean') {
+            forceHttps.checked = formState.forceHttps;
+        }
+
         const assistantKey = root.querySelector('#assistant-openai-key');
         if (assistantKey && formState.assistantOpenAIKey) {
             assistantKey.value = formState.assistantOpenAIKey;
@@ -135,6 +153,16 @@
             if (radio) {
                 radio.checked = true;
                 updateDatabaseSelection?.(radio, root);
+            }
+        }
+
+        if (formState.topology) {
+            const radio = root.querySelector(`input[name="topology"][value="${formState.topology}"]`);
+            if (radio) {
+                radio.checked = true;
+                const group = radio.closest('.selector-group');
+                group?.querySelectorAll('.selector-card').forEach((card) => card.classList.remove('selected'));
+                radio.closest('.selector-card')?.classList.add('selected');
             }
         }
     };
@@ -162,16 +190,28 @@
             bindDatabaseSelection(root);
         }
 
+        const topologyRadios = root.querySelectorAll('input[name="topology"]');
+        topologyRadios.forEach((radio) => {
+            radio.addEventListener('change', () => {
+                formState.topology = radio.value;
+                const group = radio.closest('.selector-group');
+                group?.querySelectorAll('.selector-card').forEach((card) => card.classList.remove('selected'));
+                radio.closest('.selector-card')?.classList.add('selected');
+            });
+        });
+
         const hostname = root.querySelector('#hostname');
         const httpPort = root.querySelector('#http-port');
         const httpsPort = root.querySelector('#https-port');
         const sslEmail = root.querySelector('#ssl-email');
+        const forceHttps = root.querySelector('#force-https');
         const assistantKey = root.querySelector('#assistant-openai-key');
 
         bindInputToState(hostname, 'appDomain');
         bindInputToState(httpPort, 'httpPort');
         bindInputToState(httpsPort, 'httpsPort');
         bindInputToState(sslEmail, 'emailCertificates');
+        bindCheckboxToState(forceHttps, 'forceHttps');
         bindInputToState(assistantKey, 'assistantOpenAIKey');
 
         bindErrorClear?.(hostname);

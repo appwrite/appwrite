@@ -23,7 +23,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Text;
 
 class Upsert extends PlatformAction
@@ -102,7 +102,7 @@ class Upsert extends PlatformAction
                 (new \DateTime())->modify('+30 days'),
                 requireDateInFuture: true
             ), 'Presence expiry datetime.', true)
-            ->param('metadata', [], new JSON(), 'Presence metadata object.', true)
+            ->param('metadata', [], new JSONObject(), 'Presence metadata object.', true)
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
@@ -119,7 +119,7 @@ class Upsert extends PlatformAction
         ?string $status,
         ?array $permissions,
         ?string $expiresAt,
-        array $metadata,
+        array|\stdClass $metadata,
         Response $response,
         Request $request,
         Database $dbForProject,
@@ -158,16 +158,17 @@ class Upsert extends PlatformAction
         }
         $isGraphQL = $request->getHeaderLine('x-appwrite-source') === 'graphql';
 
+        $presenceState = new PresenceState();
+
         $presenceData = [
             'userInternalId' => $userInternalId,
             'userId' => $resolvedUserId,
             'status' => $status,
             'source' => $isGraphQL ? 'graphql' : 'rest',
             'expiresAt' => $expiresAt ?? DateTime::addSeconds(new \DateTime(), 15 * 60),
-            'metadata' => $metadata,
+            'metadata' => $presenceState->normalizeMetadata($metadata),
         ];
 
-        $presenceState = new PresenceState();
         $presenceDocument = new Document($presenceData);
         $ownerOverride = $permissions === null && ($isAPIKey || $isPrivilegedUser)
             ? $resolvedUserId

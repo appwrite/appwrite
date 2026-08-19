@@ -144,7 +144,6 @@ class OpenAPI3 extends Format
                 'responses' => [],
                 'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
-                    'method' => $methodName,
                     'group' => $sdk->getGroup(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
@@ -568,10 +567,15 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'https://example.com';
                         break;
                     case \Utopia\Validator\JSON::class:
+                    case \Utopia\Validator\JSON\ObjectValidator::class:
                     case \Utopia\Validator\Assoc::class:
                         $node['schema']['type'] = 'object';
                         $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '{}';
+                        break;
+                    case \Utopia\Validator\JSON\ArrayValidator::class:
+                        $node['schema']['type'] = 'array';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '[]';
                         break;
                     case \Appwrite\Utopia\Request\Validator\File::class:
                         $consumes = ['multipart/form-data'];
@@ -803,15 +807,9 @@ class OpenAPI3 extends Format
             $methods = \array_values($route->getMethods());
             foreach ($methods as $index => $method) {
                 $methodTemp = $temp;
-                if (\count($methods) > 1) {
+                if (\count($methods) > 1 && $index > 0) {
                     $suffix = \ucfirst(\strtolower($method));
                     $methodTemp['operationId'] .= $suffix;
-
-                    // Keep the first method's SDK name stable while ensuring
-                    // additional HTTP methods generate unique SDK methods.
-                    if ($index > 0) {
-                        $methodTemp['x-appwrite']['method'] .= $suffix;
-                    }
                 }
                 $body = [
                     'content' => [
@@ -832,6 +830,13 @@ class OpenAPI3 extends Format
 
                     if ($parameterNode['path']) { // Param is in URL path (directly or through alias)
                         $node['in'] = 'path';
+                        // A route only matches when every path segment is present, so a
+                        // path parameter is always supplied whatever the PHP param says.
+                        // OpenAPI requires `required: true` here, and generators emit a
+                        // bare identifier for the path substitution — an optional one
+                        // becomes an undefined reference (Go) or interpolates the
+                        // absent value into the URL (Python).
+                        $node['required'] = true;
                         $methodTemp['parameters'][] = $node;
                     } elseif (\in_array($method, ['GET', 'DELETE'], true)) { // Param is in query
                         $node['in'] = 'query';
@@ -876,7 +881,7 @@ class OpenAPI3 extends Format
                         }
 
                         if ($parameter['nullable']) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['nullable'] = true;
                         }
                     }
                 }

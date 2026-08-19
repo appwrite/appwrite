@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
@@ -14,6 +15,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
+use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -71,6 +73,7 @@ class Deletes extends Action
             ->inject('log')
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -97,6 +100,7 @@ class Deletes extends Action
         Log $log,
         DeletePublisher $publisherForDeletes,
         UsagePublisher $publisherForUsage,
+        Bus $bus,
     ): void {
         $payload = $message->getPayload();
 
@@ -119,16 +123,16 @@ class Deletes extends Action
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_PROJECTS:
-                        $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document);
+                        $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document, $bus);
                         break;
                     case DELETE_TYPE_SITES:
-                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
+                        $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $bus);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project, $executor);
+                        $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project, $executor, $bus);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor);
+                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus);
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
@@ -143,7 +147,7 @@ class Deletes extends Action
                         $this->deleteInstallation($dbForPlatform, $getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_RULES:
-                        $this->deleteRule($dbForPlatform, $document, $certificates);
+                        $this->deleteRule($dbForPlatform, $document, $certificates, $bus);
                         break;
                     case DELETE_TYPE_TRANSACTIONS:
                         $this->deleteTransactionLogs($getProjectDB, $document, $project);
@@ -154,7 +158,7 @@ class Deletes extends Action
                 }
                 break;
             case DELETE_TYPE_TEAM_PROJECTS:
-                $this->deleteProjectsByTeam($dbForPlatform, $getProjectDB, $getDatabasesDB, $certificates, $document);
+                $this->deleteProjectsByTeam($dbForPlatform, $getProjectDB, $getDatabasesDB, $certificates, $document, $bus);
                 break;
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
@@ -210,7 +214,8 @@ class Deletes extends Action
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount);
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
-                $this->deleteExpiredOAuth2Grants($project, $getProjectDB);
+                $this->deleteExpiredTokens($project, $getProjectDB);
+                $this->deleteExpiredChallenges($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
@@ -650,7 +655,7 @@ class Deletes extends Action
      * @throws Structure
      * @throws Exception
      */
-    protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, CertificatesAdapter $certificates, Document $document): void
+    protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, CertificatesAdapter $certificates, Document $document, Bus $bus): void
     {
 
         $projects = $dbForPlatform->find('projects', [
@@ -665,7 +670,7 @@ class Deletes extends Action
             $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
             $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 
-            $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project);
+            $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project, $bus);
             $dbForPlatform->deleteDocument('projects', $project->getId());
         }
     }
@@ -682,7 +687,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws DatabaseException
      */
-    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document): void
+    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document, Bus $bus): void
     {
         $projectInternalId = $document->getSequence();
         $projectId = $document->getId();
@@ -709,8 +714,8 @@ class Deletes extends Action
             $this->deleteByGroup('rules', [
                 Query::equal('projectInternalId', [$projectInternalId]),
                 Query::orderAsc()
-            ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
-                $this->deleteRule($dbForPlatform, $document, $certificates);
+            ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates, $bus) {
+                $this->deleteRule($dbForPlatform, $document, $certificates, $bus);
             });
         } catch (Throwable $th) {
             Console::error('Failed to delete rules: ' . $th->getMessage());
@@ -1151,19 +1156,55 @@ class Deletes extends Action
      * @return void
      * @throws Exception|Throwable
      */
-    private function deleteExpiredOAuth2Grants(Document $project, callable $getProjectDB): void
+    private function deleteExpiredTokens(Document $project, callable $getProjectDB): void
     {
-        Console::info('Delete expired OAuth2 grants');
+        Console::info('Delete expired tokens');
 
         $dbForProject = $getProjectDB($project);
+        $expire = DateTime::format(new \DateTime());
 
-        $this->deleteByGroup('tokens', [
+        $types = [
+            TOKEN_TYPE_LOGIN,
+            TOKEN_TYPE_VERIFICATION,
+            TOKEN_TYPE_RECOVERY,
+            TOKEN_TYPE_INVITE,
+            TOKEN_TYPE_MAGIC_URL,
+            TOKEN_TYPE_PHONE,
+            TOKEN_TYPE_OAUTH2,
+            TOKEN_TYPE_GENERIC,
+            TOKEN_TYPE_EMAIL,
+        ];
+
+        // Current index is on {`type`, `expire`}
+        // Should be changed to {`expire`}
+
+        foreach ($types as $type) {
+            $this->deleteByGroup('tokens', [
+                Query::select([...$this->selects, 'expire']),
+                Query::equal('type', [$type]),
+                Query::lessThan('expire', $expire),
+                Query::orderDesc('expire'),
+                Query::orderDesc(),
+            ], $dbForProject);
+        }
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @return void
+     * @throws Exception|Throwable
+     */
+    private function deleteExpiredChallenges(Document $project, callable $getProjectDB): void
+    {
+        Console::info('Delete expired challenges');
+
+        $this->deleteByGroup('challenges', [
             Query::select([...$this->selects, 'expire']),
-            Query::equal('type', [TOKEN_TYPE_OAUTH2]),
             Query::lessThan('expire', DateTime::format(new \DateTime())),
             Query::orderAsc('expire'),
             Query::orderAsc(),
-        ], $dbForProject);
+        ], $getProjectDB($project));
     }
 
     /**
@@ -1226,7 +1267,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project): void
+    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project, Bus $bus): void
     {
         $dbForProject = $getProjectDB($project);
         $siteId = $document->getId();
@@ -1240,8 +1281,8 @@ class Deletes extends Action
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentResourceInternalId', [$siteInternalId]),
             Query::equal('projectInternalId', [$project->getSequence()])
-        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
-            $this->deleteRule($dbForPlatform, $document, $certificates);
+        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates, $bus) {
+            $this->deleteRule($dbForPlatform, $document, $certificates, $bus);
         });
 
         /**
@@ -1310,7 +1351,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteFunction(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, CertificatesAdapter $certificates, Document $document, Document $project, Executor $executor): void
+    private function deleteFunction(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, CertificatesAdapter $certificates, Document $document, Document $project, Executor $executor, Bus $bus): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1326,8 +1367,8 @@ class Deletes extends Action
             Query::equal('deploymentResourceInternalId', [$functionInternalId]),
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::orderAsc()
-        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
-            $this->deleteRule($dbForPlatform, $document, $certificates);
+        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates, $bus) {
+            $this->deleteRule($dbForPlatform, $document, $certificates, $bus);
         });
 
         /**
@@ -1514,7 +1555,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project, Executor $executor): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project, Executor $executor, Bus $bus): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1549,8 +1590,8 @@ class Deletes extends Action
             Query::equal('type', ['deployment']),
             Query::equal('deploymentInternalId', [$deploymentInternalId]),
             Query::equal('projectInternalId', [$project->getSequence()])
-        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
-            $this->deleteRule($dbForPlatform, $document, $certificates);
+        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates, $bus) {
+            $this->deleteRule($dbForPlatform, $document, $certificates, $bus);
         });
 
         /**
@@ -1657,8 +1698,10 @@ class Deletes extends Action
      * @param Document $document rule document
      * @return void
      */
-    protected function deleteRule(Database $dbForPlatform, Document $document, CertificatesAdapter $certificates): void
+    protected function deleteRule(Database $dbForPlatform, Document $document, CertificatesAdapter $certificates, Bus $bus): void
     {
+        $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
+
         $domain = $document->getAttribute('domain');
         $certificates->deleteCertificate($domain);
 

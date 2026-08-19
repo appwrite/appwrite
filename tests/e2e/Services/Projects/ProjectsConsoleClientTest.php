@@ -1650,7 +1650,10 @@ final class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals(Exception::PROJECT_SMTP_CONFIG_INVALID, $response['body']['type']);
-        $this->assertStringContainsStringIgnoringCase('Could not authenticate', $response['body']['message']);
+        // The message quotes the server now rather than the library, so it
+        // reads "Authentication failed: 535 …". What matters is that it says
+        // which of the things that could be wrong is wrong.
+        $this->assertStringContainsStringIgnoringCase('authentication', $response['body']['message']);
     }
 
     #[Group('smtpAndTemplates')]

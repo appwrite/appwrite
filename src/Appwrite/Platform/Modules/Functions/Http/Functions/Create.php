@@ -2,10 +2,15 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Certificates\Certificates;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Event\Certificate as CertificateEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Certificate as CertificateMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
@@ -23,6 +28,7 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Abuse;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -128,10 +134,13 @@ class Create extends Base
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
+            ->inject('publisherForCertificates')
+            ->inject('certificateIssuer')
             ->inject('request')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -174,10 +183,13 @@ class Create extends Base
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
+        Certificate $publisherForCertificates,
+        Certificates $certificateIssuer,
         Request $request,
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
+        Bus $bus,
         array $platform
     ) {
 
@@ -427,6 +439,7 @@ class Create extends Base
                         'region' => $project->getAttribute('region')
                     ]))
                 );
+                $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
                 $ruleModel = new Rule();
                 $ruleCreate =
@@ -457,6 +470,20 @@ class Create extends Base
                     ->setSubscribers(['console', $project->getId()])
                     ->from($ruleCreate)
                     ->trigger();
+
+                if ($certificateIssuer->isAutoIssueEnabled(new Document([
+                    'domain' => $domain,
+                    'owner' => 'Appwrite',
+                ]))) {
+                    $publisherForCertificates->enqueue(new CertificateMessage(
+                        project: $project,
+                        domain: new Document([
+                            'domain' => $domain,
+                            'domainType' => 'function',
+                        ]),
+                        action: CertificateEvent::ACTION_GENERATION,
+                    ));
+                }
             }
         }
 

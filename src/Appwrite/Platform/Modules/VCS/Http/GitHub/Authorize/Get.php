@@ -46,7 +46,8 @@ class Get extends Action
                 ],
                 contentType: ContentType::HTML,
                 type: MethodType::WEBAUTH,
-                hide: true,
+                // Preview SDK builds show the whole surface, so they do not hide.
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
             ))
             ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a successful installation attempt.', true, ['redirectValidator'])
             ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a failed installation attempt.', true, ['redirectValidator'])

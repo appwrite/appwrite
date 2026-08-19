@@ -26,8 +26,6 @@ use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
-use Appwrite\Spec\OpenAPI3;
-use Appwrite\Spec\StaticSpec;
 use CzProject\GitPhp\Git;
 use Utopia\Agents\Adapters\OpenAI;
 use Utopia\Agents\DiffCheck\DiffCheck;
@@ -37,6 +35,7 @@ use Utopia\Agents\Schema;
 use Utopia\Agents\Schema\SchemaObject;
 use Utopia\Config\Config;
 use Utopia\Console;
+use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 use Utopia\Validator\Nullable;
@@ -198,6 +197,7 @@ class SDKs extends Action
 
                     $releaseTitle = $releaseVersion;
                     $releaseTarget = $language['repoBranch'] ?? 'main';
+                    $isPrerelease = (bool) \preg_match('/^v?\d+\.\d+\.\d+-/', $releaseVersion);
 
                     if ($repoName === '/') {
                         Console::warning('  Not a releasable SDK, skipping');
@@ -255,6 +255,7 @@ class SDKs extends Action
                         Console::log("    Version:          {$releaseVersion}");
                         Console::log("    Title:            {$releaseTitle}");
                         Console::log("    Target Branch:    {$releaseTarget}");
+                        Console::log('    Prerelease:       ' . ($isPrerelease ? 'yes' : 'no'));
                         Console::log('    Previous Version: ' . ($previousVersion ?: 'N/A'));
                         Console::log('    Release Notes:');
                         Console::log('    ' . str_replace("\n", "\n    ", $formattedNotes));
@@ -264,12 +265,13 @@ class SDKs extends Action
                         $tempNotesFile = \tempnam(\sys_get_temp_dir(), 'release_notes_');
                         \file_put_contents($tempNotesFile, $formattedNotes);
 
-                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion) . ' \
-                            --repo ' . \escapeshellarg($repoName) . ' \
-                            --title ' . \escapeshellarg($releaseTitle) . ' \
-                            --notes-file ' . \escapeshellarg($tempNotesFile) . ' \
-                            --target ' . \escapeshellarg($releaseTarget) . ' \
-                            2>&1';
+                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion)
+                            . ' --repo ' . \escapeshellarg($repoName)
+                            . ' --title ' . \escapeshellarg($releaseTitle)
+                            . ' --notes-file ' . \escapeshellarg($tempNotesFile)
+                            . ' --target ' . \escapeshellarg($releaseTarget)
+                            . ($isPrerelease ? ' --prerelease' : '')
+                            . ' 2>&1';
 
                         $releaseOutput = [];
                         $releaseReturnCode = 0;
@@ -359,7 +361,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new CLI();
                         $config->setNPMPackage('appwrite-cli');
                         $config->setExecutableName('appwrite');
-                        $config->setLogo(json_encode("
+                        $config->setLogo("
     _                            _ _           ___   __   _____
    /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
   //_\\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
@@ -367,7 +369,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
  \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/
        |_|   |_|
 
-"));
+");
                         $config->setLogoUnescaped("
      _                            _ _           ___   __   _____
     /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
@@ -468,14 +470,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $sdk = new SDK(
                     $config,
                     $specFormat === 'static'
-                        ? new StaticSpec(
-                            title: 'Appwrite',
-                            description: 'Appwrite backend as a service',
-                            version: $version,
-                            licenseName: 'BSD-3-Clause',
-                            licenseURL: 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
-                        )
-                        : new OpenAPI3($spec)
+                        ? Parser::parse([
+                            'openapi' => '3.0.0',
+                            'info' => [
+                                'title' => 'Appwrite',
+                                'description' => 'Appwrite backend as a service',
+                                'version' => $version,
+                                'license' => [
+                                    'name' => 'BSD-3-Clause',
+                                    'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
+                                ],
+                            ],
+                            'paths' => [],
+                        ])
+                        : Parser::parse($spec)
                 );
 
                 $sdk

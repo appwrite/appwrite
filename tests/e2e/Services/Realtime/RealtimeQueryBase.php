@@ -19,11 +19,6 @@ trait RealtimeQueryBase
     use ProjectCustom;
     use SideClient;
 
-    protected function supportForCheckConnectionStatus(): bool
-    {
-        return false;
-    }
-
     private function assertConnectionStatusIfSupported($client): ?array
     {
         if (!$this->supportForCheckConnectionStatus()) {

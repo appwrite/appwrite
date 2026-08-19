@@ -216,5 +216,15 @@ final class EventTest extends TestCase
         $this->assertContains('documentsdb.factory-db.collections.assembly.documents.doc-123.update', $documentsDbEvents);
         $this->assertNotContains('documentsdb.factory-db.tables.assembly.rows.doc-123.update', $documentsDbEvents);
         $this->assertNotContains('databases.factory-db.collections.assembly.documents.doc-123.update', $documentsDbEvents);
+
+        $vectorsDb = new Document(['type' => 'vectorsdb']);
+        $vectorsDbEvents = Event::generateEvents('databases.[databaseId].collections.[collectionId].documents.[documentId].update', [
+            'databaseId' => 'factory-db',
+            'collectionId' => 'assembly',
+            'documentId' => 'doc-123',
+        ], $vectorsDb);
+        $this->assertContains('vectorsdb.factory-db.collections.assembly.documents.doc-123.update', $vectorsDbEvents);
+        $this->assertNotContains('vectorsdb.factory-db.tables.assembly.rows.doc-123.update', $vectorsDbEvents);
+        $this->assertNotContains('databases.factory-db.collections.assembly.documents.doc-123.update', $vectorsDbEvents);
     }
 }

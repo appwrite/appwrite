@@ -409,6 +409,67 @@ return [
         'scopes' => []
     ],
     [
+        'icon' => 'icon-chip',
+        'id' => 'mcp-server',
+        'name' => 'MCP server',
+        'score' => 8,
+        'tagline' => 'Expose custom tools to AI clients over HTTPS using the Model Context Protocol.',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 30,
+        'useCases' => [FunctionUseCases::AI],
+        'runtimes' => [
+            ...getRuntimes(
+                $templateRuntimes['PYTHON'],
+                'pip install -r requirements.txt',
+                'src/main.py',
+                'python/mcp-server',
+                $allowList
+            )
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/python/mcp-server">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.1.0',
+        'variables' => [
+            [
+                'name' => 'MCP_SERVER_NAME',
+                'description' => 'Display name returned to MCP clients in the initialize handshake.',
+                'value' => 'appwrite-hosted-mcp',
+                'placeholder' => 'appwrite-hosted-mcp',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'MCP_AUTH_MODE',
+                'description' => 'Auth gate for the endpoint. Set to "bearer" to require an Authorization header, or "none" to keep it open.',
+                'value' => 'none',
+                'placeholder' => 'none',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'MCP_AUTH_TOKEN',
+                'description' => 'Shared secret required when MCP_AUTH_MODE is set to "bearer".',
+                'value' => '',
+                'placeholder' => 'your-long-random-secret',
+                'required' => false,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'MCP_TOOL_TIMEOUT',
+                'description' => 'Soft deadline in seconds for the whole request, before the 30s execution hard-cap.',
+                'value' => '25',
+                'placeholder' => '25',
+                'required' => false,
+                'type' => 'number'
+            ]
+        ],
+        'scopes' => []
+    ],
+    [
         'icon' => 'icon-discord',
         'id' => 'discord-command-bot',
         'name' => 'Discord Command Bot',

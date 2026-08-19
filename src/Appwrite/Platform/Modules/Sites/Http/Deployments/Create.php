@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
+use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -12,6 +13,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -87,6 +89,7 @@ class Create extends Action
             ->inject('deployments')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('platform')
             ->inject('locks')
             ->callback($this->action(...));
@@ -110,6 +113,7 @@ class Create extends Action
         Deployments $deployments,
         array $plan,
         Authorization $authorization,
+        Bus $bus,
         array $platform,
         callable $locks,
     ) {
@@ -227,10 +231,18 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($activate, $authorization, &$chunks, $commands, $contentRange, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForSites, $fileSize, &$metadata, $outputDirectory, $path, $platform, $project, &$site, $type, &$completed, $response): void {
+            $locks($lockKey, 600, function () use ($activate, $authorization, $bus, &$chunks, $commands, $contentRange, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForSites, $fileSize, &$metadata, $outputDirectory, $path, $platform, $project, &$site, $type, &$completed, $response): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
                 if (!$deployment->isEmpty()) {
+                    if (
+                        // Resume / completed short-circuit must not cross resources.
+                        $deployment->getAttribute('resourceId') !== $site->getId()
+                        || $deployment->getAttribute('resourceType') !== 'sites'
+                    ) {
+                        throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                    }
+
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
                     $metadata = $deployment->getAttribute('sourceMetadata', []);
@@ -273,7 +285,7 @@ class Create extends Action
                         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
                         $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-                        $authorization->skip(
+                        $rule = $authorization->skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([
                                 '$id' => $ruleId,
                                 'projectId' => $project->getId(),
@@ -293,6 +305,7 @@ class Create extends Action
                                 'region' => $project->getAttribute('region')
                             ]))
                         );
+                        $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
                     }
                 }
             }, timeout: 120.0);
@@ -320,11 +333,18 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($activate, $authorization, $commands, &$chunks, $chunksUploaded, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForSites, $fileSize, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
+            $locks($lockKey, 600, function () use ($activate, $authorization, $bus, $commands, &$chunks, $chunksUploaded, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForSites, $fileSize, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
                 if (!$deployment->isEmpty()) {
+                    if (
+                        $deployment->getAttribute('resourceId') !== $site->getId()
+                        || $deployment->getAttribute('resourceType') !== 'sites'
+                    ) {
+                        throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                    }
+
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
                     $metadata = $mergeUploadMetadata($deployment->getAttribute('sourceMetadata', []), $metadata);
@@ -371,7 +391,7 @@ class Create extends Action
                         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
                         $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-                        $authorization->skip(
+                        $rule = $authorization->skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([
                                 '$id' => $ruleId,
                                 'projectId' => $project->getId(),
@@ -391,6 +411,7 @@ class Create extends Action
                                 'region' => $project->getAttribute('region')
                             ]))
                         );
+                        $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
                     }
                 } else {
                     $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
@@ -405,6 +426,8 @@ class Create extends Action
                     $queueForEvents
                         ->setParam('siteId', $site->getId())
                         ->setParam('deploymentId', $deployment->getId());
+                } else {
+                    $queueForEvents->reset();
                 }
 
                 $response
