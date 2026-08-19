@@ -6,6 +6,11 @@ export type DowngradeResourceType =
   | 'buckets'
   | 'functions'
   | 'sites'
+  | 'teams'
+  | 'topics'
+  | 'platforms'
+  | 'webhooks'
+  | 'wafRules'
 
 export type DowngradeResourceItem = {
   $id: string
@@ -33,6 +38,11 @@ export const DOWNGRADE_RESOURCE_TYPES: {
   { id: 'buckets', label: 'Buckets', planKey: 'buckets' },
   { id: 'functions', label: 'Functions', planKey: 'functions' },
   { id: 'sites', label: 'Sites', planKey: 'sites' },
+  { id: 'teams', label: 'Teams', planKey: 'teams' },
+  { id: 'topics', label: 'Topics', planKey: 'topics' },
+  { id: 'platforms', label: 'Platforms', planKey: 'platforms' },
+  { id: 'webhooks', label: 'Webhooks', planKey: 'webhooks' },
+  { id: 'wafRules', label: 'Firewall rules', planKey: 'wafRules' },
 ]
 
 export type DowngradeOrgResourceType = 'members' | 'domains'
@@ -147,6 +157,11 @@ export function getDowngradePlanLimits(
     buckets: readPlanLimit(targetPlan, 'buckets'),
     functions: readPlanLimit(targetPlan, 'functions'),
     sites: readPlanLimit(targetPlan, 'sites'),
+    teams: readPlanLimit(targetPlan, 'teams'),
+    topics: readPlanLimit(targetPlan, 'topics'),
+    platforms: readPlanLimit(targetPlan, 'platforms'),
+    webhooks: readPlanLimit(targetPlan, 'webhooks'),
+    wafRules: readPlanLimit(targetPlan, 'wafRules'),
   }
 }
 

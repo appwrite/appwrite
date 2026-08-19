@@ -1,10 +1,13 @@
 /**
  * The plan change estimation endpoint reports *every* plan-limited resource,
- * flagging the ones over limit, and it reports resource types the console has
- * no selection UI for (`platforms`, `webhooks`) alongside ones it does. Reading
- * that payload wrong goes badly in both directions: treat within-limit entries
- * as violations and every downgrade wedges; ignore the unselectable ones and a
- * real blocker is hidden. Pin both here.
+ * flagging the ones over limit. Reading that payload wrong goes badly in both
+ * directions: treat within-limit entries as violations and every downgrade
+ * wedges; drop a type the console cannot resolve and a real blocker is hidden.
+ * Pin both here.
+ *
+ * The console now has a picker for every type the server reports, so the
+ * unresolvable path is a forward-compat guard rather than a live case - it has
+ * to keep holding for whatever type the server adds next.
  */
 
 import { describe, expect, test } from 'bun:test'
@@ -77,12 +80,30 @@ const limits: PlanChangeLimits = {
 
 describe('getServerResourceLimits', () => {
   test('returns limits for selectable types whether or not they are over limit', () => {
-    // buckets is within limit but still needs its limit for the usage display;
-    // platforms has no selection UI, so it must not become a selection limit.
+    // buckets is within limit but still needs its limit for the usage display.
     expect(getServerResourceLimits(limits, 'over')).toEqual({
       databases: 1,
       buckets: 1,
+      platforms: 3,
     })
+  })
+
+  test('ignores resource types the console has no selection UI for', () => {
+    // `collections` is reported by no current plan, but the guard has to hold
+    // for any type the server adds before the console grows a picker for it.
+    const withUnknownType: PlanChangeLimits = {
+      ...limits,
+      projectCompliance: [
+        {
+          $id: 'over',
+          name: 'Over limit',
+          isCompliant: false,
+          resources: [overLimit('collections', 40, 10)],
+        },
+      ],
+    }
+
+    expect(getServerResourceLimits(withUnknownType, 'over')).toEqual({})
   })
 
   test('returns limits for a compliant project too', () => {
@@ -100,14 +121,38 @@ describe('getServerResourceLimits', () => {
 
 describe('getUnresolvableResources', () => {
   test('surfaces over-limit types the console cannot resolve', () => {
-    const unresolvable = getUnresolvableResources(limits)
+    // Every type the server reports today has a picker, so this is the
+    // forward-compat guard: a type the console does not know must surface as a
+    // blocker with the server's hint rather than be silently dropped.
+    const withUnknownType: PlanChangeLimits = {
+      ...limits,
+      projectCompliance: [
+        {
+          $id: 'over',
+          name: 'Over limit',
+          isCompliant: false,
+          resources: [
+            overLimit('databases', 3, 1),
+            overLimit('collections', 40, 10),
+          ],
+        },
+      ],
+    }
+
+    const unresolvable = getUnresolvableResources(withUnknownType)
 
     expect(unresolvable).toHaveLength(1)
     expect(unresolvable[0].projectId).toBe('over')
-    expect(unresolvable[0].resource.type).toBe('platforms')
+    expect(unresolvable[0].resource.type).toBe('collections')
     expect(unresolvable[0].resource.resolutionHint).toBe(
-      'Delete or migrate 6 platforms.',
+      'Delete or migrate 30 collections.',
     )
+  })
+
+  test('returns nothing when every over-limit type is selectable', () => {
+    // platforms/webhooks/wafRules/teams/topics all have pickers now, so an
+    // ordinary over-limit project must not hard-block the downgrade.
+    expect(getUnresolvableResources(limits)).toEqual([])
   })
 
   test('ignores resources that are within limits', () => {
@@ -120,7 +165,7 @@ describe('getUnresolvableResources', () => {
           $id: 'fine',
           name: 'Fine',
           isCompliant: true,
-          resources: [withinLimit('platforms', 1, 3)],
+          resources: [withinLimit('collections', 1, 10)],
         },
       ],
     }
