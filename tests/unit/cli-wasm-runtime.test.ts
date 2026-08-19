@@ -18,6 +18,7 @@ import { describe, expect, test } from 'bun:test'
 import { existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { createWasmCliContainer } from '@/lib/cli-shell/wasm/runtime'
+import { CLI_WASM_VERSION } from '@/lib/cli-shell/wasm/constants'
 import { splitCommand } from '@/lib/cli-shell/wasm/split-command'
 import { Vfs } from '@/lib/cli-shell/wasm/vfs'
 
@@ -85,7 +86,7 @@ describe.if(hasArtifact)('wasm runtime', () => {
     const result = await cli.run('--version')
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain('appwrite version')
+    expect(result.stdout).toContain(`appwrite version ${CLI_WASM_VERSION}`)
   })
 
   test('reads a preferences file written through the sync API', async () => {
@@ -121,12 +122,37 @@ describe.if(hasArtifact)('wasm runtime', () => {
   })
 
   test('writes what the CLI writes back into the shared filesystem', async () => {
-    const cli = await container()
-    await cli.run('client --endpoint https://cloud.appwrite.io/v1')
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = (async (input, init) => {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url
+      // CLI 27 validates the endpoint before writing prefs. Stub the health
+      // check so this test stays off the network.
+      if (url.includes('/health/version')) {
+        return new Response(JSON.stringify({ version: '1.0.0' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return originalFetch(input, init)
+    }) as typeof fetch
 
-    // `client` persists to prefs.json. Seeing it here proves the write path --
-    // open with O_CREAT, write, rename -- lands in the same VFS the console reads.
-    expect(cli.vfs.existsSync('/home/appwrite/.appwrite/prefs.json')).toBe(true)
+    try {
+      const cli = await container()
+      await cli.run('client --endpoint https://cloud.appwrite.io/v1')
+
+      // `client` persists to prefs.json. Seeing it here proves the write path --
+      // open with O_CREAT, write, rename -- lands in the same VFS the console reads.
+      expect(cli.vfs.existsSync('/home/appwrite/.appwrite/prefs.json')).toBe(
+        true,
+      )
+    } finally {
+      globalThis.fetch = originalFetch
+    }
   })
 
   test('separates stdout from stderr', async () => {

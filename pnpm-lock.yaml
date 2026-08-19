@@ -180,8 +180,8 @@ importers:
         specifier: ^4.4.1
         version: 4.5.0(@types/three@0.184.1)(three@0.184.0)
       appwrite-cli-wasm:
-        specifier: 26.0.0-rc.3
-        version: 26.0.0-rc.3
+        specifier: 27.1.0
+        version: 27.1.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -3058,8 +3058,8 @@ packages:
     resolution: {integrity: sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==}
     engines: {node: '>= 8'}
 
-  appwrite-cli-wasm@26.0.0-rc.3:
-    resolution: {integrity: sha512-Quoy2gd9rqkpqBfGUtrBMRT6gtEyMpoRtyv6BDFXFHGScTZhF8ERXEHNQlV+LvISWOe8GO8LJl3hgNX3yZh5FQ==}
+  appwrite-cli-wasm@27.1.0:
+    resolution: {integrity: sha512-Su6N8Udv9Yd4nUYX4Oq43Ptn95o61dDm6ywnpILXWvVl/szjyi+nGc5vKudZ3V6BGGe7sMiKxVIQCxWZY1ye9w==}
 
   argparse@1.0.10:
     resolution: {integrity: sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==}
@@ -7879,7 +7879,7 @@ snapshots:
       normalize-path: 3.0.0
       picomatch: 2.3.2
 
-  appwrite-cli-wasm@26.0.0-rc.3: {}
+  appwrite-cli-wasm@27.1.0: {}
 
   argparse@1.0.10:
     dependencies:
