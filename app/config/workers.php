@@ -11,8 +11,6 @@
 use Appwrite\Event\Event;
 
 return [
-    // Usage is emitted for every completed API request. Keep ClickHouse writes
-    // concurrent so this queue cannot starve mails, builds, and other workers.
     'stats-usage' => [
         'queue' => Event::STATS_USAGE_QUEUE_NAME,
         'queueEnv' => '_APP_STATS_USAGE_QUEUE_NAME',

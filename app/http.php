@@ -467,13 +467,9 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
             Span::current()?->finish();
         }
 
-        // Usage lives in ClickHouse rather than the primary database, so it is
-        // set up here instead of through createDatabase(). ClickHouse may still
-        // be starting, so retry on the same ladder as the databases above.
-        // Giving up must not block boot: the API has no business failing to
-        // start because analytics storage is unreachable. Reads and ingestion
-        // both gate on Connection::isReady(), so they stay correct while the
-        // schema is missing, and `usage-setup` repairs it without a restart.
+        // Usage is in ClickHouse, not the primary database, so it sets itself up
+        // here. Giving up never blocks boot; reads and ingestion gate on
+        // Connection::isReady() and recover once the schema lands.
         /** @var UsageConnection $usageConnection */
         $usageConnection = $container->get('usageConnection');
 
