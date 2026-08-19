@@ -10,16 +10,17 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
+use Utopia\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Fetch\Adapter\Curl as CurlAdapter;
-use Utopia\Fetch\Chunk;
-use Utopia\Fetch\Client;
-use Utopia\Fetch\Exception as FetchException;
-use Utopia\Fetch\Options\Curl as CurlOptions;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
+use Utopia\Psr7\ContentType;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Queue\Message;
 use Utopia\System\System;
 
@@ -122,57 +123,58 @@ class Webhooks extends Action
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
 
-        $security = $webhook->getAttribute('security', true);
-        $client = new Client(new CurlAdapter(new CurlOptions(
-            sslVerifyPeer: $security,
-            sslVerifyHost: $security,
-        )));
-        $client
-            ->setTimeout(15000)
-            ->setMaxRedirects(5)
-            ->setUserAgent(\sprintf(
-                APP_USERAGENT,
-                System::getEnv('_APP_VERSION', 'UNKNOWN'),
-                System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
-            ))
-            ->addHeader('Content-Type', Client::CONTENT_TYPE_APPLICATION_JSON)
-            ->addHeader('Content-Length', (string) \strlen($payload))
-            ->addHeader('X-' . APP_NAME . '-Webhook-Id', $webhook->getId())
-            ->addHeader('X-' . APP_NAME . '-Webhook-Events', implode(',', $events))
-            ->addHeader('X-' . APP_NAME . '-Webhook-Name', $webhook->getAttribute('name', ''))
-            ->addHeader('X-' . APP_NAME . '-Webhook-User-Id', $user->getId())
-            ->addHeader('X-' . APP_NAME . '-Webhook-Project-Id', $project->getId())
-            ->addHeader('X-' . APP_NAME . '-Webhook-Signature', $signature);
+        $client = (new Client(new CurlAdapter()))
+            ->withTimeout(15)
+            ->withConnectTimeout(15)
+            ->withSslVerification($webhook->getAttribute('security', true));
 
         if (!empty($httpUser) && !empty($httpPass)) {
-            $client->addHeader('Authorization', 'Basic ' . base64_encode("$httpUser:$httpPass"));
+            $client = $client->withBasicAuth($httpUser, $httpPass);
         }
 
         $responseBody = '';
-        $fetchError = '';
+        $clientError = '';
         $statusCode = 0;
 
         try {
-            $response = $client->fetch(
-                url: $rawUrl,
-                method: Client::METHOD_POST,
+            $request = (new RequestFactory())->body(
+                method: Method::POST,
+                uri: $rawUrl,
                 body: $payload,
-                chunks: function (Chunk $chunk) use (&$responseBody): void {
-                    if (\strlen($responseBody) + $chunk->getSize() > self::MAX_FILE_SIZE) {
-                        throw new FetchException('Maximum response size exceeded');
+                contentType: ContentType::JSON,
+                headers: [
+                    Header::CONTENT_LENGTH => (string) \strlen($payload),
+                    Header::USER_AGENT => \sprintf(
+                        APP_USERAGENT,
+                        System::getEnv('_APP_VERSION', 'UNKNOWN'),
+                        System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
+                    ),
+                    'X-' . APP_NAME . '-Webhook-Id' => $webhook->getId(),
+                    'X-' . APP_NAME . '-Webhook-Events' => implode(',', $events),
+                    'X-' . APP_NAME . '-Webhook-Name' => $webhook->getAttribute('name', ''),
+                    'X-' . APP_NAME . '-Webhook-User-Id' => $user->getId(),
+                    'X-' . APP_NAME . '-Webhook-Project-Id' => $project->getId(),
+                    'X-' . APP_NAME . '-Webhook-Signature' => $signature,
+                ],
+            );
+            $response = $client->stream(
+                request: $request,
+                sink: function (string $chunk) use (&$responseBody): void {
+                    if (\strlen($responseBody) + \strlen($chunk) > self::MAX_FILE_SIZE) {
+                        throw new Exception('Maximum response size exceeded');
                     }
 
-                    $responseBody .= $chunk->getData();
+                    $responseBody .= $chunk;
                 },
             );
             $statusCode = $response->getStatusCode();
-        } catch (FetchException $exception) {
-            $fetchError = $exception->getMessage();
+        } catch (Exception $exception) {
+            $clientError = $exception->getMessage();
         }
 
         $error = null;
 
-        if (!empty($fetchError) || $statusCode >= 400) {
+        if (!empty($clientError) || $statusCode >= 400) {
             $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
             $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
             $attempts = $webhook->getAttribute('attempts');
@@ -181,8 +183,8 @@ class Webhooks extends Action
             $logs .= 'URL: ' . $rawUrl . "\n";
             $logs .= 'Method: ' . 'POST' . "\n";
 
-            if (!empty($fetchError)) {
-                $logs .= 'Fetch Error: ' . $fetchError . "\n";
+            if (!empty($clientError)) {
+                $logs .= 'Client Error: ' . $clientError . "\n";
                 $logs .= 'Events: ' . implode(', ', $events) . "\n";
             } else {
                 $logs .= 'Status code: ' . $statusCode . "\n";
