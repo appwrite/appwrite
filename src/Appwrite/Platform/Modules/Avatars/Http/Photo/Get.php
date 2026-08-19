@@ -47,15 +47,7 @@ class Get extends Action
                 group: null,
                 name: 'getPhoto',
                 description: <<<EOT
-                Returns the best available profile photo for the currently authenticated user.
-
-                The endpoint tries each source in priority order and returns the first successful result:
-
-                1. OAuth2 session photo (planned — see TODO in source)
-                2. Gravatar
-                3. Libravatar
-                4. Initials generated from the user's name or email
-                5. A built-in static fallback image
+                Returns the best available profile photo for the currently authenticated user. The endpoint tries each source in priority order and returns the first successful result: Gravatar, Libavatar, Appwrite Initials, built-in static fallback file.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
