@@ -21,6 +21,7 @@ use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
+use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -58,6 +59,7 @@ use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Usage\Tenant as UsageTenant;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
@@ -131,6 +133,17 @@ return function (Container $context): void {
     $context->set('queueForWebhooks', fn (Publisher $publisher) => new Webhook($publisher), ['publisher']);
     $context->set('queueForRealtime', fn () => new Realtime(), []);
     $context->set('usage', fn () => new UsageContext(), []);
+    $context->set('usageForProject', function (Document $project, UsageConnection $usageConnection): UsageTenant {
+        if (!$usageConnection->isEnabled()) {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
+        }
+        if (!$usageConnection->isReady()) {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED, 'Usage storage schema is not ready.');
+        }
+
+        $tenant = (string) $project->getSequence();
+        return new UsageTenant($usageConnection->getUsage(), $tenant === '' ? '__none__' : $tenant);
+    }, ['project', 'usageConnection']);
     $context->set('auditContext', fn () => new AuditContext(), []);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {

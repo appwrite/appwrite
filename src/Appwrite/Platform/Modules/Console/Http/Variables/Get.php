@@ -85,7 +85,7 @@ class Get extends Action
             '_APP_STORAGE_LIMIT' => +System::getEnv('_APP_STORAGE_LIMIT'),
             '_APP_COMPUTE_BUILD_TIMEOUT' => +System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT'),
             '_APP_COMPUTE_SIZE_LIMIT' => +System::getEnv('_APP_COMPUTE_SIZE_LIMIT'),
-            '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
+            '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS', 'enabled'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
             '_APP_VCS_PROVIDERS' => $vcsProviders(),
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,

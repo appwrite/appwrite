@@ -79,6 +79,14 @@ services:
       - appwrite-geo
     environment:
       - _APP_ENV
+      - _APP_USAGE_STATS
+      - _APP_USAGE_PASS
+      - _APP_CONNECTIONS_DB_USAGE
+      - _APP_POOL_SIZE_USAGE
+      - _APP_MAINTENANCE_RETENTION_USAGE_TTL
+      - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_STATS_RESOURCES_INTERVAL
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
@@ -282,6 +290,8 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_USAGE_STATS
+      - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
@@ -338,9 +348,17 @@ services:
       - host.docker.internal:host-gateway
     environment:
       - _APP_ENV
+      - _APP_USAGE_STATS
+      - _APP_USAGE_PASS
+      - _APP_CONNECTIONS_DB_USAGE
+      - _APP_POOL_SIZE_USAGE
+      - _APP_MAINTENANCE_RETENTION_USAGE_TTL
+      - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
-      - _APP_WORKER_MAX_COROUTINES=69
+      - _APP_WORKER_MAX_COROUTINES=71
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -470,6 +488,14 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_USAGE_STATS
+      - _APP_USAGE_PASS
+      - _APP_CONNECTIONS_DB_USAGE
+      - _APP_POOL_SIZE_USAGE
+      - _APP_MAINTENANCE_RETENTION_USAGE_TTL
+      - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_STATS_RESOURCES_INTERVAL
       - _APP_LOGGING_FORMAT
       # Combined mode runs functions/executions/messages timers + enqueue coroutines
       # against shared console/cache pools; floor must cover concurrent ticks.
@@ -496,6 +522,30 @@ services:
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+
+  appwrite-worker-stats-usage:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-worker
+    entrypoint: worker-stats-usage
+    container_name: appwrite-worker-stats-usage
+
+  appwrite-worker-stats-resources:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-worker
+    entrypoint: worker-stats-resources
+    container_name: appwrite-worker-stats-resources
+
+  appwrite-task-stats-resources:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-task-scheduler
+    entrypoint: stats-resources
+    container_name: appwrite-task-stats-resources
 
   appwrite-worker-webhooks:
     profiles:
@@ -1428,6 +1478,44 @@ services:
     networks:
       - appwrite
 
+  appwrite-usage-setup:
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    entrypoint: usage-setup
+    restart: "no"
+    networks:
+      - appwrite
+    environment:
+      - _APP_USAGE_STATS
+      - _APP_USAGE_PASS
+      - _APP_CONNECTIONS_DB_USAGE
+      - _APP_POOL_SIZE_USAGE
+      - _APP_MAINTENANCE_RETENTION_USAGE_TTL
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.4.3-alpine
+    restart: unless-stopped
+    networks:
+      - appwrite
+    environment:
+      - CLICKHOUSE_DB=appwrite
+      - CLICKHOUSE_USER=appwrite
+      - CLICKHOUSE_PASSWORD=${_APP_USAGE_PASS:-appwrite}
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    volumes:
+      - appwrite-clickhouse:/var/lib/clickhouse:rw
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'clickhouse-client --user "$$CLICKHOUSE_USER" --password "$$CLICKHOUSE_PASSWORD" --query "SELECT 1" >/dev/null'
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
   appwrite-geo:
     container_name: appwrite-geo
     logging:
@@ -1674,6 +1762,7 @@ volumes:
   appwrite-postgresql: null
   appwrite-redis: null
   appwrite-cache: null
+  appwrite-clickhouse: null
   appwrite-uploads: null
   appwrite-imports: null
   appwrite-certificates: null

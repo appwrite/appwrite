@@ -420,6 +420,8 @@ const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
 // Realtime metrics
+const REALTIME_CONCURRENCY_INTERVAL = '5m';
+const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
 const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
 const METRIC_REALTIME_INBOUND = 'realtime.inbound';

@@ -1500,6 +1500,84 @@ return [
         ],
     ],
     [
+        'category' => 'Usage',
+        'description' => 'Usage events and resource gauges stored in ClickHouse.',
+        'variables' => [
+            [
+                'name' => '_APP_USAGE_STATS',
+                'description' => 'Enable or disable usage statistics collection and APIs.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DB_USAGE',
+                'description' => 'ClickHouse HTTP DSN used for usage storage. Set this to an external private ClickHouse DSN to replace the bundled service.',
+                'introduction' => '',
+                'default' => 'http://appwrite:appwrite@clickhouse:8123/appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_USAGE_PASS',
+                'description' => 'Password used only when creating the bundled ClickHouse appwrite user. On an existing volume, rotate the ClickHouse user with ALTER USER before updating this value and _APP_CONNECTIONS_DB_USAGE.',
+                'introduction' => '',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_POOL_SIZE_USAGE',
+                'description' => 'Maximum number of pooled ClickHouse HTTP clients per process.',
+                'introduction' => '',
+                'default' => '2',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_USAGE_TTL',
+                'description' => 'Retention in days for raw and daily usage events. Gauges have no TTL. Set to 0 to disable event TTLs.',
+                'introduction' => '',
+                'default' => '180',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATS_USAGE_QUEUE_NAME',
+                'description' => 'Queue name for usage event ingestion.',
+                'introduction' => '',
+                'default' => 'v1-stats-usage',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATS_RESOURCES_QUEUE_NAME',
+                'description' => 'Queue name for usage resource gauge ingestion.',
+                'introduction' => '',
+                'default' => 'v1-stats-resources',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATS_RESOURCES_INTERVAL',
+                'description' => 'Interval in seconds between full resource-count snapshots.',
+                'introduction' => '',
+                'default' => '3600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
+        ],
+    ],
+    [
         'category' => 'GraphQL',
         'description' => '',
         'variables' => [

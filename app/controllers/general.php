@@ -811,6 +811,53 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
 Http::init()
     ->groups(['api'])
+    ->inject('usage')
+    ->inject('request')
+    ->inject('geoRecord')
+    ->action(function ($usage, Request $request, GeoRecord $geoRecord) {
+        if (!$usage instanceof \Appwrite\Usage\Context) {
+            return;
+        }
+
+        $uri = $request->getURI();
+        $parts = explode('/', trim($uri, '/'));
+        $country = $geoRecord->isEmpty() ? '' : strtolower($geoRecord->getCountryCode());
+
+        $usage
+            ->setPath($uri)
+            ->setMethod($request->getMethod())
+            ->setUserAgent($request->getUserAgent(''))
+            ->setHostname($request->getOrigin('') ?: $request->getHostname())
+            ->setCountry($country)
+            ->setIp($request->getIP())
+            ->setSdk(strtolower($request->getHeaderLine('x-sdk-name', '')))
+            ->setSdkVersion($request->getHeaderLine('x-sdk-version', ''))
+            ->setRegion(System::getEnv('_APP_REGION', 'default'))
+            ->setService($parts[1] ?? $parts[0])
+            ->setResourceType('')
+            ->setResourceId('')
+            ->setResourceInternalId('')
+            ->setResourcePath('');
+    });
+
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('usage')
+    ->inject('response')
+    ->inject('project')
+    ->action(function ($usage, Response $response, Document $project) {
+        if (!$usage instanceof \Appwrite\Usage\Context) {
+            return;
+        }
+
+        $usage->setStatus($response->getStatusCode());
+        if ($usage->getResourcePath() === '' && !$project->isEmpty()) {
+            $usage->fillMissingResource('project', $project->getId(), (string) $project->getSequence());
+        }
+    });
+
+Http::init()
+    ->groups(['api'])
     ->inject('project')
     ->inject('mode')
     ->action(function (Document $project, string $mode) {
