@@ -20,12 +20,13 @@ class Get extends Action
     use HTTP;
 
     /**
-     * Everything the integration touches: cloning sources, pushing templates,
-     * deploying from pull requests, commenting on them, and reporting build
-     * checks. repository:metadata:read is granted implicitly.
+     * Everything the integration touches: reading repository metadata,
+     * cloning sources, pushing templates, deploying from pull requests,
+     * commenting on them, and reporting build checks.
      */
     public const SCOPES = [
         'repository:contents:read',
+        'repository:metadata:read',
         'repository:contents:write',
         'repository:pull_requests:read',
         'repository:pull_requests:write',
