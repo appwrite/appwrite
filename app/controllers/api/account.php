@@ -3684,7 +3684,12 @@ Http::patch('/v1/account/prefs')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        $queueForEvents->setParam('userId', $user->getId());
+        // Fix: include the full user object in the event payload so that
+        // users.[userId].update.prefs listeners receive a consistent payload
+        // matching all other users.[userId].update.* events (issue #7234).
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_ACCOUNT));
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
