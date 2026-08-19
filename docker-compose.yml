@@ -1484,6 +1484,9 @@ services:
     restart: "no"
     networks:
       - appwrite
+    depends_on:
+      clickhouse:
+        condition: service_healthy
     environment:
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
