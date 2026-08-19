@@ -564,7 +564,7 @@ final class FormatTest extends TestCase
 
         $this->assertSame('password', $openApiProperties['password']['format']);
         $this->assertSame('password', $openApiProperties['nullablePassword']['format']);
-        $this->assertTrue($openApiProperties['nullablePassword']['x-nullable']);
+        $this->assertTrue($openApiProperties['nullablePassword']['nullable']);
         $this->assertArrayNotHasKey('format', $openApiProperties['name']);
         $this->assertSame('password', $openApi['components']['schemas']['webhook']['properties']['authPassword']['format']);
 
