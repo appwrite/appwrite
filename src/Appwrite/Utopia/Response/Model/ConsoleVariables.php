@@ -71,6 +71,13 @@ class ConsoleVariables extends Model
                 'example' => ['github'],
                 'array' => true,
             ])
+            ->addRule('vcsProviders', [
+                'type' => Response::MODEL_VCS_PROVIDER,
+                'description' => 'Configured VCS providers and their capabilities.',
+                'default' => [],
+                'example' => [],
+                'array' => true,
+            ])
             ->addRule('_APP_DOMAIN_ENABLED', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Defines if main domain is configured. If so, custom domains can be created.',
