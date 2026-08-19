@@ -17,7 +17,7 @@ class OAuth2HuggingFace extends OAuth2Base
 
     public function getClientIdExample(): string
     {
-        return 'hf_client_1234567890abcdef1234567890abcdef';
+        return '2ab9cff9-d711-40ad-a91e-b08a49c42d24';
     }
 
     public function getClientSecretExample(): string
