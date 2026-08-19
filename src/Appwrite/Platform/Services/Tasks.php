@@ -16,11 +16,14 @@ use Appwrite\Platform\Tasks\Screenshot;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
+use Appwrite\Platform\Tasks\StatsResources;
 use Appwrite\Platform\Tasks\TimeTravel;
 use Appwrite\Platform\Tasks\Upgrade;
+use Appwrite\Platform\Tasks\UsageSetup;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Utopia\Platform\Service;
+use Utopia\System\System;
 
 class Tasks extends Service
 {
@@ -45,7 +48,12 @@ class Tasks extends Service
             ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
-            ->addAction(TimeTravel::getName(), new TimeTravel())
-        ;
+            ->addAction(TimeTravel::getName(), new TimeTravel());
+
+        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+            $this
+                ->addAction(StatsResources::getName(), new StatsResources())
+                ->addAction(UsageSetup::getName(), new UsageSetup());
+        }
     }
 }

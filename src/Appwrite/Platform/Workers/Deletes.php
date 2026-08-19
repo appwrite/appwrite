@@ -11,6 +11,7 @@ use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
@@ -35,6 +36,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Usage\Tenant as UsageTenant;
 
 use function Swoole\Coroutine\batch;
 
@@ -73,8 +75,74 @@ class Deletes extends Action
             ->inject('log')
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
-            ->inject('bus')
-            ->callback($this->action(...));
+            ->inject('bus');
+
+        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+            $this
+                ->inject('usageConnection')
+                ->callback($this->actionWithUsage(...));
+            return;
+        }
+
+        $this->callback($this->action(...));
+    }
+
+    public function actionWithUsage(
+        Message $message,
+        Document $project,
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        callable $getDatabasesDB,
+        callable $getLogsDB,
+        Device $deviceForFiles,
+        Device $deviceForFunctions,
+        Device $deviceForSites,
+        Device $deviceForBuilds,
+        Device $deviceForCache,
+        CertificatesAdapter $certificates,
+        Executor $executor,
+        string $executionRetention,
+        int $executionsRetentionCount,
+        Log $log,
+        DeletePublisher $publisherForDeletes,
+        UsagePublisher $publisherForUsage,
+        Bus $bus,
+        UsageConnection $usageConnection,
+    ): void {
+        $payload = $message->getPayload();
+        $deleteMessage = DeleteMessage::fromArray($payload);
+
+        $this->action(
+            $message,
+            $project,
+            $dbForPlatform,
+            $getProjectDB,
+            $getDatabasesDB,
+            $getLogsDB,
+            $deviceForFiles,
+            $deviceForFunctions,
+            $deviceForSites,
+            $deviceForBuilds,
+            $deviceForCache,
+            $certificates,
+            $executor,
+            $executionRetention,
+            $executionsRetentionCount,
+            $log,
+            $publisherForDeletes,
+            $publisherForUsage,
+            $bus,
+        );
+
+        $document = $deleteMessage->document ?? new Document();
+        if (
+            $usageConnection->isEnabled()
+            && $deleteMessage->type === DELETE_TYPE_DOCUMENT
+            && $document->getCollection() === DELETE_TYPE_PROJECTS
+            && $document->getSequence() !== ''
+        ) {
+            (new UsageTenant($usageConnection->getUsage(), (string) $document->getSequence()))->purge();
+        }
     }
 
     /**
