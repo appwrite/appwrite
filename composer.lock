@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2ec48bbb683ffcbbb72c7b37bd30b8b6",
+    "content-hash": "40231755d4dc80d8a23901402b42df4a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4522,16 +4522,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "1.3.0",
+            "version": "1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "0e6c8517a4b4226dad1fa8b737a1416fae5bbe7f"
+                "reference": "3685840e3194e09039eb3484bb9f666d6b6f607c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/0e6c8517a4b4226dad1fa8b737a1416fae5bbe7f",
-                "reference": "0e6c8517a4b4226dad1fa8b737a1416fae5bbe7f",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/3685840e3194e09039eb3484bb9f666d6b6f607c",
+                "reference": "3685840e3194e09039eb3484bb9f666d6b6f607c",
                 "shasum": ""
             },
             "require": {
@@ -4582,9 +4582,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/1.3.0"
+                "source": "https://github.com/utopia-php/queue/tree/1.3.1"
             },
-            "time": "2026-08-18T15:36:41+00:00"
+            "time": "2026-08-19T06:46:13+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -8436,7 +8436,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5
+        "utopia-php/http": 5,
+        "utopia-php/platform": 5
     },
     "prefer-stable": true,
     "prefer-lowest": false,
