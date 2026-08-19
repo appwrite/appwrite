@@ -28,9 +28,15 @@ class UsageSetup extends Action
             return;
         }
 
+        // An operator may run this before ClickHouse finishes starting, so
+        // retry on the same ladder the boot-time setup uses.
+        $max = 15;
+        $sleep = 2;
         $attempt = 0;
-        do {
+
+        while (true) {
             $attempt++;
+
             try {
                 $usageConnection->setup();
                 $health = $usageConnection->healthCheck();
@@ -40,12 +46,12 @@ class UsageSetup extends Action
                 Console::success('Usage schema is ready');
                 return;
             } catch (\Throwable $th) {
-                if ($attempt >= 120) {
+                if ($attempt >= $max) {
                     throw $th;
                 }
                 Console::warning("Usage schema setup attempt {$attempt} failed: " . $th->getMessage());
-                sleep(3);
+                sleep($sleep);
             }
-        } while (true);
+        }
     }
 }
