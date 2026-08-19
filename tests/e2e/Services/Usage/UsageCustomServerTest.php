@@ -75,10 +75,11 @@ final class UsageCustomServerTest extends Scope
 
     public function testUsageReadScopeIsRequired(): void
     {
+        $project = $this->getProject();
         $key = $this->getNewKey(['project.read']);
         $response = $this->client->call(Client::METHOD_GET, '/usage/events', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $project['$id'],
             'x-appwrite-key' => $key,
         ], [
             'metrics' => ['network.requests'],
@@ -91,11 +92,12 @@ final class UsageCustomServerTest extends Scope
     /** @param array<string, mixed> $parameters */
     private function call(string $path, array $parameters): array
     {
+        $project = $this->getProject();
         $key = $this->getNewKey(['usage.read']);
 
         return $this->client->call(Client::METHOD_GET, $path, [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $project['$id'],
             'x-appwrite-key' => $key,
         ], $parameters);
     }
