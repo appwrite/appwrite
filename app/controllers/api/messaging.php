@@ -54,6 +54,40 @@ use Utopia\Validator\WhiteList;
 
 use function Swoole\Coroutine\batch;
 
+/**
+ * Convert a request JSON object to the associative shape messages expect while
+ * retaining empty objects at any nested depth. Returns null untouched so the
+ * caller can distinguish "not provided" from an explicit empty object.
+ */
+function normalizeJsonObject(null|array|\stdClass $data): ?array
+{
+    if (\is_null($data)) {
+        return null;
+    }
+
+    $normalizeValue = function (mixed $value) use (&$normalizeValue): mixed {
+        if ($value instanceof \stdClass) {
+            $properties = (array) $value;
+
+            return $properties === []
+                ? $value
+                : \array_map($normalizeValue, $properties);
+        }
+
+        if (\is_array($value)) {
+            return \array_map($normalizeValue, $value);
+        }
+
+        return $value;
+    };
+
+    if ($data instanceof \stdClass) {
+        $data = (array) $data;
+    }
+
+    return \array_map($normalizeValue, $data);
+}
+
 Http::post('/v1/messaging/providers/mailgun')
     ->desc('Create Mailgun provider')
     ->groups(['api', 'messaging'])
@@ -987,12 +1021,12 @@ Http::post('/v1/messaging/providers/fcm')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, array|string|null $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, array|string|\stdClass|null $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $serviceAccountJSON = \is_string($serviceAccountJSON)
             ? \json_decode($serviceAccountJSON, true)
-            : $serviceAccountJSON;
+            : normalizeJsonObject($serviceAccountJSON);
 
         $credentials = [];
 
@@ -2300,7 +2334,7 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, array|string|null $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, array|string|\stdClass|null $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -2319,7 +2353,7 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
         if (!\is_null($serviceAccountJSON)) {
             $serviceAccountJSON = \is_string($serviceAccountJSON)
                 ? \json_decode($serviceAccountJSON, true)
-                : $serviceAccountJSON;
+                : normalizeJsonObject($serviceAccountJSON);
 
             $provider->setAttribute('credentials', [
                 'serviceAccountJSON' => $serviceAccountJSON
@@ -3420,7 +3454,9 @@ Http::post('/v1/messaging/messages/push')
     ->inject('publisherForMessaging')
     ->inject('response')
     ->inject('platform')
-    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
+    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, null|array|\stdClass $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
+        $data = normalizeJsonObject($data);
+
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -4214,7 +4250,9 @@ Http::patch('/v1/messaging/messages/push/:messageId')
     ->inject('publisherForMessaging')
     ->inject('response')
     ->inject('platform')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
+        $data = normalizeJsonObject($data);
+
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
