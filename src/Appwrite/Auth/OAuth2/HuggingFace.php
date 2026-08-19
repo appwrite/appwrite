@@ -229,7 +229,8 @@ class HuggingFace extends OAuth2
     public function verifyCredentials(): void
     {
         $client = new FetchClient();
-        $client->addHeader('Content-Type', 'application/x-www-form-urlencoded', 'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),);
+        $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $client->addHeader('Authorization', 'Basic ' . \base64_encode($this->appID . ':' . $this->appSecret));
 
         $response = $client->fetch(
             url: 'https://huggingface.co/oauth/token',
