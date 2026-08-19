@@ -53,7 +53,9 @@ class Get extends Action
                 namespace: 'vcs',
                 group: 'installations',
                 name: 'createOriginInstallation',
-                description: '/docs/references/vcs/create-origin-installation.md',
+                description: <<<EOT
+                Begin Appwrite's Origin app installation to set up version control integration. This endpoint responds with a redirect URL to the Origin app's installation page on Cursor. The Origin app must be configured in your environment for this endpoint to work.
+                EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

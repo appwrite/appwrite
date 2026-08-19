@@ -1,1 +1,0 @@
-Begin Appwrite's Origin app installation to set up version control integration. This endpoint responds with a redirect URL to the Origin app's installation page on Cursor. The Origin app must be configured in your environment for this endpoint to work.
