@@ -13,7 +13,7 @@ faqs:
   - question: "Why host an MCP server on Appwrite Functions?"
     answer: "The current MCP specification is stateless: every request carries everything the server needs, with no initialization handshake or session to keep alive. That maps directly onto a serverless function, which starts, answers one request, and exits. An Appwrite Function also receives a scoped API key on every execution and gets a public domain out of the box."
   - question: "How does vector search power the recall tool?"
-    answer: "Each memory is embedded into a 384-dimension vector with the bge-small model and stored in an Appwrite VectorsDB collection. The recall tool embeds the search query with the same model and runs a cosine-similarity query, so results match by meaning rather than by exact keywords."
+    answer: "Each memory is embedded into a 384-dimension vector with the all-minilm model and stored in an Appwrite VectorsDB collection. The recall tool embeds the search query with the same model and runs a cosine-similarity query, so results match by meaning rather than by exact keywords."
   - question: "How do AI clients authenticate with the MCP server?"
     answer: "Through the Appwrite project's built-in OAuth2 server. The client discovers the authorization server from the MCP server's protected-resource metadata, identifies itself with a client metadata URL, and sends the user through a consent screen the app hosts. The MCP server then verifies the issued access token on every request."
   - question: "Can users revoke an AI tool's access to their memories?"
@@ -34,7 +34,7 @@ Three Appwrite products carry the whole workload.
 
 **An Appwrite Function hosts the MCP server.** The Model Context Protocol's current revision is stateless: there is no initialization handshake and no session identifier, and every request stands on its own. That is exactly the shape of a serverless function. One HTTP handler serves protocol discovery, rejects unauthenticated requests, and answers tool calls, using `createMcpHandler` from the official `@modelcontextprotocol/server` SDK with plain JSON responses instead of a server-sent-events stream.
 
-**VectorsDB stores the memories.** Each memory is one document: the text embedded as a vector, plus a metadata object carrying the text itself, the owner's user ID, and optional tags. Appwrite's Embeddings service generates the vectors server-side with the `bge-small` model, and an HNSW cosine index makes similarity search fast. The `recall` tool is a single `listDocuments` call with a `vectorCosine` query.
+**VectorsDB stores the memories.** Each memory is one document: the text embedded as a vector, plus a metadata object carrying the text itself, the owner's user ID, and optional tags. Appwrite's Embeddings service generates the vectors server-side with the `all-minilm` model, and an HNSW cosine index makes similarity search fast. The `recall` tool is a single `listDocuments` call with a `vectorCosine` query.
 
 **The OAuth2 server handles permission.** AI clients never see an API key. Claude Code identifies itself with a hosted client metadata URL, the user approves access on a consent screen the app hosts, and Appwrite mints short-lived access tokens scoped to `memories.read` and `memories.write`. The function verifies each token's signature against the project's public keys before serving a single tool call.
 
@@ -58,9 +58,9 @@ Select your preferred tier, then select **Create database**. The tier controls t
 
 # Create the memories collection
 
-![The create collection dialog with the bge-small embedding model selected](/images/blog-local/build-a-memory-mcp-server/create-collection.avif)
+![The create collection dialog with the all-minilm embedding model selected](/images/blog-local/build-a-memory-mcp-server/create-collection.avif)
 
-Inside the database, select **Create collection**. Name it `Memories`, set the custom ID to `memories`, and choose the `bge-small` embedding model. The model fixes the collection's vector dimension at 384, which keeps embeddings compact and queries fast, a good fit for short personal notes.
+Inside the database, select **Create collection**. Name it `Memories`, set the custom ID to `memories`, and choose the `all-minilm` embedding model. The model fixes the collection's vector dimension at 384, which keeps embeddings compact and queries fast, a good fit for short personal notes.
 
 Every VectorsDB collection provisions the same two fields automatically: `embeddings`, which holds the vector, and `metadata`, an object for anything else you want to store alongside it. Recall keeps the memory text, the owner's user ID, and a list of tags in `metadata`.
 
@@ -336,7 +336,7 @@ The connection stays under the user's control. The consent is stored on their ac
 
 The whole server is around 400 lines, and most of the interesting behavior comes from the platform underneath it: Functions gave the MCP server a public HTTPS endpoint and per-execution credentials, VectorsDB turned semantic memory into two SDK calls, and the OAuth2 server handled registration, consent, tokens, and revocation without any auth code in the function beyond a JWT check.
 
-From here you can extend the memory model with tags and time-based decay, add an `update_memory` tool, or point several MCP clients at the same server so a memory saved in one shows up in all of them. The complete code, including the consent screen and the dashboard, is in the [companion repository](https://github.com/appwrite-community/memory-mcp).
+From here you can extend the memory model with tags and time-based decay, add an `update_memory` tool, or point several MCP clients at the same server so a memory saved in one shows up in all of them. The complete code, including the consent screen and the dashboard, is in the [companion repository](https://github.com/appwrite-community/memory-mcp), and the deployed result is live: the app at [recall.appwrite.network](https://recall.appwrite.network) and the MCP server at `https://recall-mcp.appwrite.network/mcp`.
 
 Further reading:
 
