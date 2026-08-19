@@ -17,6 +17,7 @@ use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Integer;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Create extends Base
@@ -59,7 +60,7 @@ class Create extends Base
             ->param('passwordMemory', 14, new Integer(), 'Optional memory cost used to hash password.')
             ->param('passwordParallel', 1, new Integer(), 'Optional parallelization cost used to hash password.')
             ->param('passwordLength', 64, new Integer(), 'Optional hash length used to hash password.')
-            ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+            ->param('name', '', new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')

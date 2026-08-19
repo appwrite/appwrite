@@ -60,7 +60,7 @@ class Create extends Base
             ->param('email', null, new Nullable(new EmailValidator()), 'User email.', true)
             ->param('phone', null, new Nullable(new Phone()), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
             ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
-            ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+            ->param('name', '', new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')

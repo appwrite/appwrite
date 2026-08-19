@@ -17,6 +17,7 @@ use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -56,7 +57,7 @@ class Create extends Base
             ->param('email', '', new EmailValidator(), 'User email.')
             ->param('password', '', new Password(), 'User password hashed using SHA.')
             ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true, enum: new Enum(name: 'PasswordHash'))
-            ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+            ->param('name', '', new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
