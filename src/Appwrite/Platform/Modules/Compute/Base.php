@@ -175,12 +175,14 @@ class Base extends Action
         // git write and then hands the build to the jobs-service itself.
         if ($template->isEmpty()) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            $deployment = $deployments->createFromUrl(
+            $deployment = $deployments->createFromVcs(
                 $function,
                 $deployment,
-                $vcs->getRepositoryPresignedUrl($owner, $repositoryName, $ref),
+                $vcs,
+                $owner,
+                $repositoryName,
+                $ref,
                 $function->getAttribute('providerRootDirectory', ''),
-                $vcs->getRepositoryPresignedUrlHeaders(),
             );
         } else {
             $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -400,12 +402,14 @@ class Base extends Action
         // pushes go through the Builds worker (same split as redeployVcsFunction).
         if ($template->isEmpty()) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            $deployment = $deployments->createFromUrl(
+            $deployment = $deployments->createFromVcs(
                 $site,
                 $deployment,
-                $vcs->getRepositoryPresignedUrl($owner, $repositoryName, $ref),
+                $vcs,
+                $owner,
+                $repositoryName,
+                $ref,
                 $site->getAttribute('providerRootDirectory', ''),
-                $vcs->getRepositoryPresignedUrlHeaders(),
             );
         } else {
             $publisherForBuilds->enqueue(new BuildMessage(

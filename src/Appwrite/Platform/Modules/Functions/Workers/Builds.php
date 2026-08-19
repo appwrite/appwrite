@@ -401,12 +401,14 @@ class Builds extends Action
             // jobs-service like any other VCS commit, via the same Deployments
             // service the HTTP endpoints use.
             $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
-            $deployments->createFromUrl(
+            $deployments->createFromVcs(
                 $resource,
                 $deployment,
-                $providerAdapter->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
+                $providerAdapter,
+                $cloneOwner,
+                $cloneRepository,
+                $ref,
                 $resource->getAttribute('providerRootDirectory', ''),
-                $providerAdapter->getRepositoryPresignedUrlHeaders(),
             );
 
             Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
