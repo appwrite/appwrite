@@ -298,12 +298,8 @@ if (!function_exists('getQueueForEvents')) {
         $ctx = Coroutine::getContext();
 
         if (!isset($ctx['queueForEvents'])) {
-            global $register;
-            /** @var Group $pools */
-            $pools = $register->get('pools');
-            $ctx['queueForEvents'] = new QueueEvent(new BrokerPool(
-                publisher: $pools->get('publisher')
-            ));
+            global $container;
+            $ctx['queueForEvents'] = new QueueEvent($container->get('publisher'));
         }
 
         return $ctx['queueForEvents'];

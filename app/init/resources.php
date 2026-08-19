@@ -23,6 +23,7 @@ use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
+use Appwrite\Workers\Inline;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -101,7 +102,13 @@ $container->set('telemetry', fn () => new NoTelemetry(), []);
 
 $container->set('authorization', fn () => new Authorization(), []);
 
-$container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
+$container->set('publisher', function (Group $pools) use ($container) {
+    if (Inline::enabled()) {
+        return Inline::publisher($container);
+    }
+
+    return new BrokerPool(publisher: $pools->get('publisher'));
+}, ['pools']);
 
 $container->set('publisherDatabases', fn (Publisher $publisher) => $publisher, ['publisher']);
 

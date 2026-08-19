@@ -250,6 +250,12 @@ $register->set('pools', function () {
     // job may hold a connection, so pools must cover the coroutine count.
     $poolSize = max($poolSize, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1));
 
+    // Inline runs jobs in the publishing process; the request already holds a
+    // connection and nested jobs may hold more.
+    if (System::getEnv('_APP_QUEUE_ADAPTER', 'redis') === 'inline') {
+        $poolSize += 8;
+    }
+
     $poolTimeout = (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10);
 
     foreach ($connections as $key => $connection) {
