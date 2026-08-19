@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Initials;
 
+use Appwrite\AvatarPhotos\Providers\Initials;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -9,9 +10,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Imagick;
-use ImagickDraw;
-use ImagickPixel;
 use Utopia\Database\Document;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
@@ -64,65 +62,13 @@ class Get extends Action
 
     public function action(string $name, int $width, int $height, string $background, Response $response, Document $user)
     {
-        $themes = [
-            ['background' => '#FD366E'], // Default (Pink)
-            ['background' => '#FE9567'], // Orange
-            ['background' => '#7C67FE'], // Purple
-            ['background' => '#68A3FE'], // Blue
-            ['background' => '#85DBD8'], // Mint
-        ];
-
         $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
-        $words = \explode(' ', \strtoupper($name));
-        // if there is no space, try to split by `_` underscore
-        $words = (count($words) == 1) ? \explode('_', \strtoupper($name)) : $words;
 
-        $initials = '';
-        $code = 0;
-
-        foreach ($words as $key => $w) {
-            if (ctype_alnum($w[0] ?? '')) {
-                $initials .= $w[0];
-                $code += ord($w[0]);
-
-                if ($key == 1) {
-                    break;
-                }
-            }
-        }
-
-        $rand = (int) \substr((string) $code, -1);
-
-        $rand = ($rand > \count($themes) - 1) ? $rand % \count($themes) : $rand;
-
-        $background = (!empty($background)) ? '#' . $background : $themes[$rand]['background'];
-
-        $image = new Imagick();
-        $punch = new Imagick();
-        $draw = new ImagickDraw();
-        $fontSize = \min($width, $height) / 2;
-
-        $punch->newImage($width, $height, 'transparent');
-
-        $draw->setFont($this->getAppRoot() . '/app/assets/fonts/inter-v8-latin-regular.woff2');
-        $image->setFont($this->getAppRoot() . '/app/assets/fonts/inter-v8-latin-regular.woff2');
-
-        $draw->setFillColor(new ImagickPixel('black'));
-        $draw->setFontSize($fontSize);
-
-        $draw->setTextAlignment(Imagick::ALIGN_CENTER);
-        $draw->annotation($width / 1.97, ($height / 2) + ($fontSize / 3), $initials);
-
-        $punch->drawImage($draw);
-        $punch->negateImage(true, Imagick::CHANNEL_ALPHA);
-
-        $image->newImage($width, $height, $background);
-        $image->setImageFormat("png");
-        $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
+        $image = (new Initials($background))->render($name, $width, $height);
 
         $response
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
-            ->file($image->getImageBlob());
+            ->file($image);
     }
 }

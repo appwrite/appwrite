@@ -11,17 +11,20 @@ use Utopia\Database\Document;
 /**
  * Initials provider.
  *
- * Generates a coloured square with the user's initials — identical logic to
- * the standalone GET /v1/avatars/initials endpoint, but exposed as a plain
- * PHP class so the photo-resolution chain can call it without going through
- * HTTP.
+ * Generates a coloured square with the user's initials. This is the single
+ * implementation behind both the photo-resolution chain and the standalone
+ * GET /v1/avatars/initials endpoint — the endpoint renders an arbitrary label
+ * through render(), the chain resolves the label off the user first.
  */
 class Initials extends Photo
 {
     /** Font used to render the initials, relative to the project root. */
     private const FONT_PATH = '/app/assets/fonts/inter-v8-latin-regular.woff2';
 
-    /** Colour palette — same as the Initials endpoint. */
+    /** Edge length used when the caller does not ask for a size. */
+    private const DEFAULT_SIZE = 500;
+
+    /** Colour palette — a theme is picked from the initials themselves. */
     private array $themes = [
         ['background' => '#FD366E'], // Pink
         ['background' => '#FE9567'], // Orange
@@ -53,41 +56,35 @@ class Initials extends Photo
 
         $name = $this->getLabel($user);
 
-        if (empty(\trim($name))) {
+        // Nothing printable to draw — bail out so the static fallback can be
+        // used instead. The standalone endpoint has no such fallback and keeps
+        // rendering a plain coloured square, which is why this check lives
+        // here and not in render().
+        if (empty($this->getInitials($name))) {
             return null;
         }
 
-        $words = \explode(' ', \strtoupper($name));
-        // Fallback: split on underscores when there is no space
-        $words = (\count($words) === 1) ? \explode('_', \strtoupper($name)) : $words;
+        return $this->render($name, $width, $height);
+    }
 
-        $initials = '';
-        $code = 0;
+    /**
+     * Render the initials of an arbitrary label as a PNG.
+     *
+     * @param string $name   Label to derive the initials from.
+     * @param int    $width  Output width in pixels; defaults when not positive.
+     * @param int    $height Output height in pixels; defaults when not positive.
+     * @return string Raw PNG bytes.
+     */
+    public function render(string $name, int $width, int $height): string
+    {
+        $initials = $this->getInitials($name);
 
-        foreach ($words as $key => $w) {
-            if (\ctype_alnum($w[0] ?? '')) {
-                $initials .= $w[0];
-                $code += \ord($w[0]);
+        $width = $width > 0 ? $width : self::DEFAULT_SIZE;
+        $height = $height > 0 ? $height : self::DEFAULT_SIZE;
 
-                if ($key === 1) {
-                    break;
-                }
-            }
-        }
-
-        // If we still have no printable initials, bail out so the static
-        // fallback can be used instead.
-        if (empty($initials)) {
-            return null;
-        }
-
-        $width = $width > 0 ? $width : 500;
-        $height = $height > 0 ? $height : 500;
-
-        $rand = (int) \substr((string) $code, -1);
-        $rand = ($rand > \count($this->themes) - 1) ? $rand % \count($this->themes) : $rand;
-
-        $bg = (!empty($this->background)) ? '#' . \ltrim($this->background, '#') : $this->themes[$rand]['background'];
+        $bg = !empty($this->background)
+            ? '#' . \ltrim($this->background, '#')
+            : $this->getTheme($initials);
 
         $image = new Imagick();
         $punch = new Imagick();
@@ -116,6 +113,50 @@ class Initials extends Photo
         $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 
         return $image->getImageBlob();
+    }
+
+    /**
+     * First letter of the first two words, skipping words that do not start
+     * with an alphanumeric character. Underscores stand in for spaces when the
+     * label has none.
+     */
+    private function getInitials(string $name): string
+    {
+        $words = \explode(' ', \strtoupper($name));
+        // Fallback: split on underscores when there is no space
+        $words = (\count($words) === 1) ? \explode('_', \strtoupper($name)) : $words;
+
+        $initials = '';
+
+        foreach ($words as $key => $w) {
+            if (\ctype_alnum($w[0] ?? '')) {
+                $initials .= $w[0];
+
+                if ($key === 1) {
+                    break;
+                }
+            }
+        }
+
+        return $initials;
+    }
+
+    /**
+     * Background colour for a set of initials. Derived from the initials so the
+     * same label always gets the same colour.
+     */
+    private function getTheme(string $initials): string
+    {
+        $code = 0;
+
+        foreach (\str_split($initials) as $char) {
+            $code += \ord($char);
+        }
+
+        $rand = (int) \substr((string) $code, -1);
+        $rand = ($rand > \count($this->themes) - 1) ? $rand % \count($this->themes) : $rand;
+
+        return $this->themes[$rand]['background'];
     }
 
     /**
