@@ -23,6 +23,7 @@ use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\Metric;
+use Appwrite\Utopia\Response\Model\Migration;
 use Appwrite\Utopia\Response\Model\None as NoneModel;
 use Appwrite\Utopia\Response\Model\PlatformAndroid;
 use Appwrite\Utopia\Response\Model\PlatformApple;
@@ -44,8 +45,12 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Assoc;
+use Utopia\Validator\Boolean as BooleanValidator;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 class TestFormat extends Format
@@ -136,10 +141,46 @@ final class FormatTest extends TestCase
 
         $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
 
-        $this->assertSame(
-            ['idGenerator' => 'ID.unique'],
-            $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['userId']['x-appwrite']
-        );
+        $userId = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['userId'];
+
+        $this->assertSame(['idGenerator' => 'ID.unique'], $userId['x-appwrite']);
+        $this->assertSame('<USER_ID>', $userId['example']);
+        $this->assertArrayNotHasKey('x-example', $userId);
+    }
+
+    public function testOpenApiExamplesUseNativeSchemaTypes(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('metadata', [], new Assoc(), 'Metadata.', example: '{"enabled":true}')
+            ->param('labels', [], new ArrayList(new Text(16)), 'Labels.', example: '["one","two"]')
+            ->param('singleLabel', [], new ArrayList(new Text(16)), 'Single label.', example: 'one')
+            ->param('count', 0, new Range(0, 100), 'Count.', example: '42')
+            ->param('ratio', 0, new Range(0, 10, Range::TYPE_FLOAT), 'Ratio.', example: '2.5')
+            ->param('enabled', false, new BooleanValidator(true), 'Enabled.', example: 'true')
+            ->param('text', '', new Text(64), 'Text.', example: '["one","two"]');
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        $this->assertEquals((object) ['enabled' => true], $properties['metadata']['example']);
+        $this->assertSame(['one', 'two'], $properties['labels']['example']);
+        $this->assertSame(['one'], $properties['singleLabel']['example']);
+        $this->assertSame(42, $properties['count']['example']);
+        $this->assertEqualsWithDelta(2.5, $properties['ratio']['example'], PHP_FLOAT_EPSILON);
+        $this->assertTrue($properties['enabled']['example']);
+        $this->assertSame('["one","two"]', $properties['text']['example']);
     }
 
     public function testMethodParameterOverridesFilterAndReplaceRouteParams(): void
@@ -411,6 +452,42 @@ final class FormatTest extends TestCase
         }
     }
 
+    public function testJsonArrayModelExamplesUseArraySchemas(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/migration'))
+            ->desc('Get migration')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getMigration',
+                description: 'Get migration.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_MIGRATION,
+                    ),
+                ],
+            ));
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new Migration()], [], 0, 'console'))->parse();
+        $resourceData = $openApi['components']['schemas']['migration']['properties']['resourceData'];
+
+        $this->assertSame('array', $resourceData['type']);
+        $this->assertSame(['type' => 'object'], $resourceData['items']);
+        $this->assertSame([
+            [
+                'resource' => 'Database',
+                'id' => 'public',
+                'status' => 'SUCCESS',
+                'message' => '',
+            ],
+        ], $resourceData['example']);
+    }
+
     public function testArrayItemsSchemaInfersTypesFromJsonStringExamples(): void
     {
         $this->assertSame(
@@ -532,6 +609,8 @@ final class FormatTest extends TestCase
             $this->assertSame('number', $default['items']['items']['type']);
             $this->assertSame('double', $default['items']['items']['format']);
         }
+
+        $this->assertSame([[1, 2], [3, 4], [5, 6]], $openApiRequestDefault['example']);
     }
 
     public function testPasswordFormatMarksOnlyExplicitPasswordFields(): void
@@ -563,10 +642,16 @@ final class FormatTest extends TestCase
         $openApiProperties = $openApi['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
 
         $this->assertSame('password', $openApiProperties['password']['format']);
+        $this->assertSame('password', $openApiProperties['password']['example']);
+        $this->assertArrayNotHasKey('x-example', $openApiProperties['password']);
         $this->assertSame('password', $openApiProperties['nullablePassword']['format']);
         $this->assertTrue($openApiProperties['nullablePassword']['x-nullable']);
         $this->assertArrayNotHasKey('format', $openApiProperties['name']);
-        $this->assertSame('password', $openApi['components']['schemas']['webhook']['properties']['authPassword']['format']);
+
+        $authPassword = $openApi['components']['schemas']['webhook']['properties']['authPassword'];
+        $this->assertSame('password', $authPassword['format']);
+        $this->assertSame('webhook-password', $authPassword['example']);
+        $this->assertArrayNotHasKey('x-example', $authPassword);
 
     }
 
