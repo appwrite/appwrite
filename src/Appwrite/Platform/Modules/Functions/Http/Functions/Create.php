@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Certificate as CertificateEvent;
@@ -27,6 +28,7 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Abuse;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -138,6 +140,7 @@ class Create extends Base
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -186,6 +189,7 @@ class Create extends Base
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
+        Bus $bus,
         array $platform
     ) {
 
@@ -435,6 +439,7 @@ class Create extends Base
                         'region' => $project->getAttribute('region')
                     ]))
                 );
+                $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
                 $ruleModel = new Rule();
                 $ruleCreate =

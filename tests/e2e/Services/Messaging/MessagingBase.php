@@ -1787,6 +1787,45 @@ trait MessagingBase
         $this->assertEquals(200, $image['headers']['status-code']);
     }
 
+    public function testCreateDraftPushWithData(): void
+    {
+        // A nested `data` object is sent as a JSON object and must round-trip
+        // intact (the controller normalizes the decoded stdClass to an array).
+        $data = [
+            'route' => '/home',
+            'meta' => [
+                'count' => 2,
+                'flags' => ['a', 'b'],
+            ],
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post',
+            'data' => $data,
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
+        $this->assertEquals($data, $response['body']['data']['data']);
+
+        $messageId = $response['body']['$id'];
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals($data, $message['body']['data']['data']);
+    }
+
     public function testScheduledMessage(): void
     {
         // Create user

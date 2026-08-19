@@ -6,7 +6,6 @@ use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Usage\Context as UsageContext;
-use Swoole\Runtime;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -101,8 +100,6 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry
     ): void {
-        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-
         $this->telemetry = $telemetry;
         $payload = $message->getPayload();
 

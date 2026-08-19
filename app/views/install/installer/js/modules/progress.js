@@ -368,6 +368,7 @@
             httpPort: normalizedHttpPort,
             httpsPort: normalizedHttpsPort,
             database: formState?.database || 'postgresql',
+            topology: formState?.topology || 'combined',
             appDomain: normalizedDomain,
             emailCertificates: normalizedEmail,
             forceHttps: formState?.forceHttps === true,
