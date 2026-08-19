@@ -7,6 +7,8 @@ use Appwrite\Platform\Modules\Usage\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
+use Appwrite\Usage\Policy;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -24,9 +26,9 @@ use Utopia\Validator\WhiteList;
 
 class XList extends Action
 {
-    private const VALID_INTERVALS = ['1m', '15m', '30m', '1h', '1d'];
+    protected const VALID_INTERVALS = ['1m', '15m', '30m', '1h', '1d'];
 
-    private const VALID_DIMENSIONS = [
+    protected const VALID_DIMENSIONS = [
         'path', 'method', 'status', 'service', 'resourceType',
         'country', 'region', 'hostname', 'ip',
         'osName', 'clientType', 'clientName', 'deviceName',
@@ -34,11 +36,11 @@ class XList extends Action
         'resourceId',
     ];
 
-    private const VALID_ORDER_BY = ['time', 'value'];
+    protected const VALID_ORDER_BY = ['time', 'value'];
 
-    private const VALID_ORDER_DIRS = ['asc', 'desc'];
+    protected const VALID_ORDER_DIRS = ['asc', 'desc'];
 
-    private const DEFAULT_AGGREGATE_WINDOW_SECONDS = 7 * 86400;
+    protected const DEFAULT_AGGREGATE_WINDOW_SECONDS = 7 * 86400;
 
     /**
      * Attributes that may be used as filter targets in `queries[]`. Subset
@@ -46,7 +48,7 @@ class XList extends Action
      * (osVersion, clientVersion, deviceBrand …) where dimension-by use is
      * preferred over equality filters.
      */
-    private const VALID_FILTER_ATTRIBUTES = [
+    protected const VALID_FILTER_ATTRIBUTES = [
         'path', 'method', 'status', 'service', 'resourceType', 'resourceId',
         'country', 'region', 'hostname', 'ip',
         'osName', 'clientType', 'clientName', 'deviceName',
@@ -61,7 +63,7 @@ class XList extends Action
      * own dedicated startAt/endAt params and ClickHouse doesn't fulltext
      * these LowCardinality(String) columns.
      */
-    private const VALID_FILTER_METHODS = [
+    protected const VALID_FILTER_METHODS = [
         Query::TYPE_EQUAL,
         Query::TYPE_NOT_EQUAL,
         Query::TYPE_CONTAINS,
@@ -70,8 +72,6 @@ class XList extends Action
         Query::TYPE_IS_NULL,
         Query::TYPE_IS_NOT_NULL,
     ];
-
-
 
     public static function getName(): string
     {
@@ -113,20 +113,21 @@ class XList extends Action
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') === 'enabled' ? false : ['server'],
             ))
             ->param('metrics', [], new ArrayList(new Text(255), 10), 'One to ten metric names. Single-metric callers pass a one-element array.', false)
-            ->param('queries', [], new ArrayList(new Text(4096), 10), 'Up to 10 filter queries in Utopia syntax. Allowed attributes, also published as the `UsageEventDimension` enum: ' . implode(', ', self::VALID_FILTER_ATTRIBUTES) . '. Allowed methods: equal, notEqual, contains, startsWith, endsWith, isNull, isNotNull. Example: `queries[]=equal("resourceType", ["bucket"])`.', true)
-            ->param('interval', null, new Nullable(new WhiteList(self::VALID_INTERVALS)), 'Time interval size. Omit (null) for a flat aggregate over the whole window. Allowed: ' . implode(', ', self::VALID_INTERVALS) . '.', true, enum: new Enum(
+            ->param('queries', [], new ArrayList(new Text(4096), 10), 'Up to 10 filter queries in Utopia syntax. Allowed attributes, also published as the `UsageEventDimension` enum: ' . implode(', ', static::VALID_FILTER_ATTRIBUTES) . '. Allowed methods: equal, notEqual, contains, startsWith, endsWith, isNull, isNotNull. Example: `queries[]=equal("resourceType", ["bucket"])`.', true)
+            ->param('interval', null, new Nullable(new WhiteList(static::VALID_INTERVALS)), 'Time interval size. Omit (null) for a flat aggregate over the whole window. Allowed: ' . implode(', ', static::VALID_INTERVALS) . '.', true, enum: new Enum(
                 name: 'UsageInterval',
                 map: parent::INTERVAL_ENUM_KEYS
             ))
-            ->param('dimensions', [], new ArrayList(new WhiteList(self::VALID_DIMENSIONS, true), 10), 'Break-down dimensions (max 10). Allowed: ' . implode(', ', self::VALID_DIMENSIONS) . '.', true, enum: new Enum(name: 'UsageEventDimension'))
+            ->param('dimensions', [], new ArrayList(new WhiteList(static::VALID_DIMENSIONS, true), 10), 'Break-down dimensions (max 10). Allowed: ' . implode(', ', static::VALID_DIMENSIONS) . '.', true, enum: new Enum(name: 'UsageEventDimension'))
             ->param('startAt', '', new DatetimeValidator(), 'Range start in ISO 8601. Defaults adapt to interval (7d for the no-interval aggregate).', true)
             ->param('endAt', '', new DatetimeValidator(), 'Range end in ISO 8601. Defaults to the current time.', true)
-            ->param('orderBy', 'time', new WhiteList(self::VALID_ORDER_BY), 'Column to order by. Allowed: time, value. Default time when an interval is set; otherwise value.', true, enum: new Enum(name: 'UsageOrderBy'))
-            ->param('orderDir', 'desc', new WhiteList(self::VALID_ORDER_DIRS), 'Sort direction: asc or desc. Default desc — paired with the default limit, returns the most recent / highest-value groups first.', true, enum: new Enum(name: 'UsageOrderDirection'))
+            ->param('orderBy', 'time', new WhiteList(static::VALID_ORDER_BY), 'Column to order by. Allowed: time, value. Default time when an interval is set; otherwise value.', true, enum: new Enum(name: 'UsageOrderBy'))
+            ->param('orderDir', 'desc', new WhiteList(static::VALID_ORDER_DIRS), 'Sort direction: asc or desc. Default desc — paired with the default limit, returns the most recent / highest-value groups first.', true, enum: new Enum(name: 'UsageOrderDirection'))
             ->param('limit', parent::DEFAULT_TYPED_LIMIT, new Range(1, parent::MAX_LIMIT), 'Maximum rows to return (1-' . parent::MAX_LIMIT . ').', true)
             ->param('offset', 0, new Range(0, parent::MAX_OFFSET), 'Pagination offset (0-' . parent::MAX_OFFSET . ').', true)
             ->inject('response')
             ->inject('usageForProject')
+            ->inject('usagePolicy')
             ->callback($this->action(...));
     }
 
@@ -142,16 +143,31 @@ class XList extends Action
         int $limit,
         int $offset,
         Response $response,
-        Tenant $usageForProject
+        Tenant $usageForProject,
+        Policy $usagePolicy
     ): void {
 
         $metricsList = $this->resolveMetrics($metrics);
-        $filterQueries = $this->parseFilterQueries($queries, self::VALID_FILTER_ATTRIBUTES, self::VALID_FILTER_METHODS);
+        $filterQueries = $this->parseFilterQueries($queries, static::VALID_FILTER_ATTRIBUTES, static::VALID_FILTER_METHODS);
+        $usagePolicy->assert($metricsList, $dimensions, $filterQueries, $startAt);
+
+        // Fold country filters the same way the write path folds them, or an
+        // uppercase value silently matches nothing.
+        foreach ($filterQueries as $query) {
+            if ($query->getAttribute() === 'country') {
+                $query->setValues(\array_map(
+                    static fn (mixed $value): mixed => \is_string($value)
+                        ? Context::normalizeCountry($value)
+                        : $value,
+                    $query->getValues()
+                ));
+            }
+        }
 
         $end = $endAt !== '' ? $endAt : \gmdate('Y-m-d H:i:s');
         $defaultWindow = $interval !== null
             ? parent::INTERVAL_DEFAULT_WINDOW_SECONDS[$interval]
-            : self::DEFAULT_AGGREGATE_WINDOW_SECONDS;
+            : static::DEFAULT_AGGREGATE_WINDOW_SECONDS;
         $start = $startAt !== ''
             ? $startAt
             : \gmdate('Y-m-d H:i:s', \strtotime($end) - $defaultWindow);
@@ -252,7 +268,7 @@ class XList extends Action
      * @return array<int, string>
      * @throws Exception
      */
-    private function resolveMetrics(array $metrics): array
+    protected function resolveMetrics(array $metrics): array
     {
         $resolved = array_values(array_unique(array_filter($metrics, static fn ($m) => $m !== '')));
 
@@ -277,5 +293,4 @@ class XList extends Action
 
         return $resolved;
     }
-
 }

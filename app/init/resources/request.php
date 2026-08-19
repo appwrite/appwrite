@@ -23,6 +23,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Usage\Policy as UsagePolicy;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -144,6 +145,7 @@ return function (Container $context): void {
         $tenant = (string) $project->getSequence();
         return new UsageTenant($usageConnection->getUsage(), $tenant === '' ? '__none__' : $tenant);
     }, ['project', 'usageConnection']);
+    $context->set('usagePolicy', fn () => new UsagePolicy(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {

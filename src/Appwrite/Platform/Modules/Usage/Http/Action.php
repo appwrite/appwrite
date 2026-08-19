@@ -131,10 +131,7 @@ abstract class Action extends PlatformAction
     }
 
     /**
-     * Reject queries whose `(endAt - startAt) / interval` exceeds MAX_BUCKETS.
-     * Surfaces a clear hint so callers know to use a coarser interval or a
-     * narrower range instead of letting ClickHouse churn through tens of
-     * thousands of buckets.
+     * Render a timestamp as the ISO 8601 UTC form the response models expect.
      *
      * @throws Exception
      */
@@ -149,6 +146,14 @@ abstract class Action extends PlatformAction
         }
     }
 
+    /**
+     * Reject queries whose `(endAt - startAt) / interval` exceeds MAX_BUCKETS.
+     * Surfaces a clear hint so callers know to use a coarser interval or a
+     * narrower range instead of letting ClickHouse churn through tens of
+     * thousands of buckets.
+     *
+     * @throws Exception
+     */
     protected function assertBucketBudget(string $startAt, string $endAt, string $interval): void
     {
         $bucketSeconds = self::INTERVAL_SECONDS[$interval] ?? null;

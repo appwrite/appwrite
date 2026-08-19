@@ -70,4 +70,23 @@ final class ContextTest extends TestCase
         $this->assertSame('project', $project['resourceId']);
         $this->assertSame('42', $project['resourceInternalId']);
     }
+
+    /**
+     * Readers fold `country` filters through normalizeCountry() to match how
+     * writes are stored. If the two ever disagree, an uppercase filter matches
+     * nothing in ClickHouse, which compares case-sensitively.
+     */
+    public function testCountryIsStoredInItsNormalizedForm(): void
+    {
+        $this->assertSame('us', Context::normalizeCountry('US'));
+        $this->assertSame('us', Context::normalizeCountry('us'));
+        $this->assertSame('', Context::normalizeCountry(''));
+
+        [$metric] = (new Context())
+            ->setCountry('US')
+            ->addMetric('network.requests', 1)
+            ->getMetrics();
+
+        $this->assertSame(Context::normalizeCountry('US'), $metric['country']);
+    }
 }

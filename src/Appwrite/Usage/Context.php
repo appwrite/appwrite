@@ -92,9 +92,19 @@ class Context
         return $this->resourcePath;
     }
 
+    /**
+     * Canonical form of the `country` column. ClickHouse compares strings
+     * case-sensitively, so readers must fold filter values the same way this
+     * folds them on the way in or an uppercase filter matches nothing.
+     */
+    public static function normalizeCountry(string $country): string
+    {
+        return strtolower($country);
+    }
+
     public function setCountry(string $country): self
     {
-        $this->country = strtolower($country);
+        $this->country = self::normalizeCountry($country);
         return $this;
     }
 
