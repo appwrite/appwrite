@@ -109,6 +109,17 @@ html .toaster-at-inline-end[data-sonner-toaster] [data-sonner-toast] {
 }
 
 :root {
+  /* Code syntax palette. Server HTML cannot know the theme, so CodeBlock emits
+     these variables instead of hex and the active theme class supplies values. */
+  --code-plain: #000000;
+  --code-module-keyword: #7b6aee;
+  --code-function: #4a8fe8;
+  --code-keyword: #e85d8a;
+  --code-escape: #4a8fe8;
+  --code-comment: #6e6e71;
+  --code-property: #4a8fe8;
+  --code-string: #2db88a;
+
   /* Text ::selection highlight */
   --selection-background: hsl(178 54% 69%);
   --background: oklch(1 0 0);
@@ -166,6 +177,22 @@ html[lang='he'] {
 
 html:not([lang='en']):not([lang='he']) {
   --font-aeonik-pro: var(--font-inter);
+}
+
+/* Dark chrome themes share the dark code palette. */
+.dark,
+.crazy,
+.stealth,
+.premium,
+.high-contrast {
+  --code-plain: #9cdcfe;
+  --code-module-keyword: #9685fe;
+  --code-function: #67a3fe;
+  --code-keyword: #fe86a8;
+  --code-escape: #67a3fe;
+  --code-comment: #6e6e71;
+  --code-property: #67a3fe;
+  --code-string: #4ad4ab;
 }
 
 .dark {
