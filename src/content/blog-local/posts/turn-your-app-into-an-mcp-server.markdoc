@@ -28,7 +28,7 @@ Most teams stall on the same two problems. First, auth: the MCP specification re
 
 Both problems have now disappeared. Every Appwrite project includes an [OAuth2 server](/blog/post/announcing-oauth2-server) that implements exactly the standards MCP requires. And MCP specification 2026-07-28 made the protocol stateless, so a plain HTTP function can serve it.
 
-In this tutorial you will build a complete, working MCP server for a task manager called TaskFlow. By the end, you will type "add a task to review the launch checklist" into Claude Code, approve access on a consent screen you own, and watch the task appear in your app. The full project is available on [GitHub](https://github.com/appwrite-community/taskflow-mcp).
+In this tutorial you will build a complete, working MCP server for a task manager called TaskFlow. By the end, you will type "add a task to review the launch checklist" into Claude Code, approve access on a consent screen you own, and watch the task appear in your app. The full project is available on [GitHub](https://github.com/appwrite-community/taskflow-mcp), and the finished result is running live: the app at [taskflow.appwrite.network](https://taskflow.appwrite.network) and its MCP server at `https://taskflow-mcp.appwrite.network/mcp`. You can create an account there and connect Claude Code to it before writing a single line of code.
 
 # What we are building
 
@@ -57,7 +57,7 @@ The flow, end to end:
 
 Create a project in the [Appwrite Console](https://cloud.appwrite.io) and head to **Auth**, then the **OAuth2 server** tab. Turn the server on and set two things:
 
-- **Authorization URL**: the page in your app that will host the consent screen. For local development this is `http://localhost:4100/oauth/consent`.
+- **Authorization URL**: the page in your app that will host the consent screen. While developing this is `http://localhost:4100/oauth/consent`; after you deploy TaskFlow at the end of this tutorial, you will change it to the deployed address, `https://taskflow.appwrite.network/oauth/consent` in our case.
 - **Scopes**: add `tasks.read` and `tasks.write`.
 
 A scope is a named permission that a user can grant or refuse. The built-in scopes (`openid`, `profile`, `email`, `phone`) cover identity. Custom scopes describe your product. Defining `tasks.read` separately from `tasks.write` means a user can later connect a reporting tool that only reads tasks, without also letting it create any.
@@ -323,11 +323,25 @@ For database access, the function uses the dynamic key Appwrite injects into eve
 
 ![The deployed MCP function in the Appwrite Console](/images/blog-local/turn-your-app-into-an-mcp-server/function-overview.avif)
 
-The function is described in `appwrite.config.json` at the repository root. The `scopes` array is what the dynamic key inside the function can do, which for this server is reading and writing rows and nothing else:
+The function and the web app are described in `appwrite.config.json` at the repository root. The `scopes` array is what the dynamic key inside the function can do, which for this server is reading and writing rows and nothing else:
 
 ```json
 {
     "projectId": "<PROJECT_ID>",
+    "sites": [
+        {
+            "$id": "taskflow",
+            "name": "TaskFlow",
+            "framework": "tanstack-start",
+            "adapter": "ssr",
+            "buildRuntime": "node-22",
+            "installCommand": "npm install",
+            "buildCommand": "npm run build",
+            "outputDirectory": "./.output",
+            "path": "apps/taskflow",
+            "specification": "s-0.5vcpu-512mb"
+        }
+    ],
     "functions": [
         {
             "$id": "taskflow-mcp",
@@ -344,19 +358,24 @@ The function is described in `appwrite.config.json` at the repository root. The 
 }
 ```
 
-Deploy it with the Appwrite CLI:
+The TaskFlow web app deploys the same way, as an [Appwrite Site](/docs/products/sites) with the TanStack Start framework preset, so the whole product runs on one platform. Both are described in the same configuration file. Deploy them with the Appwrite CLI:
 
 ```bash
 appwrite login
+appwrite push site --site-id taskflow
 appwrite push function --function-id taskflow-mcp --activate
 ```
 
-The deploy output prints the function's domain. Your MCP server now lives at `https://<FUNCTION_DOMAIN>/mcp`, and its discovery document at `https://<FUNCTION_DOMAIN>/.well-known/oauth-protected-resource/mcp`:
+Before the site can run, give it its configuration in the Console under the site's **Variables** tab: `APPWRITE_ENDPOINT`, `APPWRITE_PROJECT_ID`, `APPWRITE_API_KEY`, and a random `SESSION_SECRET` for its cookie. The MCP function needs no variables at all, because Appwrite injects the endpoint, project ID, and a request-scoped key into every execution.
+
+Each deploy prints its domain, and you can assign friendlier ones in the Console under **Domains**. Our demo runs the app at `taskflow.appwrite.network` and the MCP server at `taskflow-mcp.appwrite.network`. With the app deployed, go back to **Auth**, then **OAuth2 server**, and update the authorization URL to the deployed consent page, `https://taskflow.appwrite.network/oauth/consent`.
+
+Your MCP server now lives at `https://taskflow-mcp.appwrite.network/mcp`, and its discovery document is public:
 
 ```json
 {
-    "resource": "https://<FUNCTION_DOMAIN>/mcp",
-    "authorization_servers": ["https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>"],
+    "resource": "https://taskflow-mcp.appwrite.network/mcp",
+    "authorization_servers": ["https://fra.cloud.appwrite.io/v1/oauth2/6a85d86f00183ced692f"],
     "scopes_supported": ["openid", "tasks.read", "tasks.write"],
     "resource_name": "TaskFlow"
 }
@@ -366,10 +385,10 @@ That document is the handshake that makes everything automatic: any MCP client t
 
 # Connect Claude Code
 
-Time to use it. Add the server:
+Time to use it. Add the server, using your function's domain (the command below points at our live demo, so you can run it as-is):
 
 ```bash
-claude mcp add --transport http taskflow https://<FUNCTION_DOMAIN>/mcp
+claude mcp add --transport http taskflow https://taskflow-mcp.appwrite.network/mcp
 ```
 
 Inside Claude Code, run `/mcp`, select **taskflow**, and choose **Authenticate**. Watch what happens: a browser opens on your project's authorization page, which sends you to TaskFlow's consent screen. Sign in as a TaskFlow user, review the three permissions, and allow access. The terminal reports the connection, and no one ever touched a client ID or an API key.
@@ -377,15 +396,14 @@ Inside Claude Code, run `/mcp`, select **taskflow**, and choose **Authenticate**
 Now ask for something:
 
 ```text
-> List my TaskFlow tasks, then add a task called 'Review the OAuth2 blog draft'
-  and mark the task about writing the MCP tutorial as done.
+> List my TaskFlow tasks, then add tasks 'Write the MCP tutorial' and
+  'Ship the TaskFlow demo', then mark the one about the demo as done.
 
 ⏺ Called taskflow 3 times
 
-⏺ All done.
-  - List had one task: "Write the MCP tutorial" (open).
-  - Added "Review the OAuth2 blog draft".
-  - Marked "Write the MCP tutorial" done.
+⏺ Done. List was empty. Added two tasks, marked demo done:
+  - ☐ Write the MCP tutorial
+  - ☑ Ship the TaskFlow demo
 ```
 
 Open the TaskFlow dashboard and the changes are there, created through the same database rules as tasks added in the app, owned by the same user.
@@ -418,7 +436,7 @@ A task manager whose users can connect any MCP-capable AI tool themselves: no de
 - The MCP server is an Appwrite Function that verifies signed tokens with your project's public keys and checks scopes before touching data.
 - Users manage the whole relationship from inside your product.
 
-The same structure extends to any product: swap the tasks table for your own data, rename the scopes, and rewrite the tools. The complete project, including the TaskFlow web app, is on [GitHub](https://github.com/appwrite-community/taskflow-mcp).
+The same structure extends to any product: swap the tasks table for your own data, rename the scopes, and rewrite the tools. The complete project, including the TaskFlow web app, is on [GitHub](https://github.com/appwrite-community/taskflow-mcp), and the live demo is waiting at [taskflow.appwrite.network](https://taskflow.appwrite.network).
 
 # More resources
 
