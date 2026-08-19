@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "40231755d4dc80d8a23901402b42df4a",
+    "content-hash": "bc7793f803702df7c7726d103a13f599",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1079,16 +1079,16 @@
         },
         {
             "name": "open-runtimes/sdk-for-php",
-            "version": "0.10.1",
+            "version": "0.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/open-runtimes/sdk-for-php.git",
-                "reference": "2a83df23a377d846a6a57e2146c485c4be706512"
+                "reference": "2db10da2fa7163d096bfd8343a44ae99a2852527"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/2a83df23a377d846a6a57e2146c485c4be706512",
-                "reference": "2a83df23a377d846a6a57e2146c485c4be706512",
+                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/2db10da2fa7163d096bfd8343a44ae99a2852527",
+                "reference": "2db10da2fa7163d096bfd8343a44ae99a2852527",
                 "shasum": ""
             },
             "require": {
@@ -1113,12 +1113,12 @@
             "license": [
                 "MIT"
             ],
-            "description": "PHP SDK for the Open Runtimes orchestrator Jobs API.",
+            "description": "PHP SDK for the Open Runtimes orchestrator: jobs, deployments, sandboxes, and pools.",
             "support": {
                 "issues": "https://github.com/open-runtimes/sdk-for-php/issues",
-                "source": "https://github.com/open-runtimes/sdk-for-php/tree/0.10.1"
+                "source": "https://github.com/open-runtimes/sdk-for-php/tree/0.11.1"
             },
-            "time": "2026-07-31T13:09:22+00:00"
+            "time": "2026-08-19T12:49:14+00:00"
         },
         {
             "name": "open-telemetry/api",
@@ -5068,16 +5068,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "5.2.0",
+            "version": "5.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "780f3c84d270a14744a8cd61b1234310d9af59c4"
+                "reference": "ee3928969d6c654fad44fad7f38cc96383b031fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/780f3c84d270a14744a8cd61b1234310d9af59c4",
-                "reference": "780f3c84d270a14744a8cd61b1234310d9af59c4",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/ee3928969d6c654fad44fad7f38cc96383b031fa",
+                "reference": "ee3928969d6c654fad44fad7f38cc96383b031fa",
                 "shasum": ""
             },
             "require": {
@@ -5128,10 +5128,10 @@
                 "vcs"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/vcs/tree/5.2.0",
+                "source": "https://github.com/utopia-php/vcs/tree/5.2.1",
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-08-19T10:17:14+00:00"
+            "time": "2026-08-19T12:49:54+00:00"
         },
         {
             "name": "utopia-php/websocket",
