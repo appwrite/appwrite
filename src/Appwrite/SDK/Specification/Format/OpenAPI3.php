@@ -1104,7 +1104,7 @@ class OpenAPI3 extends Format
                         'description' => $rule['description'] ?? '',
                     ];
 
-                    if (isset($rule['example'])) {
+                    if (isset($rule['example']) && ($type === 'string' || $rule['example'] !== '')) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['example'] = $this->normalizeExample($rule['example'], $type);
                     }
                     if ($readOnly) {
@@ -1142,8 +1142,8 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                if (isset($rule['example'])) {
-                    $propertyType = $rule['array'] ? 'array' : $type;
+                $propertyType = $rule['array'] ? 'array' : $type;
+                if (isset($rule['example']) && (\in_array($propertyType, ['string', 'array']) || $rule['example'] !== '')) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['example'] = $this->normalizeExample($rule['example'], $propertyType);
                 }
                 if ($items) {
