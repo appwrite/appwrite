@@ -37,6 +37,13 @@ services:
       - _TESTS_OAUTH2_GITHUB_CLIENT_ID
       - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
   appwrite-usage-setup:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
     image: appwrite-dev
   appwrite-realtime:
     build:
