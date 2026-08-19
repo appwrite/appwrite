@@ -19,6 +19,7 @@ use Appwrite\Utopia\Response\Model\AlgoPhpass;
 use Appwrite\Utopia\Response\Model\AlgoScrypt;
 use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
+use Appwrite\Utopia\Response\Model as ResponseModel;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\HealthStatus;
@@ -367,6 +368,67 @@ final class FormatTest extends TestCase
      * (`undefined: SessionId`) and a Python SDK that requested
      * `/account/sessions/None`.
      */
+    public function testObjectModelReferencesWithoutExamplesOmitExample(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $parent = new class () extends ResponseModel {
+            public function __construct()
+            {
+                $this->addRule('child', [
+                    'type' => 'childWithoutExample',
+                    'description' => 'Nested child.',
+                    'default' => null,
+                ]);
+            }
+
+            public function getName(): string
+            {
+                return 'Parent without example';
+            }
+
+            public function getType(): string
+            {
+                return 'parentWithoutExample';
+            }
+        };
+
+        $child = new class () extends ResponseModel {
+            public function getName(): string
+            {
+                return 'Child without example';
+            }
+
+            public function getType(): string
+            {
+                return 'childWithoutExample';
+            }
+        };
+
+        $route = (new Route('GET', '/v1/tests/parent'))
+            ->desc('Get parent')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getParent',
+                description: 'Get parent.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: 'parentWithoutExample',
+                    ),
+                ],
+            ));
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [$parent, $child], [], 0, 'console'))->parse();
+        $property = $openApi['components']['schemas']['parentWithoutExample']['properties']['child'];
+
+        $this->assertSame('object', $property['type']);
+        $this->assertArrayNotHasKey('example', $property);
+    }
+
     public function testOptionalPathParameterIsEmittedAsRequired(): void
     {
         Method::$processed = [];
