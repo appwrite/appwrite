@@ -5,7 +5,6 @@
  */
 
 use Appwrite\Auth\OAuth2\Bitbucket as OAuth2Bitbucket;
-use Appwrite\Auth\OAuth2\Cursor as OAuth2Cursor;
 use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
@@ -66,20 +65,15 @@ return [
     ],
     'origin' => [
         'adapter' => Origin::class,
-        // Origin apps authenticate like GitHub Apps (an app-signed JWT minting
-        // installation tokens), so the same Ed25519 private key doubles as the
-        // OAuth2 secret. Auth\OAuth2\Cursor expects it JSON-wrapped, the way
-        // Apple does.
-        'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Cursor($clientId, \json_encode([
-            'privateKey' => $clientSecret,
-        ]), ''),
+        // No 'oauth2': Origin has no OAuth2 user flow. Installs are approved
+        // on Cursor and confirmed by a signed receipt, and the dedicated
+        // Origin endpoints construct their own Auth\OAuth2\Cursor for that
+        // handshake.
         'variables' => [
-            'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_CLIENT_ID'],
-            // Factory::fromInstallation() reads appId + privateKey; the app id
-            // and OAuth2 client id are the same value on Origin.
+            // Factory::fromInstallation() reads appId + privateKey; Origin's
+            // app id doubles as its client id.
             'appId' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_CLIENT_ID'],
             'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_PRIVATE_KEY'],
-            'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_PRIVATE_KEY'],
             // No webhookSecret: Origin signs deliveries with its own Ed25519
             // key, verified against its published JWKS instead of a shared secret.
         ],
