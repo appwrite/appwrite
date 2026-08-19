@@ -46,13 +46,17 @@ class Get extends Action
                 namespace: 'avatars',
                 group: null,
                 name: 'getPhoto',
-                description: 'Returns the best available profile photo for the currently authenticated user. '
-                    . 'The endpoint tries each source in priority order and returns the first successful result: '
-                    . '(1) OAuth2 session photo (planned — see TODO in source), '
-                    . '(2) Gravatar, '
-                    . '(3) Libravatar, '
-                    . '(4) initials generated from the user\'s name or email, '
-                    . '(5) a built-in static fallback image.',
+                description: <<<EOT
+                Returns the best available profile photo for the currently authenticated user.
+
+                The endpoint tries each source in priority order and returns the first successful result:
+
+                1. OAuth2 session photo (planned — see TODO in source)
+                2. Gravatar
+                3. Libravatar
+                4. Initials generated from the user's name or email
+                5. A built-in static fallback image
+                EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
                 locationAuth: ['Project', 'ImpersonateUserId'],
@@ -93,7 +97,7 @@ class Get extends Action
         $providers = [
             new Gravatar(),
             new Libavatar(),
-            new Initials($this->getAppRoot()),
+            new Initials(),
             new Fallback(),
         ];
 
@@ -142,7 +146,7 @@ class Get extends Action
         };
 
         $response
-            ->addHeader('Cache-Control', 'private, max-age=60') // 1 minute — photo may change
+            ->addHeader('Cache-Control', 'private, no-store') // photo can change at any time
             ->setContentType($contentType)
             ->file($this->process($data, $width, $height, $quality, $output));
     }

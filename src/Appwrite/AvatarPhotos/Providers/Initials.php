@@ -18,6 +18,9 @@ use Utopia\Database\Document;
  */
 class Initials extends Photo
 {
+    /** Font used to render the initials, relative to the project root. */
+    private const FONT_PATH = '/app/assets/fonts/inter-v8-latin-regular.woff2';
+
     /** Colour palette — same as the Initials endpoint. */
     private array $themes = [
         ['background' => '#FD366E'], // Pink
@@ -28,7 +31,6 @@ class Initials extends Photo
     ];
 
     public function __construct(
-        private readonly string $appRoot,
         private readonly string $background = '',
     ) {
     }
@@ -95,7 +97,9 @@ class Initials extends Photo
 
         $punch->newImage($width, $height, 'transparent');
 
-        $fontPath = $this->appRoot . '/app/assets/fonts/inter-v8-latin-regular.woff2';
+        // Providers live at src/Appwrite/AvatarPhotos/Providers, four levels
+        // below the project root — same walk-up as Avatars\Http\Action.
+        $fontPath = \dirname(__DIR__, 4) . self::FONT_PATH;
         $draw->setFont($fontPath);
         $image->setFont($fontPath);
 
