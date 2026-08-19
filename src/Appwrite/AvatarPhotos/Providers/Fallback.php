@@ -1,6 +1,9 @@
 <?php
 
-namespace Appwrite\AvatarPhotos\Static;
+namespace Appwrite\AvatarPhotos\Providers;
+
+use Appwrite\AvatarPhotos\Photo;
+use Utopia\Database\Document;
 
 /**
  * Static fallback provider.
@@ -12,20 +15,27 @@ namespace Appwrite\AvatarPhotos\Static;
  *
  * The SVG depicts a neutral silhouette on an Appwrite-pink background —
  * similar to what "mystery man" (mp) looks like on Gravatar, but ours.
+ *
+ * This provider needs nothing from the user and never returns null, so it is
+ * always safe to place last in the chain.
  */
-class Provider
+class Fallback extends Photo
 {
-    /**
-     * Return the raw PNG bytes of the fallback avatar.
-     *
-     * The image is always returned; this method never returns null.
-     *
-     * @param int $width  Desired width in pixels.
-     * @param int $height Desired height in pixels.
-     * @return string     Raw PNG bytes.
-     */
-    public function get(int $width = 256, int $height = 256): string
+    public function getName(): string
     {
+        return 'fallback';
+    }
+
+    public function supports(Document $user): bool
+    {
+        return true;
+    }
+
+    public function get(Document $user, int $width, int $height, string $rating): ?string
+    {
+        $width = $width > 0 ? $width : 256;
+        $height = $height > 0 ? $height : 256;
+
         // Generate an SVG silhouette and rasterise it with Imagick so the
         // caller always receives a PNG regardless of whether SVG support is
         // available in the client.

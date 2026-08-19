@@ -1,10 +1,12 @@
 <?php
 
-namespace Appwrite\AvatarPhotos\Initials;
+namespace Appwrite\AvatarPhotos\Providers;
 
+use Appwrite\AvatarPhotos\Photo;
 use Imagick;
 use ImagickDraw;
 use ImagickPixel;
+use Utopia\Database\Document;
 
 /**
  * Initials provider.
@@ -14,10 +16,8 @@ use ImagickPixel;
  * PHP class so the photo-resolution chain can call it without going through
  * HTTP.
  */
-class Provider
+class Initials extends Photo
 {
-    private string $appRoot;
-
     /** Colour palette — same as the Initials endpoint. */
     private array $themes = [
         ['background' => '#FD366E'], // Pink
@@ -27,24 +27,30 @@ class Provider
         ['background' => '#85DBD8'], // Mint
     ];
 
-    public function __construct(string $appRoot)
-    {
-        $this->appRoot = $appRoot;
+    public function __construct(
+        private readonly string $appRoot,
+        private readonly string $background = '',
+    ) {
     }
 
-    /**
-     * Generate an initials avatar image.
-     *
-     * @param string $name        Full name or email to derive initials from.
-     *                            When empty or blank, returns null so the caller
-     *                            moves on to the next (static fallback) provider.
-     * @param int    $width       Canvas width in pixels.
-     * @param int    $height      Canvas height in pixels.
-     * @param string $background  Optional hex colour (without #). Empty = auto.
-     * @return string|null        Raw PNG bytes, or null when no name/email is available.
-     */
-    public function get(string $name, int $width = 500, int $height = 500, string $background = ''): ?string
+    public function getName(): string
     {
+        return 'initials';
+    }
+
+    public function supports(Document $user): bool
+    {
+        return !empty(\trim($this->getLabel($user)));
+    }
+
+    public function get(Document $user, int $width, int $height, string $rating): ?string
+    {
+        if (!\extension_loaded('imagick')) {
+            return null;
+        }
+
+        $name = $this->getLabel($user);
+
         if (empty(\trim($name))) {
             return null;
         }
@@ -73,10 +79,13 @@ class Provider
             return null;
         }
 
+        $width = $width > 0 ? $width : 500;
+        $height = $height > 0 ? $height : 500;
+
         $rand = (int) \substr((string) $code, -1);
         $rand = ($rand > \count($this->themes) - 1) ? $rand % \count($this->themes) : $rand;
 
-        $bg = (!empty($background)) ? '#' . \ltrim($background, '#') : $this->themes[$rand]['background'];
+        $bg = (!empty($this->background)) ? '#' . \ltrim($this->background, '#') : $this->themes[$rand]['background'];
 
         $image = new Imagick();
         $punch = new Imagick();
@@ -103,5 +112,16 @@ class Provider
         $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 
         return $image->getImageBlob();
+    }
+
+    /**
+     * Text the initials are derived from — the display name, falling back to
+     * the email address when the user has not set one.
+     */
+    private function getLabel(Document $user): string
+    {
+        $name = $user->getAttribute('name', '');
+
+        return !empty($name) ? $name : $user->getAttribute('email', '');
     }
 }

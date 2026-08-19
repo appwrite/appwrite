@@ -68,6 +68,7 @@
         "utopia-php/agents": "2.*",
         "utopia-php/audit": "3.0.*",
         "utopia-php/auth": "^0.10",
+        "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^4.0.0",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",

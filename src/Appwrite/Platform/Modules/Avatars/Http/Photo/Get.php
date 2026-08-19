@@ -3,6 +3,11 @@
 namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
 
 use Appwrite\AvatarPhotos\Photo;
+use Appwrite\AvatarPhotos\Providers\Fallback;
+use Appwrite\AvatarPhotos\Providers\Gravatar;
+use Appwrite\AvatarPhotos\Providers\Initials;
+use Appwrite\AvatarPhotos\Providers\Libavatar;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -10,7 +15,11 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Balancer\Algorithm\First;
+use Utopia\Balancer\Balancer;
+use Utopia\Balancer\Option;
 use Utopia\Database\Document;
+use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Range;
@@ -74,20 +83,57 @@ class Get extends Action
         Response $response,
         Document $user,
     ): void {
-        $email = $user->getAttribute('email', '');
-        $name  = $user->getAttribute('name', '');
+        // -------------------------------------------------------------------
+        // Priority 1: OAuth2 session photo
+        // TODO: Resolve profile photo from the user's active OAuth2 token.
+        //       Each OAuth2 provider (Google, GitHub, …) exposes a profile-
+        //       picture URL. Add it as a provider at the front of the list.
+        //       Track in: https://github.com/appwrite/appwrite/issues/TODO
+        // -------------------------------------------------------------------
+        $providers = [
+            new Gravatar(),
+            new Libavatar(),
+            new Initials($this->getAppRoot()),
+            new Fallback(),
+        ];
 
-        $photo = new Photo($this->getAppRoot());
+        $balancer = new Balancer(new First());
 
-        $data = $photo->resolve(
-            email: $email,
-            name: $name,
-            width: $width,
-            height: $height,
-            quality: $quality,
-            output: $output,
-            rating: $rating,
-        );
+        foreach ($providers as $provider) {
+            $balancer->addOption(new Option(['provider' => $provider]));
+        }
+
+        // Skip providers that lack the data they need — no email means no
+        // Gravatar lookup — so we never pay for a doomed network round-trip.
+        $balancer->addFilter(function (Option $option) use ($user) {
+            /** @var Photo $provider */
+            $provider = $option->getState('provider');
+
+            return $provider->supports($user);
+        });
+
+        // A provider that came up empty is out of the running; without this the
+        // First algorithm would hand back the same option forever.
+        $balancer->addFilter(fn (Option $option) => !$option->getState('attempted', false));
+
+        $data = null;
+
+        while (($option = $balancer->run()) !== null) {
+            $option->setState('attempted', true);
+
+            /** @var Photo $provider */
+            $provider = $option->getState('provider');
+
+            $data = $provider->get($user, $width, $height, $rating);
+
+            if ($data !== null) {
+                break;
+            }
+        }
+
+        if ($data === null) {
+            throw new Exception(Exception::AVATAR_NOT_FOUND);
+        }
 
         $contentType = match ($output) {
             'jpg'  => 'image/jpeg',
@@ -98,6 +144,31 @@ class Get extends Action
         $response
             ->addHeader('Cache-Control', 'private, max-age=60') // 1 minute — photo may change
             ->setContentType($contentType)
-            ->file($data);
+            ->file($this->process($data, $width, $height, $quality, $output));
+    }
+
+    /**
+     * Resize and re-encode raw image bytes.
+     */
+    private function process(string $raw, int $width, int $height, int $quality, string $output): string
+    {
+        if (!\extension_loaded('imagick') || empty($raw)) {
+            return $raw;
+        }
+
+        try {
+            $image = new Image($raw);
+
+            if ($width > 0 || $height > 0) {
+                $image->crop(
+                    $width > 0 ? $width : 256,
+                    $height > 0 ? $height : 256,
+                );
+            }
+
+            return $image->output($output, $quality);
+        } catch (\Throwable) {
+            return $raw;
+        }
     }
 }

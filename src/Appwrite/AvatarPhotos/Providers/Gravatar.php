@@ -1,36 +1,48 @@
 <?php
 
-namespace Appwrite\AvatarPhotos\Gravatar;
+namespace Appwrite\AvatarPhotos\Providers;
 
+use Appwrite\AvatarPhotos\Photo;
+use Utopia\Database\Document;
 use Utopia\Fetch\Client;
 
 /**
  * Gravatar provider.
  *
- * Resolves a photo for a given email address via the Gravatar service.
+ * Resolves a photo for a user's email address via the Gravatar service.
  * Uses the '404' fallback so we get a clear signal when the user has no
  * custom Gravatar; the caller can then move on to the next provider.
  */
-class Provider
+class Gravatar extends Photo
 {
-    /**
-     * Fetch the raw image bytes for $email, or return null when none exists.
-     *
-     * @param string $email   Lowercase-trimmed email address to look up.
-     * @param string $rating  Maximum rating: 'g' | 'pg' | 'r' | 'x'
-     * @return string|null    Raw image bytes, or null when not found / unavailable.
-     */
-    public function get(string $email, string $rating = 'g'): ?string
+    private const BASE_URL = 'https://www.gravatar.com/avatar/';
+
+    public function getName(): string
     {
+        return 'gravatar';
+    }
+
+    public function supports(Document $user): bool
+    {
+        return !empty($user->getAttribute('email', ''));
+    }
+
+    public function get(Document $user, int $width, int $height, string $rating): ?string
+    {
+        $email = $user->getAttribute('email', '');
         $hash = \hash('sha256', \strtolower(\trim($email)));
 
         // Use 'd=404' so Gravatar returns HTTP 404 instead of a generic image
         // when the user has no custom avatar — letting us fall through to the
         // next provider.
-        $url = 'https://www.gravatar.com/avatar/' . $hash
-            . '?s=256&d=404&r=' . \urlencode($rating);
+        $url = self::BASE_URL . $hash . '?' . \http_build_query([
+            's' => \max($width, $height) > 0 ? \max($width, $height) : 256,
+            'd' => '404',
+            'r' => $rating,
+        ]);
 
         $client = new Client();
+
         try {
             $res = $client
                 ->setAllowRedirects(true)
@@ -44,6 +56,7 @@ class Provider
         }
 
         $body = $res->getBody();
+
         if (empty($body)) {
             return null;
         }
