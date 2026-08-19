@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Usage\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Policy;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -24,28 +25,28 @@ use Utopia\Validator\WhiteList;
 
 class XList extends Action
 {
-    private const VALID_INTERVALS = ['1m', '15m', '30m', '1h', '1d'];
+    protected const VALID_INTERVALS = ['1m', '15m', '30m', '1h', '1d'];
 
-    private const VALID_DIMENSIONS = ['resourceId', 'service', 'resourceType', 'ordinal'];
+    protected const VALID_DIMENSIONS = ['resourceId', 'service', 'resourceType', 'ordinal'];
 
-    private const VALID_ORDER_BY = ['time', 'value'];
+    protected const VALID_ORDER_BY = ['time', 'value'];
 
-    private const VALID_ORDER_DIRS = ['asc', 'desc'];
+    protected const VALID_ORDER_DIRS = ['asc', 'desc'];
 
     /**
      * `last` keeps the historical argMax(value, time) behaviour — the latest
      * reading in the bucket. `max` takes the highest reading instead, which is
      * how a sampled level series (realtime concurrency) rolls up to a peak.
      */
-    private const VALID_AGGREGATES = ['last', 'max'];
+    protected const VALID_AGGREGATES = ['last', 'max'];
 
-    private const DEFAULT_AGGREGATE_WINDOW_SECONDS = 7 * 86400;
+    protected const DEFAULT_AGGREGATE_WINDOW_SECONDS = 7 * 86400;
 
     /**
      * Attributes that may be used as filter targets in `queries[]`. Matches
      * GAUGE_COLUMNS in utopia-php/usage.
      */
-    private const VALID_FILTER_ATTRIBUTES = ['service', 'resourceType', 'resourceId', 'ordinal'];
+    protected const VALID_FILTER_ATTRIBUTES = ['service', 'resourceType', 'resourceId', 'ordinal'];
 
     /**
      * Query::TYPE_* values supported on the filter surface. Gauges only
@@ -53,14 +54,12 @@ class XList extends Action
      * presence is what makes sense; we skip contains/startsWith here since
      * they're rarely useful on values like 'bucket' / 'function'.
      */
-    private const VALID_FILTER_METHODS = [
+    protected const VALID_FILTER_METHODS = [
         Query::TYPE_EQUAL,
         Query::TYPE_NOT_EQUAL,
         Query::TYPE_IS_NULL,
         Query::TYPE_IS_NOT_NULL,
     ];
-
-
 
     public static function getName(): string
     {
@@ -106,21 +105,22 @@ class XList extends Action
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') === 'enabled' ? false : ['server'],
             ))
             ->param('metrics', [], new ArrayList(new Text(255), 10), 'One to ten metric names. Single-metric callers pass a one-element array.', false)
-            ->param('queries', [], new ArrayList(new Text(4096), 10), 'Up to 10 filter queries in Utopia syntax. Allowed attributes, also published as the `UsageGaugeDimension` enum: ' . implode(', ', self::VALID_FILTER_ATTRIBUTES) . '. Allowed methods: equal, notEqual, isNull, isNotNull. Example: `queries[]=equal("resourceType", ["bucket"])`.', true)
-            ->param('interval', null, new Nullable(new WhiteList(self::VALID_INTERVALS)), 'Time interval size. Omit (null) for a flat aggregate over the whole window. Allowed: ' . implode(', ', self::VALID_INTERVALS) . '.', true, enum: new Enum(
+            ->param('queries', [], new ArrayList(new Text(4096), 10), 'Up to 10 filter queries in Utopia syntax. Allowed attributes, also published as the `UsageGaugeDimension` enum: ' . implode(', ', static::VALID_FILTER_ATTRIBUTES) . '. Allowed methods: equal, notEqual, isNull, isNotNull. Example: `queries[]=equal("resourceType", ["bucket"])`.', true)
+            ->param('interval', null, new Nullable(new WhiteList(static::VALID_INTERVALS)), 'Time interval size. Omit (null) for a flat aggregate over the whole window. Allowed: ' . implode(', ', static::VALID_INTERVALS) . '.', true, enum: new Enum(
                 name: 'UsageInterval',
                 map: parent::INTERVAL_ENUM_KEYS
             ))
-            ->param('dimensions', [], new ArrayList(new WhiteList(self::VALID_DIMENSIONS, true), 2), 'Break-down dimensions. Allowed: ' . implode(', ', self::VALID_DIMENSIONS) . '.', true, enum: new Enum(name: 'UsageGaugeDimension'))
+            ->param('dimensions', [], new ArrayList(new WhiteList(static::VALID_DIMENSIONS, true), 2), 'Break-down dimensions. Allowed: ' . implode(', ', static::VALID_DIMENSIONS) . '.', true, enum: new Enum(name: 'UsageGaugeDimension'))
             ->param('startAt', '', new DatetimeValidator(), 'Range start in ISO 8601. Defaults to endAt - 7d.', true)
             ->param('endAt', '', new DatetimeValidator(), 'Range end in ISO 8601. Defaults to the current time.', true)
-            ->param('orderBy', 'time', new WhiteList(self::VALID_ORDER_BY), 'Column to order by. Allowed: time, value. Default time.', true, enum: new Enum(name: 'UsageOrderBy'))
-            ->param('orderDir', 'desc', new WhiteList(self::VALID_ORDER_DIRS), 'Sort direction: asc or desc. Default desc — paired with the default limit, this returns the most recent groups first. Pass asc for chronological charting.', true, enum: new Enum(name: 'UsageOrderDirection'))
+            ->param('orderBy', 'time', new WhiteList(static::VALID_ORDER_BY), 'Column to order by. Allowed: time, value. Default time.', true, enum: new Enum(name: 'UsageOrderBy'))
+            ->param('orderDir', 'desc', new WhiteList(static::VALID_ORDER_DIRS), 'Sort direction: asc or desc. Default desc — paired with the default limit, this returns the most recent groups first. Pass asc for chronological charting.', true, enum: new Enum(name: 'UsageOrderDirection'))
             ->param('limit', parent::DEFAULT_TYPED_LIMIT, new Range(1, parent::MAX_LIMIT), 'Maximum rows to return (1-' . parent::MAX_LIMIT . ').', true)
             ->param('offset', 0, new Range(0, parent::MAX_OFFSET), 'Pagination offset (0-' . parent::MAX_OFFSET . ').', true)
-            ->param('aggregate', 'last', new WhiteList(self::VALID_AGGREGATES), 'How to combine the samples in each bucket. `last` (default) returns the latest reading — the right answer for a snapshot such as storage. `max` returns the highest reading, which is what a sampled level series needs: peak concurrent realtime connections is the max of `' . METRIC_REALTIME_CONNECTIONS . '` over the window.', true)
+            ->param('aggregate', 'last', new WhiteList(static::VALID_AGGREGATES), 'How to combine the samples in each bucket. `last` (default) returns the latest reading — the right answer for a snapshot such as storage. `max` returns the highest reading, which is what a sampled level series needs: peak concurrent realtime connections is the max of `' . METRIC_REALTIME_CONNECTIONS . '` over the window.', true)
             ->inject('response')
             ->inject('usageForProject')
+            ->inject('usagePolicy')
             ->callback($this->action(...));
     }
 
@@ -137,16 +137,18 @@ class XList extends Action
         int $offset,
         string $aggregate,
         Response $response,
-        Tenant $usageForProject
+        Tenant $usageForProject,
+        Policy $usagePolicy
     ): void {
 
         $metricsList = $this->resolveMetrics($metrics);
-        $filterQueries = $this->parseFilterQueries($queries, self::VALID_FILTER_ATTRIBUTES, self::VALID_FILTER_METHODS);
+        $filterQueries = $this->parseFilterQueries($queries, static::VALID_FILTER_ATTRIBUTES, static::VALID_FILTER_METHODS);
+        $usagePolicy->assert($metricsList, $dimensions, $filterQueries, $startAt);
 
         $end = $endAt !== '' ? $endAt : \gmdate('Y-m-d H:i:s');
         $defaultWindow = $interval !== null
             ? parent::INTERVAL_DEFAULT_WINDOW_SECONDS[$interval]
-            : self::DEFAULT_AGGREGATE_WINDOW_SECONDS;
+            : static::DEFAULT_AGGREGATE_WINDOW_SECONDS;
         $start = $startAt !== ''
             ? $startAt
             : \gmdate('Y-m-d H:i:s', \strtotime($end) - $defaultWindow);
@@ -332,7 +334,7 @@ class XList extends Action
      * @param array<int, Document> $maxPoints Per-bucket maxima, from the caller's query.
      * @return array<int, Document>
      */
-    private function foldLevelThroughBuckets(
+    protected function foldLevelThroughBuckets(
         Tenant $usageForProject,
         string $metric,
         string $start,
@@ -413,7 +415,7 @@ class XList extends Action
      * @param array<int, Document|\ArrayObject<string, mixed>> $points
      * @return array<int, float>
      */
-    private function indexByBucket(array $points): array
+    protected function indexByBucket(array $points): array
     {
         $indexed = [];
         foreach ($points as $point) {
@@ -434,7 +436,7 @@ class XList extends Action
      *
      * @param array<int, Query> $filterQueries
      */
-    private function levelAt(Tenant $usageForProject, string $metric, string $start, array $filterQueries): ?float
+    protected function levelAt(Tenant $usageForProject, string $metric, string $start, array $filterQueries): ?float
     {
         $queries = array_merge(
             [
@@ -458,7 +460,7 @@ class XList extends Action
      * @return array<int, string>
      * @throws Exception
      */
-    private function resolveMetrics(array $metrics): array
+    protected function resolveMetrics(array $metrics): array
     {
         $resolved = array_values(array_unique(array_filter($metrics, static fn ($m) => $m !== '')));
 
