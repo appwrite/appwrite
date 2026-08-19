@@ -28,7 +28,16 @@ Most teams stall on the same two problems. First, auth: the MCP specification re
 
 Both problems have now disappeared. Every Appwrite project includes an [OAuth2 server](/blog/post/announcing-oauth2-server) that implements exactly the standards MCP requires. And MCP specification 2026-07-28 made the protocol stateless, so a plain HTTP function can serve it.
 
-In this tutorial you will build a complete, working MCP server for a task manager called TaskFlow. By the end, you will type "add a task to review the launch checklist" into Claude Code, approve access on a consent screen you own, and watch the task appear in your app. The full project is available on [GitHub](https://github.com/appwrite-community/taskflow-mcp), and the finished result is running live: the app at [taskflow.appwrite.network](https://taskflow.appwrite.network) and its MCP server at `https://taskflow-mcp.appwrite.network/mcp`. You can create an account there and connect Claude Code to it before writing a single line of code.
+In this tutorial you will build a complete, working MCP server for a task manager called TaskFlow. By the end, you will type "add a task to review the launch checklist" into Claude Code, approve access on a consent screen you own, and watch the task appear in your app. The full project is available on [GitHub](https://github.com/appwrite-community/taskflow-mcp).
+
+{% info title="Try the live demo" %}
+The finished result of this tutorial is running in production. To try it before building anything:
+
+1. Create an account at [taskflow.appwrite.network](https://taskflow.appwrite.network) and add a task or two.
+2. Add the MCP server to Claude Code: `claude mcp add --transport http taskflow https://taskflow-mcp.appwrite.network/mcp`
+3. Run `/mcp` inside Claude Code, select **taskflow**, and choose **Authenticate**. Sign in with your TaskFlow account and allow access.
+4. Ask Claude to list, add, or complete your tasks, then watch the changes appear on your TaskFlow dashboard.
+{% /info %}
 
 # What we are building
 
