@@ -20,7 +20,6 @@ use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -524,11 +523,8 @@ class Jobs extends Action
                 $dbForPlatform,
                 $platform,
             );
-        } catch (\Throwable $error) {
-            // Best-effort — never fails the build. But say what was lost: a
-            // swallowed failure here leaves the provider's check and comment
-            // frozen at their last state with nothing to debug from.
-            Console::warning('Failed to report build status to VCS provider for deployment ' . $deployment->getId() . ': ' . $error->getMessage());
+        } catch (\Throwable) {
+            // Best-effort — never fails the build.
         }
     }
 
