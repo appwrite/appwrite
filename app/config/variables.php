@@ -1083,6 +1083,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_SANDBOX_VOLUME',
+                'description' => 'Name prefix for the Docker volume (or Kubernetes PersistentVolumeClaim) mounted into every sandbox at /workspace/persistent, so files outlive the sandbox. One volume per project, named {prefix}-p{projectInternalId}, created on first use. Leave empty to give sandboxes no persistent storage.',
+                'introduction' => '1.10.0',
+                'default' => 'appwrite-sandbox',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_BROWSER_HOST',
                 'description' => 'The host used by Appwrite to communicate with the browser service for screenshots.',
                 'introduction' => '1.8.0',

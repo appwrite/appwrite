@@ -44,6 +44,8 @@ class Create extends Base
                 name: 'create',
                 description: <<<EOT
                 Create a new sandbox: a live, isolated workspace to run commands in and read and write files from, started from a container image. The returned URL serves the sandbox contract (`POST /execute`, `GET|PUT|DELETE /files/{path}`) and should be treated as a secret. Declare `ports` for anything else the sandbox serves, such as a dev server.
+
+                The workspace is scratch and dies with the sandbox, except for `/workspace/persistent` — storage shared by every sandbox in the project, which survives teardown.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -105,6 +107,7 @@ class Create extends Base
                 memory: (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT),
                 environment: \array_map(\strval(...), $variables),
                 ports: \array_values(\array_map(\intval(...), $ports)),
+                volumes: $this->volumes($project),
                 timeoutSeconds: $timeout,
                 idleTimeoutSeconds: $idleTimeout,
             );

@@ -24,6 +24,30 @@ final class SandboxCustomServerTest extends Scope
         ], $body);
     }
 
+    /**
+     * Runs a command through the sandbox contract, which is served inside the
+     * sandbox rather than by this API.
+     *
+     * @return array<string, mixed>
+     */
+    private function execute(string $url, string $command): array
+    {
+        $ch = curl_init($url . '/execute');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode(['command' => $command, 'timeoutSeconds' => 30]),
+            CURLOPT_TIMEOUT => 60,
+            // The sandbox host resolves through the edge, which this container
+            // does not use; dial the orchestrator and let the Host header route.
+            CURLOPT_CONNECT_TO => [parse_url($url, PHP_URL_HOST) . ':80:orchestrator:80'],
+        ]);
+        $body = curl_exec($ch);
+
+        return json_decode((string)$body, true) ?? ['exitCode' => -1, 'stdout' => '', 'stderr' => (string)$body];
+    }
+
     public function testCreate(): array
     {
         $sandbox = $this->call(Client::METHOD_POST, '/sandbox', [
@@ -131,5 +155,33 @@ final class SandboxCustomServerTest extends Scope
 
         $this->assertEquals(404, $found['headers']['status-code']);
         $this->assertEquals('sandbox_not_found', $found['body']['type']);
+    }
+
+    public function testPersistentStorageOutlivesTheSandbox(): void
+    {
+        $first = $this->call(Client::METHOD_POST, '/sandbox', [
+            'sandboxId' => 'persist',
+            'image' => 'python:3.12-slim',
+        ]);
+        $this->assertEquals(201, $first['headers']['status-code']);
+
+        $this->assertEquals(0, $this->execute($first['body']['url'], 'echo kept > /workspace/persistent/note.txt')['exitCode']);
+        $this->assertEquals(204, $this->call(Client::METHOD_DELETE, '/sandbox/persist')['headers']['status-code']);
+
+        $second = $this->call(Client::METHOD_POST, '/sandbox', [
+            'sandboxId' => 'persist',
+            'image' => 'python:3.12-slim',
+        ]);
+        $this->assertEquals(201, $second['headers']['status-code']);
+        $this->assertNotEquals($first['body']['url'], $second['body']['url']);
+
+        $read = $this->execute($second['body']['url'], 'cat /workspace/persistent/note.txt');
+        $this->assertEquals(0, $read['exitCode'], $read['stderr']);
+        $this->assertSame('kept', trim($read['stdout']));
+
+        // The rest of the workspace is scratch, so it must not have survived.
+        $this->assertNotEquals(0, $this->execute($second['body']['url'], 'test -f /workspace/gone.txt')['exitCode']);
+
+        $this->call(Client::METHOD_DELETE, '/sandbox/persist');
     }
 }
