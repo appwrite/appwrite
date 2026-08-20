@@ -38,6 +38,8 @@ jobs:
                       family: c7g
         runs-on: runs-on=${{ github.run_id }}/runner=${{ matrix.runner }}/family=${{ matrix.family }}/extras=otel
         timeout-minutes: 45
+        env:
+            DOCKER_BUILD_RECORD_UPLOAD: false
         # Matrix legs share one output map, so each leg has to write to its own
         # key; the leg it does not belong to gets an empty value, which GitHub
         # drops rather than writing over the other leg's digest.
@@ -52,6 +54,7 @@ jobs:
               uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
               with:
                   driver: docker-container
+                  cleanup: false
 
             - name: Login to GitHub Container Registry
               uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
@@ -88,8 +91,7 @@ jobs:
                       "VITE_COMPANY_NAME=${{ vars.VITE_COMPANY_NAME }}"
                       "VITE_CONTACT_SALES_URL=${{ vars.VITE_CONTACT_SALES_URL }}"
                       "VITE_LEGAL_EMAIL=${{ vars.VITE_LEGAL_EMAIL }}"
-                  secrets: |
-                      sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
+                  secrets: ${{ secrets.SENTRY_AUTH_TOKEN != '' && format('sentry_auth_token={0}', secrets.SENTRY_AUTH_TOKEN) || '' }}
 
     manifest:
         needs: build
@@ -117,11 +119,11 @@ jobs:
                   DIGESTS: ${{ needs.build.outputs.digest_amd64 }} ${{ needs.build.outputs.digest_arm64 }}
               run: |
                   for registry in "$REGISTRY_GITHUB" "$REGISTRY_DOCKERHUB"; do
-                    refs=""
+                    refs=()
                     for digest in $DIGESTS; do
-                      refs="$refs $registry/$IMAGE_NAME@$digest"
+                      refs+=("$registry/$IMAGE_NAME@$digest")
                     done
-                    docker buildx imagetools create --tag "$registry/$IMAGE_NAME:$TAG" $refs
+                    docker buildx imagetools create --tag "$registry/$IMAGE_NAME:$TAG" "${refs[@]}"
                     docker buildx imagetools inspect "$registry/$IMAGE_NAME:$TAG"
                   done
 
@@ -139,7 +141,7 @@ jobs:
               id: app-token
               uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
               with:
-                  app-id: ${{ vars.DECLARATIVE_DEPLOYMENT_GITHUB_APP_ID }}
+                  client-id: ${{ vars.DECLARATIVE_DEPLOYMENT_GITHUB_APP_ID }}
                   private-key: ${{ secrets.DECLARATIVE_DEPLOYMENT_GITHUB_APP_PRIVATE_KEY }}
                   owner: ${{ env.DECLARATIVE_OWNER }}
                   repositories: ${{ env.DECLARATIVE_REPOSITORY }}
