@@ -231,6 +231,8 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     supportsOrganizationRoles: false,
     supportsProjectSpecificRoles: false,
     supportsCredits: false,
+    supportsDedicatedDatabases: true,
+    databaseComputeCredit: 0,
     supportsDisposableEmailValidation: false,
     supportsCanonicalEmailValidation: false,
     supportsFreeEmailValidation: false,

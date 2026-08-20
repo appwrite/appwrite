@@ -9,6 +9,7 @@ const GIT_PROVIDERS: {
   comingSoon?: boolean
 }[] = [
   { id: 'github', name: 'GitHub', icon: '/icons/github.svg' },
+  { id: 'origin', name: 'Origin', icon: '/icons/origin.svg' },
   { id: 'gitlab', name: 'GitLab', icon: '/icons/gitlab.svg', comingSoon: true },
   { id: 'gitea', name: 'Gitea', icon: '/icons/gitea.svg', comingSoon: true },
   { id: 'forgejo', name: 'Forgejo', icon: '/icons/forgejo.svg', comingSoon: true },

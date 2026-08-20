@@ -256,6 +256,17 @@ export function GitConfigurationCard({
                   {t('Connect to Bitbucket')}
                 </a>
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 text-[13px]"
+                asChild
+              >
+                <a href={vcsAuthUrl('origin')} target="_blank" rel="noreferrer">
+                  <VcsIcon type="origin" className="me-1.5 h-4 w-4" />
+                  {t('Connect to Origin')}
+                </a>
+              </Button>
             </div>
           </div>
         </div>
@@ -496,6 +507,17 @@ export function GitConfigurationCard({
               >
                 <VcsIcon type="bitbucket" className="me-1.5 h-4 w-4" />
                 {t('Connect with Bitbucket')}
+              </a>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 w-full text-[13px] sm:w-auto"
+              asChild
+            >
+              <a href={vcsAuthUrl('origin')} target="_blank" rel="noreferrer">
+                <VcsIcon type="origin" className="me-1.5 h-4 w-4" />
+                {t('Connect with Origin')}
               </a>
             </Button>
           </div>

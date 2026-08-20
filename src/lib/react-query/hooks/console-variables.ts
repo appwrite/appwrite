@@ -49,5 +49,11 @@ export function useConsoleVariables(region?: string) {
       : ([] as string[]),
     sitesDomain: vars?._APP_DOMAIN_SITES,
     functionsDomain: vars?._APP_DOMAIN_FUNCTIONS,
+    // Undefined until loaded (or on older servers): callers treat undefined
+    // as "no capability info", not as "no provider supports it".
+    vcsProvidersWithRepositoryCreation:
+      vars?._APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION,
+    vcsProvidersWithPublicRepositories:
+      vars?._APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES,
   }
 }
