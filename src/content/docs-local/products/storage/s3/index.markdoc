@@ -23,7 +23,7 @@ Configure your client with the following values. S3 clients authenticate with an
 
 The `<REGION>` in the endpoint is your Appwrite Cloud region (for example, `fra` or `nyc`), the same region you use for the rest of the Appwrite API. The S3 `region` setting accepts `auto` or that same region code; some clients require a region to sign requests, and either value works.
 
-The examples below apply these settings in the AWS CLI and the AWS SDKs.
+The examples below apply these settings in the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-services-s3.html) and the AWS SDKs.
 
 {% multicode %}
 ```bash
@@ -140,22 +140,18 @@ Create an API key in the Appwrite Console under **Overview** > **Integrations** 
 
 Copying an object reads the source and writes the destination, so `CopyObject` and `UploadPartCopy` need both `files.read` and `files.write`. A request signed with a secret that does not match a project API key, or a key missing the required scope, is rejected with `AccessDenied` (HTTP 403).
 
-# Object key mapping {% #object-key-mapping %}
+# Buckets and objects {% #buckets-and-objects %}
 
 S3 buckets map directly to Appwrite Storage buckets, and S3 objects map to files. Creating a bucket over S3 creates an Appwrite bucket that uses the S3 bucket name as both its ID and its name, with Appwrite's default settings. Any bucket you already have in your project is usable over S3 immediately.
 
-When you upload an object, Appwrite stores it as a file with an automatically generated file ID and uses the object key you provided as the file's name. Read, copy, and delete operations then address the object by its **canonical key**, which list operations return:
+Object keys are file names, used directly. Uploading to the key `reports/january.pdf` stores a file named `reports/january.pdf`, and read, copy, and delete operations address that object by the same key. Nothing has to be looked up first, and files created through the native Storage API or the Console are addressable over S3 under the names they already have.
 
-```text
-{fileId}-{fileName}
-```
+Because the key is the name, file names have to be unique within a bucket. Uploading to a key that already exists is rejected rather than replacing the object, so delete the object first if you mean to replace it.
 
-For example, uploading to the key `reports/january.pdf` creates a file whose name is `reports/january.pdf`, and the object is then listed under a canonical key such as `6710e2f300048d1e2c3f-reports/january.pdf`.
+{% info title="File names must be unique per bucket" %}
+S3 itself has no concept of two objects sharing a key: [an object key is "the unique identifier for an object within a bucket"](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#BasicsKeys), and every object in a bucket has exactly one. Appwrite Storage does let several files in a bucket share a name, but such a bucket has no valid representation as an S3 bucket and is not served over the S3 API.
 
-The same flow covers files created through the native Storage API or the Console: list the bucket to discover a file's canonical key, then address it over S3 with that key.
-
-{% info title="Uploads never overwrite by key" %}
-Because a new file ID is generated on every plain upload, uploading twice with the same key creates two distinct objects instead of overwriting. To read, copy, overwrite, or delete an object, use its canonical key from a list operation. Uploading to a canonical key that already exists overwrites that object in place.
+So if your workload depends on repeating file names within a bucket, the S3 API is not the right interface for it. Use the [native Storage API](/docs/products/storage/upload-download) instead, which addresses files by ID and lets names repeat freely.
 {% /info %}
 
 # Folders {% #folders %}
@@ -164,9 +160,9 @@ Appwrite Storage organizes the files in a bucket with [virtual folders](/docs/pr
 
 To browse a bucket like a directory tree, list objects with the `/` delimiter and, optionally, a `prefix`. Appwrite groups object names at each `/` boundary: names sharing a prefix up to the next `/` collapse into a single entry under `CommonPrefixes` (the "folders"), while objects at the current level are returned under `Contents` (the "files").
 
-Grouping is applied to the object's name rather than its canonical key, so folder prefixes come back clean, without the generated file ID. Pass a `prefix` such as `reports/` to open that folder and list one level deeper, or list without a delimiter to enumerate a bucket recursively.
+Pass a `prefix` such as `reports/` to open that folder and list one level deeper, or list without a delimiter to enumerate a bucket recursively.
 
-Objects under `Contents` are still identified by their [canonical key](#object-key-mapping); use that key to read, copy, or delete a file. `CommonPrefixes` are folder paths only, with nothing to download at the prefix itself.
+Objects under `Contents` are returned with their full keys; use those to read, copy, or delete a file. `CommonPrefixes` are folder paths only, with nothing to download at the prefix itself.
 
 `/` is the only supported delimiter. Setting `delimiter` to any other value returns `NotImplemented` (HTTP 501).
 
@@ -197,13 +193,12 @@ aws s3api create-bucket --bucket my-bucket \
 aws s3 cp ./january.pdf s3://my-bucket/reports/january.pdf \
   --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
 
-# List objects to discover canonical keys
+# List objects
 aws s3 ls s3://my-bucket --recursive \
   --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
 
-# Download using the canonical {fileId}-{fileName} key from the listing
-aws s3api get-object --bucket my-bucket \
-  --key 6710e2f300048d1e2c3f-reports/january.pdf ./january.pdf \
+# Download an object by its key
+aws s3 cp s3://my-bucket/reports/january.pdf ./january.pdf \
   --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
 ```
 
@@ -217,7 +212,7 @@ All operations are addressed with path-style URLs under `/v1/s3`. The following 
 | `CreateBucket` | Create a bucket. The S3 bucket name becomes the Appwrite bucket's ID and name, with Appwrite's default settings. |
 | `HeadBucket` | Check that a bucket exists and is accessible. |
 | `DeleteBucket` | Delete an empty bucket. Deleting a bucket that still contains objects returns `BucketNotEmpty` (HTTP 409). |
-| `GetBucketLocation` | Returns `us-east-1`. |
+| `GetBucketLocation` | Returns the added region. |
 | `GetBucketAcl`, `PutBucketAcl` | Compatibility responses only. See [Limitations](#limitations). |
 
 # Object operations {% #object-operations %}
@@ -226,7 +221,7 @@ The following object operations are supported.
 
 | Operation | Description |
 | --- | --- |
-| `PutObject` | Upload an object. Returns an `ETag`. Honors `Content-Type`, `x-amz-meta-*` user metadata, and `x-amz-server-side-encryption`. |
+| `PutObject` | Upload an object under a key that is not already taken. Returns an `ETag`. Honors `Content-Type`, `x-amz-meta-*` user metadata, and `x-amz-server-side-encryption`. |
 | `GetObject` | Download an object. Supports `Range` requests (HTTP 206), and the `If-None-Match` (HTTP 304) and `If-Match` (HTTP 412) conditional headers. |
 | `HeadObject` | Retrieve an object's metadata (size, content type, `ETag`, user metadata) without the body. |
 | `CopyObject` | Copy an object using the `x-amz-copy-source` header. Supports `x-amz-metadata-directive: REPLACE` to replace metadata. |
@@ -262,12 +257,11 @@ The S3 API targets the operations most clients depend on. Keep the following in 
 
 - **Path-style addressing only.** Virtual-hosted-style URLs (`https://<bucket>.host/...`) are not supported. Enable path-style addressing in your client, as shown in [Connect an S3 client](#connect-an-s3-client).
 - **Signature Version 4 only.** Requests are authenticated with SigV4, and the request timestamp must be within 15 minutes of the server's clock.
-- **Objects are addressed by canonical key.** Reads, copies, overwrites, and deletes use the canonical key from a list operation, not the raw key you uploaded with. See [Object key mapping](#object-key-mapping).
+- **File names must be unique within a bucket.** Object keys are file names, so a bucket cannot hold two objects under one key. Uploading to a key that already exists is rejected rather than overwriting it, and a bucket that already contains files with duplicate names is not served over the S3 API. See [Buckets and objects](#buckets-and-objects).
 - **ACLs are compatibility responses.** `GetObjectAcl`, `PutObjectAcl`, `GetBucketAcl`, and `PutBucketAcl` return a canned private ACL and are accepted for tooling compatibility. They do not change access. Manage access with [Appwrite permissions](/docs/products/storage/permissions) and API key scopes instead.
 - **No folder resource or folder markers.** Folders are virtual: they are `/`-separated prefixes in object keys, browsed by listing with `delimiter=/`. See [Folders](#folders). Using any other delimiter value or uploading a folder-marker object (a key ending in `/`) returns `NotImplemented` (HTTP 501).
 - **Prefer `ListObjectsV2` for large buckets.** `ListObjects` returns every matching object in a single response, while `ListObjectsV2` honors `max-keys` (capped at 1000) and paginates with `IsTruncated` and a `NextContinuationToken`. No objects are silently dropped.
 - **Unsupported S3 features.** Object tagging, CORS, lifecycle, bucket policies and policy status, encryption configuration, ownership controls, notifications, and versioning are not supported. Requests to these sub-resources return `NotImplemented` (HTTP 501).
-- **Custom file IDs with hyphens.** The canonical key is split on the first `-`. Objects created through the S3 API use generated IDs without hyphens, so this only affects interop with pre-existing files whose custom ID contains a `-`. A mismatch returns `NoSuchKey` rather than the wrong object.
 
 # Error responses {% #error-responses %}
 
