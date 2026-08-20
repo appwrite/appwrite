@@ -26,7 +26,6 @@ use Appwrite\Platform\Modules\Users;
 use Appwrite\Platform\Modules\VCS;
 use Appwrite\Platform\Modules\Webhooks;
 use Utopia\Platform\Platform;
-use Utopia\System\System;
 
 class Appwrite extends Platform
 {
@@ -47,9 +46,7 @@ class Appwrite extends Platform
         $this->addModule(new Teams\Module());
         $this->addModule(new Tokens\Module());
         $this->addModule(new Users\Module());
-        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-            $this->addModule(new Usage\Module());
-        }
+        $this->addModule(new Usage\Module());
         $this->addModule(new Storage\Module());
         $this->addModule(new VCS\Module());
         $this->addModule(new Webhooks\Module());

@@ -10,11 +10,8 @@ use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Messaging;
 use Appwrite\Platform\Workers\Migrations;
 use Appwrite\Platform\Workers\Notifications;
-use Appwrite\Platform\Workers\StatsResources;
-use Appwrite\Platform\Workers\StatsUsage;
 use Appwrite\Platform\Workers\Webhooks;
 use Utopia\Platform\Service;
-use Utopia\System\System;
 
 class Workers extends Service
 {
@@ -30,12 +27,7 @@ class Workers extends Service
             ->addAction(Messaging::getName(), new Messaging())
             ->addAction(Notifications::getName(), new Notifications())
             ->addAction(Webhooks::getName(), new Webhooks())
-            ->addAction(Migrations::getName(), new Migrations());
-
-        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-            $this
-                ->addAction(StatsResources::getName(), new StatsResources())
-                ->addAction(StatsUsage::getName(), new StatsUsage());
-        }
+            ->addAction(Migrations::getName(), new Migrations())
+        ;
     }
 }
