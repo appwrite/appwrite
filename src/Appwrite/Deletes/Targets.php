@@ -37,10 +37,10 @@ class Targets
                 $topicId = $subscriber->getAttribute('topicId');
                 $topicInternalId = $subscriber->getAttribute('topicInternalId');
 
-                $topic = $database->findOne('topics', [
+                $topic = $database->skipFilters(fn () => $database->findOne('topics', [
                     Query::select(['$id', '$sequence']),
                     Query::equal('$sequence', [$topicInternalId]),
-                ]);
+                ]), ['subQueryTopicTargets']);
 
                 if (!$topic->isEmpty()) {
                     $totalAttribute = match ($target->getAttribute('providerType')) {
