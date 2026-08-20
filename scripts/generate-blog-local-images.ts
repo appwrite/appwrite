@@ -49,7 +49,10 @@ async function encodeCoverAvif(input: Buffer | string): Promise<Buffer> {
     .toBuffer()
 }
 
-async function writeAvifFromPng(outputDir: string, png: Uint8Array): Promise<void> {
+async function writeAvifFromPng(
+  outputDir: string,
+  png: Uint8Array,
+): Promise<void> {
   writeFileSync(join(outputDir, 'cover-source.png'), png)
 
   const avif = await encodeCoverAvif(Buffer.from(png))
@@ -94,9 +97,33 @@ async function generateAnnouncingAppwriteExplorerCover(
   await writeAvifFromPng(outputDir, png)
 }
 
+async function generateFirewallRateLimitStrategiesCover(
+  outputDir: string,
+): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'simple-title',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    title: 'Choosing a rate limit strategy',
+    subtitle:
+      'Fixed window, sliding window, and token bucket in Appwrite Firewall',
+    eyebrow: 'Deep dive',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
+  'firewall-rate-limit-strategies': generateFirewallRateLimitStrategiesCover,
 }
 
 async function main() {
