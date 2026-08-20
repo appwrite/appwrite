@@ -1922,6 +1922,17 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('search'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
             ]
         ],
         'indexes' => [
@@ -1999,6 +2010,20 @@ return [
                 '$id' => ID::custom('_key_resource_internal_id'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceInternalId'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_commitHash_branch'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['providerCommitHash', 'providerBranch', '$sequence'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_search'),
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['search'],
                 'lengths' => [],
                 'orders' => [],
             ],
