@@ -4,12 +4,14 @@ title: Embeddings
 description: Generate text embeddings with Appwrite VectorsDB. Turn text into vector embeddings with built-in models and store them in your documents for vector search.
 ---
 An embedding is a list of numbers that represents the meaning of a piece of text.
-VectorsDB can generate embeddings for you with built-in models, so you can turn text into vectors and store them in a collection without running a separate embedding service.
+Appwrite generates embeddings for you with built-in models, so you can turn text into vectors and store them in a collection without running a separate embedding service.
 
 The typical flow is two steps: generate an embedding from your text, then store that embedding in a document's `embeddings` field. Once stored, you can run [vector search](/docs/products/databases/vectorsdb/vector-search) over your documents.
 
 # Generate embeddings {% #generate-embeddings %}
-Use the `createTextEmbeddings` method to turn one or more strings into vector embeddings. Pass an array of `texts` and, optionally, a `model`. When you omit `model`, VectorsDB uses the default `nomic-embed-text` model. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+Embeddings come from the Embeddings service rather than the VectorsDB service, and generating them doesn't involve a database or collection at all.
+
+Use the `createTextEmbeddings` method to turn one or more strings into vector embeddings. Pass an array of `texts` and, optionally, a `model`. When you omit `model`, Appwrite uses the default `nomic-embed-text` model. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys) with the `embeddings.write` scope.
 
 {% multicode %}
 ```server-nodejs
@@ -20,9 +22,9 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-const vectorsDB = new sdk.VectorsDB(client);
+const embeddings = new sdk.Embeddings(client);
 
-const result = await vectorsDB.createTextEmbeddings({
+const result = await embeddings.createTextEmbeddings({
     texts: ['The quick brown fox jumps over the lazy dog'],
     model: sdk.EmbeddingModel.Nomicembedtext // optional, defaults to nomic-embed-text
 });
@@ -35,9 +37,9 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-const vectorsDB = new sdk.VectorsDB(client);
+const embeddings = new sdk.Embeddings(client);
 
-const result = await vectorsDB.createTextEmbeddings({
+const result = await embeddings.createTextEmbeddings({
     texts: ['The quick brown fox jumps over the lazy dog'],
     model: sdk.EmbeddingModel.Nomicembedtext // optional, defaults to nomic-embed-text
 });
@@ -46,7 +48,7 @@ const result = await vectorsDB.createTextEmbeddings({
 <?php
 
 use Appwrite\Client;
-use Appwrite\Services\VectorsDB;
+use Appwrite\Services\Embeddings;
 use Appwrite\Enums\EmbeddingModel;
 
 $client = (new Client())
@@ -54,16 +56,16 @@ $client = (new Client())
     ->setProject('<YOUR_PROJECT_ID>') // Your project ID
     ->setKey('<YOUR_API_KEY>'); // Your secret API key
 
-$vectorsDB = new VectorsDB($client);
+$embeddings = new Embeddings($client);
 
-$result = $vectorsDB->createTextEmbeddings(
+$result = $embeddings->createTextEmbeddings(
     texts: ['The quick brown fox jumps over the lazy dog'],
     model: EmbeddingModel::NOMICEMBEDTEXT() // optional, defaults to nomic-embed-text
 );
 ```
 ```python
 from appwrite.client import Client
-from appwrite.services.vectors_db import VectorsDB
+from appwrite.services.embeddings import Embeddings
 from appwrite.enums import EmbeddingModel
 
 client = Client()
@@ -71,9 +73,9 @@ client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
 client.set_project('<YOUR_PROJECT_ID>') # Your project ID
 client.set_key('<YOUR_API_KEY>') # Your secret API key
 
-vectors_db = VectorsDB(client)
+embeddings = Embeddings(client)
 
-result = vectors_db.create_text_embeddings(
+result = embeddings.create_text_embeddings(
     texts = ['The quick brown fox jumps over the lazy dog'],
     model = EmbeddingModel.NOMIC_EMBED_TEXT # optional, defaults to nomic-embed-text
 )
@@ -89,9 +91,9 @@ client = Client.new
     .set_project('<YOUR_PROJECT_ID>') # Your project ID
     .set_key('<YOUR_API_KEY>') # Your secret API key
 
-vectors_db = VectorsDB.new(client)
+embeddings = Embeddings.new(client)
 
-result = vectors_db.create_text_embeddings(
+result = embeddings.create_text_embeddings(
     texts: ['The quick brown fox jumps over the lazy dog'],
     model: EmbeddingModel::NOMIC_EMBED_TEXT # optional, defaults to nomic-embed-text
 )
@@ -107,63 +109,62 @@ Client client = new Client()
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
-VectorsDB vectorsDB = new VectorsDB(client);
+Embeddings embeddings = new Embeddings(client);
 
-EmbeddingList result = await vectorsDB.CreateTextEmbeddings(
+EmbeddingList result = await embeddings.CreateTextEmbeddings(
     texts: new List<string> { "The quick brown fox jumps over the lazy dog" },
     model: EmbeddingModel.NomicEmbedText // optional, defaults to nomic-embed-text
 );
 ```
 ```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
-import 'package:dart_appwrite/enums.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
-VectorsDB vectorsDB = VectorsDB(client);
+Embeddings embeddings = Embeddings(client);
 
-EmbeddingList result = await vectorsDB.createTextEmbeddings(
+EmbeddingList result = await embeddings.createTextEmbeddings(
     texts: ['The quick brown fox jumps over the lazy dog'],
-    model: EmbeddingModel.nomicEmbedText, // optional, defaults to nomic-embed-text
+    model: enums.EmbeddingModel.nomicEmbedText, // optional, defaults to nomic-embed-text
 );
 ```
 ```kotlin
 import io.appwrite.Client
+import io.appwrite.services.Embeddings
 import io.appwrite.enums.EmbeddingModel
-import io.appwrite.services.VectorsDB
 
 val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
-val vectorsDB = VectorsDB(client)
+val embeddings = Embeddings(client)
 
-val response = vectorsDB.createTextEmbeddings(
+val response = embeddings.createTextEmbeddings(
     texts = listOf("The quick brown fox jumps over the lazy dog"),
-    model = EmbeddingModel.NOMIC_EMBED_TEXT, // optional, defaults to nomic-embed-text
+    model = EmbeddingModel.NOMIC_EMBED_TEXT // optional, defaults to nomic-embed-text
 )
 ```
 ```java
 import io.appwrite.Client;
-import io.appwrite.enums.EmbeddingModel;
 import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.services.VectorsDB;
-import java.util.List;
+import io.appwrite.services.Embeddings;
+import io.appwrite.enums.EmbeddingModel;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>"); // Your secret API key
 
-VectorsDB vectorsDB = new VectorsDB(client);
+Embeddings embeddings = new Embeddings(client);
 
-vectorsDB.createTextEmbeddings(
-    List.of("The quick brown fox jumps over the lazy dog"),
-    EmbeddingModel.NOMIC_EMBED_TEXT, // optional, defaults to nomic-embed-text
+embeddings.createTextEmbeddings(
+    List.of("The quick brown fox jumps over the lazy dog"), // texts
+    EmbeddingModel.NOMIC_EMBED_TEXT, // model (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -183,16 +184,16 @@ let client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
-let vectorsDB = VectorsDB(client)
+let embeddings = Embeddings(client)
 
-let embeddingList = try await vectorsDB.createTextEmbeddings(
+let embeddingList = try await embeddings.createTextEmbeddings(
     texts: ["The quick brown fox jumps over the lazy dog"],
     model: .nomicEmbedText // optional, defaults to nomic-embed-text
 )
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::Embeddings;
 use appwrite::enums::EmbeddingModel;
 
 #[tokio::main]
@@ -202,9 +203,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
     client.set_key("<YOUR_API_KEY>"); // Your secret API key
 
-    let vectors_db = VectorsDB::new(&client);
+    let embeddings = Embeddings::new(&client);
 
-    let result = vectors_db.create_text_embeddings(
+    let result = embeddings.create_text_embeddings(
         vec!["The quick brown fox jumps over the lazy dog"],
         Some(EmbeddingModel::NomicEmbedText), // optional, defaults to nomic-embed-text
     ).await?;
@@ -214,7 +215,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-text-embeddings \
+appwrite embeddings create-text-embeddings \
     --texts 'The quick brown fox jumps over the lazy dog' \
     --model 'nomic-embed-text'
 ```
@@ -246,17 +247,17 @@ Each entry contains:
 | `error` | An error message if this text could not be embedded. An empty string means there was no error. |
 
 # Available models {% #available-models %}
-VectorsDB ships with the following text embedding models. The `dimension` of a model is the length of the vector it produces, and it must match the `dimension` you set on the [collection](/docs/products/databases/vectorsdb/collections) where you store the embeddings.
+Appwrite ships with the following text embedding models. The `dimension` of a model is the length of the vector it produces, and it must match the `dimension` you set on the [collection](/docs/products/databases/vectorsdb/collections) where you store the embeddings.
 
-| Model | Dimension | Notes |
-| --- | --- | --- |
-| `nomic-embed-text` | 768 | Default model, used when you omit `model`. |
-| `embedding-gemma` | 768 | |
-| `all-minilm` | 384 | |
-| `bge-small` | 384 | |
+| Model | Dimension | Provider | Languages | Notes |
+| --- | --- | --- | --- | --- |
+| `nomic-embed-text` | 768 | Nomic AI | English | 8K context window. Used when you omit `model`. |
+| `embedding-gemma` | 768 | Google | 100+ | |
+| `all-minilm` | 384 | Sentence Transformers | English | |
+| `bge-small` | 384 | BAAI | English | |
 
 {% info title="Match the model to your collection dimension" %}
-Pick a model before you create your collection, then set the collection's `dimension` to that model's dimension. All documents in a collection must use vectors of the same dimension, so a single collection works with models of one dimension only.
+Pick a model before you create your collection. In the Console you pick the model and the collection takes its dimension. Through an SDK you set `dimension` to the model's dimension. Every document in a collection uses vectors of the same length, so a collection only works with models that match its dimension.
 {% /info %}
 
 # Store embeddings {% #store-embeddings %}
@@ -271,11 +272,12 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
+const embeddings = new sdk.Embeddings(client);
 const vectorsDB = new sdk.VectorsDB(client);
 
 const text = 'The quick brown fox jumps over the lazy dog';
 
-const embeddings = await vectorsDB.createTextEmbeddings({
+const generated = await embeddings.createTextEmbeddings({
     texts: [text]
 });
 
@@ -284,7 +286,7 @@ const result = await vectorsDB.createDocument({
     collectionId: '<COLLECTION_ID>',
     documentId: sdk.ID.unique(),
     data: {
-        embeddings: embeddings.embeddings[0].embedding,
+        embeddings: generated.embeddings[0].embedding,
         metadata: { text }
     }
 });
@@ -297,11 +299,12 @@ const client = new sdk.Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
+const embeddings = new sdk.Embeddings(client);
 const vectorsDB = new sdk.VectorsDB(client);
 
 const text = 'The quick brown fox jumps over the lazy dog';
 
-const embeddings = await vectorsDB.createTextEmbeddings({
+const generated = await embeddings.createTextEmbeddings({
     texts: [text]
 });
 
@@ -310,7 +313,7 @@ const result = await vectorsDB.createDocument({
     collectionId: '<COLLECTION_ID>',
     documentId: sdk.ID.unique(),
     data: {
-        embeddings: embeddings.embeddings[0].embedding,
+        embeddings: generated.embeddings[0].embedding,
         metadata: { text }
     }
 });
@@ -319,6 +322,7 @@ const result = await vectorsDB.createDocument({
 <?php
 
 use Appwrite\Client;
+use Appwrite\Services\Embeddings;
 use Appwrite\Services\VectorsDB;
 use Appwrite\ID;
 
@@ -327,11 +331,12 @@ $client = (new Client())
     ->setProject('<YOUR_PROJECT_ID>') // Your project ID
     ->setKey('<YOUR_API_KEY>'); // Your secret API key
 
+$embeddings = new Embeddings($client);
 $vectorsDB = new VectorsDB($client);
 
 $text = 'The quick brown fox jumps over the lazy dog';
 
-$embeddings = $vectorsDB->createTextEmbeddings(
+$generated = $embeddings->createTextEmbeddings(
     texts: [$text]
 );
 
@@ -340,13 +345,14 @@ $result = $vectorsDB->createDocument(
     collectionId: '<COLLECTION_ID>',
     documentId: ID::unique(),
     data: [
-        'embeddings' => $embeddings['embeddings'][0]['embedding'],
+        'embeddings' => $generated['embeddings'][0]['embedding'],
         'metadata' => ['text' => $text]
     ]
 );
 ```
 ```python
 from appwrite.client import Client
+from appwrite.services.embeddings import Embeddings
 from appwrite.services.vectors_db import VectorsDB
 from appwrite.id import ID
 
@@ -355,11 +361,12 @@ client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
 client.set_project('<YOUR_PROJECT_ID>') # Your project ID
 client.set_key('<YOUR_API_KEY>') # Your secret API key
 
+embeddings = Embeddings(client)
 vectors_db = VectorsDB(client)
 
 text = 'The quick brown fox jumps over the lazy dog'
 
-embeddings = vectors_db.create_text_embeddings(
+generated = embeddings.create_text_embeddings(
     texts = [text]
 )
 
@@ -368,7 +375,7 @@ result = vectors_db.create_document(
     collection_id = '<COLLECTION_ID>',
     document_id = ID.unique(),
     data = {
-        "embeddings": embeddings["embeddings"][0]["embedding"],
+        "embeddings": generated["embeddings"][0]["embedding"],
         "metadata": { "text": text }
     }
 )
@@ -383,11 +390,12 @@ client = Client.new
     .set_project('<YOUR_PROJECT_ID>') # Your project ID
     .set_key('<YOUR_API_KEY>') # Your secret API key
 
+embeddings = Embeddings.new(client)
 vectors_db = VectorsDB.new(client)
 
 text = 'The quick brown fox jumps over the lazy dog'
 
-embeddings = vectors_db.create_text_embeddings(
+generated = embeddings.create_text_embeddings(
     texts: [text]
 )
 
@@ -396,7 +404,7 @@ result = vectors_db.create_document(
     collection_id: '<COLLECTION_ID>',
     document_id: ID.unique(),
     data: {
-        "embeddings" => embeddings.embeddings[0].embedding,
+        "embeddings" => generated.embeddings[0].embedding,
         "metadata" => { "text" => text }
     }
 )
@@ -411,11 +419,12 @@ Client client = new Client()
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
+Embeddings embeddings = new Embeddings(client);
 VectorsDB vectorsDB = new VectorsDB(client);
 
 var text = "The quick brown fox jumps over the lazy dog";
 
-EmbeddingList embeddings = await vectorsDB.CreateTextEmbeddings(
+EmbeddingList generated = await embeddings.CreateTextEmbeddings(
     texts: new List<string> { text }
 );
 
@@ -424,7 +433,7 @@ Document result = await vectorsDB.CreateDocument(
     collectionId: "<COLLECTION_ID>",
     documentId: ID.Unique(),
     data: new {
-        embeddings = embeddings.Embeddings[0].Embedding,
+        embeddings = generated.Embeddings[0].Embedding,
         metadata = new { text }
     }
 );
@@ -437,11 +446,12 @@ Client client = Client()
     .setProject('<YOUR_PROJECT_ID>') // Your project ID
     .setKey('<YOUR_API_KEY>'); // Your secret API key
 
+Embeddings embeddings = Embeddings(client);
 VectorsDB vectorsDB = VectorsDB(client);
 
 final text = 'The quick brown fox jumps over the lazy dog';
 
-EmbeddingList embeddings = await vectorsDB.createTextEmbeddings(
+EmbeddingList generated = await embeddings.createTextEmbeddings(
     texts: [text],
 );
 
@@ -450,7 +460,7 @@ Document result = await vectorsDB.createDocument(
     collectionId: '<COLLECTION_ID>',
     documentId: ID.unique(),
     data: {
-        "embeddings": embeddings.embeddings[0].embedding,
+        "embeddings": generated.embeddings[0].embedding,
         "metadata": { "text": text }
     },
 );
@@ -458,6 +468,7 @@ Document result = await vectorsDB.createDocument(
 ```kotlin
 import io.appwrite.Client
 import io.appwrite.ID
+import io.appwrite.services.Embeddings
 import io.appwrite.services.VectorsDB
 
 val client = Client(context)
@@ -465,11 +476,12 @@ val client = Client(context)
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
+val embeddings = Embeddings(client)
 val vectorsDB = VectorsDB(client)
 
 val text = "The quick brown fox jumps over the lazy dog"
 
-val embeddings = vectorsDB.createTextEmbeddings(
+val generated = embeddings.createTextEmbeddings(
     texts = listOf(text),
 )
 
@@ -478,7 +490,7 @@ val response = vectorsDB.createDocument(
     collectionId = "<COLLECTION_ID>",
     documentId = ID.unique(),
     data = mapOf(
-        "embeddings" to embeddings.embeddings[0].embedding,
+        "embeddings" to generated.embeddings[0].embedding,
         "metadata" to mapOf("text" to text)
     ),
 )
@@ -487,6 +499,7 @@ val response = vectorsDB.createDocument(
 import io.appwrite.Client;
 import io.appwrite.ID;
 import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Embeddings;
 import io.appwrite.services.VectorsDB;
 import java.util.List;
 import java.util.Map;
@@ -496,13 +509,14 @@ Client client = new Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>"); // Your secret API key
 
+Embeddings embeddings = new Embeddings(client);
 VectorsDB vectorsDB = new VectorsDB(client);
 
 String text = "The quick brown fox jumps over the lazy dog";
 
-vectorsDB.createTextEmbeddings(
+embeddings.createTextEmbeddings(
     List.of(text),
-    new CoroutineCallback<>((embeddings, error) -> {
+    new CoroutineCallback<>((generated, error) -> {
         if (error != null) {
             error.printStackTrace();
             return;
@@ -513,7 +527,7 @@ vectorsDB.createTextEmbeddings(
             "<COLLECTION_ID>",
             ID.unique(),
             Map.of(
-                "embeddings", embeddings.getEmbeddings().get(0).getEmbedding(),
+                "embeddings", generated.getEmbeddings().get(0).getEmbedding(),
                 "metadata", Map.of("text", text)
             ),
             new CoroutineCallback<>((result, err) -> {
@@ -536,11 +550,12 @@ let client = Client()
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
 
+let embeddings = Embeddings(client)
 let vectorsDB = VectorsDB(client)
 
 let text = "The quick brown fox jumps over the lazy dog"
 
-let embeddings = try await vectorsDB.createTextEmbeddings(
+let generated = try await embeddings.createTextEmbeddings(
     texts: [text]
 )
 
@@ -549,14 +564,14 @@ let document = try await vectorsDB.createDocument(
     collectionId: "<COLLECTION_ID>",
     documentId: ID.unique(),
     data: [
-        "embeddings": embeddings.embeddings[0].embedding,
+        "embeddings": generated.embeddings[0].embedding,
         "metadata": ["text": text]
     ]
 )
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::{Embeddings, VectorsDB};
 use appwrite::id::ID;
 use serde_json::json;
 
@@ -567,11 +582,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
     client.set_key("<YOUR_API_KEY>"); // Your secret API key
 
+    let embeddings = Embeddings::new(&client);
     let vectors_db = VectorsDB::new(&client);
 
     let text = "The quick brown fox jumps over the lazy dog";
 
-    let embeddings = vectors_db.create_text_embeddings(
+    let generated = embeddings.create_text_embeddings(
         vec![text],
         None, // model (optional)
     ).await?;
@@ -581,7 +597,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "<COLLECTION_ID>",
         ID::unique(),
         json!({
-            "embeddings": embeddings.embeddings[0].embedding,
+            "embeddings": generated.embeddings[0].embedding,
             "metadata": { "text": text }
         }),
         None, // permissions (optional)
@@ -592,7 +608,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-document \
+appwrite vectorsdb create-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id 'unique()' \

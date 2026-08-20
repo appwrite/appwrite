@@ -28,8 +28,8 @@ const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
-    .setKey('<API_KEY>');
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
 
 const vectorsDB = new sdk.VectorsDB(client);
 
@@ -111,8 +111,8 @@ from datetime import datetime, timezone
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
-client.set_project('<PROJECT_ID>')
-client.set_key('<API_KEY>')
+client.set_project('<YOUR_PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
 
 vectors_db = VectorsDB(client)
 
@@ -210,7 +210,7 @@ await vectorsDB.createDocument(
 ```
 ```rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use serde_json::json;
 
@@ -218,8 +218,8 @@ use serde_json::json;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 
@@ -385,15 +385,15 @@ await vectorsDB.updateDocument(
 ```
 ```rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 
@@ -653,7 +653,7 @@ await vectorsDB.createDocuments(
 ```
 ```rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use serde_json::json;
 
@@ -661,8 +661,8 @@ use serde_json::json;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 
@@ -876,15 +876,15 @@ await vectorsDB.upsertDocuments(
 ```
 ```rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 
@@ -1012,7 +1012,7 @@ await vectorsDB.createDocument(
 ```
 ```rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use serde_json::json;
 
@@ -1020,8 +1020,8 @@ use serde_json::json;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 
@@ -1142,7 +1142,7 @@ await vectorsDB.createDocument(
 ```
 ```rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use serde_json::json;
 
@@ -1150,8 +1150,8 @@ use serde_json::json;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 
@@ -1265,15 +1265,15 @@ await vectorsDB.upsertDocument(
 ```
 ```rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 

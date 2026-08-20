@@ -192,7 +192,7 @@ let database = try await vectorsDB.create(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 
 #[tokio::main]
@@ -208,6 +208,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ID::unique(),
         "Knowledge base",
         None, // enabled (optional)
+        None, // specification (optional)
+        None, // replicas (optional)
+        None, // sync_mode (optional)
     ).await?;
 
     println!("{:?}", result);
@@ -215,7 +218,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create \
+appwrite vectorsdb create \
     --database-id <DATABASE_ID> \
     --name "Knowledge base"
 ```
@@ -225,11 +228,11 @@ appwrite vectors-db create \
 {% section #create-collection step=2 title="Create collection" %}
 In the `Knowledge base` database, click **Create collection** and name it `Articles`. Optionally, add a custom collection ID.
 
-A VectorsDB collection has a fixed `dimension`, the length of the embedding vectors it holds. All documents in the collection must use vectors of that exact length, so set the `dimension` to match the embedding model you plan to use. This guide uses `dimension: 4` to keep the vectors short and readable. The default `nomic-embed-text` [embedding model](/docs/products/databases/vectorsdb/embeddings) produces 768-dimensional vectors, so a production collection would use `dimension: 768`.
+A VectorsDB collection has a fixed `dimension`, the length of the embedding vectors it holds. All documents in the collection must use vectors of that exact length. In the Console you pick an **Embedding model** and the collection takes that model's dimension, so the default `nomic-embed-text` [embedding model](/docs/products/databases/vectorsdb/embeddings) gives you a 768-dimension collection. The SDK examples below pass `dimension: 4` instead, which keeps the vectors in this guide short enough to read.
 
 The schema is provisioned for you: an `embeddings` vector and an optional `metadata` object. There are no columns to define.
 
-Set the **dimension**, then add a **Read** permission for the **Any** role so anyone can read documents.
+Add a **Read** permission for the **Any** role so anyone can read documents.
 
 {% multicode %}
 ```server-nodejs
@@ -448,7 +451,7 @@ let collection = try await vectorsDB.createCollection(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
@@ -477,7 +480,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-collection \
+appwrite vectorsdb create-collection \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --name "Articles" \
@@ -723,7 +726,7 @@ let document = try await vectorsDB.createDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use serde_json::json;
 
@@ -752,7 +755,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-document \
+appwrite vectorsdb create-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id 'unique()' \
@@ -988,7 +991,7 @@ let documents = try await vectorsDB.listDocuments(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
@@ -1014,7 +1017,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"limit","values":[10]}'
