@@ -126,8 +126,8 @@ export const jaCatalog: EnCatalog = {
         quickStarts: {
           ...enCatalog.app.footer.expanded.quickStarts,
           web: 'Web',
-          nextjs: 'Next.js',
           tanstackStart: 'TanStack Start',
+          nextjs: 'Next.js',
           react: 'React',
           vue: 'Vue.js',
           nuxt: 'Nuxt',

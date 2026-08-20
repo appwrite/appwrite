@@ -7,9 +7,9 @@ export type DocsFrameworkStripItem = {
 /** Priority order for docs hero / quick-start strips (matches marketing homepage). */
 const FRAMEWORK_STRIP_PRIORITY = [
   'React',
+  'TanStack Start',
   'Next.js',
   'Vue',
-  'TanStack Start',
   'SvelteKit',
   'Nuxt',
   'Astro',
@@ -20,13 +20,13 @@ const FRAMEWORK_STRIP_PRIORITY = [
 
 const FRAMEWORK_STRIP_SOURCE: DocsFrameworkStripItem[] = [
   { name: 'React', href: '/docs/quick-starts/react', iconSrc: '/icons/react.svg' },
-  { name: 'Next.js', href: '/docs/quick-starts/nextjs', iconSrc: '/icons/nextjs.svg' },
-  { name: 'Vue', href: '/docs/quick-starts/vue', iconSrc: '/icons/vue.svg' },
   {
     name: 'TanStack Start',
     href: '/docs/quick-starts/tanstack-start',
     iconSrc: '/icons/tanstack.svg',
   },
+  { name: 'Next.js', href: '/docs/quick-starts/nextjs', iconSrc: '/icons/nextjs.svg' },
+  { name: 'Vue', href: '/docs/quick-starts/vue', iconSrc: '/icons/vue.svg' },
   { name: 'Angular', href: '/docs/quick-starts/angular', iconSrc: '/icons/angular.svg' },
   {
     name: 'SvelteKit',
@@ -34,7 +34,6 @@ const FRAMEWORK_STRIP_SOURCE: DocsFrameworkStripItem[] = [
     iconSrc: '/icons/svelte.svg',
   },
   { name: 'Nuxt', href: '/docs/quick-starts/nuxt', iconSrc: '/icons/nuxt.svg' },
-  { name: 'Astro', href: '/docs/quick-starts/astro', iconSrc: '/icons/astro.svg' },
   { name: 'Qwik', href: '/docs/quick-starts/qwik', iconSrc: '/icons/qwik.svg' },
   { name: 'Solid', href: '/docs/quick-starts/solid', iconSrc: '/icons/solid.svg' },
   { name: 'Refine', href: '/docs/quick-starts/refine', iconSrc: '/icons/refine.svg' },
@@ -43,6 +42,7 @@ const FRAMEWORK_STRIP_SOURCE: DocsFrameworkStripItem[] = [
     href: '/docs/products/sites/quick-start/remix',
     iconSrc: '/icons/remix.svg',
   },
+  { name: 'Astro', href: '/docs/quick-starts/astro', iconSrc: '/icons/astro.svg' },
   { name: 'Web', href: '/docs/quick-starts/web', iconSrc: '/icons/js.svg' },
   {
     name: 'React Native',

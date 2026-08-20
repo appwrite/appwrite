@@ -19,15 +19,15 @@ export const WEB_FRAMEWORK_KEYS = [
   'vue',
   'svelte',
   'sveltekit',
+  'tanstack-start',
   'nextjs',
   'nuxt',
   'angular',
   'analog',
-  'astro',
   'remix',
   'solid',
-  'tanstack-start',
   'vite',
+  'astro',
   'js',
 ] as const
 
