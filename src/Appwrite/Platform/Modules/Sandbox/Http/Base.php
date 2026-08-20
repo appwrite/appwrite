@@ -35,13 +35,15 @@ abstract class Base extends ComputeBase
     }
 
     /**
-     * Storage that outlives a sandbox, one volume per project so no two
-     * tenants ever share a filesystem. Unset _APP_SANDBOX_VOLUME and sandboxes
-     * get a workspace that dies with them.
+     * Storage that outlives a sandbox, one volume per sandbox id: delete a
+     * sandbox and create it again under the same id, and its files are back.
+     * The id carries the project prefix, so no two tenants ever share a
+     * filesystem. Unset _APP_SANDBOX_VOLUME and sandboxes get a workspace that
+     * dies with them.
      *
      * @return list<Volume>
      */
-    protected function volumes(Document $project): array
+    protected function volumes(Document $project, string $sandboxId): array
     {
         $volume = System::getEnv('_APP_SANDBOX_VOLUME', '');
         if ($volume === '') {
@@ -49,7 +51,7 @@ abstract class Base extends ComputeBase
         }
 
         return [new Volume(
-            source: $volume . '-p' . $project->getSequence(),
+            source: $volume . '-' . $this->prefix($project) . $sandboxId,
             path: self::PERSISTENT_PATH,
         )];
     }

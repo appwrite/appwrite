@@ -182,6 +182,15 @@ final class SandboxCustomServerTest extends Scope
         // The rest of the workspace is scratch, so it must not have survived.
         $this->assertNotEquals(0, $this->execute($second['body']['url'], 'test -f /workspace/gone.txt')['exitCode']);
 
+        // Storage follows the ID, so another sandbox gets its own empty one.
+        $other = $this->call(Client::METHOD_POST, '/sandbox', [
+            'sandboxId' => 'persist-other',
+            'image' => 'python:3.12-slim',
+        ]);
+        $this->assertEquals(201, $other['headers']['status-code']);
+        $this->assertNotEquals(0, $this->execute($other['body']['url'], 'test -f /workspace/persistent/note.txt')['exitCode']);
+
+        $this->call(Client::METHOD_DELETE, '/sandbox/persist-other');
         $this->call(Client::METHOD_DELETE, '/sandbox/persist');
     }
 }
