@@ -25,16 +25,16 @@ use Utopia\Usage\UsageQuery;
 class Concurrency
 {
     /** Must match REALTIME_CONCURRENCY_INTERVAL. */
-    private const INTERVAL_SECONDS = 300;
+    private const int INTERVAL_SECONDS = 300;
 
     /**
      * How far back to look for a tenant's carried level. The gauge is only
      * written when a project has deltas, so this must outlast a quiet spell.
      */
-    private const MAX_CATCHUP_HOURS = 168;
+    private const int MAX_CATCHUP_HOURS = 168;
 
     /** Row cap per cross-tenant query, one row per (tenant, bucket). */
-    private const MAX_ROWS = 50_000;
+    private const int MAX_ROWS = 50_000;
 
     /**
      * Sample every whole bucket that has closed since the last sample.
