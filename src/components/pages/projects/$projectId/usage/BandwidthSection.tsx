@@ -12,9 +12,7 @@ import {
   Tooltip,
 } from 'recharts'
 import { cn } from '@/lib/utils'
-import {
-  createCompactBytesAxisTickFormatter,
-} from '@/lib/usage/format-metric'
+import { createCompactBytesAxisTickFormatter } from '@/lib/usage/format-metric'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
   OVERVIEW_BANDWIDTH_ERROR,
@@ -24,11 +22,15 @@ import {
   USAGE_CHART_MARGIN,
   USAGE_CHART_RESPONSIVE_CONTAINER_PROPS,
 } from '@/lib/usage/chart-layout'
-import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import {
+  UsageChartXAxis,
+  UsageChartYAxis,
+} from '@/components/global/shared/ChartXAxis'
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import {
   formatBandwidthTotal,
@@ -86,13 +88,17 @@ function ChartMetricHeaderSkeleton() {
   )
 }
 
-function ChartSkeleton() {
+function ChartSkeleton({ label }: { label: string }) {
   return (
-    <Skeleton
-      className="w-full shrink-0 rounded-md"
+    <div
+      role="status"
+      aria-label={label}
+      className="relative w-full shrink-0"
       style={{ height: OVERVIEW_CHART_HEIGHT }}
-      aria-hidden
-    />
+    >
+      <Skeleton className="absolute inset-0 rounded-md" />
+      <span className="sr-only">{label}</span>
+    </div>
   )
 }
 
@@ -217,7 +223,8 @@ function BandwidthChartCard({
                   <span
                     className={cn(
                       'text-[12px] font-medium tabular-nums',
-                      changePercent > 0 && 'text-emerald-600 dark:text-emerald-400',
+                      changePercent > 0 &&
+                        'text-emerald-600 dark:text-emerald-400',
                       changePercent < 0 && 'text-amber-600 dark:text-amber-400',
                       changePercent === 0 && 'text-muted-foreground',
                     )}
@@ -244,14 +251,18 @@ function BandwidthChartCard({
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: 'var(--chart-2)' }}
               />
-              <span className="text-[11px] text-muted-foreground">{t('Inbound')}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {t('Inbound')}
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <div
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: 'var(--chart-brand)' }}
               />
-              <span className="text-[11px] text-muted-foreground">{t('Outbound')}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {t('Outbound')}
+              </span>
             </div>
           </div>
         ) : null}
@@ -261,7 +272,7 @@ function BandwidthChartCard({
         {isError ? (
           <UsageBandwidthChartError error={chartError} onRetry={onRetry} />
         ) : isLoading ? (
-          <ChartSkeleton />
+          <ChartSkeleton label={t('Loading usage data')} />
         ) : chartData.length === 0 ? (
           <UsageBandwidthChartArea>
             <div className="absolute inset-0 flex items-center justify-center text-[13px] text-muted-foreground">
@@ -292,8 +303,16 @@ function BandwidthChartCard({
                       x2="0"
                       y2="1"
                     >
-                      <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.15} />
-                      <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
+                      <stop
+                        offset="0%"
+                        stopColor="var(--chart-2)"
+                        stopOpacity={0.15}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor="var(--chart-2)"
+                        stopOpacity={0}
+                      />
                     </linearGradient>
                     <linearGradient
                       id="usage-bandwidth-outbound-gradient"
@@ -331,7 +350,8 @@ function BandwidthChartCard({
                   <Tooltip
                     cursor={!isSelecting}
                     content={({ active, payload }) => {
-                      if (isSelecting || !active || !payload?.length) return null
+                      if (isSelecting || !active || !payload?.length)
+                        return null
                       const data = payload[0].payload as {
                         fullDate: string
                         inbound: number
@@ -359,7 +379,9 @@ function BandwidthChartCard({
                                 </span>
                               </p>
                               <p className="border-t border-border pt-1 text-[13px] font-medium text-foreground">
-                                {formatBandwidthValue(data.inbound + data.outbound)}{' '}
+                                {formatBandwidthValue(
+                                  data.inbound + data.outbound,
+                                )}{' '}
                                 <span className="font-normal text-muted-foreground">
                                   {t('total')}
                                 </span>
@@ -367,7 +389,9 @@ function BandwidthChartCard({
                             </div>
                           ) : (
                             <p className="text-[13px] font-medium text-foreground">
-                              {formatBandwidthValue(data.inbound + data.outbound)}
+                              {formatBandwidthValue(
+                                data.inbound + data.outbound,
+                              )}
                             </p>
                           )}
                         </div>
@@ -439,6 +463,7 @@ export function BandwidthSection({
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
   const { disableUsageBreakdownQueries } = useDebugOverrides()
+  const { isSelfHosted } = useConsoleProfile()
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<BandwidthBreakdownDrawerState | null>(null)
   const showBreakdown = !disableUsageBreakdownQueries
@@ -451,17 +476,13 @@ export function BandwidthSection({
     isError: isChartError,
     error: chartError,
     refetch: refetchChart,
-  } = useProjectBandwidthChartOnly(
-    projectId,
-    dateRange,
-    true,
-    chartInterval,
-  )
+  } = useProjectBandwidthChartOnly(projectId, dateRange, true, chartInterval)
 
   const breakdowns = useProjectBandwidthBreakdowns(
     projectId,
     dateRange,
     showBreakdown,
+    !isSelfHosted,
   )
 
   const { standardEntries, resourceEntry, resourceTypeEntry } = useMemo(
@@ -487,12 +508,7 @@ export function BandwidthSection({
       'Usage data',
     )
     return () => unregisterRefreshHandler()
-  }, [
-    queryClient,
-    projectId,
-    registerRefreshHandler,
-    unregisterRefreshHandler,
-  ])
+  }, [queryClient, projectId, registerRefreshHandler, unregisterRefreshHandler])
 
   const dualChartPoints = isChartError
     ? []
@@ -524,36 +540,38 @@ export function BandwidthSection({
 
       {showBreakdown ? (
         <div className="grid items-stretch gap-6 lg:grid-cols-2">
-          {standardEntries.map(({ section, items, isLoading, isError, error }) => (
-            <div
-              key={section.dimension}
-              className="flex h-full min-h-0 flex-col"
-            >
-              <UsageBreakdownCard
-                title={section.title}
-                description={section.description}
-                dimension={section.dimension}
-                items={items}
-                labelVariant={section.labelVariant}
-                countryLookups={countryLookups}
-                isLoading={isLoading}
-                isError={isError}
-                error={error}
-                errorTitle={OVERVIEW_BANDWIDTH_ERROR.title}
-                errorMessage={OVERVIEW_BANDWIDTH_ERROR.message}
-                formatValue={formatBandwidthValue}
-                onRetry={handleRetryAll}
-                onShowMore={() =>
-                  setBreakdownDrawer({
-                    title: section.title,
-                    description: section.description,
-                    dimension: section.dimension,
-                    labelVariant: section.labelVariant,
-                  })
-                }
-              />
-            </div>
-          ))}
+          {standardEntries.map(
+            ({ section, items, isLoading, isError, error }) => (
+              <div
+                key={section.dimension}
+                className="flex h-full min-h-0 flex-col"
+              >
+                <UsageBreakdownCard
+                  title={section.title}
+                  description={section.description}
+                  dimension={section.dimension}
+                  items={items}
+                  labelVariant={section.labelVariant}
+                  countryLookups={countryLookups}
+                  isLoading={isLoading}
+                  isError={isError}
+                  error={error}
+                  errorTitle={OVERVIEW_BANDWIDTH_ERROR.title}
+                  errorMessage={OVERVIEW_BANDWIDTH_ERROR.message}
+                  formatValue={formatBandwidthValue}
+                  onRetry={handleRetryAll}
+                  onShowMore={() =>
+                    setBreakdownDrawer({
+                      title: section.title,
+                      description: section.description,
+                      dimension: section.dimension,
+                      labelVariant: section.labelVariant,
+                    })
+                  }
+                />
+              </div>
+            ),
+          )}
 
           {resourceEntry ? (
             <div className="flex h-full min-h-0 flex-col">

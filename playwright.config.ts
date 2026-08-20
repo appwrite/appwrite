@@ -34,6 +34,7 @@ const config: PlaywrightTestConfig = {
   reportSlowTests: null,
   reporter: isCI
     ? [
+        ['list'],
         ['github'],
         ['html', { open: 'never', outputFolder: 'playwright-report' }],
       ]
@@ -73,11 +74,41 @@ const config: PlaywrightTestConfig = {
       dependencies: ['setup'],
       // Smoke / read-only console specs only (exclude write database suites).
       testMatch:
-        /console\.(?!mysql\.|postgres\.|tablesdb\.|documentsdb\.|vectorsdb\.).*\.spec\.ts/,
+        /console\.(?!mysql\.|postgres\.|tablesdb\.|documentsdb\.|vectorsdb\.|usage\.).*\.spec\.ts/,
       use: {
         ...desktopChrome,
         storageState,
       },
+    },
+    {
+      name: 'console-usage',
+      dependencies: ['setup'],
+      testMatch: /console\.usage\.spec\.ts/,
+      use: {
+        ...desktopChrome,
+        storageState,
+      },
+    },
+    {
+      // Local-only, like console-usage-live: it needs a self-hosted *backend*,
+      // not just a self-hosted build. CI only has the cloud endpoint, and a
+      // self-hosted bundle pointed at cloud cannot even get through auth.setup.
+      // Run with `bun run e2e:usage-self-hosted` against a local instance.
+      name: 'self-hosted-usage',
+      dependencies: ['setup'],
+      testMatch: /self-hosted\.usage\.spec\.ts/,
+      use: {
+        ...desktopChrome,
+        storageState,
+      },
+    },
+    {
+      name: 'console-usage-live',
+      dependencies: ['setup'],
+      testMatch: /console\.usage\.live\.spec\.ts/,
+      fullyParallel: false,
+      workers: 1,
+      use: consoleDatabaseUse,
     },
     {
       name: 'console-mysql',
@@ -139,6 +170,11 @@ const config: PlaywrightTestConfig = {
       VITE_CONSOLE_PROFILE: process.env.VITE_CONSOLE_PROFILE || 'cloud',
       VITE_CONSOLE_FINGERPRINT_KEY:
         process.env.VITE_CONSOLE_FINGERPRINT_KEY || '',
+      // Left empty so the backend's `_APP_USAGE_STATS` decides, which is what
+      // the self-hosted lane asserts against.
+      VITE_CONSOLE_USAGE_STATS: process.env.VITE_CONSOLE_USAGE_STATS || '',
+      VITE_CONSOLE_WEBSITE_ACCESS:
+        process.env.VITE_CONSOLE_WEBSITE_ACCESS || '',
     },
     // Set E2E_SKIP_BUILD=1 to reuse an existing `dist/` (faster local iteration).
     command:

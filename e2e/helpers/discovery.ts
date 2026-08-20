@@ -9,6 +9,7 @@ export type ConsoleTargets = {
 }
 
 type ListedProject = { $id: string; name: string }
+type ListedSite = { $id: string }
 
 function isProjectsListUrl(url: string): boolean {
   try {
@@ -94,6 +95,58 @@ async function collectOrgProjects(
   }
 
   return listed
+}
+
+function isSitesListUrl(url: string): boolean {
+  try {
+    return new URL(url).pathname.replace(/\/+$/, '').endsWith('/sites')
+  } catch {
+    return false
+  }
+}
+
+/** Discover sites from the real list API response used by the Sites page. */
+export async function discoverSiteIds(
+  page: Page,
+  projectId: string,
+): Promise<string[]> {
+  const listed: ListedSite[] = []
+  const onResponse = async (response: Response) => {
+    if (response.request().method() !== 'GET' || !response.ok()) return
+    if (!isSitesListUrl(response.url())) return
+    try {
+      const body = (await response.json()) as { sites?: unknown }
+      if (!Array.isArray(body.sites)) return
+      for (const row of body.sites) {
+        if (!row || typeof row !== 'object') continue
+        const id = (row as { $id?: unknown }).$id
+        if (typeof id === 'string' && id) listed.push({ $id: id })
+      }
+    } catch {
+      // Ignore non-JSON or already-consumed bodies.
+    }
+  }
+
+  page.on('response', onResponse)
+  try {
+    await page.goto(`/projects/${projectId}/sites`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect
+      .poll(() => listed.length, { timeout: 20_000 })
+      .toBeGreaterThan(0)
+      .catch(() => undefined)
+  } finally {
+    page.off('response', onResponse)
+  }
+  return [...new Set(listed.map((site) => site.$id))]
+}
+
+export async function discoverFirstSiteId(
+  page: Page,
+  projectId: string,
+): Promise<string | null> {
+  return (await discoverSiteIds(page, projectId))[0] ?? null
 }
 
 /**

@@ -68,9 +68,20 @@ export const USAGE_FILTER_EXCLUDED_ATTRIBUTES = new Set(['teamId'])
 
 export type UsageFilterQuerySurface = 'events' | 'gauges' | 'mixed'
 
-const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'].map(
-  (method) => ({ value: method, label: method }),
-)
+export type UsageFilterAvailability = {
+  /** Cloud supports city filtering; the current self-hosted endpoint does not. */
+  allowCity?: boolean
+}
+
+const HTTP_METHODS = [
+  'GET',
+  'POST',
+  'PUT',
+  'PATCH',
+  'DELETE',
+  'OPTIONS',
+  'HEAD',
+].map((method) => ({ value: method, label: method }))
 
 const NETWORK_SERVICES = [
   'account',
@@ -156,7 +167,12 @@ const NETWORK_EVENT_FILTER_COLUMNS: FilterColumn[] = [
 const STORAGE_GAUGE_FILTER_COLUMNS: FilterColumn[] = [
   stringColumn('resourceId', 'Resource ID', GAUGE_OPERATORS),
   stringColumn('resourceType', 'Resource type', GAUGE_OPERATORS),
-  enumColumn('service', 'Service', [{ value: 'storage', label: 'storage' }], GAUGE_OPERATORS),
+  enumColumn(
+    'service',
+    'Service',
+    [{ value: 'storage', label: 'storage' }],
+    GAUGE_OPERATORS,
+  ),
 ]
 
 /** Compute executions / GB-hours (listEvents). */
@@ -216,14 +232,24 @@ const AVATARS_EVENT_FILTER_COLUMNS: FilterColumn[] = [
 
 /** Messaging messages/SMS (events) and topics (gauges). */
 const MESSAGING_FILTER_COLUMNS: FilterColumn[] = [
-  enumColumn('service', 'Service', [{ value: 'messaging', label: 'messaging' }], GAUGE_OPERATORS),
+  enumColumn(
+    'service',
+    'Service',
+    [{ value: 'messaging', label: 'messaging' }],
+    GAUGE_OPERATORS,
+  ),
   stringColumn('resourceId', 'Resource ID', GAUGE_OPERATORS),
   stringColumn('resourceType', 'Resource type', GAUGE_OPERATORS),
 ]
 
 /** Webhook deliveries (events) and webhook count (gauges). */
 const WEBHOOKS_FILTER_COLUMNS: FilterColumn[] = [
-  enumColumn('service', 'Service', [{ value: 'webhooks', label: 'webhooks' }], GAUGE_OPERATORS),
+  enumColumn(
+    'service',
+    'Service',
+    [{ value: 'webhooks', label: 'webhooks' }],
+    GAUGE_OPERATORS,
+  ),
   stringColumn('resourceId', 'Resource ID', GAUGE_OPERATORS),
   stringColumn('resourceType', 'Resource type', GAUGE_OPERATORS),
 ]
@@ -266,22 +292,34 @@ export function getUsageQuerySurfaceForCategory(
 
 export function getUsageFilterColumnsForCategory(
   categoryId: string,
+  availability: UsageFilterAvailability = {},
 ): FilterColumn[] {
-  return CATEGORY_FILTER_COLUMNS[categoryId] ?? []
+  const columns = CATEGORY_FILTER_COLUMNS[categoryId] ?? []
+  return availability.allowCity === false
+    ? columns.filter((column) => column.id !== 'city')
+    : columns
 }
 
 export function getUsageFilterColumnIdsForCategory(
   categoryId: string,
+  availability: UsageFilterAvailability = {},
 ): Set<string> {
-  return new Set(getUsageFilterColumnsForCategory(categoryId).map((column) => column.id))
+  return new Set(
+    getUsageFilterColumnsForCategory(categoryId, availability).map(
+      (column) => column.id,
+    ),
+  )
 }
 
 export function isUsageFilterDimensionAllowed(
   categoryId: string,
   dimension: string,
+  availability: UsageFilterAvailability = {},
 ): boolean {
   if (USAGE_FILTER_EXCLUDED_ATTRIBUTES.has(dimension)) return false
-  return getUsageFilterColumnIdsForCategory(categoryId).has(dimension)
+  return getUsageFilterColumnIdsForCategory(categoryId, availability).has(
+    dimension,
+  )
 }
 
 export function getUsageSavedFilterScope(categoryId: string): string {
@@ -295,13 +333,17 @@ export function categorySupportsUsageFilters(categoryId: string): boolean {
 export function isUsageEventFilterAttribute(
   attribute: string,
 ): attribute is UsageEventFilterAttribute {
-  return (USAGE_EVENT_FILTER_ATTRIBUTES as readonly string[]).includes(attribute)
+  return (USAGE_EVENT_FILTER_ATTRIBUTES as readonly string[]).includes(
+    attribute,
+  )
 }
 
 export function isUsageGaugeFilterAttribute(
   attribute: string,
 ): attribute is UsageGaugeFilterAttribute {
-  return (USAGE_GAUGE_FILTER_ATTRIBUTES as readonly string[]).includes(attribute)
+  return (USAGE_GAUGE_FILTER_ATTRIBUTES as readonly string[]).includes(
+    attribute,
+  )
 }
 
 export function isUsageEventFilterOperator(

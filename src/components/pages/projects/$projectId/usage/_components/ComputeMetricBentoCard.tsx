@@ -5,10 +5,9 @@ import type { UsageChartAxisFormat } from '@/lib/usage/format-metric'
 import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
 import { UsageTimeSeriesChartCard } from './UsageTimeSeriesChartCard'
-import {
-  UsageMetricCardFooter,
-  UsageMetricCardShell,
-} from './UsageMetricCard'
+import type { DateRange } from 'react-day-picker'
+import type { UsageChartInterval } from '@/lib/usage/chart-interval'
+import { UsageMetricCardFooter, UsageMetricCardShell } from './UsageMetricCard'
 import { UsageResourceBreakdownCard } from './UsageResourceBreakdownCard'
 
 const COMPUTE_USAGE_ERROR = {
@@ -38,10 +37,12 @@ type ComputeMetricBentoCardProps = {
   breakdownTitleAddon?: React.ReactNode
   onRetry: () => void
   docsHref?: string
+  dateRange?: DateRange
+  chartInterval?: UsageChartInterval
+  onDateRangeChange?: (dateRange: DateRange | undefined) => void
 }
 
 export function ComputeMetricBentoCard({
-  projectId,
   title,
   description,
   unitLabel,
@@ -61,15 +62,19 @@ export function ComputeMetricBentoCard({
   breakdownTitleAddon,
   onRetry,
   docsHref,
+  dateRange,
+  chartInterval,
+  onDateRangeChange,
 }: ComputeMetricBentoCardProps) {
   return (
     <UsageMetricCardShell>
       <div
         className={cn(
-          'grid grid-cols-1 items-stretch divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0',
+          'grid grid-cols-1 items-stretch divide-y divide-border lg:divide-y-0',
+          showBreakdown && 'lg:grid-cols-3 lg:divide-x',
         )}
       >
-        <div className="lg:col-span-2">
+        <div className={cn(showBreakdown && 'lg:col-span-2')}>
           <UsageTimeSeriesChartCard
             embedded
             title={title}
@@ -88,6 +93,9 @@ export function ComputeMetricBentoCard({
             formatValue={formatValue}
             axisFormat={axisFormat}
             onRetry={onRetry}
+            dateRange={dateRange}
+            chartInterval={chartInterval}
+            onDateRangeChange={onDateRangeChange}
           />
         </div>
 
