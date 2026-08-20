@@ -47,6 +47,8 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
+use Utopia\Platform\Enum;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean as BooleanValidator;
@@ -54,6 +56,7 @@ use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class TestFormat extends Format
 {
@@ -122,6 +125,68 @@ final class FormatTest extends TestCase
     public function testExistingResponseEnumMetadataRemainsUnchanged(): void
     {
         $this->assertSame('HealthCheckStatus', (new HealthStatus())->getRules()['status']['enumSDKName']);
+    }
+
+    private function parseEnumParamSchema(\Utopia\Validator $validator): array
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests'))
+            ->desc('List tests')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'listTests',
+                description: 'List tests.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('metrics', [], $validator, 'Metric names.', false, enum: new Enum(name: 'TestMetric'));
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+
+        return $spec['paths']['/tests']['get']['parameters'][0]['schema'];
+    }
+
+    public function testUnionWithAFreeStringBranchEmitsAnyOf(): void
+    {
+        $schema = $this->parseEnumParamSchema(new AnyOf([
+            new ArrayList(new WhiteList(['alpha', 'beta'], true), 10),
+            new ArrayList(new Text(255), 10),
+        ]));
+
+        // Standard OpenAPI: the known values are one branch of a union whose
+        // other branch is any string, mirroring the AnyOf validator exactly.
+        $this->assertCount(2, $schema['items']['anyOf']);
+        $this->assertSame(
+            ['type' => 'string', 'enum' => ['alpha', 'beta'], 'x-enum-name' => 'TestMetric', 'x-enum-keys' => ['alpha', 'beta']],
+            $schema['items']['anyOf'][0],
+        );
+        $this->assertSame(['type' => 'string'], $schema['items']['anyOf'][1]);
+        $this->assertArrayNotHasKey('enum', $schema['items']);
+    }
+
+    public function testWhitelistOnlyParamEmitsAPlainEnum(): void
+    {
+        $schema = $this->parseEnumParamSchema(
+            new ArrayList(new WhiteList(['alpha', 'beta'], true), 10)
+        );
+
+        $this->assertSame(['alpha', 'beta'], $schema['items']['enum']);
+        $this->assertSame('TestMetric', $schema['items']['x-enum-name']);
+        $this->assertArrayNotHasKey('anyOf', $schema['items']);
+    }
+
+    public function testUnionOfClosedBranchesEmitsAPlainEnum(): void
+    {
+        $schema = $this->parseEnumParamSchema(new AnyOf([
+            new ArrayList(new WhiteList(['alpha', 'beta'], true), 10),
+            new ArrayList(new WhiteList(['gamma'], true), 10),
+        ]));
+
+        $this->assertSame(['alpha', 'beta'], $schema['items']['enum']);
+        $this->assertArrayNotHasKey('anyOf', $schema['items']);
     }
 
     public function testOpenApiCustomIdBodyFieldIncludesIdGeneratorMetadata(): void

@@ -23,6 +23,7 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
@@ -71,6 +72,37 @@ class OpenAPI3 extends Format
         }
 
         return [$example];
+    }
+
+    /**
+     * Whether a union of validators also accepts arbitrary strings.
+     *
+     * A param declared as `AnyOf([WhiteList(...), Text(...)])` is open at
+     * runtime: the whitelist names the values callers usually want, and the
+     * text branch keeps anything else valid. An enum on such a param
+     * therefore documents the known values instead of closing the set, and
+     * generators need to know the difference so they do not reject a name the
+     * endpoint would have accepted.
+     *
+     * @param  array<int, Validator>  $validators
+     */
+    private function acceptsAnyString(array $validators): bool
+    {
+        foreach ($validators as $validator) {
+            while ($validator instanceof ArrayList || $validator instanceof Nullable) {
+                $validator = $validator->getValidator();
+            }
+
+            if ($validator instanceof WhiteList) {
+                continue;
+            }
+
+            if ($validator->getType() === Validator::TYPE_STRING) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function normalizeObjectExample(mixed $example): object
@@ -533,9 +565,12 @@ class OpenAPI3 extends Format
                     $class = Queries::class;
                 }
 
+                $openEnum = false;
                 if ($class === \Utopia\Validator\AnyOf::class) {
-                    $validator = $param['validator']->getValidators()[0];
+                    $validators = $param['validator']->getValidators();
+                    $validator = $validators[0];
                     $class = \get_class($validator);
+                    $openEnum = $this->acceptsAnyString($validators);
                 }
 
                 $array = false;
@@ -754,6 +789,15 @@ class OpenAPI3 extends Format
                                         $node['schema']['items']['x-enum-name'] = $enum->name;
                                     }
                                     $node['schema']['items']['x-enum-keys'] = $enumKeys;
+
+                                    if ($openEnum) {
+                                        $node['schema']['items'] = [
+                                            'anyOf' => [
+                                                $node['schema']['items'],
+                                                ['type' => Validator::TYPE_STRING],
+                                            ],
+                                        ];
+                                    }
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -791,6 +835,26 @@ class OpenAPI3 extends Format
                                         $node['schema']['x-enum-name'] = $enum->name;
                                     }
                                     $node['schema']['x-enum-keys'] = $enumKeys;
+
+                                    if ($openEnum) {
+                                        $enumBranch = ['type' => $node['schema']['type'], 'enum' => $enumValues];
+                                        if (!empty($enum->name)) {
+                                            $enumBranch['x-enum-name'] = $enum->name;
+                                        }
+                                        $enumBranch['x-enum-keys'] = $enumKeys;
+
+                                        unset(
+                                            $node['schema']['type'],
+                                            $node['schema']['enum'],
+                                            $node['schema']['x-enum-name'],
+                                            $node['schema']['x-enum-keys'],
+                                        );
+
+                                        $node['schema']['anyOf'] = [
+                                            $enumBranch,
+                                            ['type' => Validator::TYPE_STRING],
+                                        ];
+                                    }
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -935,6 +999,13 @@ class OpenAPI3 extends Format
 
                         if (isset($node['schema']['format'])) {
                             $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
+                        }
+
+                        if (isset($node['schema']['anyOf'])) {
+                            // Open enum: the known values and the free-form branch
+                            // both live under anyOf, so copy the union wholesale.
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['anyOf'] = $node['schema']['anyOf'];
+                            unset($body['content'][$consumes[0]]['schema']['properties'][$name]['type']);
                         }
 
                         if (isset($node['schema']['enum'])) {
