@@ -44,6 +44,7 @@ const config: PlaywrightTestConfig = {
   workers: isCI ? 2 : undefined,
   testDir: 'e2e',
   outputDir: 'test-results',
+  globalTeardown: './e2e/global-teardown.ts',
   use: {
     baseURL: 'http://localhost:4173/',
     viewport: E2E_VIEWPORT,
@@ -55,6 +56,7 @@ const config: PlaywrightTestConfig = {
     {
       name: 'setup',
       testMatch: /auth\.setup\.ts/,
+      timeout: 20 * 60_000,
       use: {
         ...desktopChrome,
         // Soft-launch gate: unlock /sign-in before capturing auth state.
