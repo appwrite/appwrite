@@ -608,6 +608,478 @@ const TokenBucketDiagram: React.FC<{ frame: number }> = ({ frame }) => {
   )
 }
 
+// --- Manual (interactive) mode --------------------------------------------
+
+// Interactive rules run a smaller, snappier quota than the auto loop so a
+// reader can hit the limit with a few clicks.
+const MANUAL_LIMIT = 5
+const MANUAL_INTERVAL_MS = 15000
+const MANUAL_BAND_LEFT = 120
+const MANUAL_BAND_RIGHT = 448
+const MANUAL_BAND_W = MANUAL_BAND_RIGHT - MANUAL_BAND_LEFT
+const BUCKET_CAPACITY = 10
+const BUCKET_REFILL_PER_MS = MANUAL_LIMIT / MANUAL_INTERVAL_MS
+const REJECTION_TTL_MS = 1400
+
+/** Wall-clock time updated every animation frame while mounted. */
+function useNowMs(): number {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    let raf = 0
+    const tick = () => {
+      setNow(Date.now())
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+  return now
+}
+
+const formatClock = (ms: number) => new Date(ms).toTimeString().slice(0, 8)
+
+const RejectionMarker: React.FC<{ x: number; age: number }> = ({ x, age }) => {
+  const opacity = interpolate(age, [0, 200, REJECTION_TTL_MS], [0, 1, 0])
+  return (
+    <g opacity={opacity}>
+      <RequestDot x={x} y={AXIS_Y} color={LIMITED_COLOR} emphasized />
+      <text
+        x={x}
+        y={AXIS_Y - 26}
+        textAnchor="middle"
+        fontSize={14}
+        fill={LIMITED_COLOR}
+      >
+        rate limited
+      </text>
+    </g>
+  )
+}
+
+type ManualDiagramProps = { now: number }
+type ManualState = {
+  requests: number[]
+  rejections: number[]
+}
+
+const ManualFixedWindow: React.FC<
+  ManualDiagramProps & { state: ManualState }
+> = ({ now, state }) => {
+  const windowStart = Math.floor(now / MANUAL_INTERVAL_MS) * MANUAL_INTERVAL_MS
+  const windowEnd = windowStart + MANUAL_INTERVAL_MS
+  const xFor = (t: number) =>
+    MANUAL_BAND_LEFT + ((t - windowStart) / MANUAL_INTERVAL_MS) * MANUAL_BAND_W
+  const inWindow = state.requests.filter((t) => t >= windowStart)
+  const rejections = state.rejections.filter(
+    (t) => now - t < REJECTION_TTL_MS && t >= windowStart,
+  )
+
+  return (
+    <svg viewBox={`0 0 ${VIEW_W} 320`} className="h-auto w-full" role="img">
+      <QuotaLabel
+        x={(MANUAL_BAND_LEFT + MANUAL_BAND_RIGHT) / 2}
+        bold={`${MANUAL_LIMIT}`}
+        rest={`requests per ${MANUAL_INTERVAL_MS / 1000}s`}
+      />
+      <text
+        x={MANUAL_BAND_RIGHT}
+        y={110}
+        textAnchor="end"
+        fontSize={15}
+        fill="var(--muted-foreground)"
+        className="tabular-nums"
+      >
+        <tspan fontWeight={600} fill="var(--foreground)">
+          {Math.min(inWindow.length, MANUAL_LIMIT)}
+        </tspan>
+        {` / ${MANUAL_LIMIT} used`}
+      </text>
+
+      <line
+        x1={24}
+        y1={AXIS_Y}
+        x2={544}
+        y2={AXIS_Y}
+        stroke="var(--border)"
+        strokeWidth={2}
+      />
+      <WindowBand left={MANUAL_BAND_LEFT} right={MANUAL_BAND_RIGHT} />
+
+      {/* progress through the current window */}
+      <line
+        x1={xFor(now)}
+        y1={BAND_TOP}
+        x2={xFor(now)}
+        y2={BAND_BOTTOM}
+        stroke="var(--muted-foreground)"
+        strokeOpacity={0.35}
+        strokeWidth={2}
+        strokeDasharray="4 4"
+      />
+
+      {inWindow.map((t) => (
+        <RequestDot key={t} x={xFor(t)} y={AXIS_Y} />
+      ))}
+      {rejections.map((t) => (
+        <RejectionMarker key={t} x={Math.min(xFor(t), 500)} age={now - t} />
+      ))}
+
+      <text
+        x={MANUAL_BAND_LEFT}
+        y={222}
+        textAnchor="middle"
+        fontSize={16}
+        fill="var(--muted-foreground)"
+        className="tabular-nums"
+      >
+        {formatClock(windowStart)}
+      </text>
+      <text
+        x={MANUAL_BAND_RIGHT}
+        y={222}
+        textAnchor="middle"
+        fontSize={16}
+        fill="var(--muted-foreground)"
+        className="tabular-nums"
+      >
+        {formatClock(windowEnd)}
+      </text>
+      <text
+        x={(MANUAL_BAND_LEFT + MANUAL_BAND_RIGHT) / 2}
+        y={244}
+        textAnchor="middle"
+        fontSize={14}
+        fill="var(--muted-foreground)"
+        className="tabular-nums"
+      >
+        {`resets for everyone in ${Math.ceil((windowEnd - now) / 1000)}s`}
+      </text>
+    </svg>
+  )
+}
+
+const ManualSlidingWindow: React.FC<
+  ManualDiagramProps & { state: ManualState }
+> = ({ now, state }) => {
+  // The band is pinned with "now" at its right edge; requests drift left as
+  // they age and stop counting once they leave the window.
+  const xFor = (t: number) =>
+    MANUAL_BAND_RIGHT - ((now - t) / MANUAL_INTERVAL_MS) * MANUAL_BAND_W
+  const visible = state.requests.filter(
+    (t) => now - t < MANUAL_INTERVAL_MS * 1.25,
+  )
+  const active = state.requests.filter((t) => now - t < MANUAL_INTERVAL_MS)
+  const rejections = state.rejections.filter((t) => now - t < REJECTION_TTL_MS)
+
+  return (
+    <svg viewBox={`0 0 ${VIEW_W} 320`} className="h-auto w-full" role="img">
+      <QuotaLabel
+        x={(MANUAL_BAND_LEFT + MANUAL_BAND_RIGHT) / 2}
+        bold={`${MANUAL_LIMIT}`}
+        rest={`requests per ${MANUAL_INTERVAL_MS / 1000}s`}
+      />
+      <text
+        x={MANUAL_BAND_RIGHT}
+        y={110}
+        textAnchor="end"
+        fontSize={15}
+        fill="var(--muted-foreground)"
+        className="tabular-nums"
+      >
+        <tspan fontWeight={600} fill="var(--foreground)">
+          {Math.min(active.length, MANUAL_LIMIT)}
+        </tspan>
+        {` / ${MANUAL_LIMIT} in the last ${MANUAL_INTERVAL_MS / 1000}s`}
+      </text>
+
+      <line
+        x1={24}
+        y1={AXIS_Y}
+        x2={544}
+        y2={AXIS_Y}
+        stroke="var(--border)"
+        strokeWidth={2}
+      />
+      <WindowBand left={MANUAL_BAND_LEFT} right={MANUAL_BAND_RIGHT} />
+
+      {visible.map((t) => {
+        const x = xFor(t)
+        const aged = interpolate(
+          x,
+          [MANUAL_BAND_LEFT - 40, MANUAL_BAND_LEFT, MANUAL_BAND_LEFT + 24],
+          [0, 0.25, 1],
+        )
+        return <RequestDot key={t} x={x} y={AXIS_Y} opacity={aged} />
+      })}
+      {rejections.map((t) => (
+        <RejectionMarker key={t} x={MANUAL_BAND_RIGHT} age={now - t} />
+      ))}
+
+      <text
+        x={MANUAL_BAND_LEFT}
+        y={222}
+        textAnchor="middle"
+        fontSize={16}
+        fill="var(--muted-foreground)"
+        className="tabular-nums"
+      >
+        {`-${MANUAL_INTERVAL_MS / 1000}s`}
+      </text>
+      <text
+        x={MANUAL_BAND_RIGHT}
+        y={222}
+        textAnchor="middle"
+        fontSize={16}
+        fill="var(--muted-foreground)"
+      >
+        now
+      </text>
+      <text
+        x={(MANUAL_BAND_LEFT + MANUAL_BAND_RIGHT) / 2}
+        y={244}
+        textAnchor="middle"
+        fontSize={14}
+        fill="var(--muted-foreground)"
+      >
+        the window rolls with time; old requests stop counting
+      </text>
+    </svg>
+  )
+}
+
+const ManualTokenBucket: React.FC<
+  ManualDiagramProps & {
+    tokens: number
+    lastAccept: number | null
+    lastReject: number | null
+  }
+> = ({ now, tokens, lastAccept, lastReject }) => {
+  const tokenCount = Math.floor(tokens)
+  const surfaceY = surfaceYFor(tokenCount)
+  const outT =
+    lastAccept === null ? 1 : interpolate(now - lastAccept, [0, 500], [0, 1])
+  const rejectOpacity =
+    lastReject === null
+      ? 0
+      : interpolate(now - lastReject, [0, 200, REJECTION_TTL_MS], [0, 1, 0])
+  const dripPhase = (now % 1200) / 1200
+
+  return (
+    <svg viewBox={`0 0 ${VIEW_W} 352`} className="h-auto w-full" role="img">
+      {[40, 60, 82].map((cy, i) => (
+        <circle
+          key={cy}
+          cx={244}
+          cy={cy}
+          r={5.5}
+          fill={LIMITED_COLOR}
+          fillOpacity={
+            [0.35, 0.65, 1][i] *
+            (0.4 + 0.6 * Math.sin(Math.PI * ((dripPhase + i * 0.18) % 1)))
+          }
+        />
+      ))}
+
+      <text x={268} y={64} fontSize={18}>
+        <tspan fontWeight={600} fill="var(--foreground)">
+          {`+${MANUAL_LIMIT}`}
+        </tspan>
+        <tspan fill="var(--muted-foreground)">
+          {` tokens per ${MANUAL_INTERVAL_MS / 1000}s`}
+        </tspan>
+      </text>
+
+      <g
+        stroke="var(--muted-foreground)"
+        strokeOpacity={0.5}
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      >
+        <path d="M 180 104 L 193.2 234 Q 194 244 203 244 L 246 244" />
+        <path d="M 348 104 L 334.8 234 Q 334 244 325 244 L 282 244" />
+      </g>
+
+      <polygon
+        points={`${wallLeftX(surfaceY)},${surfaceY} ${wallRightX(surfaceY)},${surfaceY} ${wallRightX(242)},242 ${wallLeftX(242)},242`}
+        fill={LIMITED_COLOR}
+        fillOpacity={0.08}
+      />
+      <line
+        x1={wallLeftX(surfaceY)}
+        y1={surfaceY}
+        x2={wallRightX(surfaceY)}
+        y2={surfaceY}
+        stroke={LIMITED_COLOR}
+        strokeOpacity={0.35}
+        strokeWidth={2}
+      />
+
+      {BUCKET_SLOTS.slice(0, tokenCount).map((slot) => (
+        <circle
+          key={`${slot.x}-${slot.y}`}
+          cx={slot.x}
+          cy={slot.y}
+          r={6}
+          fill={LIMITED_COLOR}
+          stroke="var(--background)"
+          strokeWidth={3}
+        />
+      ))}
+
+      <g stroke="var(--muted-foreground)" strokeOpacity={0.4} strokeWidth={2}>
+        <line x1={368} y1={104} x2={368} y2={244} />
+        <line x1={368} y1={104} x2={360} y2={104} />
+        <line x1={368} y1={244} x2={360} y2={244} />
+      </g>
+      <text x={380} y={166} fontSize={15} fill="var(--muted-foreground)">
+        Max bucket size
+      </text>
+      <text x={380} y={190} fontSize={17}>
+        <tspan fontWeight={600} fill="var(--foreground)">
+          {BUCKET_CAPACITY}
+        </tspan>
+        <tspan fill="var(--muted-foreground)"> tokens</tspan>
+      </text>
+      <text
+        x={380}
+        y={214}
+        fontSize={14}
+        fill="var(--muted-foreground)"
+        className="tabular-nums"
+      >
+        {`${tokens.toFixed(1)} available`}
+      </text>
+
+      <line
+        x1={BUCKET_OUT_X}
+        y1={254}
+        x2={BUCKET_OUT_X}
+        y2={272}
+        stroke="var(--muted-foreground)"
+        strokeOpacity={0.5}
+        strokeWidth={2}
+      />
+      <polygon
+        points={`${BUCKET_OUT_X - 7},271 ${BUCKET_OUT_X + 7},271 ${BUCKET_OUT_X},282`}
+        fill="var(--muted-foreground)"
+        fillOpacity={0.5}
+      />
+      <circle
+        cx={BUCKET_OUT_X}
+        cy={interpolate(outT, [0, 1], [288, 300])}
+        r={6.5}
+        fill={FIREWALL_PASSED_CHART_COLOR}
+        stroke="var(--background)"
+        strokeWidth={3}
+        opacity={interpolate(outT, [0, 0.15, 0.8, 1], [0, 1, 1, 0])}
+      />
+      <g opacity={rejectOpacity}>
+        <circle
+          cx={BUCKET_OUT_X}
+          cy={292}
+          r={7.5}
+          fill={LIMITED_COLOR}
+          stroke="var(--background)"
+          strokeWidth={3}
+        />
+        <text x={BUCKET_OUT_X + 16} y={297} fontSize={14} fill={LIMITED_COLOR}>
+          rate limited, bucket is empty
+        </text>
+      </g>
+      <text
+        x={BUCKET_OUT_X}
+        y={326}
+        textAnchor="middle"
+        fontSize={15}
+        fill="var(--muted-foreground)"
+      >
+        each request takes one token
+      </text>
+    </svg>
+  )
+}
+
+const ManualMode: React.FC<{ strategy: keyof typeof STRATEGIES }> = ({
+  strategy,
+}) => {
+  const now = useNowMs()
+  const [state, setState] = useState<ManualState>({
+    requests: [],
+    rejections: [],
+  })
+  const bucketRef = useRef({ tokens: BUCKET_CAPACITY, at: Date.now() })
+  const [bucketView, setBucketView] = useState({
+    lastAccept: null as number | null,
+    lastReject: null as number | null,
+  })
+
+  const bucketTokens = Math.min(
+    BUCKET_CAPACITY,
+    bucketRef.current.tokens +
+      (now - bucketRef.current.at) * BUCKET_REFILL_PER_MS,
+  )
+
+  const send = () => {
+    const t = Date.now()
+    if (strategy === 'tokenBucket') {
+      const current = Math.min(
+        BUCKET_CAPACITY,
+        bucketRef.current.tokens +
+          (t - bucketRef.current.at) * BUCKET_REFILL_PER_MS,
+      )
+      if (current >= 1) {
+        bucketRef.current = { tokens: current - 1, at: t }
+        setBucketView({ lastAccept: t, lastReject: null })
+      } else {
+        setBucketView((v) => ({ ...v, lastReject: t }))
+      }
+      return
+    }
+
+    setState((s) => {
+      const active =
+        strategy === 'fixedWindow'
+          ? s.requests.filter(
+              (r) =>
+                r >= Math.floor(t / MANUAL_INTERVAL_MS) * MANUAL_INTERVAL_MS,
+            )
+          : s.requests.filter((r) => t - r < MANUAL_INTERVAL_MS)
+      if (active.length < MANUAL_LIMIT) {
+        return { ...s, requests: [...s.requests.slice(-40), t] }
+      }
+      return { ...s, rejections: [...s.rejections.slice(-10), t] }
+    })
+  }
+
+  return (
+    <>
+      {strategy === 'fixedWindow' ? (
+        <ManualFixedWindow now={now} state={state} />
+      ) : strategy === 'slidingWindow' ? (
+        <ManualSlidingWindow now={now} state={state} />
+      ) : (
+        <ManualTokenBucket
+          now={now}
+          tokens={bucketTokens}
+          lastAccept={bucketView.lastAccept}
+          lastReject={bucketView.lastReject}
+        />
+      )}
+      <div className="mt-4 flex justify-center">
+        <button
+          type="button"
+          onClick={send}
+          className="rounded-lg bg-[var(--brand-cta)] px-4 py-2 text-[13px] font-medium text-white transition-transform hover:opacity-90 active:scale-[0.97]"
+        >
+          Send request
+        </button>
+      </div>
+    </>
+  )
+}
+
 // --- Public component -----------------------------------------------------
 
 const STRATEGIES = {
@@ -639,8 +1111,11 @@ export function RateLimitStrategyAnimation({
   strategy,
 }: RateLimitStrategyAnimationProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const config =
-    STRATEGIES[strategy as keyof typeof STRATEGIES] ?? STRATEGIES.fixedWindow
+  const [mode, setMode] = useState<'auto' | 'manual'>('auto')
+  const strategyKey = (
+    strategy && strategy in STRATEGIES ? strategy : 'fixedWindow'
+  ) as keyof typeof STRATEGIES
+  const config = STRATEGIES[strategyKey]
   const frame = useLoopFrame(config.duration, config.restFrame, containerRef)
   const { Diagram } = config
 
@@ -648,11 +1123,32 @@ export function RateLimitStrategyAnimation({
     <div
       ref={containerRef}
       className="not-prose my-6 overflow-hidden rounded-xl border border-border bg-background"
-      role="img"
       aria-label={config.label}
     >
-      <div className="mx-auto w-full max-w-[640px] px-6 py-8">
-        <Diagram frame={frame} />
+      <div className="flex justify-end px-4 pt-4">
+        <div className="flex gap-1 rounded-lg border border-border p-0.5">
+          {(['auto', 'manual'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className={
+                mode === m
+                  ? 'rounded-md bg-secondary px-2.5 py-1 text-[12px] font-medium text-foreground'
+                  : 'rounded-md px-2.5 py-1 text-[12px] text-muted-foreground hover:text-foreground'
+              }
+            >
+              {m === 'auto' ? 'Auto' : 'Try it'}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mx-auto w-full max-w-[640px] px-6 pb-8 pt-2">
+        {mode === 'auto' ? (
+          <Diagram frame={frame} />
+        ) : (
+          <ManualMode strategy={strategyKey} />
+        )}
       </div>
     </div>
   )
