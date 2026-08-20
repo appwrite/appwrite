@@ -148,8 +148,10 @@ class XList extends Action
     ): void {
 
         $metricsList = $this->resolveMetrics($metrics);
+        $usagePolicy->assertMetricAccess($metricsList);
         $filterQueries = $this->parseFilterQueries($queries, static::VALID_FILTER_ATTRIBUTES, static::VALID_FILTER_METHODS);
-        $usagePolicy->assert($metricsList, $dimensions, $filterQueries, $startAt);
+
+        $usagePolicy->assertGeoDimensions($dimensions, $filterQueries);
 
         // Fold country filters the same way the write path folds them, or an
         // uppercase value silently matches nothing.
@@ -171,6 +173,8 @@ class XList extends Action
         $start = $startAt !== ''
             ? $startAt
             : \gmdate('Y-m-d H:i:s', \strtotime($end) - $defaultWindow);
+
+        $usagePolicy->assertHistory($startAt);
 
         if ($interval !== null) {
             $this->assertBucketBudget($start, $end, $interval);
