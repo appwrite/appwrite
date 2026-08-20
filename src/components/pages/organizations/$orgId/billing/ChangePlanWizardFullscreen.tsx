@@ -98,7 +98,10 @@ const ESTIMATION_DEBOUNCE_MS = 500
 const DELETED_ORG_LIST_LIMIT = 1000
 const DOWNGRADE_PROJECT_DELETE_PAGE_SIZE = 100
 
-function usesFreeOrganizationSlot(org: { plan?: string; billingPlanDowngrade?: unknown }) {
+function usesFreeOrganizationSlot(org: {
+  plan?: string
+  billingPlanDowngrade?: unknown
+}) {
   return org.plan === 'free' || !!org.billingPlanDowngrade
 }
 
@@ -360,8 +363,7 @@ export function ChangePlanWizardFullscreen() {
     return (
       organizations.find(
         (org) => usesFreeOrganizationSlot(org) && org.$id !== orgId,
-      ) ??
-      null
+      ) ?? null
     )
   }, [organizations, orgId])
 
@@ -385,10 +387,8 @@ export function ChangePlanWizardFullscreen() {
             getPlanCanonicalFromRecord(planId, billingPlans) !== 'free',
         )
         .sort((a, b) => {
-          const orderA =
-            resolveBillingPlanRecord(a, billingPlans)?.order ?? 999
-          const orderB =
-            resolveBillingPlanRecord(b, billingPlans)?.order ?? 999
+          const orderA = resolveBillingPlanRecord(a, billingPlans)?.order ?? 999
+          const orderB = resolveBillingPlanRecord(b, billingPlans)?.order ?? 999
           return orderA - orderB
         })[0]
 
@@ -627,10 +627,7 @@ export function ChangePlanWizardFullscreen() {
   ])
 
   const showFreePlanConflict =
-    selectedPlanIsFree &&
-    hasFreeOrgs &&
-    !!otherFreeOrg &&
-    isDowngrade
+    selectedPlanIsFree && hasFreeOrgs && !!otherFreeOrg && isDowngrade
 
   const orgToDelete = useMemo(() => {
     if (!showFreePlanConflict || !otherFreeOrg || isCreateMode) return null
@@ -695,11 +692,7 @@ export function ChangePlanWizardFullscreen() {
 
   const isDeletingCurrentOrganization = orgToDelete?.$id === orgId
   const currentDeletedMembershipsQuery = useQuery({
-    queryKey: [
-      'billing',
-      'current-deleted-organization-memberships',
-      orgId,
-    ],
+    queryKey: ['billing', 'current-deleted-organization-memberships', orgId],
     queryFn: () =>
       fetchOrganizationMemberships(orgId!, 0, DELETED_ORG_LIST_LIMIT),
     enabled: !!orgId && isDeletingCurrentOrganization,
@@ -727,47 +720,48 @@ export function ChangePlanWizardFullscreen() {
     })),
   })
 
-  const currentDeletedOrganizationImpact = useMemo<DeletedOrganizationImpact | null>(() => {
-    if (!isDeletingCurrentOrganization || !orgToDelete || !orgId) return null
-    if (allProjectsLoading) return null
+  const currentDeletedOrganizationImpact =
+    useMemo<DeletedOrganizationImpact | null>(() => {
+      if (!isDeletingCurrentOrganization || !orgToDelete || !orgId) return null
+      if (allProjectsLoading) return null
 
-    const resourceImpact: DowngradeResourceImpact = {}
-    const projectResourceImpacts = allProjects.map((project, index) => {
-      const resources = currentDeletedResourceQueries[index]?.data
-      const projectImpact: DowngradeResourceImpact = {}
+      const resourceImpact: DowngradeResourceImpact = {}
+      const projectResourceImpacts = allProjects.map((project, index) => {
+        const resources = currentDeletedResourceQueries[index]?.data
+        const projectImpact: DowngradeResourceImpact = {}
 
-      for (const { id } of DOWNGRADE_RESOURCE_TYPES) {
-        const total = resources?.[id]?.total ?? 0
-        resourceImpact[id] = (resourceImpact[id] ?? 0) + total
-        projectImpact[id] = total
-      }
+        for (const { id } of DOWNGRADE_RESOURCE_TYPES) {
+          const total = resources?.[id]?.total ?? 0
+          resourceImpact[id] = (resourceImpact[id] ?? 0) + total
+          projectImpact[id] = total
+        }
+
+        return {
+          projectId: project.$id,
+          projectName: project.name || project.$id,
+          resourceImpact: projectImpact,
+        }
+      })
 
       return {
-        projectId: project.$id,
-        projectName: project.name || project.$id,
-        resourceImpact: projectImpact,
+        organizationId: orgId,
+        organizationName: orgToDelete.name,
+        projects: allProjects,
+        memberships: currentDeletedMembershipsQuery.data?.memberships ?? [],
+        domains: currentDeletedDomainsQuery.data?.domains ?? [],
+        resourceImpact,
+        projectResourceImpacts,
       }
-    })
-
-    return {
-      organizationId: orgId,
-      organizationName: orgToDelete.name,
-      projects: allProjects,
-      memberships: currentDeletedMembershipsQuery.data?.memberships ?? [],
-      domains: currentDeletedDomainsQuery.data?.domains ?? [],
-      resourceImpact,
-      projectResourceImpacts,
-    }
-  }, [
-    allProjects,
-    allProjectsLoading,
-    currentDeletedDomainsQuery.data?.domains,
-    currentDeletedMembershipsQuery.data?.memberships,
-    currentDeletedResourceQueries,
-    isDeletingCurrentOrganization,
-    orgId,
-    orgToDelete,
-  ])
+    }, [
+      allProjects,
+      allProjectsLoading,
+      currentDeletedDomainsQuery.data?.domains,
+      currentDeletedMembershipsQuery.data?.memberships,
+      currentDeletedResourceQueries,
+      isDeletingCurrentOrganization,
+      orgId,
+      orgToDelete,
+    ])
 
   const currentDeletedOrganizationLoading =
     isDeletingCurrentOrganization &&
@@ -798,15 +792,13 @@ export function ChangePlanWizardFullscreen() {
     }
   }, [isDowngrade, selectedPlan])
 
-  const needsPaymentMethods =
-    !!selectedPlan && !selectedPlanIsFree && isUpgrade
+  const needsPaymentMethods = !!selectedPlan && !selectedPlanIsFree && isUpgrade
 
   // Fetch saved cards only for paid-plan flows, or when the add-card modal is open.
-  const { paymentMethods, isLoading: paymentMethodsLoading } = usePaymentMethods(
-    {
+  const { paymentMethods, isLoading: paymentMethodsLoading } =
+    usePaymentMethods({
       enabled: needsPaymentMethods || paymentModalOpen,
-    },
-  )
+    })
 
   // Set default payment method
   useEffect(() => {
@@ -912,9 +904,10 @@ export function ChangePlanWizardFullscreen() {
 
   // Get target plan info
   const targetPlanInfo = useMemo(() => {
-    return resolveBillingPlanRecord(selectedPlan, billingPlans) as
-      | Record<string, unknown>
-      | null
+    return resolveBillingPlanRecord(selectedPlan, billingPlans) as Record<
+      string,
+      unknown
+    > | null
   }, [billingPlans, selectedPlan])
 
   const targetProjectsLimit =
@@ -930,8 +923,7 @@ export function ChangePlanWizardFullscreen() {
       : undefined
   const needsDowngradeValidation =
     isDowngrade && !!selectedPlan && orgToDelete?.$id !== orgId
-  const shouldCollectDowngradeFeedback =
-    isDowngrade && selectedPlanIsFree
+  const shouldCollectDowngradeFeedback = isDowngrade && selectedPlanIsFree
 
   // Server-side compliance for the target plan. `canChangePlan` being false is
   // expected while the user still has resources to delete - the selection UI
@@ -967,7 +959,9 @@ export function ChangePlanWizardFullscreen() {
   // disabled with nothing indicating which section was holding it.
   const submitBlockReason = useMemo<string | null>(() => {
     if (!selfService) {
-      return t('This organization is managed by Appwrite. Contact support to change plans.')
+      return t(
+        'This organization is managed by Appwrite. Contact support to change plans.',
+      )
     }
     if (!selectedPlan) return t('Select a plan to continue.')
     if (isSubmitting) return null
@@ -1136,9 +1130,7 @@ export function ChangePlanWizardFullscreen() {
           organizationId: orgId,
           invites: [],
         })
-      const seedOrganization = isOrganizationWriteResult(
-        validatedOrganization,
-      )
+      const seedOrganization = isOrganizationWriteResult(validatedOrganization)
         ? validatedOrganization
         : isOrganizationWriteResult(result)
           ? result
@@ -1149,9 +1141,7 @@ export function ChangePlanWizardFullscreen() {
         selectedPlan,
       )
 
-      setSetupProgress((prev) =>
-        prev ? { ...prev, phase: 'complete' } : prev,
-      )
+      setSetupProgress((prev) => (prev ? { ...prev, phase: 'complete' } : prev))
 
       toast.success(t('Plan updated successfully'))
       await navigate({
@@ -1307,9 +1297,7 @@ export function ChangePlanWizardFullscreen() {
         selectedPlan,
       )
 
-      setSetupProgress((prev) =>
-        prev ? { ...prev, phase: 'complete' } : prev,
-      )
+      setSetupProgress((prev) => (prev ? { ...prev, phase: 'complete' } : prev))
       toast.success(t('Plan updated successfully'))
       navigate({
         to: '/organizations/$orgId/settings/billing',
@@ -1328,8 +1316,7 @@ export function ChangePlanWizardFullscreen() {
     if (!selectedPlan || !organizationName.trim()) return
 
     const organizationId = ID.unique()
-    const requiresPayment =
-      !selectedPlanIsFree && isUpgrade && paymentMethodId
+    const requiresPayment = !selectedPlanIsFree && isUpgrade && paymentMethodId
 
     if (!selectedPlanIsFree && !paymentMethodId) {
       return
@@ -1436,9 +1423,7 @@ export function ChangePlanWizardFullscreen() {
       // of the create form (or a bounce back to /upgrade).
       await prefetchOrganizationOverviewData(queryClient, createdOrgId)
 
-      setSetupProgress((prev) =>
-        prev ? { ...prev, phase: 'complete' } : prev,
-      )
+      setSetupProgress((prev) => (prev ? { ...prev, phase: 'complete' } : prev))
 
       toast.success(t('Organization created successfully'))
       await navigate({
@@ -1632,7 +1617,9 @@ export function ChangePlanWizardFullscreen() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>{t('Custom plan')}</AlertTitle>
             <AlertDescription className="mt-2">
-              {t('You are on a custom plan. To change your plan, contact your customer success manager or')}{' '}
+              {t(
+                'You are on a custom plan. To change your plan, contact your customer success manager or',
+              )}{' '}
               {orgId ? (
                 <Link
                   to="/organizations/$orgId/support"
@@ -1651,7 +1638,10 @@ export function ChangePlanWizardFullscreen() {
           <>
             <p className="text-[13px] text-muted-foreground mb-4">
               {t('For more details on our plans, visit our')}{' '}
-              <MarketingSiteLink className="underline hover:text-foreground" href="/pricing">
+              <MarketingSiteLink
+                className="underline hover:text-foreground"
+                href="/pricing"
+              >
                 {t('pricing page')}
               </MarketingSiteLink>
               .
@@ -1693,35 +1683,30 @@ export function ChangePlanWizardFullscreen() {
       {/* Plan change blockers reported by the server that the console cannot
           resolve through the resource selection below. */}
       {hasPlanChangeBlockers && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>{t('This plan change is blocked')}</AlertTitle>
-          <AlertDescription className="mt-2">
-            <ul className="list-disc space-y-1 pl-4">
-              {unsupportedAddons.map((addon) => (
-                <li key={`addon-${addon}`}>
-                  {t('The selected plan does not support the')} {addon}{' '}
-                  {t('addon. Remove it before changing plans.')}
-                </li>
-              ))}
-              {unresolvableResources.map(
-                ({ projectId, projectName, resource }) => (
-                  <li key={`resource-${projectId}-${resource.type}`}>
-                    <span className="font-medium">{projectName}</span>:{' '}
-                    {resource.resolutionHint}
-                  </li>
-                ),
-              )}
-              {complianceErrors.map(({ projectId, projectName, error }) => (
-                <li key={`error-${projectId}`}>
+        <WarningAlert title={t('This plan change is blocked')}>
+          <ul className="list-disc space-y-1 ps-4">
+            {unsupportedAddons.map((addon) => (
+              <li key={`addon-${addon}`}>
+                {t('The selected plan does not support the')} {addon}{' '}
+                {t('addon. Remove it before changing plans.')}
+              </li>
+            ))}
+            {unresolvableResources.map(
+              ({ projectId, projectName, resource }) => (
+                <li key={`resource-${projectId}-${resource.type}`}>
                   <span className="font-medium">{projectName}</span>:{' '}
-                  {t('could not be checked against the new plan limits.')}{' '}
-                  {error}
+                  {resource.resolutionHint}
                 </li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
+              ),
+            )}
+            {complianceErrors.map(({ projectId, projectName, error }) => (
+              <li key={`error-${projectId}`}>
+                <span className="font-medium">{projectName}</span>:{' '}
+                {t('could not be checked against the new plan limits.')} {error}
+              </li>
+            ))}
+          </ul>
+        </WarningAlert>
       )}
 
       {/* Upgrade-specific sections */}
@@ -1805,7 +1790,9 @@ export function ChangePlanWizardFullscreen() {
               <AlertDescription className="mt-2">
                 {extraSeatPrice
                   ? `${t('You will be charged')} $${extraSeatPrice} ${t('per month for each organization member beyond the plan limit.')}`
-                  : t('You will be charged for each organization member beyond the plan limit.')}
+                  : t(
+                      'You will be charged for each organization member beyond the plan limit.',
+                    )}
               </AlertDescription>
             </Alert>
           )}
@@ -1815,7 +1802,10 @@ export function ChangePlanWizardFullscreen() {
               {t('Your plan will change on')}{' '}
               {organization?.billingPlanDowngrade ||
                 t('the end of your billing period')}
-              . {t('You will lose access to premium features and organization members beyond the free limit will be removed.')}
+              .{' '}
+              {t(
+                'You will lose access to premium features and organization members beyond the free limit will be removed.',
+              )}
               <DocsRouteLink className="ms-1 underline" href="/docs/migration">
                 {t('Learn more about migration')}
               </DocsRouteLink>
@@ -1827,7 +1817,9 @@ export function ChangePlanWizardFullscreen() {
             <div>
               <Label className="mb-2 block">{t('Feedback')}</Label>
               <p className="text-[13px] text-muted-foreground mb-4">
-                {t("What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.")}
+                {t(
+                  "What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.",
+                )}
               </p>
               <Label
                 htmlFor="downgrade-message"
@@ -1839,7 +1831,9 @@ export function ChangePlanWizardFullscreen() {
                 id="downgrade-message"
                 value={feedbackMessage}
                 onChange={(e) => setFeedbackMessage(e.target.value)}
-                placeholder={t('Please share anything that influenced your decision to downgrade...')}
+                placeholder={t(
+                  'Please share anything that influenced your decision to downgrade...',
+                )}
                 className="mt-2 min-h-[100px]"
                 required
               />
