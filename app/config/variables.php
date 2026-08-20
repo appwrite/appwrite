@@ -1026,9 +1026,9 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_HOST',
-                'description' => 'The host used by Appwrite to communicate with the open-runtimes jobs-service that builds manual-upload function deployments.',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes orchestrator that builds manual-upload function deployments.',
                 'introduction' => '1.9.0',
-                'default' => 'http://orchestrator-jobs:8080',
+                'default' => 'http://orchestrator:8080',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
