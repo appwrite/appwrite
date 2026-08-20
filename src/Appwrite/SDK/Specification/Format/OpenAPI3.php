@@ -23,6 +23,7 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
@@ -533,9 +534,22 @@ class OpenAPI3 extends Format
                     $class = Queries::class;
                 }
 
+                $openEnum = false;
                 if ($class === \Utopia\Validator\AnyOf::class) {
-                    $validator = $param['validator']->getValidators()[0];
+                    $validators = $param['validator']->getValidators();
+                    $validator = $validators[0];
                     $class = \get_class($validator);
+
+                    foreach ($validators as $unionValidator) {
+                        while ($unionValidator instanceof ArrayList || $unionValidator instanceof Nullable) {
+                            $unionValidator = $unionValidator->getValidator();
+                        }
+
+                        if (!$unionValidator instanceof WhiteList && $unionValidator->getType() === Validator::TYPE_STRING) {
+                            $openEnum = true;
+                            break;
+                        }
+                    }
                 }
 
                 $array = false;
@@ -754,6 +768,15 @@ class OpenAPI3 extends Format
                                         $node['schema']['items']['x-enum-name'] = $enum->name;
                                     }
                                     $node['schema']['items']['x-enum-keys'] = $enumKeys;
+
+                                    if ($openEnum) {
+                                        $node['schema']['items'] = [
+                                            'anyOf' => [
+                                                $node['schema']['items'],
+                                                ['type' => Validator::TYPE_STRING],
+                                            ],
+                                        ];
+                                    }
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -791,6 +814,26 @@ class OpenAPI3 extends Format
                                         $node['schema']['x-enum-name'] = $enum->name;
                                     }
                                     $node['schema']['x-enum-keys'] = $enumKeys;
+
+                                    if ($openEnum) {
+                                        $enumBranch = ['type' => $node['schema']['type'], 'enum' => $enumValues];
+                                        if (!empty($enum->name)) {
+                                            $enumBranch['x-enum-name'] = $enum->name;
+                                        }
+                                        $enumBranch['x-enum-keys'] = $enumKeys;
+
+                                        unset(
+                                            $node['schema']['type'],
+                                            $node['schema']['enum'],
+                                            $node['schema']['x-enum-name'],
+                                            $node['schema']['x-enum-keys'],
+                                        );
+
+                                        $node['schema']['anyOf'] = [
+                                            $enumBranch,
+                                            ['type' => Validator::TYPE_STRING],
+                                        ];
+                                    }
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -935,6 +978,13 @@ class OpenAPI3 extends Format
 
                         if (isset($node['schema']['format'])) {
                             $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
+                        }
+
+                        if (isset($node['schema']['anyOf'])) {
+                            // Open enum: the known values and the free-form branch
+                            // both live under anyOf, so copy the union wholesale.
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['anyOf'] = $node['schema']['anyOf'];
+                            unset($body['content'][$consumes[0]]['schema']['properties'][$name]['type']);
                         }
 
                         if (isset($node['schema']['enum'])) {
