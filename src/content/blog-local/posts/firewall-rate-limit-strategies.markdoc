@@ -51,12 +51,7 @@ When a request goes over the limit, Appwrite responds with HTTP `429` and a `Ret
 
 Fixed window is the strategy most people picture when they hear "rate limiting". Time is cut into back-to-back windows of the interval length, aligned to the clock. With a 15-second interval, one window runs from 11:42:15 to 11:42:30, the next from 11:42:30 to 11:42:45, and so on. Each window has a counter. A request increments it; if the counter is already at the limit, the request is rejected. When the next window starts, the counter starts over at zero, for everyone at once.
 
-{% only_dark %}
-![Fixed window rate limiting: requests fill a clock-aligned window, and the counter resets for everyone when the next interval starts](/images/blog-local/firewall-rate-limit-strategies/fixed-window-dark.gif)
-{% /only_dark %}
-{% only_light %}
-![Fixed window rate limiting: requests fill a clock-aligned window, and the counter resets for everyone when the next interval starts](/images/blog-local/firewall-rate-limit-strategies/fixed-window-light.gif)
-{% /only_light %}
+{% rate_limit_animation strategy="fixedWindow" /%}
 
 The appeal is that it's cheap and easy to reason about. One counter per client, one increment per request, and the mental model ("5 per 15 seconds, resets on the boundary") matches exactly what happens.
 
@@ -68,12 +63,7 @@ Pick fixed window when the limit exists as a coarse safety net rather than a pre
 
 Sliding window exists to fix that boundary problem. Instead of forgetting the previous window the moment a new one starts, it keeps the previous window's count around and weighs it by how much of the current window has passed. Ten seconds into a 60-second window, the effective count is the current window's requests plus about five sixths of the previous window's. The count doesn't drop off a cliff at the boundary; it slides down continuously as old traffic ages out.
 
-{% only_dark %}
-![Sliding window rate limiting: the counting window moves continuously with time, so older requests gradually stop counting against the limit](/images/blog-local/firewall-rate-limit-strategies/sliding-window-dark.gif)
-{% /only_dark %}
-{% only_light %}
-![Sliding window rate limiting: the counting window moves continuously with time, so older requests gradually stop counting against the limit](/images/blog-local/firewall-rate-limit-strategies/sliding-window-light.gif)
-{% /only_light %}
+{% rate_limit_animation strategy="slidingWindow" /%}
 
 The practical effect is twofold. The two-times spike that fixed windows permit at their edges disappears, because a burst sent moments before the boundary still counts, at nearly full weight, moments after it. And there is no synchronized reset moment. Each client's count decays on its own schedule, driven by when that client sent traffic, so limited clients come back gradually instead of stampeding at the top of the minute.
 
@@ -85,12 +75,7 @@ Pick sliding window when you want the steadiest possible enforcement of a rate. 
 
 Token bucket thinks about the problem differently. Instead of counting requests inside a time window, it gives each client a bucket of tokens. Every request spends one token, and a request that finds the bucket empty is rejected. Tokens flow back in continuously at a steady rate, the request limit divided by the interval, and the bucket holds at most **Max bucket size** tokens. Anything above that spills over and is lost.
 
-{% only_dark %}
-![Token bucket rate limiting: each request spends a token, tokens refill at a steady rate, and idle time saves up capacity for bursts](/images/blog-local/firewall-rate-limit-strategies/token-bucket-dark.gif)
-{% /only_dark %}
-{% only_light %}
-![Token bucket rate limiting: each request spends a token, tokens refill at a steady rate, and idle time saves up capacity for bursts](/images/blog-local/firewall-rate-limit-strategies/token-bucket-light.gif)
-{% /only_light %}
+{% rate_limit_animation strategy="tokenBucket" /%}
 
 This is the only strategy of the three where staying quiet earns you something. A client that idles for a while accumulates tokens, up to the bucket size, and can then spend them all at once. A rule of 10 requests per 60 seconds with a bucket of 250 means the long-run average is one request every 6 seconds, but a client that saved up can legitimately fire a 250-request burst before settling back to the refill pace. That maps well onto how clients behave: a mobile app reconnecting after a subway ride flushes its queue, a batch job writes fifty rows in a second, a client library retries a handful of failed calls in quick succession.
 
