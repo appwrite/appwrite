@@ -37,10 +37,8 @@ class Targets
                 $topicId = $subscriber->getAttribute('topicId');
                 $topicInternalId = $subscriber->getAttribute('topicInternalId');
 
-                // Thinking what to do here , We have a bug
-                // Query::select('$sequence') Will still make the subquery
+                $topic = $database->getDocument('topics', $topicId, [Query::select(['$id', '$sequence'])]);
 
-                $topic = $database->getDocument('topics', $topicId);
                 if (!$topic->isEmpty() && $topic->getSequence() === $topicInternalId) {
                     $totalAttribute = match ($target->getAttribute('providerType')) {
                         MESSAGE_TYPE_EMAIL => 'emailTotal',
