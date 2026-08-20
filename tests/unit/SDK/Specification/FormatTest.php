@@ -167,7 +167,7 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('enum', $schema['items']);
     }
 
-    public function testWhitelistOnlyParamEmitsAPlainEnum(): void
+    public function testClosedEnumsRemainPlain(): void
     {
         $schema = $this->parseEnumParamSchema(
             new ArrayList(new WhiteList(['alpha', 'beta'], true), 10)
@@ -176,10 +176,7 @@ final class FormatTest extends TestCase
         $this->assertSame(['alpha', 'beta'], $schema['items']['enum']);
         $this->assertSame('TestMetric', $schema['items']['x-enum-name']);
         $this->assertArrayNotHasKey('anyOf', $schema['items']);
-    }
 
-    public function testUnionOfClosedBranchesEmitsAPlainEnum(): void
-    {
         $schema = $this->parseEnumParamSchema(new AnyOf([
             new ArrayList(new WhiteList(['alpha', 'beta'], true), 10),
             new ArrayList(new WhiteList(['gamma'], true), 10),

@@ -74,37 +74,6 @@ class OpenAPI3 extends Format
         return [$example];
     }
 
-    /**
-     * Whether a union of validators also accepts arbitrary strings.
-     *
-     * A param declared as `AnyOf([WhiteList(...), Text(...)])` is open at
-     * runtime: the whitelist names the values callers usually want, and the
-     * text branch keeps anything else valid. An enum on such a param
-     * therefore documents the known values instead of closing the set, and
-     * generators need to know the difference so they do not reject a name the
-     * endpoint would have accepted.
-     *
-     * @param  array<int, Validator>  $validators
-     */
-    private function acceptsAnyString(array $validators): bool
-    {
-        foreach ($validators as $validator) {
-            while ($validator instanceof ArrayList || $validator instanceof Nullable) {
-                $validator = $validator->getValidator();
-            }
-
-            if ($validator instanceof WhiteList) {
-                continue;
-            }
-
-            if ($validator->getType() === Validator::TYPE_STRING) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private function normalizeObjectExample(mixed $example): object
     {
         if (\is_object($example)) {
@@ -570,7 +539,17 @@ class OpenAPI3 extends Format
                     $validators = $param['validator']->getValidators();
                     $validator = $validators[0];
                     $class = \get_class($validator);
-                    $openEnum = $this->acceptsAnyString($validators);
+
+                    foreach ($validators as $unionValidator) {
+                        while ($unionValidator instanceof ArrayList || $unionValidator instanceof Nullable) {
+                            $unionValidator = $unionValidator->getValidator();
+                        }
+
+                        if (!$unionValidator instanceof WhiteList && $unionValidator->getType() === Validator::TYPE_STRING) {
+                            $openEnum = true;
+                            break;
+                        }
+                    }
                 }
 
                 $array = false;
