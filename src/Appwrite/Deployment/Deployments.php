@@ -83,10 +83,10 @@ readonly class Deployments
     /**
      * Finalizes the deployment document (see upload() for what `$deployment`
      * should carry) and dispatches it for building from its own uploaded
-     * source. Marks it queued, writes its buildPath and deactivates any other
-     * active deployment for $resource. A deployment canceled before it is
-     * queued is left canceled and never dispatched. Returns the persisted,
-     * updated deployment.
+     * source. Marks it queued and writes its buildPath. A deployment canceled
+     * before it is queued is left canceled and never dispatched. Returns the
+     * persisted, updated deployment. Activation of a successful build is
+     * decided later by the Jobs worker (see shouldGoLive()).
      */
     public function createFromUpload(Document $resource, Document $deployment): Document
     {
@@ -189,25 +189,9 @@ readonly class Deployments
 
         $deployment = $this->dbForProject->getDocument('deployments', $deployment->getId());
 
-        // Canceled before it could be queued: leave it canceled, submit nothing,
-        // and leave the currently active deployment alone.
-        if ($queued === 0) {
+        // Canceled before it could be queued: leave it canceled, submit nothing.
+        if ($queued === 0 || $deployment->getAttribute('status') === 'canceled') {
             return $deployment;
-        }
-
-        // Claiming activation takes it away from the other pending deployments,
-        // so a cancel landing while we do it would leave nothing able to go
-        // live. Hand the claim back to exactly the deployments it was taken
-        // from, and stop before submitting a job for a canceled deployment.
-        $deactivated = $this->deactivateOthers($resource, $deployment);
-        if ($deactivated !== [] && $this->status($deployment->getId()) === 'canceled') {
-            foreach ($deactivated as $other) {
-                $this->dbForProject->updateDocument('deployments', $other, new Document([
-                    'activate' => true,
-                ]));
-            }
-
-            return $this->dbForProject->getDocument('deployments', $deployment->getId());
         }
 
         try {
@@ -241,39 +225,27 @@ readonly class Deployments
     }
 
     /**
-     * Deactivates any other active deployment for $resource before this one
-     * goes live, called once the deployment is queued for building.
+     * Whether a finished deployment should become the resource's live
+     * deployment. $current is the document currently pointed at by the
+     * resource's deploymentId, or empty if nothing is live yet.
      *
-     * @return array<string> The ids it deactivated, so the caller can hand the
-     *                       claim back if this deployment never gets to build.
+     * Overlapping builds keep their own `activate` request: an older success
+     * still goes live if nothing newer already has, and a newer success
+     * replaces an older live one. Clearing `activate` on other deployments at
+     * submit time is racy — concurrent submits steal the flag from each other
+     * and a later failure leaves a successful build with nobody live.
      */
-    protected function deactivateOthers(Document $resource, Document $deployment): array
+    public static function shouldGoLive(Document $candidate, Document $current): bool
     {
-        if (!$deployment->getAttribute('activate', false)) {
-            return [];
+        if (!\filter_var($candidate->getAttribute('activate', false), FILTER_VALIDATE_BOOLEAN)) {
+            return false;
         }
 
-        $others = $this->dbForProject->find('deployments', [
-            Query::equal('activate', [true]),
-            Query::equal('resourceId', [$resource->getId()]),
-            Query::equal('resourceType', [$resource->getCollection()]),
-            Query::notEqual('$id', $deployment->getId()),
-        ]);
-
-        $deactivated = [];
-        foreach ($others as $other) {
-            $this->dbForProject->updateDocument('deployments', $other->getId(), new Document([
-                'activate' => false,
-            ]));
-            $deactivated[] = $other->getId();
+        if ($current->isEmpty() || $current->getId() === $candidate->getId()) {
+            return true;
         }
 
-        return $deactivated;
-    }
-
-    private function status(string $deploymentId): string
-    {
-        return $this->dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status', '');
+        return $current->getCreatedAt() < $candidate->getCreatedAt();
     }
 
     /**

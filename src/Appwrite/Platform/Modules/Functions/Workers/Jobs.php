@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Detection;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
@@ -38,8 +39,9 @@ use Utopia\System\System;
  * processing for a deployment is serialized under a per-deployment lock — that
  * keeps its buildLogs a clean, monotonic append while letting different
  * deployments build in parallel. Callbacks are at-least-once, so events are
- * de-duplicated on the CloudEvent id (inside the lock, so dedup + apply is
- * atomic and a lock timeout retries cleanly).
+ * de-duplicated on the CloudEvent id (inside the lock). The dedupe key is
+ * written after a successful apply so a callback that reached 'ready' then
+ * failed while activating is retried instead of being dropped.
  *
  * Handlers are protected extension points: downstream workers (e.g. cloud)
  * override finalize() and wrap parent:: — before it for work that must
@@ -115,11 +117,13 @@ class Jobs extends Action
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
                     return; // already processed
                 }
-                $cache->save($key, true);
             }
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
             if ($deployment->isEmpty() || $deployment->getAttribute('status') === 'canceled') {
+                if ($event->id !== '') {
+                    $cache->save('jobs-event-' . $event->id, true);
+                }
                 return;
             }
 
@@ -150,6 +154,13 @@ class Jobs extends Action
             // (success), so key off the status change rather than the event.
             if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
+            }
+
+            // Mark processed only after apply succeeds. Saving first dropped
+            // retries of a callback that wrote 'ready' then failed while
+            // pointing the resource at the deployment.
+            if ($event->id !== '') {
+                $cache->save('jobs-event-' . $event->id, true);
             }
         }, self::LOCK_TIMEOUT);
     }
@@ -311,8 +322,23 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+        if ($deployment->getAttribute('status') === 'failed') {
             return $deployment; // already finalized
+        }
+
+        // A previous callback may have written 'ready' then failed before
+        // pointing the resource at this deployment. Later events (or a retry)
+        // still try to activate, then refresh the cron schedule so it sees
+        // the new deploymentId.
+        if ($deployment->getAttribute('status') === 'ready') {
+            $collection = $deployment->getAttribute('resourceType', 'functions');
+            $resource = $dbForProject->getDocument($collection, $deployment->getAttribute('resourceId'));
+            if (! $resource->isEmpty()) {
+                $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+                $this->schedule($dbForProject, $dbForPlatform, $resource);
+            }
+
+            return $deployment;
         }
 
         $deploymentId = $deployment->getId();
@@ -434,7 +460,7 @@ class Jobs extends Action
         ]);
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
-        if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
+        if ($applied > 0 && $success && ! $resource->isEmpty()) {
             $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
         }
 
@@ -529,11 +555,26 @@ class Jobs extends Action
     }
 
     /**
-     * Point the resource at this deployment (auto-activate). Mirrors the
-     * essential activation from the Builds worker.
+     * Point the resource at this deployment when it requested auto-activate
+     * and is newer than whatever is already live. Re-reads the resource so an
+     * older in-flight build cannot overwrite a newer one that finished first.
      */
     protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
     {
+        $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+        if ($resource->isEmpty()) {
+            return;
+        }
+
+        $currentId = $resource->getAttribute('deploymentId', '');
+        $current = empty($currentId)
+            ? new Document()
+            : $dbForProject->getDocument('deployments', $currentId);
+
+        if (!Deployments::shouldGoLive($deployment, $current)) {
+            return;
+        }
+
         $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
             'live' => true,
             'deploymentId' => $deployment->getId(),
