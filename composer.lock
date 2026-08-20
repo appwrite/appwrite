@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "879c52e1b71f92c61d49de080a5c7e8c",
+    "content-hash": "214b421dd1b8f0cf86d98bb86bd2435f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3090,7 +3090,7 @@
             "version": "0.10.1",
             "source": {
                 "type": "git",
-                "url": "git@github.com:utopia-php/auth.git",
+                "url": "https://github.com/utopia-php/auth.git",
                 "reference": "0f1a342bceebc2659736e52a4496daf24ca4954c"
             },
             "dist": {
