@@ -94,9 +94,32 @@ async function generateAnnouncingAppwriteExplorerCover(
   await writeAvifFromPng(outputDir, png)
 }
 
+async function generateAnnouncingAppwrite2Cover(
+  outputDir: string,
+): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'version-title',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    version: '2.0',
+    title: 'A new foundation for your apps',
+    eyebrow: 'Announcing Appwrite',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
+  'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
 }
 
 async function main() {
