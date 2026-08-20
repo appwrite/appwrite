@@ -143,7 +143,6 @@ class XList extends Action
 
         $metricsList = $this->resolveMetrics($metrics);
         $filterQueries = $this->parseFilterQueries($queries, static::VALID_FILTER_ATTRIBUTES, static::VALID_FILTER_METHODS);
-        $usagePolicy->assert($metricsList, $dimensions, $filterQueries, $startAt);
 
         $end = $endAt !== '' ? $endAt : \gmdate('Y-m-d H:i:s');
         $defaultWindow = $interval !== null
@@ -152,6 +151,8 @@ class XList extends Action
         $start = $startAt !== ''
             ? $startAt
             : \gmdate('Y-m-d H:i:s', \strtotime($end) - $defaultWindow);
+
+        $usagePolicy->assertHistory($startAt);
 
         if ($interval !== null) {
             $this->assertBucketBudget($start, $end, $interval);
