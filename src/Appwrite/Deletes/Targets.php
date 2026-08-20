@@ -37,9 +37,12 @@ class Targets
                 $topicId = $subscriber->getAttribute('topicId');
                 $topicInternalId = $subscriber->getAttribute('topicInternalId');
 
-                $topic = $database->getDocument('topics', $topicId, [Query::select(['$id', '$sequence'])]);
+                $topic = $database->findOne('topics', [
+                    Query::select(['$id', '$sequence']),
+                    Query::equal('$sequence', [$topicInternalId]),
+                ]);
 
-                if (!$topic->isEmpty() && $topic->getSequence() === $topicInternalId) {
+                if (!$topic->isEmpty()) {
                     $totalAttribute = match ($target->getAttribute('providerType')) {
                         MESSAGE_TYPE_EMAIL => 'emailTotal',
                         MESSAGE_TYPE_SMS => 'smsTotal',
