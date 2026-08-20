@@ -199,6 +199,12 @@ class Project extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('wafEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether WAF enforcement is enabled for the project.',
+                'default' => false,
+                'example' => false,
+            ])
         ;
     }
 
@@ -234,6 +240,7 @@ class Project extends Model
         $this->expandProtocols($document);
         $this->expandAuthMethods($document);
         $this->expandConsoleAccessedAt($document);
+        $document->setAttribute('wafEnabled', (bool) $document->getAttribute('wafEnabled', false));
 
         return $document;
     }
