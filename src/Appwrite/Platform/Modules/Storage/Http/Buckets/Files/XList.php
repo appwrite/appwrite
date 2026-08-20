@@ -104,6 +104,24 @@ class XList extends Action
             $queries[] = Query::search('search', $search);
         }
 
+        /**
+         * '$createdAt' is not unique, so the database appends '$sequence' as a tie breaker,
+         * but always ASC. The resulting mixed direction '_createdAt DESC, _id ASC' matches
+         * neither scan direction of the '_created_at' index, forcing a filesort over the whole bucket.
+         */
+        $orders = Query::getByType($queries, [
+            Query::TYPE_ORDER_ASC,
+            Query::TYPE_ORDER_DESC,
+            Query::TYPE_ORDER_RANDOM,
+        ], false);
+
+        if (\count($orders) === 1
+            && $orders[0]->getMethod() === Query::TYPE_ORDER_DESC
+            && $orders[0]->getAttribute() === '$createdAt'
+        ) {
+            $queries[] = Query::orderDesc('$sequence');
+        }
+
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
