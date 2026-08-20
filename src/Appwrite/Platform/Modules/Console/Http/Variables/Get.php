@@ -7,6 +7,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
@@ -47,6 +48,7 @@ class Get extends Action
                 contentType: ContentType::JSON
             ))
             ->inject('vcsProviders')
+            ->inject('vcsFactory')
             ->inject('response')
             ->inject('platform')
             ->inject('dbForProject')
@@ -55,6 +57,7 @@ class Get extends Action
 
     public function action(
         callable $vcsProviders,
+        VcsFactory $vcsFactory,
         Response $response,
         array $platform,
         Database $dbForProject
@@ -71,7 +74,20 @@ class Get extends Action
 
         $isDomainEnabled = $isAAAAValid || $isAValid || $isCNAMEValid;
 
-        $isVcsEnabled = !empty($vcsProviders());
+        $providers = $vcsProviders();
+        $isVcsEnabled = !empty($providers);
+
+        $providersWithRepositoryCreation = [];
+        $providersWithPublicRepositories = [];
+        foreach ($providers as $provider) {
+            $adapter = $vcsFactory->fromProvider($provider);
+            if ($adapter->supportsRepositoryCreation()) {
+                $providersWithRepositoryCreation[] = $provider;
+            }
+            if ($adapter->supportsPublicRepositories()) {
+                $providersWithPublicRepositories[] = $provider;
+            }
+        }
 
         $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 
@@ -87,7 +103,9 @@ class Get extends Action
             '_APP_COMPUTE_SIZE_LIMIT' => +System::getEnv('_APP_COMPUTE_SIZE_LIMIT'),
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS', 'enabled'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
-            '_APP_VCS_PROVIDERS' => $vcsProviders(),
+            '_APP_VCS_PROVIDERS' => $providers,
+            '_APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION' => $providersWithRepositoryCreation,
+            '_APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES' => $providersWithPublicRepositories,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
             '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
             '_APP_DOMAIN_SITES' => $platform['sitesDomain'],

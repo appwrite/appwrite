@@ -218,6 +218,8 @@ services:
       - _APP_VCS_BITBUCKET_CLIENT_ID
       - _APP_VCS_BITBUCKET_CLIENT_SECRET
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
+      - _APP_VCS_ORIGIN_CLIENT_ID
+      - _APP_VCS_ORIGIN_PRIVATE_KEY
       - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -446,6 +448,8 @@ services:
       - _APP_VCS_BITBUCKET_CLIENT_ID
       - _APP_VCS_BITBUCKET_CLIENT_SECRET
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
+      - _APP_VCS_ORIGIN_CLIENT_ID
+      - _APP_VCS_ORIGIN_PRIVATE_KEY
       - _APP_VCS_WEBHOOK_URL
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
@@ -758,6 +762,8 @@ services:
       - _APP_VCS_BITBUCKET_CLIENT_ID
       - _APP_VCS_BITBUCKET_CLIENT_SECRET
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
+      - _APP_VCS_ORIGIN_CLIENT_ID
+      - _APP_VCS_ORIGIN_PRIVATE_KEY
       - _APP_VCS_WEBHOOK_URL
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
@@ -1575,7 +1581,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.18.0
+    image: ghcr.io/open-runtimes/orchestrator/jobs-service:1.3.0
     restart: unless-stopped
     user: root
     networks:

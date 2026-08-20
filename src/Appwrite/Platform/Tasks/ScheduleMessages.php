@@ -76,7 +76,9 @@ class ScheduleMessages extends Action
      */
     private function dispatch(array $occurrences, MessagingPublisher $publisherForMessaging, Database $dbForPlatform): null
     {
-        foreach ($occurrences as $occurrence) {
+        $batch = \count($occurrences);
+
+        foreach (\array_values($occurrences) as $index => $occurrence) {
             $schedule = $occurrence->payload;
 
             Span::init('schedule.messages.enqueue');
@@ -85,6 +87,11 @@ class ScheduleMessages extends Action
             try {
                 Span::add('project.id', $schedule['project']->getId());
                 Span::add('schedule.id', $schedule['$id'] ?? '');
+                Span::add('message.id', (string) ($schedule['resourceId'] ?? ''));
+                Span::add('occurrence.due', $occurrence->due->format('c'));
+                Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
+                Span::add('occurrence.batch', $batch);
+                Span::add('occurrence.index', $index);
 
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 

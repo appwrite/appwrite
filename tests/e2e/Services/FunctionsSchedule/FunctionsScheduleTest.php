@@ -42,6 +42,15 @@ final class FunctionsScheduleTest extends Scope
             'activate' => true
         ]);
 
+        $this->assertEventually(function () use ($functionId) {
+            $executions = $this->listExecutions($functionId);
+
+            $this->assertEquals(200, $executions['headers']['status-code']);
+
+            $triggers = \array_column($executions['body']['executions'], 'trigger');
+            $this->assertContains('schedule', $triggers);
+        }, 180000, 5000);
+
         $this->cleanupFunction($functionId);
     }
 
