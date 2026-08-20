@@ -88,7 +88,11 @@ final class FunctionsTest extends TestCase
         $this->assertSame('/path', $message->path);
         $this->assertSame(['x-test' => 'value'], $message->headers);
         $this->assertSame('PATCH', $message->method);
-        $this->assertSame(1, $worker->projectAccessUpdates);
+        $this->assertSame(
+            0,
+            $worker->projectAccessUpdates,
+            'Access is recorded once per message in action(), so the republish path must not write it again'
+        );
     }
 
     #[DataProvider('inactiveScheduleProvider')]

@@ -1026,9 +1026,9 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_HOST',
-                'description' => 'The host used by Appwrite to communicate with the open-runtimes jobs-service that builds manual-upload function deployments.',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes orchestrator that builds manual-upload function deployments.',
                 'introduction' => '1.9.0',
-                'default' => 'http://orchestrator-jobs:8080',
+                'default' => 'http://orchestrator:8080',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
@@ -1386,6 +1386,24 @@ return [
             [
                 'name' => '_APP_VCS_BITBUCKET_WEBHOOK_SECRET',
                 'description' => 'Secret used to validate incoming Bitbucket webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ORIGIN_CLIENT_ID',
+                'description' => 'Origin app client ID. You can find it in your Origin app details on Cursor.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ORIGIN_PRIVATE_KEY',
+                'description' => 'Origin app private key. You can generate private keys from your Origin app settings on Cursor.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,
