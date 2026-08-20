@@ -55,6 +55,7 @@ import { VCSDetectionType, ID } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
+import { validateVariables } from '@/lib/variables'
 
 // Fade-in image component
 function FadeImage({
@@ -258,6 +259,15 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         toast.error(t('Please select a repository'))
         return
       }
+    }
+
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured site behind. Only the rows that
+    // get written are checked -- the valueless ones are dropped below.
+    const validationError = validateVariables(variables.filter((v) => v.value))
+    if (validationError) {
+      toast.error(validationError)
+      return
     }
 
     setIsDeploying(true)

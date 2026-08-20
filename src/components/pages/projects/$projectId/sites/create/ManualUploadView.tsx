@@ -32,6 +32,7 @@ import { BuildSettings } from './BuildSettings'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { validateVariables } from '@/lib/variables'
 
 export function ManualUploadView() {
   const t = useT()
@@ -147,6 +148,14 @@ export function ManualUploadView() {
 
     if (!domainValid) {
       toast.error(t('Please enter a valid domain'))
+      return
+    }
+
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured site behind.
+    const validationError = validateVariables(variables)
+    if (validationError) {
+      toast.error(validationError)
       return
     }
 

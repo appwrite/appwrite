@@ -31,6 +31,7 @@ import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { fetchProjectById } from '@/lib/project-settings'
 import { registerProjectRegionsFromProjects } from '@/lib/project-region'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { getVariableValueError, validateVariables } from '@/lib/variables'
 import {
   ensureFingerprintServerTimeSynced,
   generateFingerprintToken,
@@ -1537,13 +1538,9 @@ export function useCreateProjectVariable(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      if (!key.trim()) {
-        throw new Error('Variable key is required')
-      }
-      if (value.length > 8192) {
-        throw new Error(
-          `Variable ${key} is longer than 8192 allowed characters`,
-        )
+      const validationError = validateVariables([{ key: key.trim(), value }])
+      if (validationError) {
+        throw new Error(validationError)
       }
 
       const projectSdk = sdk.forProject(projectId)
@@ -1593,10 +1590,12 @@ export function useUpdateProjectVariable(projectId: string | null | undefined) {
       if (!key.trim()) {
         throw new Error('Variable key is required')
       }
-      if (value.length > 8192) {
-        throw new Error(
-          `Variable ${key} is longer than 8192 allowed characters`,
-        )
+      // The key is the stored one rather than something just typed, so its
+      // format is deliberately not checked: a variable created before the
+      // identifier rule has to stay editable.
+      const valueError = getVariableValueError(key, value)
+      if (valueError) {
+        throw new Error(valueError)
       }
 
       const projectSdk = sdk.forProject(projectId)
