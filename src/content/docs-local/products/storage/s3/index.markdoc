@@ -146,10 +146,10 @@ S3 buckets map directly to Appwrite Storage buckets, and S3 objects map to files
 
 Object keys are file names, used directly. Uploading to the key `reports/january.pdf` stores a file named `reports/january.pdf`, and read, copy, and delete operations address that object by the same key. Nothing has to be looked up first, and files created through the native Storage API or the Console are addressable over S3 under the names they already have.
 
-Because the key is the name, file names have to be unique within a bucket. Uploading to a key that already exists is rejected rather than replacing the object, so delete the object first if you mean to replace it.
+Because the key is the name, file names have to be unique within a bucket. Uploading to a key that already exists replaces that object in place: its bytes, size, content type, and user metadata are overwritten, while the underlying Appwrite file keeps its ID and permissions, so anything referencing it through the native Storage API stays valid. Concurrent uploads to the same key are serialized, and the last write wins.
 
 {% info title="File names must be unique per bucket" %}
-S3 itself has no concept of two objects sharing a key: [an object key is "the unique identifier for an object within a bucket"](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#BasicsKeys), and every object in a bucket has exactly one. Appwrite Storage does let several files in a bucket share a name, but such a bucket has no valid representation as an S3 bucket and is not served over the S3 API.
+S3 itself has no concept of two objects sharing a key: [an object key is "the unique identifier for an object within a bucket"](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#BasicsKeys), and every object in a bucket has exactly one. Appwrite Storage does let several files in a bucket share a name and folder, but such a bucket has no valid representation as an S3 bucket and is not served over the S3 API: a request whose key resolves to more than one file, or a listing that would return the same key twice, is rejected with `InvalidRequest` (HTTP 400).
 
 So if your workload depends on repeating file names within a bucket, the S3 API is not the right interface for it. Use the [native Storage API](/docs/products/storage/upload-download) instead, which addresses files by ID and lets names repeat freely.
 {% /info %}
@@ -221,7 +221,7 @@ The following object operations are supported.
 
 | Operation | Description |
 | --- | --- |
-| `PutObject` | Upload an object under a key that is not already taken. Returns an `ETag`. Honors `Content-Type`, `x-amz-meta-*` user metadata, and `x-amz-server-side-encryption`. |
+| `PutObject` | Upload an object, replacing anything already stored under that key. Returns an `ETag`. Honors `Content-Type`, `x-amz-meta-*` user metadata, and `x-amz-server-side-encryption`. |
 | `GetObject` | Download an object. Supports `Range` requests (HTTP 206), and the `If-None-Match` (HTTP 304) and `If-Match` (HTTP 412) conditional headers. |
 | `HeadObject` | Retrieve an object's metadata (size, content type, `ETag`, user metadata) without the body. |
 | `CopyObject` | Copy an object using the `x-amz-copy-source` header. Supports `x-amz-metadata-directive: REPLACE` to replace metadata. |
@@ -230,6 +230,8 @@ The following object operations are supported.
 | `ListObjects` | List objects in a bucket, with `prefix` filtering. |
 | `ListObjectsV2` | List objects with `prefix`, `delimiter` (only `/`), `max-keys`, `continuation-token`, and `start-after`. Use `delimiter=/` to browse [folders](#folders). |
 | `GetObjectAcl`, `PutObjectAcl` | Compatibility responses only. See [Limitations](#limitations). |
+
+Uploads sent with the AWS SDKs' default integrity protections, which frame the body as `Content-Encoding: aws-chunked` with a streaming payload signature, are decoded transparently, and a CRC32 trailer checksum is verified against the stored bytes when the client sends one.
 
 Content type is taken from the `Content-Type` header you send. When that is missing or generic (`application/octet-stream`), Appwrite infers a type from the file extension. Buckets keep their constraints under the S3 API: uploads that exceed the bucket's maximum file size or use a disallowed extension are rejected, and disabled buckets are treated as not found.
 
@@ -248,8 +250,14 @@ Large files are uploaded in parts. Standard SDK multipart helpers, such as the A
 | `ListParts` | List the parts already uploaded for an `UploadId`. |
 
 {% info title="Multipart requirements" %}
-Parts must be contiguous and start at part number 1. Completing an upload with non-contiguous part numbers (for example, parts 1, 5, and 100) is rejected. SDK multipart helpers upload parts sequentially, so they are unaffected. In-progress uploads are kept for 24 hours before they are cleaned up, so complete or abort within that window.
+Parts must be contiguous and start at part number 1. Completing an upload with non-contiguous part numbers (for example, parts 1, 5, and 100) is rejected. SDK multipart helpers number parts contiguously, so they are unaffected, and parts can be uploaded in parallel: the AWS CLI and the SDK transfer managers do this by default. In-progress uploads are kept for 24 hours before they are cleaned up, so complete or abort within that window.
 {% /info %}
+
+# Events and usage {% #events-and-usage %}
+
+Writes over the S3 API are ordinary Storage writes, so they take part in the rest of your project. Uploading, replacing, or deleting an object fires the matching `buckets.[bucketId].files.[fileId].create`, `.update`, or `.delete` [event](/docs/advanced/platform/events), and creating or deleting a bucket fires the corresponding bucket event. Those events reach [webhooks](/docs/advanced/platform/webhooks), [realtime](/docs/apis/realtime) subscribers, and event-triggered [functions](/docs/products/functions/execute) exactly as native Storage writes do.
+
+S3 traffic is metered like the rest of your project's API traffic: requests and inbound and outbound bandwidth accrue to your project's network usage.
 
 # Limitations {% #limitations %}
 
@@ -257,11 +265,11 @@ The S3 API targets the operations most clients depend on. Keep the following in 
 
 - **Path-style addressing only.** Virtual-hosted-style URLs (`https://<bucket>.host/...`) are not supported. Enable path-style addressing in your client, as shown in [Connect an S3 client](#connect-an-s3-client).
 - **Signature Version 4 only.** Requests are authenticated with SigV4, and the request timestamp must be within 15 minutes of the server's clock.
-- **File names must be unique within a bucket.** Object keys are file names, so a bucket cannot hold two objects under one key. Uploading to a key that already exists is rejected rather than overwriting it, and a bucket that already contains files with duplicate names is not served over the S3 API. See [Buckets and objects](#buckets-and-objects).
+- **File names must be unique within a bucket.** Object keys are file names, so a bucket cannot hold two objects under one key, and uploading to an existing key replaces the object stored there. A bucket that already contains files sharing a name and folder is not served over the S3 API: requests whose key resolves ambiguously return `InvalidRequest` (HTTP 400). See [Buckets and objects](#buckets-and-objects).
 - **ACLs are compatibility responses.** `GetObjectAcl`, `PutObjectAcl`, `GetBucketAcl`, and `PutBucketAcl` return a canned private ACL and are accepted for tooling compatibility. They do not change access. Manage access with [Appwrite permissions](/docs/products/storage/permissions) and API key scopes instead.
 - **No folder resource or folder markers.** Folders are virtual: they are `/`-separated prefixes in object keys, browsed by listing with `delimiter=/`. See [Folders](#folders). Using any other delimiter value or uploading a folder-marker object (a key ending in `/`) returns `NotImplemented` (HTTP 501).
 - **Prefer `ListObjectsV2` for large buckets.** `ListObjects` returns every matching object in a single response, while `ListObjectsV2` honors `max-keys` (capped at 1000) and paginates with `IsTruncated` and a `NextContinuationToken`. No objects are silently dropped.
-- **Unsupported S3 features.** Object tagging, CORS, lifecycle, bucket policies and policy status, encryption configuration, ownership controls, notifications, and versioning are not supported. Requests to these sub-resources return `NotImplemented` (HTTP 501).
+- **Unsupported S3 features.** Object tagging, CORS, lifecycle, bucket policies and policy status, encryption configuration, ownership controls, notifications, versioning, object locking, and restores are not supported. Any request carrying a sub-resource or query parameter the API does not implement returns `NotImplemented` (HTTP 501) rather than being partially applied.
 
 # Error responses {% #error-responses %}
 
@@ -277,5 +285,5 @@ Errors are returned as standard S3 XML error documents with an S3 error code and
 | `InvalidRange` | 416 | The requested `Range` cannot be satisfied. |
 | `PreconditionFailed` | 412 | An `If-Match` precondition did not hold. |
 | `NotImplemented` | 501 | The requested S3 feature is not supported. |
-| `InvalidRequest` | 400 | The request was malformed or violated a bucket constraint. |
+| `InvalidRequest` | 400 | The request was malformed, violated a bucket constraint, or its key matched more than one file. |
 | `InternalError` | 500 | An unexpected server error occurred. |
