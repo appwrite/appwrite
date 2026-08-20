@@ -362,7 +362,9 @@ class Messaging extends Action
      *
      * Peak memory is O(MESSAGE_RECIPIENTS_PAGE_SIZE), never O(topic size): topics are walked through the
      * subscribers collection with cursor pagination rather than reading the topic's `targets` attribute, which
-     * triggers the subQueryTopicTargets filter and loads up to APP_LIMIT_SUBSCRIBERS_SUBQUERY rows at once.
+     * is capped at APP_LIMIT_SUBSCRIBERS_SUBQUERY and would silently drop the rest of the recipients.
+     * Decode filters run regardless of Query::select, so the topic lookup below skips that filter explicitly
+     * rather than relying on selecting only $sequence.
      *
      * @param array<string> $topicIds
      * @param array<string> $userIds
@@ -379,11 +381,14 @@ class Messaging extends Action
         Document $default
     ): \Generator {
         if (\count($topicIds) > 0) {
-            $topics = $dbForProject->find('topics', [
-                Query::select(['$sequence']),
-                Query::equal('$id', $topicIds),
-                Query::limit(\count($topicIds)),
-            ]);
+            $topics = $dbForProject->skipFilters(
+                fn () => $dbForProject->find('topics', [
+                    Query::select(['$sequence']),
+                    Query::equal('$id', $topicIds),
+                    Query::limit(\count($topicIds)),
+                ]),
+                ['subQueryTopicTargets']
+            );
 
             foreach ($topics as $topic) {
                 $cursor = null;

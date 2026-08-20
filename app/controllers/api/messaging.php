@@ -2651,7 +2651,11 @@ Http::get('/v1/messaging/topics')
             $cursor->setValue($cursorDocument[0]);
         }
         try {
-            $topics = $dbForProject->find('topics', $queries);
+            // Safe to skip subquery, Does not return in Response
+            $topics = $dbForProject->skipFilters(
+                fn () => $dbForProject->find('topics', $queries),
+                ['subQueryTopicTargets']
+            );
             $total = $includeTotal ? $dbForProject->count('topics', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
@@ -2874,10 +2878,13 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
                 default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
             };
 
-            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
-                'topics',
-                $topicId,
-                $totalAttribute,
+            $authorization->skip(fn () => $dbForProject->skipFilters(
+                fn () => $dbForProject->increaseDocumentAttribute(
+                    'topics',
+                    $topicId,
+                    $totalAttribute,
+                ),
+                ['subQueryTopicTargets']
             ));
         } catch (DuplicateException) {
             throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
@@ -3081,11 +3088,14 @@ Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
-        $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute(
-            'topics',
-            $topicId,
-            $totalAttribute,
-            min: 0
+        $authorization->skip(fn () => $dbForProject->skipFilters(
+            fn () => $dbForProject->decreaseDocumentAttribute(
+                'topics',
+                $topicId,
+                $totalAttribute,
+                min: 0
+            ),
+            ['subQueryTopicTargets']
         ));
 
         $queueForEvents
