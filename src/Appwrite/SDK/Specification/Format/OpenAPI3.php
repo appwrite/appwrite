@@ -144,7 +144,6 @@ class OpenAPI3 extends Format
 
     private function assertEnumName(string $enum): void
     {
-        $enum = $this->formatSdkName($enum);
         $normalizedEnum = $this->normalizeSdkName($enum);
 
         foreach ($this->services as $service) {
@@ -159,11 +158,6 @@ class OpenAPI3 extends Format
                 );
             }
         }
-    }
-
-    private function formatSdkName(string $name): string
-    {
-        return \str_replace(' ', '', \ucwords(\str_replace(['-', '_', '/'], ' ', $name)));
     }
 
     private function normalizeSdkName(string $name): string

@@ -226,7 +226,7 @@ final class FormatTest extends TestCase
         );
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Spec service name 'Kind' must not overlap enum 'Kind'.");
+        $this->expectExceptionMessage("Spec service name 'Kind' must not overlap enum 'kind'.");
 
         $format->parse();
     }
