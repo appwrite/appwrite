@@ -88,7 +88,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'], enum: new Enum(name: 'ProjectOAuthProviderId', exclude: ['mock', 'mock-unverified']))
+            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'], enum: new Enum(name: 'ProjectOAuthProviderId', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));
