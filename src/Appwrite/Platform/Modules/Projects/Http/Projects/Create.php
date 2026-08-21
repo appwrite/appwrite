@@ -220,7 +220,11 @@ class Create extends Action
                     $indexes = $collection['indexes'];
 
                     try {
-                        $dbForProject->createCollection(new Collection(id: $key, attributes: $attributes, indexes: $indexes));
+                        $dbForProject->createCollection(new Collection(
+                            id: $key,
+                            attributes: $attributes,
+                            indexes: $indexes,
+                        ));
                     } catch (Duplicate) {
                         // Collection already exists
                     }

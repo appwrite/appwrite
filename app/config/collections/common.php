@@ -5,6 +5,7 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Index;
+use Utopia\Query\Schema\Order;
 
 return [
     'cache' => [
@@ -72,14 +73,14 @@ return [
             Attribute::boolean(key: 'impersonator', default: false),
         ],
         'indexes' => [
-            Index::key(key: '_key_name', attributes: ['name'], lengths: [256], orders: ['ASC']),
-            Index::unique(key: '_key_email', attributes: ['email'], lengths: [256], orders: ['ASC']),
-            Index::unique(key: '_key_phone', attributes: ['phone'], lengths: [16], orders: ['ASC']),
-            Index::key(key: '_key_status', attributes: ['status'], orders: ['ASC']),
-            Index::key(key: '_key_passwordUpdate', attributes: ['passwordUpdate'], orders: ['ASC']),
-            Index::key(key: '_key_registration', attributes: ['registration'], orders: ['ASC']),
-            Index::key(key: '_key_emailVerification', attributes: ['emailVerification'], orders: ['ASC']),
-            Index::key(key: '_key_phoneVerification', attributes: ['phoneVerification'], orders: ['ASC']),
+            Index::key(key: '_key_name', attributes: ['name'], lengths: [256], orders: [Order::Asc]),
+            Index::unique(key: '_key_email', attributes: ['email'], lengths: [256], orders: [Order::Asc]),
+            Index::unique(key: '_key_phone', attributes: ['phone'], lengths: [16], orders: [Order::Asc]),
+            Index::key(key: '_key_status', attributes: ['status'], orders: [Order::Asc]),
+            Index::key(key: '_key_passwordUpdate', attributes: ['passwordUpdate'], orders: [Order::Asc]),
+            Index::key(key: '_key_registration', attributes: ['registration'], orders: [Order::Asc]),
+            Index::key(key: '_key_emailVerification', attributes: ['emailVerification'], orders: [Order::Asc]),
+            Index::key(key: '_key_phoneVerification', attributes: ['phoneVerification'], orders: [Order::Asc]),
             Index::fullText(key: '_key_search', attributes: ['search']),
             Index::key(key: '_key_accessedAt', attributes: ['accessedAt']),
             Index::key(key: 'impersonator', attributes: [ID::custom('impersonator')]),
@@ -102,8 +103,8 @@ return [
             Attribute::string(key: 'ip', size: 45),
         ],
         'indexes' => [
-            Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_type_expire', attributes: ['type', 'expire'], orders: ['ASC', 'ASC']),
+            Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_type_expire', attributes: ['type', 'expire'], orders: [Order::Asc, Order::Asc]),
         ],
     ],
 
@@ -119,7 +120,7 @@ return [
             Attribute::string(key: 'data', size: 65535, default: [], filters: ['json', 'encrypt']),
         ],
         'indexes' => [
-            Index::key(key: '_key_userInternalId', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::key(key: '_key_userInternalId', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
         ],
     ],
 
@@ -137,8 +138,8 @@ return [
             Attribute::datetime(key: 'expire', signed: false, filters: ['datetime']),
         ],
         'indexes' => [
-            Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_expire', attributes: ['expire'], orders: ['ASC']),
+            Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_expire', attributes: ['expire'], orders: [Order::Asc]),
         ],
     ],
 
@@ -189,8 +190,8 @@ return [
             Attribute::datetime(key: 'mfaUpdatedAt', signed: false, filters: ['datetime']),
         ],
         'indexes' => [
-            Index::key(key: '_key_provider_providerUid', attributes: ['provider', 'providerUid'], lengths: [128, 128], orders: ['ASC', 'ASC']),
-            Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::key(key: '_key_provider_providerUid', attributes: ['provider', 'providerUid'], lengths: [128, 128], orders: [Order::Asc, Order::Asc]),
+            Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
         ],
     ],
 
@@ -215,15 +216,15 @@ return [
         ],
         'indexes' => [
             // providerUid is length 2000!
-            Index::unique(key: '_key_userInternalId_provider_providerUid', attributes: ['userInternalId', 'provider', 'providerUid'], lengths: [11, 128, 128], orders: ['ASC', 'ASC']),
+            Index::unique(key: '_key_userInternalId_provider_providerUid', attributes: ['userInternalId', 'provider', 'providerUid'], lengths: [11, 128, 128], orders: [Order::Asc, Order::Asc]),
             // providerUid is length 2000!
-            Index::unique(key: '_key_provider_providerUid', attributes: ['provider', 'providerUid'], lengths: [128, 128], orders: ['ASC', 'ASC']),
-            Index::key(key: '_key_userId', attributes: ['userId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_userInternalId', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_provider', attributes: ['provider'], lengths: [128], orders: ['ASC']),
-            Index::key(key: '_key_providerUid', attributes: ['providerUid'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_providerEmail', attributes: ['providerEmail'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_providerAccessTokenExpiry', attributes: ['providerAccessTokenExpiry'], orders: ['ASC']),
+            Index::unique(key: '_key_provider_providerUid', attributes: ['provider', 'providerUid'], lengths: [128, 128], orders: [Order::Asc, Order::Asc]),
+            Index::key(key: '_key_userId', attributes: ['userId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_userInternalId', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_provider', attributes: ['provider'], lengths: [128], orders: [Order::Asc]),
+            Index::key(key: '_key_providerUid', attributes: ['providerUid'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_providerEmail', attributes: ['providerEmail'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_providerAccessTokenExpiry', attributes: ['providerAccessTokenExpiry'], orders: [Order::Asc]),
         ],
     ],
 
@@ -240,8 +241,8 @@ return [
         ],
         'indexes' => [
             Index::fullText(key: '_key_search', attributes: ['search']),
-            Index::key(key: '_key_name', attributes: ['name'], lengths: [128], orders: ['ASC']),
-            Index::key(key: '_key_total', attributes: ['total'], orders: ['ASC']),
+            Index::key(key: '_key_name', attributes: ['name'], lengths: [128], orders: [Order::Asc]),
+            Index::key(key: '_key_total', attributes: ['total'], orders: [Order::Asc]),
         ],
     ],
 
@@ -262,15 +263,15 @@ return [
             Attribute::string(key: 'search', size: 16384),
         ],
         'indexes' => [
-            Index::unique(key: '_key_unique', attributes: ['teamInternalId', 'userInternalId'], lengths: [Database::LENGTH_KEY, Database::LENGTH_KEY], orders: ['ASC', 'ASC']),
-            Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_team', attributes: ['teamInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::unique(key: '_key_unique', attributes: ['teamInternalId', 'userInternalId'], lengths: [Database::LENGTH_KEY, Database::LENGTH_KEY], orders: [Order::Asc, Order::Asc]),
+            Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_team', attributes: ['teamInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
             Index::fullText(key: '_key_search', attributes: ['search']),
-            Index::key(key: '_key_userId', attributes: ['userId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_teamId', attributes: ['teamId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_invited', attributes: ['invited'], orders: ['ASC']),
-            Index::key(key: '_key_joined', attributes: ['joined'], orders: ['ASC']),
-            Index::key(key: '_key_confirm', attributes: ['confirm'], orders: ['ASC']),
+            Index::key(key: '_key_userId', attributes: ['userId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_teamId', attributes: ['teamId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_invited', attributes: ['invited'], orders: [Order::Asc]),
+            Index::key(key: '_key_joined', attributes: ['joined'], orders: [Order::Asc]),
+            Index::key(key: '_key_confirm', attributes: ['confirm'], orders: [Order::Asc]),
             Index::key(key: '_key_team_confirm', attributes: ['teamInternalId', 'confirm']),
         ],
     ],
@@ -293,12 +294,12 @@ return [
         ],
         'indexes' => [
             Index::fullText(key: '_key_search', attributes: ['search']),
-            Index::key(key: '_key_enabled', attributes: ['enabled'], orders: ['ASC']),
-            Index::key(key: '_key_name', attributes: ['name'], orders: ['ASC']),
-            Index::key(key: '_key_fileSecurity', attributes: ['fileSecurity'], orders: ['ASC']),
-            Index::key(key: '_key_maximumFileSize', attributes: ['maximumFileSize'], orders: ['ASC']),
-            Index::key(key: '_key_encryption', attributes: ['encryption'], orders: ['ASC']),
-            Index::key(key: '_key_antivirus', attributes: ['antivirus'], orders: ['ASC']),
+            Index::key(key: '_key_enabled', attributes: ['enabled'], orders: [Order::Asc]),
+            Index::key(key: '_key_name', attributes: ['name'], orders: [Order::Asc]),
+            Index::key(key: '_key_fileSecurity', attributes: ['fileSecurity'], orders: [Order::Asc]),
+            Index::key(key: '_key_maximumFileSize', attributes: ['maximumFileSize'], orders: [Order::Asc]),
+            Index::key(key: '_key_encryption', attributes: ['encryption'], orders: [Order::Asc]),
+            Index::key(key: '_key_antivirus', attributes: ['antivirus'], orders: [Order::Asc]),
         ]
     ],
 
@@ -314,9 +315,9 @@ return [
             Attribute::string(key: 'period', size: 4, required: true),
         ],
         'indexes' => [
-            Index::key(key: '_key_time', attributes: ['time'], orders: ['DESC']),
-            Index::key(key: '_key_period_time', attributes: ['period', 'time'], orders: ['ASC']),
-            Index::unique(key: '_key_metric_period_time', attributes: ['metric', 'period', 'time'], orders: ['DESC']),
+            Index::key(key: '_key_time', attributes: ['time'], orders: [Order::Desc]),
+            Index::key(key: '_key_period_time', attributes: ['period', 'time'], orders: [Order::Asc]),
+            Index::unique(key: '_key_metric_period_time', attributes: ['metric', 'period', 'time'], orders: [Order::Desc]),
         ],
     ],
 
@@ -334,9 +335,9 @@ return [
             Attribute::string(key: 'search', size: 65535, default: '', filters: ['providerSearch']),
         ],
         'indexes' => [
-            Index::key(key: '_key_provider', attributes: ['provider'], orders: ['ASC']),
-            Index::key(key: '_key_type', attributes: ['type'], orders: ['ASC']),
-            Index::key(key: '_key_enabled_type', attributes: ['enabled', 'type'], orders: ['ASC']),
+            Index::key(key: '_key_provider', attributes: ['provider'], orders: [Order::Asc]),
+            Index::key(key: '_key_type', attributes: ['type'], orders: [Order::Asc]),
+            Index::key(key: '_key_enabled_type', attributes: ['enabled', 'type'], orders: [Order::Asc]),
             Index::fullText(key: '_key_search', attributes: ['search']),
         ],
     ],
@@ -380,7 +381,7 @@ return [
         ],
 
         'indexes' => [
-            Index::fullText(key: '_key_search', attributes: ['search'], orders: ['ASC']),
+            Index::fullText(key: '_key_search', attributes: ['search'], orders: [Order::Asc]),
         ],
     ],
 
@@ -427,8 +428,8 @@ return [
             Attribute::boolean(key: 'expired', default: false),
         ],
         'indexes' => [
-            Index::key(key: '_key_userId', attributes: ['userId'], orders: ['ASC']),
-            Index::key(key: '_key_userInternalId', attributes: ['userInternalId'], orders: ['ASC']),
+            Index::key(key: '_key_userId', attributes: ['userId'], orders: [Order::Asc]),
+            Index::key(key: '_key_userInternalId', attributes: ['userInternalId'], orders: [Order::Asc]),
             Index::key(key: '_key_providerId', attributes: ['providerId']),
             Index::key(key: '_key_providerInternalId', attributes: ['providerInternalId']),
             Index::unique(key: '_key_identifier', attributes: ['identifier']),
@@ -468,14 +469,14 @@ return [
         ],
         'indexes' => [
             Index::fullText(key: '_key_search', attributes: ['search']),
-            Index::key(key: '_key_bucket', attributes: ['bucketId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_name', attributes: ['name'], lengths: [256], orders: ['ASC']),
-            Index::key(key: '_key_folder', attributes: ['folder'], lengths: [256], orders: ['ASC']),
-            Index::key(key: '_key_signature', attributes: ['signature'], lengths: [256], orders: ['ASC']),
-            Index::key(key: '_key_mimeType', attributes: ['mimeType'], orders: ['ASC']),
-            Index::key(key: '_key_sizeOriginal', attributes: ['sizeOriginal'], orders: ['ASC']),
-            Index::key(key: '_key_chunksTotal', attributes: ['chunksTotal'], orders: ['ASC']),
-            Index::key(key: '_key_chunksUploaded', attributes: ['chunksUploaded'], orders: ['ASC']),
+            Index::key(key: '_key_bucket', attributes: ['bucketId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_name', attributes: ['name'], lengths: [256], orders: [Order::Asc]),
+            Index::key(key: '_key_folder', attributes: ['folder'], lengths: [256], orders: [Order::Asc]),
+            Index::key(key: '_key_signature', attributes: ['signature'], lengths: [256], orders: [Order::Asc]),
+            Index::key(key: '_key_mimeType', attributes: ['mimeType'], orders: [Order::Asc]),
+            Index::key(key: '_key_sizeOriginal', attributes: ['sizeOriginal'], orders: [Order::Asc]),
+            Index::key(key: '_key_chunksTotal', attributes: ['chunksTotal'], orders: [Order::Asc]),
+            Index::key(key: '_key_chunksUploaded', attributes: ['chunksUploaded'], orders: [Order::Asc]),
             Index::key(key: '_key_transformedAt', attributes: ['transformedAt']),
         ]
     ],
@@ -496,11 +497,11 @@ return [
             Attribute::string(key: 'permissionsHash', size: 32),
         ],
         'indexes' => [
-            Index::unique(key: '_unique_userId', attributes: ['userId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_userInternal', attributes: ['userInternalId'], orders: ['ASC']),
-            Index::key(key: '_key_expiresAt', attributes: ['expiresAt'], orders: ['ASC']),
-            Index::key(key: '_key_status', attributes: ['status'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_source', attributes: ['source'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::unique(key: '_unique_userId', attributes: ['userId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_userInternal', attributes: ['userInternalId'], orders: [Order::Asc]),
+            Index::key(key: '_key_expiresAt', attributes: ['expiresAt'], orders: [Order::Asc]),
+            Index::key(key: '_key_status', attributes: ['status'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_source', attributes: ['source'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
             Index::key(key: '_key_source_status', attributes: ['source', 'status']),
             Index::key(key: '_key_permissionsHash', attributes: ['permissionsHash']),
         ]

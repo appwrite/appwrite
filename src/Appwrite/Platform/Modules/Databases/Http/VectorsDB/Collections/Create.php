@@ -157,7 +157,13 @@ class Create extends CollectionAction
                     \usleep(100_000);
                 }
             }
-            $dbForDatabases->createCollection(new Collection(id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), attributes: $attributes, indexes: $indexes, permissions: $permissions, documentSecurity: $documentSecurity));
+            $dbForDatabases->createCollection(new Collection(
+                id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                attributes: $attributes,
+                indexes: $indexes,
+                permissions: $permissions,
+                documentSecurity: $documentSecurity,
+            ));
             // Create attribute and indexes metadata documents in the attributes and indexes collections
             // needed for the get and list calls
             $attributeDocs = array_map(function (Attribute $attributeConfig) use ($database, $collection, $databaseId, $collectionId, $dimension) {

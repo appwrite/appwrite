@@ -5,6 +5,7 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Index;
+use Utopia\Query\Schema\Order;
 
 $providers = Config::getParam('oAuthProviders', []);
 
@@ -50,14 +51,14 @@ $platformCollections = [
         ],
         'indexes' => [
             Index::fullText(key: '_key_search', attributes: ['search']),
-            Index::key(key: '_key_name', attributes: ['name'], lengths: [128], orders: ['ASC']),
-            Index::key(key: '_key_team', attributes: ['teamId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::key(key: '_key_name', attributes: ['name'], lengths: [128], orders: [Order::Asc]),
+            Index::key(key: '_key_team', attributes: ['teamId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
             Index::key(key: '_key_pingCount', attributes: ['pingCount']),
             Index::key(key: '_key_pingedAt', attributes: ['pingedAt']),
             Index::key(key: '_key_database', attributes: ['database']),
             Index::key(key: '_key_region_accessed_at', attributes: ['region', 'accessedAt']),
             Index::key(key: '_key_accessedAt', attributes: ['accessedAt']),
-            Index::key(key: '_key_teamInternalId', attributes: ['teamInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::key(key: '_key_teamInternalId', attributes: ['teamInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
         ],
     ],
 
@@ -104,8 +105,8 @@ $platformCollections = [
             Attribute::string(key: 'hostname', size: 256),
         ],
         'indexes' => [
-            Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_project_id', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_project_id', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
         ],
     ],
 
@@ -146,7 +147,7 @@ $platformCollections = [
             Attribute::string(key: 'sdks', required: true, array: true),
         ],
         'indexes' => [
-            Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
             Index::key(key: '_key_accessedAt', attributes: ['accessedAt']),
         ],
     ],
@@ -171,8 +172,8 @@ $platformCollections = [
             Attribute::integer(key: 'attempts', default: 0),
         ],
         'indexes' => [
-            Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_project_id', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_project_id', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
         ],
     ],
 
@@ -200,11 +201,11 @@ $platformCollections = [
             Attribute::datetime(key: 'lastSeen', signed: false, filters: ['datetime']),
         ],
         'indexes' => [
-            Index::key(key: '_key_messageId', attributes: ['messageId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: ['ASC', 'ASC', 'ASC']),
-            Index::key(key: '_key_project', attributes: ['projectId', 'projectInternalId'], lengths: [Database::LENGTH_KEY, 0], orders: ['ASC', 'ASC']),
-            Index::key(key: '_key_project_resource', attributes: ['projectId', 'projectInternalId', 'resourceType', 'resourceId', 'resourceInternalId'], lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0], orders: ['ASC', 'ASC', 'ASC', 'ASC', 'ASC']),
-            Index::key(key: '_key_project_parent_resource', attributes: ['projectId', 'projectInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'], lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0], orders: ['ASC', 'ASC', 'ASC', 'ASC', 'ASC']),
+            Index::key(key: '_key_messageId', attributes: ['messageId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: [Order::Asc, Order::Asc, Order::Asc]),
+            Index::key(key: '_key_project', attributes: ['projectId', 'projectInternalId'], lengths: [Database::LENGTH_KEY, 0], orders: [Order::Asc, Order::Asc]),
+            Index::key(key: '_key_project_resource', attributes: ['projectId', 'projectInternalId', 'resourceType', 'resourceId', 'resourceInternalId'], lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0], orders: [Order::Asc, Order::Asc, Order::Asc, Order::Asc, Order::Asc]),
+            Index::key(key: '_key_project_parent_resource', attributes: ['projectId', 'projectInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'], lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0], orders: [Order::Asc, Order::Asc, Order::Asc, Order::Asc, Order::Asc]),
         ],
     ],
 
@@ -224,7 +225,7 @@ $platformCollections = [
             Attribute::datetime(key: 'updated', signed: false, filters: ['datetime']),
         ],
         'indexes' => [
-            Index::key(key: '_key_domain', attributes: ['domain'], lengths: [255], orders: ['ASC']),
+            Index::key(key: '_key_domain', attributes: ['domain'], lengths: [255], orders: [Order::Asc]),
         ],
     ],
 
@@ -238,7 +239,7 @@ $platformCollections = [
             Attribute::string(key: 'value', size: 16384, required: true),
         ],
         'indexes' => [
-            Index::key(key: '_key_timestamp', attributes: ['timestamp'], orders: ['DESC']),
+            Index::key(key: '_key_timestamp', attributes: ['timestamp'], orders: [Order::Desc]),
         ]
     ],
 
@@ -272,18 +273,18 @@ $platformCollections = [
         ],
         'indexes' => [
             Index::fullText(key: '_key_search', attributes: ['search']),
-            Index::unique(key: '_key_domain', attributes: ['domain'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_projectId', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_type', attributes: ['type'], orders: ['ASC']),
-            Index::key(key: '_key_trigger', attributes: ['trigger'], orders: ['ASC']),
-            Index::key(key: '_key_deploymentResourceType', attributes: ['deploymentResourceType'], orders: ['ASC']),
-            Index::key(key: '_key_deploymentResourceId', attributes: ['deploymentResourceId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_deploymentResourceInternalId', attributes: ['deploymentResourceInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_deploymentId', attributes: ['deploymentId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_deploymentInternalId', attributes: ['deploymentInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_deploymentVcsProviderBranch', attributes: ['deploymentVcsProviderBranch'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_owner', attributes: ['owner'], orders: ['ASC']),
+            Index::unique(key: '_key_domain', attributes: ['domain'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_projectId', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_type', attributes: ['type'], orders: [Order::Asc]),
+            Index::key(key: '_key_trigger', attributes: ['trigger'], orders: [Order::Asc]),
+            Index::key(key: '_key_deploymentResourceType', attributes: ['deploymentResourceType'], orders: [Order::Asc]),
+            Index::key(key: '_key_deploymentResourceId', attributes: ['deploymentResourceId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_deploymentResourceInternalId', attributes: ['deploymentResourceInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_deploymentId', attributes: ['deploymentId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_deploymentInternalId', attributes: ['deploymentInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_deploymentVcsProviderBranch', attributes: ['deploymentVcsProviderBranch'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_owner', attributes: ['owner'], orders: [Order::Asc]),
             Index::key(key: '_key_piid_diid_drt', attributes: ['projectInternalId', 'deploymentInternalId', 'deploymentResourceType']),
             Index::key(key: '_key_region_status_createdAt', attributes: ['region', 'status', '$createdAt']),
         ],
@@ -305,9 +306,9 @@ $platformCollections = [
             Attribute::text(key: 'personalRefreshToken', size: 65535, filters: ['encrypt']),
         ],
         'indexes' => [
-            Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_projectId', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_providerInstallationId', attributes: ['providerInstallationId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_projectId', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_providerInstallationId', attributes: ['providerInstallationId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
         ],
     ],
 
@@ -327,14 +328,14 @@ $platformCollections = [
             Attribute::string(key: 'providerPullRequestIds', size: 128, array: true),
         ],
         'indexes' => [
-            Index::key(key: '_key_installationId', attributes: ['installationId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_installationInternalId', attributes: ['installationInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_projectId', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_providerRepositoryId', attributes: ['providerRepositoryId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_resourceId', attributes: ['resourceId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_resourceInternalId', attributes: ['resourceInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_resourceType', attributes: ['resourceType'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::key(key: '_key_installationId', attributes: ['installationId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_installationInternalId', attributes: ['installationInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_projectId', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_providerRepositoryId', attributes: ['providerRepositoryId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_resourceId', attributes: ['resourceId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_resourceInternalId', attributes: ['resourceInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_resourceType', attributes: ['resourceType'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
             Index::key(key: '_key_piid_riid_rt', attributes: ['projectInternalId', 'resourceInternalId', 'resourceType']),
         ],
     ],
@@ -354,13 +355,13 @@ $platformCollections = [
             Attribute::string(key: 'providerBranch', required: true),
         ],
         'indexes' => [
-            Index::key(key: '_key_installationId', attributes: ['installationId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_installationInternalId', attributes: ['installationInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_projectId', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_providerRepositoryId', attributes: ['providerRepositoryId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_providerPullRequestId', attributes: ['providerPullRequestId'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
-            Index::key(key: '_key_providerBranch', attributes: ['providerBranch'], lengths: [Database::LENGTH_KEY], orders: ['ASC']),
+            Index::key(key: '_key_installationId', attributes: ['installationId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_installationInternalId', attributes: ['installationInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_projectId', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_providerRepositoryId', attributes: ['providerRepositoryId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_providerPullRequestId', attributes: ['providerPullRequestId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::key(key: '_key_providerBranch', attributes: ['providerBranch'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
             Index::key(key: '_key_piid_prid_rt', attributes: ['projectInternalId', 'providerRepositoryId']),
         ],
     ],
@@ -438,7 +439,7 @@ $platformCollections = [
             Index::key(key: '_key_project_type', attributes: ['projectInternalId', 'type']),
             Index::key(key: '_key_project_severity', attributes: ['projectInternalId', 'severity']),
             Index::key(key: '_key_project_status', attributes: ['projectInternalId', 'status']),
-            Index::key(key: '_key_project_dismissedAt', attributes: ['projectInternalId', 'dismissedAt'], orders: ['ASC', 'DESC']),
+            Index::key(key: '_key_project_dismissedAt', attributes: ['projectInternalId', 'dismissedAt'], orders: [Order::Asc, Order::Desc]),
         ],
     ],
 

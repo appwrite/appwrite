@@ -223,7 +223,11 @@ class Create extends Action
                     $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
 
                     try {
-                        $dbForProject->createCollection(new Collection(id: $key, attributes: $attributes, indexes: $indexes));
+                        $dbForProject->createCollection(new Collection(
+                            id: $key,
+                            attributes: $attributes,
+                            indexes: $indexes,
+                        ));
                     } catch (Duplicate) {
                         // Collection already exists
                     }

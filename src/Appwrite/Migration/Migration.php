@@ -265,7 +265,11 @@ abstract class Migration
         $indexes = $collection['indexes'];
 
         try {
-            $this->dbForProject->createCollection(new Collection(id: $name, attributes: $attributes, indexes: $indexes));
+            $this->dbForProject->createCollection(new Collection(
+                id: $name,
+                attributes: $attributes,
+                indexes: $indexes,
+            ));
         } catch (Duplicate) {
             Console::warning('Failed to create collection "' . $name . '": Collection already exists');
         }

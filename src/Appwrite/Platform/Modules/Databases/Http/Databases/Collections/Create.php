@@ -223,7 +223,13 @@ class Create extends Action
         }
 
         try {
-            $dbForDatabases->createCollection(new Collection(id: $collectionKey, attributes: $collectionAttributes, indexes: $collectionIndexes, permissions: $permissions, documentSecurity: $documentSecurity));
+            $dbForDatabases->createCollection(new Collection(
+                id: $collectionKey,
+                attributes: $collectionAttributes,
+                indexes: $collectionIndexes,
+                permissions: $permissions,
+                documentSecurity: $documentSecurity,
+            ));
         } catch (DuplicateException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);

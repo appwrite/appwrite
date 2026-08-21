@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0f14879079d9af07fb6ddf357725238e",
+    "content-hash": "14f4ab991f85381833da004c6b59955f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3778,12 +3778,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "196db02d6e2eadb4d42c192d5a0f260c06b3e1db"
+                "reference": "32823ded323e35c4bd5029cf904cc8b269b62b06"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/196db02d6e2eadb4d42c192d5a0f260c06b3e1db",
-                "reference": "196db02d6e2eadb4d42c192d5a0f260c06b3e1db",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/32823ded323e35c4bd5029cf904cc8b269b62b06",
+                "reference": "32823ded323e35c4bd5029cf904cc8b269b62b06",
                 "shasum": ""
             },
             "require": {
@@ -3797,7 +3797,7 @@
                 "utopia-php/console": "^0.1",
                 "utopia-php/mongo": "^1.0",
                 "utopia-php/pools": "^2.0",
-                "utopia-php/query": "^0.5",
+                "utopia-php/query": "dev-feat-schema-order as 0.5.0",
                 "utopia-php/validators": "^0.4 || ^0.5"
             },
             "require-dev": {
@@ -3868,7 +3868,7 @@
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-08-21T09:27:18+00:00"
+            "time": "2026-08-21T10:48:05+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4795,16 +4795,16 @@
         },
         {
             "name": "utopia-php/query",
-            "version": "0.5.0",
+            "version": "dev-feat-schema-order",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/query.git",
-                "reference": "802821c6fb0470410e1f0e65561cc16224c343c0"
+                "reference": "08b8e70214ae2d9315762afc1a6135c6864f7f7c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/query/zipball/802821c6fb0470410e1f0e65561cc16224c343c0",
-                "reference": "802821c6fb0470410e1f0e65561cc16224c343c0",
+                "url": "https://api.github.com/repos/utopia-php/query/zipball/08b8e70214ae2d9315762afc1a6135c6864f7f7c",
+                "reference": "08b8e70214ae2d9315762afc1a6135c6864f7f7c",
                 "shasum": ""
             },
             "require": {
@@ -4824,7 +4824,38 @@
                     "Utopia\\Query\\": "src/Query"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\Query\\": "tests/Query",
+                    "Tests\\Integration\\": "tests/Integration"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/paratest --testsuite Query --processes=auto --exclude-group=performance"
+                ],
+                "test:coverage": [
+                    "vendor/bin/paratest --testsuite Query --processes=auto --exclude-group=performance --coverage-php coverage/unit.cov"
+                ],
+                "test:performance": [
+                    "vendor/bin/phpunit --testsuite Query --group=performance"
+                ],
+                "test:integration": [
+                    "vendor/bin/phpunit --testsuite Integration"
+                ],
+                "test:integration:coverage": [
+                    "vendor/bin/phpunit --testsuite Integration --coverage-php coverage/integration.cov"
+                ],
+                "lint": [
+                    "php -d memory_limit=2G ./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "php -d memory_limit=2G ./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level max src tests --memory-limit 2G"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -4837,10 +4868,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/query/issues",
-                "source": "https://github.com/utopia-php/query/tree/0.5.0"
+                "source": "https://github.com/utopia-php/query/tree/feat-schema-order",
+                "issues": "https://github.com/utopia-php/query/issues"
             },
-            "time": "2026-08-21T06:16:10+00:00"
+            "time": "2026-08-21T10:44:38+00:00"
         },
         {
             "name": "utopia-php/queue",
@@ -8779,6 +8810,12 @@
             "version": "dev-feat-query-lib",
             "alias": "2.0.0",
             "alias_normalized": "2.0.0.0"
+        },
+        {
+            "package": "utopia-php/query",
+            "version": "dev-feat-schema-order",
+            "alias": "0.5.0",
+            "alias_normalized": "0.5.0.0"
         }
     ],
     "minimum-stability": "dev",
@@ -8788,7 +8825,8 @@
         "utopia-php/database": 20,
         "utopia-php/http": 5,
         "utopia-php/migration": 20,
-        "utopia-php/platform": 5
+        "utopia-php/platform": 5,
+        "utopia-php/query": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

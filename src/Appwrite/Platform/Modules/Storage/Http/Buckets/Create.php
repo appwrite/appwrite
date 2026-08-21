@@ -130,7 +130,13 @@ class Create extends Action
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-            $dbForProject->createCollection(new Collection(id: 'bucket_' . $bucket->getSequence(), attributes: $attributes, indexes: $indexes, permissions: $permissions, documentSecurity: $fileSecurity));
+            $dbForProject->createCollection(new Collection(
+                id: 'bucket_' . $bucket->getSequence(),
+                attributes: $attributes,
+                indexes: $indexes,
+                permissions: $permissions,
+                documentSecurity: $fileSecurity,
+            ));
         } catch (DuplicateException) {
             throw new Exception(Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }

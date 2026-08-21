@@ -139,7 +139,11 @@ class Create extends Action
         $indexes = $collections['indexes'];
 
         try {
-            $dbForProject->createCollection(new Collection(id: 'database_' . $database->getSequence(), attributes: $attributes, indexes: $indexes));
+            $dbForProject->createCollection(new Collection(
+                id: 'database_' . $database->getSequence(),
+                attributes: $attributes,
+                indexes: $indexes,
+            ));
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$database->getId()]);
         } catch (IndexException $e) {
