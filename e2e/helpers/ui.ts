@@ -96,12 +96,15 @@ export async function expectToast(
   await expect(page.getByText(text).first()).toBeVisible({ timeout })
 }
 
-function readDatabaseLifecycleStatus(
-  body: unknown,
+const DEDICATED_BUSY_TITLE =
+  /^Database is (provisioning|starting|not ready|scaling|upgrading|migrating|restoring|pausing|resuming|deleting)$/i
+const DEDICATED_FAILED_TITLE = /Database update failed|^Database is deleted$/i
+const DEDICATED_STATUS_RELOAD_MS = 15_000
+
+function readRecordLifecycleStatus(
+  record: Record<string, unknown>,
   databaseId: string,
 ): string | null {
-  if (!body || typeof body !== 'object') return null
-  const record = body as Record<string, unknown>
   if (record.$id !== databaseId) return null
   if (typeof record.status === 'string' && record.status.trim()) {
     return record.status.trim()
@@ -115,44 +118,119 @@ function readDatabaseLifecycleStatus(
   return null
 }
 
+function readDatabaseLifecycleStatus(
+  body: unknown,
+  databaseId: string,
+): string | null {
+  if (!body || typeof body !== 'object') return null
+  const record = body as Record<string, unknown>
+  const direct = readRecordLifecycleStatus(record, databaseId)
+  if (direct) return direct
+  if (Array.isArray(record.databases)) {
+    for (const item of record.databases) {
+      if (!item || typeof item !== 'object') continue
+      const nested = readRecordLifecycleStatus(
+        item as Record<string, unknown>,
+        databaseId,
+      )
+      if (nested) return nested
+    }
+  }
+  return null
+}
+
+async function readResponseJson(response: Response): Promise<unknown> {
+  const text = await response.text()
+  if (!text.trim()) return null
+  return JSON.parse(text) as unknown
+}
+
 function isFailedDatabaseStatus(status: string | null): boolean {
   const normalized = status?.toLowerCase() ?? ''
   return normalized === 'failed' || normalized === 'deleted'
 }
 
-function isBusyDatabaseStatus(status: string | null): boolean {
-  const normalized = status?.toLowerCase() ?? ''
-  return (
-    normalized === 'provisioning' ||
-    normalized === 'starting' ||
-    normalized === 'scaling' ||
-    normalized === 'restoring' ||
-    normalized === 'upgrading' ||
-    normalized === 'migrating' ||
-    normalized === 'pausing' ||
-    normalized === 'resuming' ||
-    normalized === 'deleting'
-  )
-}
-
 function isReadyDatabaseStatus(status: string | null): boolean {
-  return status?.toLowerCase() === 'ready'
+  const normalized = status?.toLowerCase() ?? ''
+  return normalized === 'ready' || normalized === 'paused'
 }
 
 /** True while dedicated compute is still coming up and SQL/DDL will 409. */
 export function dedicatedDatabaseBusyLocator(page: Page) {
   return page.locator('p.font-semibold').filter({
-    hasText: /^Database is (provisioning|starting|not ready)$/i,
+    hasText: DEDICATED_BUSY_TITLE,
   })
+}
+
+export function dedicatedDatabaseFailedLocator(page: Page) {
+  return page.locator('p.font-semibold').filter({
+    hasText: DEDICATED_FAILED_TITLE,
+  })
+}
+
+async function readDedicatedBannerTitle(page: Page): Promise<string | null> {
+  const failed = dedicatedDatabaseFailedLocator(page).first()
+  if (await failed.isVisible().catch(() => false)) {
+    return ((await failed.textContent()) ?? '').trim() || 'Database update failed'
+  }
+  const busy = dedicatedDatabaseBusyLocator(page).first()
+  if (await busy.isVisible().catch(() => false)) {
+    return ((await busy.textContent()) ?? '').trim() || 'Database is not ready'
+  }
+  return null
+}
+
+async function assertDedicatedDatabaseNotFailed(page: Page): Promise<void> {
+  const title = await readDedicatedBannerTitle(page)
+  if (title && DEDICATED_FAILED_TITLE.test(title)) {
+    throw new Error(`Dedicated database failed (${title})`)
+  }
 }
 
 export async function waitForDedicatedDatabaseReady(
   page: Page,
   timeoutMs: number,
+  options?: { reload?: boolean },
 ): Promise<void> {
-  await expect(dedicatedDatabaseBusyLocator(page)).toHaveCount(0, {
-    timeout: timeoutMs,
-  })
+  const reload = options?.reload !== false
+  const deadline = Date.now() + timeoutMs
+  let lastReloadAt = Date.now()
+  let lastBanner: string | null = null
+
+  while (Date.now() < deadline) {
+    await assertDedicatedDatabaseNotFailed(page)
+
+    const loading = await page
+      .getByText('Loading database...')
+      .isVisible()
+      .catch(() => false)
+    lastBanner = await readDedicatedBannerTitle(page)
+    if (!loading && !lastBanner) {
+      const busyCount = await dedicatedDatabaseBusyLocator(page).count()
+      if (busyCount === 0) return
+    }
+
+    const remaining = deadline - Date.now()
+    if (remaining <= 0) break
+
+    if (reload && Date.now() - lastReloadAt >= DEDICATED_STATUS_RELOAD_MS) {
+      await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined)
+      lastReloadAt = Date.now()
+      await page
+        .getByText('Loading database...')
+        .waitFor({ state: 'hidden', timeout: 5_000 })
+        .catch(() => undefined)
+      continue
+    }
+
+    await page.waitForTimeout(Math.min(2_000, remaining))
+  }
+
+  throw new Error(
+    `Dedicated database still busy after ${timeoutMs}ms${
+      lastBanner ? ` (${lastBanner})` : ''
+    }`,
+  )
 }
 
 /**
@@ -160,7 +238,8 @@ export async function waitForDedicatedDatabaseReady(
  * database route can render. Dedicated compute often stays on /databases/create
  * for minutes; the wizard also resets to the form if its own poll gives up.
  * When `waitUntilReady` is set, also wait until lifecycle status is `ready`
- * so later SQL/DDL is not rejected with dedicated_database_not_available.
+ * (or `paused`) so later SQL/DDL is not rejected with
+ * dedicated_database_not_available. Unknown/null status is not treated as ready.
  */
 export async function openCreatedDatabase(
   page: Page,
@@ -173,17 +252,22 @@ export async function openCreatedDatabase(
   const waitUntilReady = options?.waitUntilReady === true
   const databaseId = targetPath.split('/').filter(Boolean).at(-1) ?? ''
   let lastStatus: string | null = null
-  let stableReadyChecks = 0
+  let lastBanner: string | null = null
+  let lastReloadAt = 0
 
   const onResponse = async (response: Response) => {
     try {
       if (response.request().method() !== 'GET') return
       const url = new URL(response.url())
-      if (!url.pathname.includes(databaseId) || url.pathname.includes('/executions')) {
+      if (url.pathname.includes('/executions')) return
+      if (
+        !url.pathname.includes(databaseId) &&
+        !url.pathname.includes('/databases')
+      ) {
         return
       }
       const status = readDatabaseLifecycleStatus(
-        await response.json(),
+        await readResponseJson(response),
         databaseId,
       )
       if (status) lastStatus = status
@@ -195,6 +279,7 @@ export async function openCreatedDatabase(
   page.on('response', onResponse)
 
   const go = async () => {
+    lastReloadAt = Date.now()
     await page.goto(targetPath, {
       waitUntil: 'domcontentloaded',
       timeout: 45_000,
@@ -220,39 +305,36 @@ export async function openCreatedDatabase(
       const createWizard = /\/databases\/create(?:\/)?$/.test(
         new URL(page.url()).pathname,
       )
-      const provisioning = await dedicatedDatabaseBusyLocator(page)
-        .first()
-        .isVisible()
-        .catch(() => false)
+      lastBanner = await readDedicatedBannerTitle(page)
+      const provisioning = lastBanner != null && !DEDICATED_FAILED_TITLE.test(lastBanner)
 
-      if (isFailedDatabaseStatus(lastStatus)) {
+      if (isFailedDatabaseStatus(lastStatus) || (lastBanner && DEDICATED_FAILED_TITLE.test(lastBanner))) {
         throw new Error(
-          `Database entered ${lastStatus} while waiting for ${targetPath}`,
+          `Database entered ${lastStatus ?? lastBanner} while waiting for ${targetPath}`,
         )
       }
 
       if (!createWizard && !notFound && !loading) {
         if (!waitUntilReady) return
         if (isReadyDatabaseStatus(lastStatus) && !provisioning) return
-        if (!provisioning && !isBusyDatabaseStatus(lastStatus)) {
-          stableReadyChecks += 1
-          if (stableReadyChecks >= 2) return
-        } else {
-          stableReadyChecks = 0
-        }
-      } else {
-        stableReadyChecks = 0
       }
 
       await page.waitForTimeout(1_000)
       if (notFound || createWizard) {
+        await go()
+      } else if (
+        waitUntilReady &&
+        Date.now() - lastReloadAt >= DEDICATED_STATUS_RELOAD_MS
+      ) {
         await go()
       }
     }
 
     throw new Error(
       waitUntilReady
-        ? `Database was not ready before timeout (last status: ${lastStatus ?? 'unknown'})`
+        ? `Database was not ready before timeout (last status: ${lastStatus ?? 'unknown'}${
+            lastBanner ? `, banner: ${lastBanner}` : ''
+          })`
         : `Database route did not load before timeout: ${targetPath}`,
     )
   } finally {

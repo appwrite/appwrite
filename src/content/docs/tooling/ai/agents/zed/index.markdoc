@@ -9,9 +9,9 @@ description: Learn how you can use Zed with Appwrite by adding Appwrite MCP serv
 Get started quickly with these pre-built prompts for common Appwrite integrations:
 
 {% cards %}
-{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
-{% /cards_item %}
 {% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
 {% /cards_item %}
 {% /cards %}
 

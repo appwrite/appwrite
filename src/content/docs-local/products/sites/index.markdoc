@@ -23,6 +23,9 @@ Try out one of our most popular framework quick-starts:
 
 {% cards %}
 
+{% cards_item href="/docs/products/sites/quick-start/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+
 {% cards_item href="/docs/products/sites/quick-start/nextjs" title="Next.js" icon="icon-nextjs" %}
 {% /cards_item %}
 
@@ -32,13 +35,10 @@ Try out one of our most popular framework quick-starts:
 {% cards_item href="/docs/products/sites/quick-start/sveltekit" title="SvelteKit" icon="icon-svelte" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/products/sites/quick-start/astro" title="Astro" icon="icon-astro" %}
-{% /cards_item %}
-
 {% cards_item href="/docs/products/sites/quick-start/vue" title="Vue" icon="web-icon-vue" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/products/sites/quick-start/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% cards_item href="/docs/products/sites/quick-start/astro" title="Astro" icon="icon-astro" %}
 {% /cards_item %}
 
 {% /cards %}

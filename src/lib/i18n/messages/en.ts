@@ -110,8 +110,8 @@ export const enCatalog = {
       expanded: {
         quickStarts: {
           web: 'Web',
-          nextjs: 'Next.js',
           tanstackStart: 'TanStack Start',
+          nextjs: 'Next.js',
           react: 'React',
           vue: 'Vue.js',
           nuxt: 'Nuxt',
@@ -292,10 +292,10 @@ export const enCatalog = {
       },
       frameworkTools: {
         react: 'React',
+        tanstackStart: 'TanStack Start',
         nextjs: 'Next.js',
         vue: 'Vue',
         sveltekit: 'SvelteKit',
-        astro: 'Astro',
         android: 'Android',
         ios: 'iOS',
         flutter: 'Flutter',

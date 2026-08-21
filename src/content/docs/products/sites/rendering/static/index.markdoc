@@ -38,6 +38,10 @@ To enable static builds for your web app, you may need to make some additional u
 Set `static: true` in `analog` plugin in the `vite.config.ts` file.
 {% /tabsitem %}
 
+{% tabsitem #tanstack-start title="TanStack Start" %}
+Add [`prerender` option](https://tanstack.com/start/latest/docs/framework/react/guide/static-prerendering#prerendering) with the `enabled: true` option set in the `tanstackStart` configuration in the `vite.config.ts` file.
+{% /tabsitem %}
+
 {% tabsitem #nextjs title="Next.js" %}
 Set `output: export` in the `next.config.js`.
 {% /tabsitem %}
@@ -50,16 +54,12 @@ Set build command to `npm run generate` in site settings.
 Use `@sveltejs/adapter-static` adapter in the `svelte.config.js` file.
 {% /tabsitem %}
 
-{% tabsitem #astro title="Astro" %}
-Ensure you don't set `adapter` in the `astro.config.mjs` file.
-{% /tabsitem %}
-
 {% tabsitem #remix title="Remix" %}
 Set `ssr: false` in `remix` plugin in the `vite.config.ts` file.
 {% /tabsitem %}
 
-{% tabsitem #tanstack-start title="TanStack Start" %}
-Add [`prerender` option](https://tanstack.com/start/latest/docs/framework/react/guide/static-prerendering#prerendering) with the `enabled: true` option set in the `tanstackStart` configuration in the `vite.config.ts` file.
+{% tabsitem #astro title="Astro" %}
+Ensure you don't set `adapter` in the `astro.config.mjs` file.
 {% /tabsitem %}
 
 {% /tabs %}

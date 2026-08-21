@@ -37,9 +37,9 @@ If you'd rather configure MCP servers individually, skip to [Step 3](#step-3).
 Get started quickly with these pre-built prompts for common Appwrite integrations:
 
 {% cards %}
-{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
-{% /cards_item %}
 {% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
 {% /cards_item %}
 {% /cards %}
 

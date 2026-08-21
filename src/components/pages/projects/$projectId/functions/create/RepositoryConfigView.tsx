@@ -71,6 +71,7 @@ import {
 import { useFunctionWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
 import { getVcsProvider } from '@/lib/vcs/providers'
+import { validateVariables } from '@/lib/variables'
 
 export interface FunctionWizardVariable {
   key: string
@@ -252,6 +253,17 @@ export function RepositoryConfigView({
     }
     if (!installationId || !providerRepositoryId) {
       toast.error(t('Missing repository connection'))
+      return
+    }
+
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured function behind. Only the rows
+    // that get written are checked -- the keyless ones are skipped below.
+    const validationError = validateVariables(
+      variables.filter((v) => v.key.trim()),
+    )
+    if (validationError) {
+      toast.error(validationError)
       return
     }
 
