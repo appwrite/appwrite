@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Compute\Base as ComputeBase;
 use OpenRuntimes\Orchestrator\Exception\ApiException;
 use OpenRuntimes\Orchestrator\Model\SandboxStatus;
 use OpenRuntimes\Orchestrator\Model\Volume;
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\System\System;
 
@@ -58,13 +59,40 @@ abstract class Base extends ComputeBase
 
     protected function document(SandboxStatus $status, string $prefix): Document
     {
+        $ports = \array_map(\intval(...), \array_keys($status->urls));
+        \sort($ports);
+
         return new Document([
             '$id' => \substr($status->id, \strlen($prefix)),
             'status' => $status->status->value,
             'url' => $status->url ?? '',
             'urls' => $status->urls,
+            'image' => $status->image ?? '',
+            'specification' => $this->specification($status->cpu, $status->memory),
+            'ports' => $ports,
             'error' => $status->error ?? '',
         ]);
+    }
+
+    /**
+     * The orchestrator sizes a sandbox in cpu and memory; Appwrite sells that
+     * pairing as a slug, so name the one it was built from. A sandbox sized
+     * outside the catalogue — or created before the orchestrator reported its
+     * shape — matches nothing and is left unnamed rather than guessed at.
+     */
+    protected function specification(?float $cpu, ?int $memory): string
+    {
+        if ($cpu === null || $memory === null) {
+            return '';
+        }
+
+        foreach (Config::getParam('specifications', []) as $slug => $specification) {
+            if ((int) $specification['memory'] === $memory && \abs((float) $specification['cpus'] - $cpu) < 0.001) {
+                return (string) $slug;
+            }
+        }
+
+        return '';
     }
 
     protected function mapError(ApiException $error): Exception

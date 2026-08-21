@@ -38,6 +38,25 @@ class Sandbox extends Model
                 'example' => new \stdClass(),
                 'sensitive' => true,
             ])
+            ->addRule('image', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Container image the sandbox is running.',
+                'default' => '',
+                'example' => 'python:3.12-slim',
+            ])
+            ->addRule('specification', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Compute specification the sandbox is sized by.',
+                'default' => '',
+                'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+            ])
+            ->addRule('ports', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Every port the sandbox serves, including the one the contract is on.',
+                'default' => [],
+                'example' => 3000,
+                'array' => true,
+            ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Why the sandbox failed, when it did.',

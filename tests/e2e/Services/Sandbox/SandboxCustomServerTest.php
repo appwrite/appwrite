@@ -93,6 +93,14 @@ final class SandboxCustomServerTest extends Scope
 
         $this->assertEquals(201, $sandbox['headers']['status-code']);
         $this->assertEquals('ready', $sandbox['body']['status']);
+        $this->assertEquals('s-1vcpu-1gb', $sandbox['body']['specification']);
+        $this->assertEquals('python:3.12-slim', $sandbox['body']['image']);
+        $this->assertEquals([3000], $sandbox['body']['ports']);
+
+        // Reading it back must describe the same sandbox the create did.
+        $read = $this->call(Client::METHOD_GET, '/sandbox/sized');
+        $this->assertEquals('s-1vcpu-1gb', $read['body']['specification']);
+        $this->assertEquals('python:3.12-slim', $read['body']['image']);
 
         $this->assertEquals(204, $this->call(Client::METHOD_DELETE, '/sandbox/sized')['headers']['status-code']);
     }
