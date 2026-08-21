@@ -601,36 +601,7 @@ configs:
         }
       ]
   adminer-index.php:
-    content: |
-      <?php
-        $$postgres = explode(':', $$_SERVER['HTTP_HOST'] ?? '')[0] === 'postgres.localhost';
-        if ($$postgres && isset($$_GET['username']) && !isset($$_GET['ns'])) {
-          $$_GET['ns'] = $$_ENV['ADMINER_DEFAULT_DB'] ?: 'appwrite';
-          header('Location: ?' . http_build_query($$_GET));
-          exit;
-        }
-
-        function adminer_object() {
-          return new class extends Adminer\Adminer {
-            function loginForm() {
-              parent::loginForm();
-              if (isset($$_GET['username']) || !empty($$_POST['auth'])) {
-                return;
-              }
-              $$postgres = explode(':', $$_SERVER['HTTP_HOST'] ?? '')[0] === 'postgres.localhost';
-              $$auth = json_encode([
-                'server' => $$_ENV['ADMINER_DEFAULT_SERVER'],
-                'driver' => ($$postgres || $$_ENV['ADMINER_DEFAULT_DRIVER'] === 'postgresql') ? 'pgsql' : 'server',
-                'username' => $$_ENV['ADMINER_DEFAULT_USERNAME'],
-                'password' => $$_ENV['ADMINER_DEFAULT_PASSWORD'],
-                'db' => $$_ENV['ADMINER_DEFAULT_DB'],
-              ], JSON_THROW_ON_ERROR);
-              echo Adminer\script('document.addEventListener("DOMContentLoaded",()=>{const a=' . $$auth . ';const f=document.querySelector("#content form");if(!f||!f["auth[driver]"])return;f["auth[driver]"].value=a.driver;f["auth[server]"].value=a.server;f["auth[username]"].value=a.username;f["auth[password]"].value=a.password;f["auth[db]"].value=a.db;f.submit();});');
-            }
-          };
-        }
-
-        include './adminer.php';
+    file: ./tests/resources/docker/adminer/index.php
 networks:
   appwrite:
     ipam:
