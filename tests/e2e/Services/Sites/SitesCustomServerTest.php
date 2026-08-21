@@ -116,10 +116,12 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('reason', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('memory', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][1]);
+        $this->assertArrayHasKey('reason', $specifications['body']['specifications'][1]);
 
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
         $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
