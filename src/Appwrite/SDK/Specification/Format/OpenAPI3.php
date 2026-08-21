@@ -13,12 +13,12 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
-use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Spatial;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
@@ -634,7 +634,7 @@ class OpenAPI3 extends Format
                         $node['schema']['example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\BigInt::class:
-                        // BigInt validator reports Database::VAR_BIGINT, but OpenAPI expects scalar types.
+                        // BigInt validator reports ColumnType::BigInteger, but OpenAPI expects scalar types.
                         // We expose it as int64 to keep schema consistent with Column/Attribute models.
                         $node['schema']['type'] = 'integer';
                         $node['schema']['format'] = 'int64';
@@ -662,18 +662,18 @@ class OpenAPI3 extends Format
                         /** @var Spatial $validator */
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => [
+                            ColumnType::Point->value => [
                                 'type' => 'number',
                                 'format' => 'double',
                             ],
-                            Database::VAR_LINESTRING => [
+                            ColumnType::Linestring->value => [
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'number',
                                     'format' => 'double',
                                 ],
                             ],
-                            Database::VAR_POLYGON => [
+                            ColumnType::Polygon->value => [
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'array',
@@ -692,9 +692,9 @@ class OpenAPI3 extends Format
                             ],
                         };
                         $node['schema']['example'] = ($param['example'] ?? '') ?: match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => '[1, 2]',
-                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
-                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                            ColumnType::Point->value => '[1, 2]',
+                            ColumnType::Linestring->value => '[[1, 2], [3, 4], [5, 6]]',
+                            ColumnType::Polygon->value => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
                             default => '',
                         };
                         break;

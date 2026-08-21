@@ -5,6 +5,8 @@ namespace Appwrite\Migration;
 use Exception;
 use Utopia\Config\Config;
 use Utopia\Console;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -259,18 +261,15 @@ abstract class Migration
 
         $collection = $this->collections[$collectionType][$id];
 
-        $attributes = [];
-        foreach ($collection['attributes'] as $attribute) {
-            $attributes[] = new Document($attribute);
-        }
-
-        $indexes = [];
-        foreach ($collection['indexes'] as $index) {
-            $indexes[] = new Document($index);
-        }
+        $attributes = $collection['attributes'];
+        $indexes = $collection['indexes'];
 
         try {
-            $this->dbForProject->createCollection($name, $attributes, $indexes);
+            $this->dbForProject->createCollection(new Collection(
+                id: $name,
+                attributes: $attributes,
+                indexes: $indexes,
+            ));
         } catch (Duplicate) {
             Console::warning('Failed to create collection "' . $name . '": Collection already exists');
         }
@@ -316,7 +315,7 @@ abstract class Migration
 
         $attributesToCreate = [];
         $attributes = $collection['attributes'];
-        $attributeKeys = \array_column($collection['attributes'], '$id');
+        $attributeKeys = \array_map(fn ($a) => $a->key, $collection['attributes']);
 
         $database->purgeCachedCollection($collectionId);
 
@@ -337,12 +336,11 @@ abstract class Migration
                 throw new Exception("Attribute {$attributeId} not found");
             }
 
-            $attribute = $attributes[$attributeKey];
-            $attribute['filters'] ??= [];
-            $attribute['default'] ??= null;
-            $attribute['default'] = \in_array('json', $attribute['filters'])
-                ? \json_encode($attribute['default'])
-                : $attribute['default'];
+            $attribute = clone $attributes[$attributeKey];
+
+            if (\in_array('json', $attribute->filters) && $attribute->default !== null) {
+                $attribute->default = \json_encode($attribute->default);
+            }
 
             $attributesToCreate[] = $attribute;
         }
@@ -361,19 +359,10 @@ abstract class Migration
                 try {
                     $database->createAttribute(
                         collection: $collectionId,
-                        id: $attribute['$id'],
-                        type: $attribute['type'],
-                        size: $attribute['size'],
-                        required: $attribute['required'],
-                        default: $attribute['default'],
-                        signed: $attribute['signed'] ?? true,
-                        array: $attribute['array'] ?? false,
-                        format: $attribute['format'] ?? '',
-                        formatOptions: $attribute['formatOptions'] ?? [],
-                        filters: $attribute['filters'],
+                        attribute: $attribute,
                     );
                 } catch (Duplicate) {
-                    Console::warning("Skipping attribute \"{$attribute['$id']}\" in collection {$collectionId}: Attribute already exists");
+                    Console::warning("Skipping attribute \"{$attribute->key}\" in collection {$collectionId}: Attribute already exists");
                 }
             }
         }
@@ -419,28 +408,21 @@ abstract class Migration
 
         $attributes = $collection['attributes'];
 
-        $attributeKey = \array_search($attributeId, \array_column($attributes, '$id'));
+        $attributeKey = \array_search($attributeId, \array_map(fn ($a) => $a->key, $attributes));
 
         if ($attributeKey === false) {
             throw new Exception("Attribute {$attributeId} not found");
         }
 
-        $attribute = $attributes[$attributeKey];
-        $filters = $attribute['filters'] ?? [];
-        $default = $attribute['default'] ?? null;
+        $attribute = clone $attributes[$attributeKey];
+
+        if (\in_array('json', $attribute->filters) && $attribute->default !== null) {
+            $attribute->default = \json_encode($attribute->default);
+        }
 
         $database->createAttribute(
             collection: $collectionId,
-            id: $attributeId,
-            type: $attribute['type'],
-            size: $attribute['size'],
-            required: $attribute['required'],
-            default: \in_array('json', $filters) ? \json_encode($default) : $default,
-            signed: $attribute['signed'] ?? true,
-            array: $attribute['array'] ?? false,
-            format: $attribute['format'] ?? '',
-            formatOptions: $attribute['formatOptions'] ?? [],
-            filters: $filters,
+            attribute: $attribute,
         );
     }
 
@@ -477,21 +459,15 @@ abstract class Migration
 
         $indexes = $collection['indexes'];
 
-        $indexKey = \array_search($indexId, \array_column($indexes, '$id'));
+        $indexKey = \array_search($indexId, \array_map(fn ($i) => $i->key, $indexes));
 
         if ($indexKey === false) {
             throw new Exception("Index {$indexId} not found");
         }
 
-        $index = $indexes[$indexKey];
-
         $database->createIndex(
             collection: $collectionId,
-            id: $indexId,
-            type: $index['type'],
-            attributes: $index['attributes'],
-            lengths: $index['lengths'] ?? [],
-            orders: $index['orders'] ?? []
+            index: $indexes[$indexKey],
         );
     }
 

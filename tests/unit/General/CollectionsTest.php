@@ -23,7 +23,7 @@ final class CollectionsTest extends TestCase
                     foreach ($collection['attributes'] as $check) {
                         $occurrences = 0;
                         foreach ($collection['attributes'] as $attribute) {
-                            if ($attribute['$id'] == $check['$id']) {
+                            if ($attribute->key == $check->key) {
                                 $occurrences++;
                             }
                         }

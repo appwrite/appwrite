@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -105,7 +106,7 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV24ExistingAlerts')
             ->setNamespace('migration_existing_alerts_' . \uniqid());
         $database->create();
-        $database->createCollection('notifications');
+        $database->createCollection(new Collection(id: 'notifications'));
 
         $migration = new V24();
         $migration->setProject(
@@ -145,7 +146,7 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV24Functions')
             ->setNamespace('migration_functions_' . \uniqid());
         $database->create();
-        $database->createCollection('functions');
+        $database->createCollection(new Collection(id: 'functions'));
 
         $migration = new V24();
         $migration->setProject(
@@ -196,9 +197,9 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV25ProviderAttributes')
             ->setNamespace('migration_provider_attributes_' . \uniqid());
         $database->create();
-        $database->createCollection('databases');
-        $database->createCollection('functions');
-        $database->createCollection('sites');
+        $database->createCollection(new Collection(id: 'databases'));
+        $database->createCollection(new Collection(id: 'functions'));
+        $database->createCollection(new Collection(id: 'sites'));
 
         $migration = new V25();
         $migration->setProject(

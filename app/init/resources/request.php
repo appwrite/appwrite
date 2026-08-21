@@ -8,7 +8,6 @@ use Appwrite\Databases\TransactionState;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
@@ -23,6 +22,10 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hooks\FunctionCache;
+use Appwrite\Utopia\Database\Hooks\Metadata;
+use Appwrite\Utopia\Database\Hooks\Usage;
+use Appwrite\Utopia\Database\Hooks\UserEvents;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use OpenRuntimes\Orchestrator\Jobs;
@@ -53,6 +56,7 @@ use Utopia\Lock\Distributed as DistributedLock;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
+use Utopia\Query\Method;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
@@ -674,134 +678,29 @@ return function (Container $context): void {
             ['host' => \gethostname(), 'project' => $project->getId()]
         );
 
-        /**
-         * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
-         *
-         * Accounts can be created in many ways beyond `createAccount`
-         * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
-         */
-        $eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
-            // Only trigger events for user creation with the database listener.
-            if ($document->getCollection() !== 'users') {
-                return;
-            }
-
-            $queueForEvents
-                ->setEvent('users.[userId].create')
-                ->setParam('userId', $document->getId())
-                ->setPayload($response->output($document, Response::MODEL_USER));
-
-            // Trigger functions, webhooks, and realtime events
-            $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
-                event: $queueForEvents->getEvent(),
-                params: $queueForEvents->getParams(),
-                project: $queueForEvents->getProject(),
-                user: $queueForEvents->getUser(),
-                userId: $queueForEvents->getUserId(),
-                payload: $queueForEvents->getPayload(),
-                platform: $queueForEvents->getPlatform(),
-            ));
-
-            /** Trigger webhooks events only if a project has them enabled */
-            if (! empty($project->getAttribute('webhooks'))) {
-                $queueForWebhooks
-                    ->from($queueForEvents)
-                    ->trigger();
-            }
-
-            /** Trigger realtime events only for non console events */
-            if ($queueForEvents->getProject()->getId() !== 'console') {
-                $queueForRealtime
-                    ->from($queueForEvents)
-                    ->trigger();
-            }
+        $path = $request->getURI();
+        $databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
+            default => '',
         };
 
-        /**
-         * Purge function events cache when functions are created, updated or deleted.
-         */
-        $functionsEventsCacheListener = function (string $event, Document $document, Document $project, Database $dbForProject) {
-
-            if ($document->getCollection() !== 'functions') {
-                return;
-            }
-
-            if ($project->isEmpty() || $project->getId() === 'console') {
-                return;
-            }
-
-            $hostname = $dbForProject->getAdapter()->getHostname();
-            $cacheKey = \sprintf(
-                '%s-cache-%s:%s:%s:project:%s:functions:events',
-                $dbForProject->getCacheName(),
-                $hostname,
-                $dbForProject->getNamespace(),
-                $dbForProject->getTenant(),
-                $project->getId()
-            );
-
-            $dbForProject->getCache()->purge($cacheKey);
-        };
-
-        $usageDatabaseListener = function (string $event, Document $document, UsageContext $usage) {
-            $value = 1;
-
-            switch ($event) {
-                case Database::EVENT_DOCUMENT_DELETE:
-                    $value = -1;
-                    break;
-                case Database::EVENT_DOCUMENTS_DELETE:
-                    $value = -1 * $document->getAttribute('modified', 0);
-                    break;
-                case Database::EVENT_DOCUMENTS_CREATE:
-                    $value = $document->getAttribute('modified', 0);
-                    break;
-                case Database::EVENT_DOCUMENTS_UPSERT:
-                    $value = $document->getAttribute('created', 0);
-                    break;
-            }
-
-            switch (true) {
-                case $document->getCollection() === 'sessions': // sessions
-                    $usage->addMetric(METRIC_SESSIONS, $value); // per project
-                    break;
-                case $document->getCollection() === 'deployments':
-                    $resourceType = $document->getAttribute('resourceType');
-                    $usage
-                        ->setResource(rtrim($resourceType, 's'))
-                        ->setResourceInternalId((string) $document->getAttribute('resourceInternalId'))
-                        ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value) // per resource type
-                        ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
-                    break;
-                default:
-                    break;
-            }
-        };
-
-        // Clone the queues, to prevent events triggered by the database listener
-        // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
         $queueForWebhooks = new Webhook($publisherWebhooks);
         $queueForRealtime = new Realtime();
 
         $database
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+            ->addHook(new Usage($usage, $databaseType))
+            ->addHook(new UserEvents(
                 $project,
-                $document,
                 $response,
-                $queueForEventsClone->from($queueForEvents),
+                $queueForEvents,
+                $queueForEventsClone,
                 $publisherForFunctions,
-                $queueForWebhooks->from($queueForEvents),
-                $queueForRealtime->from($queueForEvents)
+                $queueForWebhooks,
+                $queueForRealtime,
             ))
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
-            ->on(Database::EVENT_DOCUMENT_UPDATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database));
+            ->addHook(new FunctionCache($project, $database));
 
         return $database;
     }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'request']);
@@ -810,7 +709,7 @@ return function (Container $context): void {
 
         $complexity = function (int $complexity, array $args) {
             $queries = Query::parseQueries($args['queries'] ?? []);
-            $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
+            $query = Query::getByType($queries, [Method::Limit])[0] ?? null;
             $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
             return $complexity * $limit;
@@ -1142,13 +1041,14 @@ return function (Container $context): void {
         return new Document([]);
     }, ['project', 'dbForProject', 'request', 'authorization']);
 
-    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request) {
+    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject, UsageContext $usage) {
 
-        return function (Document $database) use ($databaseFactory, $project, $request): Database {
-            $databaseType = $database->getAttribute('type', '');
+        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject, $usage): Database {
+            $originalDatabase = $database;
+            $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
 
             $database = $databaseFactory->tenant(
-                $database,
+                $originalDatabase,
                 $project,
                 APP_DATABASE_TIMEOUT_MILLISECONDS_API,
                 APP_DATABASE_QUERY_MAX_VALUES,
@@ -1160,14 +1060,18 @@ return function (Container $context): void {
                 $database->setTimeout($timeout);
             }
 
-            // Document counts and per-collection storage are produced by the
-            // StatsResources full-count as ClickHouse gauges (broken down by
-            // resourceId/resourceType), so no per-event usage emission here.
+            $database
+                ->addHook(new Metadata(
+                    database: $originalDatabase,
+                    context: $context,
+                    resolvePublicId: Metadata::resolver($database, $dbForProject),
+                ))
+                ->addHook(new Usage($usage, $originalDatabase->getAttribute('type', '')));
 
             return $database;
         };
 
-    }, ['databaseFactory', 'project', 'request']);
+    }, ['databaseFactory', 'project', 'request', 'dbForProject', 'usage']);
 
     $context->set(
         'transactionState',

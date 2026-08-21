@@ -52,6 +52,7 @@ use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Exception\FileNotFound;
@@ -128,9 +129,9 @@ class XList extends Action
         $vcs = $vcsFactory->fromInstallation($installation);
 
         $queries = Query::parseQueries($queries);
-        $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_LIMIT));
-        $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_OFFSET));
-        $namespaceQueries = array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'namespace');
+        $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === QueryMethod::Limit));
+        $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === QueryMethod::Offset));
+        $namespaceQueries = array_filter($queries, fn ($query) => $query->getMethod() === QueryMethod::Equal && $query->getAttribute() === 'namespace');
 
         $limit = !empty($limitQuery) ? $limitQuery->getValue() : 4;
         $offset = !empty($offsetQuery) ? $offsetQuery->getValue() : 0;

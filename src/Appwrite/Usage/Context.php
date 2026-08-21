@@ -24,6 +24,16 @@ class Context
     }
 
     /**
+     * Add a document to reduce
+     */
+    public function addReduce(Document $document): self
+    {
+        $this->reduce[] = $document;
+
+        return $this;
+    }
+
+    /**
      * Get all metrics
      *
      * @return array<array{key: string, value: int}>

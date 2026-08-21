@@ -16,6 +16,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -90,7 +91,7 @@ class XList extends Action
 
         $skipFilters = ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships'];
 
-        $selects = Query::getByType($queries, [Query::TYPE_SELECT]);
+        $selects = Query::getByType($queries, [QueryMethod::Select]);
         if (empty($selects)) {
             $skipFilters[] = 'subQueryTargets';
         }

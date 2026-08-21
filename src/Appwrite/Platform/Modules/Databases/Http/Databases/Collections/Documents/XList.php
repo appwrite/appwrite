@@ -24,6 +24,10 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Http\Http;
+use Utopia\Query\Exception as QueryLibException;
+use Utopia\Query\Exception\UnsupportedException;
+use Utopia\Query\Exception\ValidationException;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -104,11 +108,21 @@ class XList extends Action
 
         try {
             $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+            $this->mapQueryFailure($e);
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $queries = $this->resolveJoinCollections(
+            $queries,
+            $dbForProject,
+            $database,
+            $collection,
+            $authorization,
+            $isAPIKey || $isPrivilegedUser,
+        );
+
+        $dbForDatabases = $getDatabasesDB($database, $collection);
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
@@ -121,7 +135,23 @@ class XList extends Action
             $documentId = $cursor->getValue();
 
             try {
-                $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+                $hasJoins = false;
+                $cursorQueries = [];
+                foreach ($queries as $query) {
+                    $method = $query->getMethod();
+                    if ($method->isJoin()) {
+                        $hasJoins = true;
+                        $cursorQueries[] = $query;
+                    } elseif ($method === QueryMethod::Select) {
+                        $cursorQueries[] = $query;
+                    }
+                }
+
+                if ($hasJoins) {
+                    $cursorDocument = $dbForDatabases->getDocument($collectionTableId, $documentId, $cursorQueries);
+                } else {
+                    $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+                }
             } catch (NotFoundException) {
                 // The collection metadata document exists but the backing store (e.g. a
                 // dedicated DocumentsDB shard) has no table for it. Treat this as a
@@ -140,11 +170,10 @@ class XList extends Action
         $dbStart = \microtime(true);
 
         try {
-            $hasSelects = ! empty(Query::groupByType($queries)['selections']);
-            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            $selectQueries = Query::groupByType($queries)->selections;
             // When there are no select queries, relationship loading is skipped on the
             // underlying find() to avoid pulling related documents the caller did not ask for.
-            $find = $hasSelects
+            $find = $selectQueries !== []
                 ? fn () => $dbForDatabases->find($collectionTableId, $queries)
                 : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
 
@@ -218,28 +247,15 @@ class XList extends Action
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
             $message = "The order $attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all $documents order $attribute values are non-null.";
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+            $this->mapQueryFailure($e);
         } catch (Timeout) {
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
 
         $dbDurationMs = (\microtime(true) - $dbStart) * 1000;
 
-        $operations = 0;
-        $collectionsCache = [];
-        foreach ($documents as $document) {
-            $this->processDocument(
-                database: $database,
-                collection: $collection,
-                document: $document,
-                dbForProject: $dbForProject,
-                collectionsCache: $collectionsCache,
-                authorization: $authorization,
-                operations: $operations
-            );
-        }
-
+        $operations = \count($documents);
         $usage
             ->setResource('database')
             ->setResourceInternalId((string) $database->getSequence())

@@ -10,16 +10,22 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\GraphQL\Base;
+use Tests\E2E\Services\GraphQL\QueryJoinCombos;
+use Tests\E2E\Services\GraphQL\QueryJoinPermissions;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\RelationType;
+use Utopia\Query\Schema\ForeignKeyAction;
 
 final class DatabaseServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
     use Base;
+    use QueryJoinPermissions;
+    use QueryJoinCombos;
 
     /**
      * Static cache for database data
@@ -667,7 +673,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection2']['_id'],          // Movies
                 'relatedCollectionId' => $data['collection']['_id'],    // Actors
-                'type' => Database::RELATION_ONE_TO_MANY,
+                'type' => RelationType::OneToMany->value,
                 'twoWay' => true,
                 'key' => 'actors',
                 'twoWayKey' => 'movie'
@@ -1451,7 +1457,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection2']['_id'],          // Movies
                 'relatedCollectionId' => $data['collection']['_id'],    // Actors
-                'type' => Database::RELATION_ONE_TO_MANY,
+                'type' => RelationType::OneToMany->value,
                 'twoWay' => true,
                 'key' => 'actors',
                 'twoWayKey' => 'movie'
@@ -1493,7 +1499,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection2']['_id'],
                 'key' => 'actors',
-                'onDelete' => Database::RELATION_MUTATE_CASCADE,
+                'onDelete' => ForeignKeyAction::Cascade->value,
             ]
         ];
 

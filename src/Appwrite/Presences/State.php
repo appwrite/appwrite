@@ -10,6 +10,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Throwable;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -19,6 +20,7 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
@@ -36,16 +38,16 @@ class State
         ?string $ownerOverride = null,
     ): Document {
         $allowedPermissions = [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
-            Database::PERMISSION_WRITE,
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
+            PermissionType::Write,
         ];
 
         if ($ownerOverride !== null) {
             $permissions = [];
             foreach ($allowedPermissions as $permission) {
-                $permissions[] = (new Permission($permission, 'user', $ownerOverride))->toString();
+                $permissions[] = (new Permission($permission->value, 'user', $ownerOverride))->toString();
             }
         } else {
             $isAPIKey = $user->isKey($authorization->getRoles());
@@ -57,7 +59,7 @@ class State
                 $permissions = [];
                 if (!empty($user->getId()) && !$isPrivilegedUser) {
                     foreach ($allowedPermissions as $permission) {
-                        $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                        $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
                     }
                 }
             }
@@ -125,10 +127,16 @@ class State
         $presenceDocument->setAttribute('$id', $presenceId);
 
         $presenceCreated = false;
+        $userId = $presenceDocument->getAttribute('userId');
+        $existingQuery = \is_string($userId) && $userId !== ''
+            ? [Query::equal('userId', [$userId])]
+            : [Query::equal('userInternalId', [$userInternalId])];
 
         try {
-            if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
-                $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+            if ($dbForProject->getAdapter()->supports(Capability::UpsertOnUniqueIndex)) {
+                $existingPresence = $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
+                );
                 if ($existingPresence->isEmpty()) {
                     $presenceCreated = true;
                 } else {
@@ -136,8 +144,10 @@ class State
                 }
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
             } else {
-                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userInternalId, &$presenceCreated) {
-                    $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $existingQuery, &$presenceCreated) {
+                    $existingPresence = $dbForProject->getAuthorization()->skip(
+                        fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
+                    );
 
                     if ($existingPresence->isEmpty()) {
                         $presenceCreated = true;
@@ -174,10 +184,10 @@ class State
 
     private function checkPermissions(array $permissions, Authorization $authorization): void
     {
-        foreach (Database::PERMISSIONS as $type) {
+        foreach (PermissionType::cases() as $type) {
             foreach ($permissions as $permission) {
                 $permission = Permission::parse($permission);
-                if ($permission->getPermission() != $type) {
+                if ($permission->getPermission() != $type->value) {
                     continue;
                 }
 

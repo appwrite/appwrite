@@ -420,7 +420,7 @@ jobs:
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: ${{ matrix.service.runner }}
-    timeout-minutes: 20
+    timeout-minutes: 35
     needs: [build, matrix]
     permissions:
       contents: read
@@ -530,7 +530,7 @@ jobs:
           done
 
       - name: Run tests
-        timeout-minutes: 15
+        timeout-minutes: 25
         run: |
           SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
 

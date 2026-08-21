@@ -458,8 +458,9 @@ class Specs extends Action
         $specsContainer = new Container();
         $specsContainer->set('request', fn () => $this->getRequest());
         $specsContainer->set('response', fn () => $response);
-        $specsContainer->set('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
-        $specsContainer->set('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $mockDatabase = fn () => new Database(new MySQL(new \stdClass()), new Cache(new None()));
+        $specsContainer->set('dbForPlatform', $mockDatabase);
+        $specsContainer->set('dbForProject', $mockDatabase);
         $specsContainer->set('redirectValidator', fn () => new Redirect([], []));
         $specsContainer->set('project', fn () => new Document([]));
         $specsContainer->set('passwordsDictionary', fn () => []);

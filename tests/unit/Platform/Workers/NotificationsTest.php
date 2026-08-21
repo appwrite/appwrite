@@ -10,15 +10,19 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Index;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Query\Schema\Order;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 
@@ -171,42 +175,29 @@ final class NotificationsTest extends TestCase
             ->setNamespace('notif_' . \uniqid());
 
         $this->database->create();
-        $this->database->createCollection(
-            'notifications',
-            [],
-            [],
-            [Permission::create(Role::any()), Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())],
-            false,
-        );
-        $this->database->createAttribute('notifications', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('notifications', 'recipientHash', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'type', Database::VAR_STRING, 64, false, 'info');
-        $this->database->createAttribute('notifications', 'channel', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'projectId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('notifications', 'projectInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('notifications', 'resourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'resourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('notifications', 'resourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('notifications', 'parentResourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'parentResourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('notifications', 'parentResourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('notifications', 'title', Database::VAR_STRING, 256, true);
-        $this->database->createAttribute('notifications', 'body', Database::VAR_STRING, 16384, true);
-        $this->database->createAttribute('notifications', 'read', Database::VAR_BOOLEAN, 0, false, false);
-        $this->database->createAttribute('notifications', 'firstSeen', Database::VAR_DATETIME, 0, false);
-        $this->database->createAttribute('notifications', 'lastSeen', Database::VAR_DATETIME, 0, false);
+        $this->database->createCollection(new Collection(id: 'notifications', permissions: [Permission::create(Role::any()), Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], documentSecurity: false));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'messageId'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'recipientHash', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'type', size: 64, default: 'info'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'channel', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'projectId', required: true));
+        $this->database->createAttribute('notifications', Attribute::id(key: 'projectInternalId', required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'resourceType', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'resourceId', required: true));
+        $this->database->createAttribute('notifications', Attribute::id(key: 'resourceInternalId', required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'parentResourceType', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'parentResourceId', required: true));
+        $this->database->createAttribute('notifications', Attribute::id(key: 'parentResourceInternalId', required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'title', size: 256, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'body', size: 16384, required: true));
+        $this->database->createAttribute('notifications', Attribute::boolean(key: 'read', default: false));
+        $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen', filters: ['datetime']));
+        $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen', filters: ['datetime']));
 
         // Mirror the production `_key_recipient` UNIQUE composite index so the
         // duplicate-handling branch in persistAlert (catch DuplicateException ->
         // return existing alertId) is actually exercised by tests.
-        $this->database->createIndex(
-            'notifications',
-            '_key_recipient',
-            Database::INDEX_UNIQUE,
-            ['messageId', 'channel', 'recipientHash'],
-            [Database::LENGTH_KEY, 64, 64],
-            [Database::ORDER_ASC, Database::ORDER_ASC, Database::ORDER_ASC],
-        );
+        $this->database->createIndex('notifications', Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: [Order::Asc, Order::Asc, Order::Asc]));
 
         $this->registry = new Registry();
         $this->project = new Document(['$id' => 'project-x', '$sequence' => 'project-internal-x']);
