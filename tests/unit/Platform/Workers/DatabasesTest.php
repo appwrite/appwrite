@@ -88,4 +88,73 @@ final class DatabasesTest extends TestCase
             $this->createStub(Log::class),
         );
     }
+
+    public function testCreateBooleanAttributeWithFalseDefault(): void
+    {
+        $attribute = new Document([
+            '$id' => 'attr_bool',
+            'key' => 'hasTrained',
+            'type' => Database::VAR_BOOLEAN,
+            'size' => 0,
+            'required' => false,
+            'default' => 'false', // serialized string representation
+        ]);
+
+        $dbForProject = $this->createMock(Database::class);
+        $dbForProject->method('getDocument')->willReturnCallback(
+            fn (string $collection, string $id) => $collection === 'attributes' ? $attribute : new Document()
+        );
+        $dbForProject->method('updateDocument')->willReturnArgument(2);
+
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform->method('getDocument')->willReturn(new Document(['$id' => 'proj1']));
+
+        $dbForDatabases = $this->createMock(Database::class);
+        $dbForDatabases->expects($this->once())
+            ->method('createAttribute')
+            ->with(
+                $this->anything(),
+                $this->equalTo('hasTrained'),
+                $this->equalTo(Database::VAR_BOOLEAN),
+                $this->anything(),
+                $this->equalTo(false),
+                $this->identicalTo(false), // MUST be boolean false, not true or null!
+            )
+            ->willReturn(true);
+
+        $worker = new class () extends Databases {
+            protected function trigger(
+                Document $database,
+                Document $collection,
+                Document $project,
+                string $event,
+                Realtime $queueForRealtime,
+                Document|null $attribute = null,
+                Document|null $index = null,
+            ): void {
+            }
+        };
+
+        $message = new Message([
+            'pid' => 'pid',
+            'queue' => 'v1-databases',
+            'timestamp' => \time(),
+            'payload' => [
+                'type' => DATABASE_TYPE_CREATE_ATTRIBUTE,
+                'database' => ['$id' => 'db1', '$sequence' => '100'],
+                'collection' => ['$id' => 'user', '$sequence' => '1'],
+                'document' => ['$id' => 'attr_bool'],
+            ],
+        ]);
+
+        $worker->action(
+            $message,
+            new Document(['$id' => 'proj1']),
+            $dbForPlatform,
+            $dbForProject,
+            static fn () => $dbForDatabases,
+            $this->createStub(Realtime::class),
+            $this->createStub(Log::class),
+        );
+    }
 }
