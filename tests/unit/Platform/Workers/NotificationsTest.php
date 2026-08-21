@@ -21,8 +21,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
-use Utopia\Query\Schema\ColumnType;
-use Utopia\Query\Schema\IndexType;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 
@@ -182,34 +180,28 @@ final class NotificationsTest extends TestCase
             [Permission::create(Role::any()), Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())],
             false,
         );
-        $this->database->createAttribute('notifications', new Attribute(key: 'messageId', type: ColumnType::String, size: 255));
-        $this->database->createAttribute('notifications', new Attribute(key: 'recipientHash', type: ColumnType::String, size: 64, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'type', type: ColumnType::String, size: 64, default: 'info'));
-        $this->database->createAttribute('notifications', new Attribute(key: 'channel', type: ColumnType::String, size: 64, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'projectId', type: ColumnType::String, size: 255, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'projectInternalId', type: ColumnType::Id, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'resourceType', type: ColumnType::String, size: 64, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'resourceId', type: ColumnType::String, size: 255, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'resourceInternalId', type: ColumnType::Id, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'parentResourceType', type: ColumnType::String, size: 64, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'parentResourceId', type: ColumnType::String, size: 255, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'parentResourceInternalId', type: ColumnType::Id, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'title', type: ColumnType::String, size: 256, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'body', type: ColumnType::String, size: 16384, required: true));
-        $this->database->createAttribute('notifications', new Attribute(key: 'read', type: ColumnType::Boolean, default: false));
-        $this->database->createAttribute('notifications', new Attribute(key: 'firstSeen', type: ColumnType::Datetime, filters: ['datetime']));
-        $this->database->createAttribute('notifications', new Attribute(key: 'lastSeen', type: ColumnType::Datetime, filters: ['datetime']));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'messageId'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'recipientHash', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'type', size: 64, default: 'info'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'channel', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'projectId', required: true));
+        $this->database->createAttribute('notifications', Attribute::id(key: 'projectInternalId', required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'resourceType', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'resourceId', required: true));
+        $this->database->createAttribute('notifications', Attribute::id(key: 'resourceInternalId', required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'parentResourceType', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'parentResourceId', required: true));
+        $this->database->createAttribute('notifications', Attribute::id(key: 'parentResourceInternalId', required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'title', size: 256, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'body', size: 16384, required: true));
+        $this->database->createAttribute('notifications', Attribute::boolean(key: 'read', default: false));
+        $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen', filters: ['datetime']));
+        $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen', filters: ['datetime']));
 
         // Mirror the production `_key_recipient` UNIQUE composite index so the
         // duplicate-handling branch in persistAlert (catch DuplicateException ->
         // return existing alertId) is actually exercised by tests.
-        $this->database->createIndex('notifications', new Index(
-            key: '_key_recipient',
-            type: IndexType::Unique,
-            attributes: ['messageId', 'channel', 'recipientHash'],
-            lengths: [Database::LENGTH_KEY, 64, 64],
-            orders: ['ASC', 'ASC', 'ASC'],
-        ));
+        $this->database->createIndex('notifications', Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: ['ASC', 'ASC', 'ASC']));
 
         $this->registry = new Registry();
         $this->project = new Document(['$id' => 'project-x', '$sequence' => 'project-internal-x']);
