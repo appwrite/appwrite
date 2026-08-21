@@ -110,7 +110,6 @@ class Update extends Base
         ])));
 
         $queries = [
-            Query::equal('trigger', ['manual']),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentResourceInternalId', [$site->getSequence()]),

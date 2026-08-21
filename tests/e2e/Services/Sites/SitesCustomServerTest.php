@@ -1763,6 +1763,79 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testUpdateDeploymentUpdatesSiteRule(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Rule Update Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => uniqid() . '.custom.localhost',
+            'siteId' => $siteId,
+            'branch' => '',
+        ]);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $ruleId = $rule['body']['$id'];
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false'
+        ]);
+
+        $secondDeploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($siteId, $secondDeploymentId) {
+            $deployment = $this->getDeployment($siteId, $secondDeploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $response = $this->updateSiteDeployment($siteId, $secondDeploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $this->assertEventually(function () use ($ruleId, $secondDeploymentId) {
+            $updatedRule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $updatedRule['headers']['status-code']);
+            $this->assertEquals($secondDeploymentId, $updatedRule['body']['deploymentId']);
+        }, 60000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $ruleId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupDeployment($siteId, $secondDeploymentId);
+        $this->cleanupSite($siteId);
+    }
+
     public function testUpdateSiteDeploymentRequiresOwnership(): void
     {
         $siteId = $this->setupSite([
