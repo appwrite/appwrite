@@ -55,6 +55,7 @@ import { VCSDetectionType, ID } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
+import { getSiteTemplateScreenshotUrl } from '@/lib/sites/site-template-wizard'
 
 // Fade-in image component
 function FadeImage({
@@ -221,10 +222,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteName, generateDomain])
 
-  // Get screenshot URL - templates include full URLs
   const screenshotUrl = useMemo(() => {
     if (!template) return null
-    return isDark ? template.screenshotDark : template.screenshotLight
+    return getSiteTemplateScreenshotUrl(template, isDark) ?? null
   }, [template, isDark])
 
   // Mutations
