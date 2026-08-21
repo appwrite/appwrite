@@ -25,6 +25,7 @@ use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
 use Utopia\Platform\Action;
 use Utopia\System\System;
+use Utopia\Validator;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -460,6 +461,18 @@ class Specs extends Action
 
     private function collectSpecEnumNames(array $node, array &$enums, ?string $fallbackName = null, bool $skipCurrentEnum = false): void
     {
+        if (!$skipCurrentEnum && $this->isAnnotatedSpecEnum($node)) {
+            $enumName = (isset($node['title']) && \is_string($node['title']) && $node['title'] !== '')
+                ? $node['title']
+                : $this->getFallbackSpecEnumName($node, $fallbackName);
+
+            if (!\is_null($enumName)) {
+                $this->addSpecEnumName($enums, $enumName);
+            }
+
+            return;
+        }
+
         if (!$skipCurrentEnum && isset($node['enum']) && \is_array($node['enum'])) {
             $enumName = $this->getExplicitSpecEnumName($node)
                 ?? $this->getFallbackSpecEnumName($node, $fallbackName);
@@ -504,6 +517,39 @@ class Specs extends Action
                 $key === 'items' && $itemsEnumHandled
             );
         }
+    }
+
+    private function isAnnotatedSpecEnum(array $node): bool
+    {
+        $branches = $node['oneOf'] ?? $node['anyOf'] ?? null;
+        if (!\is_array($branches) || $branches === []) {
+            return false;
+        }
+
+        $values = 0;
+        foreach ($branches as $branch) {
+            if (!\is_array($branch)) {
+                return false;
+            }
+
+            if (($branch['type'] ?? null) === Validator::TYPE_STRING && !isset($branch['enum'])) {
+                continue;
+            }
+
+            if (
+                ($branch['type'] ?? null) !== Validator::TYPE_STRING
+                || !isset($branch['enum'])
+                || !\is_array($branch['enum'])
+                || \count($branch['enum']) !== 1
+                || !\is_string($branch['enum'][0])
+            ) {
+                return false;
+            }
+
+            $values++;
+        }
+
+        return $values > 0;
     }
 
     private function addSpecEnumName(array &$enums, string $name): void
