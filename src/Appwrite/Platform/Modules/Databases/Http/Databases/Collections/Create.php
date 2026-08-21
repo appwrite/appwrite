@@ -9,11 +9,12 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Attribute;
+use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Appwrite\Utopia\Database\Validator\Attributes as AttributesValidator;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Indexes as IndexesValidator;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Attribute;
 use Utopia\Database\Capability;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
@@ -24,6 +25,7 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Index;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Permissions;
@@ -271,16 +273,14 @@ class Create extends Action
     }
 
     /**
-     * Build attribute Document objects from a definition array
-     *
-     * @return array{collection: Document, document: Document}
+     * @return array{collection: Attribute, document: Document}
      */
     protected function buildAttributeDocument(
         Document $database,
         Document $collection,
         array $attribute,
     ): array {
-        ['type' => $type, 'format' => $format, 'size' => $size] = Attribute::resolve($attribute);
+        ['type' => $type, 'format' => $format, 'size' => $size] = AttributeDefinition::resolve($attribute);
 
         $key = $attribute['key'];
         $required = $attribute['required'] ?? false;
@@ -295,7 +295,7 @@ class Create extends Action
         }
 
         if (isset($attribute['min']) || isset($attribute['max'])) {
-            $format = match($type) {
+            $format = match ($type) {
                 ColumnType::Integer->value => APP_DATABASE_ATTRIBUTE_INT_RANGE,
                 ColumnType::BigInteger->value, 'bigint' => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
                 default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
@@ -308,7 +308,7 @@ class Create extends Action
             ];
         }
 
-        $collectionDoc = new Document([
+        $collectionDoc = Attribute::fromArray([
             '$id' => $key,
             'key' => $key,
             'type' => $type,
@@ -348,9 +348,7 @@ class Create extends Action
     }
 
     /**
-     * Build index Document objects from a definition array
-     *
-     * @return array{collection: Document, document: Document}
+     * @return array{collection: Index, document: Document}
      */
     protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments, Database $dbForDatabases): array
     {
@@ -389,7 +387,7 @@ class Create extends Action
             }
         }
 
-        $collectionDoc = new Document([
+        $collectionDoc = Index::fromArray([
             '$id' => $key,
             'key' => $key,
             'type' => $type,
