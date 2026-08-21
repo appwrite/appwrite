@@ -697,6 +697,7 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertSame($data['functionId'], $deployments['body']['deployments'][0]['resourceId']);
     }
 
+
     public function testUpdateFunctionUsingVCS(): void
     {
         $data = $this->setupFunctionUsingVCS();
