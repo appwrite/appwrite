@@ -429,7 +429,19 @@ abstract class Action extends DatabasesAction
                     throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');
                 }
             }
-            $dbForProject->checkAttribute($collection, Attribute::fromArray($attribute->getArrayCopy()));
+            $dbForProject->checkAttribute($collection, Attribute::fromArray([
+                'key' => $key,
+                'type' => $type,
+                'size' => $size,
+                'required' => $required,
+                'signed' => $signed,
+                'default' => $default,
+                'array' => $array,
+                'format' => $format !== '' ? $format : null,
+                'formatOptions' => $formatOptions,
+                'filters' => $filters,
+                'options' => $options !== [] ? $options : null,
+            ]));
             $attribute = $dbForProject->createDocument('attributes', $attribute);
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$key]);
@@ -473,7 +485,19 @@ abstract class Action extends DatabasesAction
                     'options' => $options,
                 ]);
 
-                $dbForProject->checkAttribute($relatedCollection, Attribute::fromArray($twoWayAttribute->getArrayCopy()));
+                $dbForProject->checkAttribute($relatedCollection, Attribute::fromArray([
+                    'key' => $twoWayKey,
+                    'type' => $type,
+                    'size' => $size,
+                    'required' => $required,
+                    'signed' => $signed,
+                    'default' => $default,
+                    'array' => $array,
+                    'format' => $format !== '' ? $format : null,
+                    'formatOptions' => $formatOptions,
+                    'filters' => $filters,
+                    'options' => $options !== [] ? $options : null,
+                ]));
                 $dbForProject->createDocument('attributes', $twoWayAttribute);
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException(), params: [$twoWayKey]);
