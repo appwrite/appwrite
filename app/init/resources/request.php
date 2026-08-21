@@ -22,7 +22,6 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
-use Appwrite\Utopia\Database\Hooks\DocumentUsage;
 use Appwrite\Utopia\Database\Hooks\FunctionCache;
 use Appwrite\Utopia\Database\Hooks\Metadata;
 use Appwrite\Utopia\Database\Hooks\Usage;
@@ -1048,24 +1047,13 @@ return function (Container $context): void {
                 $database->setTimeout($timeout);
             }
 
-            $documentsMetric = match ($originalDatabase->getAttribute('type', '')) {
-                DATABASE_TYPE_DOCUMENTSDB => METRIC_DOCUMENTS_DOCUMENTSDB,
-                DATABASE_TYPE_VECTORSDB => METRIC_DOCUMENTS_VECTORSDB,
-                default => METRIC_DOCUMENTS,
-            };
-
             $database
                 ->addHook(new Metadata(
                     database: $originalDatabase,
                     context: $context,
                     resolvePublicId: Metadata::resolver($database, $dbForProject),
                 ))
-                ->addHook(new DocumentUsage(
-                    $usage,
-                    $documentsMetric,
-                    '{databaseInternalId}.documents',
-                    '{databaseInternalId}.{collectionInternalId}.documents',
-                ));
+                ->addHook(new Usage($usage, $originalDatabase->getAttribute('type', '')));
 
             return $database;
         };

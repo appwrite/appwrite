@@ -8,7 +8,7 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
-use Appwrite\Utopia\Database\Hooks\DocumentUsage;
+use Appwrite\Utopia\Database\Hooks\Usage;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
@@ -105,18 +105,7 @@ return function (Container $container): void {
                 APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
             );
 
-            $documentsMetric = match ($databaseConfig->getAttribute('type', '')) {
-                DATABASE_TYPE_DOCUMENTSDB => METRIC_DOCUMENTS_DOCUMENTSDB,
-                DATABASE_TYPE_VECTORSDB => METRIC_DOCUMENTS_VECTORSDB,
-                default => METRIC_DOCUMENTS,
-            };
-
-            $dbForDatabases->addHook(new DocumentUsage(
-                $usage,
-                $documentsMetric,
-                '{databaseInternalId}.documents',
-                '{databaseInternalId}.{collectionInternalId}.documents',
-            ));
+            $dbForDatabases->addHook(new Usage($usage, $databaseConfig->getAttribute('type', '')));
 
             return $dbForDatabases;
         };

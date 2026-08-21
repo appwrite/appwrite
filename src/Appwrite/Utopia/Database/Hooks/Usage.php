@@ -8,10 +8,9 @@ use Utopia\Database\Event;
 use Utopia\Database\Hook\Lifecycle;
 
 /**
- * Tracks resource usage metrics (teams, users, sessions, databases, collections,
- * documents, buckets, files, functions, sites, deployments) on document CRUD events.
+ * Tracks resource usage metrics on document CRUD events.
  *
- * Registered on dbForProject.
+ * Registered on dbForProject and on getDatabasesDB tenant connections.
  */
 class Usage implements Lifecycle
 {
@@ -59,7 +58,7 @@ class Usage implements Lifecycle
                 => $this->trackCollections($event, $data, $value),
 
             str_starts_with($collection, 'database_') && str_contains($collection, '_collection_')
-                => $this->trackDocuments($value),
+                => $this->trackDocuments($data, $value),
 
             $collection === 'buckets'
                 => $this->trackBuckets($event, $data, $value),
@@ -118,9 +117,16 @@ class Usage implements Lifecycle
         }
     }
 
-    private function trackDocuments(int $value): void
+    private function trackDocuments(Document $document, int $value): void
     {
-        $this->usage->addMetric($this->metric(METRIC_DOCUMENTS), $value);
+        $parts = explode('_', $document->getCollection());
+        $databaseInternalId = $parts[1] ?? '0';
+        $collectionInternalId = $parts[3] ?? '0';
+
+        $this->usage
+            ->addMetric($this->metric(METRIC_DOCUMENTS), $value)
+            ->addMetric($databaseInternalId . '.documents', $value)
+            ->addMetric($databaseInternalId . '.' . $collectionInternalId . '.documents', $value);
     }
 
     private function trackBuckets(Event $event, Document $document, int $value): void
