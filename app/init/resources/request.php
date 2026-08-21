@@ -582,7 +582,22 @@ return function (Container $context): void {
         return $user;
     }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken', 'authorization']);
 
-    $context->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia) {
+    $context->set('projectIdFromPath', function (Request $request, Http $utopia): string {
+        $match = $utopia->match($request);
+        if (empty($match)) {
+            return '';
+        }
+
+        $path = (string) \parse_url($request->getURI(), PHP_URL_PATH);
+        $segments = \array_values(\array_filter(\explode('/', $path), fn (string $segment) => $segment !== ''));
+        if (($segments[0] ?? '') !== 'v1' || ($segments[1] ?? '') !== 'projects') {
+            return '';
+        }
+
+        return $match->params['projectId'] ?? '';
+    }, ['request', 'utopia']);
+
+    $context->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia, string $projectIdFromPath) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Utopia\Database\Database $dbForPlatform */
         /** @var Utopia\Database\Document $console */
@@ -594,7 +609,7 @@ return function (Container $context): void {
         // For non-GET requests getParam() reads the body, so a project passed
         // as a query parameter (e.g. presigned artifact URLs) is only visible
         // via getQuery().
-        if (empty($projectId)) {
+        if ($projectId === '') {
             $projectId = (string) $request->getQuery('project', '');
         }
 
@@ -604,22 +619,22 @@ return function (Container $context): void {
         $deprecatedProjectPathPrefix = '/v1/projects/';
         $route = $utopia->match($request)?->route;
         if (!empty($route)) {
-            $isDeprecatedAlias = \str_starts_with($request->getURI(), $deprecatedProjectPathPrefix) &&
+            $isDeprecatedAlias = $projectIdFromPath !== '' &&
                 !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
 
             if ($isDeprecatedAlias) {
-                $projectId = \explode('/', $request->getURI(), 5)[3] ?? '';
+                $projectId = $projectIdFromPath;
             }
         }
 
-        if (empty($projectId) || $projectId === 'console') {
+        if ($projectId === '' || $projectId === 'console') {
             return $console;
         }
 
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
         return $project;
-    }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia']);
+    }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
 
     $context->set('session', function (User $user, Store $store, Token $proofForToken) {
         if ($user->isEmpty()) {
@@ -891,7 +906,7 @@ return function (Container $context): void {
         $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
 
         $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
-        if (!empty($projectId) && $project->getId() !== $projectId) {
+        if ($projectId !== '' && $project->getId() !== $projectId) {
             $mode = APP_MODE_ADMIN;
         }
 
@@ -962,7 +977,7 @@ return function (Container $context): void {
         return $key;
     }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
 
-    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization) {
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
         $teamInternalId = '';
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
@@ -971,9 +986,7 @@ return function (Container $context): void {
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
             $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
-                $uri = $request->getURI();
-                $pid = explode('/', $uri)[3];
-                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $pid));
+                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectIdFromPath));
                 $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
                 $teamId = $request->getParam('teamId', '');
@@ -1003,7 +1016,7 @@ return function (Container $context): void {
         });
 
         return $team;
-    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization']);
+    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
         $allowed = false;

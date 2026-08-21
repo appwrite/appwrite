@@ -338,6 +338,65 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Team 1 Project', $response['body']['name']);
         $this->assertEquals($team2, $response['body']['teamId']);
+
+        $victimProjectId = ID::unique();
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'projectId' => $victimProjectId,
+            'name' => 'Victim Project',
+            'teamId' => $team1,
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $victimProjectId . '/team', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'teamId' => $team2,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '//projects/anything/team', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'teamId' => $team2,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/0/team', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'teamId' => $team2,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $victimProjectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($team1, $response['body']['teamId']);
     }
 
     #[Group('projectsCRUD')]
