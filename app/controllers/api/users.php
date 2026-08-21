@@ -2639,20 +2639,63 @@ Http::delete('/v1/users/:userId')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('publisherForDeletes')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes) {
+    ->inject('user')
+    ->inject('project')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Document $user, Document $project) {
 
-        $user = $dbForProject->getDocument('users', $userId);
+        $assertCanDelete = function (Document $target) use ($user, $project, $dbForProject): void {
+            // Session actors cannot delete themselves via the Users API.
+            // Self-service account removal must use DELETE /v1/account.
+            if (!$user->isEmpty() && $user->getId() === $target->getId()) {
+                throw new Exception(
+                    Exception::USER_DELETION_PROHIBITED,
+                    'You cannot delete your own account with the Users API. Use the account delete endpoint instead.'
+                );
+            }
 
-        if ($user->isEmpty()) {
+            // Console (platform) accounts: refuse deleting the last *active*
+            // user so the instance cannot be locked out. Blocked users do not
+            // count as usable admins.
+            if ($project->getId() === 'console' && $target->getAttribute('status', true) === true) {
+                $otherActiveCount = $dbForProject->count(
+                    'users',
+                    [
+                        Query::equal('status', [true]),
+                        Query::notEqual('$id', $target->getId()),
+                    ],
+                    1
+                );
+
+                if ($otherActiveCount === 0) {
+                    throw new Exception(
+                        Exception::USER_DELETION_PROHIBITED,
+                        'Cannot delete the last remaining active console user.'
+                    );
+                }
+            }
+        };
+
+        $target = $dbForProject->getDocument('users', $userId);
+
+        if ($target->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        // clone user object to send to workers
-        $clone = clone $user;
+        $assertCanDelete($target);
+
+        // Re-check immediately before mutating to shrink the concurrent-delete
+        // race window (two admins deleting the last two active accounts).
+        $target = $dbForProject->getDocument('users', $userId);
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+        $assertCanDelete($target);
+
+        $clone = clone $target;
 
         $dbForProject->deleteDocument('users', $userId);
-        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
-        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
+        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$target->getSequence()]));
+        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$target->getSequence()]));
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $queueForEvents->getProject(),
@@ -2661,7 +2704,7 @@ Http::delete('/v1/users/:userId')
         ));
 
         $queueForEvents
-            ->setParam('userId', $user->getId())
+            ->setParam('userId', $target->getId())
             ->setPayload($response->output($clone, Response::MODEL_USER));
 
         $response->noContent();
