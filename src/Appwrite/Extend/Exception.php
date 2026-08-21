@@ -175,6 +175,7 @@ class Exception extends \Exception
     public const string SITE_NOT_FOUND = 'site_not_found';
     public const string SITE_ALREADY_EXISTS = 'site_already_exists';
     public const string SITE_TEMPLATE_NOT_FOUND = 'site_template_not_found';
+    public const string SITE_INVALID_FILE_SIZE = 'site_invalid_file_size';
 
     /** Functions */
     public const string FUNCTION_NOT_FOUND = 'function_not_found';
