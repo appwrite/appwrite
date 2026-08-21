@@ -167,6 +167,7 @@ const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
 const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
 const SESSION_PROVIDER_PHONE = 'phone';
 const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+const SESSION_PROVIDER_LDAP = 'ldap';
 const SESSION_PROVIDER_TOKEN = 'token';
 const SESSION_PROVIDER_SERVER = 'server';
 
