@@ -1,15 +1,10 @@
 <?php
-// Dev-only Adminer entrypoint for docker-compose.override.yml.
-//
-// postgres.localhost targets the PostgreSQL container; every other host
-// (mysql.localhost) keeps the ADMINER_DEFAULT_* connection values.
 
 function onPostgresHost(): bool
 {
     return explode(':', $_SERVER['HTTP_HOST'] ?? '')[0] === 'postgres.localhost';
 }
 
-// Credentials the login form is prefilled with.
 function defaultAuth(): array
 {
     return [
@@ -21,24 +16,21 @@ function defaultAuth(): array
     ];
 }
 
-// Adminer opens the public schema unless ?ns= names another one,
-// so add it once right after login.
+// Adminer opens the public schema unless ?ns= names another one.
 if (onPostgresHost() && isset($_GET['username']) && !isset($_GET['ns'])) {
     $_GET['ns'] = $_ENV['ADMINER_DEFAULT_DB'] ?: 'appwrite';
     header('Location: ?' . http_build_query($_GET));
     exit;
 }
 
-// Adminer 6 ignores server-side POST autologin, so fill and submit
-// the login form in the browser instead.
+// Adminer 6 ignores server-side POST autologin.
 function adminer_object()
 {
     return new class extends Adminer\Adminer {
         function loginForm()
         {
             parent::loginForm();
-            // Skip while a login is in flight or just failed, otherwise
-            // wrong credentials would resubmit forever.
+            // A login is already in flight or just failed; resubmitting would loop forever.
             if (isset($_GET['username']) || !empty($_POST['auth'])) {
                 return;
             }
