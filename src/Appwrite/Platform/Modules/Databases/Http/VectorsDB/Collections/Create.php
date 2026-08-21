@@ -13,6 +13,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Config\Config;
 use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -156,13 +157,7 @@ class Create extends CollectionAction
                     \usleep(100_000);
                 }
             }
-            $dbForDatabases->createCollection(
-                id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                permissions: $permissions,
-                documentSecurity: $documentSecurity,
-                attributes: $attributes,
-                indexes: $indexes,
-            );
+            $dbForDatabases->createCollection(new Collection(id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), attributes: $attributes, indexes: $indexes, permissions: $permissions, documentSecurity: $documentSecurity));
             // Create attribute and indexes metadata documents in the attributes and indexes collections
             // needed for the get and list calls
             $attributeDocs = array_map(function (Attribute $attributeConfig) use ($database, $collection, $databaseId, $collectionId, $dimension) {

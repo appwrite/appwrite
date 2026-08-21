@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
@@ -72,10 +73,10 @@ final class TransactionCheckoutTest extends TestCase
             ->setDatabase('appwrite')
             ->setNamespace('txn_' . \uniqid());
         $setup->create();
-        $setup->createCollection('database_2', permissions: [
+        $setup->createCollection(new Collection(id: 'database_2', permissions: [
             Permission::create(Role::any()),
             Permission::read(Role::any()),
-        ]);
+        ]));
         $catalog = $authorization->skip(
             fn (): Document => $setup->createDocument('database_2', new Document([
                 '$id' => 'movies',
@@ -136,10 +137,10 @@ final class TransactionCheckoutTest extends TestCase
             ->setDatabase('appwrite')
             ->setNamespace($namespace);
         $catalogSetup->create();
-        $catalogSetup->createCollection('database_2', permissions: [
+        $catalogSetup->createCollection(new Collection(id: 'database_2', permissions: [
             Permission::create(Role::any()),
             Permission::read(Role::any()),
-        ]);
+        ]));
         $catalog = $authorization->skip(
             fn (): Document => $catalogSetup->createDocument('database_2', new Document([
                 '$id' => 'movies',
@@ -153,10 +154,10 @@ final class TransactionCheckoutTest extends TestCase
             ->setDatabase('appwrite')
             ->setNamespace($namespace);
         $tenantSetup->create();
-        $tenantSetup->createCollection('database_2', permissions: [
+        $tenantSetup->createCollection(new Collection(id: 'database_2', permissions: [
             Permission::create(Role::any()),
             Permission::read(Role::any()),
-        ]);
+        ]));
 
         $tenantCheckouts = 0;
         $catalogCheckouts = 0;

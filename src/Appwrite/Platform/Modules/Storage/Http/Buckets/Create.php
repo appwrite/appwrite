@@ -12,6 +12,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -129,7 +130,7 @@ class Create extends Action
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-            $dbForProject->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes, permissions: $permissions, documentSecurity: $fileSecurity);
+            $dbForProject->createCollection(new Collection(id: 'bucket_' . $bucket->getSequence(), attributes: $attributes, indexes: $indexes, permissions: $permissions, documentSecurity: $fileSecurity));
         } catch (DuplicateException) {
             throw new Exception(Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }

@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Config\Config;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -138,7 +139,7 @@ class Create extends Action
         $indexes = $collections['indexes'];
 
         try {
-            $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
+            $dbForProject->createCollection(new Collection(id: 'database_' . $database->getSequence(), attributes: $attributes, indexes: $indexes));
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$database->getId()]);
         } catch (IndexException $e) {

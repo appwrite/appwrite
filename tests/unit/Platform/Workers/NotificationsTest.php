@@ -11,6 +11,7 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
@@ -173,13 +174,7 @@ final class NotificationsTest extends TestCase
             ->setNamespace('notif_' . \uniqid());
 
         $this->database->create();
-        $this->database->createCollection(
-            'notifications',
-            [],
-            [],
-            [Permission::create(Role::any()), Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())],
-            false,
-        );
+        $this->database->createCollection(new Collection(id: 'notifications', permissions: [Permission::create(Role::any()), Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], documentSecurity: false));
         $this->database->createAttribute('notifications', Attribute::string(key: 'messageId'));
         $this->database->createAttribute('notifications', Attribute::string(key: 'recipientHash', size: 64, required: true));
         $this->database->createAttribute('notifications', Attribute::string(key: 'type', size: 64, default: 'info'));

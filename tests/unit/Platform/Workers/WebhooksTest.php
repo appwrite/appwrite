@@ -13,6 +13,7 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
@@ -292,11 +293,11 @@ final class WebhooksTest extends TestCase
         ];
 
         $database->create();
-        $database->createCollection('memberships', [], [], $permissions, false);
+        $database->createCollection(new Collection(id: 'memberships', permissions: $permissions, documentSecurity: false));
         $database->createAttribute('memberships', Attribute::string(key: 'teamInternalId', required: true));
         $database->createAttribute('memberships', Attribute::string(key: 'userId', required: true));
         $database->createAttribute('memberships', Attribute::string(key: 'roles', size: 1024, required: true));
-        $database->createCollection('users', [], [], $permissions, false);
+        $database->createCollection(new Collection(id: 'users', permissions: $permissions, documentSecurity: false));
         $database->createAttribute('users', Attribute::string(key: 'email', size: 320));
         $database->createAttribute('users', Attribute::string(key: 'name', size: 256));
 

@@ -15,6 +15,7 @@ use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -254,7 +255,7 @@ function createDatabase(Container $resources, string $resourceKey, string $dbNam
         $attributes = $collection['attributes'];
         $indexes = $collection['indexes'];
 
-        $database->createCollection($key, $attributes, $indexes);
+        $database->createCollection(new Collection(id: $key, attributes: $attributes, indexes: $indexes));
         $collectionsCreated++;
     }
 
@@ -314,7 +315,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 $attributes = $files['attributes'];
                 $indexes = $files['indexes'];
 
-                $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
+                $dbForPlatform->createCollection(new Collection(id: 'bucket_' . $bucket->getSequence(), attributes: $attributes, indexes: $indexes));
             }
 
             if ($authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
@@ -343,7 +344,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 $attributes = $files['attributes'];
                 $indexes = $files['indexes'];
 
-                $authorization->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
+                $authorization->skip(fn () => $dbForPlatform->createCollection(new Collection(id: 'bucket_' . $bucket->getSequence(), attributes: $attributes, indexes: $indexes)));
             }
         });
 
@@ -407,7 +408,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 $attributes = $collection['attributes'];
                 $indexes = $collection['indexes'];
 
-                $dbForProject->createCollection($key, $attributes, $indexes);
+                $dbForProject->createCollection(new Collection(id: $key, attributes: $attributes, indexes: $indexes));
                 $collectionsCreated++;
             }
 

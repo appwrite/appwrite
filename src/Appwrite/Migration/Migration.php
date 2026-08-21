@@ -6,6 +6,7 @@ use Exception;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -264,7 +265,7 @@ abstract class Migration
         $indexes = $collection['indexes'];
 
         try {
-            $this->dbForProject->createCollection($name, $attributes, $indexes);
+            $this->dbForProject->createCollection(new Collection(id: $name, attributes: $attributes, indexes: $indexes));
         } catch (Duplicate) {
             Console::warning('Failed to create collection "' . $name . '": Collection already exists');
         }

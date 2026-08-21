@@ -15,6 +15,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Indexes as IndexesValidator;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Capability;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -220,13 +221,7 @@ class Create extends Action
         }
 
         try {
-            $dbForDatabases->createCollection(
-                id: $collectionKey,
-                attributes: $collectionAttributes,
-                indexes: $collectionIndexes,
-                permissions: $permissions,
-                documentSecurity: $documentSecurity,
-            );
+            $dbForDatabases->createCollection(new Collection(id: $collectionKey, attributes: $collectionAttributes, indexes: $collectionIndexes, permissions: $permissions, documentSecurity: $documentSecurity));
         } catch (DuplicateException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
