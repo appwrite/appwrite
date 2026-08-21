@@ -257,6 +257,7 @@ class XList extends Action
 
             $rows = $usageForProject->find($queries, Usage::TYPE_GAUGE);
 
+            $fallbackTime = $this->formatTime($end);
             $byMetric = [];
             foreach ($metricsList as $m) {
                 $byMetric[$m] = [];
@@ -268,9 +269,12 @@ class XList extends Action
                 }
                 $group = ['value' => (float) ($row['value'] ?? 0)];
 
-                if ($interval !== null) {
-                    $group['time'] = $row['time'] ?? '';
-                }
+                // A flat dimensioned aggregate has no per-group snapshot time,
+                // so the window end stands in — the same substitution the pure
+                // `max` aggregate above makes.
+                $group['time'] = $interval !== null
+                    ? ($row['time'] ?? '')
+                    : $fallbackTime;
 
                 foreach ($dimensions as $dimension) {
                     $group[$dimension] = (string) ($row[$dimension] ?? '');
