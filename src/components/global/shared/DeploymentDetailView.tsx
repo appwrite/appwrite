@@ -93,7 +93,11 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { cn } from '@/lib/utils'
 import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
 import { useT } from '@/lib/i18n/translate'
-import { openDialogAfterOverlayCloses, closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
+import { domainUrl } from '@/lib/domains/url'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -739,7 +743,7 @@ export function DeploymentDetailView({
                       }}
                     >
                       <a
-                        href={`https://${domain}`}
+                        href={domainUrl(domain)}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={`Open ${domain} in new tab`}
@@ -764,9 +768,7 @@ export function DeploymentDetailView({
                         )}
                         onClick={(e) => {
                           const el = e.currentTarget as HTMLButtonElement
-                          void navigator.clipboard.writeText(
-                            `https://${domain}`,
-                          )
+                          void navigator.clipboard.writeText(domainUrl(domain))
                           toast.success(t('URL copied'))
                           el.blur()
                           if (urlCopyHideAfterCopyTimeoutRef.current) {
