@@ -13,8 +13,11 @@ use Utopia\Usage\Usage;
  */
 class Connection
 {
+    private const int READY_TTL_SECONDS = 15;
+
     private ?Usage $usage = null;
     private bool $ready = false;
+    private float $checkedAt = 0.0;
 
     public function __construct(
         private readonly bool $enabled,
@@ -92,23 +95,29 @@ class Connection
             ] + $health;
         }
 
-        $this->ready = true;
         return ['enabled' => true, 'schemaReady' => true] + $health;
     }
 
     public function isReady(): bool
     {
-        if ($this->ready) {
+        if (
+            $this->ready
+            && (microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS
+        ) {
             return true;
         }
 
-        return ($this->healthCheck()['schemaReady'] ?? false) === true;
+        $this->ready = ($this->healthCheck()['schemaReady'] ?? false) === true;
+        $this->checkedAt = microtime(true);
+
+        return $this->ready;
     }
 
     public function setup(): void
     {
         if ($this->enabled) {
             $this->ready = false;
+            $this->checkedAt = 0.0;
             $this->getUsage()->setup();
         }
     }
