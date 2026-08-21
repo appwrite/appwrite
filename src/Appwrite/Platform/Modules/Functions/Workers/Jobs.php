@@ -23,6 +23,7 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Operator;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -42,8 +43,10 @@ use Utopia\System\System;
  * atomic and a lock timeout retries cleanly).
  *
  * Handlers are protected extension points: downstream workers (e.g. cloud)
- * override finalize() and wrap parent:: — before it for work that must
- * precede 'ready' (edge distribution), after it for post-activation work.
+ * override finalize() and wrap parent:: for post-activation work. Work that
+ * must precede 'ready' and takes real time (cloud's edge distribution) belongs
+ * in publish() instead, which runs outside the lock — see the second locked
+ * section in action() for why.
  */
 class Jobs extends Action
 {
@@ -109,7 +112,12 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus): void {
+        // Set by ready() once the success join is in and the build has passed
+        // detection and the size limit: the build size to record, carried across
+        // the unlocked publish() step below to the second locked section.
+        $pending = null;
+
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$pending): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -127,9 +135,9 @@ class Jobs extends Action
 
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $vcsFactory, $platform),
-                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $pending),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $pending),
+                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $pending),
                 default => $deployment,
             };
 
@@ -152,6 +160,60 @@ class Jobs extends Action
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
         }, self::LOCK_TIMEOUT);
+
+        if ($pending === null) {
+            return;
+        }
+
+        // Deliberately outside the lock: publish() blocks on other systems (cloud
+        // fans a site build out to every edge and waits for each to report it
+        // available, up to a minute), and holding jobs-deployment:<id> across that
+        // starved every other callback for this deployment — they get LOCK_TIMEOUT
+        // to acquire, so none of them could ever win — and outlived LOCK_TTL, which
+        // let the lease expire mid-work and dropped mutual exclusion entirely.
+        $this->publish($project, $pending['deployment'], $dbForProject, $platform);
+
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $vcsFactory, $platform, $deploymentId, $bus, $pending): void {
+            // Re-read: publish() ran unlocked, so a cancel or another callback's
+            // outcome may have landed while it was in flight. Publishing what we
+            // read before is what would resurrect a canceled build.
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+            if ($deployment->isEmpty()
+                || \in_array($deployment->getAttribute('status'), ['canceled', 'ready', 'failed'], true)) {
+                return;
+            }
+
+            $deployment = $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus, $pending['size']);
+
+            $queueForRealtime
+                ->setSubscribers(['console'])
+                ->setProject($project)
+                ->setEvent(self::event($deployment))
+                ->setParam(self::resourceParam($deployment), $deployment->getAttribute('resourceId'))
+                ->setParam('deploymentId', $deploymentId)
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+
+            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+                $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
+            }
+        }, self::LOCK_TIMEOUT);
+    }
+
+    /**
+     * Work that must finish before a successful build is published, run OUTSIDE
+     * the jobs-deployment:<id> lock because it can take minutes.
+     *
+     * A no-op here; downstream workers override it. Cloud distributes a site
+     * build to every edge and waits for each to report it available.
+     *
+     * Callbacks are at-least-once and dedup lives inside the lock (moving it out
+     * would mark an event processed even when the lock timed out, losing it for
+     * good), so a redelivered event can reach this a second time. Overrides must
+     * tolerate that.
+     */
+    protected function publish(Document $project, Document $deployment, Database $dbForProject, array $platform): void
+    {
     }
 
     protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, array $data, VcsFactory $vcsFactory, array $platform): Document
@@ -209,6 +271,7 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
+        ?array &$pending = null,
     ): Document {
         if (($data['artifactId'] ?? '') === 'manifest') {
             // A failed manifest degrades to an empty listing (detection
@@ -217,7 +280,7 @@ class Jobs extends Action
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
             $cache->save('jobs-manifest-' . $deployment->getId(), ['files' => \array_values($files)]);
 
-            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $pending);
         }
 
         if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
@@ -258,6 +321,7 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
+        ?array &$pending = null,
     ): Document {
         if ($exitCode !== 0) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
@@ -265,7 +329,7 @@ class Jobs extends Action
 
         $cache->save('jobs-exit-' . $deployment->getId(), true);
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $pending);
     }
 
     /**
@@ -286,10 +350,11 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
+        ?array &$pending = null,
     ): Document {
         $cache->save('jobs-complete-' . $deployment->getId(), true);
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $pending);
     }
 
     /**
@@ -310,6 +375,7 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
+        ?array &$pending = null,
     ): Document {
         if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
             return $deployment; // already finalized
@@ -350,7 +416,13 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
-        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus, $size);
+        // The join is in and the build is publishable. finalize() happens in a
+        // second, short locked section in action(), after publish() has run
+        // unlocked -- a successful build must not be marked 'ready' until the
+        // work that makes it servable has finished.
+        $pending = ['deployment' => $deployment, 'size' => $size];
+
+        return $deployment;
     }
 
     /**
@@ -652,6 +724,35 @@ class Jobs extends Action
     private static function resourceParam(Document $deployment): string
     {
         return $deployment->getAttribute('resourceType') === 'sites' ? 'siteId' : 'functionId';
+    }
+
+    /**
+     * The value to write to 'buildLogs' to add $addition to the end of it.
+     *
+     * Concatenating server-side keeps an append safe for callers that are not
+     * holding jobs-deployment:<id> — publish() runs unlocked, so its progress
+     * lines race anything else writing the column, and a read-modify-write there
+     * would silently drop lines.
+     *
+     * The bound has to be applied here rather than left to the database:
+     * Operator's validator does check that a concat would not exceed the
+     * attribute's declared size, but only when it was given the current
+     * document, and updateDocuments() passes `currentDocument: null` because a
+     * bulk update has no single "old" row. buildLogs declares
+     * size=APP_LOG_LENGTH_LIMIT but is physically MEDIUMTEXT, so an unbounded
+     * concat would grow well past the declared size before anything failed. Fall
+     * back to the truncating rewrite once the log is full, where re-sending the
+     * column is unavoidable anyway because truncation drops from the front.
+     */
+    protected function append(Document $deployment, string $addition): Operator|string
+    {
+        $logs = $deployment->getAttribute('buildLogs', '');
+
+        if (\strlen($logs) + \strlen($addition) <= APP_LOG_LENGTH_LIMIT) {
+            return Operator::stringConcat($addition);
+        }
+
+        return $this->truncate($logs . $addition);
     }
 
     protected function truncate(string $logs): string
