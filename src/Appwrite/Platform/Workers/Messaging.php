@@ -36,6 +36,7 @@ use Utopia\Messaging\Adapter\SMS\Telesign;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
+use Appwrite\Messaging\Adapter\SMS\VonageMessages;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
@@ -892,6 +893,10 @@ class Messaging extends Action
                 $credentials['apiKey'] ?? '',
                 $credentials['apiSecret'] ??  ''
             ),
+            'vonage-messages' => new VonageMessages(
+                $credentials['apiKey'] ?? '',
+                $credentials['apiSecret'] ?? ''
+            ),
             'fast2sms' => new Fast2SMS(
                 $credentials['apiKey'] ?? '',
                 $credentials['senderId'] ?? '',
@@ -1247,6 +1252,10 @@ class Messaging extends Action
                     'templateId' => $dsn->getParam('templateId', $from),
                 ],
                 'vonage' => [
+                    'apiKey' => $user,
+                    'apiSecret' => $password
+                ],
+                'vonage-messages' => [
                     'apiKey' => $user,
                     'apiSecret' => $password
                 ],
