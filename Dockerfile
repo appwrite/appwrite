@@ -69,6 +69,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
+    chmod +x /usr/local/bin/mqtt && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-executions && \
