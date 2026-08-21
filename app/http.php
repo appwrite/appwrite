@@ -319,7 +319,11 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 $attributes = $files['attributes'];
                 $indexes = $files['indexes'];
 
-                $dbForPlatform->createCollection(new Collection(id: 'bucket_' . $bucket->getSequence(), attributes: $attributes, indexes: $indexes));
+                $dbForPlatform->createCollection(new Collection(
+                    id: 'bucket_' . $bucket->getSequence(),
+                    attributes: $attributes,
+                    indexes: $indexes,
+                ));
             }
 
             if ($authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
@@ -348,7 +352,11 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 $attributes = $files['attributes'];
                 $indexes = $files['indexes'];
 
-                $authorization->skip(fn () => $dbForPlatform->createCollection(new Collection(id: 'bucket_' . $bucket->getSequence(), attributes: $attributes, indexes: $indexes)));
+                $authorization->skip(fn () => $dbForPlatform->createCollection(new Collection(
+                    id: 'bucket_' . $bucket->getSequence(),
+                    attributes: $attributes,
+                    indexes: $indexes,
+                )));
             }
         });
 
