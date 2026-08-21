@@ -111,6 +111,10 @@ class Deletes extends Action
     ): void {
         $payload = $message->getPayload();
         $deleteMessage = DeleteMessage::fromArray($payload);
+        $document = $deleteMessage->document ?? new Document();
+        $tenants = $usageConnection->isEnabled()
+            ? $this->usageTenants($deleteMessage->type, $document, $dbForPlatform)
+            : [];
 
         $this->action(
             $message,
@@ -134,15 +138,48 @@ class Deletes extends Action
             $bus,
         );
 
-        $document = $deleteMessage->document ?? new Document();
-        if (
-            $usageConnection->isEnabled()
-            && $deleteMessage->type === DELETE_TYPE_DOCUMENT
-            && $document->getCollection() === DELETE_TYPE_PROJECTS
-            && $document->getSequence() !== ''
-        ) {
-            (new UsageTenant($usageConnection->getUsage(), (string) $document->getSequence()))->purge();
+        if ($tenants === []) {
+            return;
         }
+
+        $usage = $usageConnection->getUsage();
+        foreach ($tenants as $tenant) {
+            (new UsageTenant($usage, $tenant))->purge();
+        }
+    }
+
+    /**
+     * Collect usage tenants before the delete runs. Team-owned projects are
+     * removed from the platform DB inside the action, so sequences must be
+     * captured while those documents still exist.
+     *
+     * @return list<string>
+     */
+    protected function usageTenants(string $type, Document $document, Database $dbForPlatform): array
+    {
+        if ($type === DELETE_TYPE_DOCUMENT && $document->getCollection() === DELETE_TYPE_PROJECTS) {
+            $tenant = (string) $document->getSequence();
+            return $tenant === '' ? [] : [$tenant];
+        }
+
+        if ($type !== DELETE_TYPE_TEAM_PROJECTS || $document->getSequence() === '') {
+            return [];
+        }
+
+        $projects = $dbForPlatform->find('projects', [
+            Query::equal('teamInternalId', [$document->getSequence()]),
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+        ]);
+
+        $tenants = [];
+        foreach ($projects as $project) {
+            $tenant = (string) $project->getSequence();
+            if ($tenant !== '') {
+                $tenants[] = $tenant;
+            }
+        }
+
+        return $tenants;
     }
 
     /**
