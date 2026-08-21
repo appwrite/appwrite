@@ -9,13 +9,16 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
+use OpenRuntimes\Orchestrator\Client as OrchestratorClient;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 class Update extends Action
 {
@@ -89,13 +92,25 @@ class Update extends Action
         $startTime = new \DateTime($deployment->getAttribute('buildStartedAt', 'now'));
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
+        $logs = $deployment->getAttribute('buildLogs', '');
+        if (!\str_contains($logs, 'Build has been canceled.')) {
+            $date = \date('H:i:s');
+            $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+        }
 
         try {
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                 'buildEndedAt' => DateTime::now(),
                 'buildDuration' => $duration,
-                'status' => 'canceled'
+                'status' => 'canceled',
+                'buildLogs' => $logs,
             ]));
+
+            if ($deployment->getSequence() === $site->getAttribute('latestDeploymentInternalId', '')) {
+                $site = $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
+            }
         } catch (TransactionException) {
             $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
@@ -111,15 +126,31 @@ class Update extends Action
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                     'buildEndedAt' => DateTime::now(),
                     'buildDuration' => $duration,
-                    'status' => 'canceled'
+                    'status' => 'canceled',
+                    'buildLogs' => $logs,
                 ]));
             }
         }
 
         try {
-            $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments('resourceTokens', [
+                Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_DEPLOYMENT_ARTIFACTS]),
+                Query::equal('resourceInternalId', [$site->getSequence() . ':' . $deployment->getSequence()]),
+            ]));
         } catch (\Throwable) {
-            // Best-effort cleanup — deployment status is already 'canceled'
+        }
+
+        try {
+            if (System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
+                $client = new OrchestratorClient(
+                    endpoint: System::getEnv('_APP_ORCHESTRATOR_HOST', ''),
+                    apiKey: System::getEnv('_APP_ORCHESTRATOR_API_KEY', '') ?: null,
+                );
+                $client->jobs()->delete($project->getId() . '-' . $deploymentId . '-build');
+            } else {
+                $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+            }
+        } catch (\Throwable) {
         }
 
         $queueForEvents

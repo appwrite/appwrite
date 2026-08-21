@@ -1,0 +1,10 @@
+Fixes: Backward-compatible SELECT queries silently strip response fields for pre-1.8 clients. Related to #12476
+
+## Changes
+- V17: Split multi-value SELECT queries from old string syntax into individual queries with attribute set
+- V20: Generate individual SELECT queries (one per field) instead of a single multi-value query
+
+## Root Cause
+V17 and V20 request filters generate backward-compat SELECT queries using the old format (values stored in alues[] array), but ListSelection::parse() and RuntimeQuery::isSelectAll() now read from getAttribute(). This caused:
+1. Wildcard select("*") not detected ? response fields stripped
+2. Field selects storing to empty string key ? all non-$ fields filtered out
