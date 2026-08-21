@@ -76,6 +76,44 @@ class State
         return $document;
     }
 
+    /**
+     * Convert a request metadata object to the associative shape Document
+     * expects while retaining empty objects at any nested depth. `null` is
+     * returned untouched so callers can distinguish "not provided" from an
+     * explicit empty object.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function normalizeMetadata(array|\stdClass|null $metadata): ?array
+    {
+        if ($metadata === null) {
+            return null;
+        }
+
+        if ($metadata instanceof \stdClass) {
+            $metadata = (array) $metadata;
+        }
+
+        return \array_map($this->normalizeMetadataValue(...), $metadata);
+    }
+
+    private function normalizeMetadataValue(mixed $value): mixed
+    {
+        if ($value instanceof \stdClass) {
+            $properties = (array) $value;
+
+            return $properties === []
+                ? $value
+                : \array_map($this->normalizeMetadataValue(...), $properties);
+        }
+
+        if (\is_array($value)) {
+            return \array_map($this->normalizeMetadataValue(...), $value);
+        }
+
+        return $value;
+    }
+
     public function upsertForUser(
         Database $dbForProject,
         Document $presenceDocument,

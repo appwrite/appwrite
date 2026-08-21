@@ -13,6 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Query\Schema\IndexType;
 
 final class DatabasesCustomServerTest extends Scope
@@ -635,6 +636,103 @@ final class DatabasesCustomServerTest extends Scope
             'texts' => ['hello'],
         ]);
         $this->assertEquals(400, $unknownModel['headers']['status-code']);
+    }
+
+    /**
+     * A real nomic-embed-text embedding is 768-dimensional. Serialized into a
+     * vectorCosine query it runs well past the previous 4096 per-query character
+     * limit, so this exercises the raised MAX_VECTOR_QUERY_LENGTH cap end to end:
+     * generate a 768-dim embedding via /embeddings/text, store it as a document,
+     * then query it back with a same-sized embedding.
+     */
+    public function testDocumentNomicEmbeddingRoundTrip(): void
+    {
+        $db = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'NomicDB',
+        ]);
+        $this->assertEquals(201, $db['headers']['status-code']);
+        $databaseId = $db['body']['$id'];
+
+        $col = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'NomicCol',
+            'documentSecurity' => true,
+            'dimension' => 768, // nomic-embed-text output size
+            'permissions' => [Permission::read(Role::any())]
+        ]);
+        $this->assertEquals(201, $col['headers']['status-code']);
+        $this->assertEquals(768, $col['body']['dimension']);
+        $collectionId = $col['body']['$id'];
+
+        // Generate two real 768-dim embeddings: one to store, one to query with.
+        $embeddings = null;
+        $this->assertEventually(function () use (&$embeddings) {
+            $res = $this->client->call(Client::METHOD_POST, "/embeddings/text", [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'model' => 'nomic-embed-text',
+                'texts' => [
+                    'the quick brown fox jumps over the lazy dog',
+                    'a fast auburn fox leaps above a sleepy hound',
+                ],
+            ]);
+            $this->assertEquals(200, $res['headers']['status-code']);
+            $this->assertEquals(2, $res['body']['total']);
+            foreach ($res['body']['embeddings'] as $embed) {
+                $this->assertSame('', $embed['error']);
+                $this->assertEquals(768, $embed['dimension']);
+                $this->assertCount(768, $embed['embedding']);
+            }
+            $embeddings = $res['body']['embeddings'];
+        }, 3000, 100);
+
+        $stored = $embeddings[0]['embedding'];
+        $queryVector = $embeddings[1]['embedding'];
+
+        $doc = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'embeddings' => $stored,
+                'metadata' => ['model' => 'nomic-embed-text', 'dimension' => 768],
+            ],
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertEquals(201, $doc['headers']['status-code']);
+        $documentId = $doc['body']['$id'];
+
+        // The serialized 768-dim query must exceed the previous 4096 cap; this is
+        // what makes MAX_VECTOR_QUERY_LENGTH necessary for real embeddings.
+        $queryString = Query::vectorCosine('embeddings', $queryVector)->toString();
+        $this->assertGreaterThan(4096, \strlen($queryString));
+
+        $results = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'queries' => [
+                $queryString,
+                Query::limit(1)->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $results['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $results['body']['total']);
+        $this->assertEquals($documentId, $results['body']['documents'][0]['$id']);
     }
 
     public function testBulkUpsert(): void

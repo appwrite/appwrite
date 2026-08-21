@@ -3,110 +3,96 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\Func as FunctionMessage;
-use Swoole\Coroutine as Co;
-use Utopia\Console;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Platform\Action;
+use Utopia\Schedule\Occurrence;
+use Utopia\Schedule\Scheduler;
+use Utopia\Span\Span;
+use Utopia\Telemetry\Adapter as Telemetry;
 
-/**
- * ScheduleExecutions
- *
- * Handles delayed executions by processing one-time scheduled tasks
- * that are executed at a specific future time.
- */
-class ScheduleExecutions extends ScheduleBase
+class ScheduleExecutions extends Action
 {
-    public const UPDATE_TIMER = 3; // seconds
-    public const ENQUEUE_TIMER = 4; // seconds
+    public const UPDATE_TIMER = 3; // seconds between reconciliations
 
-    private bool $enqueuing = false;
+    public function __construct()
+    {
+        $this
+            ->desc('Execute executions scheduled in Appwrite')
+            ->inject('publisherForFunctions')
+            ->inject('getIsResourceBlocked')
+            ->inject('dbForPlatform')
+            ->inject('getProjectDB')
+            ->inject('telemetry')
+            ->callback($this->action(...));
+    }
 
     public static function getName(): string
     {
         return 'schedule-executions';
     }
 
-    public static function getSupportedResource(): string
+    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
-        return SCHEDULE_RESOURCE_TYPE_EXECUTION;
+        $source = new Source\Executions($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
+
+        $scheduler = new Scheduler(
+            source: $source,
+            syncSeconds: self::UPDATE_TIMER,
+            telemetry: $telemetry,
+            onError: function (\Throwable $error): void {
+                Span::init('schedule.executions.reconcile');
+                Span::current()?->finish(error: $error);
+            },
+        );
+
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions));
+
+        Span::init('schedule.executions.stopped');
+        Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
     }
 
-    public static function getCollectionId(): string
+    /**
+     * @param list<Occurrence> $occurrences
+     */
+    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions): null
     {
-        return RESOURCE_TYPE_EXECUTIONS;
-    }
+        $batch = \count($occurrences);
 
-    protected function loadResource(Document $project, callable $getProjectDB, array $schedule): Document
-    {
-        // Executions are not persisted; the schedule carries what the worker
-        // needs. Schedules from before the executions collection was dropped
-        // can still resolve their document for the functionId their data lacks.
-        try {
-            $resource = parent::loadResource($project, $getProjectDB, $schedule);
-        } catch (\Throwable) {
-            $resource = new Document();
-        }
+        foreach (\array_values($occurrences) as $index => $occurrence) {
+            $schedule = $occurrence->payload;
 
-        return $resource->isEmpty()
-            ? new Document(['$id' => $schedule['resourceId']])
-            : $resource;
-    }
+            Span::init('schedule.executions.enqueue');
+            $error = null;
 
-    protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
-    {
-        if ($this->enqueuing) {
-            return;
-        }
+            try {
+                Span::add('project.id', $schedule['project']->getId());
+                Span::add('schedule.id', $schedule['$id'] ?? '');
+                Span::add('execution.id', (string) ($schedule['resourceId'] ?? ''));
+                Span::add('function.id', $schedule['resource']->getAttribute('resourceId', ''));
+                Span::add('occurrence.due', $occurrence->due->format('c'));
+                Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
+                Span::add('occurrence.batch', $batch);
+                Span::add('occurrence.index', $index);
 
-        $this->enqueuing = true;
-
-        try {
-            $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
-
-            $schedules = [];
-            foreach ($this->schedules as $schedule) {
-                if (!$schedule['active']) {
-                    unset($this->schedules[$schedule['$sequence']]);
-                    continue;
-                }
-
-                $scheduledAt = new \DateTime($schedule['schedule']);
-                if ($scheduledAt > $intervalEnd) {
-                    continue;
-                }
-
-                $schedules[] = [$scheduledAt, $schedule];
+                $publisherForFunctions->enqueue(new FunctionMessage(
+                    project: $schedule['project'],
+                    functionId: $schedule['resource']->getAttribute('resourceId', ''),
+                    execution: new Document([
+                        '$id' => $schedule['resourceId'],
+                        'scheduleId' => $schedule['$id'],
+                    ]),
+                    type: 'schedule',
+                ));
+            } catch (\Throwable $th) {
+                $error = $th;
+            } finally {
+                Span::current()?->finish(error: $error);
             }
-
-            usort($schedules, static fn (array $first, array $second) => $first[0] <=> $second[0]);
-
-            foreach ($schedules as [$scheduledAt, $schedule]) {
-                $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
-
-                try {
-                    if ($delay > 0) {
-                        Co::sleep($delay);
-                    }
-
-                    $this->publisherForFunctions->enqueue(new FunctionMessage(
-                        project: $schedule['project'],
-                        functionId: $schedule['resource']->getAttribute('resourceId', ''),
-                        execution: new Document([
-                            '$id' => $schedule['resourceId'],
-                            'scheduleId' => $schedule['$id'],
-                        ]),
-                        type: 'schedule',
-                    ));
-
-                    $this->recordEnqueueDelay($scheduledAt);
-                    unset($this->schedules[$schedule['$sequence']]);
-                } catch (\Throwable $th) {
-                    Console::error("Failed to enqueue scheduled execution {$schedule['resourceId']}: {$th->getMessage()}");
-                    break;
-                }
-            }
-        } finally {
-            $this->enqueuing = false;
         }
+
+        return null;
     }
 }

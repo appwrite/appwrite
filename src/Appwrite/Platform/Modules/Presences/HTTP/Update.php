@@ -119,7 +119,7 @@ class Update extends PlatformAction
         ?string $userId,
         ?string $status,
         ?string $expiresAt,
-        ?array $metadata,
+        array|\stdClass|null $metadata,
         ?array $permissions,
         bool $purge,
         Response $response,
@@ -167,7 +167,7 @@ class Update extends PlatformAction
         }
 
         if ($metadata !== null) {
-            $updateData['metadata'] = $metadata;
+            $updateData['metadata'] = $presenceState->normalizeMetadata($metadata);
         }
 
         $updates = new Document($updateData);

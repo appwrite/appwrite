@@ -114,6 +114,7 @@
         "utopia-php/agents": "2.*",
         "utopia-php/audit": "dev-feat-query-lib as 3.0.0",
         "utopia-php/auth": "^0.10",
+        "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^4.0.0",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",
@@ -134,7 +135,7 @@
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.1",
         "utopia-php/migration": "dev-feat-query-lib as 2.0.0",
-        "utopia-php/platform": "1.0.999",
+        "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "3.0.*",
         "utopia-php/queue": "^1.3.0",
@@ -155,7 +156,8 @@
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*",
         "utopia-php/client": "^0.3.0",
-        "open-runtimes/sdk-for-php": "0.10.*"
+        "open-runtimes/sdk-for-php": "0.11.*",
+        "utopia-php/schedule": "^0.2.0"
     },
     "require-dev": {
         "ext-fileinfo": "*",

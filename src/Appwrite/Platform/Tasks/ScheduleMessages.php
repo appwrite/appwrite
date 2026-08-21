@@ -2,55 +2,97 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Event;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
+use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
-use Utopia\Queue\Queue;
-use Utopia\System\System;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Platform\Action;
+use Utopia\Schedule\Occurrence;
+use Utopia\Schedule\Scheduler;
+use Utopia\Span\Span;
+use Utopia\Telemetry\Adapter as Telemetry;
 
-class ScheduleMessages extends ScheduleBase
+class ScheduleMessages extends Action
 {
-    public const UPDATE_TIMER = 3; // seconds
-    public const ENQUEUE_TIMER = 4; // seconds
+    public const UPDATE_TIMER = 3; // seconds between reconciliations
 
-    private ?MessagingPublisher $publisherForMessaging = null;
+    public function __construct()
+    {
+        $this
+            ->desc('Execute messages scheduled in Appwrite')
+            ->inject('publisherForMessaging')
+            ->inject('getIsResourceBlocked')
+            ->inject('dbForPlatform')
+            ->inject('getProjectDB')
+            ->inject('telemetry')
+            ->callback($this->action(...));
+    }
 
     public static function getName(): string
     {
         return 'schedule-messages';
     }
 
-    public static function getSupportedResource(): string
+    public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
-        return SCHEDULE_RESOURCE_TYPE_MESSAGE;
-    }
+        $source = new Source\Messages($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
 
-    public static function getCollectionId(): string
-    {
-        return RESOURCE_TYPE_MESSAGES;
-    }
-
-    protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
-    {
-        $publisherForMessaging = $this->publisherForMessaging ??= new MessagingPublisher(
-            $this->publisherMessaging,
-            new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
+        $scheduler = new Scheduler(
+            source: $source,
+            syncSeconds: self::UPDATE_TIMER,
+            telemetry: $telemetry,
+            onError: function (\Throwable $error): void {
+                Span::init('schedule.messages.reconcile');
+                Span::current()?->finish(error: $error);
+            },
         );
 
-        foreach ($this->schedules as $schedule) {
-            if (!$schedule['active']) {
-                continue;
-            }
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForMessaging, $dbForPlatform));
 
-            $now = new \DateTime();
-            $scheduledAt = new \DateTime($schedule['schedule']);
+        Span::init('schedule.messages.stopped');
+        Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
+    }
 
-            if ($scheduledAt > $now) {
-                continue;
-            }
+    protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
+    {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return;
+        }
 
-            \go(function () use ($schedule, $scheduledAt, $dbForPlatform, $publisherForMessaging) {
+        $accessedAt = $project->getAttribute('accessedAt', 0);
+        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+            $now = DateTime::now();
+            $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'accessedAt' => $now
+            ]));
+            $project->setAttribute('accessedAt', $now);
+        }
+    }
+
+    /**
+     * @param list<Occurrence> $occurrences
+     */
+    private function dispatch(array $occurrences, MessagingPublisher $publisherForMessaging, Database $dbForPlatform): null
+    {
+        $batch = \count($occurrences);
+
+        foreach (\array_values($occurrences) as $index => $occurrence) {
+            $schedule = $occurrence->payload;
+
+            Span::init('schedule.messages.enqueue');
+            $error = null;
+
+            try {
+                Span::add('project.id', $schedule['project']->getId());
+                Span::add('schedule.id', $schedule['$id'] ?? '');
+                Span::add('message.id', (string) ($schedule['resourceId'] ?? ''));
+                Span::add('occurrence.due', $occurrence->due->format('c'));
+                Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
+                Span::add('occurrence.batch', $batch);
+                Span::add('occurrence.index', $index);
+
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
                 $publisherForMessaging->enqueue(new MessagingMessage(
@@ -59,14 +101,14 @@ class ScheduleMessages extends ScheduleBase
                     messageId: $schedule['resourceId'],
                 ));
 
-                $dbForPlatform->deleteDocument(
-                    'schedules',
-                    $schedule['$id'],
-                );
-
-                $this->recordEnqueueDelay($scheduledAt);
-                unset($this->schedules[$schedule['$sequence']]);
-            });
+                $dbForPlatform->deleteDocument('schedules', $schedule['$id']);
+            } catch (\Throwable $th) {
+                $error = $th;
+            } finally {
+                Span::current()?->finish(error: $error);
+            }
         }
+
+        return null;
     }
 }

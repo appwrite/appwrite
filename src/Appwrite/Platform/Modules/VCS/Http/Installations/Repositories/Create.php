@@ -112,6 +112,11 @@ class Create extends Action
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
             $vcs = $vcsFactory->fromInstallation($installation);
+
+            if (!$vcs->supportsRepositoryCreation()) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'VCS provider does not support repository creation: ' . $provider);
+            }
+
             $owner = !empty($providerNamespace) ? $providerNamespace : $vcs->getOwnerName($providerInstallationId);
 
             try {

@@ -9,7 +9,6 @@ use Appwrite\Utopia\Messaging\Adapter\Webhook as WebhookAdapter;
 use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Exception;
-use Swoole\Runtime;
 use Throwable;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -59,62 +58,52 @@ class Notifications extends Action
 
     public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, Log $log): void
     {
-        $previousHookFlags = \class_exists(Runtime::class) ? Runtime::getHookFlags() : null;
-        if (\class_exists(Runtime::class)) {
-            Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+        $payload = $message->getPayload();
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
         }
-        try {
-            $payload = $message->getPayload();
 
-            if (empty($payload)) {
-                throw new Exception('Missing payload');
-            }
+        $deduplicationKey = $payload['deduplicationKey'] ?? '';
+        $messageId = $deduplicationKey !== '' ? \md5($deduplicationKey) : '';
 
-            $deduplicationKey = $payload['deduplicationKey'] ?? '';
-            $messageId = $deduplicationKey !== '' ? \md5($deduplicationKey) : '';
+        $recipients = $this->resolveRecipients($payload);
+        if (empty($recipients)) {
+            throw new Exception('No recipients in payload');
+        }
 
-            $recipients = $this->resolveRecipients($payload);
-            if (empty($recipients)) {
-                throw new Exception('No recipients in payload');
-            }
+        $failure = null;
+        foreach ($recipients as $recipient) {
+            $recipient = $this->normalizeRecipient($recipient, $project);
+            $channel = $recipient['channel'];
 
-            $failure = null;
-            foreach ($recipients as $recipient) {
-                $recipient = $this->normalizeRecipient($recipient, $project);
-                $channel = $recipient['channel'];
-
-                if ($messageId !== '') {
-                    if ($channel === NOTIFICATION_TYPE_CONSOLE) {
-                        $this->validateConsoleRecipient($recipient);
-                    }
-                    $this->validateAlertResource($recipient);
+            if ($messageId !== '') {
+                if ($channel === NOTIFICATION_TYPE_CONSOLE) {
+                    $this->validateConsoleRecipient($recipient);
                 }
+                $this->validateAlertResource($recipient);
+            }
 
-                if ($messageId !== '' && $this->alreadyDelivered($dbForPlatform, self::buildAlertId($messageId, $recipient))) {
-                    $log->addTag('dedup', 'hit');
-                    $log->addTag('channel', $channel);
-                    continue;
+            if ($messageId !== '' && $this->alreadyDelivered($dbForPlatform, self::buildAlertId($messageId, $recipient))) {
+                $log->addTag('dedup', 'hit');
+                $log->addTag('channel', $channel);
+                continue;
+            }
+
+            try {
+                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $log);
+                if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
+                    $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
                 }
+            } catch (Throwable $error) {
+                $log->addTag('channel', $channel);
+                $log->addTag('error', $error->getMessage());
+                $failure ??= $error;
+            }
+        }
 
-                try {
-                    $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $log);
-                    if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
-                        $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
-                    }
-                } catch (Throwable $error) {
-                    $log->addTag('channel', $channel);
-                    $log->addTag('error', $error->getMessage());
-                    $failure ??= $error;
-                }
-            }
-
-            if ($failure !== null) {
-                throw $failure;
-            }
-        } finally {
-            if ($previousHookFlags !== null) {
-                Runtime::setHookFlags($previousHookFlags);
-            }
+        if ($failure !== null) {
+            throw $failure;
         }
     }
 

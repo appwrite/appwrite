@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Swoole\Coroutine as Co;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
-use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Span\Span;
 use Utopia\Telemetry\Adapter as Telemetry;
 
 class Schedule extends Action
@@ -21,10 +21,8 @@ class Schedule extends Action
     {
         $this
             ->desc('Execute functions, executions, and messages scheduled in Appwrite')
-            ->inject('publisher')
-            ->inject('publisherMigrations')
             ->inject('publisherForFunctions')
-            ->inject('publisherMessaging')
+            ->inject('publisherForMessaging')
             ->inject('getIsResourceBlocked')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
@@ -33,58 +31,35 @@ class Schedule extends Action
     }
 
     public function action(
-        BrokerPool $publisher,
-        BrokerPool $publisherMigrations,
         FunctionPublisher $publisherForFunctions,
-        BrokerPool $publisherMessaging,
+        MessagingPublisher $publisherForMessaging,
         callable $getIsResourceBlocked,
         Database $dbForPlatform,
         callable $getProjectDB,
         Telemetry $telemetry,
     ): never {
-        Console::title('Scheduler V1 (combined)');
-        Console::success(APP_NAME . ' combined scheduler v1 has started');
-
-        /** @var list<ScheduleBase> $tasks */
-        $tasks = [
-            new ScheduleFunctions(),
-            new ScheduleExecutions(),
-            new ScheduleMessages(),
-        ];
-
-        $names = \array_map(
-            static fn (ScheduleBase $task): string => $task::getSupportedResource(),
-            $tasks,
-        );
-
-        Console::info('Mode: combined — functions, executions, and messages in one process');
-        Console::info('Resource types: ' . \implode(', ', $names));
-        Console::info('Bootstrap runs serially (shared console/cache pools), then enqueue loops in parallel');
-
-        foreach ($tasks as $task) {
-            $resource = $task::getSupportedResource();
-            Console::info("Bootstrapping {$resource}…");
-            $task->setup(
-                $publisher,
-                $publisherMigrations,
-                $publisherForFunctions,
-                $publisherMessaging,
-                $telemetry,
-            );
-            $task->start($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
-            Console::success("Bootstrapped {$resource} (" . \count($task->getSchedules()) . ' active)');
-        }
-
-        Console::success('All schedulers loaded; starting enqueue loops…');
-
-        foreach ($tasks as $task) {
-            Co::create(function () use ($task, $dbForPlatform, $getProjectDB): void {
-                $task->listen($dbForPlatform, $getProjectDB);
-            });
-        }
+        $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
+        $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
+        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
 
         while (true) {
             sleep(3600);
         }
+    }
+
+    private function loop(\Closure $task): void
+    {
+        Co::create(function () use ($task): void {
+            Span::init('schedule.combined.loop');
+            $error = null;
+
+            try {
+                $task();
+            } catch (\Throwable $th) {
+                $error = $th;
+            } finally {
+                Span::current()?->finish(error: $error);
+            }
+        });
     }
 }
