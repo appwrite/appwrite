@@ -647,9 +647,6 @@ class OpenAPI3 extends Format
                         $node['schema']['example'] = ($param['example'] ?? '') ?: false;
                         break;
                     case \Appwrite\Utopia\Database\Validator\CustomId::class:
-                        if ($sdk->getType() === MethodType::UPLOAD) {
-                            $node['schema']['x-upload-id'] = true;
-                        }
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-appwrite'] = [
                             'idGenerator' => 'ID.unique',
@@ -1029,10 +1026,6 @@ class OpenAPI3 extends Format
                                     $body['content'][$consumes[0]]['schema']['properties'][$name][$key] = $node['schema'][$key];
                                 }
                             }
-                        }
-
-                        if ($node['schema']['x-upload-id'] ?? false) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
                         }
 
                         if (isset($node['schema']['x-appwrite'])) {
