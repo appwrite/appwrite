@@ -11,6 +11,7 @@ use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
@@ -35,6 +36,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Usage\Tenant as UsageTenant;
 
 use function Swoole\Coroutine\batch;
 
@@ -73,8 +75,134 @@ class Deletes extends Action
             ->inject('log')
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
-            ->inject('bus')
-            ->callback($this->action(...));
+            ->inject('bus');
+
+        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+            $this
+                ->inject('usageConnection')
+                ->callback($this->actionWithUsage(...));
+            return;
+        }
+
+        $this->callback($this->action(...));
+    }
+
+    public function actionWithUsage(
+        Message $message,
+        Document $project,
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        callable $getDatabasesDB,
+        callable $getLogsDB,
+        Device $deviceForFiles,
+        Device $deviceForFunctions,
+        Device $deviceForSites,
+        Device $deviceForBuilds,
+        Device $deviceForCache,
+        CertificatesAdapter $certificates,
+        Executor $executor,
+        string $executionRetention,
+        int $executionsRetentionCount,
+        Log $log,
+        DeletePublisher $publisherForDeletes,
+        UsagePublisher $publisherForUsage,
+        Bus $bus,
+        UsageConnection $usageConnection,
+    ): void {
+        $payload = $message->getPayload();
+        $deleteMessage = DeleteMessage::fromArray($payload);
+        $document = $deleteMessage->document ?? new Document();
+        $tenants = $usageConnection->isEnabled()
+            ? $this->usageTenants($deleteMessage->type, $document, $dbForPlatform)
+            : [];
+
+        // Purge before the delete: the project records are the only mapping
+        // back to their tenants, so a purge failure must fail the message
+        // while a retry can still resolve them.
+        $this->purgeUsage($usageConnection, $tenants);
+
+        $this->action(
+            $message,
+            $project,
+            $dbForPlatform,
+            $getProjectDB,
+            $getDatabasesDB,
+            $getLogsDB,
+            $deviceForFiles,
+            $deviceForFunctions,
+            $deviceForSites,
+            $deviceForBuilds,
+            $deviceForCache,
+            $certificates,
+            $executor,
+            $executionRetention,
+            $executionsRetentionCount,
+            $log,
+            $publisherForDeletes,
+            $publisherForUsage,
+            $bus,
+        );
+
+        // Sweep rows that landed between the purge and the delete. The
+        // mapping is gone now, so a failure here strands only in-flight
+        // stragglers; log it rather than failing a delete that completed.
+        try {
+            $this->purgeUsage($usageConnection, $tenants);
+        } catch (Throwable $th) {
+            Console::error('Failed to sweep usage tenants after delete: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * @param list<string> $tenants
+     * @throws \RuntimeException
+     */
+    protected function purgeUsage(UsageConnection $usageConnection, array $tenants): void
+    {
+        if ($tenants === []) {
+            return;
+        }
+
+        $usage = $usageConnection->getUsage();
+        foreach ($tenants as $tenant) {
+            if (!(new UsageTenant($usage, $tenant))->purge()) {
+                throw new \RuntimeException('Usage purge returned false for tenant: ' . $tenant);
+            }
+        }
+    }
+
+    /**
+     * Collect usage tenants before the delete runs. Team-owned projects are
+     * removed from the platform DB inside the action, so sequences must be
+     * captured while those documents still exist.
+     *
+     * @return list<string>
+     */
+    protected function usageTenants(string $type, Document $document, Database $dbForPlatform): array
+    {
+        if ($type === DELETE_TYPE_DOCUMENT && $document->getCollection() === DELETE_TYPE_PROJECTS) {
+            $tenant = (string) $document->getSequence();
+            return $tenant === '' ? [] : [$tenant];
+        }
+
+        if ($type !== DELETE_TYPE_TEAM_PROJECTS || $document->getSequence() === '') {
+            return [];
+        }
+
+        $projects = $dbForPlatform->find('projects', [
+            Query::equal('teamInternalId', [$document->getSequence()]),
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+        ]);
+
+        $tenants = [];
+        foreach ($projects as $project) {
+            $tenant = (string) $project->getSequence();
+            if ($tenant !== '') {
+                $tenants[] = $tenant;
+            }
+        }
+
+        return $tenants;
     }
 
     /**

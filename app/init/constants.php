@@ -366,6 +366,7 @@ const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 
 const METRIC_BUCKETS = 'buckets';
+const METRIC_STORAGE = 'storage';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
 const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
@@ -419,6 +420,12 @@ const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
+
+// Peak is the highest 5-minute level; shorter bursts are smoothed away.
+const REALTIME_CONCURRENCY_INTERVAL = '5m';
+
+// Held back so in-flight writes land first; a delta arriving later is lost.
+const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';

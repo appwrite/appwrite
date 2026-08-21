@@ -11,6 +11,16 @@
 use Appwrite\Event\Event;
 
 return [
+    'stats-usage' => [
+        'queue' => Event::STATS_USAGE_QUEUE_NAME,
+        'queueEnv' => '_APP_STATS_USAGE_QUEUE_NAME',
+        'maxCoroutines' => 8,
+    ],
+    'stats-resources' => [
+        'queue' => Event::STATS_RESOURCES_QUEUE_NAME,
+        'queueEnv' => '_APP_STATS_RESOURCES_QUEUE_NAME',
+        'maxCoroutines' => 1,
+    ],
     'webhooks' => [
         'queue' => Event::WEBHOOK_QUEUE_NAME,
         'queueEnv' => '_APP_WEBHOOK_QUEUE_NAME',
