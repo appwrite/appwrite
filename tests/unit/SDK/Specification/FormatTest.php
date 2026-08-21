@@ -198,6 +198,39 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('x-enum-keys', $kind);
     }
 
+    public function testEnumNameMustNotOverlapServiceName(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('kind', 'basic', new WhiteList(['basic', 'advanced']), 'Test kind.', enum: new Enum());
+
+        $format = new OpenAPI3(
+            new Container(),
+            [['name' => 'Kind', 'description' => 'Test kinds.']],
+            [$route],
+            [],
+            [],
+            0,
+            'console',
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Spec service name 'Kind' must not overlap enum 'Kind'.");
+
+        $format->parse();
+    }
+
     public function testResponseModelEnumEmitsAnnotatedBranches(): void
     {
         Method::$processed = [];

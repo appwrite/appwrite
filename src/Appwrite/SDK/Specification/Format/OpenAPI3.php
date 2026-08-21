@@ -107,8 +107,10 @@ class OpenAPI3 extends Format
      * @param list<string> $keys
      * @return array<string, mixed>
      */
-    private function getEnumSchema(array $values, ?string $name, array $keys, bool $open = false): array
+    private function getEnumSchema(array $values, ?string $name, string $fallbackName, array $keys, bool $open = false): array
     {
+        $this->assertEnumName($name ?: $fallbackName);
+
         $branches = [];
         foreach ($values as $index => $value) {
             $branch = [
@@ -138,6 +140,35 @@ class OpenAPI3 extends Format
                 'anyOf' => [$enum, ['type' => Validator::TYPE_STRING]],
             ]
             : $enum;
+    }
+
+    private function assertEnumName(string $enum): void
+    {
+        $enum = $this->formatSdkName($enum);
+        $normalizedEnum = $this->normalizeSdkName($enum);
+
+        foreach ($this->services as $service) {
+            $name = $service['name'] ?? null;
+            if (!\is_string($name) || $name === '') {
+                continue;
+            }
+
+            if ($this->normalizeSdkName($name) === $normalizedEnum) {
+                throw new \RuntimeException(
+                    "Spec service name '{$name}' must not overlap enum '{$enum}'."
+                );
+            }
+        }
+    }
+
+    private function formatSdkName(string $name): string
+    {
+        return \str_replace(' ', '', \ucwords(\str_replace(['-', '_', '/'], ' ', $name)));
+    }
+
+    private function normalizeSdkName(string $name): string
+    {
+        return \strtolower((string) \preg_replace('/[^a-z0-9]/i', '', $name));
     }
 
     public function parse(): array
@@ -804,6 +835,7 @@ class OpenAPI3 extends Format
                                     $node['schema']['items'] = $this->getEnumSchema(
                                         $enumValues,
                                         $enum->name,
+                                        $name,
                                         $enumKeys,
                                         $openEnum,
                                     );
@@ -844,6 +876,7 @@ class OpenAPI3 extends Format
                                         ...$this->getEnumSchema(
                                             $enumValues,
                                             $enum->name,
+                                            $name,
                                             $enumKeys,
                                             $openEnum,
                                         ),
@@ -1225,6 +1258,7 @@ class OpenAPI3 extends Format
                     $enum = $this->getEnumSchema(
                         \array_values($rule['enum']),
                         $rule['enumSDKName'] ?? null,
+                        $name,
                         \array_values($rule['enum']),
                     );
 
