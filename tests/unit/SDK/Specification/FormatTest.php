@@ -47,6 +47,8 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
+use Utopia\Platform\Enum;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean as BooleanValidator;
@@ -54,6 +56,7 @@ use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class TestFormat extends Format
 {
@@ -122,6 +125,139 @@ final class FormatTest extends TestCase
     public function testExistingResponseEnumMetadataRemainsUnchanged(): void
     {
         $this->assertSame('HealthCheckStatus', (new HealthStatus())->getRules()['status']['enumSDKName']);
+    }
+
+    public function testUnionWithAFreeStringBranchEmitsAnyOf(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests'))
+            ->desc('List tests')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'listTests',
+                description: 'List tests.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('metrics', [], new AnyOf([
+                new ArrayList(new WhiteList(['alpha', 'beta'], true), 10),
+                new ArrayList(new Text(255), 10),
+            ]), 'Metric names.', false, enum: new Enum(name: 'TestMetric'));
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+
+        $this->assertSame([
+            'type' => 'string',
+            'anyOf' => [
+                [
+                    'title' => 'TestMetric',
+                    'type' => 'string',
+                    'oneOf' => [
+                        ['type' => 'string', 'enum' => ['alpha'], 'title' => 'alpha'],
+                        ['type' => 'string', 'enum' => ['beta'], 'title' => 'beta'],
+                    ],
+                ],
+                ['type' => 'string'],
+            ],
+        ], $spec['paths']['/tests']['get']['parameters'][0]['schema']['items']);
+    }
+
+    public function testClosedEnumEmitsAnnotatedBranchesInRequestBody(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('kind', 'basic', new WhiteList(['basic', 'advanced']), 'Test kind.', enum: new Enum(
+                name: 'TestKind',
+                map: ['basic' => 'Basic', 'advanced' => 'Advanced'],
+            ));
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $kind = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['kind'];
+
+        $this->assertSame('TestKind', $kind['title']);
+        $this->assertSame([
+            ['type' => 'string', 'enum' => ['basic'], 'title' => 'Basic'],
+            ['type' => 'string', 'enum' => ['advanced'], 'title' => 'Advanced'],
+        ], $kind['oneOf']);
+        $this->assertSame('string', $kind['type']);
+        $this->assertArrayNotHasKey('x-enum-name', $kind);
+        $this->assertArrayNotHasKey('x-enum-keys', $kind);
+    }
+
+    public function testEnumNameMustNotOverlapServiceName(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('kind', 'basic', new WhiteList(['basic', 'advanced']), 'Test kind.', enum: new Enum());
+
+        $format = new OpenAPI3(
+            new Container(),
+            [['name' => 'Kind', 'description' => 'Test kinds.']],
+            [$route],
+            [],
+            [],
+            0,
+            'console',
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Spec service name 'Kind' must not overlap enum 'kind'.");
+
+        $format->parse();
+    }
+
+    public function testResponseModelEnumEmitsAnnotatedBranches(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/health'))
+            ->desc('Get health')
+            ->label('sdk', new Method(
+                namespace: 'health',
+                group: null,
+                name: 'get',
+                description: 'Get health.',
+                auth: [],
+                responses: [new SDKResponse(code: Response::STATUS_CODE_OK, model: Response::MODEL_HEALTH_STATUS)],
+            ));
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [new HealthStatus()], [], 0, 'console'))->parse();
+        $status = $spec['components']['schemas']['healthStatus']['properties']['status'];
+
+        $this->assertSame('HealthCheckStatus', $status['title']);
+        $this->assertNotEmpty($status['oneOf']);
+        foreach ($status['oneOf'] as $branch) {
+            $this->assertSame('string', $branch['type']);
+            $this->assertCount(1, $branch['enum']);
+            $this->assertSame($branch['enum'][0], $branch['title']);
+        }
+        $this->assertArrayNotHasKey('x-enum-name', $status);
     }
 
     public function testOpenApiCustomIdBodyFieldIncludesIdGeneratorMetadata(): void

@@ -23,6 +23,7 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
@@ -99,6 +100,69 @@ class OpenAPI3 extends Format
         }
 
         throw new \InvalidArgumentException('Object schema examples must be JSON objects.');
+    }
+
+    /**
+     * @param list<string> $values
+     * @param list<string> $keys
+     * @return array<string, mixed>
+     */
+    private function getEnumSchema(array $values, ?string $name, string $fallbackName, array $keys, bool $open = false): array
+    {
+        $this->assertEnumName($name ?: $fallbackName);
+
+        $branches = [];
+        foreach ($values as $index => $value) {
+            $branch = [
+                'type' => Validator::TYPE_STRING,
+                'enum' => [$value],
+            ];
+
+            $key = $keys[$index] ?? null;
+            if (\is_string($key) && $key !== '') {
+                $branch['title'] = $key;
+            }
+
+            $branches[] = $branch;
+        }
+
+        $enum = [
+            'type' => Validator::TYPE_STRING,
+            'oneOf' => $branches,
+        ];
+        if (\is_string($name) && $name !== '') {
+            $enum = ['title' => $name, ...$enum];
+        }
+
+        return $open
+            ? [
+                'type' => Validator::TYPE_STRING,
+                'anyOf' => [$enum, ['type' => Validator::TYPE_STRING]],
+            ]
+            : $enum;
+    }
+
+    private function assertEnumName(string $enum): void
+    {
+        $normalizedEnum = $this->normalizeSdkName($enum);
+
+        foreach ($this->services as $service) {
+            $name = $service['name'] ?? null;
+            if (!\is_string($name) || $name === '') {
+                continue;
+            }
+
+            if ($this->normalizeSdkName($name) === $normalizedEnum) {
+                throw new \RuntimeException(
+                    "Spec service name '{$name}' must not overlap enum '{$enum}'."
+                );
+            }
+        }
+    }
+
+    private function normalizeSdkName(string $name): string
+    {
+        return \strtolower((string) \preg_replace('/[^a-z0-9]/i', '', $name));
     }
 
     public function parse(): array
@@ -533,9 +597,22 @@ class OpenAPI3 extends Format
                     $class = Queries::class;
                 }
 
+                $openEnum = false;
                 if ($class === \Utopia\Validator\AnyOf::class) {
-                    $validator = $param['validator']->getValidators()[0];
+                    $validators = $param['validator']->getValidators();
+                    $validator = $validators[0];
                     $class = \get_class($validator);
+
+                    foreach ($validators as $unionValidator) {
+                        while ($unionValidator instanceof ArrayList || $unionValidator instanceof Nullable) {
+                            $unionValidator = $unionValidator->getValidator();
+                        }
+
+                        if (!$unionValidator instanceof WhiteList && $unionValidator->getType() === Validator::TYPE_STRING) {
+                            $openEnum = true;
+                            break;
+                        }
+                    }
                 }
 
                 $array = false;
@@ -749,11 +826,13 @@ class OpenAPI3 extends Format
                                         $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
                                     }
 
-                                    $node['schema']['items']['enum'] = $enumValues;
-                                    if (!empty($enum->name)) {
-                                        $node['schema']['items']['x-enum-name'] = $enum->name;
-                                    }
-                                    $node['schema']['items']['x-enum-keys'] = $enumKeys;
+                                    $node['schema']['items'] = $this->getEnumSchema(
+                                        $enumValues,
+                                        $enum->name,
+                                        $name,
+                                        $enumKeys,
+                                        $openEnum,
+                                    );
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -786,11 +865,16 @@ class OpenAPI3 extends Format
                                         $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
                                     }
 
-                                    $node['schema']['enum'] = $enumValues;
-                                    if (!empty($enum->name)) {
-                                        $node['schema']['x-enum-name'] = $enum->name;
-                                    }
-                                    $node['schema']['x-enum-keys'] = $enumKeys;
+                                    $node['schema'] = [
+                                        ...$node['schema'],
+                                        ...$this->getEnumSchema(
+                                            $enumValues,
+                                            $enum->name,
+                                            $name,
+                                            $enumKeys,
+                                            $openEnum,
+                                        ),
+                                    ];
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -921,9 +1005,11 @@ class OpenAPI3 extends Format
                         }
 
                         $body['content'][$consumes[0]]['schema']['properties'][$name] = [
-                            'type' => $node['schema']['type'],
                             'description' => $node['description'],
                         ];
+                        if (isset($node['schema']['type'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['type'] = $node['schema']['type'];
+                        }
 
                         if (\array_key_exists('default', $node['schema'])) {
                             $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['schema']['default'];
@@ -937,11 +1023,12 @@ class OpenAPI3 extends Format
                             $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
                         }
 
-                        if (isset($node['schema']['enum'])) {
-                            /// If the enum flag is Set, add the enum values to the body
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'];
+                        if (isset($node['schema']['oneOf']) || isset($node['schema']['anyOf'])) {
+                            foreach (['title', 'oneOf', 'anyOf'] as $key) {
+                                if (isset($node['schema'][$key])) {
+                                    $body['content'][$consumes[0]]['schema']['properties'][$name][$key] = $node['schema'][$key];
+                                }
+                            }
                         }
 
                         if ($node['schema']['x-upload-id'] ?? false) {
@@ -1162,16 +1249,21 @@ class OpenAPI3 extends Format
                     }
                 }
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
+                    $enum = $this->getEnumSchema(
+                        \array_values($rule['enum']),
+                        $rule['enumSDKName'] ?? null,
+                        $name,
+                        \array_values($rule['enum']),
+                    );
+
                     if ($rule['array']) {
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['enum'] = \array_values($rule['enum']);
-                        if (!empty($rule['enumSDKName'])) {
-                            $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $rule['enumSDKName'];
-                        }
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $enum;
                     } else {
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['enum'] = \array_values($rule['enum']);
-                        if (!empty($rule['enumSDKName'])) {
-                            $output['components']['schemas'][$model->getType()]['properties'][$name]['x-enum-name'] = $rule['enumSDKName'];
-                        }
+                        unset($output['components']['schemas'][$model->getType()]['properties'][$name]['type']);
+                        $output['components']['schemas'][$model->getType()]['properties'][$name] = [
+                            ...$output['components']['schemas'][$model->getType()]['properties'][$name],
+                            ...$enum,
+                        ];
                     }
                 }
                 if (!in_array($name, $required)) {
