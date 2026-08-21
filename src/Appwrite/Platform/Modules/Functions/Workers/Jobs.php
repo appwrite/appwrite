@@ -44,23 +44,17 @@ use Utopia\System\System;
  * Handlers are protected extension points: downstream workers (e.g. cloud)
  * override finalize() and wrap parent:: for post-activation work.
  *
- * A build that has to exist somewhere other than the region that produced it
- * joins on that too, through three seams a downstream worker overrides:
- * dispatchDistribution() starts the copies once the build is known good,
- * recordEdgeReady() notes each target that answers, and distributed() decides
- * when enough have. Waiting happens between callbacks rather than inside one,
- * so nothing holds jobs-deployment:<id> while a copy is in flight.
+ * A build that has to exist somewhere other than where it was produced joins on
+ * that too, through two seams a downstream worker overrides:
+ * dispatchDistribution() starts the copies once the build is known good, and
+ * distributed() decides when enough of them have arrived. Both are no-ops here,
+ * where a build is servable in the only place it exists. How a copy reports back
+ * is that worker's business — it puts its own callback on this queue and handles
+ * it in onCallback(), so the waiting happens between callbacks rather than inside
+ * one and nothing holds jobs-deployment:<id> while a copy is in flight.
  */
 class Jobs extends Action
 {
-    /**
-     * An edge reporting that it can serve a deployment's build. Not an
-     * orchestrator callback: downstream deployments that distribute a build
-     * beyond the region that built it publish this themselves as each target
-     * reports in.
-     */
-    public const string EVENT_EDGE_READY = 'appwrite.deployment.edge-ready';
-
     private const DEDUPE_TTL = 3600;
     private const LOCK_TTL = 30;
     private const LOCK_TIMEOUT = 10.0;
@@ -144,8 +138,7 @@ class Jobs extends Action
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                self::EVENT_EDGE_READY => $this->onEdgeReady($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                default => $deployment,
+                default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
 
             // Console realtime on every callback (log stream + status).
@@ -205,14 +198,20 @@ class Jobs extends Action
     }
 
     /**
-     * Apply one edge's readiness report, then retry the success join.
+     * A callback this worker does not handle.
      *
-     * The report is recorded by recordEdgeReady(), which is where a downstream
-     * worker tracks which targets have answered; distributed() is the gate that
-     * decides whether enough of them have. Neither does anything here, because a
-     * self-hosted build is servable in the only place it exists.
+     * Everything the jobs-service sends is matched above. A subclass that puts
+     * its own events on this queue handles them here, with the deployment already
+     * read and the lock already held, and returns the deployment as it left it —
+     * which is why the outcome of one is published like any other callback's.
+     *
+     * Returns the deployment untouched here: an unrecognised callback is not an
+     * error, it belongs to something this class does not know about.
+     *
+     * @param array<string, mixed> $data
      */
-    protected function onEdgeReady(
+    protected function onCallback(
+        string $event,
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
@@ -228,19 +227,7 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        $this->recordEdgeReady($deployment, $data, $cache);
-
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
-    }
-
-    /**
-     * Note that one edge can serve this deployment. A no-op here; overridden
-     * where builds are distributed beyond the region that produced them.
-     *
-     * @param array<string, mixed> $data
-     */
-    protected function recordEdgeReady(Document $deployment, array $data, Cache $cache): void
-    {
+        return $deployment;
     }
 
     /**
@@ -428,11 +415,11 @@ class Jobs extends Action
         }
 
         // Only now is the build known good, so this is the first point it is worth
-        // copying anywhere. Idempotent: every edge report re-enters here.
+        // copying anywhere. Idempotent: every report re-enters here.
         $this->dispatchDistribution($dbForProject, $project, $deployment, $cache);
 
-        // Joined on the build itself, still waiting on the copies of it. Each
-        // report re-enters through onEdgeReady() and retries this.
+        // Joined on the build itself, still waiting on the copies of it. Whatever
+        // reports a copy arriving re-enters through onCallback() and retries this.
         if (! $this->distributed($deployment, $cache)) {
             return $deployment;
         }
