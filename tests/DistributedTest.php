@@ -76,6 +76,46 @@ final class DistributedTest extends TestCase
         $holder->release();
     }
 
+    public function testWaitersDoNotRetryInLockstep(): void
+    {
+        $holder = new Distributed($this->redis, $this->key, 30);
+        $this->assertTrue($holder->tryAcquire());
+
+        // Time from starting to wait until the first retry fires. An unjittered
+        // ladder sleeps exactly BACKOFF_MIN here every single time, so every
+        // waiter in a burst wakes at the same instant and collides again.
+        $observed = 0;
+        $lowest = PHP_FLOAT_MAX;
+        $highest = 0.0;
+        for ($run = 0; $run < 25; $run++) {
+            $waiter = new Distributed($this->redis, $this->key, 30);
+            $start = microtime(true);
+            $first = null;
+            $waiter->setLogger(function () use ($start, &$first): void {
+                $first ??= microtime(true) - $start;
+            });
+            $waiter->acquire(0.05);
+            if ($first !== null) {
+                $observed++;
+                $lowest = min($lowest, $first);
+                $highest = max($highest, $first);
+            }
+        }
+
+        $holder->release();
+
+        $this->assertGreaterThan(0, $observed, 'No retry was observed; the logger hook never fired');
+
+        // usleep() overshoot on a loaded runner is a couple of milliseconds, so a
+        // spread this wide can only come from the wait being randomised.
+        $spread = $highest - $lowest;
+        $this->assertGreaterThan(
+            0.010,
+            $spread,
+            \sprintf('Retry delays span only %.1fms - waiters are waking in lockstep', $spread * 1000),
+        );
+    }
+
     public function testReleaseDoesNotRemoveForeignLock(): void
     {
         $this->redis->set($this->key, 'other-owner', ['EX' => 30]);

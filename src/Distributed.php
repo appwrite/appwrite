@@ -28,6 +28,10 @@ final class Distributed implements Lock
         end
         LUA;
 
+    private const float BACKOFF_MIN = 0.05;
+
+    private const float BACKOFF_MAX = 1.0;
+
     private ?string $token = null;
 
     private ?Closure $logger = null;
@@ -60,11 +64,11 @@ final class Distributed implements Lock
         }
 
         $deadline = microtime(true) + $timeout;
-        $delay = 0.05;
+        $delay = self::BACKOFF_MIN;
 
         while (microtime(true) < $deadline) {
             $remaining = $deadline - microtime(true);
-            $sleep = min($delay, $remaining);
+            $sleep = min($this->jitter($delay), $remaining);
             if ($sleep > 0.0) {
                 usleep((int) ($sleep * 1_000_000));
             }
@@ -74,7 +78,7 @@ final class Distributed implements Lock
             }
 
             $this->log("Lock contention for {$this->key}, retrying");
-            $delay = min($delay * 2.0, 1.0);
+            $delay = min($delay * 2.0, self::BACKOFF_MAX);
         }
 
         $this->log("Failed to acquire lock for {$this->key} within {$timeout}s");
@@ -198,6 +202,29 @@ final class Distributed implements Lock
         $method = 'eval';
 
         return $this->redis->$method($script, $arguments, 1);
+    }
+
+    /**
+     * Spread the next wait randomly over the second half of $delay.
+     *
+     * Without this every waiter walks the same backoff ladder from the moment it
+     * started, so waiters that arrived together keep waking together and keep
+     * colliding on the same `SET NX`: contention re-synchronises the herd
+     * instead of dispersing it, and a waiter that has reached BACKOFF_MAX loses
+     * repeatedly to newer arrivals still probing at BACKOFF_MIN until its
+     * timeout expires. Randomising the wait is what the Redis distributed-lock
+     * guidance asks for ("try again after a random delay in order to try to
+     * desynchronize multiple clients").
+     *
+     * The floor at half keeps the growth of the ladder monotonic, so a long
+     * queue still backs off rather than degenerating into a hot retry loop
+     * against Redis.
+     */
+    private function jitter(float $delay): float
+    {
+        $half = $delay / 2.0;
+
+        return $half + (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) * $half;
     }
 
     private function generateToken(): string
