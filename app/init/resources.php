@@ -25,6 +25,7 @@ use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
+use OpenRuntimes\Orchestrator\Sandboxes;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
@@ -87,6 +88,21 @@ $container->set('jobs', function () {
     }
 
     return new Jobs($client);
+}, []);
+
+$container->set('sandboxes', function () {
+    $client = (new Client(new CurlAdapter()))
+        ->withBearerAuth(System::getEnv('_APP_SANDBOX_SECRET', ''))
+        ->withTimeout(30);
+
+    // Keep the injection resolvable without _APP_SANDBOX_HOST and fail at
+    // call time instead, so installs without the service stay bootable.
+    $host = System::getEnv('_APP_SANDBOX_HOST', '');
+    if ($host !== '') {
+        $client = $client->withBaseUri($host);
+    }
+
+    return new Sandboxes($client);
 }, []);
 
 $container->set('screenshots', function () {

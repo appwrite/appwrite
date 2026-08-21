@@ -17,6 +17,7 @@ use Appwrite\Platform\Modules\Presences;
 use Appwrite\Platform\Modules\Project;
 use Appwrite\Platform\Modules\Projects;
 use Appwrite\Platform\Modules\Proxy;
+use Appwrite\Platform\Modules\Sandbox;
 use Appwrite\Platform\Modules\Sites;
 use Appwrite\Platform\Modules\Storage;
 use Appwrite\Platform\Modules\Teams;
@@ -42,6 +43,7 @@ class Appwrite extends Platform
         $this->addModule(new Sites\Module());
         $this->addModule(new Console\Module());
         $this->addModule(new Proxy\Module());
+        $this->addModule(new Sandbox\Module());
         $this->addModule(new Teams\Module());
         $this->addModule(new Tokens\Module());
         $this->addModule(new Users\Module());

@@ -1054,6 +1054,44 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_SANDBOXES',
+                'description' => 'Wildcard domain sandbox URLs are minted under, as s-{token}.{domain}. Needs a DNS record for *.{domain} pointing at this install, and must differ from the domain deployments use.',
+                'introduction' => '1.10.0',
+                'default' => 'sandboxes.localhost',
+                'required' => false,
+                'overwrite' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SANDBOX_HOST',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes orchestrator that serves the sandbox API.',
+                'introduction' => '1.10.0',
+                'default' => 'http://orchestrator:8080',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SANDBOX_SECRET',
+                'description' => 'The secret used to authenticate with the sandbox API. Make sure to change this.',
+                'introduction' => '1.10.0',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SANDBOX_VOLUME',
+                'description' => 'Name prefix for the Docker volume (or Kubernetes PersistentVolumeClaim) mounted into every sandbox at /workspace/persistent, so files outlive the sandbox. One volume per sandbox, named {prefix}-p{projectInternalId}-{sandboxId} and created on first use, so recreating a sandbox under the same ID restores its files. Leave empty to give sandboxes no persistent storage.',
+                'introduction' => '1.10.0',
+                'default' => 'appwrite-sandbox',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_BROWSER_HOST',
                 'description' => 'The host used by Appwrite to communicate with the browser service for screenshots.',
                 'introduction' => '1.8.0',

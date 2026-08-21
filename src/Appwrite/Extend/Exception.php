@@ -422,6 +422,11 @@ class Exception extends \Exception
     public const string TOKEN_EXPIRED = 'token_expired';
     public const string TOKEN_RESOURCE_TYPE_INVALID = 'token_resource_type_invalid';
 
+    /** Sandbox */
+    public const string SANDBOX_NOT_FOUND = 'sandbox_not_found';
+    public const string SANDBOX_ALREADY_EXISTS = 'sandbox_already_exists';
+    public const string SANDBOX_LIMIT_EXCEEDED = 'sandbox_limit_exceeded';
+
     /** Advisor */
     public const string INSIGHT_NOT_FOUND = 'insight_not_found';
     public const string INSIGHT_ALREADY_EXISTS = 'insight_already_exists';

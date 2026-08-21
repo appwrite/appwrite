@@ -339,6 +339,10 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_CERTIFICATE = 'healthCertificate';
     public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
 
+    // Sandbox
+    public const MODEL_SANDBOX = 'sandbox';
+    public const MODEL_SANDBOX_LIST = 'sandboxList';
+
     // Advisor
     public const MODEL_INSIGHT = 'insight';
     public const MODEL_INSIGHT_LIST = 'insightList';
