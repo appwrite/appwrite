@@ -23,9 +23,13 @@ class Broker
     // Property identifiers, shared between CONNECT and AUTH property blocks.
     private const PROP_AUTH_METHOD = 0x15;
     private const PROP_AUTH_DATA = 0x16;
+    private const PROP_USER = 0x26;
 
     /** @var array<int, int> fd => protocol level (4 = 3.1.1, 5 = 5.0) */
     private array $protocol = [];
+
+    /** @var array<int, string> fd => project id (from the CONNECT username field) */
+    private array $project = [];
 
     /** @var array<int, array<string, true>> fd => set of subscribed topic filters */
     private array $subscriptions = [];
@@ -53,10 +57,8 @@ class Broker
 
     private function onReceive(Server $server, int $fd, int $reactorId, string $data): void
     {
-        var_dump($data);
         $type = ord($data[0]) >> 4;
         $flags = ord($data[0]) & 0x0F;
-        var_dump($type);
 
         [$remaining, $lenBytes] = $this->decodeLength($data, 1);
         $body = substr($data, 1 + $lenBytes, $remaining);
@@ -77,12 +79,65 @@ class Broker
     {
         $offset = 0;
         [, $offset] = $this->readString($body, $offset); // protocol name
+
         $level = ord($body[$offset]);
         $this->protocol[$fd] = $level;
+        $offset += 1; // protocol level
+        $offset += 1; // connect flags
+        $offset += 2; // keep alive
+
+        // CONNECT properties carry enhanced auth and our custom metadata.
+        [$userProperties] = $this->readUserProperties($fd, $body, $offset);
+
+        // projectId is sent as a User Property. deviceType and any other client
+        // metadata can be added the same way, e.g. $userProperties['deviceType'].
+        $project = $userProperties['projectId'] ?? '';
+
+        $this->project[$fd] = $project;
+        echo "CONNECT project={$project}\n";
+
+        // TODO: select the project DB from $project and verify the session credential.
 
         // CONNACK: [ack flags = 0][reason code = 0](+ [property length = 0] for v5)
         $variable = chr(0x00) . chr(0x00) . ($level >= 5 ? chr(0x00) : '');
         $server->send($fd, chr(0x20) . $this->encodeLength(strlen($variable)) . $variable);
+    }
+
+    /**
+     * Read the User Properties from a v5 CONNECT property block as a key/value map,
+     * skipping the auth method/data. No-op for MQTT 3.1.1 (no properties).
+     *
+     * @return array{0: array<string, string>, 1: int} [userProperties, newOffset]
+     */
+    private function readUserProperties(int $fd, string $body, int $offset): array
+    {
+        $userProperties = [];
+
+        if (($this->protocol[$fd] ?? 4) < 5) {
+            return [$userProperties, $offset];
+        }
+
+        [$length, $lenBytes] = $this->decodeLength($body, $offset);
+        $offset += $lenBytes;
+        $end = $offset + $length;
+
+        while ($offset < $end) {
+            $id = ord($body[$offset]);
+            $offset++;
+
+            if ($id === self::PROP_AUTH_METHOD || $id === self::PROP_AUTH_DATA) {
+                [, $offset] = $this->readString($body, $offset);
+            } elseif ($id === self::PROP_USER) {
+                [$key, $offset] = $this->readString($body, $offset);
+                [$value, $offset] = $this->readString($body, $offset);
+                $userProperties[$key] = $value;
+            } else {
+                // POC assumption: clients send only auth and user properties.
+                throw new \RuntimeException('Unhandled connect property 0x' . dechex($id));
+            }
+        }
+
+        return [$userProperties, $offset];
     }
 
     private function handleSubscribe(Server $server, int $fd, string $body): void
@@ -231,7 +286,7 @@ class Broker
 
     private function onClose(Server $server, int $fd): void
     {
-        unset($this->subscriptions[$fd], $this->protocol[$fd]);
+        unset($this->subscriptions[$fd], $this->protocol[$fd], $this->project[$fd]);
     }
 
     /**
