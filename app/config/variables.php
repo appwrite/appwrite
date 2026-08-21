@@ -233,6 +233,60 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONSOLE_OIDC_CLIENT_ID',
+                'description' => 'The client ID for the OIDC provider used to login to the Appwrite console.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_OIDC_CLIENT_SECRET',
+                'description' => 'The client secret for the OIDC provider used to login to the Appwrite console.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_OIDC_AUTHORIZATION_ENDPOINT',
+                'description' => 'The authorization endpoint for the OIDC provider used to login to the Appwrite console.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_OIDC_TOKEN_ENDPOINT',
+                'description' => 'The token endpoint for the OIDC provider used to login to the Appwrite console.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_OIDC_USERINFO_ENDPOINT',
+                'description' => 'The userinfo endpoint for the OIDC provider used to login to the Appwrite console.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_OIDC_WELLKNOWN_ENDPOINT',
+                'description' => 'The well-known configuration endpoint for the OIDC provider used to login to the Appwrite console.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_URL_SCHEME',
                 'description' => 'Console URL scheme used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments). Set to \'root\' for the new console served at the root path (appwrite/new), or \'legacy\' for the older console served under the /console path prefix. The default value is \'legacy\'.',
                 'introduction' => '2.0.0',
