@@ -3804,6 +3804,60 @@ trait DatabasesBase
         ], $this->getHeaders()));
     }
 
+    public function testCreateQuery(): void
+    {
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $documentIds = $data['documentIds'];
+        $url = $this->getRecordUrl($databaseId, $data['moviesId']);
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $queries = [
+            Query::equal('$id', $documentIds)->toString(),
+            Query::limit(10)->toString(),
+        ];
+
+        $list = $this->client->call(Client::METHOD_GET, $url, $headers, [
+            'queries' => $queries,
+        ]);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+
+        $created = $this->client->call(Client::METHOD_POST, $url . '/query', $headers, [
+            'queries' => $queries,
+        ]);
+
+        $this->assertSame(200, $created['headers']['status-code']);
+        $this->assertSame($list['body']['total'], $created['body']['total']);
+
+        $resource = $this->getRecordResource();
+        $this->assertSame(
+            array_column($list['body'][$resource], '$id'),
+            array_column($created['body'][$resource], '$id'),
+        );
+
+        $values = $documentIds;
+        for ($index = 0; $index < 80; $index++) {
+            $values[] = ID::unique();
+        }
+
+        $large = $this->client->call(Client::METHOD_POST, $url . '/query', $headers, [
+            'queries' => [
+                Query::equal('$id', $values)->toString(),
+                Query::limit(10)->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $large['headers']['status-code']);
+        $this->assertSame($list['body']['total'], $large['body']['total']);
+        $this->assertSame(
+            array_column($list['body'][$resource], '$id'),
+            array_column($large['body'][$resource], '$id'),
+        );
+    }
+
     public function testListDocumentsWithCache(): void
     {
         if (!$this->getSupportForAttributes()) {
