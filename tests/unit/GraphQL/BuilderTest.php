@@ -110,4 +110,56 @@ final class BuilderTest extends TestCase
             static fn () => 1,
         );
     }
+
+    /**
+     * @throws \ReflectionException
+     */
+    public function testEnumAttributeResolvesToEnumModel(): void
+    {
+        $method = new \ReflectionMethod(Mapper::class, 'getColumnImplementation');
+
+        $type = $method->invokeArgs(null, [['type' => 'string', 'format' => APP_DATABASE_ATTRIBUTE_ENUM], false]);
+
+        $this->assertInstanceOf(NamedType::class, $type);
+        $this->assertEquals('AttributeEnum', $type->name());
+    }
+
+    /**
+     * @throws \ReflectionException
+     */
+    public function testEnumColumnResolvesToEnumModel(): void
+    {
+        $method = new \ReflectionMethod(Mapper::class, 'getColumnImplementation');
+
+        $type = $method->invokeArgs(null, [['type' => 'string', 'format' => APP_DATABASE_ATTRIBUTE_ENUM], true]);
+
+        $this->assertInstanceOf(NamedType::class, $type);
+        $this->assertEquals('ColumnEnum', $type->name());
+    }
+
+    /**
+     * @throws \ReflectionException
+     */
+    public function testLegacyEnumTypeResolvesToEnumAttribute(): void
+    {
+        $method = new \ReflectionMethod(Mapper::class, 'getColumnImplementation');
+
+        $type = $method->invokeArgs(null, [['type' => 'enum'], false]);
+
+        $this->assertInstanceOf(NamedType::class, $type);
+        $this->assertEquals('AttributeEnum', $type->name());
+    }
+
+    /**
+     * @throws \ReflectionException
+     */
+    public function testLegacyEnumTypeResolvesToEnumColumn(): void
+    {
+        $method = new \ReflectionMethod(Mapper::class, 'getColumnImplementation');
+
+        $type = $method->invokeArgs(null, [['type' => 'enum'], true]);
+
+        $this->assertInstanceOf(NamedType::class, $type);
+        $this->assertEquals('ColumnEnum', $type->name());
+    }
 }
