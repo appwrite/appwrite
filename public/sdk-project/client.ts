@@ -358,6 +358,15 @@ class Client {
         }
     }
 
+    /**
+     * Call an API endpoint
+     *
+     * @param {string} method
+     * @param {URL} url
+     * @param {Headers} headers
+     * @param {Payload} params
+     * @returns {Promise<any>}
+     */
     async call(method: string, url: URL, headers: Headers = {}, params: Payload = {}): Promise<any> {
         method = method.toUpperCase();
 
