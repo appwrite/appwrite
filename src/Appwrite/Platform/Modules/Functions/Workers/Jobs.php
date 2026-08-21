@@ -42,11 +42,25 @@ use Utopia\System\System;
  * atomic and a lock timeout retries cleanly).
  *
  * Handlers are protected extension points: downstream workers (e.g. cloud)
- * override finalize() and wrap parent:: — before it for work that must
- * precede 'ready' (edge distribution), after it for post-activation work.
+ * override finalize() and wrap parent:: for post-activation work.
+ *
+ * A build that has to exist somewhere other than the region that produced it
+ * joins on that too, through three seams a downstream worker overrides:
+ * dispatchDistribution() starts the copies once the build is known good,
+ * recordEdgeReady() notes each target that answers, and distributed() decides
+ * when enough have. Waiting happens between callbacks rather than inside one,
+ * so nothing holds jobs-deployment:<id> while a copy is in flight.
  */
 class Jobs extends Action
 {
+    /**
+     * An edge reporting that it can serve a deployment's build. Not an
+     * orchestrator callback: downstream deployments that distribute a build
+     * beyond the region that built it publish this themselves as each target
+     * reports in.
+     */
+    public const string EVENT_EDGE_READY = 'appwrite.deployment.edge-ready';
+
     private const DEDUPE_TTL = 3600;
     private const LOCK_TTL = 30;
     private const LOCK_TIMEOUT = 10.0;
@@ -130,6 +144,7 @@ class Jobs extends Action
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                self::EVENT_EDGE_READY => $this->onEdgeReady($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $deployment,
             };
 
@@ -187,6 +202,68 @@ class Jobs extends Action
         }
 
         return $deployment;
+    }
+
+    /**
+     * Apply one edge's readiness report, then retry the success join.
+     *
+     * The report is recorded by recordEdgeReady(), which is where a downstream
+     * worker tracks which targets have answered; distributed() is the gate that
+     * decides whether enough of them have. Neither does anything here, because a
+     * self-hosted build is servable in the only place it exists.
+     */
+    protected function onEdgeReady(
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Document $deployment,
+        array $data,
+        UsageContext $usage,
+        UsagePublisher $publisherForUsage,
+        ScreenshotPublisher $publisherForScreenshots,
+        Device $deviceForBuilds,
+        VcsFactory $vcsFactory,
+        Cache $cache,
+        array $platform,
+        array $plan,
+        Bus $bus,
+    ): Document {
+        $this->recordEdgeReady($deployment, $data, $cache);
+
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+    }
+
+    /**
+     * Note that one edge can serve this deployment. A no-op here; overridden
+     * where builds are distributed beyond the region that produced them.
+     *
+     * @param array<string, mixed> $data
+     */
+    protected function recordEdgeReady(Document $deployment, array $data, Cache $cache): void
+    {
+    }
+
+    /**
+     * Start copying the build everywhere it has to be. A no-op here; overridden
+     * where builds are distributed beyond the region that produced them.
+     *
+     * Called every time the join is retried, so an override must be idempotent.
+     */
+    protected function dispatchDistribution(Database $dbForProject, Document $project, Document $deployment, Cache $cache): void
+    {
+    }
+
+    /**
+     * Whether the build has reached everywhere it has to be before the
+     * deployment may be called ready.
+     *
+     * Always true here: a self-hosted build is servable in the only place it
+     * exists. Overridden where a build is copied out to other regions, so that
+     * 'ready' never advertises a deployment some of those regions cannot serve.
+     */
+    protected function distributed(Document $deployment, Cache $cache): bool
+    {
+        return true;
     }
 
     /**
@@ -348,6 +425,16 @@ class Jobs extends Action
             $deviceForBuilds->delete($path);
 
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+        }
+
+        // Only now is the build known good, so this is the first point it is worth
+        // copying anywhere. Idempotent: every edge report re-enters here.
+        $this->dispatchDistribution($dbForProject, $project, $deployment, $cache);
+
+        // Joined on the build itself, still waiting on the copies of it. Each
+        // report re-enters through onEdgeReady() and retries this.
+        if (! $this->distributed($deployment, $cache)) {
+            return $deployment;
         }
 
         return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus, $size);
