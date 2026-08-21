@@ -219,14 +219,11 @@ class Create extends Action
                         continue;
                     }
 
-                    $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                    $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
-
                     try {
                         $dbForProject->createCollection(new Collection(
                             id: $key,
-                            attributes: $attributes,
-                            indexes: $indexes,
+                            attributes: $collection['attributes'],
+                            indexes: $collection['indexes'],
                         ));
                     } catch (Duplicate) {
                         // Collection already exists

@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Hooks\DocumentUsage;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
@@ -88,8 +89,8 @@ return function (Container $container): void {
         };
     }, ['databaseFactory', 'dbForPlatform']);
 
-    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project) {
-        return function (Document $database, ?Document $projectDocument = null) use ($databaseFactory, $project): Database {
+    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Context $usage) {
+        return function (Document $database, ?Document $projectDocument = null) use ($databaseFactory, $project, $usage): Database {
             $projectDocument ??= $project;
 
             // Backwards-compatibility: older or seeded legacy databases may not have a DSN stored
@@ -98,13 +99,28 @@ return function (Container $container): void {
                 ? new Document(\array_merge($database->getArrayCopy(), ['database' => $projectDocument->getAttribute('database', '')]))
                 : $database;
 
-            return $databaseFactory->tenant(
+            $dbForDatabases = $databaseFactory->tenant(
                 $databaseConfig,
                 $projectDocument,
                 APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
             );
+
+            $documentsMetric = match ($databaseConfig->getAttribute('type', '')) {
+                DATABASE_TYPE_DOCUMENTSDB => METRIC_DOCUMENTS_DOCUMENTSDB,
+                DATABASE_TYPE_VECTORSDB => METRIC_DOCUMENTS_VECTORSDB,
+                default => METRIC_DOCUMENTS,
+            };
+
+            $dbForDatabases->addHook(new DocumentUsage(
+                $usage,
+                $documentsMetric,
+                '{databaseInternalId}.documents',
+                '{databaseInternalId}.{collectionInternalId}.documents',
+            ));
+
+            return $dbForDatabases;
         };
-    }, ['databaseFactory', 'project']);
+    }, ['databaseFactory', 'project', 'usage']);
 
     $container->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
         $database = null;

@@ -57,7 +57,7 @@ class V18 extends Migration
                 $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
 
                 foreach ($collection['attributes'] ?? [] as $attribute) {
-                    if ($attribute['type'] !== ColumnType::Float->value) {
+                    if ($attribute['type'] !== ColumnType::Double->value) {
                         continue;
                     }
                     $this->changeAttributeInternalType($collectionTable, $attribute['key'], 'DOUBLE');
@@ -88,7 +88,7 @@ class V18 extends Migration
             Console::log("Migrating Collection \"{$id}\"");
 
             foreach ($collection['attributes'] ?? [] as $attribute) {
-                if ($attribute['type'] !== ColumnType::Float->value) {
+                if ($attribute['type'] !== ColumnType::Double->value) {
                     continue;
                 }
                 $this->changeAttributeInternalType($id, $attribute['$id'], 'DOUBLE');

@@ -22,6 +22,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hooks\DocumentUsage;
 use Appwrite\Utopia\Database\Hooks\FunctionCache;
 use Appwrite\Utopia\Database\Hooks\Metadata;
 use Appwrite\Utopia\Database\Hooks\Usage;
@@ -1028,9 +1029,9 @@ return function (Container $context): void {
         return new Document([]);
     }, ['project', 'dbForProject', 'request', 'authorization']);
 
-    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject) {
+    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject, UsageContext $usage) {
 
-        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject): Database {
+        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject, $usage): Database {
             $originalDatabase = $database;
             $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
 
@@ -1047,16 +1048,29 @@ return function (Container $context): void {
                 $database->setTimeout($timeout);
             }
 
-            $database->addHook(new Metadata(
-                database: $originalDatabase,
-                context: $context,
-                resolvePublicId: Metadata::resolver($database, $dbForProject),
-            ));
+            $documentsMetric = match ($originalDatabase->getAttribute('type', '')) {
+                DATABASE_TYPE_DOCUMENTSDB => METRIC_DOCUMENTS_DOCUMENTSDB,
+                DATABASE_TYPE_VECTORSDB => METRIC_DOCUMENTS_VECTORSDB,
+                default => METRIC_DOCUMENTS,
+            };
+
+            $database
+                ->addHook(new Metadata(
+                    database: $originalDatabase,
+                    context: $context,
+                    resolvePublicId: Metadata::resolver($database, $dbForProject),
+                ))
+                ->addHook(new DocumentUsage(
+                    $usage,
+                    $documentsMetric,
+                    '{databaseInternalId}.documents',
+                    '{databaseInternalId}.{collectionInternalId}.documents',
+                ));
 
             return $database;
         };
 
-    }, ['databaseFactory', 'project', 'request', 'dbForProject']);
+    }, ['databaseFactory', 'project', 'request', 'dbForProject', 'usage']);
 
     $context->set(
         'transactionState',

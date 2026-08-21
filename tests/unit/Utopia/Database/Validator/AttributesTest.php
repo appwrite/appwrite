@@ -77,6 +77,15 @@ final class AttributesTest extends TestCase
         ]), $this->object->getDescription());
     }
 
+    public function testPublicNumericTypeIsDouble(): void
+    {
+        $this->assertContains(ColumnType::Double->value, Attribute::types());
+        $this->assertNotContains(ColumnType::Float->value, Attribute::types());
+        $this->assertTrue($this->object->isValid([
+            ['key' => 'score', 'type' => ColumnType::Double->value, 'default' => 1.5],
+        ]), $this->object->getDescription());
+    }
+
     public function testUnsupportedType(): void
     {
         $this->assertFalse($this->object->isValid([

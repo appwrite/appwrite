@@ -55,7 +55,7 @@ class Attribute
             ColumnType::Integer->value,
             ColumnType::BigInteger->value,
             'bigint',
-            ColumnType::Float->value,
+            ColumnType::Double->value,
             ColumnType::Boolean->value,
             ColumnType::Datetime->value,
             ColumnType::Point->value,
