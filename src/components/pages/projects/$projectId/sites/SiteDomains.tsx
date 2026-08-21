@@ -41,6 +41,7 @@ import type { Models } from '@appwrite.io/console'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
+import { domainUrl } from '@/lib/domains/url'
 
 export function SiteDomainsView() {
   const t = useT()
@@ -165,7 +166,7 @@ export function SiteDomainsView() {
                       <TableRow>
                         <TableCell className="px-4 py-3">
                           <a
-                            href={`https://${ruleData.domain}`}
+                            href={domainUrl(ruleData.domain)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 font-mono text-[13px] link-neutral"

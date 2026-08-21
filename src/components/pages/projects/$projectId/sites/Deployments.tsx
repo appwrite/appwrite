@@ -132,6 +132,7 @@ import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap, getPage } from '@/lib/table-filters'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { domainUrl } from '@/lib/domains/url'
 
 const DEPLOYMENTS_SELECT = [
   Query.select([
@@ -495,7 +496,8 @@ export function View() {
   // Merge list/hook so status/buildDuration update from realtime list while hook keeps
   // screenshot fields when the list row is missing or has empty screenshot IDs.
   const activeDeploymentForCard = useMemo(
-    () => mergeActiveDeploymentForCard(activeDeployment, activeDeploymentResolved),
+    () =>
+      mergeActiveDeploymentForCard(activeDeployment, activeDeploymentResolved),
     [activeDeployment, activeDeploymentResolved],
   )
 
@@ -1115,7 +1117,7 @@ export function View() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={`https://${rule.domain}`}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-[13px] font-mono link-neutral"
@@ -1272,7 +1274,7 @@ export function View() {
                                 {activeDomains.map((rule) => (
                                   <a
                                     key={rule.$id}
-                                    href={`https://${rule.domain}`}
+                                    href={domainUrl(rule.domain)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"

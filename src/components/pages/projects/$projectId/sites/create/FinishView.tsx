@@ -48,6 +48,7 @@ import {
 import { toast } from 'sonner'
 import { useWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
+import { domainUrl } from '@/lib/domains/url'
 
 interface FinishViewProps {
   siteId?: string
@@ -139,7 +140,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
     return null
   }, [domains])
 
-  const siteUrl = primaryDomain ? `https://${primaryDomain}` : null
+  const siteUrl = primaryDomain ? domainUrl(primaryDomain) : null
 
   // QR code image URL from console avatars API (for "View on mobile" dialog)
   const qrImageUrl = useMemo(() => {

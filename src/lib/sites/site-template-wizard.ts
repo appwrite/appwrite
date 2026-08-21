@@ -24,11 +24,33 @@ export const SITE_TEMPLATE_USE_CASE_OPTIONS = [
   { value: 'utilities', label: 'Utilities' },
 ] as const
 
+const SITE_TEMPLATE_SCREENSHOT_PATH = '/images/sites/templates/'
+
+/**
+ * The API builds screenshot URLs from the instance's console hostname, but the
+ * console itself bundles these images. Serving them from the console's own
+ * origin keeps them working on self-hosted and local instances where the API's
+ * configured hostname may not resolve or may point at a stale console build.
+ */
+export function normalizeSiteTemplateScreenshotUrl(
+  url: string | undefined,
+): string | undefined {
+  if (!url) return url
+  try {
+    const { pathname } = new URL(url)
+    return pathname.startsWith(SITE_TEMPLATE_SCREENSHOT_PATH) ? pathname : url
+  } catch {
+    return url
+  }
+}
+
 export function getSiteTemplateScreenshotUrl(
   template: Pick<Models.TemplateSite, 'screenshotDark' | 'screenshotLight'>,
   isDark: boolean,
 ): string | undefined {
-  return isDark ? template.screenshotDark : template.screenshotLight
+  return normalizeSiteTemplateScreenshotUrl(
+    isDark ? template.screenshotDark : template.screenshotLight,
+  )
 }
 
 export type SiteTemplateFrameworkOption = {
