@@ -20,7 +20,10 @@ use Appwrite\Utopia\Response\Model\AlgoScrypt;
 use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model as ResponseModel;
+use Appwrite\Utopia\Response\Model\AttributeEmail;
+use Appwrite\Utopia\Response\Model\AttributeEnum;
 use Appwrite\Utopia\Response\Model\AttributeLine;
+use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\HealthStatus;
@@ -1009,6 +1012,38 @@ final class FormatTest extends TestCase
 
         $this->assertTrue($openApiOptions['additionalProperties']);
         $this->assertArrayNotHasKey('nullable', $openApiOptions);
+    }
+
+    public function testCompoundDiscriminatorDoesNotEmitRedundantPropertyNames(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $email = new AttributeEmail();
+        $enum = new AttributeEnum();
+        $string = new AttributeString();
+        $route = (new Route('GET', '/v1/tests/attribute'))
+            ->desc('Get test attribute')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getTestAttribute',
+                description: 'Get test attribute.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: [$email->getType(), $enum->getType(), $string->getType()],
+                    ),
+                ],
+            ));
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [$email, $enum, $string], [], 0, 'console'))->parse();
+        $discriminator = $openApi['paths']['/tests/attribute']['get']['responses']['200']
+            ['content']['application/json']['schema']['discriminator'];
+
+        $this->assertArrayHasKey('x-mapping', $discriminator);
+        $this->assertArrayNotHasKey('x-propertyNames', $discriminator);
     }
 
     public function testQueriesSubclassesEmitArrayOfStrings(): void
