@@ -342,6 +342,11 @@ return [
         'description' => 'OAuth2 provider rejected the unauthorized request.',
         'code' => 401,
     ],
+    Exception::USER_OAUTH2_TOKEN_INVALID => [
+        'name' => Exception::USER_OAUTH2_TOKEN_INVALID,
+        'description' => 'The provided ID token is invalid, expired, or failed verification.',
+        'code' => 401,
+    ],
     Exception::USER_OAUTH2_PROVIDER_ERROR => [
         'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
         'description' => 'OAuth2 provider returned some error.',

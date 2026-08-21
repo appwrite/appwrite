@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -99,6 +100,12 @@ class Update extends Base
                 'example' => '-----BEGIN PRIVATE KEY-----MIGTAg...jy2Xbna-----END PRIVATE KEY-----',
                 'hint' => '',
             ],
+            [
+                '$id' => 'nativeClientIds',
+                'name' => 'Native client IDs',
+                'example' => '["com.example.app"]',
+                'hint' => 'App bundle IDs accepted as ID token audiences for native Sign in with Apple.',
+            ],
         ];
     }
 
@@ -133,6 +140,7 @@ class Update extends Base
             ->param('keyId', null, new Nullable(new Text(256, 0)), '\'Key ID\' of Apple OAuth2 app. For example: P4000000N8', optional: true)
             ->param('teamId', null, new Nullable(new Text(256, 0)), '\'Team ID\' of Apple OAuth2 app. For example: D4000000R6', optional: true)
             ->param('p8File', null, new Nullable(new Text(4096, 0)), 'Contents of the Apple OAuth2 app .p8 private key file. The secret key wrapped by the PEM markers is 200 characters long. For example: -----BEGIN PRIVATE KEY-----MIGTAg...jy2Xbna-----END PRIVATE KEY-----', optional: true)
+            ->param('nativeClientIds', null, new Nullable(new ArrayList(new Text(256, 0), 20)), 'App bundle IDs accepted as ID token audiences for native Sign in with Apple. For example: com.example.app. Pass an empty array to clear the list.', optional: true)
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -155,6 +163,7 @@ class Update extends Base
             'keyId' => $storedSecret['keyID'] ?? '',
             'teamId' => $storedSecret['teamID'] ?? '',
             'p8File' => '',
+            'nativeClientIds' => $oAuthProviders[$providerId . 'ClientIds'] ?? [],
         ]);
     }
 
@@ -170,6 +179,7 @@ class Update extends Base
         ?string $keyId,
         ?string $teamId,
         ?string $p8File,
+        ?array $nativeClientIds,
         ?bool $enabled,
         Response $response,
         Database $dbForPlatform,
@@ -198,7 +208,7 @@ class Update extends Base
             ]);
         }
 
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $serviceId, $encodedSecret, $enabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $serviceId, $encodedSecret, $enabled, $nativeClientIds);
 
         // Reuse buildReadResponse to keep PATCH/GET shapes identical and
         // guarantee keyId/teamId/p8File are write-only on every response path.

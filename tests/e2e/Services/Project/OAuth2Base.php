@@ -17,10 +17,10 @@ trait OAuth2Base
         $providers = [
             'amazon' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'github' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
-            'apple' => ['serviceId' => '', 'keyId' => '', 'teamId' => '', 'p8File' => '', 'enabled' => false],
+            'apple' => ['serviceId' => '', 'keyId' => '', 'teamId' => '', 'p8File' => '', 'nativeClientIds' => [], 'enabled' => false],
             'oidc' => ['clientId' => '', 'clientSecret' => '', 'wellKnownURL' => '', 'authorizationURL' => '', 'tokenURL' => '', 'userInfoURL' => '', 'prompt' => [], 'enabled' => false],
             'okta' => ['clientId' => '', 'clientSecret' => '', 'domain' => '', 'authorizationServerId' => '', 'enabled' => false],
-            'google' => ['clientId' => '', 'clientSecret' => '', 'prompt' => ['consent'], 'enabled' => false],
+            'google' => ['clientId' => '', 'clientSecret' => '', 'prompt' => ['consent'], 'nativeClientIds' => [], 'enabled' => false],
             'dropbox' => ['appKey' => '', 'appSecret' => '', 'enabled' => false],
         ];
 
@@ -245,6 +245,51 @@ trait OAuth2Base
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame('ip.appwrite.app.web', $get['body']['serviceId']);
         $this->assertSame('', $get['body']['p8File']);
+    }
+
+    public function testUpdateOAuth2NativeClientIdsRoundTrip(): void
+    {
+        $update = $this->updateOAuth2('apple', [
+            'serviceId' => 'ip.appwrite.app.web',
+            'keyId' => 'P4000000N8',
+            'teamId' => 'D4000000R6',
+            'p8File' => '-----BEGIN PRIVATE KEY-----TEST-----END PRIVATE KEY-----',
+            'nativeClientIds' => ['com.example.app', 'com.example.app.dev'],
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame(['com.example.app', 'com.example.app.dev'], $update['body']['nativeClientIds']);
+
+        $get = $this->getOAuth2Provider('apple');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame(['com.example.app', 'com.example.app.dev'], $get['body']['nativeClientIds']);
+
+        // A partial update leaves the list untouched
+        $update = $this->updateOAuth2('apple', [
+            'keyId' => 'P4000000N9',
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame(['com.example.app', 'com.example.app.dev'], $update['body']['nativeClientIds']);
+
+        // An empty array clears the list
+        $update = $this->updateOAuth2('apple', [
+            'nativeClientIds' => [],
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame([], $update['body']['nativeClientIds']);
+
+        $update = $this->updateOAuth2('google', [
+            'clientId' => 'google-client',
+            'clientSecret' => 'google-secret',
+            'nativeClientIds' => ['120000000095-android.apps.googleusercontent.com'],
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame(['120000000095-android.apps.googleusercontent.com'], $update['body']['nativeClientIds']);
     }
 
     public function testUpdateOAuth2OidcRoundTrip(): void

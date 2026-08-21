@@ -763,7 +763,9 @@ Http::init()
     ->inject('user')
     ->inject('request')
     ->action(function (User $user, Request $request) {
-        if (\str_contains($request->getURI(), 'oauth2')) {
+        // OAuth2 and ID token sign-ins accept logged-in users for account
+        // linking and session upgrade (e.g. converting an anonymous account)
+        if (\str_contains($request->getURI(), 'oauth2') || \str_contains($request->getURI(), '/sessions/id-token')) {
             return;
         }
 

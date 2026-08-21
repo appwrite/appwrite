@@ -77,6 +77,12 @@ class Update extends Base
                 'example' => '["consent"]',
                 'hint' => '',
             ],
+            [
+                '$id' => 'nativeClientIds',
+                'name' => 'Native client IDs',
+                'example' => '["YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com"]',
+                'hint' => 'Additional OAuth2 client IDs accepted as ID token audiences for native sign-in. The Client ID is always accepted.',
+            ],
         ]);
     }
 
@@ -110,6 +116,7 @@ class Update extends Base
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
             ->param('prompt', null, new Nullable(new ArrayList(new WhiteList(['none', 'consent', 'select_account'], true), 3)), 'Array of Google OAuth2 prompt values. If "none" is included, it must be the only element. "none" means: don\'t display any authentication or consent screens. Must not be specified with other values. "consent" means: prompt the user for consent. "select_account" means: prompt the user to select an account.', optional: true, enum: new Enum(name: 'ProjectOAuth2GooglePrompt'))
+            ->param('nativeClientIds', null, new Nullable(new ArrayList(new Text(256, 0), 20)), 'Additional OAuth2 client IDs accepted as ID token audiences for native sign-in (Android and iOS client IDs). The Client ID is always accepted. Pass an empty array to clear the list.', optional: true)
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -131,6 +138,7 @@ class Update extends Base
             static::getClientIdParamName() => $oAuthProviders[$providerId . 'Appid'] ?? '',
             static::getClientSecretParamName() => '',
             'prompt' => $decoded['prompt'] ?? ['consent'],
+            'nativeClientIds' => $oAuthProviders[$providerId . 'ClientIds'] ?? [],
         ]);
     }
 
@@ -143,6 +151,7 @@ class Update extends Base
         ?string $clientId,
         ?string $clientSecret,
         ?array $prompt,
+        ?array $nativeClientIds,
         ?bool $enabled,
         Response $response,
         Database $dbForPlatform,
@@ -177,7 +186,7 @@ class Update extends Base
             'prompt' => $prompt ?? ($existing['prompt'] ?? ['consent']),
         ]);
 
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled, $nativeClientIds);
 
         $response->dynamic($this->buildReadResponse($project), static::getResponseModel());
     }

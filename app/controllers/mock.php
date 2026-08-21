@@ -2,6 +2,7 @@
 
 global $utopia, $request, $response;
 
+use Appwrite\Auth\OIDC\MockKeys;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -151,6 +152,19 @@ Http::get('/v1/mock/tests/general/oauth2/user-unverified')
             'name' => 'User Name Unverified',
             'email' => 'useroauthunverified@localhost.test',
             'verified' => false,
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/jwks')
+    ->desc('OAuth2 JWKS')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('response')
+    ->action(function (Response $response) {
+        $response->json([
+            'keys' => [MockKeys::jwk()],
         ]);
     });
 
