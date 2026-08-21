@@ -166,8 +166,7 @@ class Create extends Action
             'buildPath' => '',
             'buildLogs' => '',
             'type' => $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual',
-            // Not inherited: a redeploy always goes live, and the source's own
-            // flag is unset by deactivateOthers() once anything newer builds.
+            // Not inherited: a redeploy always goes live when its build succeeds.
             'activate' => true,
         ]);
 
