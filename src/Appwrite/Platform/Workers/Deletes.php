@@ -116,6 +116,11 @@ class Deletes extends Action
             ? $this->usageTenants($deleteMessage->type, $document, $dbForPlatform)
             : [];
 
+        // Purge before the delete: the project records are the only mapping
+        // back to their tenants, so a purge failure must fail the message
+        // while a retry can still resolve them.
+        $this->purgeUsage($usageConnection, $tenants);
+
         $this->action(
             $message,
             $project,
@@ -138,13 +143,31 @@ class Deletes extends Action
             $bus,
         );
 
+        // Sweep rows that landed between the purge and the delete. The
+        // mapping is gone now, so a failure here strands only in-flight
+        // stragglers; log it rather than failing a delete that completed.
+        try {
+            $this->purgeUsage($usageConnection, $tenants);
+        } catch (Throwable $th) {
+            Console::error('Failed to sweep usage tenants after delete: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * @param list<string> $tenants
+     * @throws \RuntimeException
+     */
+    protected function purgeUsage(UsageConnection $usageConnection, array $tenants): void
+    {
         if ($tenants === []) {
             return;
         }
 
         $usage = $usageConnection->getUsage();
         foreach ($tenants as $tenant) {
-            (new UsageTenant($usage, $tenant))->purge();
+            if (!(new UsageTenant($usage, $tenant))->purge()) {
+                throw new \RuntimeException('Usage purge returned false for tenant: ' . $tenant);
+            }
         }
     }
 
