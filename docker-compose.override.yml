@@ -603,7 +603,7 @@ configs:
   adminer-index.php:
     content: |
       <?php
-        $$postgres = str_contains($$_SERVER['HTTP_HOST'] ?? '', 'postgres.localhost');
+        $$postgres = explode(':', $$_SERVER['HTTP_HOST'] ?? '')[0] === 'postgres.localhost';
         if ($$postgres && isset($$_GET['username']) && !isset($$_GET['ns'])) {
           $$_GET['ns'] = $$_ENV['ADMINER_DEFAULT_DB'] ?: 'appwrite';
           header('Location: ?' . http_build_query($$_GET));
@@ -617,9 +617,9 @@ configs:
               if (isset($$_GET['username']) || !empty($$_POST['auth'])) {
                 return;
               }
-              $$postgres = str_contains($$_SERVER['HTTP_HOST'] ?? '', 'postgres.localhost');
+              $$postgres = explode(':', $$_SERVER['HTTP_HOST'] ?? '')[0] === 'postgres.localhost';
               $$auth = json_encode([
-                'server' => $$postgres ? 'postgresql' : $$_ENV['ADMINER_DEFAULT_SERVER'],
+                'server' => $$_ENV['ADMINER_DEFAULT_SERVER'],
                 'driver' => ($$postgres || $$_ENV['ADMINER_DEFAULT_DRIVER'] === 'postgresql') ? 'pgsql' : 'server',
                 'username' => $$_ENV['ADMINER_DEFAULT_USERNAME'],
                 'password' => $$_ENV['ADMINER_DEFAULT_PASSWORD'],
