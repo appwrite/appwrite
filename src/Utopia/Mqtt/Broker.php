@@ -13,6 +13,16 @@ class Broker
     private const UNSUBSCRIBE = 10;
     private const PINGREQ = 12;
     private const DISCONNECT = 14;
+    private const AUTH = 15;
+
+    // Authenticate reason codes (MQTT 5.0).
+    private const AUTH_SUCCESS = 0x00;
+    private const AUTH_CONTINUE = 0x18;
+    private const AUTH_REAUTH = 0x19;
+
+    // Property identifiers, shared between CONNECT and AUTH property blocks.
+    private const PROP_AUTH_METHOD = 0x15;
+    private const PROP_AUTH_DATA = 0x16;
 
     /** @var array<int, int> fd => protocol level (4 = 3.1.1, 5 = 5.0) */
     private array $protocol = [];
@@ -43,8 +53,10 @@ class Broker
 
     private function onReceive(Server $server, int $fd, int $reactorId, string $data): void
     {
+        var_dump($data);
         $type = ord($data[0]) >> 4;
         $flags = ord($data[0]) & 0x0F;
+        var_dump($type);
 
         [$remaining, $lenBytes] = $this->decodeLength($data, 1);
         $body = substr($data, 1 + $lenBytes, $remaining);
@@ -54,6 +66,7 @@ class Broker
             self::SUBSCRIBE => $this->handleSubscribe($server, $fd, $body),
             self::UNSUBSCRIBE => $this->handleUnsubscribe($server, $fd, $body),
             self::PUBLISH => $this->handlePublish($server, $fd, $flags, $body),
+            self::AUTH => $this->handleAuth($server, $fd, $body),
             self::PINGREQ => $server->send($fd, chr(0xD0) . chr(0x00)),
             self::DISCONNECT => $server->close($fd),
             default => null,
@@ -112,6 +125,70 @@ class Broker
             $variable .= chr(0x00) . str_repeat(chr(0x00), $count);
         }
         $server->send($fd, chr(0xB0) . $this->encodeLength(strlen($variable)) . $variable);
+    }
+
+    private function handleAuth(Server $server, int $fd, string $body): void
+    {
+        if ($body === '') {
+            // Shorthand: remaining length 0 means reason Success with no properties.
+            $reasonCode = self::AUTH_SUCCESS;
+            $method = $data = '';
+        } else {
+            $reasonCode = ord($body[0]);
+            [$method, $data] = $this->readAuthProperties($body, 1);
+        }
+
+        // $reasonCode: 0x19 re-authenticate, 0x18 continue.
+        // $method e.g. "appwrite-session"; $data is the credential to verify.
+        // TODO: verify $data and derive the identity, then persist it for this $fd.
+        // Success on a live connection is acknowledged with an AUTH packet;
+        // failure should DISCONNECT (or CONNACK 0x87 during the initial handshake).
+        $server->send($fd, $this->encodeAuth(self::AUTH_SUCCESS, $method));
+    }
+
+    /**
+     * Read the Authentication Method and Data from a property block.
+     * Works for both the AUTH packet and the CONNECT properties.
+     *
+     * @return array{0: string, 1: string} [authMethod, authData]
+     */
+    private function readAuthProperties(string $body, int $offset): array
+    {
+        $method = $data = '';
+
+        [$length, $lenBytes] = $this->decodeLength($body, $offset);
+        $offset += $lenBytes;
+        $end = $offset + $length;
+
+        while ($offset < $end) {
+            $id = ord($body[$offset]);
+            $offset++;
+
+            match ($id) {
+                self::PROP_AUTH_METHOD => [$method, $offset] = $this->readString($body, $offset),
+                self::PROP_AUTH_DATA => [$data, $offset] = $this->readString($body, $offset),
+                // POC assumption: clients send only method and data. A general
+                // skip needs each property's wire type to advance correctly.
+                default => throw new \RuntimeException('Unhandled auth property 0x' . dechex($id)),
+            };
+        }
+
+        return [$method, $data];
+    }
+
+    private function encodeAuth(int $reasonCode, string $method, string $data = ''): string
+    {
+        $properties = '';
+        if ($method !== '') {
+            $properties .= chr(self::PROP_AUTH_METHOD) . $this->encodeString($method);
+        }
+        if ($data !== '') {
+            $properties .= chr(self::PROP_AUTH_DATA) . $this->encodeString($data);
+        }
+
+        $variable = chr($reasonCode) . $this->encodeLength(strlen($properties)) . $properties;
+
+        return chr(self::AUTH << 4) . $this->encodeLength(strlen($variable)) . $variable;
     }
 
     private function handlePublish(Server $server, int $fd, int $flags, string $body): void
