@@ -1,0 +1,11 @@
+{
+  "name": "@test/types",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Building types...'"
+  },
+  "dependencies": {
+    "typescript": "^5.5.0"
+  }
+}
