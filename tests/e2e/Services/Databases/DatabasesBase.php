@@ -5,13 +5,13 @@ namespace Tests\E2E\Services\Databases;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
-use Tests\E2E\Services\Databases\Queries\QueryJoinCombos;
-use Tests\E2E\Services\Databases\Queries\QueryJoinOperators;
-use Tests\E2E\Services\Databases\Queries\QueryJoinPermissions;
-use Tests\E2E\Services\Databases\Queries\QueryJoinProjection;
-use Tests\E2E\Services\Databases\Queries\QueryJoinTypes;
-use Tests\E2E\Services\Databases\Queries\QueryRejectedMethods;
-use Tests\E2E\Services\Databases\Queries\QueryStatisticalAggregates;
+use Tests\E2E\Services\Databases\Queries\JoinCombos;
+use Tests\E2E\Services\Databases\Queries\JoinOperators;
+use Tests\E2E\Services\Databases\Queries\JoinPermissions;
+use Tests\E2E\Services\Databases\Queries\JoinProjection;
+use Tests\E2E\Services\Databases\Queries\JoinTypes;
+use Tests\E2E\Services\Databases\Queries\RejectedMethods;
+use Tests\E2E\Services\Databases\Queries\StatisticalAggregates;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -30,13 +30,13 @@ trait DatabasesBase
 {
     use DatabasesUrlHelpers;
     use SchemaPolling;
-    use QueryJoinTypes;
-    use QueryJoinOperators;
-    use QueryJoinPermissions;
-    use QueryJoinCombos;
-    use QueryJoinProjection;
-    use QueryStatisticalAggregates;
-    use QueryRejectedMethods;
+    use JoinTypes;
+    use JoinOperators;
+    use JoinPermissions;
+    use JoinCombos;
+    use JoinProjection;
+    use StatisticalAggregates;
+    use RejectedMethods;
 
     /**
      * Static caches for test data - keyed by project ID to support parallel test runs

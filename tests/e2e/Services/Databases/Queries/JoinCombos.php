@@ -9,7 +9,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 
-trait QueryJoinCombos
+trait JoinCombos
 {
     private static array $joinComboCache = [];
     private static array $joinHardcoreCache = [];

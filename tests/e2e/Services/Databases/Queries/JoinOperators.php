@@ -5,7 +5,7 @@ namespace Tests\E2E\Services\Databases\Queries;
 use Tests\E2E\Client;
 use Utopia\Database\Query;
 
-trait QueryJoinOperators
+trait JoinOperators
 {
     public function testJoinOperatorNotEqual(): void
     {

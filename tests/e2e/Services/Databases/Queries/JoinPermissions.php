@@ -8,7 +8,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 
-trait QueryJoinPermissions
+trait JoinPermissions
 {
     private static array $joinPermissionsCache = [];
 

@@ -5,7 +5,7 @@ namespace Tests\E2E\Services\Databases\Queries;
 use Tests\E2E\Client;
 use Utopia\Database\Query;
 
-trait QueryRejectedMethods
+trait RejectedMethods
 {
     public function testGroupByIntervalRejected(): void
     {
