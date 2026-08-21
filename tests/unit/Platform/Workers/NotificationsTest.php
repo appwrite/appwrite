@@ -22,6 +22,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Query\Schema\Order;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 
@@ -196,7 +197,7 @@ final class NotificationsTest extends TestCase
         // Mirror the production `_key_recipient` UNIQUE composite index so the
         // duplicate-handling branch in persistAlert (catch DuplicateException ->
         // return existing alertId) is actually exercised by tests.
-        $this->database->createIndex('notifications', Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: ['ASC', 'ASC', 'ASC']));
+        $this->database->createIndex('notifications', Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: [Order::Asc, Order::Asc, Order::Asc]));
 
         $this->registry = new Registry();
         $this->project = new Document(['$id' => 'project-x', '$sequence' => 'project-internal-x']);
