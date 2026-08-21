@@ -87,7 +87,7 @@ class Create extends Action
             ->label('abuse-reset', [201])
             ->param('provider', '', new WhiteList(\array_keys($providers), true), 'OAuth2 provider that issued the ID token. Currently, supported providers are: ' . \implode(', ', $idTokenProviders) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
             ->param('idToken', '', new Text(8192, 0), 'OpenID Connect ID token (JWT) obtained natively from the provider, for example via Google Credential Manager or Sign in with Apple.')
-            ->param('nonce', '', new Text(256, 0), 'Raw nonce used when requesting the ID token. Required when the token contains a nonce claim.', true)
+            ->param('nonce', '', new Text(256, 0), 'Raw nonce used when requesting the ID token. Required for Apple, and whenever the token contains a nonce claim.', true)
             ->param('accessToken', '', new Text(4096, 0), 'Provider access token to store alongside the session for calling provider APIs. Never used for authentication.', true)
             ->param('name', '', new Text(128, 0), 'User name. Only used when creating a new user and the ID token has no name claim, such as on the first Sign in with Apple authorization.', true)
             ->inject('request')

@@ -124,6 +124,41 @@ final class IdTokenVerifierTest extends TestCase
         $this->verifier()->verify($this->profile(), $this->mint($claims), [self::AUDIENCE], $rawNonce);
     }
 
+    /**
+     * When the profile requires a nonce (Apple), a token without a nonce
+     * claim was never bound to a sign-in ceremony and is replayable for its
+     * full lifetime - it must be rejected regardless of the request nonce.
+     */
+    public function testNonceRequiredProfileRejectsTokenWithoutNonceClaim(): void
+    {
+        $this->expectException(VerificationException::class);
+        $this->expectExceptionMessage('Nonce required');
+
+        $this->verifier()->verify($this->profile(nonceRequired: true), $this->mint([]), [self::AUDIENCE], null);
+    }
+
+    public function testNonceRequiredProfileRejectsTokenWithoutNonceClaimEvenWithRequestNonce(): void
+    {
+        $this->expectException(VerificationException::class);
+        $this->expectExceptionMessage('Nonce required');
+
+        $this->verifier()->verify($this->profile(nonceRequired: true), $this->mint([]), [self::AUDIENCE], 'raw-nonce');
+    }
+
+    public function testNonceRequiredProfileAcceptsMatchingNonce(): void
+    {
+        $raw = 'raw-nonce-value';
+
+        $claims = $this->verifier()->verify(
+            $this->profile(nonceRequired: true),
+            $this->mint(['nonce' => \hash('sha256', $raw)]),
+            [self::AUDIENCE],
+            $raw,
+        );
+
+        $this->assertSame('subject-1', $claims['sub']);
+    }
+
     public function testTamperedPayloadIsRejected(): void
     {
         $parts = \explode('.', $this->mint([]));
@@ -196,9 +231,9 @@ final class IdTokenVerifierTest extends TestCase
         return new IdTokenVerifier($jwks);
     }
 
-    private function profile(): Profile
+    private function profile(bool $nonceRequired = false): Profile
     {
-        return new Profile('test', [self::ISSUER], 'https://issuer.test/jwks');
+        return new Profile('test', [self::ISSUER], 'https://issuer.test/jwks', $nonceRequired);
     }
 
     /**

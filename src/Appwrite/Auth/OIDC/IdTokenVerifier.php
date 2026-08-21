@@ -84,7 +84,11 @@ class IdTokenVerifier
         }
 
         $nonce = $claims['nonce'] ?? null;
-        if (\is_string($nonce) && $nonce !== '') {
+        $hasNonceClaim = \is_string($nonce) && $nonce !== '';
+        if ($profile->nonceRequired && !$hasNonceClaim) {
+            throw new VerificationException('Nonce required');
+        }
+        if ($hasNonceClaim) {
             if ($rawNonce === null || $rawNonce === '') {
                 throw new VerificationException('Nonce required');
             }

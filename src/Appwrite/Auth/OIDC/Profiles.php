@@ -20,6 +20,9 @@ class Profiles
                 provider: 'apple',
                 issuers: ['https://appleid.apple.com'],
                 jwksUrl: 'https://appleid.apple.com/auth/keys',
+                // ASAuthorizationController always supports request.nonce, and a
+                // nonce-less Apple token is replayable for its full lifetime
+                nonceRequired: true,
             ),
             'mock' => new Profile(
                 provider: 'mock',
