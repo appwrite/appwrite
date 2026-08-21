@@ -26,8 +26,8 @@ if (onPostgresHost() && isset($_GET['username']) && !isset($_GET['ns'])) {
 // Adminer 6 ignores server-side POST autologin.
 function adminer_object()
 {
-    return new class extends Adminer\Adminer {
-        function loginForm()
+    return new class () extends Adminer\Adminer {
+        public function loginForm()
         {
             parent::loginForm();
             // A login is already in flight or just failed; resubmitting would loop forever.
