@@ -255,7 +255,11 @@ function createDatabase(Container $resources, string $resourceKey, string $dbNam
         $attributes = $collection['attributes'];
         $indexes = $collection['indexes'];
 
-        $database->createCollection(new Collection(id: $key, attributes: $attributes, indexes: $indexes));
+        $database->createCollection(new Collection(
+            id: $key,
+            attributes: $attributes,
+            indexes: $indexes,
+        ));
         $collectionsCreated++;
     }
 
@@ -408,7 +412,11 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 $attributes = $collection['attributes'];
                 $indexes = $collection['indexes'];
 
-                $dbForProject->createCollection(new Collection(id: $key, attributes: $attributes, indexes: $indexes));
+                $dbForProject->createCollection(new Collection(
+                    id: $key,
+                    attributes: $attributes,
+                    indexes: $indexes,
+                ));
                 $collectionsCreated++;
             }
 
