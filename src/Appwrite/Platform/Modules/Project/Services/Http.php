@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Project\Services;
 
 use Appwrite\Platform\Modules\Project\Http\Init;
+use Appwrite\Platform\Modules\Project\Http\Project\Auth\Ldap\Update as UpdateAuthLdap;
 use Appwrite\Platform\Modules\Project\Http\Project\AuthMethods\Update as UpdateAuthMethod;
 use Appwrite\Platform\Modules\Project\Http\Project\Delete as DeleteProject;
 use Appwrite\Platform\Modules\Project\Http\Project\Get as GetProject;
@@ -183,6 +184,7 @@ class Http extends Service
 
         // Auth Methods
         $this->addAction(UpdateAuthMethod::getName(), new UpdateAuthMethod());
+        $this->addAction(UpdateAuthLdap::getName(), new UpdateAuthLdap());
 
         // OAuth2
         $this->addAction(ListOAuth2Providers::getName(), new ListOAuth2Providers());
