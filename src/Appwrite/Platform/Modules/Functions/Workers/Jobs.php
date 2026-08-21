@@ -44,14 +44,14 @@ use Utopia\System\System;
  * Handlers are protected extension points: downstream workers (e.g. cloud)
  * override finalize() and wrap parent:: for post-activation work.
  *
- * A build that has to exist somewhere other than where it was produced joins on
- * that too, through two seams a downstream worker overrides:
- * dispatchDistribution() starts the copies once the build is known good, and
- * distributed() decides when enough of them have arrived. Both are no-ops here,
- * where a build is servable in the only place it exists. How a copy reports back
- * is that worker's business — it puts its own callback on this queue and handles
- * it in onCallback(), so the waiting happens between callbacks rather than inside
- * one and nothing holds jobs-deployment:<id> while a copy is in flight.
+ * The ready transition can be deferred. Once a build has passed every check this
+ * worker makes, onVerified() runs and deferred() is asked whether the deployment
+ * may be called ready yet; a subclass with work of its own to finish first starts
+ * it in the former and answers true from the latter until it is done. Both are
+ * no-ops here, where a verified build has nothing left to wait for. Whatever the
+ * subclass is waiting on reports back as its own callback on this queue, handled
+ * in onCallback(), so the waiting happens between callbacks rather than inside one
+ * and nothing holds jobs-deployment:<id> while it is outstanding.
  */
 class Jobs extends Action
 {
@@ -231,26 +231,28 @@ class Jobs extends Action
     }
 
     /**
-     * Start copying the build everywhere it has to be. A no-op here; overridden
-     * where builds are distributed beyond the region that produced them.
+     * The build has passed every check and the deployment could be called ready.
      *
-     * Called every time the join is retried, so an override must be idempotent.
+     * A no-op here. A subclass with work that must finish before that happens
+     * starts it here and defers the transition through deferred(). Called on
+     * every attempt at the transition, not only the first, so an override must be
+     * idempotent.
      */
-    protected function dispatchDistribution(Database $dbForProject, Document $project, Document $deployment, Cache $cache): void
+    protected function onVerified(Database $dbForProject, Document $project, Document $deployment, Cache $cache): void
     {
     }
 
     /**
-     * Whether the build has reached everywhere it has to be before the
-     * deployment may be called ready.
+     * Whether the ready transition has to wait for something.
      *
-     * Always true here: a self-hosted build is servable in the only place it
-     * exists. Overridden where a build is copied out to other regions, so that
-     * 'ready' never advertises a deployment some of those regions cannot serve.
+     * Never here: a verified build has nothing left outstanding. A subclass
+     * answers true while its own work is unfinished, so that 'ready' is not
+     * published before the deployment can actually be served, and false once it
+     * is done or has given up waiting.
      */
-    protected function distributed(Document $deployment, Cache $cache): bool
+    protected function deferred(Document $deployment, Cache $cache): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -414,13 +416,13 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
-        // Only now is the build known good, so this is the first point it is worth
-        // copying anywhere. Idempotent: every report re-enters here.
-        $this->dispatchDistribution($dbForProject, $project, $deployment, $cache);
+        // Every check this worker makes has passed, so the deployment is publishable
+        // as far as it is concerned. Idempotent: each retry of the join arrives here.
+        $this->onVerified($dbForProject, $project, $deployment, $cache);
 
-        // Joined on the build itself, still waiting on the copies of it. Whatever
-        // reports a copy arriving re-enters through onCallback() and retries this.
-        if (! $this->distributed($deployment, $cache)) {
+        // Something else is not finished. Whatever it is reports back as its own
+        // callback, which re-enters through onCallback() and retries this.
+        if ($this->deferred($deployment, $cache)) {
             return $deployment;
         }
 
