@@ -370,6 +370,53 @@ services:
       - 9507:5000
     networks:
       - appwrite
+  openldap:
+    profiles:
+      - openldap
+    image: osixia/openldap:1.5.0
+    container_name: appwrite-openldap
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      - appwrite
+    ports:
+      - 3389:389
+    environment:
+      - LDAP_ORGANISATION=Appwrite Test
+      - LDAP_DOMAIN=appwrite.test
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
+    volumes:
+      # Seeded by the openldap-seed service below rather than by the image's own
+      # bootstrap, which rewrites and then deletes that directory and so cannot
+      # take a bind mount.
+      - ./dev/openldap/seed:/seed:ro
+
+  openldap-seed:
+    profiles:
+      - openldap
+    image: osixia/openldap:1.5.0
+    container_name: appwrite-openldap-seed
+    depends_on:
+      - openldap
+    networks:
+      - appwrite
+    volumes:
+      - ./dev/openldap/seed:/seed:ro
+    entrypoint:
+      - sh
+      - -c
+      - |
+        until ldapsearch -x -H ldap://openldap -b dc=appwrite,dc=test \
+          -D cn=admin,dc=appwrite,dc=test -w $${LDAP_ADMIN_PASSWORD} >/dev/null 2>&1; do sleep 2; done
+        ldapadd -c -x -H ldap://openldap -D cn=admin,dc=appwrite,dc=test \
+          -w $${LDAP_ADMIN_PASSWORD} -f /seed/seed.ldif || true
+        echo "LDAP fixtures loaded."
+    environment:
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
+
   gitea:
     profiles:
       - gitea

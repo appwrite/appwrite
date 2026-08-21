@@ -1,0 +1,48 @@
+# Fixtures for developing and testing LDAP authentication.
+#
+# Loaded by the openldap-seed service in docker-compose.override.yml. Three
+# users and one group, enough to exercise sign-in, provisioning, the
+# provisioning filter that restricts who is allowed an account, and the refusal
+# of an entry with no email address.
+
+dn: ou=people,dc=appwrite,dc=test
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=appwrite,dc=test
+objectClass: organizationalUnit
+ou: groups
+
+# In the appwrite-users group, so a provisioning filter admits her.
+dn: uid=alice,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: alice
+cn: Alice Smith
+sn: Smith
+givenName: Alice
+mail: alice@appwrite.test
+userPassword: alicepass
+
+# Valid credentials but not in the group, so a provisioning filter refuses him.
+dn: uid=bob,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: bob
+cn: Bob Jones
+sn: Jones
+givenName: Bob
+mail: bob@appwrite.test
+userPassword: bobpass
+
+# No mail attribute. An account cannot be created without an email address, so
+# this entry is refused with a message naming the attribute mapping.
+dn: uid=noemail,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: noemail
+cn: No Email
+sn: Email
+userPassword: noemailpass
+
+dn: cn=appwrite-users,ou=groups,dc=appwrite,dc=test
+objectClass: groupOfNames
+cn: appwrite-users
+member: uid=alice,ou=people,dc=appwrite,dc=test

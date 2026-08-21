@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4fd078c5f4c652e6b07c639e275b520c",
+    "content-hash": "fcb643bd041777cfa38150a1dddee06f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -606,6 +606,240 @@
                 "source": "https://github.com/darylldoyle/svg-sanitizer/tree/0.22.0"
             },
             "time": "2025-08-12T10:13:48+00:00"
+        },
+        {
+            "name": "freedsx/asn1",
+            "version": "0.4.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/ASN1.git",
+                "reference": "a136e7981d2ca76b140570834bd65debf42ee3da"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/ASN1/zipball/a136e7981d2ca76b140570834bd65debf42ee3da",
+                "reference": "a136e7981d2ca76b140570834bd65debf42ee3da",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "friends-of-phpspec/phpspec-code-coverage": "^4.3|^6.1",
+                "phpspec/phpspec": "^5.1|^6.1|^7.1",
+                "phpstan/phpstan": "^0.11.15|^0.12",
+                "slevomat/coding-standard": "~7.0",
+                "squizlabs/php_codesniffer": "3.*",
+                "symplify/easy-coding-standard": "^6.1|^7.3|^9.0"
+            },
+            "suggest": {
+                "ext-gmp": "For big integer support in Integer/Enumerated/OID types and tag numbers."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Asn1\\": "src/FreeDSx/Asn1"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "An ASN.1 library for PHP.",
+            "homepage": "https://github.com/FreeDSx/ASN1",
+            "keywords": [
+                "DER",
+                "asn.1",
+                "asn1",
+                "ber",
+                "x.690"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/ASN1/issues",
+                "source": "https://github.com/FreeDSx/ASN1/tree/0.4.8"
+            },
+            "time": "2024-10-13T15:35:35+00:00"
+        },
+        {
+            "name": "freedsx/ldap",
+            "version": "0.8.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/LDAP.git",
+                "reference": "b94be237daaa6f7144f9ff9a7fd158229597b784"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/LDAP/zipball/b94be237daaa6f7144f9ff9a7fd158229597b784",
+                "reference": "b94be237daaa6f7144f9ff9a7fd158229597b784",
+                "shasum": ""
+            },
+            "require": {
+                "freedsx/asn1": ">=0.4,<1.0",
+                "freedsx/sasl": ">=0.1,<1.0",
+                "freedsx/socket": ">=0.5,<1.0",
+                "php": ">=7.1",
+                "psr/log": "^1||^2||^3"
+            },
+            "require-dev": {
+                "friends-of-phpspec/phpspec-code-coverage": "^4.3|^6.1|dev-master",
+                "phpspec/phpspec": "^7.2|^7.1|^6.1|^5.1",
+                "phpstan/phpstan": "^0.12.70",
+                "phpunit/phpunit": "^9.3|^8.0|^7.0",
+                "slevomat/coding-standard": "~7.0",
+                "squizlabs/php_codesniffer": "3.*",
+                "symfony/process": "^3.0|^4.0|^5.0",
+                "symplify/easy-coding-standard": "^6.1|^7.3|^9.0"
+            },
+            "suggest": {
+                "ext-openssl": "For SSL/TLS support and some SASL mechanisms.",
+                "ext-pcntl": "For LDAP server functionality."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Ldap\\": "src/FreeDSx/Ldap"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "A Pure PHP LDAP library",
+            "homepage": "https://github.com/FreeDSx/LDAP",
+            "keywords": [
+                "activedirectory",
+                "ldap",
+                "openldap"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/LDAP/issues",
+                "source": "https://github.com/FreeDSx/LDAP/tree/0.8.1"
+            },
+            "time": "2026-04-25T16:51:40+00:00"
+        },
+        {
+            "name": "freedsx/sasl",
+            "version": "0.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/SASL.git",
+                "reference": "8dfa6e105f101960d9fa5f9c57d9c461d2c20593"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/SASL/zipball/8dfa6e105f101960d9fa5f9c57d9c461d2c20593",
+                "reference": "8dfa6e105f101960d9fa5f9c57d9c461d2c20593",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^0.11|^0.12",
+                "phpunit/phpunit": "^7.0|^8.5|^9.5",
+                "symfony/polyfill-php80": "^1.27",
+                "symplify/easy-coding-standard": ">=6.1"
+            },
+            "suggest": {
+                "ext-openssl": "Needed for encryption for certain mechanisms."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Sasl\\": "src/FreeDSx/Sasl"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "A Pure PHP SASL Library",
+            "homepage": "https://github.com/FreeDSx/SASL",
+            "keywords": [
+                "CRAM-MD5",
+                "DIGEST-MD5",
+                "sasl"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/SASL/issues",
+                "source": "https://github.com/FreeDSx/SASL/tree/0.2.1"
+            },
+            "time": "2026-03-22T23:50:16+00:00"
+        },
+        {
+            "name": "freedsx/socket",
+            "version": "0.6.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/Socket.git",
+                "reference": "d0c8c6f684582e5ddbf5fc3d59d2316d3914b271"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/Socket/zipball/d0c8c6f684582e5ddbf5fc3d59d2316d3914b271",
+                "reference": "d0c8c6f684582e5ddbf5fc3d59d2316d3914b271",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "freedsx/asn1": ">=0.4, <1.0",
+                "friends-of-phpspec/phpspec-code-coverage": "^6.1|^7.0",
+                "phpspec/phpspec": "^7.1|^8.0",
+                "phpstan/phpstan": "^2.0"
+            },
+            "suggest": {
+                "ext-openssl": "For SSL/TLS support.",
+                "freedsx/asn1": "For ASN.1 based message queues."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Socket\\": "src/FreeDSx/Socket"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "A simple socket library for FreeDSx",
+            "homepage": "https://github.com/FreeDSx/Socket",
+            "keywords": [
+                "Socket",
+                "tcp",
+                "udp"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/Socket/issues",
+                "source": "https://github.com/FreeDSx/Socket/tree/0.6.3"
+            },
+            "time": "2026-04-25T17:18:43+00:00"
         },
         {
             "name": "google/protobuf",

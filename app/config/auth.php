@@ -10,6 +10,13 @@ return [
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateEmailPasswordSession',
         'enabled' => true,
     ],
+    'ldap' => [
+        'name' => 'LDAP',
+        'key' => 'ldap',
+        'icon' => '/images/users/ldap.png',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateLdapSession',
+        'enabled' => true,
+    ],
     'magic-url' => [
         'name' => 'Magic URL',
         'key' => 'usersAuthMagicURL',
