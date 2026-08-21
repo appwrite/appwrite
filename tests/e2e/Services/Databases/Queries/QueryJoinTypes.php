@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases;
+namespace Tests\E2E\Services\Databases\Queries;
 
 use Tests\E2E\Client;
 use Utopia\Database\Query;
