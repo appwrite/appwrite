@@ -748,6 +748,42 @@ final class AccountCustomClientTest extends Scope
         return $response['cookies']['a_session_' . $projectId];
     }
 
+    protected function configureMockOAuth(string $appId): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => $appId,
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    protected function createMockOAuthSession(?string $session = null, bool $followRedirects = true): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        if ($session !== null) {
+            $headers['cookie'] = 'a_session_' . $projectId . '=' . $session;
+        }
+
+        return $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock', $headers, [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: $followRedirects);
+    }
+
     /**
      * Helper to delete any existing user with the given email.
      * Used to prevent parallel test conflicts when tests share
@@ -3175,6 +3211,272 @@ final class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testOAuthWithoutProfileCreatesAndReusesUser(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $appId = 'without-profile-' . \bin2hex(\random_bytes(8));
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $userId = '';
+
+        try {
+            $this->configureMockOAuth($appId);
+
+            $response = $this->createMockOAuthSession();
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('success', $response['body']['result']);
+            $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+
+            $session = $response['cookies'][$sessionCookieKey];
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEmpty($response['body']['email']);
+            $this->assertEmpty($response['body']['name']);
+            $this->assertFalse($response['body']['emailVerification']);
+            $userId = $response['body']['$id'];
+
+            $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body']['identities']);
+            $this->assertEquals($appId, $response['body']['identities'][0]['providerUid']);
+            $this->assertEmpty($response['body']['identities'][0]['providerEmail']);
+
+            // Remove the provider session so the next login must resolve through the identity.
+            $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(204, $response['headers']['status-code']);
+
+            $response = $this->createMockOAuthSession();
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+
+            $session = $response['cookies'][$sessionCookieKey];
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($userId, $response['body']['$id']);
+        } finally {
+            if (!empty($userId)) {
+                $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            $this->configureMockOAuth('1');
+        }
+    }
+
+    public function testConvertAnonymousAccountOAuth2WithoutProfile(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $appId = 'without-profile-' . \bin2hex(\random_bytes(8));
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $session = $this->createAnonymousSession();
+        $userId = '';
+
+        try {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $userId = $response['body']['$id'];
+
+            $this->configureMockOAuth($appId);
+
+            $response = $this->createMockOAuthSession($session);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('success', $response['body']['result']);
+            $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+
+            $session = $response['cookies'][$sessionCookieKey];
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($userId, $response['body']['$id']);
+            $this->assertEmpty($response['body']['email']);
+            $this->assertEmpty($response['body']['name']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $session,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body']['identities']);
+            $this->assertEquals($appId, $response['body']['identities'][0]['providerUid']);
+            $this->assertEmpty($response['body']['identities'][0]['providerEmail']);
+        } finally {
+            if (!empty($userId)) {
+                $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            $this->configureMockOAuth('1');
+        }
+    }
+
+    public function testOAuthConcurrentIdentityClaimCreatesSingleUser(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $raceId = \bin2hex(\random_bytes(8));
+        $appId = 'race-' . $raceId;
+        $name = 'OAuth Race ' . $raceId;
+
+        try {
+            $this->configureMockOAuth($appId);
+
+            $response = $this->createMockOAuthSession(followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+
+            $oauthClient = new Client();
+            $oauthClient->setEndpoint('');
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+            $redirect = $response['headers']['location'];
+
+            $multi = \curl_multi_init();
+            $handles = [];
+            $responses = [];
+
+            try {
+                for ($i = 0; $i < 10; $i++) {
+                    $handle = \curl_init($redirect);
+                    \curl_setopt_array($handle, [
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_FOLLOWLOCATION => false,
+                        CURLOPT_HTTPHEADER => [
+                            'origin: http://localhost',
+                            'content-type: application/json',
+                            'x-appwrite-project: ' . $projectId,
+                        ],
+                        CURLOPT_TIMEOUT => 120,
+                    ]);
+                    \curl_multi_add_handle($multi, $handle);
+                    $handles[] = $handle;
+                }
+
+                do {
+                    $result = \curl_multi_exec($multi, $running);
+                    if ($result !== CURLM_OK || !$running) {
+                        break;
+                    }
+
+                    if (\curl_multi_select($multi, 1.0) === -1) {
+                        \usleep(1_000);
+                    }
+                } while (true);
+
+                $this->assertSame(CURLM_OK, $result);
+
+                foreach ($handles as $handle) {
+                    $responses[] = [
+                        'status' => \curl_getinfo($handle, CURLINFO_HTTP_CODE),
+                        'error' => \curl_error($handle),
+                    ];
+                }
+            } finally {
+                foreach ($handles as $handle) {
+                    \curl_multi_remove_handle($multi, $handle);
+                }
+                \curl_multi_close($multi);
+            }
+
+            foreach ($responses as $oauthResponse) {
+                $this->assertSame('', $oauthResponse['error']);
+                $this->assertSame(301, $oauthResponse['status']);
+            }
+
+            $response = $this->client->call(Client::METHOD_GET, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'queries' => [
+                    Query::equal('name', [$name])->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body']['users']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/users/identities', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'queries' => [
+                    Query::equal('providerUid', [$appId])->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body']['identities']);
+        } finally {
+            $response = $this->client->call(Client::METHOD_GET, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'queries' => [
+                    Query::equal('name', [$name])->toString(),
+                ],
+            ]);
+
+            foreach ($response['body']['users'] ?? [] as $oauthUser) {
+                $this->client->call(Client::METHOD_DELETE, '/users/' . $oauthUser['$id'], [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            $this->configureMockOAuth('1');
+        }
     }
 
     public function testOAuthUnverifiedEmailCannotLinkToExistingAccount(): void

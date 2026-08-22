@@ -70,8 +70,10 @@ Http::get('/v1/mock/tests/general/oauth2/token')
     ->action(function (string $client_id, string $client_secret, string $grantType, string $redirectURI, string $code, string $refreshToken, Response $response) {
 
         $canonicalEmail = \str_starts_with($client_id, 'canonical-');
+        $race = \str_starts_with($client_id, 'race-');
+        $withoutProfile = \str_starts_with($client_id, 'without-profile-');
 
-        if ($client_id != '1' && !$canonicalEmail) {
+        if ($client_id != '1' && !$canonicalEmail && !$race && !$withoutProfile) {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid client ID');
         }
 
@@ -80,7 +82,7 @@ Http::get('/v1/mock/tests/general/oauth2/token')
         }
 
         $responseJson = [
-            'access_token' => $canonicalEmail ? $client_id : '123456',
+            'access_token' => ($canonicalEmail || $race || $withoutProfile) ? $client_id : '123456',
             'refresh_token' => 'tuvwxyz',
             'expires_in' => 14400
         ];
@@ -117,6 +119,16 @@ Http::get('/v1/mock/tests/general/oauth2/user')
                 'name' => 'User Name',
                 'email' => 'useroauth@localhost.test',
                 'verified' => true,
+            ];
+        } elseif (\str_starts_with($token, 'without-profile-')) {
+            $user = [
+                'id' => $token,
+            ];
+        } elseif (\str_starts_with($token, 'race-')) {
+            $id = \substr($token, \strlen('race-'));
+            $user = [
+                'id' => $token,
+                'name' => 'OAuth Race ' . $id,
             ];
         } elseif (\str_starts_with($token, 'canonical-')) {
             $id = \substr($token, \strlen('canonical-'));
