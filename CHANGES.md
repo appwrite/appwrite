@@ -109,6 +109,7 @@
 * Fix installer compose executor config in [#11874](https://github.com/appwrite/appwrite/pull/11874)
 * Fix public hostname validation under Swoole DNS in [#12431](https://github.com/appwrite/appwrite/pull/12431)
 * Fix host validation and regional endpoint validation in [#12411](https://github.com/appwrite/appwrite/pull/12411) and [#12357](https://github.com/appwrite/appwrite/pull/12357)
+* **Upgrade note:** As of this release, the `openruntimes-executor` service's `container_name` must match its `hostname` in `docker-compose.yml` ([#11874](https://github.com/appwrite/appwrite/pull/11874)). The executor looks up its own container at startup by matching `hostname` against Docker container `name`; if you run a custom Compose file where these differ (common in installs predating 1.9.5), the executor will crash-loop on start. See [#13016](https://github.com/appwrite/appwrite/issues/13016).
 
 ### API, SDKs, and specs
 
