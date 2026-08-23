@@ -35,12 +35,14 @@ class Install extends Action
             ->param('appDomain', '', new AppDomain(), 'Application domain (hostname, IP, or bracket IPv6 with optional port)')
             ->param('httpPort', 80, new Range(1, 65535), 'HTTP port')
             ->param('httpsPort', 443, new Range(1, 65535), 'HTTPS port')
+            ->param('forceHttps', false, new \Utopia\Validator\Boolean(true), 'Generate HTTPS API URLs and enforce HTTPS', true)
             ->param('emailCertificates', '', new Email(allowEmpty: true), 'Email for SSL certificates', true)
             ->param('opensslKey', '', new Text(64, 0), 'Secret API key', true)
             ->param('assistantOpenAIKey', '', new Text(256, 0), 'OpenAI API key for assistant', true)
             ->param('accountEmail', '', new Email(allowEmpty: true), 'Account email address', true)
             ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
             ->param('database', '', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database adapter', true)
+            ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology', true)
             ->param('installId', '', new Text(64, 0), 'Installation ID', true)
             ->param('retryStep', null, new Nullable(new WhiteList([
                 Server::STEP_CONFIG_FILES,
@@ -64,12 +66,14 @@ class Install extends Action
         string $appDomain,
         int $httpPort,
         int $httpsPort,
+        bool $forceHttps,
         string $emailCertificates,
         string $opensslKey,
         string $assistantOpenAIKey,
         string $accountEmail,
         string $accountPassword,
         string $database,
+        string $topology,
         string $installId,
         ?string $retryStep,
         bool $migrate,
@@ -212,6 +216,7 @@ class Install extends Action
         try {
             $state->ensureBootstrapped();
             $installer = new \Appwrite\Platform\Tasks\Install();
+            $installer->setTopology($topology);
 
             if ($wantsStream) {
                 $this->writeSseEvent($swooleResponse, 'install-id', ['installId' => $installId]);
@@ -224,6 +229,7 @@ class Install extends Action
                 '_APP_OPENSSL_KEY_V1' => $opensslKey,
                 '_APP_DOMAIN' => $appDomain ?: 'localhost',
                 '_APP_DOMAIN_TARGET' => $appDomain ?: 'localhost',
+                '_APP_OPTIONS_FORCE_HTTPS' => $forceHttps ? 'enabled' : 'disabled',
                 '_APP_EMAIL_CERTIFICATES' => $emailCertificates,
                 '_APP_DB_ADAPTER' => $lockedDatabase ?? ($database ?: 'postgresql'),
                 '_APP_ASSISTANT_OPENAI_API_KEY' => $assistantOpenAIKey,
@@ -238,19 +244,33 @@ class Install extends Action
                     'database' => $database,
                     'appDomain' => $appDomain,
                     'emailCertificates' => $emailCertificates,
+                    'forceHttps' => $forceHttps,
                 ];
                 foreach ($inputValues as $field => $inputValue) {
-                    if (isset($stored[$field]) && $inputValue !== '') {
-                        $storedValue = (string) $stored[$field];
-                        if (in_array($field, ['httpPort', 'httpsPort'], true)) {
-                            $storedValue = trim($storedValue);
-                            $inputValue = trim($inputValue);
-                        }
-                        if ($storedValue !== $inputValue) {
+                    if (!isset($stored[$field])) {
+                        continue;
+                    }
+                    if ($field === 'forceHttps') {
+                        if ((bool) $stored[$field] !== $inputValue) {
                             $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                             $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                             return;
                         }
+                        continue;
+                    }
+                    if ($inputValue === '') {
+                        continue;
+                    }
+                    $inputValue = (string) $inputValue;
+                    $storedValue = (string) $stored[$field];
+                    if (in_array($field, ['httpPort', 'httpsPort'], true)) {
+                        $storedValue = trim($storedValue);
+                        $inputValue = trim($inputValue);
+                    }
+                    if ($storedValue !== $inputValue) {
+                        $state->updateGlobalLock($installId, Server::STATUS_ERROR);
+                        $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
+                        return;
                     }
                 }
 
@@ -282,6 +302,8 @@ class Install extends Action
                 $payloadInput['_APP_DOMAIN_TARGET'] = $stored['appDomain'] ?? $payloadInput['_APP_DOMAIN_TARGET'];
                 $payloadInput['_APP_EMAIL_CERTIFICATES'] = $stored['emailCertificates'] ?? $payloadInput['_APP_EMAIL_CERTIFICATES'];
                 $payloadInput['_APP_DB_ADAPTER'] = $lockedDatabase ?? ($stored['database'] ?? $payloadInput['_APP_DB_ADAPTER']);
+                $forceHttps = (bool) ($stored['forceHttps'] ?? $forceHttps);
+                $payloadInput['_APP_OPTIONS_FORCE_HTTPS'] = $forceHttps ? 'enabled' : 'disabled';
                 $httpPort = (int) ($stored['httpPort'] ?? $httpPort ?: $config->getDefaultHttpPort());
                 $httpsPort = (int) ($stored['httpsPort'] ?? $httpsPort ?: $config->getDefaultHttpsPort());
             }
@@ -297,6 +319,7 @@ class Install extends Action
                     'database' => $lockedDatabase ?? ($database ?: 'postgresql'),
                     'appDomain' => $appDomain ?: 'localhost',
                     'emailCertificates' => $emailCertificates,
+                    'forceHttps' => $forceHttps,
                     'opensslKeyHash' => $state->hashSensitiveValue($opensslKey),
                     'assistantOpenAIKeyHash' => $state->hashSensitiveValue($assistantOpenAIKey),
                 ],

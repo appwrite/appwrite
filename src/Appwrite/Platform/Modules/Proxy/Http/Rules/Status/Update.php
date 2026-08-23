@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Status;
 
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
@@ -10,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -64,6 +66,7 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('log')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -76,6 +79,7 @@ class Update extends Action
         Database $dbForPlatform,
         Log $log,
         Authorization $authorization,
+        Bus $bus,
     ) {
         $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
 
@@ -98,6 +102,7 @@ class Update extends Action
                 'logs' => '',
                 'status' => RULE_STATUS_CERTIFICATE_GENERATING,
             ])));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
             $certificateId = $rule->getAttribute('certificateId', '');
             // Reset logs for the associated certificate.
@@ -110,6 +115,7 @@ class Update extends Action
             $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 '$updatedAt' => DateTime::now(),
             ])));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
             throw $err;
         }
 

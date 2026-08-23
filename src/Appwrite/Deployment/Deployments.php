@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
+use OpenRuntimes\Orchestrator\Model\Artifact\CloneArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\ReadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
@@ -21,6 +22,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\System\System;
+use Utopia\VCS\Adapter\Git;
 
 /**
  * Owns a deployment's lifecycle: upload bookkeeping, creating it and
@@ -131,6 +133,41 @@ readonly class Deployments
         array $headers = [],
     ): Document {
         return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory, 'headers' => $headers]);
+    }
+
+    /**
+     * Same as createFromUpload(), but builds from a repository on a VCS
+     * provider: a presigned archive URL when the provider hands those out, or
+     * a git clone through the jobs-service's clone artifact when the provider
+     * serves content over the git protocol only (Origin).
+     *
+     * @param string $ref Branch, tag, or commit the deployment builds from
+     */
+    public function createFromVcs(
+        Document $resource,
+        Document $deployment,
+        Git $vcs,
+        string $owner,
+        string $repository,
+        string $ref,
+        string $rootDirectory = '',
+    ): Document {
+        if ($vcs->supportsRepositoryArchives()) {
+            return $this->createFromUrl(
+                $resource,
+                $deployment,
+                $vcs->getRepositoryPresignedUrl($owner, $repository, $ref),
+                $rootDirectory,
+                $vcs->getRepositoryPresignedUrlHeaders(),
+            );
+        }
+
+        return $this->submit($resource, $deployment, [
+            'clone' => $vcs->getRepositoryCloneUrl($owner, $repository),
+            'ref' => $ref,
+            'subdir' => $rootDirectory,
+            'headers' => $vcs->getRepositoryCloneHeaders(),
+        ]);
     }
 
     private function submit(Document $resource, Document $deployment, ?array $source): Document
@@ -317,15 +354,25 @@ readonly class Deployments
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $endpoint = System::getEnv('_APP_JOBS_ENDPOINT', "$protocol://{$platform['apiHostname']}");
 
-        // Source artifacts, both ending in /mnt/code/source:
-        //  - remote tarball ($source): templates (public codeload URL) and VCS
-        //    (a short-lived presigned URL). Git-forge archives wrap the tree in
-        //    a "{repo}-{ref}/" root the caller can't predict, so strip drops it
-        //    and subdir then extracts just the rootDirectory from the unwrapped
-        //    tree. Uploaded tarballs (the else branch) are flat — no strip.
+        // Source artifacts, all ending in /mnt/code/source:
+        //  - remote tarball ($source with url): templates (public codeload URL)
+        //    and VCS (a short-lived presigned URL). Git-forge archives wrap the
+        //    tree in a "{repo}-{ref}/" root the caller can't predict, so strip
+        //    drops it and subdir then extracts just the rootDirectory from the
+        //    unwrapped tree. Uploaded tarballs (the else branch) are flat — no
+        //    strip.
+        //  - git clone ($source with clone): a provider without archive
+        //    downloads; the sidecar clones over Git HTTPS and checks the tree
+        //    out directly, so there is no archive to unarchive — or to stat,
+        //    which is why this path reports no sourceSize.
         //  - otherwise: the deployment's uploaded tarball, fetched from Appwrite
         //    over a presigned GET (manual upload / duplicate).
-        if ($source !== null) {
+        if (isset($source['clone'])) {
+            $subdir = \trim($source['subdir'] ?? '', '/');
+            $sourceArtifacts = [
+                new CloneArtifact(id: 'source', in: $source['clone'], out: 'source', ref: $source['ref'] ?? '', subdir: $subdir, headers: $source['headers'] ?? []),
+            ];
+        } elseif ($source !== null) {
             $subdir = \trim($source['subdir'] ?? '', '/');
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz', headers: $source['headers'] ?? []),

@@ -53,6 +53,7 @@ Http::init()
     ->inject('dbForProject')
     ->inject('auditContext')
     ->inject('project')
+    ->inject('projectIdFromPath')
     ->inject('user')
     ->inject('session')
     ->inject('servers')
@@ -63,7 +64,7 @@ Http::init()
     ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -109,6 +110,17 @@ Http::init()
          *     - Validate factor completion
          *     - Throw exception if factors incomplete
          */
+
+        // Bind project management authorization to the project in the path.
+        if ($projectIdFromPath !== '') {
+            $headerProjectId = $request->getHeaderLine('x-appwrite-project', '');
+
+            foreach ([$headerProjectId, $project->getId()] as $contextProjectId) {
+                if ($contextProjectId !== '' && $contextProjectId !== 'console' && $contextProjectId !== $projectIdFromPath) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+            }
+        }
 
         // Step 1: Check if project is empty
         if ($project->isEmpty()) {
@@ -293,8 +305,7 @@ Http::init()
 
             $projectId = $project->getId();
             if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
-                $uri = $request->getURI();
-                $projectId = explode('/', $uri)[3];
+                $projectId = $projectIdFromPath;
             }
 
             // Base scopes for admin users to allow listing teams and projects.

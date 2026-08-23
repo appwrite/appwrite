@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -77,6 +78,7 @@ class Create extends Action
             ->inject('platform')
             ->inject('log')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -94,6 +96,7 @@ class Create extends Action
         array $platform,
         Log $log,
         Authorization $authorization,
+        Bus $bus,
     ) {
 
         $this->validateDomainRestrictions($domain, $platform);
@@ -144,7 +147,7 @@ class Create extends Action
             }
         }
 
-        $rule = $this->createRule($rule, $dbForPlatform, $authorization);
+        $rule = $this->createRule($rule, $dbForPlatform, $authorization, $bus);
 
         $needsCertificate = $rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING
             || $certificateIssuer->isAutoIssueEnabled($rule);

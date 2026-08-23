@@ -19,7 +19,6 @@
 [![Twitter Account](https://img.shields.io/twitter/follow/appwrite?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite)
 
 <!-- [![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/appwrite?color=f02e65&style=flat-square)](https://hub.docker.com/r/appwrite/appwrite) -->
-<!-- [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md) -->
 <!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
 
 [English](README.md) | 简体中文
@@ -72,7 +71,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.9.0
+    appwrite/appwrite:1.9.6
 ```
 
 ### Windows
@@ -84,7 +83,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.9.0
+    appwrite/appwrite:1.9.6
 ```
 
 #### PowerShell
@@ -94,7 +93,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.9.0
+    appwrite/appwrite:1.9.6
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
@@ -213,11 +212,31 @@ docker run -it --rm `
 
 ## 软件架构
 
-![Appwrite 软件架构](docs/specs/overview.drawio.svg)
+```mermaid
+flowchart TB
+  Console & Flutter & iOS & Android & Web & Agents & MCP & CLI & SDKs & Terraform --> Appwrite
+  Appwrite --> REST & Realtime & GraphQL & S3
+  REST & Realtime & GraphQL & S3 --> securityLayer[Security layer]
+  securityLayer --> services
+  subgraph services [Services]
+    Auth
+    Databases
+    Functions
+    Sites
+    Messaging
+    Storage
+    Avatars
+    Locale
+  end
+  services --> Executor & Queue & Cache & Browser & SMTP & Embeddings
+  Cache --> Database
+  Queue --> Workers
+  Executor --> openRuntimes[Open Runtimes]
+```
 
-Appwrite 使用高拓展性的微服务架构。此外，Appwrite 支持多种 API（REST、WebSocket 和 即将推出的 GraphQL），来迎合您的个性化开发习惯。
+Appwrite 使用高拓展性的微服务架构。此外，Appwrite 支持多种 API（REST、WebSocket 和 GraphQL），来迎合您的个性化开发习惯。
 
-Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应时间。后台的 Worker 代理还允许您使用消息队列来处理负载，并精确控制硬件合理分配和成本。您可以在 [贡献指南](CONTRIBUTING.md#architecture-1) 中了解有关我们架构的更多信息。
+Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应时间。后台的 Worker 代理还允许您使用消息队列来处理负载，并精确控制硬件合理分配和成本。您可以在 [AGENTS.md](AGENTS.md) 中了解有关我们架构的更多信息。
 
 ## 贡献代码
 
@@ -227,11 +246,11 @@ Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应�
 
 ## 安全
 
-为了保护您的隐私，请避免在 GitHub 上发布安全问题。发送问题至 security@appwrite.io，我们将为您做更细致的解答。
+请通过 [SECURITY.md](SECURITY.md) 报告安全漏洞。请勿在 GitHub 上公开提交安全问题。
 
 ## 订阅我们
 
-加入我们在世界各地不断发展的社区！请参阅我们的官方 [博客](https://medium.com/appwrite-io)。在 [Twitter](https://twitter.com/appwrite)、[Facebook 页面](https://www.facebook.com/appwrite.io)、[Facebook 群组](https://www.facebook.com/appwrite.io/groups/)、[开发者社区](https://dev.to/appwrite) 等平台订阅我们或加入我们的 [Discord 社区](https://discord.gg/GSeTUeA) 以获得更多帮助，想法和讨论。
+加入我们在世界各地不断发展的社区！请参阅我们的 [博客](https://appwrite.io/blog)，或在 [Discord](https://appwrite.io/discord)、[GitHub](https://github.com/appwrite)、[X](https://x.com/appwrite)、[LinkedIn](https://linkedin.com/company/appwrite)、[YouTube](https://youtube.com/c/appwrite)、[daily.dev](https://app.daily.dev/squads/appwrite)、[Bluesky](https://bsky.app/profile/appwrite.io)、[TikTok](https://tiktok.com/@appwrite) 和 [Instagram](https://instagram.com/appwrite.io) 关注我们。
 
 ## 版权说明
 

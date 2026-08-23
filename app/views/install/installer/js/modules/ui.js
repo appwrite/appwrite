@@ -90,7 +90,8 @@
 
     const updateDatabaseSelection = (radio, root) => {
         if (!radio || !root) return;
-        const allOptions = root.querySelectorAll('.selector-card');
+        const group = radio.closest('.selector-group') || root;
+        const allOptions = group.querySelectorAll('.selector-card');
         allOptions.forEach((option) => option.classList.remove('selected'));
         const selectedOption = radio.closest('.selector-card');
         if (selectedOption) {
@@ -254,6 +255,14 @@
             badge.textContent = hasKey ? 'Generated' : 'Missing';
             badge.classList.remove('badge-success', 'badge-warning');
             badge.classList.add(hasKey ? 'badge-success' : 'badge-warning');
+        }
+
+        const httpsBadge = root.querySelector('[data-review-https-badge]');
+        if (httpsBadge) {
+            const forceHttps = formState?.forceHttps === true;
+            httpsBadge.textContent = forceHttps ? 'HTTPS' : 'HTTP';
+            httpsBadge.classList.remove('badge-success', 'badge-neutral');
+            httpsBadge.classList.add(forceHttps ? 'badge-success' : 'badge-neutral');
         }
 
         const assistantBadge = root.querySelector('[data-review-assistant-badge]');

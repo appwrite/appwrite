@@ -23,12 +23,146 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
     public function getName(): string
     {
         return 'Open API 3';
+    }
+
+    private function normalizeExample(mixed $example, string $type): mixed
+    {
+        return match ($type) {
+            'array' => $this->normalizeArrayExample($example),
+            'object' => $this->normalizeObjectExample($example),
+            'integer' => \is_int($example) ? $example : (int) $example,
+            'number' => \is_int($example) || \is_float($example) ? $example : (float) $example,
+            'boolean' => \is_bool($example) ? $example : \filter_var($example, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
+            'string' => \is_string($example) ? $example : (string) $example,
+            default => $example,
+        };
+    }
+
+    private function normalizeArrayExample(mixed $example): array
+    {
+        if (\is_array($example)) {
+            return \array_is_list($example) ? $example : [$example];
+        }
+
+        if (\is_object($example)) {
+            $example = (array) $example;
+            return empty($example) ? [] : [$example];
+        }
+
+        if (\is_string($example)) {
+            if ($example === '') {
+                return [];
+            }
+
+            try {
+                $decoded = \json_decode($example, true, flags: JSON_THROW_ON_ERROR);
+                if (\is_array($decoded)) {
+                    return \array_is_list($decoded) ? $decoded : [$decoded];
+                }
+            } catch (\JsonException) {
+                // A scalar example for an array parameter represents one item.
+            }
+        }
+
+        return [$example];
+    }
+
+    private function normalizeObjectExample(mixed $example): object
+    {
+        if (\is_object($example)) {
+            return $example;
+        }
+
+        if (\is_array($example)) {
+            if (!empty($example) && \array_is_list($example)) {
+                throw new \InvalidArgumentException('Object schema examples cannot be lists.');
+            }
+
+            return (object) $example;
+        }
+
+        if (\is_string($example)) {
+            try {
+                $decoded = \json_decode($example, flags: JSON_THROW_ON_ERROR);
+                if (\is_object($decoded)) {
+                    return $decoded;
+                }
+            } catch (\JsonException) {
+                // Throw the schema-specific error below.
+            }
+        }
+
+        throw new \InvalidArgumentException('Object schema examples must be JSON objects.');
+    }
+
+    /**
+     * @param list<string> $values
+     * @param list<string> $keys
+     * @return array<string, mixed>
+     */
+    private function getEnumSchema(array $values, ?string $name, string $fallbackName, array $keys, bool $open = false): array
+    {
+        $this->assertEnumName($name ?: $fallbackName);
+
+        $branches = [];
+        foreach ($values as $index => $value) {
+            $branch = [
+                'type' => Validator::TYPE_STRING,
+                'enum' => [$value],
+            ];
+
+            $key = $keys[$index] ?? null;
+            if (\is_string($key) && $key !== '') {
+                $branch['title'] = $key;
+            }
+
+            $branches[] = $branch;
+        }
+
+        $enum = [
+            'type' => Validator::TYPE_STRING,
+            'oneOf' => $branches,
+        ];
+        if (\is_string($name) && $name !== '') {
+            $enum = ['title' => $name, ...$enum];
+        }
+
+        return $open
+            ? [
+                'type' => Validator::TYPE_STRING,
+                'anyOf' => [$enum, ['type' => Validator::TYPE_STRING]],
+            ]
+            : $enum;
+    }
+
+    private function assertEnumName(string $enum): void
+    {
+        $normalizedEnum = $this->normalizeSdkName($enum);
+
+        foreach ($this->services as $service) {
+            $name = $service['name'] ?? null;
+            if (!\is_string($name) || $name === '') {
+                continue;
+            }
+
+            if ($this->normalizeSdkName($name) === $normalizedEnum) {
+                throw new \RuntimeException(
+                    "Spec service name '{$name}' must not overlap enum '{$enum}'."
+                );
+            }
+        }
+    }
+
+    private function normalizeSdkName(string $name): string
+    {
+        return \strtolower((string) \preg_replace('/[^a-z0-9]/i', '', $name));
     }
 
     public function parse(): array
@@ -144,7 +278,6 @@ class OpenAPI3 extends Format
                 'responses' => [],
                 'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
-                    'method' => $methodName,
                     'group' => $sdk->getGroup(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
@@ -464,9 +597,22 @@ class OpenAPI3 extends Format
                     $class = Queries::class;
                 }
 
+                $openEnum = false;
                 if ($class === \Utopia\Validator\AnyOf::class) {
-                    $validator = $param['validator']->getValidators()[0];
+                    $validators = $param['validator']->getValidators();
+                    $validator = $validators[0];
                     $class = \get_class($validator);
+
+                    foreach ($validators as $unionValidator) {
+                        while ($unionValidator instanceof ArrayList || $unionValidator instanceof Nullable) {
+                            $unionValidator = $unionValidator->getValidator();
+                        }
+
+                        if (!$unionValidator instanceof WhiteList && $unionValidator->getType() === Validator::TYPE_STRING) {
+                            $openEnum = true;
+                            break;
+                        }
+                    }
                 }
 
                 $array = false;
@@ -485,7 +631,7 @@ class OpenAPI3 extends Format
                     case \Utopia\Database\Validator\UID::class:
                     case \Utopia\Validator\Text::class:
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\BigInt::class:
                         // BigInt validator reports Database::VAR_BIGINT, but OpenAPI expects scalar types.
@@ -493,27 +639,24 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = 'integer';
                         $node['schema']['format'] = 'int64';
                         if (!empty($param['example'])) {
-                            $node['schema']['x-example'] = $param['example'];
+                            $node['schema']['example'] = $param['example'];
                         }
                         break;
                     case \Utopia\Validator\Boolean::class:
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: false;
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: false;
                         break;
                     case \Appwrite\Utopia\Database\Validator\CustomId::class:
-                        if ($sdk->getType() === MethodType::UPLOAD) {
-                            $node['schema']['x-upload-id'] = true;
-                        }
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-appwrite'] = [
                             'idGenerator' => 'ID.unique',
                         ];
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\Datetime::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'datetime';
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: Model::TYPE_DATETIME_EXAMPLE;
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: Model::TYPE_DATETIME_EXAMPLE;
                         break;
                     case \Utopia\Database\Validator\Spatial::class:
                         /** @var Spatial $validator */
@@ -548,7 +691,7 @@ class OpenAPI3 extends Format
                                 ],
                             ],
                         };
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: match ($validator->getSpatialType()) {
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: match ($validator->getSpatialType()) {
                             Database::VAR_POINT => '[1, 2]',
                             Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
                             Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
@@ -558,25 +701,25 @@ class OpenAPI3 extends Format
                     case \Utopia\Emails\Validator\Email::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'email';
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'email@example.com';
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: 'email@example.com';
                         break;
                     case \Utopia\Validator\Host::class:
                     case \Utopia\Validator\URL::class:
                     case \Appwrite\Network\Validator\Redirect::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'https://example.com';
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: 'https://example.com';
                         break;
                     case \Utopia\Validator\JSON::class:
                     case \Utopia\Validator\JSON\ObjectValidator::class:
                     case \Utopia\Validator\Assoc::class:
                         $node['schema']['type'] = 'object';
                         $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '{}';
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: '{}';
                         break;
                     case \Utopia\Validator\JSON\ArrayValidator::class:
                         $node['schema']['type'] = 'array';
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '[]';
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: '[]';
                         break;
                     case \Appwrite\Utopia\Request\Validator\File::class:
                         $consumes = ['multipart/form-data'];
@@ -590,7 +733,7 @@ class OpenAPI3 extends Format
                             'type' => $validator->getValidator()->getType(),
                         ];
                         if (!empty($param['example'])) {
-                            $node['schema']['x-example'] = $param['example'];
+                            $node['schema']['example'] = $param['example'];
                         }
                         break;
                     case Queries::class:
@@ -604,37 +747,37 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '["' . Permission::read(Role::any()) . '"]';
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: [Permission::read(Role::any())];
                         break;
                     case \Utopia\Database\Validator\Roles::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
                         break;
                     case \Appwrite\Auth\Validator\Password::class:
                     case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'password';
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'password';
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: 'password';
                         break;
                     case \Appwrite\Auth\Validator\Phone::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'phone';
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '+12065550100'; // In the US, 555 is reserved like example.com
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: '+12065550100'; // In the US, 555 is reserved like example.com
                         break;
                     case \Utopia\Validator\Range::class:
                         /** @var Range $validator */
                         $node['schema']['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
                         $node['schema']['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: $validator->getMin();
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: $validator->getMin();
                         break;
                     case \Utopia\Validator\Integer::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = $validator->getFormat();
                         if (!empty($param['example'])) {
-                            $node['schema']['x-example'] = $param['example'];
+                            $node['schema']['example'] = $param['example'];
                         }
                         break;
                     case \Utopia\Validator\Numeric::class:
@@ -642,7 +785,7 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = 'number';
                         $node['schema']['format'] = 'float';
                         if (!empty($param['example'])) {
-                            $node['schema']['x-example'] = $param['example'];
+                            $node['schema']['example'] = $param['example'];
                         }
                         break;
                     case \Utopia\Validator\WhiteList::class:
@@ -654,7 +797,7 @@ class OpenAPI3 extends Format
                                 'type' => $validator->getType(),
                             ];
                             if (!empty($param['example'])) {
-                                $node['schema']['x-example'] = $param['example'];
+                                $node['schema']['example'] = $param['example'];
                             }
 
                             if ($validator->getType() === 'string') {
@@ -680,11 +823,13 @@ class OpenAPI3 extends Format
                                         $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
                                     }
 
-                                    $node['schema']['items']['enum'] = $enumValues;
-                                    if (!empty($enum->name)) {
-                                        $node['schema']['items']['x-enum-name'] = $enum->name;
-                                    }
-                                    $node['schema']['items']['x-enum-keys'] = $enumKeys;
+                                    $node['schema']['items'] = $this->getEnumSchema(
+                                        $enumValues,
+                                        $enum->name,
+                                        $name,
+                                        $enumKeys,
+                                        $openEnum,
+                                    );
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -692,7 +837,7 @@ class OpenAPI3 extends Format
                             }
                         } else {
                             $node['schema']['type'] = $validator->getType();
-                            $node['schema']['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
+                            $node['schema']['example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
 
                             if ($validator->getType() === 'string') {
                                 $enum = $param['enum'] ?? null;
@@ -717,11 +862,16 @@ class OpenAPI3 extends Format
                                         $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
                                     }
 
-                                    $node['schema']['enum'] = $enumValues;
-                                    if (!empty($enum->name)) {
-                                        $node['schema']['x-enum-name'] = $enum->name;
-                                    }
-                                    $node['schema']['x-enum-keys'] = $enumKeys;
+                                    $node['schema'] = [
+                                        ...$node['schema'],
+                                        ...$this->getEnumSchema(
+                                            $enumValues,
+                                            $enum->name,
+                                            $name,
+                                            $enumKeys,
+                                            $openEnum,
+                                        ),
+                                    ];
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -731,7 +881,7 @@ class OpenAPI3 extends Format
                         break;
                     case \Appwrite\Utopia\Database\Validator\CompoundUID::class:
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<ID1:ID2>';
+                        $node['schema']['example'] = ($param['example'] ?? '') ?: '<ID1:ID2>';
                         break;
                     case \Appwrite\Utopia\Database\Validator\Operation::class:
                         if ($array) {
@@ -760,17 +910,21 @@ class OpenAPI3 extends Format
                             if ($array) {
                                 $example = [$example];
                             }
-                            $node['schema']['x-example'] = \str_replace("\n", "\n\t", \json_encode($example, JSON_PRETTY_PRINT));
+                            $node['schema']['example'] = \str_replace("\n", "\n\t", \json_encode($example, JSON_PRETTY_PRINT));
                         } else {
-                            $node['schema']['x-example'] = $param['example'];
+                            $node['schema']['example'] = $param['example'];
                         }
                         break;
                     default:
                         $node['schema']['type'] = 'string';
                         if (!empty($param['example'])) {
-                            $node['schema']['x-example'] = $param['example'];
+                            $node['schema']['example'] = $param['example'];
                         }
                         break;
+                }
+
+                if (\array_key_exists('example', $node['schema'])) {
+                    $node['schema']['example'] = $this->normalizeExample($node['schema']['example'], $node['schema']['type']);
                 }
 
                 if ($parameter['emitDefault'] && $this->shouldEmitDefaultForSchema($param['default'], $node['schema'])) { // Param has default value
@@ -811,7 +965,6 @@ class OpenAPI3 extends Format
                 if (\count($methods) > 1 && $index > 0) {
                     $suffix = \ucfirst(\strtolower($method));
                     $methodTemp['operationId'] .= $suffix;
-                    $methodTemp['x-appwrite']['method'] .= $suffix;
                 }
                 $body = [
                     'content' => [
@@ -849,29 +1002,30 @@ class OpenAPI3 extends Format
                         }
 
                         $body['content'][$consumes[0]]['schema']['properties'][$name] = [
-                            'type' => $node['schema']['type'],
                             'description' => $node['description'],
                         ];
+                        if (isset($node['schema']['type'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['type'] = $node['schema']['type'];
+                        }
 
                         if (\array_key_exists('default', $node['schema'])) {
                             $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['schema']['default'];
                         }
 
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-example'] = $node['schema']['x-example'] ?? null;
+                        if (\array_key_exists('example', $node['schema'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['example'] = $node['schema']['example'];
+                        }
 
                         if (isset($node['schema']['format'])) {
                             $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
                         }
 
-                        if (isset($node['schema']['enum'])) {
-                            /// If the enum flag is Set, add the enum values to the body
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'];
-                        }
-
-                        if ($node['schema']['x-upload-id'] ?? false) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
+                        if (isset($node['schema']['oneOf']) || isset($node['schema']['anyOf'])) {
+                            foreach (['title', 'oneOf', 'anyOf'] as $key) {
+                                if (isset($node['schema'][$key])) {
+                                    $body['content'][$consumes[0]]['schema']['properties'][$name][$key] = $node['schema'][$key];
+                                }
+                            }
                         }
 
                         if (isset($node['schema']['x-appwrite'])) {
@@ -883,7 +1037,7 @@ class OpenAPI3 extends Format
                         }
 
                         if ($parameter['nullable']) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['nullable'] = true;
                         }
                     }
                 }
@@ -1023,14 +1177,16 @@ class OpenAPI3 extends Format
                 }
 
                 $readOnly = $rule['readOnly'] ?? false;
-                if ($rule['type'] == 'json') {
+                if ($rule['type'] == 'json' && !$rule['array']) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
                         'additionalProperties' => true,
                         'description' => $rule['description'] ?? '',
-                        'x-example' => $rule['example'] ?? null,
                     ];
 
+                    if (isset($rule['example']) && ($type === 'string' || $rule['example'] !== '')) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['example'] = $this->normalizeExample($rule['example'], $type);
+                    }
                     if ($readOnly) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
                     }
@@ -1044,7 +1200,6 @@ class OpenAPI3 extends Format
                         'items' => [
                             'type' => $type,
                         ],
-                        'x-example' => $rule['example'] ?? null,
                     ];
 
                     if ($format) {
@@ -1057,7 +1212,6 @@ class OpenAPI3 extends Format
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
                         'description' => $rule['description'] ?? '',
-                        'x-example' => $rule['example'] ?? null,
                     ];
 
                     if ($format) {
@@ -1066,6 +1220,11 @@ class OpenAPI3 extends Format
                     if ($readOnly) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
                     }
+                }
+
+                $propertyType = $rule['array'] ? 'array' : $type;
+                if (isset($rule['example']) && (\in_array($propertyType, ['string', 'array']) || $rule['example'] !== '')) {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['example'] = $this->normalizeExample($rule['example'], $propertyType);
                 }
                 if ($items) {
                     if ($rule['array'] || $rule['type'] === 'array') {
@@ -1083,16 +1242,21 @@ class OpenAPI3 extends Format
                     }
                 }
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
+                    $enum = $this->getEnumSchema(
+                        \array_values($rule['enum']),
+                        $rule['enumSDKName'] ?? null,
+                        $name,
+                        \array_values($rule['enum']),
+                    );
+
                     if ($rule['array']) {
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['enum'] = \array_values($rule['enum']);
-                        if (!empty($rule['enumSDKName'])) {
-                            $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $rule['enumSDKName'];
-                        }
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $enum;
                     } else {
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['enum'] = \array_values($rule['enum']);
-                        if (!empty($rule['enumSDKName'])) {
-                            $output['components']['schemas'][$model->getType()]['properties'][$name]['x-enum-name'] = $rule['enumSDKName'];
-                        }
+                        unset($output['components']['schemas'][$model->getType()]['properties'][$name]['type']);
+                        $output['components']['schemas'][$model->getType()]['properties'][$name] = [
+                            ...$output['components']['schemas'][$model->getType()]['properties'][$name],
+                            ...$enum,
+                        ];
                     }
                 }
                 if (!in_array($name, $required)) {
@@ -1105,7 +1269,7 @@ class OpenAPI3 extends Format
                 $examples = array_merge($examples, $model->getSampleData());
             }
 
-            $output['components']['schemas'][$model->getType()]['example'] = $examples;
+            $output['components']['schemas'][$model->getType()]['example'] = (object) $examples;
         }
 
         \ksort($output['paths']);

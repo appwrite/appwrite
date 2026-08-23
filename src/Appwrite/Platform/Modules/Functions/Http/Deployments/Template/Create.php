@@ -13,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -81,6 +82,7 @@ class Create extends Base
             ->inject('vcsFactory')
             ->inject('deployments')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -103,6 +105,7 @@ class Create extends Base
         VcsFactory $vcsFactory,
         Deployments $deployments,
         Authorization $authorization,
+        Bus $bus,
         array $platform
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -189,7 +192,7 @@ class Create extends Base
             $rootDirectory,
         );
 
-        $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
+        $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization, $bus);
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

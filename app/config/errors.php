@@ -729,6 +729,11 @@ return [
         'description' => 'Deployment with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::DEPLOYMENT_INVALID_FILE_SIZE => [
+        'name' => Exception::DEPLOYMENT_INVALID_FILE_SIZE,
+        'description' => 'The deployment file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_COMPUTE_SIZE_LIMIT environment variable.',
+        'code' => 400,
+    ],
 
     /** Executions */
     Exception::EXECUTION_NOT_FOUND => [
@@ -1280,6 +1285,11 @@ return [
         'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
         'description' => 'Too many queries.',
         'code' => 400,
+    ],
+    Exception::GRAPHQL_METHOD_UNSUPPORTED => [
+        'name' => Exception::GRAPHQL_METHOD_UNSUPPORTED,
+        'description' => 'GET requests only support GraphQL query operations.',
+        'code' => 405,
     ],
 
     /** Migrations */

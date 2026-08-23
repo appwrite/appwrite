@@ -54,7 +54,7 @@ return [
             ],
             [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
-                'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443, and you have set up wildcard certificates with DNS challenge.',
+                'description' => 'Controls whether Appwrite generates HTTPS API URLs and enforces HTTPS for incoming API requests. Set to \'enabled\' whenever the public API is served over HTTPS, including when TLS is terminated by a reverse proxy. When enabled, HTTP GET requests are redirected to HTTPS and other HTTP requests are rejected. The default value is \'disabled\' to support local and plain HTTP installations.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
@@ -1026,9 +1026,9 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_HOST',
-                'description' => 'The host used by Appwrite to communicate with the open-runtimes jobs-service that builds manual-upload function deployments.',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes orchestrator that builds manual-upload function deployments.',
                 'introduction' => '1.9.0',
-                'default' => 'http://orchestrator-jobs:8080',
+                'default' => 'http://orchestrator:8080',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
@@ -1386,6 +1386,24 @@ return [
             [
                 'name' => '_APP_VCS_BITBUCKET_WEBHOOK_SECRET',
                 'description' => 'Secret used to validate incoming Bitbucket webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ORIGIN_CLIENT_ID',
+                'description' => 'Origin app client ID. You can find it in your Origin app details on Cursor.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ORIGIN_PRIVATE_KEY',
+                'description' => 'Origin app private key. You can generate private keys from your Origin app settings on Cursor.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,

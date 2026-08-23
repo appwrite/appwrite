@@ -50,6 +50,33 @@ services:
       - ./src:/usr/src/code/src
     ports:
       - 9502:80
+  appwrite-worker:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - request-catcher-sms
+      - request-catcher-webhook
+  appwrite-task-scheduler:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
   appwrite-worker-webhooks:
     build:
       context: .
@@ -126,6 +153,18 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
   appwrite-worker-certificates:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+  appwrite-worker-executions:
     build:
       context: .
       target: development
@@ -415,10 +454,10 @@ services:
       - traefik.docker.network=gateway
       - traefik.http.services.appwrite_adminer.loadbalancer.server.port=8080
       - traefik.http.routers.appwrite_adminer_http.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_adminer_http.rule=Host(`mysql.localhost`)
+      - traefik.http.routers.appwrite_adminer_http.rule=Host(`mysql.localhost`) || Host(`postgres.localhost`)
       - traefik.http.routers.appwrite_adminer_http.service=appwrite_adminer
       - traefik.http.routers.appwrite_adminer_https.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_adminer_https.rule=Host(`mysql.localhost`)
+      - traefik.http.routers.appwrite_adminer_https.rule=Host(`mysql.localhost`) || Host(`postgres.localhost`)
       - traefik.http.routers.appwrite_adminer_https.service=appwrite_adminer
       - traefik.http.routers.appwrite_adminer_https.tls=true
   redis-insight:
@@ -562,19 +601,7 @@ configs:
         }
       ]
   adminer-index.php:
-    content: |
-      <?php
-        if(!count($$_GET)) {
-          $$_POST['auth'] = [
-            'server' => $$_ENV['ADMINER_DEFAULT_SERVER'],
-            /* Adminer calls the MySQL/MariaDB driver "server". */
-            'driver' => $$_ENV['ADMINER_DEFAULT_DRIVER'] === 'postgresql' ? 'pgsql' : 'server',
-            'username' => $$_ENV['ADMINER_DEFAULT_USERNAME'],
-            'password' => $$_ENV['ADMINER_DEFAULT_PASSWORD'],
-            'db' => $$_ENV['ADMINER_DEFAULT_DB'],
-          ];
-        }
-        include './adminer.php';
+    file: ./tests/resources/docker/adminer/index.php
 networks:
   appwrite:
     ipam:
