@@ -211,6 +211,8 @@ services:
       - _APP_VCS_BITBUCKET_CLIENT_ID
       - _APP_VCS_BITBUCKET_CLIENT_SECRET
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
+      - _APP_VCS_ORIGIN_CLIENT_ID
+      - _APP_VCS_ORIGIN_PRIVATE_KEY
       - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -310,7 +312,199 @@ services:
       - _APP_DATABASE_SHARED_TABLES
       - _APP_POOL_ADAPTER=swoole
 
+  appwrite-worker:
+    entrypoint: worker
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - ${_APP_DB_HOST:-postgresql}
+      - appwrite-embedding
+    volumes:
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-cache:/storage/cache:rw
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
+      - appwrite-builds:/storage/builds:rw
+      - appwrite-certificates:/storage/certificates:rw
+      - appwrite-config:/storage/config:rw
+      - appwrite-imports:/storage/imports:rw
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
+      - _APP_WORKER_MAX_COROUTINES=69
+      - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
+      - _APP_OPENSSL_KEY_V1
+      - _APP_EMAIL_SECURITY
+      - _APP_EMAIL_CERTIFICATES
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
+      - _APP_LOGGING_PROVIDER
+      - _APP_QUEUE_NAME
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_TRUSTED_PROJECTS
+      - _APP_DOMAIN
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
+      - _APP_DOMAIN_TARGET_CAA
+      - _APP_DNS
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_ROUTER_FORCE_HTTPS
+      - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
+      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
+      - _APP_STORAGE_BACKBLAZE_SECRET
+      - _APP_STORAGE_BACKBLAZE_REGION
+      - _APP_STORAGE_BACKBLAZE_BUCKET
+      - _APP_STORAGE_LINODE_ACCESS_KEY
+      - _APP_STORAGE_LINODE_SECRET
+      - _APP_STORAGE_LINODE_REGION
+      - _APP_STORAGE_LINODE_BUCKET
+      - _APP_STORAGE_WASABI_ACCESS_KEY
+      - _APP_STORAGE_WASABI_SECRET
+      - _APP_STORAGE_WASABI_REGION
+      - _APP_STORAGE_WASABI_BUCKET
+      - _APP_EXECUTOR_SECRET
+      - _APP_EXECUTOR_HOST
+      - _APP_DOCKER_HUB_USERNAME
+      - _APP_DOCKER_HUB_PASSWORD
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
+      - _APP_OPEN_RUNTIMES_NFT
+      - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_VCS_GITHUB_APP_NAME
+      - _APP_VCS_GITHUB_PRIVATE_KEY
+      - _APP_VCS_GITHUB_APP_ID
+      - _APP_VCS_GITEA_ENDPOINT
+      - _APP_VCS_GITEA_BROWSER_ENDPOINT
+      - _APP_VCS_GITEA_CLIENT_ID
+      - _APP_VCS_GITEA_CLIENT_SECRET
+      - _APP_VCS_GITEA_WEBHOOK_SECRET
+      - _APP_VCS_GITLAB_CLIENT_ID
+      - _APP_VCS_GITLAB_CLIENT_SECRET
+      - _APP_VCS_GITLAB_WEBHOOK_SECRET
+      - _APP_VCS_BITBUCKET_CLIENT_ID
+      - _APP_VCS_BITBUCKET_CLIENT_SECRET
+      - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
+      - _APP_VCS_ORIGIN_CLIENT_ID
+      - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_WEBHOOK_URL
+      - _APP_BUILDS_VOLUME
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_JOBS_ENDPOINT
+      - _APP_BROWSER_HOST
+      - _APP_WORKER_SCREENSHOTS_ROUTER
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_SMTP_HOST
+      - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      - _APP_SMS_FROM
+      - _APP_SMS_PROVIDER
+      - _APP_SMS_PROJECTS_DENY_LIST
+      - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
+      - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
+      - _APP_MIGRATION_HOST
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
+
+  appwrite-task-scheduler:
+    entrypoint: schedule
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-task-scheduler
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    networks:
+      - appwrite
+    depends_on:
+      - ${_APP_DB_HOST:-postgresql}
+      - redis
+      - appwrite-embedding
+    environment:
+      - _APP_ENV
+      - _APP_LOGGING_FORMAT
+      # Combined mode runs functions/executions/messages timers + enqueue coroutines
+      # against shared console/cache pools; floor must cover concurrent ticks.
+      - _APP_WORKER_MAX_COROUTINES=8
+      - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
+      - _APP_OPENSSL_KEY_V1
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_SCHEMA
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
+      - _APP_MIGRATION_HOST
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_FUNCTIONS_SCHEDULE_SPREAD
+
   appwrite-worker-webhooks:
+    profiles:
+      - separate
     entrypoint: worker-webhooks
     logging:
       driver: json-file
@@ -349,6 +543,8 @@ services:
       - _APP_DATABASE_SHARED_TABLES
       - _APP_CONSOLE_URL_SCHEME=root
   appwrite-worker-deletes:
+    profiles:
+      - separate
     entrypoint: worker-deletes
     logging:
       driver: json-file
@@ -419,6 +615,8 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
   appwrite-worker-databases:
+    profiles:
+      - separate
     entrypoint: worker-databases
     logging:
       driver: json-file
@@ -461,6 +659,8 @@ services:
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-builds:
+    profiles:
+      - separate
     entrypoint: worker-builds
     logging:
       driver: json-file
@@ -514,6 +714,8 @@ services:
       - _APP_VCS_BITBUCKET_CLIENT_ID
       - _APP_VCS_BITBUCKET_CLIENT_SECRET
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
+      - _APP_VCS_ORIGIN_CLIENT_ID
+      - _APP_VCS_ORIGIN_PRIVATE_KEY
       - _APP_VCS_WEBHOOK_URL
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
@@ -560,6 +762,8 @@ services:
       - host.docker.internal:host-gateway
 
   appwrite-worker-jobs:
+    profiles:
+      - separate
     entrypoint: worker-jobs
     logging:
       driver: json-file
@@ -601,6 +805,8 @@ services:
       - host.docker.internal:host-gateway
 
   appwrite-worker-screenshots:
+    profiles:
+      - separate
     entrypoint: worker-screenshots
     logging:
       driver: json-file
@@ -726,6 +932,8 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
   appwrite-worker-certificates:
+    profiles:
+      - separate
     entrypoint: worker-certificates
     logging:
       driver: json-file
@@ -774,6 +982,8 @@ services:
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-executions:
+    profiles:
+      - separate
     entrypoint: worker-executions
     logging:
       driver: json-file
@@ -810,6 +1020,8 @@ services:
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-functions:
+    profiles:
+      - separate
     entrypoint: worker-functions
     logging:
       driver: json-file
@@ -856,6 +1068,8 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-mails:
+    profiles:
+      - separate
     entrypoint: worker-mails
     logging:
       driver: json-file
@@ -901,6 +1115,8 @@ services:
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-notifications:
+    profiles:
+      - separate
     entrypoint: worker-notifications
     logging:
       driver: json-file
@@ -944,6 +1160,8 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-messaging:
+    profiles:
+      - separate
     entrypoint: worker-messaging
     logging:
       driver: json-file
@@ -1005,6 +1223,8 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-migrations:
+    profiles:
+      - separate
     entrypoint: worker-migrations
     logging:
       driver: json-file
@@ -1146,6 +1366,8 @@ services:
       - _APP_INTERVAL_CLEANUP_STALE_EXECUTIONS
 
   appwrite-task-scheduler-functions:
+    profiles:
+      - separate
     entrypoint: schedule-functions
     restart: unless-stopped
     logging:
@@ -1187,6 +1409,8 @@ services:
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
   appwrite-task-scheduler-executions:
+    profiles:
+      - separate
     entrypoint: schedule-executions
     restart: unless-stopped
     logging:
@@ -1227,6 +1451,8 @@ services:
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-scheduler-messages:
+    profiles:
+      - separate
     entrypoint: schedule-messages
     restart: unless-stopped
     logging:
@@ -1336,15 +1562,18 @@ services:
       retries: 20
       start_period: 5s
 
-  orchestrator-jobs:
-    container_name: orchestrator-jobs
-    hostname: orchestrator-jobs
+  orchestrator:
+    container_name: orchestrator
+    hostname: orchestrator
     logging:
       driver: json-file
       options:
         max-file: "5"
         max-size: 10m
-    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.18.0
+    # One image carrying every orchestrator control plane. Appwrite drives the
+    # jobs plane today; the per-plane images exist for Kubernetes, where each
+    # scales, fails and gets RBAC on its own.
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.3.0
     restart: unless-stopped
     user: root
     networks:
@@ -1353,9 +1582,14 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - ORCHESTRATOR_BACKEND=docker
+      # The jobs plane and the serving planes read the network under different
+      # names; both name the network the workload containers join.
       - ORCHESTRATOR_NETWORK=appwrite
-      - ARTIFACT_ENDPOINT=http://orchestrator-jobs:8080
-      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.18.0
+      - DOCKER_NETWORK=appwrite
+      - ARTIFACT_ENDPOINT=http://orchestrator:8080
+      # Sidecars ship with the service and move with it, so they share its tag.
+      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:1.3.0
+      - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.3.0
 
   mariadb:
     image: mariadb:10.11

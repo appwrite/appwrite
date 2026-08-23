@@ -181,6 +181,55 @@ trait PresenceBase
         $this->assertArrayHasKey('expiresAt', $get['body']);
     }
 
+    public function testUpsertPresenceNestedMetadata(): void
+    {
+        $metadata = [
+            'device' => 'web',
+            'profile' => [
+                'os' => 'linux',
+                'versions' => ['stable' => 3, 'beta' => 4],
+            ],
+            'tags' => ['x', 'y'],
+        ];
+
+        if ($this->getSide() === 'client' || $this->getSide() === 'console') {
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders());
+        } else {
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getPresenceServerHeaders());
+        }
+
+        $payload = ['status' => 'online', 'metadata' => $metadata];
+        if ($this->getSide() === 'server') {
+            $payload['userId'] = $this->getUser()['$id'];
+        }
+
+        $upsert = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . ID::unique(),
+            $headers,
+            $payload
+        );
+
+        $this->assertEquals(200, $upsert['headers']['status-code']);
+        $this->assertNotEmpty($upsert['body']['$id']);
+        $this->assertEquals($metadata, $upsert['body']['metadata']);
+
+        $get = $this->client->call(
+            Client::METHOD_GET,
+            '/presences/' . $upsert['body']['$id'],
+            $headers
+        );
+
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals($metadata, $get['body']['metadata']);
+    }
+
     public function testListPresences(): void
     {
         if ($this->getSide() === 'client' || $this->getSide() === 'console') {
@@ -522,6 +571,54 @@ trait PresenceBase
         $this->assertEquals(200, $update['headers']['status-code']);
         $this->assertEquals('busy', $update['body']['status']);
         $this->assertEquals(['source' => 'update'], $update['body']['metadata']);
+    }
+
+    public function testUpdatePresenceNestedMetadata(): void
+    {
+        $metadata = [
+            'device' => 'web',
+            'profile' => [
+                'os' => 'linux',
+                'versions' => ['stable' => 3, 'beta' => 4],
+            ],
+            'tags' => ['x', 'y'],
+        ];
+
+        if ($this->getSide() === 'client' || $this->getSide() === 'console') {
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders());
+
+            $upsert = $this->client->call(
+                Client::METHOD_PUT,
+                '/presences/' . ID::unique(),
+                $headers,
+                ['status' => 'online', 'metadata' => ['source' => 'setup']]
+            );
+            $this->assertEquals(200, $upsert['headers']['status-code']);
+            $presenceId = $upsert['body']['$id'];
+            $payload = ['metadata' => $metadata];
+        } else {
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getPresenceServerHeaders());
+
+            $presence = $this->setupPresence(['metadata' => ['source' => 'setup']]);
+            $presenceId = $presence['$id'];
+            $payload = ['metadata' => $metadata, 'userId' => $presence['userId']];
+        }
+
+        $update = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presenceId,
+            $headers,
+            $payload
+        );
+
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals($metadata, $update['body']['metadata']);
     }
 
     public function testUpdatePresenceUserIdReassignsDefaultPermissions(): void

@@ -44,6 +44,7 @@ class Install extends Action
     protected ?bool $isLocalInstall = null;
     protected ?array $installerConfig = null;
     protected string $path = '/usr/src/code/appwrite';
+    protected string $topology = 'combined';
 
     public static function getName(): string
     {
@@ -61,6 +62,7 @@ class Install extends Action
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
+            ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
             ->callback($this->action(...));
     }
 
@@ -71,7 +73,8 @@ class Install extends Action
         string $image,
         string $interactive,
         bool $noStart,
-        string $database
+        string $database,
+        string $topology
     ): void {
         $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
@@ -113,6 +116,12 @@ class Install extends Action
             Console::info('Compose file found, creating backup: ' . $composeFileName . '.' . $time . '.backup');
             file_put_contents($this->path . '/' . $composeFileName . '.' . $time . '.backup', $data);
             $compose = new Compose($data);
+            if (!$this->hasExplicitTopologyParam()) {
+                $detected = $this->detectTopologyFromCompose($compose);
+                if ($detected !== null) {
+                    $topology = $detected;
+                }
+            }
             $appwrite = $compose->getService('appwrite');
             $oldVersion = $appwrite->getImageVersion();
             try {
@@ -209,6 +218,8 @@ class Install extends Action
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
             Console::exit(1);
         }
+
+        $this->setTopology($topology);
 
         // If interactive and web mode enabled, start web server
         // Skip the web installer when explicit CLI params are provided
@@ -350,6 +361,7 @@ class Install extends Action
             'vars' => $vars,
             'isUpgrade' => $isUpgrade,
             'lockedDatabase' => $lockedDatabase,
+            'topology' => $this->topology,
             'enabledDatabases' => $enabledDatabases,
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
@@ -574,6 +586,7 @@ class Install extends Action
             'database' => $database,
             'hostPath' => $this->hostPath,
             'enableAssistant' => $enableAssistant,
+            'topology' => $this->topology,
         ]);
 
         $templateForEnv->setParam('vars', $input);
@@ -1534,6 +1547,37 @@ class Install extends Action
             if ($host !== null && in_array($host, $dbServices, true)) {
                 return $host;
             }
+        }
+
+        return null;
+    }
+
+    public function setTopology(string $topology): void
+    {
+        $this->topology = \in_array($topology, ['combined', 'separate'], true)
+            ? $topology
+            : 'combined';
+    }
+
+    private function hasExplicitTopologyParam(): bool
+    {
+        foreach ($_SERVER['argv'] ?? [] as $arg) {
+            if (\str_starts_with((string) $arg, '--topology')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function detectTopologyFromCompose(Compose $compose): ?string
+    {
+        $names = array_keys($compose->getServices());
+        if (\in_array('appwrite-worker', $names, true)) {
+            return 'combined';
+        }
+        if (\in_array('appwrite-worker-functions', $names, true)) {
+            return 'separate';
         }
 
         return null;

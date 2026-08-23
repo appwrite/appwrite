@@ -31,3 +31,4 @@ docker-compose.web-installer.yml.**.backup
 tests/playwright/screenshots
 .playwright-mcp/
 .phpstan-cache-deadcode
+auth.json
