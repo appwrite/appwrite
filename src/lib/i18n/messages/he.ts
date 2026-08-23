@@ -85,6 +85,7 @@ export const heCatalog: EnCatalog = {
         cache: 'Cache',
         blocks: 'Blocks',
         generator: 'Generator',
+        impersonate: 'התחזות',
       },
       search: {
         ...enCatalog.app.header.search,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Eye, Users, Loader2 } from 'lucide-react'
+import { Users, Loader2 } from 'lucide-react'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -18,15 +18,12 @@ import {
   CommandSeparator,
 } from '@/components/ui/command'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   applyConsoleImpersonateUserId,
   clearConsoleImpersonateUser,
@@ -65,11 +62,16 @@ function recentImpersonationUserToModel(
   } as Models.User
 }
 
-export function ImpersonateConsoleUserPopover() {
+export function ImpersonateConsoleUserDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const t = useT()
   const { account: accountRaw } = useAuth()
   const account = accountRaw as ConsoleAccount | undefined
-  const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
@@ -82,14 +84,14 @@ export function ImpersonateConsoleUserPopover() {
     if (!open) setSearch('')
   }, [open])
 
-  const showTrigger =
+  const canImpersonate =
     account?.impersonator === true || !!account?.impersonatorUserId
 
   const isImpersonating = !!account?.impersonatorUserId
 
   const { data, isFetching } = useQuery({
     ...consoleUsersImpersonationSearchQueryOptions(debouncedSearch),
-    enabled: open,
+    enabled: open && canImpersonate,
     placeholderData: keepPreviousData,
   })
 
@@ -193,7 +195,7 @@ export function ImpersonateConsoleUserPopover() {
     const opId = readConsoleImpersonationOperatorSnapshot()?.$id
     clearConsoleImpersonateUser()
     clearConsoleImpersonationSession({ skipNotify: true })
-    setOpen(false)
+    onOpenChange(false)
     if (opId) {
       void flushRecentImpersonationUsersToAccountPrefs(opId).catch((e) => {
         console.error(e)
@@ -202,73 +204,58 @@ export function ImpersonateConsoleUserPopover() {
     hardNavigateToAccountAfterImpersonation()
   }
 
-  if (!showTrigger) return null
+  if (!canImpersonate) return null
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <Tooltip>
-        {/* Avoid nested asChild (Tooltip+Popover) - React 19 composeRefs can loop (#185). */}
-        <TooltipTrigger asChild>
-          <span className="hidden h-9 w-9 shrink-0 @[900px]:inline-flex">
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                aria-label={
-                  isImpersonating ? t('Impersonating') : t('Impersonate')
-                }
-              >
-                <Eye className="h-4 w-4" />
-              </button>
-            </PopoverTrigger>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">
-          <p>{isImpersonating ? t('Impersonating') : t('Impersonate')}</p>
-        </TooltipContent>
-      </Tooltip>
-      <PopoverContent
-        align="end"
-        className="w-[min(100vw-2rem,380px)] p-0"
-      >
-        <div className="border-b border-border px-4 py-3">
-          <h3 className="text-[13px] font-semibold text-foreground">
-            {t('Impersonate user')}
-          </h3>
-          <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-4 pe-12 text-start">
+          <DialogTitle>{t('Impersonate user')}</DialogTitle>
+          <DialogDescription className="mt-2 text-[13px] leading-relaxed">
             {t(
               "Matches the start of name, email, phone, or user ID. The Console runs with the selected account's access until you end impersonation.",
             )}
-          </p>
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex h-[72px] shrink-0 flex-col justify-center border-t border-border bg-muted/30 px-6">
+          {isImpersonating ? (
+            <>
+              <p className="truncate text-[12px] text-muted-foreground">
+                {t('Active session:')}{' '}
+                <span className="font-medium text-foreground">
+                  {account?.name || account?.email || account?.$id}
+                </span>
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2 h-8 w-fit text-[12px]"
+                onClick={() => void handleStop()}
+              >
+                {t('Exit impersonation')}
+              </Button>
+            </>
+          ) : (
+            <p className="text-[12px] leading-relaxed text-muted-foreground">
+              {t(
+                'Pick a console user to operate as. Your operator account stays signed in.',
+              )}
+            </p>
+          )}
         </div>
 
-        {isImpersonating && (
-          <div className="border-b border-border bg-muted/30 px-4 py-3">
-            <p className="text-[12px] text-muted-foreground">
-              {t('Active session:')}{' '}
-              <span className="font-medium text-foreground">
-                {account?.name || account?.email || account?.$id}
-              </span>
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2 h-8 text-[12px]"
-              onClick={() => void handleStop()}
-            >
-              {t('Exit impersonation')}
-            </Button>
-          </div>
-        )}
-
-        <Command shouldFilter={false} className="overflow-visible">
-          <div className="relative border-b border-border">
+        <Command
+          shouldFilter={false}
+          className="min-h-0 overflow-hidden rounded-none border-t border-border"
+        >
+          <div className="relative shrink-0">
             <CommandInput
               placeholder={t('Name, email, phone, or user ID…')}
               value={search}
               onValueChange={setSearch}
-              className={cn('h-9 text-[13px]', isFetching && 'pe-9')}
+              className="h-9 pe-9 text-[13px]"
             />
             <div
               className={cn(
@@ -280,7 +267,7 @@ export function ImpersonateConsoleUserPopover() {
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           </div>
-          <CommandList className="min-h-[180px] max-h-[280px]">
+          <CommandList className="h-[360px] min-h-[360px] max-h-[360px] overflow-x-hidden overflow-y-scroll overscroll-contain [scrollbar-gutter:stable]">
             {showRecentSection && (
               <CommandGroup heading={t('Recent')}>
                 {recentImpersonationUsers.map((recent) => {
@@ -343,7 +330,7 @@ export function ImpersonateConsoleUserPopover() {
             )}
             <CommandEmpty className="p-0">
               {isFetching ? (
-                <div className="flex items-center justify-center px-6 py-10">
+                <div className="flex h-[360px] items-center justify-center px-6">
                   <Loader2
                     className="h-5 w-5 animate-spin text-muted-foreground"
                     aria-hidden
@@ -351,26 +338,28 @@ export function ImpersonateConsoleUserPopover() {
                   <span className="sr-only">{t('Loading users')}</span>
                 </div>
               ) : (
-                <EmptyState
-                  icon={Users}
-                  iconSize="sm"
-                  variant="default"
-                  className="px-6 py-8"
-                  title={
-                    debouncedSearch.trim()
-                      ? t('No matching users')
-                      : t('No users to show')
-                  }
-                  description={
-                    debouncedSearch.trim()
-                      ? t(
-                          'Try a different prefix for name, email, phone, or user ID.',
-                        )
-                      : t(
-                          'Enter text that matches the start of a name, email, phone, or user ID.',
-                        )
-                  }
-                />
+                <div className="flex h-[360px] items-center justify-center">
+                  <EmptyState
+                    icon={Users}
+                    iconSize="sm"
+                    variant="default"
+                    className="px-6 py-0"
+                    title={
+                      debouncedSearch.trim()
+                        ? t('No matching users')
+                        : t('No users to show')
+                    }
+                    description={
+                      debouncedSearch.trim()
+                        ? t(
+                            'Try a different prefix for name, email, phone, or user ID.',
+                          )
+                        : t(
+                            'Enter text that matches the start of a name, email, phone, or user ID.',
+                          )
+                    }
+                  />
+                </div>
               )}
             </CommandEmpty>
             <CommandGroup>
@@ -421,7 +410,7 @@ export function ImpersonateConsoleUserPopover() {
             </CommandGroup>
           </CommandList>
         </Command>
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   )
 }

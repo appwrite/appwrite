@@ -1086,6 +1086,8 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   // Command center: local actions and groups
   'See all keyboard shortcuts': 'הצגת כל קיצורי המקלדת',
+  'Pick a console user to operate as. Your operator account stays signed in.':
+    'בחרו משתמש קונסול לפעול בשמו. חשבון האופרטור שלכם נשאר מחובר.',
   'Pick a function to execute': 'בחירת פונקציה להרצה',
   'Open project activity log': 'פתיחת יומן הפעילות של הפרויקט',
   'View activity log': 'צפייה ביומן הפעילות',

@@ -678,6 +678,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Find a project in this organization': 'この組織のプロジェクトを検索',
   // Command center: local actions and groups
   'See all keyboard shortcuts': 'すべてのキーボードショートカットを表示',
+  'Pick a console user to operate as. Your operator account stays signed in.':
+    '操作するコンソールユーザーを選択してください。オペレーターアカウントはサインインしたままです。',
   'Pick a function to execute': '実行する関数を選択',
   'Open project activity log': 'プロジェクトのアクティビティログを開く',
   'View activity log': 'アクティビティログを表示',

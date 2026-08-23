@@ -86,6 +86,7 @@ export const jaCatalog: EnCatalog = {
         cache: 'Cache',
         blocks: 'Blocks',
         generator: 'Generator',
+        impersonate: 'なりすまし',
       },
       search: {
         ...enCatalog.app.header.search,

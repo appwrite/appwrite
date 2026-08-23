@@ -76,6 +76,7 @@ export const enCatalog = {
         cache: 'Cache',
         blocks: 'Blocks',
         generator: 'Generator',
+        impersonate: 'Impersonate',
       },
       search: {
         compactPlaceholder: 'Search...',
