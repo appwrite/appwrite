@@ -33,9 +33,7 @@ export function resolveBillingAddonDisplayName(resource: {
 }): string {
   const fromApi = resource.name?.trim()
   if (fromApi) return fromApi
-  return (
-    BILLING_ADDON_NAME_FALLBACK[resource.resourceId] || resource.resourceId
-  )
+  return BILLING_ADDON_NAME_FALLBACK[resource.resourceId] || resource.resourceId
 }
 
 type AggregationResourceLike = {

@@ -72,5 +72,7 @@ export async function deleteDowngradeDomains(
 
   if (updated) return
 
-  await Promise.all(domainIds.map((domainId) => deleteOrganizationDomain(domainId)))
+  await Promise.all(
+    domainIds.map((domainId) => deleteOrganizationDomain(domainId)),
+  )
 }
