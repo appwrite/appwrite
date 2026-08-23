@@ -547,12 +547,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             'body' => '',
         ];
         $streamed = null;
-        $streamFailed = false;
         $streamParts = [];
         $streamBody = '';
         $canStreamResponse = $type === 'site' && !$isPreview;
 
-        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution): void {
+        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView): void {
             if ($name !== 'body') {
                 $streamParts[$name] = ($streamParts[$name] ?? '') . $chunk;
 
@@ -561,13 +560,16 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             if ($streamed === null) {
                 $statusCode = \intval($streamParts['statusCode'] ?? 200);
+                $headers = \json_decode($streamParts['headers'] ?? '', true);
+
+                if (!\is_array($headers)) {
+                    throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Executor response headers could not be decoded', view: $errorView);
+                }
 
                 // A failed response may be replaced by a branded page, which needs the whole body.
                 $streamed = $statusCode < 400;
 
                 if ($streamed) {
-                    $headers = \json_decode($streamParts['headers'] ?? '', true);
-                    $headers = \is_array($headers) ? $headers : [];
                     $headers['x-appwrite-log-id'] = $execution->getId();
 
                     $contentType = 'text/plain';
@@ -673,49 +675,47 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             $headerOverrides = [];
 
-            if ($streamed !== true) {
-                // Branded 404 override
-                $isResponseBranded = false;
-                if ($executionResponse['statusCode'] === 404 && $deployment->getAttribute('adapter', '') === 'static') {
-                    $layout = new View(__DIR__ . '/../views/general/404.phtml');
-                    $executionResponse['body'] = $layout->render();
-                    $headerOverrides['content-length'] = \strlen($executionResponse['body']);
-                    $isResponseBranded = true;
-                }
+            // Branded 404 override
+            $isResponseBranded = false;
+            if ($executionResponse['statusCode'] === 404 && $deployment->getAttribute('adapter', '') === 'static') {
+                $layout = new View(__DIR__ . '/../views/general/404.phtml');
+                $executionResponse['body'] = $layout->render();
+                $headerOverrides['content-length'] = \strlen($executionResponse['body']);
+                $isResponseBranded = true;
+            }
 
-                // Branded banner for previews
-                if (!$isResponseBranded) {
-                    if (\is_null($apiKey) || $apiKey->isBannerDisabled() === false) {
-                        $transformation = new Transformation();
-                        $transformation->addAdapter(new Preview());
-                        $transformation->setInput($executionResponse['body']);
+            // Branded banner for previews
+            if (!$isResponseBranded) {
+                if (\is_null($apiKey) || $apiKey->isBannerDisabled() === false) {
+                    $transformation = new Transformation();
+                    $transformation->addAdapter(new Preview());
+                    $transformation->setInput($executionResponse['body']);
 
-                        $simpleHeaders = [];
-                        foreach ($executionResponse['headers'] as $key => $value) {
-                            $simpleHeaders[$key] = \is_array($value) ? \implode(', ', $value) : $value;
-                        }
+                    $simpleHeaders = [];
+                    foreach ($executionResponse['headers'] as $key => $value) {
+                        $simpleHeaders[$key] = \is_array($value) ? \implode(', ', $value) : $value;
+                    }
 
-                        $transformation->setTraits($simpleHeaders);
-                        if ($isPreview && $transformation->transform()) {
-                            $executionResponse['body'] = $transformation->getOutput();
-                            $headerOverrides['content-length'] = \strlen($executionResponse['body']);
-                        }
+                    $transformation->setTraits($simpleHeaders);
+                    if ($isPreview && $transformation->transform()) {
+                        $executionResponse['body'] = $transformation->getOutput();
+                        $headerOverrides['content-length'] = \strlen($executionResponse['body']);
                     }
                 }
+            }
 
-                // Branded error pages (when developer left body empty)
-                if ($executionResponse['statusCode'] >= 400 && empty($executionResponse['body'])) {
-                    $layout = new View($errorView);
-                    $layout
-                        ->setParam('title', $project->getAttribute('name') . ' - Error')
-                        ->setParam('type', 'proxy_error_override')
-                        ->setParam('code', $executionResponse['statusCode']);
+            // Branded error pages (when developer left body empty)
+            if ($executionResponse['statusCode'] >= 400 && empty($executionResponse['body'])) {
+                $layout = new View($errorView);
+                $layout
+                    ->setParam('title', $project->getAttribute('name') . ' - Error')
+                    ->setParam('type', 'proxy_error_override')
+                    ->setParam('code', $executionResponse['statusCode']);
 
-                    $executionResponse['body'] = $layout->render();
+                $executionResponse['body'] = $layout->render();
 
-                    $headerOverrides['content-length'] = \strlen($executionResponse['body']);
-                    $headerOverrides['content-type'] = 'text/html';
-                }
+                $headerOverrides['content-length'] = \strlen($executionResponse['body']);
+                $headerOverrides['content-type'] = 'text/html';
             }
 
             if ($deployment->getAttribute('resourceType') === 'functions') {
@@ -783,7 +783,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
-            $streamFailed = $streamed === true;
+
+            if ($streamed === true) {
+                // Content is already on the wire; a truncated response must not read as a complete one.
+                $response->getSwooleResponse()->close();
+                $response->setSent(true);
+            }
 
             $execution
                 ->setAttribute('duration', $durationEnd - $durationStart)
@@ -846,10 +851,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 ->setContentType($contentType)
                 ->setStatusCode($execution['responseStatusCode'] ?? 200)
                 ->send($body);
-        } elseif ($streamFailed) {
-            // Content is already on the wire, so drop the connection rather than writing the
-            // terminating chunk: a truncated response must not read as a complete one.
-            $response->getSwooleResponse()->close();
         } else {
             $response->chunk('', true);
         }

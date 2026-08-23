@@ -237,7 +237,7 @@ class Executor
         if (is_string($headers)) {
             $headers = \json_decode($headers, true);
         }
-        $response['body']['headers'] = $headers;
+        $response['body']['headers'] = \is_array($headers) ? $headers : [];
         $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
         $response['body']['duration'] = \floatval($response['body']['duration'] ?? 0);
         $response['body']['startTime'] = \floatval($response['body']['startTime'] ?? \microtime(true));
