@@ -2206,24 +2206,28 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:shimonewman/streaming.git",
-                "reference": "58a0d28efb70560f7e06ed793860d34d738276b3"
+                "reference": "b5f71dc06c139acf49e0a33ea74c03277303bac8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shimonewman/streaming/zipball/58a0d28efb70560f7e06ed793860d34d738276b3",
-                "reference": "58a0d28efb70560f7e06ed793860d34d738276b3",
+                "url": "https://api.github.com/repos/shimonewman/streaming/zipball/b5f71dc06c139acf49e0a33ea74c03277303bac8",
+                "reference": "b5f71dc06c139acf49e0a33ea74c03277303bac8",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
                 "ext-json": "*",
-                "php": ">=8.1",
+                "php": ">=8.2",
                 "utopia-php/console": "^0.2"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
-                "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*"
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "9.*",
+                "swoole/ide-helper": "6.2.2"
+            },
+            "suggest": {
+                "ext-swoole": "Needed to run the library inside Swoole coroutines."
             },
             "type": "library",
             "autoload": {
@@ -2253,7 +2257,7 @@
                     "@php -r \"require 'vendor/autoload.php'; Utopia\\\\Tests\\\\Samples::build(true);\""
                 ],
                 "check": [
-                    "./vendor/bin/phpstan analyse"
+                    "./vendor/bin/phpstan analyse --memory-limit=512M"
                 ],
                 "format": [
                     "./vendor/bin/pint"
@@ -2284,7 +2288,7 @@
                 "utopia",
                 "video"
             ],
-            "time": "2026-08-02T16:01:32+00:00"
+            "time": "2026-08-23T11:20:32+00:00"
         },
         {
             "name": "spomky-labs/otphp",
