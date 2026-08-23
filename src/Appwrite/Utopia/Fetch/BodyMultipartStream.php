@@ -123,6 +123,10 @@ class BodyMultipartStream
                         return;
                     }
 
+                    if (!\str_starts_with($this->buffer, "\r\n")) {
+                        throw new Exception('Malformed content terminator in part "' . $this->part . '"');
+                    }
+
                     $this->buffer = \substr($this->buffer, 2);
                     $this->state = self::STATE_SIZE;
                     break;
@@ -130,6 +134,10 @@ class BodyMultipartStream
                 case self::STATE_PART_EOL:
                     if (\strlen($this->buffer) < 2) {
                         return;
+                    }
+
+                    if (!\str_starts_with($this->buffer, "\r\n")) {
+                        throw new Exception('Malformed part terminator in part "' . $this->part . '"');
                     }
 
                     $this->buffer = \substr($this->buffer, 2);

@@ -227,6 +227,12 @@ class Executor
             throw new ExecutorException($message, $status, type: $type);
         }
 
+        // A stream that stops before the closing delimiter has lost content, and the caller has
+        // already forwarded what did arrive. It must not be reported as a complete execution.
+        if ($reader !== null && !$reader->isComplete()) {
+            throw new ExecutorException('Executor response ended before the envelope was complete');
+        }
+
         $headers = $response['body']['headers'] ?? [];
         if (is_string($headers)) {
             $headers = \json_decode($headers, true);

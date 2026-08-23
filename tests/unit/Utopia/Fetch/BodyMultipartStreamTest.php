@@ -196,6 +196,37 @@ final class BodyMultipartStreamTest extends TestCase
         );
     }
 
+    public function testTruncatedEnvelopeIsNotComplete(): void
+    {
+        $stream = new BodyMultipartStream('X', function (): void {
+        });
+
+        // A full body part, then nothing: the closing delimiter never arrives.
+        $stream->feed(
+            "--X\r\n"
+            . "Content-Disposition: form-data; name=\"body\"\r\n"
+            . "Content-Transfer-Encoding: chunked\r\n\r\n"
+            . "5\r\nhello\r\n0\r\n\r\n"
+        );
+
+        $this->assertFalse($stream->isComplete());
+    }
+
+    public function testMalformedContentTerminatorIsRejected(): void
+    {
+        $stream = new BodyMultipartStream('X', function (): void {
+        });
+
+        $this->expectException(Exception::class);
+
+        $stream->feed(
+            "--X\r\n"
+            . "Content-Disposition: form-data; name=\"body\"\r\n"
+            . "Content-Transfer-Encoding: chunked\r\n\r\n"
+            . "5\r\nhelloXX"
+        );
+    }
+
     public function testPartWithoutANameIsRejected(): void
     {
         $stream = new BodyMultipartStream('X', function (): void {

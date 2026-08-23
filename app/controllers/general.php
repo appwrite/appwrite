@@ -546,6 +546,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             'body' => '',
         ];
         $streamed = null;
+        $streamFailed = false;
         $streamParts = [];
         $streamBody = '';
         $canStreamResponse = $type === 'site' && !$isPreview;
@@ -781,6 +782,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
+            $streamFailed = $streamed === true;
 
             $execution
                 ->setAttribute('duration', $durationEnd - $durationStart)
@@ -843,6 +845,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 ->setContentType($contentType)
                 ->setStatusCode($execution['responseStatusCode'] ?? 200)
                 ->send($body);
+        } elseif ($streamFailed) {
+            // Content is already on the wire, so drop the connection rather than writing the
+            // terminating chunk: a truncated response must not read as a complete one.
+            $response->getSwooleResponse()->close();
         } else {
             $response->chunk('', true);
         }
