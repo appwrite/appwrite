@@ -200,8 +200,23 @@ class Executor
 
         if ($onPart !== null) {
             if (!$streamed) {
-                $boundary = \trim(\explode('boundary=', $response['headers']['content-type'] ?? '')[1] ?? '', '"');
-                $parts = (new BodyMultipart($boundary))->load($buffered)->getParts();
+                // A callback suppresses decoding in call(), so the buffered body still has to be
+                // read here. It is not always multipart: the executor answers its own failures with
+                // JSON, and parsing that as multipart silently discards the message and type.
+                $contentType = $response['headers']['content-type'] ?? '';
+                $separator = \strpos($contentType, ';');
+                $mime = \substr($contentType, 0, \is_bool($separator) ? \strlen($contentType) : $separator);
+
+                if (\trim($mime) === 'application/json') {
+                    $parts = \json_decode($buffered, true);
+
+                    if (!\is_array($parts)) {
+                        throw new ExecutorException('Failed to parse response: ' . $buffered);
+                    }
+                } else {
+                    $boundary = \trim(\explode('boundary=', $contentType)[1] ?? '', '"');
+                    $parts = (new BodyMultipart($boundary))->load($buffered)->getParts();
+                }
             }
 
             $response['body'] = $parts;
