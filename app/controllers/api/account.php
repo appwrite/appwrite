@@ -1733,8 +1733,17 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     )
                         && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
                         && $isVerified;
-                    $email = $canonicalize ? $canonical : $providerEmail;
-                    $emails = array_values(array_unique([$email, $providerEmail]));
+                    // Keep the provider domain for delivery (e.g. live.com must
+                    // not become outlook.com). Still canonicalize the local part
+                    // and include the full provider canonical in collision lookups.
+                    if ($canonicalize) {
+                        $canonicalLocal = \explode('@', $canonical, 2)[0];
+                        $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
+                        $email = $canonicalLocal . '@' . $providerDomain;
+                    } else {
+                        $email = $providerEmail;
+                    }
+                    $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
                     $emailMetadata = [
                         'emailCanonical' => $canonical,
                         'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
@@ -1880,8 +1889,17 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 )
                     && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
                     && $isVerified;
-                $email = $canonicalize ? $canonical : $providerEmail;
-                $emails = array_values(array_unique([$email, $providerEmail]));
+                // Keep the provider domain for delivery (e.g. live.com must
+                // not become outlook.com). Still canonicalize the local part
+                // and include the full provider canonical in collision lookups.
+                if ($canonicalize) {
+                    $canonicalLocal = \explode('@', $canonical, 2)[0];
+                    $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
+                    $email = $canonicalLocal . '@' . $providerDomain;
+                } else {
+                    $email = $providerEmail;
+                }
+                $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
                 $emailMetadata = [
                     'emailCanonical' => $canonical,
                     'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
