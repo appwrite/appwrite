@@ -30,6 +30,9 @@ You can add the MCP server to various AI tools and code editors:
 {% cards_item href="/docs/tooling/ai/agents/antigravity" title="Google Antigravity" icon="google-antigravity" %}
 {% /cards_item %}
 
+{% cards_item href="/docs/tooling/ai/agents/grok-build" title="Grok Build" icon="grok-build" %}
+{% /cards_item %}
+
 {% /cards %}
 {% /only_light %}
 
@@ -61,6 +64,9 @@ You can add the MCP server to various AI tools and code editors:
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/agents/antigravity" title="Google Antigravity" icon="google-antigravity" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/grok-build" title="Grok Build" icon="grok-build" %}
 {% /cards_item %}
 
 {% /cards %}

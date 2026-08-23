@@ -1,14 +1,51 @@
 ---
 layout: article
-title: AI
-description: Discover Appwrite's AI tooling ecosystem. Build with AI-powered development tools, integrate AI capabilities into your apps, and leverage documentation designed for AI consumption.
+title: Tooling
+description: CLI, Terraform, Command Center, MCP, agent skills, IDEs, and vibe coding platforms for building with Appwrite.
 ---
 
-Appwrite provides a comprehensive set of tools and resources to help you build with AI, from AI-powered development tools that accelerate your workflow to infrastructure for building AI-powered applications.
+Appwrite tooling covers everything you use to build, automate, and operate projects. The CLI, Terraform, Command Center, MCP server, and agent skills sit alongside the IDEs and vibe coding platforms that connect to Appwrite.
+
+# Tools {% #tools %}
+
+First-party tools for the terminal, Console, infrastructure, and AI agents. Use them together; they are all part of the same Appwrite toolchain.
+
+{% cards %}
+{% cards_item href="/docs/tooling/ai/mcp-servers" title="MCP server" icon="mcp" %}
+Give AI tools direct access to your Appwrite project and docs.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/command-line/installation" title="CLI" icon="terminal" %}
+Create projects, manage resources, and deploy Functions and Sites from your terminal.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/skills" title="Agent skills" icon="sparkles" %}
+Pre-built Appwrite knowledge for AI agents across supported languages and SDKs.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/terraform" title="Terraform" icon="terraform" %}
+Declare Appwrite infrastructure as code and apply it with the official provider.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/agents-md" title="AGENTS.md" icon="document-text" %}
+Instruction files that help AI agents understand your project's structure and conventions.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/command-center" title="Command Center" icon="command" %}
+Search, shortcuts, and AI-assisted navigation in the Appwrite Console.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts" title="Quickstart prompts" icon="rocket-launch" %}
+Pre-built prompts to quickly generate your first Appwrite project with AI assistants.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/arena" title="Appwrite Arena" icon="trophy" %}
+Open-source benchmark evaluating how well AI models understand Appwrite's APIs and SDKs.
+{% /cards_item %}
+{% cards_item href="/docs/products/agent" title="Appwrite Agent" icon="bot" %}
+Chat in the Console to inspect your project, explain issues, and run approved actions.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/appwriter" title="The Appwriter" icon="text" %}
+A mechanical keyboard designed for the Appwrite Console and its shortcuts.
+{% /cards_item %}
+{% /cards %}
 
 # IDEs {% #ides %}
 
-AI-powered IDEs and code editors provide intelligent code completion and context-aware assistance as you write code. These tools support our MCP servers, giving AI agents direct access to your Appwrite project.
+AI-powered IDEs and code editors provide intelligent code completion and context-aware assistance as you write code. These tools support the Appwrite MCP server, giving AI agents direct access to your Appwrite project and documentation.
 
 {% only_light %}
 {% cards %}
@@ -16,7 +53,7 @@ AI-powered IDEs and code editors provide intelligent code completion and context
 {% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" icon="claude" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="openai" %}
+{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="codex" %}
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" icon="cursor-ai" %}
@@ -32,6 +69,9 @@ AI-powered IDEs and code editors provide intelligent code completion and context
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/agents/antigravity" title="Antigravity" icon="google-antigravity" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/grok-build" title="Grok Build" icon="grok-build" %}
 {% /cards_item %}
 
 {% /cards %}
@@ -43,7 +83,7 @@ AI-powered IDEs and code editors provide intelligent code completion and context
 {% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" icon="claude" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="openai" %}
+{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="codex" %}
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" icon="cursor-ai" %}
@@ -59,6 +99,9 @@ AI-powered IDEs and code editors provide intelligent code completion and context
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/agents/antigravity" title="Antigravity" icon="google-antigravity" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/grok-build" title="Grok Build" icon="grok-build" %}
 {% /cards_item %}
 
 {% /cards %}
@@ -109,31 +152,6 @@ Vibe coding platforms let you build applications through natural language. Descr
 
 {% /cards %}
 {% /only_dark %}
-
-# Tooling {% #tooling %}
-
-These resources help AI tools understand and work with Appwrite. Use them alongside your IDE or agent to get faster, more accurate results.
-
-{% cards %}
-{% cards_item href="/docs/tooling/ai/quickstart-prompts" title="Quickstart prompts" %}
-Pre-built prompts to quickly generate your first Appwrite project with AI assistants.
-{% /cards_item %}
-{% cards_item href="/docs/tooling/ai/mcp-servers/api" title="MCP servers" %}
-Give AI tools direct access to your Appwrite project and docs.
-{% /cards_item %}
-{% cards_item href="/docs/tooling/ai/agents-md" title="AGENTS.md" %}
-Instruction files that help AI agents understand your project's structure and conventions.
-{% /cards_item %}
-{% cards_item href="/docs/tooling/ai/skills" title="Agent skills" %}
-Pre-built Appwrite knowledge for AI agents across supported languages and SDKs.
-{% /cards_item %}
-{% cards_item href="/docs/tooling/ai/assistant" title="Assistant" %}
-AI-powered assistant in Appwrite Cloud for troubleshooting, code generation, and searching docs.
-{% /cards_item %}
-{% cards_item href="/docs/tooling/ai/arena" title="Appwrite Arena" %}
-Open-source benchmark evaluating how well AI models understand Appwrite's APIs and SDKs.
-{% /cards_item %}
-{% /cards %}
 
 # Guides {% #guides %}
 

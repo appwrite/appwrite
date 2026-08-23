@@ -196,8 +196,8 @@ export function DocsAiSection({ variant = 'page' }: DocsAiSectionProps) {
 
         <div className="mt-8 flex flex-col gap-3 @[560px]:flex-row @[560px]:flex-wrap">
           <Button variant="outline" size="sm" className="h-9 text-[13px]" asChild>
-            <DocsRouteLink href="/docs/tooling/ai">
-              Explore the AI tooling documentation
+            <DocsRouteLink href="/docs/tooling">
+              Explore the tooling documentation
             </DocsRouteLink>
           </Button>
           <Button variant="ghost" size="sm" className="h-9 text-[13px]" asChild>

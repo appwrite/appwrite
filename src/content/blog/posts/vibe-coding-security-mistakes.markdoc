@@ -38,7 +38,7 @@ The agent does not have a strong prior against pasting a real API key into a com
 
 The fix is to grep the whole repo for the key prefixes you use, not just `.env`. Database URLs, OAuth client secrets, webhook signing keys, third-party provider keys, internal admin keys. Anything that ever sat inside a generated file. Then rotate every key that passed through a cloud-hosted AI chat at any point. Use separate keys per environment, scope each one to the minimum permissions the calling code needs, and never ship a master key to the client.
 
-The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers/api) authenticates with an API key, so the scopes you grant that key decide what the agent can touch. Grant only what the agent's current task needs.
+The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers) authenticates with an API key, so the scopes you grant that key decide what the agent can touch. Grant only what the agent's current task needs.
 
 # 3. Treating chat history as ephemeral
 

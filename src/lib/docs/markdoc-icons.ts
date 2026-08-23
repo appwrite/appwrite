@@ -1,6 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
 import {
+  BotMessageSquare,
   Code2,
+  Command,
   FileText,
   Globe,
   LayoutGrid,
@@ -9,6 +11,10 @@ import {
   Plus,
   Rocket,
   Smartphone,
+  Sparkles,
+  Terminal,
+  Trophy,
+  Type,
 } from 'lucide-react'
 import { FRAMEWORK_ICON_MAP, getFrameworkIconFile } from '@/lib/frameworks/icons'
 
@@ -44,7 +50,7 @@ const MARKDOC_ICON_FILE_OVERRIDES: Record<string, string> = {
   aws: 'amazon.svg',
   azure: 'microsoft.svg',
   openai: 'chatgpt.svg',
-  codex: 'chatgpt.svg',
+  codex: 'codex.svg',
   gemini: 'google.svg',
   imagine: 'imagine.svg',
   'icon-node_js': 'node.svg',
@@ -55,6 +61,9 @@ const MARKDOC_ICON_FILE_OVERRIDES: Record<string, string> = {
   'web-icon-firebase': 'firebase.svg',
   'web-icon-github': 'github.svg',
   'web-icon-terraform': 'terraform.svg',
+  mcp: 'mcp.svg',
+  'mcp-server': 'mcp.svg',
+  'mcp server': 'mcp.svg',
   'web-icon-mailgun': 'mailgun.svg',
   'web-icon-sendgrid': 'sendgrid.svg',
   'icon-twilio': 'twilio.svg',
@@ -74,6 +83,12 @@ const MARKDOC_LUCIDE_ICONS: Record<string, LucideIcon> = {
   'icon-code-bracket': Code2,
   'icon-rocket-launch': Rocket,
   'icon-squares-2x2': LayoutGrid,
+  terminal: Terminal,
+  command: Command,
+  bot: BotMessageSquare,
+  text: Type,
+  sparkles: Sparkles,
+  trophy: Trophy,
 }
 
 function stripMarkdocIconPrefix(icon: string): string {
@@ -153,10 +168,12 @@ const CARD_TITLE_ICON_KEYS: Record<string, string> = {
   vite: 'vite',
   'claude code': 'claude',
   'claude desktop': 'claude',
-  codex: 'chatgpt',
+  codex: 'codex',
   cursor: 'cursor-ai',
   'vs code': 'vscode',
   opencode: 'opencode',
+  grok: 'grok-build',
+  'grok build': 'grok-build',
   antigravity: 'google-antigravity',
   lovable: 'lovable',
   emergent: 'emergent',
@@ -174,6 +191,7 @@ const CARD_TITLE_ICON_KEYS: Record<string, string> = {
   'graphql api': 'graphql',
   github: 'github',
   'terraform registry': 'terraform',
+  'mcp server': 'mcp',
   apns: 'apple',
   fcm: 'firebase',
   mailgun: 'mailgun',

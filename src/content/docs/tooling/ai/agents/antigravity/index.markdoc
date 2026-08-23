@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Google Antigravity
-description: Learn how you can add the Appwrite MCP servers to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.
+description: Learn how you can add the Appwrite MCP server to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.
 ---
 
 {% section #quick-start-prompts step=1 title="Quick start prompts" %}
@@ -21,81 +21,31 @@ Browse all quick start prompts
 
 {% /section %}
 
-{% section #step-2 step=2 title="Add MCP servers" %}
+{% section #step-2 step=2 title="Add the MCP server" %}
 
-Connect Appwrite MCP servers to Antigravity for deeper integration with the Appwrite API and documentation.
-
-Before you begin, ensure you have the following **pre-requisites** installed on your system:
-
-{% tabs %}
-{% tabsitem #api-server-prerequisites title="API server" %}
-
-[uv](https://docs.astral.sh/uv/getting-started/installation/) must be installed on your system.
-
-{% /tabsitem %}
-
-{% tabsitem #docs-server-prerequisites title="Docs server" %}
-
-[Node.js](https://nodejs.org/en/download) and npm must be installed on your system.
-
-{% /tabsitem %}
-{% /tabs %}
+Connect the Appwrite MCP server to Antigravity for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install.
 
 To add the Appwrite MCP server, open Antigravity and go to the drop-down (...) menu in the Agent window . From there, navigate to Manage MCP Servers in the MCP Store, and then click View raw config in the main panel to add your custom MCP server.
 
-{% tabs %}
-{% tabsitem #api-only title="API server" %}
-
-Update the `mcp_config.json` file to include the API server:
+Update the `mcp_config.json` file to include the Appwrite MCP server:
 
 ```json
 {
   "mcpServers": {
-    "appwrite-api": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-appwrite"
-      ],
-      "env": {
-        "APPWRITE_PROJECT_ID": "your-project-id",
-        "APPWRITE_API_KEY": "your-api-key",
-        "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"
-      }
+    "appwrite": {
+      "serverUrl": "https://mcp.appwrite.io/"
     }
   }
 }
-
 ```
 
-**Configuration:**
+{% info title="Use the serverUrl key" %}
 
-- Replace `your-project-id` with your actual Appwrite project ID
-- Replace `your-api-key` with your Appwrite API key
-- Replace `<REGION>` with your Appwrite Cloud region (e.g., `nyc`, `fra`)
+Antigravity requires the `serverUrl` key for remote MCP servers. Using fields like `url` or `httpUrl` will cause tool registration to fail silently.
 
-{% /tabsitem %}
+{% /info %}
 
-{% tabsitem #docs-only title="Docs server" %}
-
-Update the `mcp_config.json` file to include the docs server:
-
-```json
-{
-  "mcpServers": {
-      "appwrite-docs": {
-          "command": "npx",
-          "args": [
-              "mcp-remote",
-              "<https://mcp-for-docs.appwrite.io>"
-          ]
-      }
-  }
-}
-
-```
-
-{% /tabsitem %}
-{% /tabs %}
+The server uses OAuth for authentication. When Antigravity first connects to the server, your browser opens so you can sign in to your Appwrite account and authorize access.
 
 Head back to the Managed MCP Server page and click refresh.
 
@@ -103,34 +53,16 @@ Head back to the Managed MCP Server page and click refresh.
 
 {% section #step-3 step=3 title="Test the integration" %}
 
-Open **Agent Manager** in Antigravity to test your MCP integrations. You can try out the following example prompts based on the MCP server you have configured:
-
-{% tabs %}
-{% tabsitem #test-api title="API server" %}
+Open **Agent Manager** in Antigravity to test your MCP integration. You can try out the following example prompts:
 
 **Example prompts:**
 
 - `Create a new user in my Appwrite project`
 - `List all databases in my project`
 - `Show me the tables in my database`
-- `Create a new row in my table`
-- `Delete a specific user by ID`
-
-{% /tabsitem %}
-
-{% tabsitem #test-docs title="Docs server" %}
-
-**Example prompts:**
-
 - `How do I set up real-time subscriptions in Appwrite?`
 - `Show me how to authenticate users with OAuth`
-- `What are the best practices for database queries?`
 - `How do I implement file uploads with Appwrite Storage?`
-- `Show me an example of using Appwrite Functions`
-
-{% /tabsitem %}
-
-{% /tabs %}
 
 ![Antigravity Agent chat](/images/docs/mcp/antigravity/agent-chat.avif)
 
