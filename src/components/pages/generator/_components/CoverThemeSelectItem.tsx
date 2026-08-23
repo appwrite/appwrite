@@ -13,15 +13,15 @@ export function CoverThemeSelectItem({ theme }: CoverThemeSelectItemProps) {
     <SelectPrimitive.Item
       value={theme.id}
       className={cn(
-        'relative flex w-full cursor-pointer items-start gap-2.5 rounded-sm py-2 pe-8 ps-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex w-full cursor-pointer items-start justify-start gap-2.5 rounded-sm py-2 pe-8 ps-2 text-start text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       )}
     >
       <CoverThemePreviewThumb themeId={theme.id} className="mt-0.5" />
-      <div className="min-w-0 flex-1">
-        <SelectPrimitive.ItemText className="block text-[13px] leading-snug text-foreground">
+      <div className="min-w-0 flex-1 text-start">
+        <SelectPrimitive.ItemText className="block w-full text-start text-[13px] leading-snug text-foreground">
           {theme.label}
         </SelectPrimitive.ItemText>
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+        <p className="mt-0.5 text-start text-[11px] leading-snug text-muted-foreground">
           {theme.description}
         </p>
       </div>

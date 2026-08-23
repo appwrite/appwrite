@@ -150,8 +150,21 @@ export function buildCoverChartCardShell(options: {
   subtitle?: string
   themeId: CoverThemeId
   chartContentSvg: string
+  /** Custom header above the card, in coordinates relative to the frame's left edge. */
+  headerSvg?: string
+  headerHeight?: number
 }): string {
-  const { frameWidthPercent, width, height, title, subtitle, themeId, chartContentSvg } = options
+  const {
+    frameWidthPercent,
+    width,
+    height,
+    title,
+    subtitle,
+    themeId,
+    chartContentSvg,
+    headerSvg,
+    headerHeight,
+  } = options
   const brand = getCoverBrandThemeForSvgExport(themeId)
   const glass = getCoverScreenshotGlassColors(themeId)
 
@@ -160,13 +173,18 @@ export function buildCoverChartCardShell(options: {
   const centerX = COVER_WIDTH / 2
   const cardHeight = COVER_CHART_LAYOUT.cardPaddingY * 2 + COVER_CHART_LAYOUT.chartHeight
 
-  const titleHeight = measureCoverChartTitleBlockHeight(title, subtitle)
+  const customHeaderHeight =
+    headerSvg && headerHeight != null && headerHeight > 0 ? headerHeight : 0
+  const titleHeight =
+    customHeaderHeight || measureCoverChartTitleBlockHeight(title, subtitle)
   const titleCardGap = titleHeight > 0 ? COVER_CHART_LAYOUT.titleCardGap : 0
   const compositionHeight = titleHeight + titleCardGap + cardHeight
   const compositionY = Math.round((COVER_HEIGHT - compositionHeight) / 2)
   const cardY = compositionY + titleHeight + titleCardGap
 
-  const titleSvg = buildCoverChartTitleBlock(title, subtitle, centerX, compositionY, brand)
+  const titleSvg = customHeaderHeight
+    ? `<g transform="translate(${frameX} ${compositionY})">${headerSvg}</g>`
+    : buildCoverChartTitleBlock(title, subtitle, centerX, compositionY, brand)
 
   return `
     ${titleSvg}

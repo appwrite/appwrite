@@ -706,6 +706,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No rows to display.': 'אין שורות להצגה.',
   'No matching settings': 'אין הגדרות תואמות',
   'Select project': 'בחירת פרויקט',
+  'Select date': 'בחירת תאריך',
   'Select date & time': 'בחירת תאריך ושעה',
   'Select branch': 'בחירת Branch',
   'Clone template': 'שכפול תבנית',
@@ -1215,4 +1216,9 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   // Screenshot frames (cover generator, perspective cards)
   'Screenshot preview': 'תצוגה מקדימה של צילום מסך',
+  Green: 'ירוק',
+  Amber: 'ענבר',
+  Red: 'אדום',
+  Blue: 'כחול',
+  Slate: 'אפור',
 }

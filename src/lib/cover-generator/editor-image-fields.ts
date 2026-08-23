@@ -1,4 +1,5 @@
 import { getCoverCardsAngledIconKeys } from '@/lib/cover-generator/cards-angled/constants'
+import { getCoverLogoMarqueeIconKeys } from '@/lib/cover-generator/extra-templates/constants'
 import type { CoverTemplateId } from '@/lib/cover-generator/constants'
 import {
   clearCoverImageFields,
@@ -183,6 +184,13 @@ export function getCoverGeneratorImageFieldKeys(
       return ['screenshot']
     case 'cards-angled':
       return getCoverCardsAngledIconKeys()
+    case 'logo-marquee':
+      return getCoverLogoMarqueeIconKeys()
+    case 'quote':
+    case 'blog-post':
+    case 'profile-card':
+    case 'social-post':
+      return ['avatar']
     default:
       return []
   }

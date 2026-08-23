@@ -21,15 +21,15 @@ import {
   renderVersionNumberTemplateSvg,
   renderVersionTitleTemplateSvg,
 } from '@/lib/cover-generator/version/render'
-import type { CoverRenderData } from '@/lib/cover-generator/types'
+import { renderCoverExtraTemplateSvg } from '@/lib/cover-generator/extra-templates/render'
+import { isCoverExtraTemplateData, type CoverRenderData } from '@/lib/cover-generator/types'
 
 async function renderCoverSvg(data: CoverRenderData): Promise<string> {
   let content = ''
-  let titleGradientBounds: ReturnType<
-    typeof renderSimpleTitleTemplateSvg
-  >['titleGradientBounds']
 
-  switch (data.template) {
+  if (isCoverExtraTemplateData(data)) {
+    content = await renderCoverExtraTemplateSvg(data, data.theme)
+  } else switch (data.template) {
     case 'simple-title': {
       content = renderSimpleTitleTemplateSvg(data, data.theme)
       break
@@ -61,30 +61,18 @@ async function renderCoverSvg(data: CoverRenderData): Promise<string> {
     case 'code-snippet':
       content = renderCodeSnippetTemplateSvg(data, data.theme)
       break
-    case 'milestone-split': {
-      const milestone = renderMilestoneSplitTemplateSvg(data, data.theme)
-      content = milestone.content
-      titleGradientBounds = milestone.titleGradientBounds
+    case 'milestone-split':
+      content = renderMilestoneSplitTemplateSvg(data, data.theme)
       break
-    }
-    case 'milestone-centered': {
-      const milestone = renderMilestoneCenteredTemplateSvg(data, data.theme)
-      content = milestone.content
-      titleGradientBounds = milestone.titleGradientBounds
+    case 'milestone-centered':
+      content = renderMilestoneCenteredTemplateSvg(data, data.theme)
       break
-    }
-    case 'version-number': {
-      const version = renderVersionNumberTemplateSvg(data, data.theme)
-      content = version.content
-      titleGradientBounds = version.titleGradientBounds
+    case 'version-number':
+      content = renderVersionNumberTemplateSvg(data, data.theme)
       break
-    }
-    case 'version-title': {
-      const version = renderVersionTitleTemplateSvg(data, data.theme)
-      content = version.content
-      titleGradientBounds = version.titleGradientBounds
+    case 'version-title':
+      content = renderVersionTitleTemplateSvg(data, data.theme)
       break
-    }
     default:
       throw new Error(`Template "${data.template}" is not supported by SVG export`)
   }
@@ -96,7 +84,6 @@ async function renderCoverSvg(data: CoverRenderData): Promise<string> {
     width: data.width,
     height: data.height,
     fontFaceCss,
-    titleGradientBounds,
     templateId: data.template,
     contentAnchor: data.template === 'cli-code' ? 'right' : undefined,
     content,
