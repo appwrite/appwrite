@@ -1746,7 +1746,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
                     $emailMetadata = [
                         'emailCanonical' => $canonical,
-                        'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
+                        'emailIsCanonical' => \mb_strtolower($email) === $canonical,
                         'emailIsCorporate' => $parsedEmail->isCorporate(),
                         'emailIsDisposable' => $parsedEmail->isDisposable(),
                         'emailIsFree' => $parsedEmail->isFree(),
@@ -1797,7 +1797,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
                 }
 
-                if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+                // When $canonicalize is true we already applied delivery-safe
+                // local-part normalization while preserving the provider domain.
+                if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
                     $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
                 }
 
@@ -1902,7 +1904,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
                 $emailMetadata = [
                     'emailCanonical' => $canonical,
-                    'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
+                    'emailIsCanonical' => \mb_strtolower($email) === $canonical,
                     'emailIsCorporate' => $parsedEmail->isCorporate(),
                     'emailIsDisposable' => $parsedEmail->isDisposable(),
                     'emailIsFree' => $parsedEmail->isFree(),
@@ -1923,7 +1925,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+            // When $canonicalize is true we already applied delivery-safe
+            // local-part normalization while preserving the provider domain.
+            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
                 $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
