@@ -545,7 +545,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             'headers' => [],
             'body' => '',
         ];
-        $streaming = new class {
+        $streaming = new class () {
             public bool $response = false;
             public bool $started = false;
             public bool $ended = false;
