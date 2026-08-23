@@ -279,13 +279,15 @@ export const jaCatalog: EnCatalog = {
     home: {
       ...enCatalog.website.home,
       seoDescription:
-        'Appwrite は、認証、データベース、ストレージ、Functions、メッセージング、サイトを備えたオープンソースの開発者向けプラットフォームです。数百人規模のチームのように構築できます。', // pragma: allowlist secret
+        'Appwrite は、認証、データベース、ストレージ、Functions、メッセージング、サイトを備えたオープンソースの開発者向けプラットフォームです。エージェントと開発者のためのオープンソースクラウド。', // pragma: allowlist secret
       announcementNew: 'Breaking',
       announcementText: 'Appwrite 2.0 の発表を嬉しく思います',
-      heroTitleLineOne: 'より速く構築し、',
-      heroTitleLineTwo: 'これまで以上にスケール',
-      heroDescription:
-        'Appwrite は、認証、データベース、ストレージ、Functions、メッセージング、Realtime、Web ホスティングを備えたオープンソースプラットフォームです。すべてが一つの場所に。', // pragma: allowlist secret
+      heroTitleLineOne: 'エージェント＆開発者のための',
+      heroTitleLineTwo: 'オープンソースクラウド',
+      heroDescriptionLineOne:
+        'Appwrite は、思考の速さでアプリを構築しスケールするための MCP＆エージェントファーストの OSS プラットフォームです。', // pragma: allowlist secret
+      heroDescriptionLineTwo:
+        'エージェントに Auth、DB、ストレージ、Functions、メッセージング、Realtime、ホスティングを提供し、すべてが一つの場所に。',
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
       heroPreviewOrganization: 'Acme Corp',
       heroPreviewProject: '最初の Appwrite プロジェクト', // pragma: allowlist secret

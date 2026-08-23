@@ -1,4 +1,5 @@
 import type { CoverTemplateId } from '@/lib/cover-generator/constants'
+import { getCoverBackgroundSquareFills } from '@/lib/cover-generator/cover-background-grid'
 import {
   getCoverBackgroundGridStyleForTheme,
   getCoverSoftLightCssGradient,
@@ -21,7 +22,7 @@ type CoverBrandBackgroundPreviewProps = {
 }
 
 /**
- * Live DOM background for cover previews: solid → pattern grid → soft lights.
+ * Live DOM background for cover previews: solid → tinted squares → pattern grid → soft lights.
  * Kept as flat CSS layers so 3D foreground content always paints on top.
  */
 export function CoverBrandBackgroundPreview({
@@ -33,7 +34,11 @@ export function CoverBrandBackgroundPreview({
 }: CoverBrandBackgroundPreviewProps) {
   const brand = getCoverBrandThemeForSvgExport(themeId)
   const theme = getCoverTheme(themeId)
-  const gridStyle = getCoverBackgroundGridStyleForTheme(themeId)
+  const gridStyle = getCoverBackgroundGridStyleForTheme(themeId, width, height)
+  const squareFills =
+    theme.backgroundGrid === 'squares'
+      ? getCoverBackgroundSquareFills(themeId, width, height)
+      : []
   const backgroundContext = templateId ? { templateId } : undefined
   const confettiPieces = isCoverMilestoneTemplate(templateId)
     ? getCoverMilestoneConfettiDomPieces(width, height, theme.family)
@@ -46,6 +51,19 @@ export function CoverBrandBackgroundPreview({
       aria-hidden
     >
       <div className="absolute inset-0" style={{ backgroundColor: brand.background }} />
+      {squareFills.map((cell, index) => (
+        <div
+          key={`${cell.x}-${cell.y}-${index}`}
+          className="absolute"
+          style={{
+            left: cell.x,
+            top: cell.y,
+            width: cell.size,
+            height: cell.size,
+            backgroundColor: cell.fill,
+          }}
+        />
+      ))}
       {gridStyle ? <div className="absolute inset-0" style={gridStyle} /> : null}
       {getCoverSoftLightLayoutsForTheme(themeId, backgroundContext).map(([side, layout]) => {
         const rect = getCoverSoftLightRect(layout, width, height)

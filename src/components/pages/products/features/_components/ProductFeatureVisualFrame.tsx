@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 type ProductFeatureVisualFrameProps = {
   eyebrow?: string
   title?: string
-  headerIconSrc?: string
+  headerIconSrc?: string | string[]
   tabs?: { id: string; label: string; active?: boolean }[]
   className?: string
   contentClassName?: string
@@ -23,6 +23,11 @@ export function ProductFeatureVisualFrame({
   children,
 }: ProductFeatureVisualFrameProps) {
   const t = useT()
+  const headerIcons = headerIconSrc
+    ? Array.isArray(headerIconSrc)
+      ? headerIconSrc
+      : [headerIconSrc]
+    : []
   return (
     <div
       className={cn(
@@ -48,8 +53,12 @@ export function ProductFeatureVisualFrame({
         </div>
       ) : title || eyebrow ? (
         <div className="flex items-center gap-2.5 border-b border-border bg-muted/15 px-4 py-2.5">
-          {headerIconSrc ? (
-            <ProductFeaturePublicIcon src={headerIconSrc} className="size-5 shrink-0" />
+          {headerIcons.length > 0 ? (
+            <div className="flex shrink-0 items-center gap-1.5">
+              {headerIcons.map((src) => (
+                <ProductFeaturePublicIcon key={src} src={src} className="size-5 shrink-0" />
+              ))}
+            </div>
           ) : null}
           <div className="min-w-0">
             {eyebrow ? (

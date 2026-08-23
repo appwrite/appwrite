@@ -278,13 +278,15 @@ export const heCatalog: EnCatalog = {
     home: {
       ...enCatalog.website.home,
       seoDescription:
-        'Appwrite היא פלטפורמת פיתוח בקוד פתוח עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים. לבנות כמו צוות של מאות מפתחים.', // pragma: allowlist secret
+        'Appwrite היא פלטפורמת פיתוח בקוד פתוח עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים. הענן בקוד פתוח לסוכנים ולמפתחים.', // pragma: allowlist secret
       announcementNew: 'Breaking',
       announcementText: 'אנחנו נרגשים להכריז על Appwrite 2.0',
-      heroTitleLineOne: 'לבנות מהר יותר,',
-      heroTitleLineTwo: 'לצמוח רחוק מאי פעם',
-      heroDescription:
-        'Appwrite היא פלטפורמת קוד פתוח לבנייה ולהרחבה מהירה של אפליקציות, עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח אתרים. הכל במקום אחד.', // pragma: allowlist secret
+      heroTitleLineOne: 'הענן בקוד פתוח',
+      heroTitleLineTwo: 'לסוכנים ולמפתחים',
+      heroDescriptionLineOne:
+        'Appwrite היא פלטפורמת OSS מוכוונת MCP וסוכנים לבנייה ולהרחבה של אפליקציות במהירות המחשבה.', // pragma: allowlist secret
+      heroDescriptionLineTwo:
+        'תנו לסוכנים שלכם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח - הכל במקום אחד.',
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
       heroPreviewOrganization: 'Acme Corp',
       heroPreviewProject: 'פרויקט Appwrite ראשון', // pragma: allowlist secret

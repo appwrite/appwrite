@@ -12,13 +12,14 @@ export type { CoverSoftLightOpacity, CoverSoftLightTone } from '@/lib/cover-gene
 
 export type CoverThemeFamily = 'light' | 'dark'
 
-export type CoverBackgroundGridStyle = 'dots' | 'grid' | 'diagonal' | 'none'
+export type CoverBackgroundGridStyle = 'dots' | 'grid' | 'squares' | 'diagonal' | 'none'
 
-export type CoverSoftLightVariant = 'hero' | 'aurora' | 'beam' | 'glow' | 'mono'
+export type CoverSoftLightVariant = 'hero' | 'aurora' | 'beam' | 'glow' | 'mono' | 'none'
 
 export const COVER_BACKGROUND_GRID_LABELS: Record<CoverBackgroundGridStyle, string> = {
   dots: 'Dotted grid',
   grid: 'Line grid',
+  squares: 'Square grid',
   diagonal: 'Diagonal lines',
   none: 'Plain',
 }
@@ -31,6 +32,8 @@ const COVER_THEME_LABEL_BY_ID: Record<string, string> = {
   'dark-aurora': 'Dotted grid, top teal & purple aurora',
   'light-grid': 'Line grid, bottom purple & teal',
   'dark-grid': 'Line grid, bottom purple & teal',
+  'light-squares': 'Square grid',
+  'dark-squares': 'Square grid',
   'light-beam': 'Diagonal lines, top pink & orange spotlight',
   'dark-beam': 'Diagonal lines, top pink & orange spotlight',
   'light-plain': 'Plain, bottom pink & purple',
@@ -46,6 +49,8 @@ const COVER_THEME_DESCRIPTION_BY_ID: Record<string, string> = {
   'dark-aurora': 'Mint teal and purple aurora from the upper edge.',
   'light-grid': 'Square line grid with purple and mint teal corner glow.',
   'dark-grid': 'Square line grid with purple and mint teal corner glow.',
+  'light-squares': 'Large square cells with scattered tinted tiles.',
+  'dark-squares': 'Large square cells with monochrome shade tiles.',
   'light-beam': 'Diagonal texture with a pink spotlight and orange accent above.',
   'dark-beam': 'Diagonal texture with a pink spotlight and orange accent above.',
   'light-plain': 'Solid background with soft corner glow, no texture.',
@@ -93,6 +98,14 @@ const DARK_GLOW_SOFT_LIGHTS: CoverSoftLightOpacity = {
   purple: { strong: 0.07, mid: 0.025 },
   teal: { strong: 0.13, mid: 0.045 },
   orange: { strong: 0.06, mid: 0.02 },
+  mono: { strong: 0, mid: 0 },
+}
+
+const NO_SOFT_LIGHTS: CoverSoftLightOpacity = {
+  pink: { strong: 0, mid: 0 },
+  purple: { strong: 0, mid: 0 },
+  teal: { strong: 0, mid: 0 },
+  orange: { strong: 0, mid: 0 },
   mono: { strong: 0, mid: 0 },
 }
 
@@ -170,6 +183,20 @@ export const COVER_THEME_DEFINITIONS = {
     softLightVariant: 'hero',
     softLights: DARK_SOFT_LIGHTS,
   }),
+  'light-squares': defineCoverTheme({
+    id: 'light-squares',
+    ...LIGHT_BASE,
+    backgroundGrid: 'squares',
+    softLightVariant: 'none',
+    softLights: NO_SOFT_LIGHTS,
+  }),
+  'dark-squares': defineCoverTheme({
+    id: 'dark-squares',
+    ...DARK_BASE,
+    backgroundGrid: 'squares',
+    softLightVariant: 'none',
+    softLights: NO_SOFT_LIGHTS,
+  }),
   'light-aurora': defineCoverTheme({
     id: 'light-aurora',
     ...LIGHT_BASE,
@@ -234,7 +261,9 @@ export const COVER_THEME_IDS = Object.keys(COVER_THEME_DEFINITIONS) as CoverThem
 
 export const COVER_EDITOR_THEME_IDS = [
   'light-plain',
+  'light-squares',
   'dark-plain',
+  'dark-squares',
   'dark-glow',
   'dark-mono',
 ] as const satisfies readonly CoverThemeId[]

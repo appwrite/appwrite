@@ -65,6 +65,7 @@ export const heMarketingDictionary: Record<string, string> = {
   Advisor: 'יועץ',
   'After': 'אחרי',
   'Agencies and consultancies': 'סוכנויות וחברות ייעוץ',
+  'AI Arena': 'AI Arena',
   'AI-native': 'AI-native',
   'AI-native team': 'צוות AI-native',
   'AI-powered development': 'פיתוח מבוסס AI',
@@ -201,7 +202,6 @@ export const heMarketingDictionary: Record<string, string> = {
   'Budget caps and alerts': 'תקרות תקציב והתראות',
   'Build': 'בנייה',
   'Build duration': 'משך בנייה',
-  'Build like a team of hundreds.': 'בנו כמו צוות של מאות.',
   'Build logs': 'לוגי בנייה',
   'Build triggers': 'טריגרים לבנייה',
   'Build with any framework': 'בנו עם כל פריימוורק',
@@ -545,6 +545,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Git branch · staging': 'ענף Git · staging',
   'Git push': 'Git push',
   'Git repository': 'Git repo',
+  'GitHub and Origin': 'GitHub ו-Origin',
   'GitHub stars': 'כוכבי GitHub',
   'GitHub Stars': 'כוכבי GitHub',
   'GitLab, Bitbucket, Gitea, and more coming soon.': 'GitLab, Bitbucket, Gitea ועוד בקרוב.',
@@ -1132,6 +1133,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'The integrated user authentication and the ease of creating data structures have undoubtedly saved us several weeks\u2019 worth of time.':
     'אימות המשתמשים המשולב והקלות ביצירת מבני נתונים חסכו לנו ללא ספק שבועות של עבודה.',
   'The new logo': 'הלוגו החדש',
+  'The open-source cloud for agents and developers':
+    'הענן בקוד פתוח לסוכנים ולמפתחים',
   'The power of open source benefits us all': 'העוצמה של קוד פתוח מיטיבה עם כולנו',
   'The Sites view in Console, ready to deploy your first web app': 'תצוגת אתרים בקונסולה, מוכנה לפריסת אפליקציית הווב הראשונה שלכם',
   'The Startups program is for companies with traction through funding or revenue. If you have neither, Appwrite Cloud Pro is the right place to start building.': // pragma: allowlist secret
@@ -1214,6 +1217,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'We adhere to all needed compliance: GDPR, HIPAA, CCPA, SOC-2.': 'אנחנו עומדים בכל דרישות התאימות הנדרשות: GDPR, HIPAA, CCPA, SOC-2.',
   'We are a remote-first, AI-native team built to stay lean. We recruit exceptional talent worldwide, communicate with clarity, and combine human judgment with AI to ship ambitious work at speed.':
     'אנחנו צוות remote-first ו-AI-native שנבנה להישאר רזה. אנחנו מגייסים כישרונות יוצאי דופן מכל העולם, מתקשרים בבהירות ומשלבים שיקול דעת אנושי עם AI כדי לספק עבודה שאפתנית בקצב מהיר.',
+  'We constantly benchmark platform performance against every leading model so you can see which one works best with Appwrite.': // pragma: allowlist secret
+    'אנחנו משווים באופן מתמיד את ביצועי הפלטפורמה מול כל המודלים המובילים, כדי שתוכלו לראות איזה מהם עובד הכי טוב עם Appwrite.', // pragma: allowlist secret
   'We hire the best people wherever they are. Being remote-first keeps us thoughtful about communication across time zones and cultures. We stay humble, treat each other with respect, and work to help everyone on the team do their best work.':
     'אנחנו מגייסים את האנשים הטובים ביותר בכל מקום שבו הם נמצאים. העבודה מרחוק שומרת אותנו קשובים לתקשורת בין אזורי זמן ותרבויות. אנחנו נשארים צנועים, מתייחסים זה לזה בכבוד ועוזרים לכל אחד בצוות לעשות את עבודתו הטובה ביותר.',
   'We keep overhead lean and our investments close to the product. Most of our team is dedicated to creating products developers genuinely enjoy using.':
@@ -1265,7 +1270,6 @@ export const heMarketingDictionary: Record<string, string> = {
   'Work email address': 'כתובת אימייל עבודה',
   'Works for external viewers without third-party cookie issues.': 'עובד לצופים חיצוניים בלי בעיות עוגיות צד שלישי.',
   'Works with': 'עובד עם',
-  'Works with every major LLM. Find out how well your model integrates with Appwrite.': 'עובד עם כל LLM מוביל. גלו עד כמה המודל שלכם משתלב עם Appwrite.', // pragma: allowlist secret
   "Write 'Appwrite,' with a lowercase 'w' and no space between the two words. Please refrain from using variations like 'AppWrite' or 'App Write'.": // pragma: allowlist secret
     "כתבו 'Appwrite' עם w קטנה וללא רווח בין שתי המילים. הימנעו משימוש בווריאציות כמו 'AppWrite' או 'App Write'.", // pragma: allowlist secret
   'Writes': 'כתיבות',

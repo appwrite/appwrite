@@ -170,7 +170,7 @@ export const DEFAULT_COVER_VALUES = {
   format: 'png' satisfies CoverImageFormat,
   width: COVER_WIDTH,
   height: COVER_HEIGHT,
-  title: 'Build like a team of hundreds',
+  title: 'The open-source cloud for agents and developers',
   subtitle: 'The open-source developer platform',
   eyebrow: 'Cover generator',
   connector: '×',

@@ -308,8 +308,10 @@ function HomePage() {
               <span className="text-[var(--brand-cta)]">_</span>
             </h1>
 
-            <p className="mx-auto mt-5 max-w-2xl text-balance text-[15px] leading-6 text-muted-foreground sm:text-[16px] sm:leading-7">
-              {homeCopy.heroDescription}
+            <p className="mx-auto mt-5 max-w-4xl text-[15px] leading-6 text-muted-foreground sm:text-[16px] sm:leading-7">
+              {homeCopy.heroDescriptionLineOne}
+              <br />
+              {homeCopy.heroDescriptionLineTwo}
             </p>
 
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2">

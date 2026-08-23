@@ -262,13 +262,15 @@ export const enCatalog = {
   website: {
     home: {
       seoDescription:
-        'Appwrite is an open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. Build like a team of hundreds.', // pragma: allowlist secret
+        'Appwrite is an open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. The open-source cloud for agents and developers.', // pragma: allowlist secret
       announcementNew: 'Breaking',
       announcementText: "We're thrilled to announce Appwrite 2.0",
-      heroTitleLineOne: 'Build faster and scale',
-      heroTitleLineTwo: 'bigger than ever',
-      heroDescription:
-        'Appwrite is an open-source platform for building and scaling applications faster, offering Auth, Databases, Storage, Functions, Messaging, Realtime, and web hosting. All in one place.', // pragma: allowlist secret
+      heroTitleLineOne: 'The open-source cloud for',
+      heroTitleLineTwo: 'agents & devs',
+      heroDescriptionLineOne:
+        'Appwrite is an MCP & agent-first, OSS platform for building and scaling apps at the speed of thought.', // pragma: allowlist secret
+      heroDescriptionLineTwo:
+        'Give your agents Auth, DBs, Storage, Functions, Messaging, Realtime, and Hosting - all in one place.',
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
       heroPreviewOrganization: 'Acme Corp',
       heroPreviewProject: 'First Appwrite project', // pragma: allowlist secret

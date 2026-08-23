@@ -748,6 +748,23 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Page not found': 'ページが見つかりません',
   'Looking for product docs?': '製品ドキュメントをお探しですか?',
   'Browse documentation': 'ドキュメントを閲覧',
+  // Cover generator backgrounds
+  'Light backgrounds': 'ライト背景',
+  'Dark backgrounds': 'ダーク背景',
+  'Plain, bottom pink & purple': '無地、下部にピンクとパープル',
+  'Square grid': 'スクエアグリッド',
+  'Plain, bottom teal ambient glow': '無地、下部にティールのグロー',
+  'Plain, monochrome shade glow': '無地、モノクロのシェードグロー',
+  'Solid background with soft corner glow, no texture.':
+    'テクスチャなしの単色背景に、角からのソフトなグロー。',
+  'Large square cells with scattered tinted tiles.':
+    '大きなスクエアセルに散らした着色タイル。',
+  'Large square cells with monochrome shade tiles.':
+    '大きなスクエアセルに散らしたモノクロシェードのタイル。',
+  'Plain dark background with a large teal light leak from the lower-left corner.':
+    '左下からティールの大きなライトリークが入る無地のダーク背景。',
+  'Plain dark background with soft corner washes in a darker shade of the same color.':
+    '同じ色のより暗いシェードで角をやわらかく照らした無地のダーク背景。',
   // Screenshot frames (cover generator, perspective cards)
   'Screenshot preview': 'スクリーンショットプレビュー',
   Green: 'グリーン',

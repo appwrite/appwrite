@@ -78,7 +78,7 @@ const BENCHMARK_ROWS: BenchmarkRow[] = [
   },
   {
     model: 'Grok Build 0.1',
-    icon: '/icons/x.svg',
+    icon: '/icons/grok-build.svg',
     cost: '$1.00',
     overall: 96.7,
     auth: 92,
@@ -338,11 +338,11 @@ export function AiSection() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-4 lg:gap-5">
               <h3 className="font-aeonik-pro shrink-0 text-[16px] font-normal text-foreground sm:text-[17px]">
-                {t('Benchmark')}
+                {t('AI Arena')}
               </h3>
-              <p className="min-w-0 max-w-xl text-[14px] leading-6 text-muted-foreground sm:text-[15px]">
+              <p className="min-w-0 max-w-2xl text-[14px] leading-6 text-muted-foreground sm:text-[15px]">
                 {t(
-                  'Works with every major LLM. Find out how well your model integrates with Appwrite.', // pragma: allowlist secret
+                  'We constantly benchmark platform performance against every leading model so you can see which one works best with Appwrite.', // pragma: allowlist secret
                 )}
               </p>
             </div>

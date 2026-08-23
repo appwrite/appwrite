@@ -1,6 +1,7 @@
 import {
   buildCoverBackgroundGridSvgPattern,
   getCoverBackgroundGridCssStyle,
+  getCoverBackgroundSquareFills,
 } from '@/lib/cover-generator/cover-background-grid'
 import {
   getCoverBrandLightRgb,
@@ -183,6 +184,7 @@ export const COVER_SOFT_LIGHT_VARIANTS: Record<
   beam: COVER_BEAM_SOFT_LIGHT_LAYOUT,
   glow: COVER_GLOW_SOFT_LIGHT_LAYOUT,
   mono: COVER_MONO_SOFT_LIGHT_LAYOUT,
+  none: {},
 }
 
 /** Dark hero themes get larger corner washes so the glow reads on the dark base. */
@@ -330,6 +332,10 @@ export function getCoverSoftLightLayoutsForTheme(
 ): Array<[string, CoverSoftLightLayout]> {
   const theme = getCoverTheme(themeId)
 
+  if (theme.softLightVariant === 'none') {
+    return []
+  }
+
   if (
     context?.templateId === 'integration-icon' &&
     theme.softLightVariant !== 'glow'
@@ -408,7 +414,7 @@ export function buildCoverSoftLightSvgDefs(
 }
 
 /**
- * Background stack: solid fill → pattern grid → soft lights (lights on top).
+ * Background stack: solid fill → tinted square cells → pattern grid → soft lights.
  */
 export function buildCoverBrandBackgroundSvgLayers(
   themeId: CoverThemeId,
@@ -421,7 +427,16 @@ export function buildCoverBrandBackgroundSvgLayers(
   const gridPattern =
     backgroundGrid === 'none'
       ? ''
-      : buildCoverBackgroundGridSvgPattern(themeId, backgroundGrid)
+      : buildCoverBackgroundGridSvgPattern(themeId, backgroundGrid, width, height)
+  const squareFillLayer =
+    backgroundGrid === 'squares'
+      ? getCoverBackgroundSquareFills(themeId, width, height)
+          .map(
+            (cell) =>
+              `<rect x="${cell.x}" y="${cell.y}" width="${cell.size}" height="${cell.size}" fill="${cell.fill}" />`,
+          )
+          .join('\n')
+      : ''
   const gridLayer =
     backgroundGrid === 'none'
       ? ''
@@ -444,6 +459,7 @@ export function buildCoverBrandBackgroundSvgLayers(
     defs: `${backgroundDefs}\n<clipPath id="cover-soft-lights-clip"><rect width="${width}" height="${height}" /></clipPath>`,
     layers: `
       <rect width="${width}" height="${height}" fill="${brand.background}" />
+      ${squareFillLayer}
       ${gridLayer}
       <g clip-path="url(#cover-soft-lights-clip)">
         ${lightRects}
@@ -453,13 +469,17 @@ export function buildCoverBrandBackgroundSvgLayers(
   }
 }
 
-export function getCoverBackgroundGridStyleForTheme(themeId: CoverThemeId): {
+export function getCoverBackgroundGridStyleForTheme(
+  themeId: CoverThemeId,
+  width?: number,
+  height?: number,
+): {
   backgroundImage: string
   backgroundSize: string
   backgroundPosition?: string
 } | null {
   const { backgroundGrid } = getCoverTheme(themeId)
-  return getCoverBackgroundGridCssStyle(themeId, backgroundGrid)
+  return getCoverBackgroundGridCssStyle(themeId, backgroundGrid, width, height)
 }
 
 export function getCoverSoftLightCssGradient(
@@ -473,5 +493,6 @@ export {
   buildCoverBackgroundGridSvgPattern,
   buildCoverDotGridSvgPattern,
   getCoverBackgroundGridCssStyle,
+  getCoverBackgroundSquareFills,
   getCoverDottedBackgroundStyle,
 } from '@/lib/cover-generator/cover-background-grid'
