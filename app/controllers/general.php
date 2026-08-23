@@ -545,114 +545,63 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             'headers' => [],
             'body' => '',
         ];
-        $streaming = new class () {
-            public bool $response = false;
-            public bool $started = false;
-            public bool $ended = false;
-            public bool $disabled = false;
-            /** @var array<string, string> */
-            public array $parts = [];
-            public string $bodyBuffer = '';
-            public bool $bodyReceived = false;
-        };
+        $streamed = null;
+        $streamParts = [];
+        $streamBody = '';
         $canStreamResponse = $type === 'site' && !$isPreview;
 
-        $startStreaming = function () use ($streaming, $response, $deployment, $execution): void {
-            if ($streaming->started || $streaming->ended || $streaming->disabled) {
-                return;
-            }
-
-            $statusCode = \intval($streaming->parts['statusCode'] ?? 200);
-            if ($statusCode === 404 && $deployment->getAttribute('adapter', '') === 'static') {
-                $streaming->disabled = true;
-                return;
-            }
-
-            if ($statusCode >= 400 && $streaming->bodyBuffer === '') {
-                return;
-            }
-
-            $headers = $streaming->parts['headers'] ?? [];
-            if (\is_string($headers)) {
-                $headers = \json_decode($headers, true) ?? [];
-            }
-            if (!\is_array($headers)) {
-                $headers = [];
-            }
-
-            if ($deployment->getAttribute('resourceType') === 'functions') {
-                $headers['x-appwrite-execution-id'] = $execution->getId();
-            } elseif ($deployment->getAttribute('resourceType') === 'sites') {
-                $headers['x-appwrite-log-id'] = $execution->getId();
-            }
-
-            $contentType = 'text/plain';
-            foreach ($headers as $name => $values) {
-                $nameLower = \strtolower($name);
-                if ($nameLower === 'content-type') {
-                    $contentType = \is_array($values) ? ($values[0] ?? $contentType) : $values;
-                    continue;
-                }
-
-                if ($nameLower === 'content-length' || $nameLower === 'transfer-encoding') {
-                    continue;
-                }
-
-                if (\is_array($values)) {
-                    foreach ($values as $value) {
-                        $response->addHeader($name, $value);
-                    }
-                } else {
-                    $response->addHeader($name, $values);
-                }
-            }
-
-            $response
-                ->setContentType($contentType)
-                ->setStatusCode($statusCode);
-
-            $streaming->started = true;
-            $streaming->response = true;
-
-            if ($streaming->bodyBuffer !== '') {
-                $response->chunk($streaming->bodyBuffer);
-                $streaming->bodyBuffer = '';
-            }
-        };
-
-        $onExecutionPart = $canStreamResponse ? function (string $name, string $chunk, bool $isLast) use ($streaming, $response, $startStreaming): void {
+        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution): void {
             if ($name !== 'body') {
-                $streaming->parts[$name] = ($streaming->parts[$name] ?? '') . $chunk;
-
-                if ($isLast && \in_array($name, ['statusCode', 'headers'], true) && isset($streaming->parts['statusCode'], $streaming->parts['headers'])) {
-                    $startStreaming();
-                }
+                $streamParts[$name] = ($streamParts[$name] ?? '') . $chunk;
 
                 return;
             }
 
-            $streaming->bodyReceived = true;
+            if ($streamed === null) {
+                $statusCode = \intval($streamParts['statusCode'] ?? 200);
 
-            if (!$streaming->started) {
-                $streaming->bodyBuffer .= $chunk;
-                if (isset($streaming->parts['statusCode'], $streaming->parts['headers'])) {
-                    $startStreaming();
+                // A failed response may be replaced by a branded page, which needs the whole body.
+                $streamed = $statusCode < 400;
+
+                if ($streamed) {
+                    $headers = \json_decode($streamParts['headers'] ?? '', true);
+                    $headers = \is_array($headers) ? $headers : [];
+                    $headers['x-appwrite-log-id'] = $execution->getId();
+
+                    $contentType = 'text/plain';
+
+                    foreach ($headers as $header => $values) {
+                        $lowercased = \strtolower($header);
+
+                        if ($lowercased === 'content-type') {
+                            $contentType = \is_array($values) ? ($values[0] ?? $contentType) : $values;
+                            continue;
+                        }
+
+                        // Length and framing describe the buffered response, not the chunked one.
+                        if ($lowercased === 'content-length' || $lowercased === 'transfer-encoding') {
+                            continue;
+                        }
+
+                        foreach ((array) $values as $value) {
+                            $response->addHeader($header, $value);
+                        }
+                    }
+
+                    $response
+                        ->setContentType($contentType)
+                        ->setStatusCode($statusCode);
                 }
-            } elseif (!$streaming->ended && $chunk !== '') {
-                $response->chunk($chunk);
             }
 
-            if ($isLast) {
-                if (!$streaming->started && \intval($streaming->parts['statusCode'] ?? 200) >= 400 && $streaming->bodyBuffer === '') {
-                    $streaming->disabled = true;
-                }
+            if (!$streamed) {
+                $streamBody .= $chunk;
 
-                if ($streaming->started && !$streaming->ended) {
-                    $response->chunk('', true);
-                    $streaming->ended = true;
-                }
+                return;
             }
-        } : null;
+
+            $response->chunk($chunk, $isLast);
+        };
 
         try {
             $version = match ($type) {
@@ -716,13 +665,13 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
             }
 
-            if ($streaming->response || ($streaming->disabled && $streaming->bodyReceived)) {
-                $executionResponse['body'] = $streaming->bodyBuffer;
+            if ($streamed !== null) {
+                $executionResponse['body'] = $streamBody;
             }
 
             $headerOverrides = [];
 
-            if (!$streaming->response) {
+            if ($streamed !== true) {
                 // Branded 404 override
                 $isResponseBranded = false;
                 if ($executionResponse['statusCode'] === 404 && $deployment->getAttribute('adapter', '') === 'static') {
@@ -792,7 +741,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
             }
 
-            if ($streaming->response) {
+            if ($streamed === true) {
                 unset($executionResponse['headers']['content-length'], $executionResponse['headers']['Content-Length']);
             }
 
@@ -869,7 +818,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         $body = $execution['responseBody'];
 
-        if (!$streaming->response) {
+        if ($streamed !== true) {
             $contentType = 'text/plain';
             foreach ($executionResponse['headers'] as $name => $values) {
                 if (\strtolower($name) === 'content-type') {
@@ -894,9 +843,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 ->setContentType($contentType)
                 ->setStatusCode($execution['responseStatusCode'] ?? 200)
                 ->send($body);
-        } elseif (!$streaming->ended) {
+        } else {
             $response->chunk('', true);
-            $streaming->ended = true;
         }
 
         $bus->dispatch(new RequestCompleted(

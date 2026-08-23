@@ -151,20 +151,19 @@ class Executor
             $requestTimeout = $timeout + 15;
         }
 
-        $streamed = false;
         $parts = [];
         $buffered = '';
         $reader = null;
         $onData = null;
 
         if ($onPart !== null) {
-            $onData = function (string $data, array $responseHeaders) use (&$streamed, &$parts, &$buffered, &$reader, $onPart): void {
-                if (!$streamed && $reader === null) {
+            $onData = function (string $data, array $responseHeaders) use (&$parts, &$buffered, &$reader, $onPart): void {
+                if ($reader === null) {
                     $format = $responseHeaders['x-executor-response-format'] ?? '';
 
-                    // The request asks for the streaming format, but an executor that predates it
-                    // answers with a complete document and echoes nothing. Detection has to be the
-                    // echo: curl hands over the same sized runs either way.
+                    // An executor predating the streaming format answers with a complete document
+                    // and echoes nothing. Only the echo distinguishes the two: curl hands over the
+                    // same sized runs either way.
                     if ($format !== '' && \version_compare($format, self::RESPONSE_FORMAT_STREAM, '>=')) {
                         $boundary = \trim(\explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '', '"');
                         if ($boundary === '') {
@@ -172,7 +171,6 @@ class Executor
                             return;
                         }
 
-                        $streamed = true;
                         $reader = new BodyMultipartStream(
                             $boundary,
                             function (string $name, string $chunk, bool $isLast) use (&$parts, $onPart): void {
@@ -199,7 +197,7 @@ class Executor
         $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, true, $requestTimeout, $onData);
 
         if ($onPart !== null) {
-            if (!$streamed) {
+            if ($reader === null) {
                 // A callback suppresses decoding in call(), so the buffered body still has to be
                 // read here. It is not always multipart: the executor answers its own failures with
                 // JSON, and parsing that as multipart silently discards the message and type.

@@ -5,15 +5,8 @@ namespace Appwrite\Utopia\Fetch;
 use Exception;
 
 /**
- * Incremental reader for the streaming executor response format.
- *
- * BodyMultipart parses a finished buffer. This consumes arbitrary byte runs as they arrive and
- * reports part content as soon as it is framed, so a response can be forwarded before the
- * executor has finished producing it.
- *
- * Part content is length prefixed, which is what makes the incremental read tractable: content is
- * never scanned for the boundary, so a body carrying the boundary string cannot split the envelope
- * and no lookahead has to be retained between feeds.
+ * Reads the streaming executor response format, where part content is length prefixed. Content is
+ * never scanned for the boundary, so a body carrying the boundary string cannot split the envelope.
  */
 class BodyMultipartStream
 {
@@ -31,9 +24,8 @@ class BodyMultipartStream
     private int $remaining = 0;
 
     /**
-     * @param string $boundary
-     * @param callable(string, string, bool): void $onData Receives part name, content run, and
-     *                                                     whether the part is now complete.
+     * @param callable(string, string, bool): void $onData Part name, content run, and whether the
+     *                                                     part is now complete.
      */
     public function __construct(
         private readonly string $boundary,
@@ -185,7 +177,6 @@ class BodyMultipartStream
             throw new Exception('Multipart part is missing a name');
         }
 
-        // Without length prefixed content there is no safe way to find the end of this part.
         if (!$chunked) {
             throw new Exception('Part "' . $name . '" is not chunked');
         }
