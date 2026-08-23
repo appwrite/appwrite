@@ -84,6 +84,17 @@ export function isDedicatedDatabaseReady(
   return coerceTrimmedString(status).toLowerCase() === 'ready'
 }
 
+/** Initial create/start only. Do not treat paused/failed/scaling as provisioning. */
+export function isDedicatedDatabaseProvisioning(
+  status: string | null | undefined,
+): boolean {
+  const normalized = coerceTrimmedString(status).toLowerCase()
+  return normalized === 'provisioning' || normalized === 'starting'
+}
+
+export const DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE =
+  'Available once the database is ready.'
+
 export function shouldPollDedicatedDatabaseStatus(
   status: string | null | undefined,
 ): boolean {

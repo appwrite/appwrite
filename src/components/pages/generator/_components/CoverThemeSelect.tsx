@@ -14,6 +14,7 @@ import {
   listCoverEditorThemesByFamily,
   resolveCoverEditorThemeId,
 } from '@/lib/cover-generator/themes'
+import { cn } from '@/lib/utils'
 
 type CoverThemeSelectProps = {
   theme: CoverTheme
@@ -36,14 +37,22 @@ export function CoverThemeSelect({
         onThemeChange(value as CoverTheme)
       }}
     >
-      <SelectTrigger className={className ?? 'h-8 w-full text-[12px]'}>
+      <SelectTrigger
+        className={cn(
+          'justify-start text-start *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:justify-start',
+          className ?? 'h-8 w-full text-[12px]',
+        )}
+      >
         <CoverThemePreviewThumb themeId={editorTheme} />
         <SelectValue>{selectedTheme.label}</SelectValue>
       </SelectTrigger>
-      <SelectContent className="min-w-[min(100vw-2rem,360px)]">
+      <SelectContent
+        align="start"
+        className="min-w-[min(100vw-2rem,360px)] text-start"
+      >
         {(['light', 'dark'] as const).map((family) => (
           <SelectGroup key={family}>
-            <SelectLabel className="text-[11px] font-semibold uppercase tracking-wider">
+            <SelectLabel className="text-start text-[11px] font-semibold uppercase tracking-wider">
               {family === 'light' ? 'Light backgrounds' : 'Dark backgrounds'}
             </SelectLabel>
             {listCoverEditorThemesByFamily(family).map((themeOption) => (

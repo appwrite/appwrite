@@ -34,7 +34,10 @@ import {
   useOrganizationById,
 } from '@/lib/react-query/hooks'
 import { apiExplorerSpecQueryOptions } from '@/lib/react-query/hooks/api-explorer'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  getActiveProfileId,
+} from '@/lib/console-profiles'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
@@ -224,6 +227,14 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
         retry: false,
       })
       registerProjectRegionFromProject(projectData)
+
+      // Self-hosted usage availability is a backend capability. Resolve the
+      // public Console variable before child route guards and navigation render.
+      if (getActiveProfileId() === 'self-hosted') {
+        await context.queryClient
+          .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
+          .catch(() => {})
+      }
     } catch (error) {
       if (isRedirect(error)) throw error
 
@@ -314,10 +325,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       return EMPTY_PROJECT_LAYOUT_CONTEXT
     }
   },
-  loader: async ({
-    params,
-    context,
-  }): Promise<ProjectLayoutLoaderData> => {
+  loader: async ({ params, context }): Promise<ProjectLayoutLoaderData> => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return undefined
@@ -538,12 +546,9 @@ function ProjectLayout() {
       ? billingOrganization.billingLimits
       : project?.billingLimits
 
-  const { data: failedInvoicePresence } =
-    useOrganizationFailedInvoicePresence(
-      budgetLimitReached || planUsageLimitReached
-        ? undefined
-        : teamIdForBilling,
-    )
+  const { data: failedInvoicePresence } = useOrganizationFailedInvoicePresence(
+    budgetLimitReached || planUsageLimitReached ? undefined : teamIdForBilling,
+  )
   const showFailedInvoiceBanner =
     !budgetLimitReached &&
     !planUsageLimitReached &&
@@ -553,9 +558,7 @@ function ProjectLayout() {
   const { data: organizationsListData } = useQuery({
     ...organizationsQueryOptions(),
     enabled:
-      !budgetLimitReached &&
-      !planUsageLimitReached &&
-      features.multiTenancy,
+      !budgetLimitReached && !planUsageLimitReached && features.multiTenancy,
   })
   const orgBillingReadonlyForFailedInvoice = useMemo(() => {
     if (
@@ -568,11 +571,7 @@ function ProjectLayout() {
       (t: { $id: string }) => t.$id === teamIdForBilling,
     ) as { status?: string } | undefined
     return isOrganizationBillingReadonlyStatus(row?.status)
-  }, [
-    showFailedInvoiceBanner,
-    organizationsListData,
-    teamIdForBilling,
-  ])
+  }, [showFailedInvoiceBanner, organizationsListData, teamIdForBilling])
 
   // Use loader data for first paint so paused curtain shows immediately (no layout shift)
   const projectForPaused =
@@ -597,8 +596,7 @@ function ProjectLayout() {
     (projectForPaused?.teamId && projectForPaused.teamId.length > 0
       ? projectForPaused.teamId
       : null) ||
-    (routeContext.budgetLimitTeamId &&
-    routeContext.budgetLimitTeamId.length > 0
+    (routeContext.budgetLimitTeamId && routeContext.budgetLimitTeamId.length > 0
       ? routeContext.budgetLimitTeamId
       : null)
 

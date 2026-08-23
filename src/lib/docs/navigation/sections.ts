@@ -2204,6 +2204,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           label: "Web app",
           items: [
             {
+              label: "TanStack Start",
+              href: "/docs/quick-starts/tanstack-start",
+            },
+            {
               label: "Next.js",
               href: "/docs/quick-starts/nextjs",
             },
@@ -2236,8 +2240,8 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
               href: "/docs/quick-starts/solid",
             },
             {
-              label: "TanStack Start",
-              href: "/docs/quick-starts/tanstack-start",
+              label: "Astro",
+              href: "/docs/quick-starts/astro",
             },
             {
               label: "Web",

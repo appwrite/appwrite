@@ -14,7 +14,7 @@ export type CoverThemeFamily = 'light' | 'dark'
 
 export type CoverBackgroundGridStyle = 'dots' | 'grid' | 'diagonal' | 'none'
 
-export type CoverSoftLightVariant = 'hero' | 'aurora' | 'beam' | 'glow'
+export type CoverSoftLightVariant = 'hero' | 'aurora' | 'beam' | 'glow' | 'mono'
 
 export const COVER_BACKGROUND_GRID_LABELS: Record<CoverBackgroundGridStyle, string> = {
   dots: 'Dotted grid',
@@ -36,6 +36,7 @@ const COVER_THEME_LABEL_BY_ID: Record<string, string> = {
   'light-plain': 'Plain, bottom pink & purple',
   'dark-plain': 'Plain, bottom pink & purple',
   'dark-glow': 'Plain, bottom teal ambient glow',
+  'dark-mono': 'Plain, monochrome shade glow',
 }
 
 const COVER_THEME_DESCRIPTION_BY_ID: Record<string, string> = {
@@ -51,6 +52,8 @@ const COVER_THEME_DESCRIPTION_BY_ID: Record<string, string> = {
   'dark-plain': 'Solid background with soft corner glow, no texture.',
   'dark-glow':
     'Plain dark background with a large teal light leak from the lower-left corner.',
+  'dark-mono':
+    'Plain dark background with soft corner washes in a darker shade of the same color.',
 }
 
 export function getCoverBackgroundGridLabel(style: CoverBackgroundGridStyle): string {
@@ -78,7 +81,6 @@ export type CoverThemeDefinition = {
 const BRAND_CTA = '#FD366E'
 const BRAND_PURPLE = '#7C67FE'
 const BRAND_TEAL = '#85DBD8'
-const BRAND_ORANGE = '#FE9567'
 
 const LIGHT_SOFT_LIGHTS = getCoverSoftLightOpacityPreset('light')
 const DARK_SOFT_LIGHTS = getCoverSoftLightOpacityPreset('dark')
@@ -91,6 +93,16 @@ const DARK_GLOW_SOFT_LIGHTS: CoverSoftLightOpacity = {
   purple: { strong: 0.07, mid: 0.025 },
   teal: { strong: 0.13, mid: 0.045 },
   orange: { strong: 0.06, mid: 0.02 },
+  mono: { strong: 0, mid: 0 },
+}
+
+/** Monochrome shade washes: only the `mono` tone is used by the mono variant. */
+const DARK_MONO_SOFT_LIGHTS: CoverSoftLightOpacity = {
+  pink: { strong: 0, mid: 0 },
+  purple: { strong: 0, mid: 0 },
+  teal: { strong: 0, mid: 0 },
+  orange: { strong: 0, mid: 0 },
+  mono: { strong: 0.5, mid: 0.2 },
 }
 
 const LIGHT_BASE = {
@@ -207,6 +219,13 @@ export const COVER_THEME_DEFINITIONS = {
     softLightVariant: 'glow',
     softLights: DARK_GLOW_SOFT_LIGHTS,
   }),
+  'dark-mono': defineCoverTheme({
+    id: 'dark-mono',
+    ...DARK_BASE,
+    backgroundGrid: 'none',
+    softLightVariant: 'mono',
+    softLights: DARK_MONO_SOFT_LIGHTS,
+  }),
 } as const satisfies Record<string, CoverThemeDefinition>
 
 export type CoverThemeId = keyof typeof COVER_THEME_DEFINITIONS
@@ -217,11 +236,18 @@ export const COVER_EDITOR_THEME_IDS = [
   'light-plain',
   'dark-plain',
   'dark-glow',
+  'dark-mono',
 ] as const satisfies readonly CoverThemeId[]
 
 export type CoverEditorThemeId = (typeof COVER_EDITOR_THEME_IDS)[number]
 
 export const DEFAULT_COVER_THEME_ID: CoverThemeId = 'dark-plain'
+
+/** Random background from the editor palette. Used when starting a new cover. */
+export function pickRandomCoverEditorThemeId(): CoverEditorThemeId {
+  const index = Math.floor(Math.random() * COVER_EDITOR_THEME_IDS.length)
+  return COVER_EDITOR_THEME_IDS[index] ?? 'dark-plain'
+}
 
 export function isCoverThemeId(value: string): value is CoverThemeId {
   return (COVER_THEME_IDS as readonly string[]).includes(value)
@@ -321,4 +347,73 @@ export function getCoverBrandThemeForSvgExport(
     brandTeal: cssColorToHex(theme.brandTeal),
     softLights: theme.softLights,
   }
+}
+
+/**
+ * Status badge hues used in the console (badge.tsx text colors):
+ * emerald / amber / red / blue / slate, 600 on light and 400 on dark.
+ */
+export const COVER_BADGE_COLORS = {
+  green: {
+    label: 'Green',
+    swatchClass: 'bg-emerald-500',
+    light: '#059669',
+    dark: '#34d399',
+  },
+  amber: {
+    label: 'Amber',
+    swatchClass: 'bg-amber-500',
+    light: '#d97706',
+    dark: '#fbbf24',
+  },
+  red: {
+    label: 'Red',
+    swatchClass: 'bg-red-500',
+    light: '#dc2626',
+    dark: '#f87171',
+  },
+  blue: {
+    label: 'Blue',
+    swatchClass: 'bg-blue-500',
+    light: '#2563eb',
+    dark: '#60a5fa',
+  },
+  slate: {
+    label: 'Slate',
+    swatchClass: 'bg-slate-500',
+    light: '#475569',
+    dark: '#94a3b8',
+  },
+} as const
+
+export type CoverBadgeColor = keyof typeof COVER_BADGE_COLORS
+
+export const COVER_BADGE_COLOR_IDS = Object.keys(
+  COVER_BADGE_COLORS,
+) as CoverBadgeColor[]
+
+export const DEFAULT_COVER_BADGE_COLOR: CoverBadgeColor = 'green'
+
+export function isCoverBadgeColor(value: string): value is CoverBadgeColor {
+  return value in COVER_BADGE_COLORS
+}
+
+export function parseCoverBadgeColor(
+  value: string | null | undefined,
+): CoverBadgeColor {
+  const normalized = value?.trim().toLowerCase()
+  if (normalized && isCoverBadgeColor(normalized)) return normalized
+  return DEFAULT_COVER_BADGE_COLOR
+}
+
+export function getCoverBadgeColor(
+  themeId: CoverThemeId,
+  color: CoverBadgeColor = DEFAULT_COVER_BADGE_COLOR,
+): string {
+  const tokens = COVER_BADGE_COLORS[color] ?? COVER_BADGE_COLORS.green
+  return getCoverTheme(themeId).family === 'dark' ? tokens.dark : tokens.light
+}
+
+export function getCoverSuccessColor(themeId: CoverThemeId): string {
+  return getCoverBadgeColor(themeId, 'green')
 }

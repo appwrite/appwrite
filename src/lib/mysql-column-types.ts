@@ -1,3 +1,9 @@
+import { buildMysqlInlineEnumTypeSql } from '@/lib/mysql-enum-ddl'
+import {
+  normalizeMysqlEnumValues,
+  parseMysqlEnumValues,
+  validateMysqlEnumValues,
+} from '@/lib/mysql-enum-metadata'
 import type { MysqlTableColumnRow } from '@/lib/mysql-sql'
 
 export type MysqlColumnTypeGroup =
@@ -30,6 +36,7 @@ export type MysqlColumnTypeId =
   | 'timestamp with time zone'
   | 'interval'
   | 'uuid'
+  | 'enum'
   | 'json'
   | 'jsonb'
   | 'bytea'
@@ -84,6 +91,8 @@ export type MysqlColumnTypeState = {
   numericPrecision?: number
   numericScale?: number
   datetimePrecision?: number
+  /** Allowed labels when typeId is `enum`. */
+  enumValues?: string[]
 }
 
 const LENGTH_PROPERTY = (
@@ -315,6 +324,14 @@ export const MYSQL_COLUMN_TYPE_DEFINITIONS: MysqlColumnTypeDefinition[] =
       searchTerms: ['uuid'],
     },
     {
+      id: 'enum',
+      label: 'Enum',
+      description: 'One value from a fixed list',
+      group: 'Structured',
+      properties: [],
+      searchTerms: ['enum', 'enumeration', 'list'],
+    },
+    {
       id: 'json',
       label: 'JSON',
       description: 'JSON stored as text',
@@ -502,6 +519,10 @@ export function createDefaultMysqlColumnTypeState(
     }
   }
 
+  if (typeId === 'enum') {
+    state.enumValues = ['']
+  }
+
   return state
 }
 
@@ -564,6 +585,8 @@ function buildMysqlColumnBaseTypeSql(state: MysqlColumnTypeState): string {
       return 'VARCHAR(64)'
     case 'uuid':
       return 'CHAR(36)'
+    case 'enum':
+      return buildMysqlInlineEnumTypeSql(normalizeMysqlEnumValues(state.enumValues))
     case 'json':
     case 'jsonb':
       return 'JSON'
@@ -712,6 +735,12 @@ function parseMysqlColumnBaseTypeState(
   if (normalizedData === 'date') {
     return { typeId: 'date' }
   }
+  if (normalizedData === 'enum' || normalizedUdt.startsWith('enum')) {
+    return {
+      typeId: 'enum',
+      enumValues: parseMysqlEnumValues(udt || dataType),
+    }
+  }
   if (normalizedData === 'json' || normalizedUdt.startsWith('json')) {
     return { typeId: 'json' }
   }
@@ -785,6 +814,10 @@ export function mysqlColumnTypeStatesEqual(
 export function validateMysqlColumnTypeState(
   state: MysqlColumnTypeState,
 ): string | null {
+  if (state.typeId === 'enum') {
+    return validateMysqlEnumValues(state.enumValues)
+  }
+
   const definition = getMysqlColumnTypeDefinition(state.typeId)
 
   for (const property of definition.properties) {
@@ -812,6 +845,8 @@ export function getMysqlColumnDefaultPlaceholder(
     case 'boolean':
       return 'NULL'
     case 'uuid':
+      return 'NULL'
+    case 'enum':
       return 'NULL'
     case 'timestamp with time zone':
     case 'timestamp':

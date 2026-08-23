@@ -19,22 +19,20 @@ import {
   resolveBandwidthStackedYAxisDomain,
   type BandwidthDualChartPoint,
 } from '@/lib/usage/bandwidth-events'
-import {
-  OVERVIEW_CHART_HEIGHT,
-} from '../../overview/chart-panel'
+import { OVERVIEW_CHART_HEIGHT } from '../../overview/chart-panel'
 import {
   USAGE_CHART_MARGIN,
   USAGE_CHART_RESPONSIVE_CONTAINER_PROPS,
 } from '@/lib/usage/chart-layout'
-import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import {
+  UsageChartXAxis,
+  UsageChartYAxis,
+} from '@/components/global/shared/ChartXAxis'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from '../usage-filters-context'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  UsageMetricCardFooter,
-  UsageMetricCardShell,
-} from './UsageMetricCard'
+import { UsageMetricCardFooter, UsageMetricCardShell } from './UsageMetricCard'
 import { UsageSectionChartError } from './UsageSectionChartError'
 import { UsageChartBrushReferenceArea } from './UsageChartBrushReferenceArea'
 
@@ -51,13 +49,17 @@ function ChartMetricHeaderSkeleton() {
   )
 }
 
-function ChartSkeleton() {
+function ChartSkeleton({ label }: { label: string }) {
   return (
-    <Skeleton
-      className="w-full shrink-0 rounded-md"
+    <div
+      role="status"
+      aria-label={label}
+      className="relative w-full shrink-0"
       style={{ height: OVERVIEW_CHART_HEIGHT }}
-      aria-hidden
-    />
+    >
+      <Skeleton className="absolute inset-0 rounded-md" />
+      <span className="sr-only">{label}</span>
+    </div>
   )
 }
 
@@ -168,7 +170,9 @@ export function InboundOutboundUsageChartCard({
     <UsageMetricCardShell>
       <div className="shrink-0 flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
-          <h3 className="text-[14px] font-medium text-foreground">{t(title)}</h3>
+          <h3 className="text-[14px] font-medium text-foreground">
+            {t(title)}
+          </h3>
 
           <div className={metricHeaderClass}>
             {isLoading ? (
@@ -210,14 +214,18 @@ export function InboundOutboundUsageChartCard({
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: 'var(--chart-2)' }}
               />
-              <span className="text-[11px] text-muted-foreground">{t('Inbound')}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {t('Inbound')}
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <div
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: 'var(--chart-brand)' }}
               />
-              <span className="text-[11px] text-muted-foreground">{t('Outbound')}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {t('Outbound')}
+              </span>
             </div>
           </div>
         ) : null}
@@ -234,7 +242,7 @@ export function InboundOutboundUsageChartCard({
             />
           </ChartArea>
         ) : isLoading ? (
-          <ChartSkeleton />
+          <ChartSkeleton label={t('Loading usage data')} />
         ) : chartData.length === 0 ? (
           <ChartArea>
             <div className="absolute inset-0 flex items-center justify-center text-[13px] text-muted-foreground">
@@ -265,8 +273,16 @@ export function InboundOutboundUsageChartCard({
                       x2="0"
                       y2="1"
                     >
-                      <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.15} />
-                      <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
+                      <stop
+                        offset="0%"
+                        stopColor="var(--chart-2)"
+                        stopOpacity={0.15}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor="var(--chart-2)"
+                        stopOpacity={0}
+                      />
                     </linearGradient>
                     <linearGradient
                       id={outboundGradientId}
@@ -304,7 +320,8 @@ export function InboundOutboundUsageChartCard({
                   <Tooltip
                     cursor={!isSelecting}
                     content={({ active, payload }) => {
-                      if (isSelecting || !active || !payload?.length) return null
+                      if (isSelecting || !active || !payload?.length)
+                        return null
                       const data = payload[0].payload as {
                         fullDate: string
                         inbound: number

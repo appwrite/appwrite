@@ -54,10 +54,10 @@ const HOME_COPY = getEnglishCatalog().website.home
 
 const frameworkTools = [
   { name: HOME_COPY.frameworkTools.react, icon: '/icons/react.svg', href: '/docs/quick-starts/react' },
+  { name: HOME_COPY.frameworkTools.tanstackStart, icon: '/icons/tanstack.svg', href: '/docs/quick-starts/tanstack-start' },
   { name: HOME_COPY.frameworkTools.nextjs, icon: '/icons/nextjs.svg', href: '/docs/quick-starts/nextjs' },
   { name: HOME_COPY.frameworkTools.vue, icon: '/icons/vue.svg', href: '/docs/quick-starts/vue' },
   { name: HOME_COPY.frameworkTools.sveltekit, icon: '/icons/svelte.svg', href: '/docs/quick-starts/sveltekit' },
-  { name: HOME_COPY.frameworkTools.astro, icon: '/icons/astro.svg', href: '/docs/quick-starts/astro' },
   { name: HOME_COPY.frameworkTools.android, icon: '/icons/android.svg', href: '/docs/quick-starts/android' },
   { name: HOME_COPY.frameworkTools.ios, icon: '/icons/apple.svg', href: '/docs/quick-starts/apple' },
   { name: HOME_COPY.frameworkTools.flutter, icon: '/icons/flutter.svg', href: '/docs/quick-starts/flutter' },

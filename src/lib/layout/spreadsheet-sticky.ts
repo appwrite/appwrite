@@ -29,3 +29,22 @@ export const SPREADSHEET_STICKY_START_HEADER_SHADOW =
 /** Header cell: sticky end column (top + bottom + inline-start). */
 export const SPREADSHEET_STICKY_END_HEADER_SHADOW =
   'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_1px_0_0_0_var(--border)] rtl:shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_-1px_0_0_0_var(--border)]'
+
+/**
+ * Inner layer for spreadsheet tables inside `overflow-auto`.
+ *
+ * `inline-block min-w-full` plus `w-full` on the table grows about 1px past the
+ * pane (collapsed borders), which shows a phantom horizontal scrollbar. Use a
+ * block layer with `max-w-full overflow-x-clip`, set `minWidth` to the sum of
+ * column mins so real overflow still scrolls, and put leftover width in a
+ * filler column before sticky actions.
+ */
+export const SPREADSHEET_SCROLL_LAYER_CLASS =
+  'relative isolate w-full max-w-full overflow-x-clip'
+
+/** Empty header cell that absorbs leftover width before sticky actions. */
+export const SPREADSHEET_FILLER_HEADER_CLASS =
+  'bg-background p-0 shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
+
+/** Empty body cell matching {@link SPREADSHEET_FILLER_HEADER_CLASS}. */
+export const SPREADSHEET_FILLER_CELL_CLASS = 'border-b border-border p-0'

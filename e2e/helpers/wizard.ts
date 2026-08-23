@@ -85,7 +85,7 @@ export async function selectServerlessSpecificationIfPresent(
   page: Page,
 ): Promise<void> {
   const serverlessRow = page.locator('table tbody tr').filter({
-    hasText: /Serverless|Pay as you go/i,
+    hasText: /Serverless|No compute fee|Pay as you go|writes included|reads included/i,
   })
   if (await serverlessRow.first().isVisible({ timeout: 2_000 }).catch(() => false)) {
     await serverlessRow.first().click()

@@ -10,10 +10,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import {
-  resolvePostAuthOrganizationId,
-} from '@/lib/ensure-personal-org'
-import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
+import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
@@ -64,11 +61,10 @@ export const Route = createFileRoute('/_public/')({
     }
 
     try {
-      const orgId = await resolvePostAuthOrganizationId(
-        account,
+      const orgId = await resolveAndPrefetchDefaultOrganization(
         context.queryClient,
+        account,
       )
-      await prefetchOrganizationOverviewData(context.queryClient, orgId)
       throw redirect({
         to: '/organizations/$orgId',
         params: { orgId },

@@ -1,5 +1,5 @@
 /** Secondary brand light tones used in marketing soft-light washes. */
-export type CoverSoftLightTone = 'pink' | 'purple' | 'teal' | 'orange'
+export type CoverSoftLightTone = 'pink' | 'purple' | 'teal' | 'orange' | 'mono'
 
 export type CoverSoftLightOpacityLevel = {
   strong: number
@@ -20,6 +20,8 @@ export const COVER_BRAND_LIGHT_RGB: Record<
   purple: [124, 103, 254],
   teal: [133, 219, 216],
   orange: [254, 149, 103],
+  /** Darker shade of the dark base (#19191c) for monochrome shade washes. */
+  mono: [6, 6, 9],
 }
 
 const LIGHT_OPACITY: CoverSoftLightOpacity = {
@@ -27,6 +29,7 @@ const LIGHT_OPACITY: CoverSoftLightOpacity = {
   purple: { strong: 0.17, mid: 0.06 },
   teal: { strong: 0.17, mid: 0.06 },
   orange: { strong: 0.17, mid: 0.06 },
+  mono: { strong: 0.1, mid: 0.04 },
 }
 
 const DARK_OPACITY: CoverSoftLightOpacity = {
@@ -34,6 +37,7 @@ const DARK_OPACITY: CoverSoftLightOpacity = {
   purple: { strong: 0.11, mid: 0.04 },
   teal: { strong: 0.11, mid: 0.04 },
   orange: { strong: 0.11, mid: 0.04 },
+  mono: { strong: 0.17, mid: 0.07 },
 }
 
 export function getCoverSoftLightOpacityPreset(

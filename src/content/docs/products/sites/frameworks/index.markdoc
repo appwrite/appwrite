@@ -25,6 +25,13 @@ This means you can focus on building your application while Appwrite handles the
 
 ---
 
+- {% only_dark %}{% icon_image src="/images/platforms/dark/tanstack.svg" alt="TanStack Start logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/tanstack.svg" alt="TanStack Start logo" size="m" /%}{% /only_light %}
+- [**TanStack Start**](/docs/products/sites/quick-start/tanstack-start)
+- `SSR` `Static`
+
+---
+
 - {% icon icon="nextjs" size="m" /%}
 - [**Next.js**](/docs/products/sites/quick-start/nextjs)
 - `SSR` `Static`
@@ -49,12 +56,6 @@ This means you can focus on building your application while Appwrite handles the
 
 ---
 
-- {% icon icon="astro" size="m" /%}
-- [**Astro**](/docs/products/sites/quick-start/astro)
-- `SSR` `Static`
-
----
-
 - {% only_dark %}{% icon_image src="/images/platforms/dark/remix.svg" alt="Remix logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/remix.svg" alt="Remix logo" size="m" /%}{% /only_light %}
 - [**Remix**](/docs/products/sites/quick-start/remix)
@@ -62,9 +63,8 @@ This means you can focus on building your application while Appwrite handles the
 
 ---
 
-- {% only_dark %}{% icon_image src="/images/platforms/dark/tanstack.svg" alt="TanStack Start logo" size="m" /%}{% /only_dark %}
-{% only_light %}{% icon_image src="/images/platforms/light/tanstack.svg" alt="TanStack Start logo" size="m" /%}{% /only_light %}
-- [**TanStack Start**](/docs/products/sites/quick-start/tanstack-start)
+- {% icon icon="astro" size="m" /%}
+- [**Astro**](/docs/products/sites/quick-start/astro)
 - `SSR` `Static`
 
 ---

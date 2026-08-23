@@ -41,6 +41,7 @@ import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
 import { RetryDomainDialog } from './domains/RetryDomain'
 import { ProxyRuleContextMenu } from './domains/ProxyRuleContextMenu'
+import { domainUrl } from '@/lib/domains/url'
 
 interface DomainsProps {
   projectId: string
@@ -202,7 +203,7 @@ export function Domains({
                     <TableRow>
                       <TableCell className="px-4 py-3">
                         <a
-                          href={`https://${rule.domain}`}
+                          href={domainUrl(rule.domain)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"

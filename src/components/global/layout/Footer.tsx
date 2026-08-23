@@ -125,12 +125,12 @@ function getExpandedFooterGroups(
     title: footerCopy.groups.quickStarts,
     links: [
       docsFooterLink(footerCopy.expanded.quickStarts.web, '/docs/quick-starts/web', marketing),
-      docsFooterLink(footerCopy.expanded.quickStarts.nextjs, '/docs/quick-starts/nextjs', marketing),
       docsFooterLink(
         footerCopy.expanded.quickStarts.tanstackStart,
         '/docs/quick-starts/tanstack-start',
         marketing,
       ),
+      docsFooterLink(footerCopy.expanded.quickStarts.nextjs, '/docs/quick-starts/nextjs', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.react, '/docs/quick-starts/react', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.vue, '/docs/quick-starts/vue', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.nuxt, '/docs/quick-starts/nuxt', marketing),
@@ -142,8 +142,8 @@ function getExpandedFooterGroups(
       docsFooterLink(footerCopy.expanded.quickStarts.apple, '/docs/quick-starts/apple', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.android, '/docs/quick-starts/android', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.qwik, '/docs/quick-starts/qwik', marketing),
-      docsFooterLink(footerCopy.expanded.quickStarts.astro, '/docs/quick-starts/astro', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.solid, '/docs/quick-starts/solid', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.astro, '/docs/quick-starts/astro', marketing),
     ],
   },
   {

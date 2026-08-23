@@ -23,6 +23,8 @@ export interface RuntimeConfig {
   cookieBanner: string
   /** Override for the profile's blogDrafts feature ('' = profile default). */
   blogDrafts: string
+  /** Override for backend-powered usage statistics ('' = Console variables). */
+  usageStats: string
   /**
    * Demo / soft-launch website password gate (`/access`, Appwrite2 cookie).
    * '' = enabled; `false` / `0` / `disabled` turns the gate off.
@@ -111,6 +113,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     userVerification: read('VITE_CONSOLE_USER_VERIFICATION'),
     cookieBanner: read('VITE_CONSOLE_COOKIE_BANNER'),
     blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
+    usageStats: read('VITE_CONSOLE_USAGE_STATS'),
     websiteAccess: read('VITE_CONSOLE_WEBSITE_ACCESS'),
   }
 }
@@ -127,8 +130,7 @@ export function serializeRuntimeConfig(config: RuntimeConfig): string {
   )
 }
 
-const RUNTIME_CONFIG_SCRIPT_ASSIGNMENT =
-  /window\.__APP_CONFIG__=[^;]*;/g
+const RUNTIME_CONFIG_SCRIPT_ASSIGNMENT = /window\.__APP_CONFIG__=[^;]*;/g
 
 /** Stamp live runtime config into HTML (SSR, prerender, or static). */
 export function injectRuntimeConfigIntoHtml(

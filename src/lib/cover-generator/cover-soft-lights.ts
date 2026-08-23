@@ -147,6 +147,33 @@ const COVER_GLOW_SOFT_LIGHT_LAYOUT = {
   },
 } satisfies Record<'bottomLeft', CoverSoftLightLayout>
 
+/**
+ * Monochrome shade washes: same hue as the dark base in a lighter shade.
+ * Sized like the enlarged dark hero corners.
+ */
+const COVER_MONO_SOFT_LIGHT_LAYOUT = {
+  left: {
+    left: -0.38,
+    anchor: 'bottom',
+    bottomOverflow: 0.3,
+    widthRatio: 1.13,
+    heightRatio: 1.2,
+    tone: 'mono',
+    midStop: 38,
+    fadeStop: 72,
+  },
+  right: {
+    right: -0.41,
+    anchor: 'bottom',
+    bottomOverflow: 0.32,
+    widthRatio: 1.15,
+    heightRatio: 1.24,
+    tone: 'mono',
+    midStop: 40,
+    fadeStop: 74,
+  },
+} satisfies Record<'left' | 'right', CoverSoftLightLayout>
+
 export const COVER_SOFT_LIGHT_VARIANTS: Record<
   CoverSoftLightVariant,
   Record<string, CoverSoftLightLayout>
@@ -155,6 +182,46 @@ export const COVER_SOFT_LIGHT_VARIANTS: Record<
   aurora: COVER_AURORA_SOFT_LIGHT_LAYOUT,
   beam: COVER_BEAM_SOFT_LIGHT_LAYOUT,
   glow: COVER_GLOW_SOFT_LIGHT_LAYOUT,
+  mono: COVER_MONO_SOFT_LIGHT_LAYOUT,
+}
+
+/** Dark hero themes get larger corner washes so the glow reads on the dark base. */
+export const COVER_DARK_HERO_SOFT_LIGHT_SCALE = 1.35
+
+/** Same treatment for the dark glow variant's ambient teal wash. */
+export const COVER_DARK_GLOW_SOFT_LIGHT_SCALE = 1.3
+
+/** Scale a soft-light layout about its anchored canvas corner/edge. */
+export function scaleCoverSoftLightLayout(
+  layout: CoverSoftLightLayout,
+  scale: number,
+): CoverSoftLightLayout {
+  const scaled: CoverSoftLightLayout = {
+    ...layout,
+    widthRatio: layout.widthRatio * scale,
+    heightRatio: layout.heightRatio * scale,
+  }
+  if (layout.left != null) scaled.left = layout.left * scale
+  if (layout.right != null) scaled.right = layout.right * scale
+  if (layout.bottomOverflow != null) {
+    scaled.bottomOverflow = layout.bottomOverflow * scale
+  }
+  if (layout.verticalOffset != null) {
+    scaled.verticalOffset = layout.verticalOffset * scale
+  }
+  return scaled
+}
+
+function scaleCoverSoftLightLayouts(
+  layouts: Record<string, CoverSoftLightLayout>,
+  scale: number,
+): Record<string, CoverSoftLightLayout> {
+  return Object.fromEntries(
+    Object.entries(layouts).map(([key, layout]) => [
+      key,
+      scaleCoverSoftLightLayout(layout, scale),
+    ]),
+  )
 }
 
 /** Reference canvas the light layouts were tuned against (Open Graph). */
@@ -273,9 +340,22 @@ export function getCoverSoftLightLayoutsForTheme(
   const layouts = COVER_SOFT_LIGHT_VARIANTS[theme.softLightVariant]
 
   if (theme.softLightVariant === 'hero') {
+    const sized =
+      theme.family === 'dark'
+        ? scaleCoverSoftLightLayouts(layouts, COVER_DARK_HERO_SOFT_LIGHT_SCALE)
+        : layouts
+
     if (theme.backgroundGrid === 'grid') {
-      return applyHeroToneOverrides(layouts, { left: 'purple', right: 'teal' })
+      return applyHeroToneOverrides(sized, { left: 'purple', right: 'teal' })
     }
+
+    return Object.entries(sized)
+  }
+
+  if (theme.softLightVariant === 'glow') {
+    return Object.entries(
+      scaleCoverSoftLightLayouts(layouts, COVER_DARK_GLOW_SOFT_LIGHT_SCALE),
+    )
   }
 
   return Object.entries(layouts)

@@ -59,6 +59,7 @@ import {
 import { getVcsProvider } from '@/lib/vcs/providers'
 import { useWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
+import { domainUrl } from '@/lib/domains/url'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -248,7 +249,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     if (domains.length > 0) return domains[0].domain
     return null
   }, [domains])
-  const siteUrl = primaryDomain ? `https://${primaryDomain}` : null
+  const siteUrl = primaryDomain ? domainUrl(primaryDomain) : null
 
   // QR code image URL from console avatars API (for "View on mobile" dialog)
   const qrImageUrl = useMemo(() => {

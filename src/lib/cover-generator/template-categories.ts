@@ -6,6 +6,7 @@ import {
 
 export const COVER_TEMPLATE_CATEGORY_IDS = [
   'text',
+  'social',
   'code',
   'milestones',
   'releases',
@@ -28,13 +29,26 @@ export const COVER_TEMPLATE_CATEGORIES: CoverTemplateCategory[] = [
     id: 'text',
     label: 'Text',
     description: 'Headlines and copy-focused covers.',
-    templateIds: ['simple-title'],
+    templateIds: ['simple-title', 'big-type', 'announcement', 'checklist', 'numbered-steps'],
+  },
+  {
+    id: 'social',
+    label: 'Social',
+    description: 'Quotes, posts, events, and community covers.',
+    templateIds: [
+      'quote',
+      'blog-post',
+      'podcast-episode',
+      'event',
+      'profile-card',
+      'social-post',
+    ],
   },
   {
     id: 'code',
     label: 'Code',
     description: 'Terminal commands and syntax-highlighted snippets.',
-    templateIds: ['cli-code', 'code-snippet'],
+    templateIds: ['cli-code', 'code-snippet', 'api-endpoint', 'code-diff'],
   },
   {
     id: 'milestones',
@@ -46,25 +60,44 @@ export const COVER_TEMPLATE_CATEGORIES: CoverTemplateCategory[] = [
     id: 'releases',
     label: 'Releases',
     description: 'Announce new version releases with a large version number.',
-    templateIds: ['version-number', 'version-title'],
+    templateIds: ['version-number', 'version-title', 'status-pill', 'countdown'],
   },
   {
     id: 'logos',
     label: 'Logos',
     description: 'Single icons, integrations, and partner logos.',
-    templateIds: ['integration', 'integration-icon', 'showcase-icon', 'title-icon'],
+    templateIds: [
+      'integration',
+      'integration-icon',
+      'showcase-icon',
+      'title-icon',
+      'logo-marquee',
+    ],
   },
   {
     id: 'product',
     label: 'Product',
     description: 'Screenshots and 3D product visuals.',
-    templateIds: ['screenshot', 'screenshot-side', 'screenshot-angled', 'cards-angled'],
+    templateIds: [
+      'screenshot',
+      'screenshot-side',
+      'screenshot-angled',
+      'cards-angled',
+    ],
   },
   {
     id: 'data',
     label: 'Data',
     description: 'Tables and charts for metrics and comparisons.',
-    templateIds: ['table', 'bar-chart', 'line-chart'],
+    templateIds: [
+      'table',
+      'bar-chart',
+      'line-chart',
+      'stats-grid',
+      'metric-delta',
+      'donut-chart',
+      'progress-bar',
+    ],
   },
 ]
 

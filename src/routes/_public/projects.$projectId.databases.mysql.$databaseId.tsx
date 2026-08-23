@@ -7,6 +7,8 @@ import {
   isMysqlEngine,
 } from '@/lib/react-query/hooks'
 import { ensureConsoleSqlApiStatements } from '@/lib/databases/sql-api-statements'
+import { throwRedirectIfDedicatedDatabaseProvisioning } from '@/lib/databases/dedicated-database-provisioning-access'
+import { mysqlNav } from '@/lib/mysql-database-routes'
 import { DatabaseTypeUnavailable } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeUnavailable'
 import { MysqlSidebarProvider } from '@/components/pages/projects/$projectId/databases/mysql/_components/MysqlSidebarContext'
 import { MysqlShell } from '@/components/pages/projects/$projectId/databases/mysql/MysqlShell'
@@ -15,7 +17,7 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/mysql/$databaseId',
 )({
   head: () => ({ meta: [{ title: pageTitle('MySQL', 'Databases') }] }),
-  beforeLoad: async ({ params, context }) => {
+  beforeLoad: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return
 
     const { projectId, databaseId } = params
@@ -45,6 +47,12 @@ export const Route = createFileRoute(
         replace: true,
       })
     }
+
+    throwRedirectIfDedicatedDatabaseProvisioning(
+      database.status,
+      location.pathname,
+      mysqlNav({ projectId, databaseId }).sql(),
+    )
 
     try {
       const { database: updated, updated: didUpdate } =

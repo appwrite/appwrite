@@ -11,6 +11,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { projectSupportsDedicatedDatabaseCompute } from '@/lib/databases/dedicated-database-regions'
+import { planSupportsDedicatedDatabases } from '@/lib/databases/dedicated-database-plan'
 import { DatabaseType } from '@/lib/databases/database-type'
 import {
   GRID_DEFAULT_PAGE_SIZE,
@@ -59,10 +60,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
       const projectData = await queryClient.ensureQueryData(
         projectQueryOptions(projectId),
       )
+      const organizationPlan = projectData?.teamId
+        ? await queryClient
+            .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
+            .catch(() => null)
+        : null
 
       const profileFeatures = getActiveProfileFeatures()
       const supportsDedicatedDatabaseCompute =
-        projectSupportsDedicatedDatabaseCompute(projectData?.region)
+        projectSupportsDedicatedDatabaseCompute(projectData?.region) &&
+        planSupportsDedicatedDatabases(organizationPlan) === true
       const shouldPrefetchNativeDatabases =
         supportsDedicatedDatabaseCompute &&
         (profileFeatures.nativeDbsPostgres ||
@@ -132,11 +139,6 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
             filterQueries,
           ),
         ),
-        projectData?.teamId
-          ? queryClient.ensureQueryData(
-              organizationPlanQueryOptions(projectData.teamId),
-            )
-          : Promise.resolve(),
       ])
     },
     component: DatabasesIndexPage,

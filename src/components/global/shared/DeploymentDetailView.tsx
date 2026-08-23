@@ -93,7 +93,11 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { cn } from '@/lib/utils'
 import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
 import { useT } from '@/lib/i18n/translate'
-import { openDialogAfterOverlayCloses, closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
+import { domainUrl } from '@/lib/domains/url'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -137,6 +141,10 @@ function detectVcsProvider(
       const { label, Icon } = getVcsProvider('bitbucket')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
+    if (url.includes('cursor.com')) {
+      const { label, Icon } = getVcsProvider('origin')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
   }
 
   // Check for vcsProvider field (if available)
@@ -152,6 +160,10 @@ function detectVcsProvider(
     }
     if (provider === 'bitbucket') {
       const { label, Icon } = getVcsProvider('bitbucket')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (provider === 'origin') {
+      const { label, Icon } = getVcsProvider('origin')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -175,7 +187,7 @@ function detectVcsProvider(
  */
 function getVcsProviderType(
   deployment: unknown,
-): 'github' | 'gitlab' | 'bitbucket' | null {
+): 'github' | 'gitlab' | 'bitbucket' | 'origin' | null {
   // Check provider from URL or vcsProvider field
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
@@ -183,6 +195,7 @@ function getVcsProviderType(
     if (url.includes('gitlab.com')) return 'gitlab'
     if (url.includes('bitbucket.org') || url.includes('bitbucket.com'))
       return 'bitbucket'
+    if (url.includes('cursor.com')) return 'origin'
   }
 
   // Fallback to vcsProvider field
@@ -191,6 +204,7 @@ function getVcsProviderType(
     if (provider === 'github') return 'github'
     if (provider === 'gitlab') return 'gitlab'
     if (provider === 'bitbucket') return 'bitbucket'
+    if (provider === 'origin') return 'origin'
   }
 
   return null
@@ -224,6 +238,9 @@ function getCommitUrl(deployment: unknown): string | null {
   if (provider === 'bitbucket') {
     return `https://bitbucket.org/${owner}/${repo}/commits/${commitHash}`
   }
+  if (provider === 'origin') {
+    return `https://cursor.com/codebase/${owner}/${repo}/commit/${commitHash}`
+  }
 
   return null
 }
@@ -255,6 +272,9 @@ function getBranchUrl(deployment: unknown): string | null {
   }
   if (provider === 'bitbucket') {
     return `https://bitbucket.org/${owner}/${repo}/src/${branch}`
+  }
+  if (provider === 'origin') {
+    return `https://cursor.com/codebase/${owner}/${repo}/tree/${branch}`
   }
 
   return null
@@ -723,7 +743,7 @@ export function DeploymentDetailView({
                       }}
                     >
                       <a
-                        href={`https://${domain}`}
+                        href={domainUrl(domain)}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={`Open ${domain} in new tab`}
@@ -748,9 +768,7 @@ export function DeploymentDetailView({
                         )}
                         onClick={(e) => {
                           const el = e.currentTarget as HTMLButtonElement
-                          void navigator.clipboard.writeText(
-                            `https://${domain}`,
-                          )
+                          void navigator.clipboard.writeText(domainUrl(domain))
                           toast.success(t('URL copied'))
                           el.blur()
                           if (urlCopyHideAfterCopyTimeoutRef.current) {

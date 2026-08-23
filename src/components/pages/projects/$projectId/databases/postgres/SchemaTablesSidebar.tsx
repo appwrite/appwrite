@@ -36,6 +36,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { usePostgresDatabase } from '@/lib/react-query/hooks'
+import {
+  DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,
+  isDedicatedDatabaseProvisioning,
+} from '@/lib/databases/dedicated-database-status'
 import { PostgresDatabaseNav } from './PostgresDatabaseNav'
 import { PostgresSegmentedToggle } from './_components/PostgresSegmentedToggle'
 import {
@@ -77,6 +82,8 @@ export function SchemaTablesSidebar({
     useDatabaseTableOperationsAccess({
       permissionDeniedTooltip: t("You don't have permission to create schemas."),
     })
+  const { database } = usePostgresDatabase(projectId, databaseId)
+  const provisioning = isDedicatedDatabaseProvisioning(database?.status)
   const { panel, setPanel, selectedSchema, setSelectedSchema } = usePostgresSidebar()
   const [createSchemaOpen, setCreateSchemaOpen] = useState(false)
   const [createTableOpen, setCreateTableOpen] = useState(false)
@@ -170,10 +177,12 @@ export function SchemaTablesSidebar({
     tablesLoading && visibleTables.length === 0 && !!selectedSchema
   const showSchemasLoading =
     schemasLoading && loadedSchemas.length === 0 && !selectedSchema
-  const createSchemaDisabledReason = !canModifyTableStructure
-    ? (tableWriteTooltip ??
-      t("You don't have permission to create schemas."))
-    : undefined
+  const createSchemaDisabledReason = provisioning
+    ? t(DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE)
+    : !canModifyTableStructure
+      ? (tableWriteTooltip ??
+        t("You don't have permission to create schemas."))
+      : undefined
   const createTableDisabledReason = !selectedSchema
     ? t('Select a schema to create a table.')
     : !canModifyTableStructure

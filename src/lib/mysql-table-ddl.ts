@@ -294,10 +294,15 @@ export function buildMysqlDropSchemaSql(schemaName: string): string {
 
 export function formatMysqlColumnType(row: {
   data_type: string
+  udt_name?: string
   character_maximum_length?: number | string | null
   numeric_precision?: number | string | null
   numeric_scale?: number | string | null
 }): string {
+  const dataType = row.data_type?.toLowerCase() ?? ''
+  if (dataType === 'enum' && row.udt_name?.trim()) {
+    return row.udt_name
+  }
   const base = row.data_type
   const charLen = row.character_maximum_length
   if (charLen != null && charLen !== '') {

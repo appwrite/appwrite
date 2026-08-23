@@ -7,6 +7,7 @@ import {
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import {
+  SPREADSHEET_SCROLL_LAYER_CLASS,
   SPREADSHEET_STICKY_BODY_Z,
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
@@ -4213,6 +4214,18 @@ export function RowsSpreadsheet({
               />
             </div>
           ) : (
+          <div
+            className={SPREADSHEET_SCROLL_LAYER_CLASS}
+            style={{
+              minWidth:
+                ROWS_TABLE_EDGE_COL_PX * 2 +
+                (hideSequenceColumn ? 0 : 72) +
+                180 +
+                columns.length * 150 +
+                180 +
+                180,
+            }}
+          >
           <table
             className={cn(
               'w-full border-collapse',
@@ -4806,6 +4819,7 @@ export function RowsSpreadsheet({
             })}
           </tbody>
         </table>
+          </div>
           )}
         </div>
         {useInlineDocumentPane ? (

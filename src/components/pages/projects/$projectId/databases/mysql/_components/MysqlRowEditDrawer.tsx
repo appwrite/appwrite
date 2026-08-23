@@ -33,6 +33,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useT } from '@/lib/i18n/translate'
 
 type MysqlRowEditDrawerProps = {
@@ -342,6 +349,33 @@ export function MysqlRowEditDrawer({
                             {stringValue === 'true' ? t('True') : t('False')}
                           </span>
                         </div>
+                      ) : fieldType === 'enum' && (meta.enumValues?.length ?? 0) > 0 ? (
+                        <Select
+                          value={isNull ? undefined : stringValue || undefined}
+                          onValueChange={(next) =>
+                            handleFieldChange(column.column_name, next)
+                          }
+                          disabled={isNull}
+                        >
+                          <SelectTrigger
+                            id={inputId}
+                            className="h-9 w-full text-[13px]"
+                            aria-invalid={error ? true : undefined}
+                          >
+                            <SelectValue
+                              placeholder={
+                                required ? t('Select a value') : emptyPlaceholder
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {meta.enumValues!.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       ) : isDateTimeInlineFieldType(fieldType) ? (
                         <DateTimePicker
                           id={inputId}
@@ -465,7 +499,7 @@ export function MysqlRowEditDrawer({
                       )}
 
                       {error ? (
-                        <p className="text-[12px] text-destructive">{error}</p>
+                        <p className="text-[12px] text-destructive">{t(error)}</p>
                       ) : null}
                     </div>
                   )

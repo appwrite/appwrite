@@ -30,7 +30,10 @@ export type BillingLimitResourceKey = keyof typeof BILLING_LIMIT_RESOURCE_LABELS
 const BUDGET_LIMIT_KEY = 'budgetLimit'
 const USAGE_LIMIT_THRESHOLD = 100
 
-export type BillingLimitsMap = Record<string, number | string | null | undefined>
+export type BillingLimitsMap = Record<
+  string,
+  number | string | null | undefined
+>
 
 function toFiniteNumber(value: unknown): number | null {
   if (value == null || value === '') return null
@@ -73,9 +76,7 @@ export function isPlanUsageLimitReached(
 /**
  * Display label for a Cloud billing-limit resource key, or null if unknown.
  */
-export function getBillingLimitResourceLabel(
-  key: string,
-): string | null {
+export function getBillingLimitResourceLabel(key: string): string | null {
   if (key in BILLING_LIMIT_RESOURCE_LABELS) {
     return BILLING_LIMIT_RESOURCE_LABELS[key as BillingLimitResourceKey]
   }

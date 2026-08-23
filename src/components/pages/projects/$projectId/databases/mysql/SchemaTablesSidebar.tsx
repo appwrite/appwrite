@@ -36,6 +36,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useMysqlDatabase } from '@/lib/react-query/hooks'
+import {
+  DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,
+  isDedicatedDatabaseProvisioning,
+} from '@/lib/databases/dedicated-database-status'
 import { MysqlDatabaseNav } from './MysqlDatabaseNav'
 import { MysqlSegmentedToggle } from './_components/MysqlSegmentedToggle'
 import {
@@ -77,6 +82,8 @@ export function SchemaTablesSidebar({
     useDatabaseTableOperationsAccess({
       permissionDeniedTooltip: t("You don't have permission to create schemas."),
     })
+  const { database } = useMysqlDatabase(projectId, databaseId)
+  const provisioning = isDedicatedDatabaseProvisioning(database?.status)
   const { panel, setPanel, selectedSchema, setSelectedSchema } = useMysqlSidebar()
   const [createSchemaOpen, setCreateSchemaOpen] = useState(false)
   const [createTableOpen, setCreateTableOpen] = useState(false)
@@ -117,7 +124,7 @@ export function SchemaTablesSidebar({
   }, [databaseId])
 
   useEffect(() => {
-    if (databaseTab === 'visualizer' || databaseTab === 'enums') {
+    if (databaseTab === 'visualizer') {
       setPanel('schemas')
     }
   }, [databaseTab, setPanel])
@@ -170,10 +177,12 @@ export function SchemaTablesSidebar({
     tablesLoading && visibleTables.length === 0 && !!selectedSchema
   const showSchemasLoading =
     schemasLoading && loadedSchemas.length === 0 && !selectedSchema
-  const createSchemaDisabledReason = !canModifyTableStructure
-    ? (tableWriteTooltip ??
-      t("You don't have permission to create schemas."))
-    : undefined
+  const createSchemaDisabledReason = provisioning
+    ? t(DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE)
+    : !canModifyTableStructure
+      ? (tableWriteTooltip ??
+        t("You don't have permission to create schemas."))
+      : undefined
   const createTableDisabledReason = !selectedSchema
     ? t('Select a schema to create a table.')
     : !canModifyTableStructure
