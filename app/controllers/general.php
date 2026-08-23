@@ -545,6 +545,114 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             'headers' => [],
             'body' => '',
         ];
+        $streaming = new class {
+            public bool $response = false;
+            public bool $started = false;
+            public bool $ended = false;
+            public bool $disabled = false;
+            /** @var array<string, string> */
+            public array $parts = [];
+            public string $bodyBuffer = '';
+            public bool $bodyReceived = false;
+        };
+        $canStreamResponse = $type === 'site' && !$isPreview;
+
+        $startStreaming = function () use ($streaming, $response, $deployment, $execution): void {
+            if ($streaming->started || $streaming->ended || $streaming->disabled) {
+                return;
+            }
+
+            $statusCode = \intval($streaming->parts['statusCode'] ?? 200);
+            if ($statusCode === 404 && $deployment->getAttribute('adapter', '') === 'static') {
+                $streaming->disabled = true;
+                return;
+            }
+
+            if ($statusCode >= 400 && $streaming->bodyBuffer === '') {
+                return;
+            }
+
+            $headers = $streaming->parts['headers'] ?? [];
+            if (\is_string($headers)) {
+                $headers = \json_decode($headers, true) ?? [];
+            }
+            if (!\is_array($headers)) {
+                $headers = [];
+            }
+
+            if ($deployment->getAttribute('resourceType') === 'functions') {
+                $headers['x-appwrite-execution-id'] = $execution->getId();
+            } elseif ($deployment->getAttribute('resourceType') === 'sites') {
+                $headers['x-appwrite-log-id'] = $execution->getId();
+            }
+
+            $contentType = 'text/plain';
+            foreach ($headers as $name => $values) {
+                $nameLower = \strtolower($name);
+                if ($nameLower === 'content-type') {
+                    $contentType = \is_array($values) ? ($values[0] ?? $contentType) : $values;
+                    continue;
+                }
+
+                if ($nameLower === 'content-length' || $nameLower === 'transfer-encoding') {
+                    continue;
+                }
+
+                if (\is_array($values)) {
+                    foreach ($values as $value) {
+                        $response->addHeader($name, $value);
+                    }
+                } else {
+                    $response->addHeader($name, $values);
+                }
+            }
+
+            $response
+                ->setContentType($contentType)
+                ->setStatusCode($statusCode);
+
+            $streaming->started = true;
+            $streaming->response = true;
+
+            if ($streaming->bodyBuffer !== '') {
+                $response->chunk($streaming->bodyBuffer);
+                $streaming->bodyBuffer = '';
+            }
+        };
+
+        $onExecutionPart = $canStreamResponse ? function (string $name, string $chunk, bool $isLast) use ($streaming, $response, $startStreaming): void {
+            if ($name !== 'body') {
+                $streaming->parts[$name] = ($streaming->parts[$name] ?? '') . $chunk;
+
+                if ($isLast && \in_array($name, ['statusCode', 'headers'], true) && isset($streaming->parts['statusCode'], $streaming->parts['headers'])) {
+                    $startStreaming();
+                }
+
+                return;
+            }
+
+            $streaming->bodyReceived = true;
+
+            if (!$streaming->started) {
+                $streaming->bodyBuffer .= $chunk;
+                if (isset($streaming->parts['statusCode'], $streaming->parts['headers'])) {
+                    $startStreaming();
+                }
+            } elseif (!$streaming->ended && $chunk !== '') {
+                $response->chunk($chunk);
+            }
+
+            if ($isLast) {
+                if (!$streaming->started && \intval($streaming->parts['statusCode'] ?? 200) >= 400 && $streaming->bodyBuffer === '') {
+                    $streaming->disabled = true;
+                }
+
+                if ($streaming->started && !$streaming->ended) {
+                    $response->chunk('', true);
+                    $streaming->ended = true;
+                }
+            }
+        } : null;
 
         try {
             $version = match ($type) {
@@ -601,55 +709,62 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
                     logging: $resource->getAttribute('logging', true),
                     requestTimeout: 30,
-                    responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
+                    responseFormat: $canStreamResponse ? Executor::RESPONSE_FORMAT_STREAM : Executor::RESPONSE_FORMAT_ARRAY_HEADERS,
+                    onPart: $onExecutionPart
                 );
             } catch (ExecutorTimeout $th) {
                 throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
             }
 
+            if ($streaming->response || ($streaming->disabled && $streaming->bodyReceived)) {
+                $executionResponse['body'] = $streaming->bodyBuffer;
+            }
+
             $headerOverrides = [];
 
-            // Branded 404 override
-            $isResponseBranded = false;
-            if ($executionResponse['statusCode'] === 404 && $deployment->getAttribute('adapter', '') === 'static') {
-                $layout = new View(__DIR__ . '/../views/general/404.phtml');
-                $executionResponse['body'] = $layout->render();
-                $headerOverrides['content-length'] = \strlen($executionResponse['body']);
-                $isResponseBranded = true;
-            }
+            if (!$streaming->response) {
+                // Branded 404 override
+                $isResponseBranded = false;
+                if ($executionResponse['statusCode'] === 404 && $deployment->getAttribute('adapter', '') === 'static') {
+                    $layout = new View(__DIR__ . '/../views/general/404.phtml');
+                    $executionResponse['body'] = $layout->render();
+                    $headerOverrides['content-length'] = \strlen($executionResponse['body']);
+                    $isResponseBranded = true;
+                }
 
-            // Branded banner for previews
-            if (!$isResponseBranded) {
-                if (\is_null($apiKey) || $apiKey->isBannerDisabled() === false) {
-                    $transformation = new Transformation();
-                    $transformation->addAdapter(new Preview());
-                    $transformation->setInput($executionResponse['body']);
+                // Branded banner for previews
+                if (!$isResponseBranded) {
+                    if (\is_null($apiKey) || $apiKey->isBannerDisabled() === false) {
+                        $transformation = new Transformation();
+                        $transformation->addAdapter(new Preview());
+                        $transformation->setInput($executionResponse['body']);
 
-                    $simpleHeaders = [];
-                    foreach ($executionResponse['headers'] as $key => $value) {
-                        $simpleHeaders[$key] = \is_array($value) ? \implode(', ', $value) : $value;
-                    }
+                        $simpleHeaders = [];
+                        foreach ($executionResponse['headers'] as $key => $value) {
+                            $simpleHeaders[$key] = \is_array($value) ? \implode(', ', $value) : $value;
+                        }
 
-                    $transformation->setTraits($simpleHeaders);
-                    if ($isPreview && $transformation->transform()) {
-                        $executionResponse['body'] = $transformation->getOutput();
-                        $headerOverrides['content-length'] = \strlen($executionResponse['body']);
+                        $transformation->setTraits($simpleHeaders);
+                        if ($isPreview && $transformation->transform()) {
+                            $executionResponse['body'] = $transformation->getOutput();
+                            $headerOverrides['content-length'] = \strlen($executionResponse['body']);
+                        }
                     }
                 }
-            }
 
-            // Branded error pages (when developer left body empty)
-            if ($executionResponse['statusCode'] >= 400 && empty($executionResponse['body'])) {
-                $layout = new View($errorView);
-                $layout
-                    ->setParam('title', $project->getAttribute('name') . ' - Error')
-                    ->setParam('type', 'proxy_error_override')
-                    ->setParam('code', $executionResponse['statusCode']);
+                // Branded error pages (when developer left body empty)
+                if ($executionResponse['statusCode'] >= 400 && empty($executionResponse['body'])) {
+                    $layout = new View($errorView);
+                    $layout
+                        ->setParam('title', $project->getAttribute('name') . ' - Error')
+                        ->setParam('type', 'proxy_error_override')
+                        ->setParam('code', $executionResponse['statusCode']);
 
-                $executionResponse['body'] = $layout->render();
+                    $executionResponse['body'] = $layout->render();
 
-                $headerOverrides['content-length'] = \strlen($executionResponse['body']);
-                $headerOverrides['content-type'] = 'text/html';
+                    $headerOverrides['content-length'] = \strlen($executionResponse['body']);
+                    $headerOverrides['content-type'] = 'text/html';
+                }
             }
 
             if ($deployment->getAttribute('resourceType') === 'functions') {
@@ -675,6 +790,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 } else {
                     $executionResponse['headers'][$key] = $value;
                 }
+            }
+
+            if ($streaming->response) {
+                unset($executionResponse['headers']['content-length'], $executionResponse['headers']['Content-Length']);
             }
 
             $headersFiltered = [];
@@ -750,30 +869,35 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         $body = $execution['responseBody'];
 
-        $contentType = 'text/plain';
-        foreach ($executionResponse['headers'] as $name => $values) {
-            if (\strtolower($name) === 'content-type') {
-                $contentType = \is_array($values) ? $values[0] : $values;
-                continue;
-            }
-
-            if (\strtolower($name) === 'transfer-encoding') {
-                continue;
-            }
-
-            if (\is_array($values)) {
-                foreach ($values as $value) {
-                    $response->addHeader($name, $value);
+        if (!$streaming->response) {
+            $contentType = 'text/plain';
+            foreach ($executionResponse['headers'] as $name => $values) {
+                if (\strtolower($name) === 'content-type') {
+                    $contentType = \is_array($values) ? $values[0] : $values;
+                    continue;
                 }
-            } else {
-                $response->addHeader($name, $values);
-            }
-        }
 
-        $response
-            ->setContentType($contentType)
-            ->setStatusCode($execution['responseStatusCode'] ?? 200)
-            ->send($body);
+                if (\strtolower($name) === 'transfer-encoding') {
+                    continue;
+                }
+
+                if (\is_array($values)) {
+                    foreach ($values as $value) {
+                        $response->addHeader($name, $value);
+                    }
+                } else {
+                    $response->addHeader($name, $values);
+                }
+            }
+
+            $response
+                ->setContentType($contentType)
+                ->setStatusCode($execution['responseStatusCode'] ?? 200)
+                ->send($body);
+        } elseif (!$streaming->ended) {
+            $response->chunk('', true);
+            $streaming->ended = true;
+        }
 
         $bus->dispatch(new RequestCompleted(
             project: $project->getArrayCopy(),

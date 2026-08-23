@@ -3,6 +3,7 @@
 namespace Executor;
 
 use Appwrite\Utopia\Fetch\BodyMultipart;
+use Appwrite\Utopia\Fetch\BodyMultipartStream;
 use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Utopia\System\System;
@@ -14,6 +15,9 @@ class Executor
 
     // 0.9.0 is first version with array-based headers
     public const RESPONSE_FORMAT_ARRAY_HEADERS = '0.11.0';
+
+    // 0.12.0 is first version that flushes parts as they are produced
+    public const RESPONSE_FORMAT_STREAM = '0.12.0';
 
     public const METHOD_GET = 'GET';
     public const METHOD_POST = 'POST';
@@ -108,7 +112,8 @@ class Executor
         bool $logging,
         string $runtimeEntrypoint = '',
         ?int $requestTimeout = null,
-        string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS
+        string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS,
+        ?callable $onPart = null
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/executions';
@@ -146,7 +151,61 @@ class Executor
             $requestTimeout = $timeout + 15;
         }
 
-        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, true, $requestTimeout);
+        $streamed = false;
+        $parts = [];
+        $buffered = '';
+        $reader = null;
+        $onData = null;
+
+        if ($onPart !== null) {
+            $onData = function (string $data, array $responseHeaders) use (&$streamed, &$parts, &$buffered, &$reader, $onPart): void {
+                if (!$streamed && $reader === null) {
+                    $format = $responseHeaders['x-executor-response-format'] ?? '';
+
+                    // The request asks for the streaming format, but an executor that predates it
+                    // answers with a complete document and echoes nothing. Detection has to be the
+                    // echo: curl hands over the same sized runs either way.
+                    if ($format !== '' && \version_compare($format, self::RESPONSE_FORMAT_STREAM, '>=')) {
+                        $boundary = \trim(\explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '', '"');
+                        if ($boundary === '') {
+                            $buffered .= $data;
+                            return;
+                        }
+
+                        $streamed = true;
+                        $reader = new BodyMultipartStream(
+                            $boundary,
+                            function (string $name, string $chunk, bool $isLast) use (&$parts, $onPart): void {
+                                if ($name !== 'body') {
+                                    $parts[$name] = ($parts[$name] ?? '') . $chunk;
+                                }
+
+                                $onPart($name, $chunk, $isLast);
+                            }
+                        );
+                    }
+                }
+
+                if ($reader !== null) {
+                    $reader->feed($data);
+
+                    return;
+                }
+
+                $buffered .= $data;
+            };
+        }
+
+        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, true, $requestTimeout, $onData);
+
+        if ($onPart !== null) {
+            if (!$streamed) {
+                $boundary = \trim(\explode('boundary=', $response['headers']['content-type'] ?? '')[1] ?? '', '"');
+                $parts = (new BodyMultipart($boundary))->load($buffered)->getParts();
+            }
+
+            $response['body'] = $parts;
+        }
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -215,10 +274,10 @@ class Executor
         }
 
         if (isset($callback)) {
-            $headers[] = 'accept: text/event-stream';
-
-            $handleEvent = function ($ch, $data) use ($callback) {
-                $callback($data);
+            $handleEvent = function ($ch, $data) use ($callback, &$responseHeaders) {
+                // Headers are complete before the first body byte, so the callback can tell
+                // what the other side agreed to before deciding what to do with the payload.
+                $callback($data, $responseHeaders);
                 return \strlen($data);
             };
 
@@ -257,16 +316,13 @@ class Executor
 
         $responseBody   = curl_exec($ch);
 
-        if (isset($callback)) {
-            return [];
-        }
-
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_errno($ch);
         $curlErrorMessage = curl_error($ch);
 
-        if ($decode) {
+        // A callback consumed the body as it arrived, so there is nothing left to decode.
+        if ($decode && !isset($callback)) {
             $strpos = strpos($responseType, ';');
             $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
             switch (substr($responseType, 0, $strpos)) {
@@ -301,7 +357,7 @@ class Executor
 
         return [
             'headers' => $responseHeaders,
-            'body' => $responseBody
+            'body' => isset($callback) ? '' : $responseBody
         ];
     }
 
