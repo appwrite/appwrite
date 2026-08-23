@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "Faster cold starts for Appwrite Sites and Functions with SquashFS"
+date: 2026-08-12
+cover: /images/blog/announcing-deployment-retention/cover.avif
+---
+
+New [Appwrite Sites](/docs/products/sites) and [Functions](/docs/products/functions) deployments on Appwrite Cloud now use **SquashFS**. Appwrite mounts the compressed, read-only artifact instead of extracting every file, which removes the extraction step from cold starts.
+
+- **Up to 51% faster** on the format-dependent cold-start path for larger deployments.
+- **Near-constant mount time** as a deployment grows, where extraction time climbed with archive size.
+- **More predictable startup**, with less pressure on the cold-start timeout.
+
+Sites typically have larger artifacts than Functions, so they will see the more substantial improvements.
+
+Existing Sites and Functions keep running normally and are not rewritten in place. To migrate one, open its **Deployments** tab and redeploy the active deployment, or create a new deployment through your existing Git, CLI, or manual workflow. No source-code or configuration change is required.
+
+{% arrow_link href="/blog/post/appwrite-sites-squashfs-migration" %}
+Read the announcement to learn more
+{% /arrow_link %}
