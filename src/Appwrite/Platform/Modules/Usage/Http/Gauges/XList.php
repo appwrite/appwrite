@@ -108,7 +108,7 @@ class XList extends Action
             ->param('queries', [], new ArrayList(new Text(4096), 10), 'Up to 10 filter queries in Utopia syntax. Allowed attributes, also published as the `UsageGaugeDimension` enum: ' . implode(', ', static::VALID_FILTER_ATTRIBUTES) . '. Allowed methods: equal, notEqual, isNull, isNotNull. Example: `queries[]=equal("resourceType", ["bucket"])`.', true)
             ->param('interval', null, new Nullable(new WhiteList(static::VALID_INTERVALS)), 'Time interval size. Omit (null) for a flat aggregate over the whole window. Allowed: ' . implode(', ', static::VALID_INTERVALS) . '.', true, enum: new Enum(
                 name: 'UsageInterval',
-                map: parent::INTERVAL_ENUM_KEYS
+                map: static::INTERVAL_ENUM_KEYS
             ))
             ->param('dimensions', [], new ArrayList(new WhiteList(static::VALID_DIMENSIONS, true), 2), 'Break-down dimensions. Allowed: ' . implode(', ', static::VALID_DIMENSIONS) . '.', true, enum: new Enum(name: 'UsageGaugeDimension'))
             ->param('startAt', '', new DatetimeValidator(), 'Range start in ISO 8601. Defaults to endAt - 7d.', true)
@@ -146,7 +146,7 @@ class XList extends Action
 
         $end = $endAt !== '' ? $endAt : \gmdate('Y-m-d H:i:s');
         $defaultWindow = $interval !== null
-            ? parent::INTERVAL_DEFAULT_WINDOW_SECONDS[$interval]
+            ? static::INTERVAL_DEFAULT_WINDOW_SECONDS[$interval]
             : static::DEFAULT_AGGREGATE_WINDOW_SECONDS;
         $start = $startAt !== ''
             ? $startAt
@@ -249,7 +249,7 @@ class XList extends Action
                 ? Query::orderDesc($effectiveOrderBy)
                 : Query::orderAsc($effectiveOrderBy);
 
-            $queries[] = Query::limit($foldsLevel ? parent::MAX_BUCKETS : $limit);
+            $queries[] = Query::limit($foldsLevel ? static::MAX_BUCKETS : $limit);
 
             if (!$foldsLevel && $offset > 0) {
                 $queries[] = Query::offset($offset);
@@ -348,7 +348,7 @@ class XList extends Action
         array $filterQueries,
         array $maxPoints,
     ): array {
-        $step = self::INTERVAL_SECONDS[$interval] ?? null;
+        $step = static::INTERVAL_SECONDS[$interval] ?? null;
         if ($step === null) {
             return $maxPoints;
         }
@@ -363,7 +363,7 @@ class XList extends Action
             [
                 UsageQuery::groupByInterval('time', $interval),
                 Query::orderAsc('time'),
-                Query::limit(parent::MAX_BUCKETS),
+                Query::limit(static::MAX_BUCKETS),
             ],
         );
 
@@ -384,7 +384,7 @@ class XList extends Action
         // than that - both boundaries land on a bucket. Cap one above the
         // budget so an admitted request keeps its newest bucket instead of
         // having it silently dropped here.
-        $maxPoints = parent::MAX_BUCKETS + 1;
+        $maxPoints = static::MAX_BUCKETS + 1;
 
         while ($cursor <= $until && count($points) < $maxPoints) {
             $hasMaximum = array_key_exists($cursor, $maxByBucket);

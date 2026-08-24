@@ -156,7 +156,7 @@ abstract class Action extends PlatformAction
      */
     protected function assertBucketBudget(string $startAt, string $endAt, string $interval): void
     {
-        $bucketSeconds = self::INTERVAL_SECONDS[$interval] ?? null;
+        $bucketSeconds = static::INTERVAL_SECONDS[$interval] ?? null;
         if ($bucketSeconds === null) {
             return;
         }
@@ -164,10 +164,10 @@ abstract class Action extends PlatformAction
         $rangeSeconds = max(0, (int) \strtotime($endAt) - (int) \strtotime($startAt));
         $bucketCount = (int) \ceil($rangeSeconds / $bucketSeconds);
 
-        if ($bucketCount > self::MAX_BUCKETS) {
+        if ($bucketCount > static::MAX_BUCKETS) {
             throw new Exception(
                 Exception::GENERAL_ARGUMENT_INVALID,
-                "Time range × interval would produce {$bucketCount} buckets (max " . self::MAX_BUCKETS . "). Use a coarser interval or narrow the range."
+                "Time range × interval would produce {$bucketCount} buckets (max " . static::MAX_BUCKETS . "). Use a coarser interval or narrow the range."
             );
         }
     }

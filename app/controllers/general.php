@@ -23,6 +23,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User as DBUser;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
@@ -814,11 +815,7 @@ Http::init()
     ->inject('usage')
     ->inject('request')
     ->inject('geoRecord')
-    ->action(function ($usage, Request $request, GeoRecord $geoRecord) {
-        if (!$usage instanceof \Appwrite\Usage\Context) {
-            return;
-        }
-
+    ->action(function (Context $usage, Request $request, GeoRecord $geoRecord) {
         $uri = $request->getURI();
         $parts = explode('/', trim($uri, '/'));
         $country = $geoRecord->isEmpty() ? '' : strtolower($geoRecord->getCountryCode());
@@ -845,11 +842,7 @@ Http::shutdown()
     ->inject('usage')
     ->inject('response')
     ->inject('project')
-    ->action(function ($usage, Response $response, Document $project) {
-        if (!$usage instanceof \Appwrite\Usage\Context) {
-            return;
-        }
-
+    ->action(function (Context $usage, Response $response, Document $project) {
         $usage->setStatus($response->getStatusCode());
         if ($usage->getResourcePath() === '' && !$project->isEmpty()) {
             $usage->fillMissingResource('project', $project->getId(), (string) $project->getSequence());

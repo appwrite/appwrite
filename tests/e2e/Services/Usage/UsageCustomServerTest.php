@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\System\System;
 
 final class UsageCustomServerTest extends Scope
 {
@@ -16,6 +17,8 @@ final class UsageCustomServerTest extends Scope
 
     public function testListEventsReturnsRequestedEmptySeries(): void
     {
+        $this->skipUnlessUsageStatsEnabled();
+
         $response = $this->call('/usage/events', [
             'metrics' => ['test.unknown.event'],
             'interval' => '1h',
@@ -29,6 +32,8 @@ final class UsageCustomServerTest extends Scope
 
     public function testListGaugesReturnsEveryRequestedSeries(): void
     {
+        $this->skipUnlessUsageStatsEnabled();
+
         $response = $this->call('/usage/gauges', [
             'metrics' => ['test.unknown.gauge', 'test.second.gauge'],
             'interval' => '1h',
@@ -46,6 +51,8 @@ final class UsageCustomServerTest extends Scope
 
     public function testFlatEventAggregateNormalizesExplicitEndTime(): void
     {
+        $this->skipUnlessUsageStatsEnabled();
+
         $response = $this->call('/usage/events', [
             'metrics' => ['test.unknown.event'],
             'endAt' => '2026-04-09T12:00:00.000Z',
@@ -57,6 +64,8 @@ final class UsageCustomServerTest extends Scope
 
     public function testUnknownMaxGaugeDoesNotFabricateZeroSeries(): void
     {
+        $this->skipUnlessUsageStatsEnabled();
+
         $flat = $this->call('/usage/gauges', [
             'metrics' => ['test.unknown.max.gauge'],
             'aggregate' => 'max',
@@ -73,6 +82,54 @@ final class UsageCustomServerTest extends Scope
         $this->assertSame([], $interval['body']['metrics'][0]['points']);
     }
 
+    public function testInvalidFilterAttributeIsRejected(): void
+    {
+        $this->skipUnlessUsageStatsEnabled();
+
+        $response = $this->call('/usage/events', [
+            'metrics' => ['network.requests'],
+            'queries' => ['equal("osVersion", ["15"])'],
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $response['body']['type']);
+        $this->assertNotSame(500, $response['headers']['status-code']);
+    }
+
+    public function testStructuralFilterQueryIsRejected(): void
+    {
+        $this->skipUnlessUsageStatsEnabled();
+
+        $response = $this->call('/usage/events', [
+            'metrics' => ['network.requests'],
+            'queries' => ['limit(10)'],
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $response['body']['type']);
+    }
+
+    public function testDisabledStatsReturnCataloguedError(): void
+    {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'disabled') {
+            $this->markTestSkipped('_APP_USAGE_STATS is enabled on this stack; disabled-mode coverage needs a stack with _APP_USAGE_STATS=disabled');
+        }
+
+        $events = $this->call('/usage/events', [
+            'metrics' => ['network.requests'],
+        ]);
+        $gauges = $this->call('/usage/gauges', [
+            'metrics' => ['files.storage'],
+        ]);
+
+        $this->assertSame(403, $events['headers']['status-code']);
+        $this->assertSame('general_usage_disabled', $events['body']['type']);
+        $this->assertSame(403, $gauges['headers']['status-code']);
+        $this->assertSame('general_usage_disabled', $gauges['body']['type']);
+        $this->assertArrayHasKey('message', $events['body']);
+        $this->assertNotSame('', $events['body']['message']);
+    }
+
     public function testUsageReadScopeIsRequired(): void
     {
         $project = $this->getProject();
@@ -87,6 +144,13 @@ final class UsageCustomServerTest extends Scope
 
         $this->assertSame(401, $response['headers']['status-code']);
         $this->assertSame('general_unauthorized_scope', $response['body']['type']);
+    }
+
+    private function skipUnlessUsageStatsEnabled(): void
+    {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') === 'disabled') {
+            $this->markTestSkipped('Usage stats are disabled on this stack');
+        }
     }
 
     /** @param array<string, mixed> $parameters */

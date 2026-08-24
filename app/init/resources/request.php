@@ -139,7 +139,7 @@ return function (Container $context): void {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
         if (!$usageConnection->isReady()) {
-            throw new Exception(Exception::GENERAL_USAGE_DISABLED, 'Usage storage schema is not ready.');
+            throw new Exception(Exception::GENERAL_USAGE_NOT_READY);
         }
 
         $tenant = (string) $project->getSequence();

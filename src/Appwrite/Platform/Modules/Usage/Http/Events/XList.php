@@ -116,7 +116,7 @@ class XList extends Action
             ->param('queries', [], new ArrayList(new Text(4096), 10), 'Up to 10 filter queries in Utopia syntax. Allowed attributes, also published as the `UsageEventDimension` enum: ' . implode(', ', static::VALID_FILTER_ATTRIBUTES) . '. Allowed methods: equal, notEqual, contains, startsWith, endsWith, isNull, isNotNull. Example: `queries[]=equal("resourceType", ["bucket"])`.', true)
             ->param('interval', null, new Nullable(new WhiteList(static::VALID_INTERVALS)), 'Time interval size. Omit (null) for a flat aggregate over the whole window. Allowed: ' . implode(', ', static::VALID_INTERVALS) . '.', true, enum: new Enum(
                 name: 'UsageInterval',
-                map: parent::INTERVAL_ENUM_KEYS
+                map: static::INTERVAL_ENUM_KEYS
             ))
             ->param('dimensions', [], new ArrayList(new WhiteList(static::VALID_DIMENSIONS, true), 10), 'Break-down dimensions (max 10). Allowed: ' . implode(', ', static::VALID_DIMENSIONS) . '.', true, enum: new Enum(name: 'UsageEventDimension'))
             ->param('startAt', '', new DatetimeValidator(), 'Range start in ISO 8601. Defaults adapt to interval (7d for the no-interval aggregate).', true)
@@ -168,7 +168,7 @@ class XList extends Action
 
         $end = $endAt !== '' ? $endAt : \gmdate('Y-m-d H:i:s');
         $defaultWindow = $interval !== null
-            ? parent::INTERVAL_DEFAULT_WINDOW_SECONDS[$interval]
+            ? static::INTERVAL_DEFAULT_WINDOW_SECONDS[$interval]
             : static::DEFAULT_AGGREGATE_WINDOW_SECONDS;
         $start = $startAt !== ''
             ? $startAt
