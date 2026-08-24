@@ -43,12 +43,13 @@ const MESSAGING_CHANNEL_TILES: MessagingChannelTile[] = [
     id: 'email',
     title: 'Emails',
     description:
-      'Send receipts, digests, and transactional mail through SendGrid, Mailgun, SMTP, and other email providers.',
+      'Send receipts, digests, and transactional mail through SendGrid, Mailgun, Amazon SES, SMTP, and other email providers.',
     icon: Mail,
     providers: [
       { id: 'resend', name: 'Resend', icon: '/icons/resend.svg' },
       { id: 'sendgrid', name: 'SendGrid', icon: '/icons/sendgrid.svg' },
       { id: 'mailgun', name: 'Mailgun', icon: '/icons/mailgun.svg' },
+      { id: 'ses', name: 'Amazon SES', icon: '/icons/amazon.svg' },
       { id: 'smtp', name: 'SMTP' },
     ],
   },

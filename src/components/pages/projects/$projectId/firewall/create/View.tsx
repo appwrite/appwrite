@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { WafRuleAction } from '@appwrite.io/console'
 import { Globe, Server, Zap } from 'lucide-react'
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ConditionsBuilder } from '../_components/ConditionsBuilder'
+import { PriorityHint } from '../_components/PriorityHint'
 import { RuleImpactPreview } from '../_components/RuleImpactPreview'
 import { useCreateFirewallRule } from '@/lib/react-query/hooks'
 import {
@@ -42,11 +43,16 @@ import {
   FIREWALL_RESOURCE_TYPES,
   areFirewallConditionsComplete,
   createEmptyConditionDraft,
+  firewallListSearch,
+  parseFirewallListSearch,
   serializeFirewallConditions,
   type FirewallConditionDraft,
+  type FirewallResourceSelection,
   type FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import { draftsFromUsageFilterMap } from '@/lib/firewall/usage'
+import { normalizeFirewallLastResource } from '@/lib/firewall/last-resource'
+import { useFirewallLastResource } from '@/hooks/use-firewall-last-resource'
 import { queryParamToMap } from '@/lib/table-filters'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -107,23 +113,38 @@ export function View() {
   const navigate = useNavigate()
   const { projectId } = useParams({ strict: false })
   const {
-    resourceType: initialResourceType = 'api',
+    resourceType: initialResourceType,
     resourceId: initialResourceId,
     query: initialQuery,
   } = Route.useSearch()
+  const { lastResource, setLastResource } = useFirewallLastResource(projectId)
+  const initialSelection: FirewallResourceSelection =
+    parseFirewallListSearch({
+      resourceType: initialResourceType,
+      resourceId: initialResourceId,
+    }) ??
+    lastResource ?? { resourceType: 'api' }
   const createMutation = useCreateFirewallRule(projectId)
   const [ruleId, setRuleId] = useState<string | undefined>()
   const [form, setForm] = useState({
     ...DEFAULT_FORM,
-    resourceType: initialResourceType,
+    resourceType: initialSelection.resourceType,
     resourceId:
-      initialResourceType !== 'api' && initialResourceId
-        ? initialResourceId
+      initialSelection.resourceType !== 'api' && initialSelection.resourceId
+        ? initialSelection.resourceId
         : '',
   })
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>(() =>
     initialConditionsFromSearch(initialQuery),
   )
+
+  useEffect(() => {
+    const next = normalizeFirewallLastResource({
+      resourceType: form.resourceType,
+      resourceId: form.resourceId,
+    })
+    if (next) setLastResource(next)
+  }, [form.resourceId, form.resourceType, setLastResource])
 
   const needsResourceId = form.resourceType !== 'api'
   const canSubmit =
@@ -151,15 +172,20 @@ export function View() {
     navigate({
       to: '/projects/$projectId/firewall',
       params: { projectId: projectId! },
-      search:
-        resourceType === 'api' || !resourceId?.trim()
-          ? { resourceType: 'api' }
-          : { resourceType, resourceId: resourceId.trim() },
+      search: firewallListSearch({
+        resourceType,
+        resourceId,
+      }),
     })
   }
 
   const handleClose = () => {
-    navigateToRules(initialResourceType, initialResourceId)
+    navigateToRules(
+      initialSelection.resourceType,
+      initialSelection.resourceType === 'api'
+        ? undefined
+        : initialSelection.resourceId,
+    )
   }
 
   const handleSubmit = async () => {
@@ -528,7 +554,10 @@ export function View() {
         />
 
         <div className="space-y-2">
-          <Label>{t('Priority')}</Label>
+          <Label className="inline-flex items-center gap-1.5">
+            {t('Priority')}
+            <PriorityHint />
+          </Label>
           <Input
             type="number"
             min={0}
@@ -540,9 +569,6 @@ export function View() {
               })
             }
           />
-          <p className="text-[12px] text-muted-foreground">
-            {t('Lower numbers are evaluated first.')}
-          </p>
         </div>
 
         <div className="space-y-2">

@@ -73,6 +73,9 @@ Change name, scope, conditions, action settings, priority, or enabled state.
 {% cards_item href="/docs/products/firewall/monitor" title="Monitor traffic" %}
 Read traffic overview metrics and use impact preview when designing new rules.
 {% /cards_item %}
+{% cards_item href="/docs/products/firewall/attack-mode" title="Attack mode" %}
+Challenge every visitor to a site with one click during an incident.
+{% /cards_item %}
 {% cards_item href="/docs/products/firewall/delete" title="Delete a rule" %}
 Remove a rule from the project and understand what happens to active traffic.
 {% /cards_item %}

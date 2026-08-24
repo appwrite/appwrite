@@ -4140,6 +4140,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/firewall/attack-mode",
+    "title": "Attack mode",
+    "description": "Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.",
+    "excerpt": "**Attack mode** is a one-click challenge for a site you are viewing in Firewall. Use it when you need to put a proof-of-work challenge in front of all visitors quickly, for example during a traffic spike or abuse incident. Attack mode is available only for Sites. It does not apply to the project API or to Functions. Turn it on 1. Open **Firewall** in your project.…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Attack mode"
+    ]
+  },
+  {
     "slug": "products/firewall/conditions",
     "title": "Conditions",
     "description": "Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.",
@@ -4494,7 +4505,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/send-email-messages",
     "title": "Send email messages",
     "description": "Send email messages to your users using Appwrite Messaging.",
-    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun, Resend, and Sendgrid as SMTP providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more details about configuring…",
+    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun, Resend, Sendgrid, Amazon SES, and SMTP as email providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more…",
     "breadcrumbs": [
       "Messaging",
       "Guides",
@@ -4532,6 +4543,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Messaging",
       "Providers",
       "Email with SendGrid"
+    ]
+  },
+  {
+    "slug": "products/messaging/ses",
+    "title": "Amazon SES",
+    "description": "Send emails to your Appwrite users using Amazon SES and Appwrite Messaging.",
+    "excerpt": "Amazon SES lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Amazon SES as a provider, navigate to **Messaging** > **Providers** > **Add provider**, then choose **Amazon SES** under Email. Give your provider a name and complete the configuration, then click **Create provider**. In the configuration step, you will need credentials from the AWS console…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Email with Amazon SES"
     ]
   },
   {
@@ -6104,7 +6126,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
     "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. The Command Center is enhanced with AI capabilities and is the home of the Appwrite assistant. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows…",
     "breadcrumbs": [
-      "Command Center",
+      "Tooling",
       "Getting started",
       "Overview"
     ]
@@ -6115,7 +6137,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn to navigate the Appwrite Console efficiently and effectively with your keyboard",
     "excerpt": "The Appwrite Console was designed with a keyboard first approach. The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform actions quicker. Shortcuts The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform common actions quicker. The shortcuts use the following pattern: use the first letter from the call to action followed by the resource, product, service, or page you're targeting. For example, the shortcut keys + navigates to the project's Storage…",
     "breadcrumbs": [
-      "Command Center",
+      "Tooling",
       "Getting started",
       "Shortcuts"
     ]
@@ -6126,7 +6148,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite buckets using the Command-Line Tool (CLI).",
     "excerpt": "The Appwrite CLI allows you to configure and deploy buckets across projects. You can also configure your files using the CLI commands. Initialize bucket Create a new bucket using the following command: Pull bucket You can also pull your existing Appwrite buckets from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing buckets, your file should look similar to the following: You can also move the array…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Buckets"
     ]
@@ -6137,7 +6159,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.",
     "excerpt": "All commands are compatible with the latest version of the CLI. We recommend running the CLI on its latest version. Other than commands to create and push databases, tables, functions, messaging-topics, teams, and buckets, the Appwrite CLI can be used as a Server SDK as well. The Appwrite CLI has a command for every Server API endpoint. Commands generally follow the following syntax: Commands Below is a list of the available commands in the Appwrite CLI. You can get more…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Commands"
     ]
@@ -6148,7 +6170,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite functions using the Command-Line Tool (CLI).",
     "excerpt": "The CLI handles the creation, deployment, and execution of Appwrite Functions, as well as the configuration of the variables. You can also develop your function locally using CLI commands. Initialize function Create a new function using the following command: Pull function You can also pull your existing Appwrite Functions from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing functions, your file should look similar to the…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Functions"
     ]
@@ -6159,7 +6181,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Generate a type-safe SDK for your Appwrite project using the Command-Line Tool (CLI). Automatically create typed helpers based on your database schema.",
     "excerpt": "The command creates a type-safe SDK tailored to your Appwrite project. It reads your database schema and generates typed helpers, so you can interact with your tables using auto-completed methods, resulting in a better developer experience. Generate SDK Run the following command in your project directory: The CLI automatically detects your project's language and generates the SDK to a directory. Options * Option * Description --- * * Output directory for generated files (default: ) --- * * Target language…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Generate SDK"
     ]
@@ -6170,7 +6192,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
     "excerpt": "The Appwrite Command Line Interface (CLI) is an application that allows you to interact with Appwrite to perform server-side tasks using your terminal. This includes creating and managing projects, managing resources (rows, files, users), creating and deploying Appwrite Functions, and other operations available through Appwrite's API. Getting started The CLI is packaged both as an npm module as well as a standalone binary for your operating system, making it completely dependency free, platform independent, and language agnostic. If you plan…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Installation"
     ]
@@ -6181,7 +6203,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Deploy changes to Appwrite projects to migrate databases and tables schema, functions, teams, buckets, and more.",
     "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner, without saving configuration or sessions. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : When you set the global configuration parameters using the command, they take precedence over the local configuration parameters in your thereby switching the CLI to non-interactive mode. In this mode, the…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Non interactive"
     ]
@@ -6192,7 +6214,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite Sites using the Command-Line Tool (CLI).",
     "excerpt": "The CLI handles the creation, deployment, and execution of Appwrite Sites, as well as the configuration of the variables. Initialize site Create a new site using the following command: Pull site You can also pull your existing Appwrite Sites from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing sites, your file should look similar to the following: You can also move the array into a separate…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Sites"
     ]
@@ -6203,7 +6225,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite tables using the Command-Line Tool (CLI).",
     "excerpt": "Create and manage your tables using the CLI commands. The Appwrite CLI also helps you push your project's databases and tables schema from one project to another. Initialize table Create a new table using the following command: Pull table You can also pull your existing Appwrite tables and databases from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing tables, your file should look similar to the…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Tables"
     ]
@@ -6214,7 +6236,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite teams using the Command-Line Tool (CLI).",
     "excerpt": "The Appwrite CLI can create teams to organize users. Teams can be used to configure permissions for a group of users. Initialize team Create a new team using the following command: Pull team You can also pull your existing Appwrite teams from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing teams, your file should look similar to the following: You can also move the array into…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Teams"
     ]
@@ -6225,7 +6247,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite topics using the Command-Line Tool (CLI).",
     "excerpt": "The Appwrite CLI can create, update, delete, and get topics, as well as configure the provider and the subscribers. Initialize topic Create a new topic using the following command: Pull topics You can also pull your existing Appwrite topics from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing topics, your file should look similar to the following: You can also move the array into a separate…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Topics"
     ]
@@ -6236,7 +6258,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
     "excerpt": "The Terraform provider for Appwrite lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, and more in files, and apply those changes through HashiCorp Terraform. It is the official way to automate Appwrite project configuration alongside the rest of your stack. Resources Resource types use the prefix and match the Terraform Registry documentation. | Area | Resources…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Getting started",
       "Overview"
     ]
@@ -6247,7 +6269,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure the Appwrite Terraform provider for Cloud or Community Edition using endpoints, API keys, and optional environment variables.",
     "excerpt": "The Appwrite provider is published as on the Terraform Registry. The registry hosts **generated reference docs** for the provider and every resource and data source: latest docs. Full examples and attribute tables also live in the provider repository. Terraform block Declare the provider source in a block. You can add a constraint when you want to pin a release; see published versions on the registry provider page. Appwrite Cloud Replace with your project’s region subdomain (see Regions). Community Edition For…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Getting started",
       "Configuration"
     ]
@@ -6258,7 +6280,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite users and teams with the Terraform provider.",
     "excerpt": "The provider exposes **Auth** resources so you can align users and teams with the rest of your infrastructure-as-code workflow. For generated schemas and import syntax, see the Terraform Registry: auth_user and auth_team. The provider repository contains source and examples. Resources | Resource | Purpose | |----------|---------| | | Create and manage users | | | Create and manage teams | Use these together with your normal Auth and permission models; scope API keys appropriately when Terraform manages identity resources. Examples…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Auth"
     ]
@@ -6269,7 +6291,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure Appwrite backup policies with Terraform where your plan supports them.",
     "excerpt": "The resource configures **backup policies** for supported resources. Availability depends on your Appwrite Cloud plan or self-hosted setup. See the Terraform Registry: backup_policy. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Configure backup policies for supported resources | Policies use **** (CRON), **** (days), and **** (for example ). Omit **** to cover all databases in the project, or set **** to a specific database ID (often ) to back up…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Backups"
     ]
@@ -6280,7 +6302,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.",
     "excerpt": "The provider exposes Appwrite **TablesDB** as Terraform resources. Typical order: create a **database** (), then **tables**, then **columns** and **indexes**, and optionally **rows**. For full generated schemas, see the Terraform Registry: tablesdb, tablesdb_table, tablesdb_column, tablesdb_index, and tablesdb_row. The provider repository contains the source and examples. Resources | Resource | Purpose | |----------|---------| | | Create a database in your project | | | Create a table within a database | | | Define columns (types, constraints, defaults) | | |…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Databases"
     ]
@@ -6291,7 +6313,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite Functions, environment variables, and deployments with Terraform.",
     "excerpt": "Functions can be declared as Terraform resources, including **runtime**, **entrypoint**, **build commands**, **events**, and **per-function environment variables**. The provider also exposes an **** resource so you can ship code from a local tar archive or from a Git template alongside the rest of your configuration. See the Terraform Registry: function, function_variable, and function_deployment. The provider repository includes examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a function (runtime, entrypoint, commands, events, timeout, and related settings)…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Functions"
     ]
@@ -6302,7 +6324,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure Appwrite Messaging providers, topics, and subscribers with Terraform for email, SMS, and push delivery.",
     "excerpt": "Messaging integrates email, SMS, and push providers. The Terraform provider exposes **providers** (credentials and channel configuration), **topics** (groupings of subscribers for broadcasts), and **subscribers** (who receives messages on a topic). See the Terraform Registry for generated schemas: messaging_provider, messaging_topic, and messaging_subscriber. The provider repository lists every and optional field in source; provider-specific arguments apply only to the matching provider (for example Twilio , SMTP and , FCM ). Resources | Resource | Purpose | |----------|---------| | | Register an email,…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Messaging"
     ]
@@ -6313,7 +6335,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite Sites, environment variables, and deployments with Terraform.",
     "excerpt": "Sites supports Terraform resources for the **site** definition, **build-time environment variables**, and **deployments** that publish your site from a local artifact or a Git template. See the Terraform Registry: site, site_variable, and site_deployment. The provider repository includes examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a site (framework, build and install commands, runtimes, and related settings) | | | Set environment variables for a site (for example keys) | | | Push a new deployment…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Sites"
     ]
@@ -6324,7 +6346,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite Storage buckets and files with the Terraform provider, including file limits, extensions, compression, and security options.",
     "excerpt": "The resource manages Storage buckets in your Appwrite project: file size limits, allowed extensions, compression, image transformations, encryption, and optional antivirus. The resource uploads and manages **files** inside a bucket from a local path on the machine running Terraform. See the Terraform Registry for generated schemas: storage_bucket and storage_file. The provider repository contains source and examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a storage bucket | | | Upload and manage a file in…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Storage"
     ]
@@ -6335,7 +6357,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Register Appwrite webhooks with Terraform to deliver events to your HTTP endpoints.",
     "excerpt": "The resource registers a **URL** and **event** subscriptions so Appwrite can notify your services when resources change. Configure **** for TLS verification on the webhook URL, **** and **** when your endpoint expects HTTP basic authentication, and read **** from Terraform state when you verify **incoming** webhook signatures on your server. See the Terraform Registry: webhook. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Register a webhook URL and subscribe to…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Webhooks"
     ]

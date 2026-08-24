@@ -55,6 +55,8 @@ Behavior:
 
 Challenged requests appear in [traffic overview](/docs/products/firewall/monitor) under the **Challenged** series.
 
+To challenge **every** visitor to a site without building a rule by hand, use [Attack mode](/docs/products/firewall/attack-mode).
+
 # Rate limit {% #rate-limit %}
 
 Rate limit throttles matching requests that exceed a quota. The quota is counted **per bucket key, per rule, per project**, where the key is either the client IP or the authenticated user (see **Limit by** below).

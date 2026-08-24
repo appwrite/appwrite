@@ -26,6 +26,7 @@ import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
 import { patchMessagingProvider } from '@/lib/messaging/patch-messaging-provider'
+import { AwsSesRegionSelect } from '../../_components/AwsSesRegionSelect'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 
@@ -119,6 +120,9 @@ export function View({
   const [fromName, setFromName] = useState('')
   const [replyToEmail, setReplyToEmail] = useState('')
   const [replyToName, setReplyToName] = useState('')
+  const [sesAccessKey, setSesAccessKey] = useState('')
+  const [sesSecretKey, setSesSecretKey] = useState('')
+  const [sesRegion, setSesRegion] = useState('')
 
   const [smsCredentialsJson, setSmsCredentialsJson] = useState('{}')
   const [smsOptionsJson, setSmsOptionsJson] = useState('{}')
@@ -140,6 +144,18 @@ export function View({
       setFromName(provider.options?.fromName || '')
       setReplyToEmail(provider.options?.replyToEmail || '')
       setReplyToName(provider.options?.replyToName || '')
+      if (provider.provider === 'ses') {
+        const credentials = provider.credentials ?? {}
+        setSesAccessKey(
+          typeof credentials.accessKey === 'string' ? credentials.accessKey : '',
+        )
+        setSesSecretKey(
+          typeof credentials.secretKey === 'string' ? credentials.secretKey : '',
+        )
+        setSesRegion(
+          typeof credentials.region === 'string' ? credentials.region : '',
+        )
+      }
     } else if (provider.type === 'sms') {
       setSmsCredentialsJson(formatJsonConfig(provider.credentials))
       setSmsOptionsJson(formatJsonConfig(provider.options))
@@ -178,11 +194,18 @@ export function View({
     if (!provider) return false
     if (provider.type === 'email') {
       const o = provider.options
-      return (
+      const emailChanged =
         fromEmail.trim() !== (o?.fromEmail || '').trim() ||
         fromName.trim() !== (o?.fromName || '').trim() ||
         replyToEmail.trim() !== (o?.replyToEmail || '').trim() ||
         replyToName.trim() !== (o?.replyToName || '').trim()
+      if (provider.provider !== 'ses') return emailChanged
+      const c = provider.credentials ?? {}
+      return (
+        emailChanged ||
+        sesAccessKey !== (typeof c.accessKey === 'string' ? c.accessKey : '') ||
+        sesSecretKey !== (typeof c.secretKey === 'string' ? c.secretKey : '') ||
+        sesRegion !== (typeof c.region === 'string' ? c.region : '')
       )
     }
     if (provider.type === 'sms') {
@@ -216,6 +239,9 @@ export function View({
     fromName,
     replyToEmail,
     replyToName,
+    sesAccessKey,
+    sesSecretKey,
+    sesRegion,
     smsCredentialsJson,
     smsOptionsJson,
     fcmServiceAccountJson,
@@ -229,8 +255,17 @@ export function View({
     if (!provider || !projectId || !providerId) return
 
     if (provider.type === 'email') {
+      const credentials =
+        provider.provider === 'ses'
+          ? {
+              ...((provider.credentials ?? {}) as Record<string, unknown>),
+              accessKey: sesAccessKey.trim() || undefined,
+              secretKey: sesSecretKey.trim() || undefined,
+              region: sesRegion.trim() || undefined,
+            }
+          : ((provider.credentials ?? {}) as Record<string, unknown>)
       updateSettingsMutation.mutate({
-        credentials: (provider.credentials ?? {}) as Record<string, unknown>,
+        credentials,
         fromEmail: fromEmail.trim(),
         fromName: fromName.trim(),
         replyToEmail: replyToEmail.trim(),
@@ -652,6 +687,60 @@ export function View({
                         placeholder={t('Reply Name')}
                       />
                     </div>
+                    {provider.provider === 'ses' && (
+                      <>
+                        <div>
+                          <Label
+                            htmlFor="ses-access-key"
+                            className="text-[13px] font-medium text-foreground"
+                          >
+                            {t('Access key')}
+                          </Label>
+                          <Input
+                            id="ses-access-key"
+                            value={sesAccessKey}
+                            onChange={(e) => setSesAccessKey(e.target.value)}
+                            className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                            autoComplete="off"
+                          />
+                        </div>
+                        <div>
+                          <Label
+                            htmlFor="ses-secret-key"
+                            className="text-[13px] font-medium text-foreground"
+                          >
+                            {t('Secret key')}
+                          </Label>
+                          <Input
+                            id="ses-secret-key"
+                            type="password"
+                            value={sesSecretKey}
+                            onChange={(e) => setSesSecretKey(e.target.value)}
+                            className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                            autoComplete="new-password"
+                          />
+                        </div>
+                        <div>
+                          <Label
+                            htmlFor="ses-region"
+                            className="text-[13px] font-medium text-foreground"
+                          >
+                            {t('Region')}
+                          </Label>
+                          <AwsSesRegionSelect
+                            id="ses-region"
+                            value={sesRegion}
+                            onValueChange={setSesRegion}
+                            className="mt-1.5 border-border bg-background text-[13px] text-foreground"
+                          />
+                          <p className="text-[12px] text-muted-foreground mt-1">
+                            {t(
+                              'Select the AWS region of your verified SES identity.',
+                            )}
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
                 {provider.type === 'sms' && (

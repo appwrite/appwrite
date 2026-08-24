@@ -168,6 +168,7 @@ const COVER_BUILT_IN_ICON_CATEGORY_ICONS: Record<string, string[]> = {
     'textmagic.svg',
     'telesign.svg',
     'resend.svg',
+    'amazon.svg',
     'slack.svg',
     'whatsapp.svg',
     'telegram.svg',

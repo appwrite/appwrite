@@ -1,0 +1,40 @@
+---
+layout: article
+title: Attack mode
+description: Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.
+---
+
+**Attack mode** is a one-click challenge for a [site](/docs/products/sites) you are viewing in Firewall. Use it when you need to put a proof-of-work challenge in front of all visitors quickly, for example during a traffic spike or abuse incident.
+
+Attack mode is available only for **Sites**. It does not apply to the project API or to Functions.
+
+# Turn it on {% #turn-it-on %}
+
+1. Open **Firewall** in your project.
+2. Select the site you want to protect.
+3. Click **Attack mode**.
+4. Confirm **Turn on**.
+
+Appwrite creates (or re-enables) a **Challenge** rule named **Attack mode** that matches every request for that site. The rule uses priority `0`, so it is evaluated before the create-wizard default of `100`.
+
+Visitors must pass a challenge before the request continues. Challenged traffic appears in [traffic overview](/docs/products/firewall/monitor) under the **Challenged** series.
+
+# Allowlists {% #allowlists %}
+
+[Bypass](/docs/products/firewall/actions#bypass) rules with a **lower** priority number (negative values) still run first and can allowlist trusted traffic. Bypass rules at `10` or higher are evaluated after Attack mode, so they do not skip the challenge while Attack mode is on.
+
+To keep an allowlist during Attack mode, give those bypass rules a negative priority.
+
+# Turn it off {% #turn-it-off %}
+
+Click **Attack mode** again, or **Turn off** on the warning banner, and confirm. Appwrite **disables** the Attack mode rule. It stays in the project (and still counts toward [plan limits](/docs/products/firewall/rules#plan-limits)) so you can turn it back on without creating a new rule.
+
+Your other Firewall rules stay in place.
+
+# Plan limits {% #plan-limits %}
+
+Turning Attack mode on for the first time **creates** a rule. If the project is already at its Firewall rule limit, create a slot by [deleting a rule](/docs/products/firewall/delete) or [upgrade your plan](/docs/advanced/platform/billing) before you can turn Attack mode on.
+
+{% arrow_link href="/docs/products/firewall/actions#challenge" %}
+Challenge action
+{% /arrow_link %}

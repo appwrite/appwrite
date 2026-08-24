@@ -11,6 +11,7 @@
  */
 
 import { USER_PREFS_KEY_COVER_GENERATIONS } from '@/lib/cover-generator/cover-generation-prefs'
+import { USER_PREFS_KEY_FIREWALL_LAST_RESOURCE_PREFIX } from '@/lib/firewall/last-resource'
 import { USER_PREFS_KEY_DIAGRAM_GENERATIONS } from '@/lib/diagram-generator/generation-prefs'
 import { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
 import { INIT_TICKET_PREFS_KEY_PREFIX } from '@/lib/init/ticket-prefs'
@@ -118,6 +119,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
     description: 'Dismissed coming-soon feature IDs (comma-separated).',
     category: 'Account',
+  },
+  {
+    id: 'firewallLastResource',
+    scope: 'account',
+    prefix: USER_PREFS_KEY_FIREWALL_LAST_RESOURCE_PREFIX,
+    description: 'Last Firewall resource managed per project (JSON).',
+    category: 'Firewall',
   },
 
   // Layout / chrome

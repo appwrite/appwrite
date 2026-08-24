@@ -950,8 +950,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'שלחו קודי OTP, עדכוני משלוח והתראות מחוץ לאפליקציה דרך Twilio, Vonage, MSG91, Telesign, Textmagic וספקי SMS נוספים.',
   'Send realtime alerts to signed-in users without leaving your application experience.': 'שלחו התראות בזמן אמת למשתמשים מחוברים בלי לצאת מחוויית האפליקציה.',
   'Send receipt, update inventory, and notify fulfillment': 'שלחו קבלה, עדכנו מלאי והודיעו למערך האספקה',
-  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, SMTP, and other email providers.':
-    'שלחו קבלות, סיכומים ודואר טרנזקציוני דרך SendGrid, Mailgun, SMTP וספקי אימייל נוספים.',
+  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, Amazon SES, SMTP, and other email providers.':
+    'שלחו קבלות, סיכומים ודואר טרנזקציוני דרך SendGrid, Mailgun, Amazon SES, SMTP וספקי אימייל נוספים.',
   'Series A': 'סבב Series A',
   'Series A coverage': 'סיקור ה-Series A',
   'Serve WebP or AVIF without storing duplicate files.': 'הגישו WebP או AVIF בלי לאחסן קבצים כפולים.',

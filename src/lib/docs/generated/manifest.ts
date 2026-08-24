@@ -2653,6 +2653,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 7
   },
   {
+    "slug": "products/firewall/attack-mode",
+    "title": "Attack mode",
+    "description": "Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "products/firewall/conditions",
     "title": "Conditions",
     "description": "Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.",
@@ -2903,6 +2910,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Send emails to your Appwrite users using SendGrid and Appwrite Messaging.",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/messaging/ses",
+    "title": "Amazon SES",
+    "description": "Send emails to your Appwrite users using Amazon SES and Appwrite Messaging.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/messaging/smtp",

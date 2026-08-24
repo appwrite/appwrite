@@ -1166,7 +1166,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Run Enterprise on fully managed Appwrite Cloud or as a premium self-hosted edition in your environment.': 'Enterpriseは、フルマネージドのAppwrite Cloud上で実行するか、環境内のプレミアムセルフホスト版として実行できます。',
   'Search 160+ TLDs with live pricing and private WHOIS. Manage DNS, connect Sites, Functions, or custom API domains, and provision TLS without leaving Appwrite.': 'リアルタイム料金とプライベートWHOISで160以上のTLDを検索。Appwriteを離れることなく、DNSの管理、Sites、Functions、カスタムAPIドメインの接続、TLSのプロビジョニングができます。',
   'Send OTP codes, delivery updates, and alerts outside your app through Twilio, Vonage, MSG91, Telesign, Textmagic, and other SMS vendors.': 'Twilio、Vonage、MSG91、Telesign、Textmagicなどの各種SMSベンダーを通じて、OTPコード、配送状況の更新、アラートをアプリの外に送信。',
-  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, SMTP, and other email providers.': 'SendGrid、Mailgun、SMTPなどの各種メールプロバイダーを通じて、領収書、ダイジェスト、トランザクションメールを送信。',
+  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, Amazon SES, SMTP, and other email providers.': 'SendGrid、Mailgun、Amazon SES、SMTPなどの各種メールプロバイダーを通じて、領収書、ダイジェスト、トランザクションメールを送信。',
   'Ship production features without stitching together multiple vendors or maintaining custom backend infrastructure.': '複数のベンダーをつなぎ合わせたり、カスタムのバックエンドインフラを維持したりすることなく、本番機能をリリース。',
   "Should you require further assistance or have specific needs beyond what's presented on this page, please don't hesitate to": 'このページに記載されている内容を超えて追加のサポートや特別なニーズがある場合は、お気軽に',
   'Socialaize runs hundreds of thousands of function executions per day on Cloud': 'SocialaizeはCloudで1日に数十万件のFunction実行を処理',

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ConditionsBuilder } from './ConditionsBuilder'
+import { PriorityHint } from './PriorityHint'
 import { FunctionSelector } from '@/components/global/shared/FunctionSelector'
 import { SiteSelector } from '@/components/global/shared/SiteSelector'
 import { RuleImpactPreview } from './RuleImpactPreview'
@@ -438,8 +439,12 @@ export function UpdateRule({
               />
 
               <div className="space-y-2">
-                <Label htmlFor="update-firewall-priority">
+                <Label
+                  htmlFor="update-firewall-priority"
+                  className="inline-flex items-center gap-1.5"
+                >
                   {t('Priority')}
+                  <PriorityHint />
                 </Label>
                 <Input
                   id="update-firewall-priority"
@@ -449,9 +454,6 @@ export function UpdateRule({
                   onChange={(e) => setPriority(Number(e.target.value) || 0)}
                   disabled={updateMutation.isPending}
                 />
-                <p className="text-[12px] text-muted-foreground">
-                  {t('Lower numbers are evaluated first.')}
-                </p>
               </div>
 
               <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">

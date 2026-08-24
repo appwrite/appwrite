@@ -459,6 +459,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/firewall/monitor',
           },
           {
+            label: 'Attack mode',
+            href: '/docs/products/firewall/attack-mode',
+          },
+          {
             label: 'Delete a rule',
             href: '/docs/products/firewall/delete',
           },

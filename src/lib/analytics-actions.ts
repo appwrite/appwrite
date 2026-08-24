@@ -215,6 +215,7 @@ export const ANALYTICS_ACTIONS = {
   'add-project-domain': 'Add Project Domain Clicked',
   'add-platform': 'Add Platform Clicked',
   'create-firewall-rule': 'Create Firewall Rule Clicked',
+  'firewall-attack-mode': 'Firewall Attack Mode Clicked',
   'buy-domain': 'Buy Domain Clicked',
   'add-org-domain': 'Add Org Domain Clicked',
   'create-dns-record': 'Create DNS Record Clicked',
