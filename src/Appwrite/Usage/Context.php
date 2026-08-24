@@ -240,6 +240,10 @@ class Context
 
     public function fillMissingResource(string $resourceType, string $resourceId, string $resourceInternalId): static
     {
+        $this->setResourceType($resourceType);
+        $this->setResourceId($resourceId);
+        $this->setResourceInternalId($resourceInternalId);
+
         foreach ($this->metrics as $index => $metric) {
             if (($metric['resourceType'] ?? '') === '') {
                 $this->metrics[$index]['resourceType'] = $resourceType;
