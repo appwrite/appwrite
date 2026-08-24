@@ -1480,4 +1480,83 @@ export const heMarketingDictionary: Record<string, string> = {
   'Create and share your first link': 'צרו ושתפו את הקישור הראשון',
   'Generate an invite link for each campaign or channel. Signups stay attributed for 180 days, and you earn $15 when a referral upgrades to Pro.':
     'צרו קישור הזמנה לכל קמפיין או ערוץ. הרשמות מיוחסות למשך 180 ימים, ואתם מרוויחים 15$ כשמופנה משדרג ל-Pro.',
+  'A skill loads first, then MCP tools fetch live Auth and Functions data.':
+    'Skill נטען קודם, ואז כלי MCP שולפים נתוני Auth ו-Functions חיים.',
+  'Agents call Appwrite MCP and Skills from the same composer you already use.': // pragma: allowlist secret
+    'הסוכנים קוראים ל-MCP ול-Skills של Appwrite מאותו Composer שאתם כבר עובדים בו.',
+  'Ask to chart usage, scaffold auth, or query tables...':
+    'בקשו לשרטט שימוש, להקים auth או לשלוף טבלאות...',
+  'Artifact': 'Artifact',
+  'Auth is up 18% week over week. Functions executions followed the same curve after the Friday deploy.':
+    'Auth עלה ב-18% משבוע לשבוע. הרצות Functions עקבו אחרי אותה עקומה אחרי הפריסה ביום שישי.',
+  'Auth signups vs function executions': 'הרשמות Auth מול הרצות Functions',
+  "Chart this week's Auth signups against Functions executions":
+    'שרטטו את הרשמות ה-Auth השבוע מול הרצות Functions',
+  'Compare layouts': 'השוואת פריסות',
+  'Composer': 'Composer',
+  'Install Appwrite in Cursor, Claude Code, Codex, and other agents.': // pragma: allowlist secret
+    'התקינו את Appwrite ב-Cursor, Claude Code, Codex ובסוכנים אחרים.',
+  'MCP and Skills show up in the chat, complete with live Appwrite data and a usage chart.': // pragma: allowlist secret
+    'MCP ו-Skills מופיעים בצ׳אט, כולל נתוני Appwrite חיים ותרשים שימוש.',
+  'Query Postgres, chart traffic, and ship a campaign. Your agent does it on a live Appwrite project.': // pragma: allowlist secret
+    'שלפו מ-Postgres, שרטטו תעבורה ושלחו קמפיין. הסוכן מריץ את זה על פרויקט Appwrite אמיתי.',
+  'MCP docs': 'מסמכי MCP',
+  'Official plugin with MCP and Skills.': 'תוסף רשמי עם MCP ו-Skills.',
+  'Plugins and integrations': 'תוספים ואינטגרציות',
+  'Ran MCP': 'הרצת MCP',
+  'Rendered chart': 'תרשים הוצג',
+  'Skills docs': 'מסמכי Skills',
+  'Skills ready': 'Skills מוכנים',
+  'Spotlight': 'Spotlight',
+  'Steps': 'שלבים',
+  'Using skill': 'שימוש ב-Skill',
+  'Usage chart from Appwrite MCP': 'תרשים שימוש מ-Appwrite MCP',
+  'Weekly activity': 'פעילות שבועית',
+  'Workbench': 'Workbench',
+  'Agent chat with Appwrite MCP': 'צ׳אט סוכן עם Appwrite MCP',
+  "Query Postgres for Friday's new users. Did the launch convert?":
+    'שלפו מ-Postgres את המשתמשים החדשים מיום שישי. ההשקה המירה?',
+  '2,184 new accounts since Friday. Email verification is at 91%, so they are staying.':
+    '2,184 חשבונות חדשים מאז יום שישי. אימות האימייל עומד על 91%, כך שהם נשארים.',
+  'Show requests since Friday. Did the launch spike traffic?':
+    'הציגו את הבקשות מאז יום שישי. ההשקה הקפיצה את התעבורה?',
+  '184K requests since Friday, 3.2x Thursday. Traffic is holding through the weekend.':
+    '184K בקשות מאז יום שישי, פי 3.2 מיום חמישי. התעבורה מחזיקה לאורך סוף השבוע.',
+  'Queue a Messaging campaign for the 9% who have not verified yet.':
+    'תזמנו קמפיין Messaging ל-9% שעדיין לא אומתו.',
+  'Draft is ready for 187 unverified accounts, scheduled tomorrow at 9am.':
+    'הטיוטה מוכנה ל-187 חשבונות לא מאומתים, מתוזמנת למחר ב-9:00.',
+  'Ask to inspect logs, ship a campaign, or query tables...':
+    'בקשו לבדוק לוגים, לשלוח קמפיין או לשלוף טבלאות...',
+  '2,184 new rows in users since Friday. Email verification is at 91%. Opening the latest signups.':
+    '2,184 שורות חדשות ב-users מאז יום שישי. אימות האימייל עומד על 91%. פותחים את ההרשמות האחרונות.',
+  '2,184 rows since Friday': '2,184 שורות מאז יום שישי',
+  'Postgres': 'Postgres',
+  'Any failed executions from Friday?': 'יש הרצות שנכשלו ביום שישי?',
+  '12 executions timed out on cold start. The rest completed.':
+    '12 הרצות חרגו מזמן ב-cold start. השאר הושלמו.',
+  'Latest signups': 'ההרשמות האחרונות',
+  '2,184 accounts since Friday': '2,184 חשבונות מאז יום שישי',
+  'Friday executions': 'הרצות מיום שישי',
+  '12 timed out on cold start': '12 חרגו מזמן ב-cold start',
+  'Verify your account': 'אמתו את החשבון שלכם',
+  '187 unverified accounts': '187 חשבונות לא מאומתים',
+  'Audience': 'קהל',
+  'Unverified users': 'משתמשים לא מאומתים',
+  'Schedule': 'תזמון',
+  'Tomorrow, 9:00 AM': 'מחר, 9:00',
+  'Finish creating your account to keep your data and start building.':
+    'סיימו ליצור את החשבון כדי לשמור על הנתונים ולהתחיל לבנות.',
+  'Campaign': 'קמפיין',
+  'Upload this photo to a new Storage bucket.':
+    'העלו את התמונה הזו לבאקט Storage חדש.',
+  'Created the campaign-assets bucket and uploaded kittens.jpg.':
+    'יצרנו את הבאקט campaign-assets והעלינו את kittens.jpg.',
+  '1 file': 'קובץ אחד',
+  'Remote MCP': 'MCP מרוחק',
+  'Authorize Appwrite MCP': 'אישור Appwrite MCP',
+  'No API key needed. Sign in with OAuth.':
+    'אין צורך ב-API key. התחברו עם OAuth.',
+  'Allow access': 'אישור גישה',
+  'Authenticated with OAuth': 'מאומת עם OAuth',
 }

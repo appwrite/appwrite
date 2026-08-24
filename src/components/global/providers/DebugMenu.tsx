@@ -164,6 +164,20 @@ const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
 /** Debug menu stays English + LTR regardless of app language (developer tooling). */
 const DEBUG_MENU_LANGUAGE_COPY = getEnglishCatalog().app.debugMenu.language
 
+/** Scroll only the menu list. `scrollIntoView` also moves the document while the popover is still off-screen. */
+function scrollMenuItemIntoView(
+  container: HTMLElement,
+  element: HTMLElement,
+) {
+  const containerRect = container.getBoundingClientRect()
+  const elementRect = element.getBoundingClientRect()
+  if (elementRect.bottom > containerRect.bottom) {
+    container.scrollTop += elementRect.bottom - containerRect.bottom
+  } else if (elementRect.top < containerRect.top) {
+    container.scrollTop -= containerRect.top - elementRect.top
+  }
+}
+
 function DebugMenuBrandMark({ className }: { className?: string }) {
   return (
     <svg
@@ -2596,15 +2610,26 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     if (!isOpen) return
     const frame = window.requestAnimationFrame(() => {
       if (hasSearchField) {
-        searchInputRef.current?.focus()
+        searchInputRef.current?.focus({ preventScroll: true })
         return
       }
       if (!isPanelSubmenu) {
-        menuListRef.current?.focus()
+        menuListRef.current?.focus({ preventScroll: true })
       }
     })
     return () => window.cancelAnimationFrame(frame)
   }, [isOpen, activeSubmenu, hasSearchField, isPanelSubmenu])
+
+  const handleOpenAutoFocus = useCallback((event: Event) => {
+    event.preventDefault()
+    if (hasSearchField) {
+      searchInputRef.current?.focus({ preventScroll: true })
+      return
+    }
+    if (!isPanelSubmenu) {
+      menuListRef.current?.focus({ preventScroll: true })
+    }
+  }, [hasSearchField, isPanelSubmenu])
 
   useEffect(() => {
     if (highlightedIndex < 0) return
@@ -2613,7 +2638,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     const el = root.querySelector<HTMLElement>(
       `[data-debug-nav-index="${highlightedIndex}"]`,
     )
-    el?.scrollIntoView({ block: 'nearest' })
+    if (el) scrollMenuItemIntoView(root, el)
   }, [highlightedIndex, navigableIdsKey])
 
   const activateNavigableEntry = useCallback(
@@ -2844,6 +2869,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           collisionPadding={DEBUG_MENU_EDGE_OFFSET_PX}
           className={cn(
             'z-[10060] flex max-h-[min(85dvh,var(--radix-popper-available-height,100dvh))] flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-popover p-0 shadow-xl',
+            // Neutralize default popover zoom/slide (they grow from the trigger). Fade is unchanged.
+            '![--tw-enter-scale:1] ![--tw-exit-scale:1] ![--tw-enter-translate-x:0px] ![--tw-enter-translate-y:0px] ![--tw-exit-translate-x:0px] ![--tw-exit-translate-y:0px]',
             currentSubmenu?.submenuVariant === 'profileComparison' ||
               currentSubmenu?.submenuVariant === 'communityShareExamples' ||
               currentSubmenu?.submenuVariant === 'prefsDebug' ||
@@ -2861,6 +2888,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           onWheelCapture={(event) => {
             event.stopPropagation()
           }}
+          onOpenAutoFocus={handleOpenAutoFocus}
           onKeyDown={handleMenuKeyDown}
           onEscapeKeyDown={handleEscapeKeyDown}
         >
@@ -2905,7 +2933,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--network-globe-edge)]/60" />
                   <Input
                     ref={searchInputRef}
-                    autoFocus
                     role="combobox"
                     aria-expanded
                     aria-controls="debug-menu-listbox"

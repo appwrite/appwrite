@@ -1326,4 +1326,83 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Create and share your first link': '最初のリンクを作成して共有',
   'Generate an invite link for each campaign or channel. Signups stay attributed for 180 days, and you earn $15 when a referral upgrades to Pro.':
     'キャンペーンやチャネルごとに招待リンクを作成します。サインアップは 180 日間アトリビュートされ、紹介ユーザーが Pro にアップグレードすると $15 を獲得できます。',
+  'A skill loads first, then MCP tools fetch live Auth and Functions data.':
+    '最初に Skill を読み込み、その後 MCP ツールが Auth と Functions のライブデータを取得します。',
+  'Agents call Appwrite MCP and Skills from the same composer you already use.': // pragma: allowlist secret
+    'エージェントは、いつも使っている同じ Composer から Appwrite の MCP と Skills を呼び出します。',
+  'Ask to chart usage, scaffold auth, or query tables...':
+    '使用状況のチャート作成、Auth のスキャフォールド、テーブルの照会を依頼...',
+  'Artifact': 'Artifact',
+  'Auth is up 18% week over week. Functions executions followed the same curve after the Friday deploy.':
+    'Auth は前週比 18% 増加しています。Functions の実行数は金曜のデプロイ後に同じ曲線をたどりました。',
+  'Auth signups vs function executions': 'Auth の登録数と Functions の実行数',
+  "Chart this week's Auth signups against Functions executions":
+    '今週の Auth 登録数を Functions の実行数とグラフにして',
+  'Compare layouts': 'レイアウトを比較',
+  'Composer': 'Composer',
+  'Install Appwrite in Cursor, Claude Code, Codex, and other agents.': // pragma: allowlist secret
+    'Cursor、Claude Code、Codex、その他のエージェントに Appwrite をインストール。',
+  'MCP and Skills show up in the chat, complete with live Appwrite data and a usage chart.': // pragma: allowlist secret
+    'MCP と Skills がチャットに表示され、Appwrite のライブデータと使用状況チャートが揃います。',
+  'Query Postgres, chart traffic, and ship a campaign. Your agent does it on a live Appwrite project.': // pragma: allowlist secret
+    'Postgres の照会、トラフィックのチャート化、キャンペーンの配信。エージェントがライブの Appwrite プロジェクト上で実行します。',
+  'MCP docs': 'MCP ドキュメント',
+  'Official plugin with MCP and Skills.': 'MCP と Skills を含む公式プラグイン。',
+  'Plugins and integrations': 'プラグインとインテグレーション',
+  'Ran MCP': 'MCP を実行',
+  'Rendered chart': 'チャートを描画',
+  'Skills docs': 'Skills ドキュメント',
+  'Skills ready': 'Skills 準備完了',
+  'Spotlight': 'Spotlight',
+  'Steps': 'ステップ',
+  'Using skill': 'Skill を使用',
+  'Usage chart from Appwrite MCP': 'Appwrite MCP からの使用状況チャート',
+  'Weekly activity': '週間アクティビティ',
+  'Workbench': 'Workbench',
+  'Agent chat with Appwrite MCP': 'Appwrite MCP を使ったエージェントチャット',
+  "Query Postgres for Friday's new users. Did the launch convert?":
+    '金曜の新規ユーザーを Postgres から取得してください。ローンチはコンバージョンしましたか?',
+  '2,184 new accounts since Friday. Email verification is at 91%, so they are staying.':
+    '金曜以降、2,184件の新規アカウントです。メール認証は91%なので、定着しています。',
+  'Show requests since Friday. Did the launch spike traffic?':
+    '金曜以降のリクエストを表示して。ローンチでトラフィックは急増しましたか?',
+  '184K requests since Friday, 3.2x Thursday. Traffic is holding through the weekend.':
+    '金曜以降のリクエストは184Kで、木曜の3.2倍です。週末もトラフィックは維持されています。',
+  'Queue a Messaging campaign for the 9% who have not verified yet.':
+    'まだ認証していない9%向けに Messaging キャンペーンをキューに入れてください。',
+  'Draft is ready for 187 unverified accounts, scheduled tomorrow at 9am.':
+    '未認証の187アカウント向けの下書きが準備でき、明日9時に予約されています。',
+  'Ask to inspect logs, ship a campaign, or query tables...':
+    'ログの確認、キャンペーンの配信、テーブルの照会を依頼...',
+  '2,184 new rows in users since Friday. Email verification is at 91%. Opening the latest signups.':
+    '金曜以降、users に2,184件の新規行があります。メール認証は91%です。最新の登録を開きます。',
+  '2,184 rows since Friday': '金曜以降 2,184 行',
+  'Postgres': 'Postgres',
+  'Any failed executions from Friday?': '金曜に失敗した実行はありますか?',
+  '12 executions timed out on cold start. The rest completed.':
+    '12件の実行がコールドスタートでタイムアウトしました。残りは完了しています。',
+  'Latest signups': '最新の登録',
+  '2,184 accounts since Friday': '金曜以降 2,184 アカウント',
+  'Friday executions': '金曜の実行',
+  '12 timed out on cold start': 'コールドスタートで12件がタイムアウト',
+  'Verify your account': 'アカウントを確認',
+  '187 unverified accounts': '未確認の187アカウント',
+  'Audience': '対象',
+  'Unverified users': '未確認ユーザー',
+  'Schedule': 'スケジュール',
+  'Tomorrow, 9:00 AM': '明日 9:00',
+  'Finish creating your account to keep your data and start building.':
+    'データをを保持して構築を始めるには、アカウント作成を完了してください。',
+  'Campaign': 'キャンペーン',
+  'Upload this photo to a new Storage bucket.':
+    'この写真を新しい Storage バケットにアップロードしてください。',
+  'Created the campaign-assets bucket and uploaded kittens.jpg.':
+    'バケット campaign-assets を作成し、kittens.jpg をアップロードしました。',
+  '1 file': '1件のファイル',
+  'Remote MCP': 'リモート MCP',
+  'Authorize Appwrite MCP': 'Appwrite MCP を許可',
+  'No API key needed. Sign in with OAuth.':
+    'API キーは不要です。OAuth でサインインしてください。',
+  'Allow access': 'アクセスを許可',
+  'Authenticated with OAuth': 'OAuth で認証済み',
 }

@@ -280,7 +280,6 @@ export const enCatalog = {
       startProject: 'Start project',
       requestDemo: 'Request a demo',
       toolsHeading: 'Optimized for the frameworks, languages and agents you love',
-      aiDocsNavLabel: 'AI and MCP documentation',
       productsHeadingLineOne: 'All the services you need',
       productsHeadingLineTwo: 'in one platform',
       productsDescription:
@@ -288,11 +287,6 @@ export const enCatalog = {
       securityHeading: 'Embedded security across every layer of the architecture',
       securityDescription:
         'With a security-first approach, Appwrite helps keep products and users safe by default, making it easier to adhere to strict safety policies.', // pragma: allowlist secret
-      aiDocLinks: {
-        mcpServers: 'MCP servers',
-        skills: 'Appwrite Skills', // pragma: allowlist secret
-        aiArena: 'AI Arena',
-      },
       frameworkTools: {
         react: 'React',
         tanstackStart: 'TanStack Start',

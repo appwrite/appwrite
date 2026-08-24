@@ -297,7 +297,6 @@ export const jaCatalog: EnCatalog = {
       startProject: 'プロジェクトを開始',
       requestDemo: 'デモを依頼',
       toolsHeading: 'お気に入りのフレームワーク、言語、エージェント向けに最適化',
-      aiDocsNavLabel: 'AI と MCP ドキュメント',
       productsHeadingLineOne: '必要なサービスをすべて',
       productsHeadingLineTwo: '一つのプラットフォームに',
       productsDescription:
@@ -305,12 +304,6 @@ export const jaCatalog: EnCatalog = {
       securityHeading: 'アーキテクチャのすべてのレイヤーに組み込まれたセキュリティ',
       securityDescription:
         'セキュリティファーストのアプローチにより、Appwrite はプロダクトとユーザーをデフォルトで安全に保ち、厳格なポリシーへの準拠を容易にします。', // pragma: allowlist secret
-      aiDocLinks: {
-        ...enCatalog.website.home.aiDocLinks,
-        mcpServers: 'MCP サーバー',
-        skills: 'Appwrite Skills', // pragma: allowlist secret
-        aiArena: 'AI Arena',
-      },
       securityItems: {
         ...enCatalog.website.home.securityItems,
         ddosTitle: 'DDoS 保護',

@@ -296,7 +296,6 @@ export const heCatalog: EnCatalog = {
       startProject: 'התחילו פרויקט',
       requestDemo: 'בקשו דמו',
       toolsHeading: 'מותאם לפריימוורקים, לשפות ולסוכני ה-AI שאתם אוהבים',
-      aiDocsNavLabel: 'דוקומנטציית AI ו-MCP',
       productsHeadingLineOne: 'כל השירותים שאתם צריכים',
       productsHeadingLineTwo: 'בפלטפורמה אחת',
       productsDescription:
@@ -304,12 +303,6 @@ export const heCatalog: EnCatalog = {
       securityHeading: 'אבטחה מובנית בכל שכבות הארכיטקטורה',
       securityDescription:
         'עם גישה שמתחילה מאבטחה, Appwrite עוזרת לשמור על המוצר ועל המשתמשים בטוחים כברירת מחדל, ומקלה על עמידה במדיניות מחמירה.', // pragma: allowlist secret
-      aiDocLinks: {
-        ...enCatalog.website.home.aiDocLinks,
-        mcpServers: 'שרתי MCP',
-        skills: 'Appwrite Skills', // pragma: allowlist secret
-        aiArena: 'AI Arena',
-      },
       securityItems: {
         ...enCatalog.website.home.securityItems,
         ddosTitle: 'הגנת DDoS',

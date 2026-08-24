@@ -24,8 +24,7 @@ const COVER_SQUARE_FILL_ANCHORS: ReadonlyArray<{
 
 const COVER_SQUARE_FILL_OPACITY = {
   light: [0.14, 0.08, 0.045],
-  /** Matches dark-mono shade wash: strong 0.5, mid 0.2, plus a fainter step. */
-  dark: [0.5, 0.28, 0.14],
+  dark: [0.42, 0.3, 0.18],
 } as const
 
 export type CoverBackgroundSquareFill = {
@@ -48,14 +47,13 @@ function getCoverGridStroke(themeId: CoverThemeId): string {
 }
 
 function getCoverSquareAccentRgb(themeId: CoverThemeId): [number, number, number] {
-  if (getCoverTheme(themeId).family === 'dark') return getCoverBrandLightRgb('mono')
+  if (getCoverTheme(themeId).family === 'dark') return [255, 255, 255]
   return getCoverBrandLightRgb('pink')
 }
 
 function getCoverSquareGridStroke(themeId: CoverThemeId): string {
   if (getCoverTheme(themeId).family === 'dark') {
-    const [r, g, b] = getCoverBrandLightRgb('mono')
-    return rgba([r, g, b], 0.55)
+    return 'rgba(255, 255, 255, 0.07)'
   }
   return rgba(getCoverBrandLightRgb('pink'), 0.13)
 }
@@ -89,6 +87,7 @@ export function getCoverBackgroundSquareFills(
   const cell = getCoverSquareCellSize(width, height)
   const cols = Math.max(1, Math.ceil(width / cell))
   const rows = Math.max(1, Math.ceil(height / cell))
+  const family = getCoverTheme(themeId).family
   const accent = getCoverSquareAccentRgb(themeId)
   const used = new Set<string>()
   const fills: CoverBackgroundSquareFill[] = []
@@ -106,6 +105,34 @@ export function getCoverBackgroundSquareFills(
     })
   }
 
+  if (family === 'dark') {
+    const liftKeys = new Set<string>()
+    const markLift = (col: number, row: number) => {
+      if (col < 0 || row < 0 || col >= cols || row >= rows) return
+      liftKeys.add(`${col}:${row}`)
+    }
+
+    for (const anchor of COVER_SQUARE_FILL_ANCHORS) {
+      markLift(Math.round(anchor.u * (cols - 1)), Math.round(anchor.v * (rows - 1)))
+    }
+
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        if (hashCell(col, row) % 11 !== 0) continue
+        markLift(col, row)
+      }
+    }
+
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        if (liftKeys.has(`${col}:${row}`)) continue
+        addFill(col, row, ((hashCell(col, row) >>> 8) % 3) as 0 | 1 | 2)
+      }
+    }
+
+    return fills
+  }
+
   for (const anchor of COVER_SQUARE_FILL_ANCHORS) {
     addFill(Math.round(anchor.u * (cols - 1)), Math.round(anchor.v * (rows - 1)), anchor.strength)
   }
@@ -116,11 +143,8 @@ export function getCoverBackgroundSquareFills(
       const ny = (row + 0.5) / rows - 0.5
       const dist = Math.sqrt(nx * nx * 4 + ny * ny * 4)
       if (dist < 0.38) continue
-
-      const hash = hashCell(col, row)
-      if (hash % 71 !== 0) continue
-
-      addFill(col, row, ((hash >>> 8) % 3) as 0 | 1 | 2)
+      if (hashCell(col, row) % 71 !== 0) continue
+      addFill(col, row, ((hashCell(col, row) >>> 8) % 3) as 0 | 1 | 2)
     }
   }
 
