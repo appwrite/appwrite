@@ -1225,6 +1225,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_SITES_STREAMING',
+                'description' => 'Allows a site to send its response in chunks as the runtime produces it, so a progressively rendered page reaches the visitor before it has finished. By default, set to \'disabled\'. A streamed response is not compressed, so it reaches the visitor sooner but carries more bytes. Requires an executor that supports response format 0.12.0.',
+                'introduction' => '',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_SITES_RUNTIMES',
                 'description' => "This option allows you to enable or disable runtime environments for Sites. Disable unused runtimes to save disk space.\n\nTo enable cloud site runtimes, pass a list of enabled environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '1.7.0',

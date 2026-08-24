@@ -549,7 +549,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $streamed = null;
         $streamParts = [];
         $streamBody = '';
-        $canStreamResponse = $type === 'site' && !$isPreview;
+        $canStreamResponse = $type === 'site'
+            && !$isPreview
+            && System::getEnv('_APP_SITES_STREAMING', 'disabled') === 'enabled';
 
         $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView): void {
             if ($name !== 'body') {
