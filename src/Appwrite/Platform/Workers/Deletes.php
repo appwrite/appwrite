@@ -34,6 +34,7 @@ use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Usage\Tenant as UsageTenant;
@@ -150,6 +151,12 @@ class Deletes extends Action
             $this->purgeUsage($usageConnection, $tenants);
         } catch (Throwable $th) {
             Console::error('Failed to sweep usage tenants after delete: ' . $th->getMessage());
+            Span::add('usage.sweep.status', 'failure');
+            Span::add('usage.sweep.error', $th->getMessage());
+            Span::add('usage.sweep.exception', $th::class);
+            Span::add('usage.sweep.tenants', \implode(',', $tenants));
+            Span::add('usage.sweep.delete_type', $deleteMessage->type);
+            Span::add('project.id', $project->getId());
         }
     }
 
