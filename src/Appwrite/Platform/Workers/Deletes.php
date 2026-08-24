@@ -101,6 +101,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Device $deviceForCache,
+        Device $deviceForVideos,
         CertificatesAdapter $certificates,
         Executor $executor,
         string $executionRetention,
@@ -135,6 +136,7 @@ class Deletes extends Action
             $deviceForSites,
             $deviceForBuilds,
             $deviceForCache,
+            $deviceForVideos,
             $certificates,
             $executor,
             $executionRetention,
@@ -1095,6 +1097,13 @@ class Deletes extends Action
                 Console::error('Failed to delete videos storage directory: ' . $th->getMessage());
             }
 
+            try {
+                $deviceForVideosTmp = getDevice(APP_STORAGE_VIDEOS_TMP . '/app-' . $projectId);
+                $deviceForVideosTmp->delete($deviceForVideosTmp->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete videos temp storage directory: ' . $th->getMessage());
+            }
+
         } finally {
             $dbForProject->enableValidation();
         }
@@ -1927,6 +1936,13 @@ class Deletes extends Action
             $deviceForVideos->deletePath($document->getId());
         } catch (Throwable $th) {
             Console::error('Failed to delete video storage directory: ' . $th->getMessage());
+        }
+
+        try {
+            $deviceForVideosTmp = getDevice(APP_STORAGE_VIDEOS_TMP . '/app-' . $project->getId());
+            $deviceForVideosTmp->deletePath($document->getId());
+        } catch (Throwable $th) {
+            Console::error('Failed to delete video temp storage directory: ' . $th->getMessage());
         }
     }
 

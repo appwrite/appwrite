@@ -342,6 +342,7 @@ services:
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
       - appwrite-config:/storage/config:rw
       - appwrite-imports:/storage/imports:rw
     extra_hosts:
@@ -932,6 +933,7 @@ services:
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
@@ -1839,4 +1841,6 @@ volumes:
   appwrite-config: null
   appwrite-models: null
   appwrite-videos: null
+  # Scratch for source download + ffmpeg; swap this volume for block storage later.
+  appwrite-videos-tmp: null
   openruntimes-node-modules-cache: null

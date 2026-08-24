@@ -160,10 +160,10 @@ class Videos extends Action
         Device $deviceForVideos,
         VideoMessage $videoMessage
     ): void {
-        $workspace = $this->workspace();
+        $video = $videoMessage->video;
+        $workspace = $this->workspace($videoMessage->project->getId(), $video->getId());
 
         try {
-            $video = $videoMessage->video;
             Console::info('Videos worker: timeline started for video ' . $video->getId());
             $file = $this->resolveFile($dbForProject, $video->getAttribute('bucketId', ''), $video->getAttribute('fileId', ''));
             $inPath = $this->download($deviceForFiles, $file, $workspace['inDir']);
@@ -274,11 +274,10 @@ class Videos extends Action
             throw new \Exception('Missing subtitle in payload');
         }
 
-        $workspace = $this->workspace();
+        $video = $videoMessage->video;
+        $workspace = $this->workspace($videoMessage->project->getId(), $video->getId());
 
         try {
-            $video = $videoMessage->video;
-
             if (empty($video->getAttribute('duration'))) {
                 $sourceFile = $this->resolveFile(
                     $dbForProject,
@@ -366,7 +365,7 @@ class Videos extends Action
             throw new \Exception('Missing profile in payload');
         }
 
-        $workspace = $this->workspace();
+        $workspace = $this->workspace($videoMessage->project->getId(), $videoMessage->video->getId());
         $startedAt = \microtime(true);
         $storageBytes = 0;
         $output = $videoMessage->output !== ''
@@ -956,9 +955,10 @@ class Videos extends Action
     /**
      * @return array{basePath: string, inDir: string, outDir: string}
      */
-    private function workspace(): array
+    private function workspace(string $projectId, string $videoId): array
     {
-        $basePath = '/tmp/videos/' . \uniqid('', true);
+        $root = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/app-' . $projectId . '/' . $videoId;
+        $basePath = $root . '/' . \uniqid('', true);
         $inDir = $basePath . '/in/';
         $outDir = $basePath . '/out/';
 
@@ -978,7 +978,8 @@ class Videos extends Action
 
     private function cleanup(string $basePath): void
     {
-        if ($basePath === '' || !\str_starts_with($basePath, '/tmp/videos/')) {
+        $root = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+        if ($basePath === '' || !\str_starts_with($basePath, $root)) {
             return;
         }
 

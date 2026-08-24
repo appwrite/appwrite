@@ -56,6 +56,15 @@
       font-weight: 600;
     }
     button.secondary { background: transparent; color: #e8eaed; border-color: #2a3038; font-weight: 400; }
+    button.danger {
+      background: transparent;
+      color: #ff8e8e;
+      border-color: #5a2020;
+      font-weight: 400;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+    }
+    button.danger:hover { background: #301414; }
     button:disabled { opacity: 0.5; cursor: not-allowed; }
     .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
     .mono { font-family: ui-monospace, monospace; }
@@ -64,7 +73,7 @@
     .rows { display: grid; gap: 0.4rem; }
     .row {
       display: grid;
-      grid-template-columns: 1fr auto auto;
+      grid-template-columns: 1fr auto auto auto;
       gap: 0.75rem;
       align-items: center;
       font-size: 0.85rem;
@@ -158,6 +167,9 @@
     #sheetPanel h2 { margin-bottom: 0.5rem; }
     #sheet { max-width: 100%; border-radius: 8px; border: 1px solid #2a3038; }
     #status { font-family: ui-monospace, monospace; font-size: 0.85rem; opacity: 0.8; }
+    .manifests { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.8rem; }
+    .manifests a { color: #8ab4ff; }
+    .manifests a.selected { color: #fd366e; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -253,8 +265,10 @@
       <div class="actions">
         <button type="button" id="loadBtn" disabled>Load / watch</button>
         <button type="button" class="secondary" id="stopBtn" disabled>Stop polling</button>
+        <button type="button" class="danger" id="deleteVideoBtn" disabled>Delete video</button>
         <span class="mono muted" id="pollInfo">idle</span>
       </div>
+      <div class="manifests muted" id="manifestLinks">Set a video ID to see manifest URLs.</div>
       <div class="rows" id="statusRows">
         <div class="muted">Waiting for auth + video ID…</div>
       </div>
@@ -307,6 +321,7 @@
     const uploadProgress = $('uploadProgress');
     const uploadInfo = $('uploadInfo');
     const loadBtn = $('loadBtn');
+    const deleteVideoBtn = $('deleteVideoBtn');
     const stopBtn = $('stopBtn');
     const playbackSelect = $('playback');
 
@@ -413,6 +428,43 @@
 
     function persistConfig() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(config()));
+      renderManifestLinks();
+    }
+
+    const MANIFEST_MODES = [
+      { mode: 'hls', label: 'HLS' },
+      { mode: 'dash', label: 'DASH' },
+      { mode: 'cmaf-hls', label: 'CMAF HLS' },
+      { mode: 'cmaf-dash', label: 'CMAF DASH' },
+    ];
+
+    function manifestUrl(mode) {
+      const cfg = config();
+      if (!cfg.endpoint || !cfg.projectId || !cfg.videoId) return '';
+      try {
+        const url = new URL(cfg.endpoint + masterPath(cfg.videoId, mode));
+        url.searchParams.set('project', cfg.projectId);
+        return url.toString();
+      } catch {
+        return '';
+      }
+    }
+
+    function renderManifestLinks() {
+      const el = $('manifestLinks');
+      if (!el) return;
+      const cfg = config();
+      if (!cfg.videoId || !cfg.projectId) {
+        el.textContent = 'Set a video ID to see manifest URLs.';
+        return;
+      }
+      const selected = playbackMode();
+      el.innerHTML = MANIFEST_MODES.map(({ mode, label }) => {
+        const href = manifestUrl(mode);
+        if (!href) return '';
+        const cls = mode === selected ? 'selected' : '';
+        return `<a class="${cls}" href="${href}" target="_blank" rel="noopener">${label}</a>`;
+      }).join('');
     }
 
     /** Keep the watch form, localStorage, and URL query in sync with a new video id. */
@@ -461,6 +513,7 @@
       logoutBtn.disabled = false;
       loadBtn.disabled = false;
       uploadBtn.disabled = false;
+      deleteVideoBtn.disabled = false;
       createBucketBtn.disabled = false;
       uploadInfo.textContent = 'ready';
       persistConfig();
@@ -520,6 +573,7 @@
       logoutBtn.disabled = true;
       loadBtn.disabled = true;
       uploadBtn.disabled = true;
+      deleteVideoBtn.disabled = true;
       createBucketBtn.disabled = true;
       uploadInfo.textContent = 'authenticate first';
     });
@@ -579,6 +633,22 @@
         throw new Error(`${res.status} ${path}${responseBody ? `: ${responseBody.slice(0, 180)}` : ''}`);
       }
       return res.json();
+    }
+
+    async function apiDelete(path) {
+      await ensureJwt();
+      const res = await fetch(`${config().endpoint}${path}`, {
+        method: 'DELETE',
+        headers: { ...authHeaders(), Accept: 'application/json' },
+      });
+      if (res.status === 401) {
+        await mintJwt();
+        return apiDelete(path);
+      }
+      if (!res.ok && res.status !== 204) {
+        const body = await res.text().catch(() => '');
+        throw new Error(`${res.status} ${path}${body ? `: ${body.slice(0, 180)}` : ''}`);
+      }
     }
 
     async function createPublicBucket(apiKey) {
@@ -959,6 +1029,7 @@
               <span>${r.output || '?'} · ${r.name || r.$id}${hint}</span>
               <span>${progress}</span>
               ${badge(r.status)}
+              <button type="button" class="danger" data-action="delete-rendition" data-rendition="${r.$id}">Delete</button>
             </div>
           `);
         }
@@ -998,12 +1069,49 @@
         }
       } else if (action === 'rendition') {
         selectRendition(row.dataset.rendition);
+      } else if (action === 'delete-rendition') {
+        deleteRendition(row.dataset.rendition);
+      } else if (action === 'delete-video') {
+        deleteVideo();
       } else if (action === 'level') {
         selectLevel(Number(row.dataset.level));
       } else if (action === 'sprite') {
         toggleSpriteSheet();
       }
     });
+
+    async function deleteRendition(renditionId) {
+      const cfg = config();
+      if (!cfg.videoId || !renditionId) return;
+      statusEl.textContent = `Deleting rendition ${renditionId}…`;
+      try {
+        await apiDelete(`/videos/${cfg.videoId}/renditions/${renditionId}`);
+        if (hls || dashPlayer?.__renditionId === renditionId) {
+          destroyPlayer();
+        }
+        statusEl.textContent = `Deleted rendition ${renditionId}`;
+        await pollOnce();
+      } catch (err) {
+        statusEl.textContent = `Delete rendition failed: ${err.message}`;
+      }
+    }
+
+    async function deleteVideo() {
+      const cfg = config();
+      if (!cfg.videoId) return;
+      if (!confirm(`Delete video ${cfg.videoId} and all its renditions?`)) return;
+      statusEl.textContent = `Deleting video ${cfg.videoId}…`;
+      try {
+        await apiDelete(`/videos/${cfg.videoId}`);
+        stopPolling();
+        destroyPlayer();
+        setVideoId('');
+        statusRows.innerHTML = '<div class="muted">Video deleted.</div>';
+        statusEl.textContent = 'Video deleted';
+      } catch (err) {
+        statusEl.textContent = `Delete video failed: ${err.message}`;
+      }
+    }
 
     function selectLevel(level) {
       if (!hls) return;
@@ -1493,6 +1601,11 @@
 
     loadBtn.addEventListener('click', startPolling);
     stopBtn.addEventListener('click', stopPolling);
+    deleteVideoBtn.addEventListener('click', () => deleteVideo());
+    $('videoId').addEventListener('input', renderManifestLinks);
+    $('endpoint').addEventListener('input', renderManifestLinks);
+    $('projectId').addEventListener('input', renderManifestLinks);
+    renderManifestLinks();
 
     playbackSelect.addEventListener('change', async () => {
       persistConfig();
