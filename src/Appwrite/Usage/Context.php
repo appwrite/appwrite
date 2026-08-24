@@ -16,6 +16,8 @@ class Context
     protected string $resourceId = '';
     protected string $resourceInternalId = '';
     protected string $resourcePath = '';
+    protected string $teamId = '';
+    protected string $teamInternalId = '';
     protected string $country = '';
     protected string $region = '';
     protected string $hostname = '';
@@ -90,6 +92,18 @@ class Context
     public function getResourcePath(): string
     {
         return $this->resourcePath;
+    }
+
+    public function setTeamId(string $teamId): static
+    {
+        $this->teamId = $teamId;
+        return $this;
+    }
+
+    public function setTeamInternalId(string $teamInternalId): static
+    {
+        $this->teamInternalId = $teamInternalId;
+        return $this;
     }
 
     /**
@@ -183,6 +197,8 @@ class Context
             'resourceId' => $this->resourceId,
             'resourceInternalId' => $this->resourceInternalId,
             'resourcePath' => $this->resourcePath,
+            'teamId' => $this->teamId,
+            'teamInternalId' => $this->teamInternalId,
             'country' => $this->country,
             'region' => $this->region,
             'hostname' => $this->hostname,
@@ -251,6 +267,8 @@ class Context
         $this->resourceId = '';
         $this->resourceInternalId = '';
         $this->resourcePath = '';
+        $this->teamId = '';
+        $this->teamInternalId = '';
         $this->country = '';
         $this->region = '';
         $this->hostname = '';
