@@ -42,16 +42,8 @@ class V26 extends Migration
 
             switch ($id) {
                 case 'identities':
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'photoUrl');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"photoUrl\" in collection {$id}: {$th->getMessage()}");
-                    }
-                    try {
-                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_userId_photoUrl_updatedAt');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create index \"_key_userId_photoUrl_updatedAt\" from {$id}: {$th->getMessage()}");
-                    }
+                    $this->createAttributeFromCollection($this->dbForProject, $id, 'photoUrl');
+                    $this->createIndexFromCollection($this->dbForProject, $id, '_key_userId_photoUrl_updatedAt');
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
             }
