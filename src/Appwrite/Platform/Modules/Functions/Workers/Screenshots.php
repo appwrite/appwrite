@@ -241,7 +241,7 @@ class Screenshots extends Action
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
             $reason = $th->getMessage() === '' ? \get_class($th) : $th->getMessage();
-            $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed: {$reason} Deployment will continue. [0m\n");
+            $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. Reason: {$reason} [0m\n");
 
             $this->recordTelemetry($counter, 'failure');
 
