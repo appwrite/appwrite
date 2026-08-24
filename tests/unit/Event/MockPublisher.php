@@ -18,6 +18,15 @@ class MockPublisher implements Publisher
         return true;
     }
 
+    public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+    {
+        foreach ($payloads as $payload) {
+            $this->enqueue($queue, $payload, $priority);
+        }
+
+        return true;
+    }
+
     public function getEvents(string $queue)
     {
         return $this->events[$queue] ?? null;
