@@ -27,6 +27,8 @@ class Broker
     private const AUTH_CONTINUE = 0x18;
     private const AUTH_REAUTH = 0x19;
 
+    private const QOS_1 = 1;
+
     // Property identifiers, shared between CONNECT and AUTH property blocks.
     private const PROP_AUTH_METHOD = 0x15;
     private const PROP_AUTH_DATA = 0x16;
@@ -43,6 +45,9 @@ class Broker
 
     /** @var array<int, array<string, string>> fd => resolved identity (project/user ids) */
     private array $identity = [];
+
+    /** @var array<int, int> fd => last outbound packet id (QoS 1 delivery) */
+    private array $packetId = [];
 
     /**
      *
@@ -95,6 +100,7 @@ class Broker
             self::SUBSCRIBE => $this->handleSubscribe($server, $fd, $body),
             self::UNSUBSCRIBE => $this->handleUnsubscribe($server, $fd, $body),
             self::PUBLISH => $this->handlePublish($server, $fd, $flags, $body),
+            self::PUBACK => null,
             self::AUTH => $this->handleAuth($server, $fd, $body),
             self::PINGREQ => $server->send($fd, chr(self::PINGRESP << 4) . $this->encodeLength(0)),
             self::DISCONNECT => $server->close($fd),
@@ -197,7 +203,7 @@ class Broker
             [$filter, $offset] = $this->readString($body, $offset);
             $offset += 1; // subscription options byte
             $this->subscriptions[$fd][$filter] = true;
-            $granted .= chr(self::REASON_SUCCESS); // granted QoS 0
+            $granted .= chr(self::QOS_1); // granted max QoS 1
         }
 
         // SUBACK: packet id (+ property length 0 for v5) + granted codes
@@ -313,15 +319,28 @@ class Broker
         foreach ($this->subscriptions as $fd => $filters) {
             foreach ($filters as $filter => $_) {
                 if ($this->matches($filter, $topic)) {
+                    $packetId = $this->getNextPacketId($fd);
+                    // Variable header order: topic, packet id (QoS > 0), properties (v5), payload.
                     $variable = $this->encodeString($topic)
+                        . chr($packetId >> 8) . chr($packetId & 0xFF)
                         . (($this->protocol[$fd] ?? 4) >= 5 ? $this->encodeLength(0) : '')
                         . $payload;
-                    // PUBLISH, QoS 0
-                    $server->send($fd, chr(self::PUBLISH << 4) . $this->encodeLength(strlen($variable)) . $variable);
+                    // PUBLISH, QoS 1 (flags = QoS << 1)
+                    $header = chr((self::PUBLISH << 4) | (self::QOS_1 << 1));
+                    $server->send($fd, $header . $this->encodeLength(strlen($variable)) . $variable);
                     break; // one copy per subscriber even if several filters match
                 }
             }
         }
+    }
+
+    /** Next per-connection outbound packet id, wrapping 1..65535 (0 is not allowed). */
+    private function getNextPacketId(int $fd): int
+    {
+        $next = (($this->packetId[$fd] ?? 0) % 0xFFFF) + 1;
+        $this->packetId[$fd] = $next;
+
+        return $next;
     }
 
     private function onClose(Server $server, int $fd): void
@@ -331,6 +350,7 @@ class Broker
             $this->protocol[$fd],
             $this->project[$fd],
             $this->identity[$fd],
+            $this->packetId[$fd],
         );
     }
 
