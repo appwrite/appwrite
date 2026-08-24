@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Organization\Http\Projects;
 
+use Appwrite\Config\Regions;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\SDK\AuthType;
@@ -65,7 +66,7 @@ class Create extends Action
             ))
             ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
-            ->param('region', System::getEnv('_APP_REGION', 'default'), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true, enum: new Enum(name: 'Region'))
+            ->param('region', Regions::getDefaultRegionId(Config::getParam('regions', []), System::getEnv('_APP_REGION', 'default')), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true, enum: new Enum(name: 'Region'))
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('cache')
@@ -121,14 +122,23 @@ class Create extends Action
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        $databases = Config::getParam('pools-database', []);
+        $registeredPools = Config::getParam('pools-database', []);
 
         if ($region !== 'default') {
             $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
-            $keys = explode(',', $databaseKeys);
-            $databases = array_filter($keys, function ($value) use ($region) {
-                return str_contains($value, $region);
-            });
+            $keys = \array_values(\array_filter(\array_map('trim', \explode(',', $databaseKeys))));
+            $candidateKeys = Regions::filterPoolKeysForRegion($keys, $region);
+            // Only persist pool names that are actually registered from _APP_CONNECTIONS_DATABASE.
+            $databases = \array_values(\array_intersect($candidateKeys, $registeredPools));
+        } else {
+            $databases = $registeredPools;
+        }
+
+        if (empty($databases)) {
+            throw new Exception(
+                Exception::PROJECT_REGION_UNSUPPORTED,
+                'No registered database pool for region "' . $region . '". Check _APP_DATABASE_KEYS and _APP_CONNECTIONS_DATABASE.'
+            );
         }
 
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
@@ -136,7 +146,7 @@ class Create extends Action
         if ($index !== false) {
             $dsn = $databases[$index];
         } else {
-            $dsn = $databases[array_rand($databases)];
+            $dsn = $databases[\array_rand($databases)];
         }
 
         // TODO: Temporary until all projects are using shared tables.

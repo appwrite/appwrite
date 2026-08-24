@@ -228,6 +228,11 @@ services:
       - _APP_EXPERIMENT_LOGGING_PROVIDER
       - _APP_EXPERIMENT_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
       - _APP_DATABASE_SHARED_NAMESPACE
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_CUSTOM_DOMAIN_DENY_LIST
@@ -319,6 +324,11 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
       - _APP_POOL_ADAPTER=swoole
 
   appwrite-worker:
@@ -590,6 +600,11 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
       - _APP_CONSOLE_URL_SCHEME=root
   appwrite-worker-deletes:
     profiles:
@@ -659,6 +674,11 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
       - _APP_EMAIL_CERTIFICATES
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
@@ -706,6 +726,11 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
   appwrite-worker-builds:
     profiles:
       - separate
@@ -801,6 +826,11 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
       - _APP_DOMAIN_SITES
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
@@ -849,6 +879,11 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
     extra_hosts:
       - host.docker.internal:host-gateway
 
@@ -893,6 +928,11 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -966,6 +1006,11 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
 
   appwrite-worker-executions:
     profiles:
@@ -1053,6 +1098,11 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_LOGGING_PROVIDER
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
   appwrite-worker-mails:
     profiles:
       - separate
@@ -1099,6 +1149,11 @@ services:
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
 
   appwrite-worker-notifications:
     profiles:
@@ -1145,6 +1200,11 @@ services:
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
   appwrite-worker-messaging:
     profiles:
       - separate
@@ -1208,6 +1268,11 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
   appwrite-worker-migrations:
     profiles:
       - separate
@@ -1256,6 +1321,11 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_MIGRATION_HOST
   appwrite-task-maintenance:
@@ -1308,6 +1378,11 @@ services:
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_MAINTENANCE_START_TIME
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
   appwrite-task-interval:
     entrypoint: interval
     restart: unless-stopped
@@ -1348,6 +1423,11 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
       - _APP_INTERVAL_DOMAIN_VERIFICATION
       - _APP_INTERVAL_CLEANUP_STALE_EXECUTIONS
 
@@ -1394,6 +1474,11 @@ services:
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
   appwrite-task-scheduler-executions:
     profiles:
       - separate
@@ -1436,6 +1521,11 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
   appwrite-task-scheduler-messages:
     profiles:
       - separate
@@ -1471,6 +1561,11 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_REGION
+      - _APP_REGIONS
+      - _APP_PROJECT_REGIONS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_KEYS
   appwrite-assistant:
     container_name: appwrite-assistant
     image: appwrite/assistant:0.8.4
