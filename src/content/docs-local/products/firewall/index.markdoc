@@ -23,6 +23,8 @@ Each Firewall rule combines four ideas:
 
 Disabled rules stay in your project and still count toward plan limits, but they are not evaluated.
 
+For a deployed site, you can turn on [Attack mode](/docs/products/firewall/attack-mode) to challenge every visitor with one click instead of building a catch-all challenge rule by hand.
+
 # Console access {% #console-access %}
 
 Firewall does not block you in the Appwrite Console. You can keep managing your project, including Firewall rules, even when deny or rate limit rules are enabled for client or API key traffic.
@@ -93,6 +95,6 @@ Edge routing, TLS, DDoS mitigation, and other network-layer protections.
 HTTP-triggered serverless functions you can scope Firewall rules to.
 {% /cards_item %}
 {% cards_item href="/docs/products/sites" title="Sites" %}
-Deployed web apps you can protect with site-scoped Firewall rules.
+Deployed web apps you can protect with site-scoped Firewall rules, including [Attack mode](/docs/products/firewall/attack-mode).
 {% /cards_item %}
 {% /cards %}

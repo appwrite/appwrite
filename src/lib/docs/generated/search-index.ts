@@ -4143,7 +4143,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/firewall/attack-mode",
     "title": "Attack mode",
     "description": "Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.",
-    "excerpt": "**Attack mode** is a one-click challenge for a site you are viewing in Firewall. Use it when you need to put a proof-of-work challenge in front of all visitors quickly, for example during a traffic spike or abuse incident. Attack mode is available only for Sites. It does not apply to the project API or to Functions. Turn it on 1. Open **Firewall** in your project.…",
+    "excerpt": "**Attack mode** is a one-click challenge for a site you are viewing in Firewall. Use it when you need to put a proof-of-work challenge in front of all visitors quickly, for example during a traffic spike or abuse incident. Attack mode is available only for **Sites**. It does not apply to the project API or to Functions. Select a site in the Firewall resource picker to see the **Attack mode** button. Turn it on 1. Open **Firewall** in your project.…",
     "breadcrumbs": [
       "Firewall",
       "Guides",
@@ -4176,7 +4176,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/firewall/delete",
     "title": "Delete a rule",
     "description": "Remove an Appwrite Firewall rule from a project and understand the impact on traffic.",
-    "excerpt": "Deleting a Firewall rule removes it from the project permanently. Matching traffic is no longer affected by that rule. This action cannot be undone. Before you delete - Confirm no other process depends on the rule (for example an allowlist bypass that protects a broad deny). - Prefer **disable** from Update a rule if you only need to pause the policy temporarily. Disabled rules still count toward plan limits. - Note the rule's priority and conditions if you might recreate…",
+    "excerpt": "Deleting a Firewall rule removes it from the project permanently. Matching traffic is no longer affected by that rule. This action cannot be undone. Before you delete - Confirm no other process depends on the rule (for example an allowlist bypass that protects a broad deny). - Prefer **disable** from Update a rule if you only need to pause the policy temporarily. Disabled rules still count toward plan limits. - For the **Attack mode** rule on a site, turn Attack…",
     "breadcrumbs": [
       "Firewall",
       "Guides",
@@ -4552,8 +4552,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Amazon SES lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Amazon SES as a provider, navigate to **Messaging** > **Providers** > **Add provider**, then choose **Amazon SES** under Email. Give your provider a name and complete the configuration, then click **Create provider**. In the configuration step, you will need credentials from the AWS console…",
     "breadcrumbs": [
       "Messaging",
-      "Providers",
-      "Email with Amazon SES"
+      "Amazon SES"
     ]
   },
   {

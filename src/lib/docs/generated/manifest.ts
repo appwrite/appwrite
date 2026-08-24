@@ -2657,7 +2657,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Attack mode",
     "description": "Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/firewall/conditions",
@@ -2720,7 +2720,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Update a rule",
     "description": "Change an existing Appwrite Firewall rule's name, scope, conditions, action settings, priority, or enabled state.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/functions",

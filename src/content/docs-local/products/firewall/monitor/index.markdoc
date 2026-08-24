@@ -16,7 +16,7 @@ Series include:
 |--------|--------|---------|
 | **Passed** | Project request volume (`network.requests`) | Overall requests in the window (not a Firewall “allowed” counter) |
 | **Denied** | `waf.requests.denied` | Requests rejected by a deny action (`403`) |
-| **Challenged** | `waf.requests.challenged` | Requests challenged by a [challenge action](/docs/products/firewall/actions#challenge) |
+| **Challenged** | `waf.requests.challenged` | Requests challenged by a [challenge action](/docs/products/firewall/actions#challenge), including [Attack mode](/docs/products/firewall/attack-mode) on a site |
 | **Rate limited** | `waf.requests.rateLimited` | Requests throttled over a rate limit quota (`429`) |
 | **Redirected** | `waf.requests.redirected` | Requests answered with a redirect action |
 
