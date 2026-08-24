@@ -59,7 +59,6 @@ use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
-use Utopia\Usage\Usage;
 
 global $register;
 global $container;
@@ -193,8 +192,6 @@ $container->set('usageConnection', function () {
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_TTL', 180),
     );
 }, []);
-
-$container->set('dbForUsage', fn (UsageConnection $usageConnection): Usage => $usageConnection->getUsage(), ['usageConnection']);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,

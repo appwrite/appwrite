@@ -10,6 +10,11 @@ use Utopia\Usage\Usage;
 
 /**
  * Lifecycle-local connection to the shared OSS usage namespace.
+ *
+ * Self-hosted constructs this from enabled / DSN / HTTP client and lazily
+ * builds Usage. To attach an already-pooled Usage (one client, schema out
+ * of band), use Connection::fromUsage(). Callers that need the raw Utopia
+ * Usage object use getUsage(); do not register a second usage resource.
  */
 class Connection
 {
@@ -18,13 +23,28 @@ class Connection
     private ?Usage $usage = null;
     private bool $ready = false;
     private float $checkedAt = 0.0;
+    private bool $wrapped = false;
 
     public function __construct(
         private readonly bool $enabled,
         private readonly string $dsn,
-        private readonly ClientInterface $client,
+        private readonly ?ClientInterface $client = null,
         private readonly int $retention = 180,
     ) {
+    }
+
+    /**
+     * Wrap an already-built Usage instance. isEnabled and isReady are true;
+     * setup() does not run DDL.
+     */
+    public static function fromUsage(Usage $usage): self
+    {
+        $connection = new self(enabled: true, dsn: '');
+        $connection->usage = $usage;
+        $connection->wrapped = true;
+        $connection->ready = true;
+
+        return $connection;
     }
 
     public function isEnabled(): bool
@@ -44,6 +64,10 @@ class Connection
 
         if ($this->dsn === '') {
             throw new \RuntimeException('Usage database connection not configured (_APP_CONNECTIONS_DB_USAGE)');
+        }
+
+        if ($this->client === null) {
+            throw new \RuntimeException('Usage HTTP client is not configured');
         }
 
         try {
@@ -100,6 +124,10 @@ class Connection
 
     public function isReady(): bool
     {
+        if ($this->wrapped) {
+            return true;
+        }
+
         if (
             $this->ready
             && (microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS
@@ -115,6 +143,10 @@ class Connection
 
     public function setup(): void
     {
+        if ($this->wrapped) {
+            return;
+        }
+
         if ($this->enabled) {
             $this->ready = false;
             $this->checkedAt = 0.0;
