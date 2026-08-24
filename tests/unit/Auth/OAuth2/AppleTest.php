@@ -21,13 +21,14 @@ final class AppleTest extends TestCase
 
     public function testVerifyCredentialsSingleLinePem(): void
     {
-        // The console field example documents a single-line PEM, which OpenSSL
-        // alone cannot parse. It must be accepted.
+        // OpenSSL requires the PEM line breaks; a key pasted as a single line
+        // must be rejected with a clear error, not accepted quietly.
         $apple = new Apple('com.example.service', $this->secret($this->singleLine($this->privateKey())), 'https://example.com/callback');
 
-        $apple->verifyCredentials();
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('p8');
 
-        $this->expectNotToPerformAssertions();
+        $apple->verifyCredentials();
     }
 
     public function testVerifyCredentialsEscapedNewlines(): void
@@ -36,9 +37,10 @@ final class AppleTest extends TestCase
         $escaped = \str_replace("\n", '\\n', $this->privateKey());
         $apple = new Apple('com.example.service', $this->secret($escaped), 'https://example.com/callback');
 
-        $apple->verifyCredentials();
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('p8');
 
-        $this->expectNotToPerformAssertions();
+        $apple->verifyCredentials();
     }
 
     public function testVerifyCredentialsInvalidKey(): void
@@ -85,10 +87,9 @@ final class AppleTest extends TestCase
 
     public function testTokenRequestSendsSignedClientSecret(): void
     {
-        $pem = $this->privateKey();
         $clientSecret = null;
 
-        $apple = $this->createApple($this->secret($this->singleLine($pem)), function (string $payload) use (&$clientSecret): bool {
+        $apple = $this->createApple($this->secret($this->privateKey()), function (string $payload) use (&$clientSecret): bool {
             \parse_str($payload, $params);
             $clientSecret = $params['client_secret'] ?? null;
 

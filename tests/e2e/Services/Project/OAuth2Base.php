@@ -225,21 +225,17 @@ trait OAuth2Base
 
     public function testUpdateOAuth2AppleRoundTrip(): void
     {
-        // Single-line PEM, the format shown in the p8File field description.
         $resource = \openssl_pkey_new([
             'private_key_type' => OPENSSL_KEYTYPE_EC,
             'curve_name' => 'prime256v1',
         ]);
         \openssl_pkey_export($resource, $pem);
-        $p8 = '-----BEGIN PRIVATE KEY-----'
-            . \str_replace(['-----BEGIN PRIVATE KEY-----', '-----END PRIVATE KEY-----', "\n", "\r"], '', $pem)
-            . '-----END PRIVATE KEY-----';
 
         $update = $this->updateOAuth2('apple', [
             'serviceId' => 'ip.appwrite.app.web',
             'keyId' => 'P4000000N8',
             'teamId' => 'D4000000R6',
-            'p8File' => $p8,
+            'p8File' => $pem,
             'enabled' => true,
         ]);
 

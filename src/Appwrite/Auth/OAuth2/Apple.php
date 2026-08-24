@@ -206,10 +206,10 @@ class Apple extends OAuth2
             'sub' => $bundleID,
         ];
 
-        $pkey = \openssl_pkey_get_private($this->normalizePrivateKey($keyfile));
+        $pkey = \openssl_pkey_get_private($keyfile);
 
         if ($pkey === false) {
-            throw new Exception('Invalid Apple OAuth2 p8 private key. Make sure the value contains the full contents of the .p8 key file downloaded from the Apple Developer portal.');
+            throw new Exception('Invalid Apple OAuth2 p8 private key. Make sure the value contains the full contents of the .p8 key file downloaded from the Apple Developer portal, including the PEM markers and line breaks.');
         }
 
         $payload = $this->encode(\json_encode($headers)) . '.' . $this->encode(\json_encode($claims));
@@ -223,23 +223,6 @@ class Apple extends OAuth2
         }
 
         return $payload . '.' . $this->encode($this->fromDER($signature, 64));
-    }
-
-    /**
-     * Repair common console paste formats OpenSSL rejects: literal \n escapes
-     * and PEM armor with the base64 body on a single line.
-     */
-    protected function normalizePrivateKey(string $key): string
-    {
-        $key = \str_replace(['\\r\\n', '\\n', '\\r'], "\n", $key);
-
-        if (\preg_match('/-----BEGIN ([A-Z0-9 ]+)-----(.+?)-----END \1-----/s', $key, $matches)) {
-            $body = \preg_replace('/\s+/', '', $matches[2]);
-
-            return '-----BEGIN ' . $matches[1] . "-----\n" . \chunk_split($body, 64, "\n") . '-----END ' . $matches[1] . "-----\n";
-        }
-
-        return $key;
     }
 
     /**
