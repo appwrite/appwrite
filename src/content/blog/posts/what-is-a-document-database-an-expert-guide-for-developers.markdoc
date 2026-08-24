@@ -1,0 +1,143 @@
+---
+layout: post
+title: What is a document database? An expert guide for developers
+description: Learn what a document database is, how it stores flexible JSON documents, how it differs from relational databases, and when to use one, in this guide.
+date: 2026-07-15
+cover: /images/blog/what-is-a-document-database-an-expert-guide-for-developers/cover.avif
+timeToRead: 5
+author: aishwari
+category: architecture
+featured: false
+unlisted: true
+faqs:
+  - question: How is a document database different from a relational database?
+    answer: A relational database stores data in structured tables with a fixed schema and uses joins to connect records. A document database stores related data together in flexible documents that can have different structures.
+  - question: Is a document database a NoSQL database? 
+    answer: Yes. Document databases are a category of NoSQL databases designed to store and query flexible, semi-structured data such as JSON documents.
+  - question: Do document databases support relationships? 
+    answer: Yes. Document databases can model relationships by embedding related data inside a document or by storing references to other documents. The best approach depends on how the data is read and updated.
+  - question: When should you use a document database?
+    answer: Use a document database when your data is nested, varies between records, or changes frequently. It is commonly used for user profiles, product catalogs, content management systems, real-time apps, and AI applications.
+---
+
+Application data rarely stays as simple as a fixed set of columns. A user profile might gain new preferences, an order might contain nested items, and different records may need different fields over time. Relational databases handle this through structured schemas and normalized tables, but that structure can become cumbersome when the shape of your data changes frequently.
+
+Document databases take a different approach: they store related data together as flexible, JSON-like documents. This guide explains how the document model works, how it differs from relational databases, and when it is the right choice.
+
+## What is a document database?
+
+A **document database** is a type of NoSQL database that stores data as **documents**, usually in a JSON or JSON-like format, instead of in rigid tables with rows and columns. Each document is a self-contained record that holds its own fields, values, and nested structures.
+
+Because the structure lives inside each document rather than in a fixed table schema, you can store records with different shapes in the same place. One user document can have a `phone` field while another does not, and the database does not complain. This is the defining trait of the document model: **the schema is flexible and travels with the data**.
+
+Document databases are one of several NoSQL types, alongside key-value stores, wide-column stores, and graph databases. For a broader map of those options, see [SQL vs NoSQL: choosing the right database for your project](/blog/post/sql-vs-nosql).
+
+## How a document database stores data
+
+The document model has three building blocks: documents, collections, and fields.
+
+* **Documents** are the base unit. A document is a JSON object that represents a single record, such as one user, one order, or one blog post.
+* **Collections** are groups of related documents. A collection is roughly the document-database equivalent of a table, but without a rigid column definition every document must obey.
+* **Fields** are the key-value pairs inside a document. Values can be strings, numbers, booleans, arrays, or other nested objects.
+
+Here is what a single user document looks like:
+
+```json
+{
+  "id": "user_8f2a",
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "roles": ["admin", "editor"],
+  "address": {
+    "city": "London",
+    "country": "UK"
+  },
+  "lastLogin": "2026-07-14T09:20:00Z"
+}
+```
+
+In a relational database, this single record would likely be split across a `users` table, a `roles` join table, and an `addresses` table, then reassembled with JOINs at query time. In a document database, it is one read. The data is stored in the same shape your application code already uses, which removes much of the translation work an object-relational mapper (ORM) exists to handle.
+
+## How document databases differ from relational databases
+
+The core difference is where structure lives. In a **relational database**, the schema is defined up front at the table level and enforced on every row. In a **document database**, the structure lives inside each document and can vary between records.
+
+That single distinction drives most of the practical trade-offs.
+
+| Aspect            | Relational (SQL)                     | Document (NoSQL)                                         |
+| :---------------- | :----------------------------------- | :------------------------------------------------------- |
+| **Data format**   | Tables with rows and columns         | JSON-like documents                                      |
+| **Schema**        | Fixed, enforced, migration to change | Flexible, changes without downtime                       |
+| **Relationships** | JOINs across normalized tables       | References or embedded/nested data                       |
+| **Scaling**       | Typically vertical                   | Typically horizontal                                     |
+| **Consistency**   | Strong (ACID)                        | Often tunable, eventual by default in distributed setups |
+| **Best for**      | Complex queries, strict integrity    | Iteration speed, flexible shapes, scale                  |
+
+Relational databases follow **ACID** guarantees (Atomicity, Consistency, Isolation, Durability), which is why they remain the default for payments, ledgers, and any system where a partial write is unacceptable. Many distributed document databases instead lean toward **BASE** (Basically Available, Soft state, Eventually consistent), trading immediate consistency for availability and horizontal scale.
+
+Neither model is strictly better. For a deeper side-by-side, read [Document vs relational databases: finding the right fit for your project](/blog/post/document-vs-relational-databases-vibecoding).
+
+## Do document databases support relationships?
+
+Yes, but they handle them differently than SQL. A document database gives you two options: **embedding** and **referencing**.
+
+* **Embedding** nests related data inside the parent document, like the `address` object above. This makes reads fast because everything arrives in one query, and it fits data that is always accessed together.
+* **Referencing** stores an ID that points to another document, similar to a foreign key. You resolve the link with a second query or a built-in relationship feature.
+
+The rule of thumb: embed data that is read together and changes together, reference data that is shared or updated independently. Some document databases add first-class relationship support so you do not have to manage this by hand. See [simplify your data management with relationships](/blog/post/simplify-your-data-management-with-relationships) for how this works in practice.
+
+For very deep, many-table analytical JOINs across normalized data, a relational database is still the stronger tool. Most applications do not need that, but it is an honest limit of the model.
+
+## When to use a document database
+
+Reach for a document database when flexibility and iteration speed matter more than rigid structure. It is a strong fit when:
+
+* **Your data model is still evolving.** During early development, requirements change weekly. Adding a field to a document does not require a migration, so you can iterate without stopping to alter a schema.
+* **Records have varied or nested shapes.** User profiles, product catalogs, and CMS content rarely fit a uniform set of columns. The document model absorbs that variance naturally.
+* **You need to scale horizontally.** Document databases are built to partition data across servers, which suits high-volume reads and writes.
+* **You are building with AI.** Large language models emit JSON natively, and document databases store JSON natively. There is no translation layer between what an agent generates and what gets persisted, which is why many teams choose the document model for AI workloads. See [why NoSQL databases are a better fit for AI applications](/blog/post/why-nosql-databases-are-a-better-fit-for-ai-applications-than-relational-databases).
+
+Common real-world use cases include content management systems, user profiles, product catalogs, real-time chat, event logging, and IoT data streams.
+
+## When a relational database is the better choice
+
+Being direct about the trade-offs matters more than defending one model. A document database is the wrong default when:
+
+* **You need multi-record transactions with strict guarantees.** Financial systems, inventory ledgers, and booking systems depend on ACID transactions across records. Some document databases support transactions, but this is where relational databases were designed to excel.
+* **Your data is highly relational and stable.** If nearly every query joins many tables and the schema rarely changes, a relational model expresses that intent more cleanly.
+* **You rely on complex ad hoc analytical queries.** Reporting workloads with deep aggregations across normalized tables are a relational strength.
+
+A useful decision guide for the AI-specific version of this question is [choosing the right database for AI applications: when to use MongoDB](/blog/post/choosing-the-right-database-for-ai-applications-when-to-use-mongodb).
+
+## Popular document databases
+
+A few document databases dominate real-world usage:
+
+* [MongoDB](https://www.mongodb.com/docs/manual/) is the most widely used document database, known for its flexible querying and mature tooling.
+* [Amazon DynamoDB](https://docs.aws.amazon.com/dynamodb/) is a managed key-value and document store built for predictable low-latency access at scale.
+* [Apache CouchDB](https://docs.couchdb.org/) focuses on offline-first replication and sync.
+* * Appwrite DocumentsDB provides the document model with built-in permissions, queries, relationships, and realtime updates as part of the Appwrite backend platform.
+
+MongoDB consistently ranks as the most popular document database in the [DB-Engines ranking](https://db-engines.com/en/ranking), which tracks database popularity across search, job listings, and community signals.
+
+## How Appwrite implements the document model
+
+Appwrite DocumentsDB is a document database that stores data in collections of JSON-like documents. It combines the flexibility of the document model with built-in queries, relationships, permissions, and realtime updates.
+
+* [Queries](/docs/products/databases/queries) let you filter, sort, and paginate documents without writing raw query syntax. For a walkthrough, see [understand Appwrite queries](/blog/post/understand-data-queries).
+* [Relationships](/docs/products/databases/relationships) give you first-class one-to-many and many-to-many links between collections.
+* [Permissions](/docs/products/databases/permissions) are enforced at the document level, so access control is part of the data model rather than a separate layer.
+* **Realtime updates** push changes to connected clients as documents change, which fits chat, dashboards, and collaborative apps.
+
+Appwrite is also flexible about its storage engine. It originally shipped with MariaDB and, since version 1.9, supports MongoDB as the underlying database, while your application code talks to the same Databases API regardless. If you want to connect an external engine instead, see [integrate SQL, NoSQL, vector, graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project).
+
+## Getting started with Appwrite DocumentsDB
+
+Appwrite DocumentsDB is a good fit when your application data is flexible, nested, or still evolving. It gives you the document model along with built-in queries, relationships, permissions, and realtime updates.
+
+If you want to build with a document database while keeping these capabilities in the same backend, Appwrite DocumentsDB is designed for that kind of fast, iterative application development. Start with the [databases quick start](/docs/products/databases/quick-start), or read one of the guides below to go deeper.
+
+* [Document vs relational databases: finding the right fit for your project](/blog/post/document-vs-relational-databases-vibecoding)
+* [SQL vs NoSQL: choosing the right database for your project](/blog/post/sql-vs-nosql)
+* [Choosing the right database for AI applications: when to use MongoDB](/blog/post/choosing-the-right-database-for-ai-applications-when-to-use-mongodb)
+* [Integrate SQL, NoSQL, vector, graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project)

@@ -1,0 +1,166 @@
+---
+layout: post
+title: "What is OAuth? A beginner's guide"
+description: OAuth is an open standard that lets apps access user data from another application without sharing passwords. Learn how OAuth 2.0 works, its flows, and how to add it to your app.
+date: 2026-07-21
+cover: /images/blog/what-is-oauth-a-beginners-guide/cover.avif
+timeToRead: 5
+author: aishwari
+category: security
+featured: false
+unlisted: true
+faqs:
+  - question: What does OAuth stand for?
+    answer: OAuth stands for Open Authorization. It is commonly used to grant third-party applications limited access to user accounts and APIs.
+  - question: How does OAuth work?
+    answer: OAuth redirects the user to an authorization server, where they sign in and approve requested permissions. The client then receives an authorization code, exchanges it for a token, and uses that token to access an API.
+  - question: Is OAuth used for authentication or authorization?
+    answer: OAuth is primarily an authorization protocol. It controls what an application can access. OpenID Connect adds the authentication layer used for experiences such as “Sign in with Google.”
+  - question: What is an OAuth client?
+    answer: An OAuth client is the application requesting access to a user’s protected data. It redirects the user to the authorization server and uses the resulting token to call an API.
+---
+Every time you click "Sign in with Google" or let a new app read your GitHub repositories, you are using OAuth. You are also, quietly, avoiding a much worse alternative: handing that app your actual password.
+
+OAuth exists to solve one specific problem. An application needs access to your data on another service, but you should never have to give it your credentials to get that access. This post explains what OAuth is, how OAuth 2.0 works, what its flows look like, and how to add it to your own app without building the hard parts yourself.
+
+# What is OAuth?
+
+OAuth is an open standard for **delegated authorization**. It lets one application access a user's data on another application, with the user's permission, without the user ever sharing their password.
+
+The name stands for "Open Authorization". The version in use almost everywhere today is OAuth 2.0, defined in [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749). When people say "OAuth" in 2026, they almost always mean OAuth 2.0.
+
+Here is the core idea. Instead of giving an app your password, you give it a **token**. The token grants limited, revocable access to a specific set of your data, and nothing more. You can hand a photo-printing service permission to read your Google Photos without also giving it the ability to read your email, change your password, or delete your account.
+
+## Why OAuth exists
+
+Before OAuth, the common pattern was the "password anti-pattern". If a third-party app wanted to access your data on another service, you gave it your username and password for that service, and it logged in as you.
+
+That approach fails on every dimension that matters:
+
+- **The app sees your real password.** It can store it, leak it, or use it for anything.
+- **Access is all or nothing.** The app can do everything you can do, not just the one thing it needs.
+- **You cannot revoke access selectively.** The only way to cut off one app is to change your password, which breaks every other app too.
+- **There is no audit trail.** The service cannot tell your legitimate logins apart from the app acting on your behalf.
+
+OAuth was designed to fix all of this. Tokens are scoped, revocable, and traceable, and your password never leaves the service that owns it.
+
+# The four roles in OAuth
+
+OAuth defines four parties. Understanding them makes every flow easier to follow.
+
+- **Resource owner.** The user. You own the data and grant access to it.
+- **Client.** The application requesting access to your data, for example a photo-printing app.
+- **Authorization server.** The service that authenticates you and issues tokens, for example Google's login system.
+- **Resource server.** The API that holds your data and accepts tokens, for example the Google Photos API.
+
+In many products the authorization server and resource server are run by the same company, so you may only notice two parties: the app you are using and the service you are logging in with. If you want a deeper breakdown of the client and server sides, see [OAuth server vs. OAuth client](/blog/post/oauth-server-vs-oauth-client-what-is-the-difference).
+
+# How does OAuth work?
+
+OAuth works by exchanging a user's consent for a short-lived token, then using that token to make API requests. The user approves access once, and the app receives a credential it can present instead of a password.
+
+Here is the standard sequence, using "Sign in with Google" as the example:
+
+1. **The app requests authorization.** You click "Sign in with Google". The app redirects you to Google's authorization server, along with details about what it wants access to.
+2. **You authenticate and consent.** You log in to Google directly, on Google's own page, and approve the specific permissions the app is asking for.
+3. **Google returns an authorization code.** Google redirects you back to the app with a temporary code. Notice the app still has not seen your password.
+4. **The app exchanges the code for a token.** Behind the scenes, the app's server swaps the code with Google for an **access token**.
+5. **The app uses the token.** The app calls the resource server's API with the token attached, and gets only the data the token permits.
+
+The key detail is step two. You authenticate on the provider's page, not the app's. The app never touches your credentials at any point in the flow.
+
+## Access tokens and refresh tokens
+
+OAuth 2.0 uses two kinds of tokens, and the difference matters.
+
+- **Access token.** A short-lived credential the app sends with each API request. It usually expires within minutes to hours, which limits the damage if it leaks.
+- **Refresh token.** A longer-lived credential the app uses to get a new access token when the old one expires, without asking you to log in again.
+
+Short-lived access tokens plus refresh tokens are what let you stay signed in for weeks while keeping each individual credential low-risk.
+
+## Scopes
+
+A **scope** is a string that defines exactly what an access token is allowed to do. When an app requests authorization, it lists the scopes it needs, and the consent screen shows them to you in plain language.
+
+Scopes are how OAuth enforces least privilege. An app that only needs to read your profile should request a read-only profile scope, not full account access. As a user, the consent screen is your chance to check that an app is not asking for more than it should.
+
+# OAuth 2.0 flows explained
+
+OAuth 2.0 defines several **grant types**, often called flows. Each fits a different kind of client. Picking the right one is the main design decision when you implement OAuth.
+
+## Authorization code flow
+
+This is the default and most secure flow, used by web apps with a backend. The app receives a temporary authorization code in the browser, then exchanges it for tokens from its server, so the tokens never appear in the browser. This is the flow behind most "Sign in with..." buttons.
+
+## Authorization code flow with PKCE
+
+**PKCE** (Proof Key for Code Exchange, defined in [RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)) extends the authorization code flow for clients that cannot keep a secret, such as mobile apps and single-page apps. It adds a dynamically generated proof that ties the token exchange to the original request, blocking attackers who intercept the code. PKCE is now recommended for all clients, including those with a backend.
+
+## Client credentials flow
+
+This flow is for machine-to-machine access, where there is no user involved. A backend service authenticates as itself to access another service's API, using its own credentials rather than a user's consent.
+
+## Flows to avoid
+
+Two older flows are now discouraged:
+
+- **Implicit flow.** It returned tokens directly in the browser URL and is superseded by the authorization code flow with PKCE.
+- **Resource owner password credentials flow.** It required the user to give their password to the app, which defeats the entire purpose of OAuth. Avoid it.
+
+The [OAuth 2.0 Security Best Current Practice](https://datatracker.ietf.org/doc/html/rfc9700) formalizes this guidance. For new apps, use the authorization code flow with PKCE unless you have a specific reason not to.
+
+# OAuth vs. authentication: what OAuth is not
+
+OAuth is an **authorization** protocol, not an authentication protocol. This distinction trips up a lot of developers, so it is worth being direct about.
+
+- **Authentication** answers "who are you?"
+- **Authorization** answers "what are you allowed to do?"
+
+OAuth was built to answer the second question. It grants an app access to resources. It does not, on its own, verify identity in a standardized way.
+
+The protocol that adds a proper identity layer on top of OAuth 2.0 is **OpenID Connect (OIDC)**. When you "Sign in with Google" and the app learns who you are, OIDC is doing the identity part while OAuth handles the access. If your goal is user login, you want OAuth 2.0 with OpenID Connect, which is exactly what most providers give you out of the box.
+
+# How to add OAuth to your app
+
+You have two options: build an OAuth client yourself against each provider, or use an authentication service that wraps the flows for you.
+
+Building it yourself means registering an app with every provider, handling redirects, exchanging codes for tokens, storing and refreshing tokens securely, and keeping up with security best practices as they evolve. It is doable, but it is a lot of surface area to get right, and every mistake is a security bug.
+
+The faster path is to use a backend that implements the flows for you. [Appwrite Authentication](/docs/products/auth) supports [OAuth2 login](/docs/products/auth/oauth2) with more than 30 providers, including Google, GitHub, Apple, and Microsoft. You enable a provider in the console, add its credentials, and trigger the flow with a single SDK call. Appwrite handles the redirect, the token exchange, and session management.
+
+Here is what an OAuth2 login looks like with the Appwrite web SDK. Depending on your use case, you can start the flow with [`createOAuth2Session()`](/docs/references/cloud/client-web/account#createOAuth2Session) or [`createOAuth2Token()`](/docs/references/cloud/client-web/account#createOAuth2Token). The example below uses `createOAuth2Session()`.
+
+```client-web
+import { Client, Account, OAuthProvider } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Google,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed'
+});
+```
+
+That single call kicks off the authorization code flow, redirects the user to Google, and returns them to your app with an active session. For a full walkthrough with a real frontend, see [how to set up Google auth with Appwrite and React](/blog/post/set-up-google-auth-appwrite-react).
+
+OAuth is also just one of several login methods. Appwrite pairs it with [email and password](/docs/products/auth/email-password), [passwordless authentication](/blog/post/improve-ux-passwordless-auth), phone OTP, and MFA, so you can offer OAuth alongside whatever else your users expect.
+
+# Getting started with OAuth in Appwrite
+
+OAuth solves a problem you should not solve with passwords: letting an app act on a user's behalf without holding their credentials. Once you understand the four roles, the token exchange, and the flows, the protocol stops feeling mysterious and starts feeling like the obvious way to handle third-party access.
+
+You do not need to implement OAuth from scratch to use it well. Appwrite gives you production-ready OAuth2 login across 30-plus providers, secure session handling, and the other auth methods your app will eventually need, all behind one set of APIs. Create a project, enable a provider, and you can have "Sign in with Google" working in an afternoon.
+
+## Resources
+
+- [Appwrite Authentication docs](/docs/products/auth)
+- [OAuth2 login in Appwrite](/docs/products/auth/oauth2)
+- [Set up Google auth with Appwrite and React](/blog/post/set-up-google-auth-appwrite-react)
+- [OAuth server vs. OAuth client](/blog/post/oauth-server-vs-oauth-client-what-is-the-difference)
+- [Sign up for Appwrite Cloud](https://cloud.appwrite.io/register)
+- [Join the Appwrite Discord community](https://appwrite.io/discord)

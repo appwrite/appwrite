@@ -1,0 +1,145 @@
+---
+layout: post
+title: "OAuth server vs. OAuth client: What is the difference?"
+description: Learn the difference between an OAuth server and OAuth client, how each works, and the role they play in secure authorization flows.
+date: 2026-07-21
+cover: /images/blog/oauth-server-vs-oauth-client-what-is-the-difference/cover.avif
+timeToRead: 5
+author: aishwari
+category: comparisons
+featured: false
+unlisted: true
+faqs:
+  - question: What is the difference between an OAuth server and an OAuth client?
+    answer: An OAuth server authenticates users, collects consent, and issues access tokens. An OAuth client requests those tokens and uses them to access a protected API on the user’s behalf.
+  - question: Is an OAuth server the same as an authorization server?
+    answer: Usually, yes. The precise OAuth term is authorization server. People often use OAuth server more broadly to describe the authorization server and the protected resource server operated by the same provider.
+  - question: What is the difference between an authorization server and a resource server?
+    answer: The authorization server authenticates users and issues tokens. The resource server hosts the protected API or data and accepts valid access tokens before returning a resource.
+  - question: What does an OAuth server do?
+    answer: An OAuth server verifies the user’s identity, displays the consent screen, processes authorization requests, and issues access and refresh tokens. It may also validate, revoke, and rotate tokens.
+---
+Most developers never need to build an OAuth server. They need an OAuth client. But because the terms are often used interchangeably, it's easy to misunderstand which role your application actually plays. That confusion leads to incorrect architectures, unnecessary complexity, and security mistakes. This guide explains the difference, how the two work together, and how to know which one you're building.
+
+If you are adding "Sign in with Google" to your app, integrating a third-party API, or building a service other apps authenticate against, you need to know which role you are playing. This post breaks down what an OAuth server is, what an OAuth client is, how they interact, and how to decide which side you are building.
+
+# OAuth server vs. OAuth client: the short answer
+
+An **OAuth server** issues and validates access tokens. It authenticates the user, asks for their consent, and hands out tokens that grant access to protected resources. Google, GitHub, and Microsoft all run OAuth servers.
+
+An **OAuth client** is the application that wants access. It requests tokens from the OAuth server and uses them to call an API on the user's behalf. Your web app, mobile app, or backend service is the OAuth client.
+
+Put simply: the client asks for access, and the server decides whether to grant it. If you are consuming someone else's login or API, you are building an OAuth client. If you are the one letting other apps authenticate against your service, you are running an OAuth server.
+
+# The four roles in OAuth 2.0
+
+"Server" and "client" are shorthand. The [OAuth 2.0 specification](https://datatracker.ietf.org/doc/html/rfc6749) actually defines four roles, and understanding all four removes most of the ambiguity.
+
+* **Resource owner:** the user who owns the data and can grant access to it. When you let an app read your Google Calendar, you are the resource owner.
+* **Client:** the application requesting access to the resource owner's data. This is the "OAuth client."
+* **Authorization server:** the server that authenticates the resource owner and issues access tokens after consent. This is the core of the "OAuth server."
+* **Resource server:** the API that holds the protected data and accepts access tokens to serve it. In practice, the authorization server and resource server are often run by the same provider, which is why people collapse them into one term: the OAuth server.
+
+So when someone says "OAuth server," they usually mean the authorization server plus the resource server operated by a provider like Google. When they say "OAuth client," they mean the app you are building.
+
+# What is an OAuth server?
+
+An OAuth server (the authorization server) is responsible for the trust in the whole system. Its job is to verify who the user is, confirm what they are agreeing to share, and issue tokens that prove that grant.
+
+A typical OAuth server handles:
+
+* **Authentication:** confirming the user's identity, usually through a login screen the client never sees.
+* **Consent:** showing the user which permissions (scopes) the client is requesting and letting them approve or deny.
+* **Token issuance:** generating access tokens, and often refresh tokens, scoped to what the user approved.
+* **Token validation:** verifying tokens on incoming requests so the resource server can trust them.
+
+The key point is that the OAuth server owns the user's credentials. The password, the multi-factor prompt, the session, all of it lives on the server side. A client never sees the user's password, which is the entire reason OAuth exists. Instead of handing your Google password to a random app, you let Google's OAuth server authenticate you and issue a limited token.
+
+Running an OAuth server is a serious undertaking. You are responsible for securely storing credentials, implementing consent screens, managing token lifecycles, rotating signing keys, and defending against a long list of attacks. Most teams should not build one from scratch.
+
+# What is an OAuth client?
+
+An OAuth client is any application that wants to access protected resources on a user's behalf. It never handles the user's password. Instead, it redirects the user to the OAuth server, waits for an authorization code, exchanges that code for an access token, and then uses the token to call the API.
+
+The OAuth spec splits clients into two types, and the distinction matters for security.
+
+## Confidential clients
+
+A **confidential client** can keep a secret. This is a server-side application, like a backend written in Node.js or Python, where you can safely store a client secret that is never exposed to the user. Confidential clients use the client secret when exchanging the authorization code for a token, which proves the request came from the real app.
+
+## Public clients
+
+A **public client** cannot keep a secret. Single-page apps, mobile apps, and desktop apps fall into this category because any secret shipped in their code can be extracted. Instead of using a client secret, public clients typically use the [PKCE extension](https://oauth.net/2/pkce/) (Proof Key for Code Exchange) to protect the authorization code flow. PKCE is mandatory in OAuth 2.1 and strongly recommended for OAuth 2.0 public clients.
+
+Getting this classification wrong is one of the most common OAuth mistakes. Embedding a client secret in a mobile app or browser bundle is the same category of error as putting an API key in client-side code: anyone who inspects the app can extract it.
+
+# How the OAuth server and client work together
+
+The two roles come together in the [authorization code flow](https://oauth.net/2/grant-types/authorization-code/), the most common OAuth 2.0 grant type. Here is the sequence, with the roles labeled:
+
+1. The **client** redirects the user to the **OAuth server's** authorization endpoint, passing its client ID, the requested scopes, and a redirect URL.
+2. The **OAuth server** authenticates the user (login screen) and shows the consent prompt.
+3. The user approves. The **OAuth server** redirects back to the client's redirect URL with a short-lived authorization code.
+4. The **client** sends that code back to the **OAuth server's** token endpoint, along with its client secret (confidential) or PKCE verifier (public).
+5. The **OAuth server** validates everything and returns an access token, and often a refresh token.
+6. The **client** uses the access token to call the **resource server's** API on the user's behalf.
+
+Notice that the user's password only ever touches the OAuth server. The client only ever holds tokens, and only the tokens the user explicitly approved. That separation is the whole point of OAuth, and it is why the client and server roles are strictly divided.
+
+# Key differences between an OAuth server and OAuth client
+
+| Aspect                  | OAuth server                                              | OAuth client                                                 |
+| ----------------------- | --------------------------------------------------------- | ------------------------------------------------------------ |
+| Primary job             | Authenticate users, issue and validate tokens             | Request tokens, call APIs on the user's behalf               |
+| Handles passwords       | Yes, owns user credentials                                | No, never sees the user's password                           |
+| Who runs it             | Providers like Google, GitHub, Microsoft                  | Your app: web, mobile, or backend                            |
+| Holds the client secret | Issues and verifies it                                    | Stores it (confidential) or uses PKCE (public)               |
+| Security burden         | Credential storage, consent, key rotation, attack defense | Safe token storage, correct client type, redirect validation |
+| You build one when      | Other apps need to authenticate against your service      | You consume a provider's login or API                        |
+
+# Which one are you building?
+
+For the vast majority of apps, you are building an **OAuth client**. You want users to sign in with Google or GitHub, or you need to call an external API like Stripe or Slack on a user's behalf. In both cases your app is the client, and the provider runs the OAuth server.
+
+You only need to run an **OAuth server** if you are the provider: if other developers' applications need to let their users log in with your service, or if you expose an API that third parties access on behalf of your users. That is a much rarer requirement, and it comes with the full weight of securing user credentials.
+
+Most teams that think they need an OAuth server actually need a managed authentication layer. If you just want users to log in and stay logged in, what you want is a client integration plus session management, not a full authorization server of your own.
+
+# Where Appwrite fits into OAuth
+
+When you add social login to your app with [Appwrite Auth](/docs/products/auth), Appwrite acts as the OAuth client on your behalf. You do not build the redirect handling, the code exchange, or the token storage yourself. Appwrite handles the entire OAuth2 flow server-side across 30+ providers, so provider secrets stay off your frontend.
+
+The pattern looks like this: your app calls a single SDK method to start the flow, the user authenticates with the provider's OAuth server, and Appwrite exchanges the authorization code for tokens and creates a session for you. We cover the exact flow in [How Appwrite handles OAuth](/blog/post/appwrite-oauth).
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+// Start the OAuth flow; Appwrite acts as the OAuth client for you
+const authUrl = await account.createOAuth2Token({
+  provider: OAuthProvider.Github,
+  success: 'https://yourapp.com/callback',
+  failure: 'https://yourapp.com/login?error=oauth'
+});
+
+window.location.href = authUrl;
+```
+
+Because Appwrite runs the token exchange on the server, your app stays a thin, secure OAuth client without you having to reason about confidential versus public client rules, PKCE, or refresh logic. If OAuth as a concept is still new to you, start with [What is OAuth? A beginner's guide](/blog/post/what-is-oauth-a-beginners-guide) before wiring up providers.
+
+# Getting started with Appwrite Auth
+
+The line between an OAuth server and an OAuth client is really a line of responsibility. The server owns identity and issues trust; the client consumes it. Almost every app you build sits on the client side, and the safest way to stay there is to let a managed layer handle the flow instead of rolling your own authorization server.
+
+Appwrite gives you social login, session management, and token handling out of the box, so you can ship OAuth without becoming an OAuth expert first. Configure a provider in the Console and you have working "Sign in with Google" in minutes.
+
+* [Appwrite Auth overview](/docs/products/auth)
+* [OAuth2 providers documentation](/docs/products/auth/oauth2)
+* [How Appwrite handles OAuth: Google, GitHub, and beyond](/blog/post/appwrite-oauth)
+* [What is OAuth? A beginner's guide](/blog/post/what-is-oauth-a-beginners-guide)
+* [Join the Appwrite Discord community](https://appwrite.io/discord)

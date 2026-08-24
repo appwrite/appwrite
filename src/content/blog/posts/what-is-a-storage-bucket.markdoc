@@ -1,0 +1,118 @@
+---
+layout: post
+title: What is a storage bucket?
+description: "A storage bucket is a container for files in cloud object storage. Learn how buckets work, what they're used for, and how to keep your stored data secure."
+date: 2026-07-17
+cover: /images/blog/what-is-a-storage-bucket/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: architecture
+featured: false
+unlisted: true
+faqs:
+  - question: What is a storage bucket in simple terms?
+    answer: "It's a container in the cloud that holds your files. You put files (objects) into a bucket, give the bucket a name and permissions, and then access each file by its unique key or URL."
+  - question: What is the difference between a bucket and a folder?
+    answer: "A folder is part of a hierarchical file system. A bucket is a flat container in object storage; the \"folders\" you see inside it are really just prefixes in each object's key, not true directories."
+  - question: Is a storage bucket the same as a database?
+    answer: "No. A database stores structured records you query and relate to each other. A bucket stores whole files as objects. Apps often use both: a database for data and a bucket for the files that data references."
+  - question: Are storage buckets secure?
+    answer: They can be, but security depends on configuration. Keep buckets private by default, grant least-privilege access, use signed URLs for private files, and enable encryption to keep data safe.
+---
+A storage bucket is a container for files in cloud object storage. You create a bucket, upload files into it, and the bucket controls who can access those files, how large they can be, and which file types are allowed. It's the top-level unit of organization in object storage, the same way a table is the top-level unit in a database.
+
+If you've ever uploaded a profile picture, attached a document, or served images from an app, there was almost certainly a bucket behind it. This guide explains what a storage bucket is, how buckets work, what they're used for, and how to keep the files inside them secure. It's written for developers who want more than a one-line definition.
+
+# How does a storage bucket work?
+
+A storage bucket sits inside [object storage](/blog/post/what-is-object-storage-a-beginners-guide), a model where each file is stored as a self-contained object with three parts: the file data itself, metadata describing it, and a unique identifier used to retrieve it. The bucket is the namespace that groups those objects together.
+
+When you upload a file, you send it to a specific bucket through an API or client library. The storage service writes the object, records its metadata, and returns an ID. To read the file back, you reference the bucket and the file ID. There's no folder path to traverse, since object storage uses a flat structure rather than a nested directory tree.
+
+Buckets also carry configuration that applies to every file inside them. That includes access permissions, a maximum file size, allowed file extensions, and options like encryption and compression. This is what makes buckets useful as an organizing tool: you set a policy once at the bucket level, and every file inherits it.
+
+# Buckets vs folders: what's the difference?
+
+A common misconception is that a bucket is just a folder with a different name. It isn't.
+
+A folder is a node in a hierarchy. It exists to create a path, and its only real job is to nest other folders and files beneath it. A bucket is flat. Files inside a bucket don't live in a tree, they live in a single namespace and are addressed by ID. Any "folders" you see in an object storage UI are usually just prefixes in the file name, not real directories.
+
+The bigger difference is configuration. A folder doesn't enforce rules. A bucket does.
+
+| Aspect         | Storage bucket                          | Folder                         |
+| -------------- | --------------------------------------- | ------------------------------ |
+| Structure      | Flat namespace, files keyed by ID       | Nested hierarchy of paths      |
+| Access control | Permissions set per bucket and per file | Inherited from the file system |
+| Restrictions   | Size limits, allowed file types         | None by default                |
+| Extra features | Encryption, compression, virus scanning | None                           |
+| Scope          | Top-level container in object storage   | A node inside a file system    |
+
+Treating a bucket like a folder is where a lot of storage problems start. You end up with one giant bucket holding everything, no per-use-case rules, and permissions that are far too broad.
+
+# What is a storage bucket used for?
+
+Buckets are used to store and organize any file your application needs to keep. The point of using more than one bucket is that each can have its own rules, tuned to a specific use case.
+
+* **User uploads.** Profile pictures, avatars, and documents, often locked down so only the owner can read or delete them.
+* **Media assets.** Images, video, and audio served to web and mobile clients, usually with public read access.
+* **Static site assets.** CSS, JavaScript, and downloads for a website, frequently paired with a [CDN](/blog/post/what-is-cdn) to serve them fast.
+* **Backups and exports.** Generated files like reports, invoices, or data dumps that need durable, off-app storage.
+* **Private documents.** Contracts, medical records, or anything sensitive, kept in an encrypted bucket with strict permissions.
+
+A practical pattern is one bucket per use case. Profile photos go in a bucket that only allows image types under 10MB. User documents go in a separate bucket with tighter permissions and encryption. Keeping them apart means a misconfiguration in one bucket can't leak files from another.
+
+# How do storage buckets scale?
+
+Buckets scale because the object storage underneath them is designed to. There's no fixed capacity you provision ahead of time, so a bucket can hold a handful of files or billions without you changing anything. The flat namespace is part of why: since files are addressed by ID rather than walked through a directory tree, adding more of them doesn't slow lookups the way a deeply nested file system would.
+
+Durability comes from replication. A good object storage service writes multiple copies of each file across different machines, and often different regions, so a single disk or server failure doesn't lose data. That happens transparently at the bucket level, which means you get redundancy without managing it.
+
+This is the practical reason most application files live in buckets rather than on a server's local disk. A disk fills up and fails. A bucket grows with your app and keeps your files safe while it does. For a fuller picture of the model buckets sit on, see [what is cloud storage](/blog/post/what-is-cloud-storage-an-expert-guide-for-developers).
+
+# How to keep a storage bucket secure
+
+Most storage breaches don't come from a provider being hacked. They come from a bucket left open to the world. Securing a bucket comes down to a few settings you should configure deliberately rather than leaving at their defaults.
+
+* **Permissions.** Control who can read, create, update, and delete files. A well-designed storage service denies access by default, so you grant the minimum each role needs instead of opening everything. In Appwrite, you can set permissions at the bucket level for all files, or enable file-level security to set them per file. See the [permissions docs](/docs/products/storage/permissions) for the model.
+* **File type restrictions.** Limit which extensions a bucket accepts. A bucket for avatars has no reason to accept executables, and blocking them upfront prevents a whole class of abuse.
+* **Maximum file size.** Cap the size of any single upload to protect against runaway storage costs and denial-of-service style abuse.
+* **Encryption.** Encrypt files at rest so a leaked file is unreadable without the key. This matters most for private documents and anything regulated.
+* **Antivirus scanning.** Scan uploads for malware before they're stored, especially when users can upload arbitrary files.
+
+The principle underneath all of these is least privilege: every file should be readable and writable only by the people and roles that genuinely need it, and nothing more.
+
+# Storage bucket best practices
+
+* **Use one bucket per use case** so each can carry permissions and restrictions that fit its content.
+* **Deny by default and grant narrowly.** Start with no access and add only the roles that need it.
+* **Validate uploads** for size and type at the bucket level, not just in your client code.
+* **Encrypt sensitive buckets** and reserve public read access for assets that are genuinely meant to be public.
+* **Store file metadata in a database**, keeping large binary files in the bucket and their searchable details in a [database](/blog/post/what-is-cloud-storage-an-expert-guide-for-developers) record that points to the file ID.
+* **Monitor usage** so storage growth and data transfer don't surprise you at scale.
+
+# How to create a storage bucket in Appwrite
+
+[Appwrite Storage](/docs/products/storage) gives you buckets with permissions, file type and size limits, encryption, compression, and antivirus scanning built in. You can create a bucket in a few ways:
+
+1. **From the Console.** Open the Storage page and click **Create bucket**, then configure its permissions and restrictions in the UI.
+2. **With a Server SDK.** Call `createBucket` and pass a bucket ID, name, and any settings like allowed extensions or a maximum file size.
+3. **With the CLI.** Run `appwrite init buckets` to scaffold a bucket in your config file, then `appwrite push buckets` to create it.
+
+Once a bucket exists, uploading a file is a single call from your client with the bucket ID, and reading it back is a matter of referencing the bucket and file ID. If you want a step-by-step walkthrough, the [easiest way to add file uploads](/blog/post/easiest-file-uploads) covers the full flow from bucket to upload to download.
+
+For more on the underlying model and how buckets compare to other storage types, see [file vs. object vs. block storage](/blog/post/file-vs-object-vs-block-storage-whats-the-difference) and the [buckets documentation](/docs/products/storage/buckets).
+
+# Getting started with Appwrite Storage
+
+A storage bucket is more than a folder in the cloud. It's the unit where you decide who can touch your files, how big they can be, what types you accept, and whether they're encrypted. Getting those decisions right at the bucket level is what keeps a growing app's files organized and secure.
+
+[Appwrite Storage](/docs/products/storage) gives you all of that in a managed backend, alongside auth, databases, and functions, so you can handle user files and the rest of your backend in one place with no infrastructure to run. Create a bucket, set its permissions, and wire an upload into your app in minutes.
+
+## Resources
+
+* [Appwrite Storage documentation](/docs/products/storage)
+* [Storage buckets](/docs/products/storage/buckets)
+* [Storage permissions](/docs/products/storage/permissions)
+* [The easiest way to add file uploads](/blog/post/easiest-file-uploads)
+* [What is object storage? A beginner's guide](/blog/post/what-is-object-storage-a-beginners-guide)
+* [Join the Appwrite Discord](https://appwrite.io/discord)

@@ -1,0 +1,223 @@
+---
+layout: post
+title: "SQL explained: How developers query databases"
+description: Learn what SQL is, how queries work, and how developers use it to read, write, and manage data in relational databases.
+date: 2026-07-20
+cover: /images/blog/sql-explained-how-developers-query-databases/cover.avif
+timeToRead: 5
+author: aishwari
+category: best-practices
+featured: false
+unlisted: true
+faqs:
+  - question: What is SQL used for?
+    answer: SQL is used to read, write, update, and delete data in relational databases. Developers use SQL to query tables, filter records, join related data, create reports, and manage application data.
+  - question: What is a SQL query?
+    answer: A SQL query is an instruction sent to a database. It can ask the database to return data, insert new records, update existing records, delete rows, or summarize information using filters, joins, and aggregate functions.
+  - question: Do developers still need to learn SQL?
+    answer: Yes. Even if you use an ORM, backend platform, or Query API, SQL helps you understand how databases filter, sort, join, aggregate, and manage data. It gives you the mental model behind most application data workflows.
+  - question: What is the difference between SQL and NoSQL?
+    answer: SQL databases store data in structured tables with rows, columns, schemas, and relationships. NoSQL databases use more flexible models such as documents, key-value pairs, or graphs. SQL is usually better for relational data and transactions, while NoSQL can be better for flexible or rapidly changing data.
+  - question: Is SQL a programming language?
+    answer: SQL is a query language, not a general-purpose programming language like JavaScript or Python. It is designed specifically for working with relational databases and describing what data you want the database to return or change.
+---
+Almost every application you use is backed by a database, and most of those databases speak the same language: SQL. If you have ever loaded a list of orders, filtered a product catalog, or looked up a user by email, a SQL query ran somewhere to make it happen.
+
+This guide explains what SQL is, how queries actually work, and how developers use SQL to read, write, and manage data in relational databases. No prior database experience required.
+
+# What is SQL?
+
+**SQL (Structured Query Language)** is the standard language for working with relational databases. You use it to ask a database questions ("give me every user who signed up this week") and to change what it stores ("mark this order as shipped").
+
+SQL is declarative. You describe *what* data you want, not *how* to fetch it. The database engine figures out the most efficient way to find and return the results. That single idea is why SQL has stayed the industry standard for decades across databases like [PostgreSQL](https://www.postgresql.org/docs/), [MySQL](https://dev.mysql.com/doc/), [MariaDB](https://mariadb.org/documentation/), and [SQLite](https://www.sqlite.org/docs.html).
+
+# How relational databases store data
+
+Before you can query data, it helps to know how a relational database organizes it. Data lives in **tables**, and each table is a grid of **rows** and **columns**.
+
+* A **table** represents one type of thing, such as `users` or `orders`.
+* A **column** defines a single attribute and its data type, such as `email` (text) or `created_at` (date).
+* A **row** is one record, such as one specific user.
+
+Tables connect to each other through **keys**. A **primary key** uniquely identifies each row in a table, while a **foreign key** in one table points to the primary key of another. That relationship is what lets you link an order back to the user who placed it, and it is the foundation every SQL query builds on.
+
+# The four core SQL operations
+
+Almost everything you do in SQL falls into four operations, often called **CRUD**: Create, Read, Update, and Delete.
+
+* **`SELECT`** reads data from one or more tables.
+* **`INSERT`** adds new rows.
+* **`UPDATE`** changes existing rows.
+* **`DELETE`** removes rows.
+
+`SELECT` is the one you will write most often, so it is worth understanding in detail.
+
+# How developers query databases with SELECT
+
+A SQL query reads like a sentence. To get every column for every user, you write:
+
+```sql
+SELECT * FROM users;
+```
+
+The `*` means "all columns." In real applications you usually name only the columns you need, which is faster and clearer:
+
+```sql
+SELECT email, name FROM users;
+```
+
+## Filtering rows with WHERE
+
+Most queries do not want every row. The `WHERE` clause filters results to only the rows that match a condition:
+
+```sql
+SELECT email, name
+FROM users
+WHERE country = 'US';
+```
+
+You can combine conditions with `AND` and `OR`, and use operators like `>`, `<`, `!=`, `LIKE` for partial text matches, and `IN` for a list of values:
+
+```sql
+SELECT email, name
+FROM users
+WHERE country = 'US'
+  AND created_at > '2026-01-01';
+```
+
+## Sorting and limiting results
+
+`ORDER BY` sorts the results, and `LIMIT` caps how many rows come back. Together they answer questions like "the 10 most recent signups":
+
+```sql
+SELECT email, name
+FROM users
+ORDER BY created_at DESC
+LIMIT 10;
+```
+
+`DESC` sorts in descending order (newest first), and `ASC` sorts ascending. Sorting and limiting are also the building blocks of pagination, which is how apps load data one page at a time instead of all at once.
+
+# How to combine SQL tables with JOINs
+
+The real power of SQL shows up when you pull data from multiple tables in a single query. This is what "relational" means in practice, and it is done with a **`JOIN`**.
+
+Say you have a `users` table and an `orders` table, where each order stores the `user_id` of the person who placed it. To list every order alongside the buyer's name, you join the two tables on that key:
+
+```sql
+SELECT orders.id, orders.total, users.name
+FROM orders
+JOIN users ON orders.user_id = users.id;
+```
+
+The most common join types are:
+
+* **`INNER JOIN`**: returns only rows that have a match in both tables.
+* **`LEFT JOIN`**: returns all rows from the left table, with matching data from the right where it exists.
+* **`RIGHT JOIN`**: the reverse of a left join.
+
+Joins are one of the strongest reasons to reach for a relational database. If your data has clear relationships, SQL lets you traverse them efficiently in one query instead of stitching results together in application code.
+
+# Aggregating data with GROUP BY
+
+SQL can also summarize data, not just return raw rows. **Aggregate functions** like `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` compute a single value across many rows.
+
+To count how many orders each user has placed, you group the rows by user and count each group:
+
+```sql
+SELECT user_id, COUNT(*) AS order_count
+FROM orders
+GROUP BY user_id;
+```
+
+`GROUP BY` collapses rows that share a value into a single result row, and the aggregate function runs over each group. Add a `HAVING` clause to filter those groups, for example to find only users with more than five orders. This is how dashboards, reports, and analytics screens get their numbers.
+
+# How to write and modify data with SQL
+
+Reading is only half of SQL. The other three CRUD operations change what the database stores.
+
+Add a new row with `INSERT`:
+
+```sql
+INSERT INTO users (email, name, country)
+VALUES ('ada@example.com', 'Ada', 'UK');
+```
+
+Change existing rows with `UPDATE`, always paired with a `WHERE` clause so you do not accidentally update the whole table:
+
+```sql
+UPDATE users
+SET country = 'US'
+WHERE email = 'ada@example.com';
+```
+
+Remove rows with `DELETE`, again scoped with `WHERE`:
+
+```sql
+DELETE FROM users
+WHERE email = 'ada@example.com';
+```
+
+A missing `WHERE` on an `UPDATE` or `DELETE` affects every row in the table. It is the most common way developers cause real damage in production, so treat those two statements with care.
+
+# How SQL keeps data correct: Transactions and ACID
+
+When several changes must succeed or fail together, SQL uses **transactions**. A classic example is a money transfer: you subtract from one account and add to another, and it must never happen that one succeeds while the other fails.
+
+```sql
+BEGIN;
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;
+```
+
+If anything goes wrong before `COMMIT`, you can `ROLLBACK` and the database behaves as if none of it happened. This behavior is guaranteed by **ACID** properties (Atomicity, Consistency, Isolation, Durability), which are a core reason SQL databases are trusted for financial, ordering, and other systems where correctness is non-negotiable.
+
+# SQL vs NoSQL: When SQL is the right choice
+
+SQL is not the only way to store data. **NoSQL** databases (such as document, key-value, and graph stores) trade the rigid table structure for flexibility and horizontal scale.
+
+SQL tends to be the better fit when:
+
+* Your data has clear relationships you need to query across.
+* Your schema is stable and well understood.
+* You need strong consistency and transactional guarantees.
+
+NoSQL tends to win when your data shape changes often or you need to scale writes across many servers. For a deeper breakdown, see our guide on [SQL vs NoSQL](/blog/post/sql-vs-nosql) and how to think about [document vs relational databases](/blog/post/document-vs-relational-databases-vibecoding).
+
+# Querying data without writing raw SQL
+
+Here is a practical point many tutorials skip: you do not always write raw SQL by hand. Most applications talk to their database through a library, ORM, or backend platform that generates the SQL for you. You still think in the same terms of filtering, sorting, joining, and paginating, but you express them in your programming language.
+
+[Appwrite Databases](/docs/products/databases) is a good example. It gives you a structured [Query API](/docs/products/databases/queries) that maps directly onto the SQL concepts in this post. Filtering with `WHERE` becomes `Query.equal` and `Query.greaterThan`, sorting with `ORDER BY` becomes `Query.orderDesc`, and `LIMIT` becomes `Query.limit`, all with type safety and built-in pagination.
+
+```js
+const result = await tablesDB.listRows({
+  databaseId: "<DATABASE_ID>",
+  tableId: "users",
+  queries: [
+    Query.equal("country", ["US"]),
+    Query.greaterThan("created_at", "2026-01-01"),
+    Query.orderDesc("created_at"),
+    Query.limit(10),
+  ],
+});
+```
+
+That query does exactly what the SQL `SELECT ... WHERE ... ORDER BY ... LIMIT` earlier in this post does. You get the querying model SQL made standard, plus permissions, realtime updates, and pagination handled for you. And because Appwrite can run on a SQL engine like MariaDB under the hood, you are not locked out of raw SQL when you need it. See how to [integrate SQL, NoSQL, and other databases into your project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project) for more.
+
+# Start with Appwrite Databases
+
+Appwrite Databases gives you a structured way to store and work with application data without managing the underlying database infrastructure yourself. You can define your data model, store records in tables, control access with permissions, and build applications around the data using Appwrite's database services.
+
+For developers coming from SQL, the underlying concepts will feel familiar: tables hold structured data, rows represent records, and queries let you filter, sort, and paginate the data you need. Appwrite adds these capabilities as part of its native database experience, alongside permissions and realtime updates.
+
+To get started, see the [Appwrite Databases documentation](/docs/products/databases) and [databases quick start](/docs/products/databases/quick-start).
+
+## Resources
+
+* [Appwrite Databases documentation](/docs/products/databases)
+* [Appwrite Query API: filtering, sorting, and pagination](/blog/post/appwrite-query-api)
+* [SQL vs NoSQL: Choosing the right database for your project](/blog/post/sql-vs-nosql)
+* [Integrate SQL, NoSQL, Vector, Graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project)
+* Join the [Appwrite Discord community](https://appwrite.io/discord) to ask questions and share what you build.

@@ -1,0 +1,161 @@
+---
+layout: post
+title: What is a vector database? An AI developer guide
+description: Learn what a vector database is, how embeddings and similarity search work, its top AI use cases, key tradeoffs, and how to choose the right one.
+date: 2026-07-15
+cover: /images/blog/what-is-a-vector-database-an-ai-developer-guide/cover.avif
+timeToRead: 5
+author: aishwari
+category: ai
+featured: false
+unlisted: true
+faqs:
+  - question: How does a vector database work?
+    answer: An embedding model converts text, images, audio, or other data into vectors. The database indexes those vectors and uses similarity search to find the nearest matches to a query vector.
+  - question: What is the difference between a vector database and a traditional database?
+    answer: Traditional databases retrieve exact values, ranges, or structured records. Vector databases retrieve ranked results based on semantic similarity and are commonly used alongside a primary relational or document database.
+  - question: Do I need a vector database for RAG?
+    answer: RAG usually requires a way to retrieve relevant context by meaning, but it does not always require a dedicated vector database. Smaller projects can often use PostgreSQL with pgvector or vector search built into an existing database. 
+  - question: When should I use a dedicated vector database?
+    answer: Use a dedicated vector database when your application needs low-latency similarity search across a large number of embeddings or requires advanced indexing, filtering, scaling, and retrieval features.
+---
+# What is a vector database? An AI developer guide
+
+Traditional databases are built to answer one kind of question: does this value exactly match that value? That works when you are looking up a user by ID or filtering orders by status. It falls apart the moment you ask a fuzzier question, like "which support articles are about this problem" or "which products feel similar to this one."
+
+AI applications ask that fuzzier question constantly. A **vector database** exists to answer it. Instead of matching exact values, it finds items by meaning. This guide explains what a vector database is, how embeddings and similarity search work, where it fits in an AI stack, the trade-offs to weigh, and how to choose one.
+
+## What is a vector database?
+
+A **vector database** is a database built to store **embeddings**, which are numerical representations of data, and to run **similarity search** across them. Rather than returning rows that match a value exactly, it returns the items whose meaning is closest to your query.
+
+The core idea is simple. You convert your data, whether text, images, or audio, into a list of numbers called a **vector**. Similar items produce vectors that sit close together in space. When you search, the database compares your query vector against stored vectors and returns the nearest ones. This is why a vector database can find a document that is conceptually about cats even when the word "cat" never appears in it.
+
+This is a fundamentally different job from what relational or document databases do, which is why it gets its own category of tooling. For a broader map of database types, see [SQL vs NoSQL: choosing the right database for your project](/blog/post/sql-vs-nosql).
+
+## What is an embedding?
+
+An **embedding** is a vector, a fixed-length array of floating point numbers, that captures the semantic meaning of a piece of data. You generate embeddings by passing your data through an **embedding model**, such as OpenAI's `text-embedding-3` models or an open model from Hugging Face.
+
+The key property is that distance means similarity. Two sentences with related meaning produce vectors that land near each other, even if they share no words. A typical embedding has hundreds or thousands of dimensions, so you are not storing three numbers, you are storing a coordinate in very high dimensional space.
+
+Here is what an embedding looks like in practice:
+
+```json
+{
+  "id": "doc_8f2a",
+  "text": "How do I reset my password?",
+  "embedding": [0.021, -0.114, 0.087, 0.203, -0.056, "... 1531 more values"],
+  "metadata": {
+    "category": "account",
+    "source": "help-center"
+  }
+}
+```
+
+The `embedding` array is what the vector database indexes and searches. The `metadata` travels alongside it so you can filter results by ordinary fields, like restricting a search to one category.
+
+## How similarity search works
+
+Once your data is stored as vectors, search becomes a geometry problem: find the vectors closest to the query vector. Closeness is measured with a **distance metric**, most commonly **cosine similarity** or **Euclidean distance**.
+
+The naive approach compares the query against every stored vector, but that does not scale to millions or billions of records. Vector databases instead use **approximate nearest neighbor (ANN)** search, which trades a small amount of accuracy for a large gain in speed.
+
+ANN relies on specialized indexes rather than the B-trees relational databases use. The common techniques are:
+
+* **HNSW (Hierarchical Navigable Small World):** a graph-based index that offers a strong balance of speed and recall, and the most widely used default.
+* **IVF (Inverted File):** partitions vectors into clusters and searches only the most relevant ones.
+* **PQ (Product Quantization):** compresses vectors to shrink memory usage, often combined with the methods above.
+
+If you want the underlying theory, the original [HNSW paper](https://arxiv.org/abs/1603.09320) is the standard reference. In practice you rarely tune these by hand, but knowing the trade-off helps: higher recall costs more memory and latency, and every vector database exposes knobs to balance the two.
+
+## How a vector database differs from a traditional database
+
+The core difference is what "match" means. A **traditional database** matches exact values or ranges. A **vector database** matches by proximity in vector space. That single distinction drives the rest of the trade-offs.
+
+| Aspect          | Traditional (SQL / document)     | Vector database                       |
+| :-------------- | :------------------------------- | :------------------------------------ |
+| **Query type**  | Exact match, range, join         | Nearest-neighbor similarity           |
+| **Data stored** | Rows or JSON documents           | Embeddings plus metadata              |
+| **Index**       | B-tree, hash                     | HNSW, IVF, PQ                         |
+| **Returns**     | Exact results                    | Ranked, approximate results           |
+| **Best for**    | Transactions, lookups, reporting | Semantic search, RAG, recommendations |
+
+A vector database is not a replacement for your primary database. It is a specialized layer that sits alongside it. Your users, orders, and permissions still belong in a relational or document store, while embeddings live in the vector store. Many teams keep operational data in a [document database](/blog/post/what-is-a-document-database-an-expert-guide-for-developers) and add vector search on top.
+
+## What are vector databases used for?
+
+Vector databases are the retrieval layer of most modern AI applications. The main use cases are:
+
+* **Retrieval-augmented generation (RAG):** the most common use. Before an LLM answers, it retrieves relevant context from a vector database and feeds that into the prompt. This gives the model current, domain-specific knowledge without retraining it, and is how most AI assistants and chatbots avoid answering from stale training data.
+* **Semantic search:** search that matches intent rather than keywords, so "how do I cancel my plan" surfaces a "closing your account" article.
+* **Recommendations:** suggest products, songs, or articles similar to what a user already engaged with by comparing their embeddings.
+* **Deduplication and clustering:** group near-identical support tickets, images, or documents even when the wording differs.
+* **Multimodal search:** search images with text, or audio with images, by embedding different data types into the same space.
+
+For how these workloads handle unstructured inputs like text and images, see [how NoSQL databases handle unstructured AI data](/blog/post/how-nosql-databases-handle-unstructured-ai-data-text-images-embeddings).
+
+## When to use a vector database
+
+Reach for a vector database when similarity, not exact matching, is the core of the feature you are building. It is a strong fit when:
+
+* **You are building RAG or an AI chatbot.** Grounding an LLM in your own data is the canonical reason to adopt one.
+* **You need semantic or "find similar" search.** Keyword search cannot rank by meaning; vector search is built for it.
+* **Your data is unstructured.** Text, images, audio, and video all embed cleanly into vectors.
+* **You work at scale.** Purpose-built vector databases handle billions of embeddings with predictable latency.
+
+## When you may not need a dedicated vector database
+
+Being honest about the trade-offs matters more than defending the tool. You can often skip a separate vector database when:
+
+* **Your dataset is small.** For a few thousand embeddings, a `pgvector` extension on PostgreSQL or [MongoDB Atlas Vector Search](https://www.mongodb.com/products/platform/atlas-vector-search) keeps everything in one system with far less operational overhead.
+* **Exact matching is enough.** If keyword search or filters already answer your users' questions, adding embeddings is complexity you do not need.
+* **You want fewer moving parts.** Every extra service means more infrastructure, another connection to secure, and another bill. Extending your existing database is frequently the pragmatic choice.
+
+A dedicated vector database earns its place when scale, latency, or advanced retrieval features push past what an extension can comfortably do. For a decision framework, read [choosing the right AI database for your application](/blog/post/choosing-the-right-ai-database).
+
+## Popular vector databases
+
+A handful of options dominate real-world usage:
+
+* [Pinecone](https://www.pinecone.io/) is a fully managed vector database known for consistent low latency and zero infrastructure management.
+* [Weaviate](https://weaviate.io/) is open source and AI-native, with hybrid search that combines vector and keyword matching.
+* [Milvus](https://milvus.io/) is built for scale, handling billions of vectors across distributed deployments.
+* [Qdrant](https://qdrant.tech/) is a Rust-based engine focused on performance and efficient storage.
+* [Chroma](https://www.trychroma.com/) is lightweight and easy to run locally, popular for prototyping RAG pipelines.
+
+For a deeper feature-by-feature comparison, see [the top 6 vector databases to use for AI applications](/blog/post/top-6-vector-databases-2025).
+
+## How Appwrite fits into a vector search stack
+
+Appwrite does not ship a dedicated vector engine, and that is a deliberate scope choice rather than a gap to paper over. What it gives you is the surrounding backend that every AI app needs, plus a clean way to orchestrate the vector database of your choice.
+
+The common pattern looks like this:
+
+* **Generate and query embeddings from a function.** [Appwrite Functions](/docs/products/functions) call your embedding model and talk to your vector database server-side, so API keys and connection strings never touch the client. See [integrate SQL, NoSQL, vector, graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project) for a working Upstash Vector example.
+* **Store operational data in Appwrite Databases.** Your users, chat history, and metadata live in [Appwrite Databases](/docs/products/databases), close to your app logic.
+* **Keep source files in Storage.** The documents and images you embed can live in [Appwrite Storage](/docs/products/storage).
+* **Guard access with Auth.** [Appwrite Auth](/docs/products/auth) and document-level permissions control who can trigger retrieval and see results.
+
+Since version 1.9, Appwrite also supports MongoDB as its underlying database engine, which brings native vector search within reach for teams that want to keep embeddings and operational data in one place. See [choosing the right database for AI applications: when to use MongoDB](/blog/post/choosing-the-right-database-for-ai-applications-when-to-use-mongodb).
+
+## Getting started with VectorsDB on Appwrite
+
+Appwrite VectorsDB is built for storing embeddings and performing similarity search, making it a natural fit for AI workloads such as RAG, semantic search, and recommendations.
+
+A typical workflow looks like this:
+
+* **Generate embeddings.** Convert your documents, images, or other data into embeddings using an embedding model.
+* **Store embeddings in VectorsDB.** Store the resulting vectors alongside the metadata you need to retrieve and filter your data.
+* **Search by similarity.** When a user submits a query, generate an embedding for it and use VectorsDB to find the most relevant results.
+* **Use the retrieved context.** Pass the relevant results to your AI model to generate a grounded response.
+
+Because VectorsDB is part of Appwrite's database offering, you can build the rest of your AI application on the same backend. Use [Appwrite Auth](/docs/products/auth) to manage access, [Appwrite Storage](/docs/products/storage) for source files, and [Appwrite Functions](/docs/products/functions) for embedding generation and other AI workflows.
+
+This gives you a single backend for the application data, authentication, files, server-side logic, and vector search your AI application needs.
+
+For more on building AI applications with Appwrite, see:
+
+* [Appwrite AI](/docs/products/ai)
+* [Appwrite Functions](/docs/products/functions)
+* [Integrate SQL, NoSQL, vector, graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project)
