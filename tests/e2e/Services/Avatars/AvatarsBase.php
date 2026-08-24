@@ -1423,18 +1423,26 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         /**
-         * Test for SUCCESS — Gravatar flow
+         * Test for SUCCESS — OAuth2 identity photo (Priority 1)
          *
-         * Use a well-known email that has a real Gravatar so we can verify the
-         * provider is actually being reached.  Wrapped in assertEventually to
-         * tolerate transient network hiccups.
+         * TODO: Once the full OAuth2 login flow is wired through the test
+         * infrastructure (requires a real OAuth2 session to populate
+         * identities.photoUrl), add an integration test here that:
+         *   1. Creates a GitHub session via the OAuth2 callback.
+         *   2. Calls GET /avatars/photo and asserts the response is the
+         *      GitHub avatar (not initials or the static fallback).
+         *   3. Verifies that Cache-Control: private, no-store is set.
+         * Track in: https://github.com/appwrite/appwrite/issues/TODO
+         */
+
+        /**
+         * Test for SUCCESS — Gravatar flow (Priority 2)
          *
-         * TODO: Once the OAuth2 session photo is implemented, add a test that
-         * verifies priority 1 takes precedence over Gravatar.
+         * When no OAuth2 identity photo is available the chain falls through to
+         * Gravatar. Wrapped in assertEventually to tolerate transient network
+         * hiccups.
          */
         $this->assertEventually(function () {
-            // When we have a Gravatar for the user's email the chain resolves at
-            // priority 2; result must be a non-trivial PNG.
             $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -1445,6 +1453,8 @@ trait AvatarsBase
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals('image/png', $response['headers']['content-type']);
             $this->assertNotEmpty($response['body']);
+            // The response must never be cached — profile photos change at any time.
+            $this->assertEquals('private, no-store', $response['headers']['cache-control']);
         }, 30_000, 2_000);
 
         /**

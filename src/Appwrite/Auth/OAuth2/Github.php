@@ -7,49 +7,29 @@ use Utopia\Fetch\Client as FetchClient;
 
 class Github extends OAuth2
 {
-    /**
-     * @var array
-     */
     protected array $user = [];
 
-    /**
-     * @var array
-     */
     protected array $tokens = [];
 
-    /**
-     * @var array
-     */
     protected array $scopes = [
         'user:email',
     ];
 
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return 'github';
     }
 
-    /**
-     * @return string
-     */
     public function getLoginURL(): string
     {
-        return 'https://github.com/login/oauth/authorize?' . \http_build_query([
+        return 'https://github.com/login/oauth/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
-            'state' => \json_encode($this->state)
+            'state' => \json_encode($this->state),
         ]);
     }
 
-    /**
-     * @param string $code
-     *
-     * @return array
-     */
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
@@ -61,7 +41,7 @@ class Github extends OAuth2
                     'client_id' => $this->appID,
                     'redirect_uri' => $this->callback,
                     'client_secret' => $this->appSecret,
-                    'code' => $code
+                    'code' => $code,
                 ])
             );
 
@@ -71,11 +51,6 @@ class Github extends OAuth2
         return $this->tokens;
     }
 
-    /**
-     * @param string $refreshToken
-     *
-     * @return array
-     */
     public function refreshTokens(string $refreshToken): array
     {
         $response = $this->request(
@@ -86,7 +61,7 @@ class Github extends OAuth2
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshToken
+                'refresh_token' => $refreshToken,
             ])
         );
 
@@ -106,7 +81,7 @@ class Github extends OAuth2
     {
         $tokens = \json_decode($response, true);
 
-        if (!\is_array($tokens)) {
+        if (! \is_array($tokens)) {
             $tokens = [];
             \parse_str($response, $tokens);
         }
@@ -128,11 +103,6 @@ class Github extends OAuth2
         return $tokens;
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return string
-     */
     public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -140,11 +110,6 @@ class Github extends OAuth2
         return $user['id'] ?? '';
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return string
-     */
     public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -156,10 +121,6 @@ class Github extends OAuth2
      * Check if the OAuth email is verified
      *
      * @link https://docs.github.com/en/rest/users/emails#list-email-addresses-for-the-authenticated-user
-     *
-     * @param string $accessToken
-     *
-     * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
@@ -172,11 +133,6 @@ class Github extends OAuth2
         return false;
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return string
-     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -185,10 +141,19 @@ class Github extends OAuth2
     }
 
     /**
-     * @param string $accessToken
+     * Return the user's GitHub avatar URL.
      *
-     * @return string
+     * GitHub includes `avatar_url` directly in the `GET /user` response that
+     * is already fetched and cached by getUser(), so this method costs no
+     * extra network round-trip.
      */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['avatar_url'] ?? '';
+    }
+
     public function getUserSlug(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -197,16 +162,14 @@ class Github extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
      * @return array
      */
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token ' . \urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token '.\urlencode($accessToken)]), true);
 
-            $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token ' . \urlencode($accessToken)]);
+            $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token '.\urlencode($accessToken)]);
 
             $emails = \json_decode($emails, true);
 
@@ -223,10 +186,10 @@ class Github extends OAuth2
                 }
             }
 
-            if (!empty($primaryEmail)) {
+            if (! empty($primaryEmail)) {
                 $this->user['email'] = $primaryEmail['email'];
                 $this->user['verified'] = $primaryEmail['verified'];
-            } elseif (!empty($verifiedEmail)) {
+            } elseif (! empty($verifiedEmail)) {
                 $this->user['email'] = $verifiedEmail['email'];
                 $this->user['verified'] = $verifiedEmail['verified'];
             }
@@ -237,18 +200,19 @@ class Github extends OAuth2
 
     public function createRepository(string $accessToken, string $repositoryName, bool $private, string $namespaceId = ''): array
     {
-        $repository = $this->request('POST', 'https://api.github.com/user/repos', ['Authorization: token ' . \urlencode($accessToken)], \json_encode([
+        $repository = $this->request('POST', 'https://api.github.com/user/repos', ['Authorization: token '.\urlencode($accessToken)], \json_encode([
             'name' => $repositoryName,
-            'private' => $private
+            'private' => $private,
         ]));
 
         $repository = \json_decode($repository, true);
+
         return $repository;
     }
 
     public function verifyCredentials(): void
     {
-        $client = new FetchClient();
+        $client = new FetchClient;
         $client->addHeader('Accept', 'application/json');
 
         $response = $client->fetch(
@@ -264,11 +228,11 @@ class Github extends OAuth2
 
         $json = \json_decode($response->getBody(), true);
 
-        if (isset($json['error']) && $json['error'] === "Not Found") {
+        if (isset($json['error']) && $json['error'] === 'Not Found') {
             throw new \Exception('GitHub application with provided Client ID is does not exist.');
         }
 
-        if (isset($json['error']) && $json['error'] === "incorrect_client_credentials") {
+        if (isset($json['error']) && $json['error'] === 'incorrect_client_credentials') {
             throw new \Exception('GitHub application with provided Client ID is valid, but the provided Client Secret is incorrect.');
         }
 
