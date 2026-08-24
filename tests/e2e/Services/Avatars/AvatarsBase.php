@@ -600,6 +600,7 @@ trait AvatarsBase
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
+            'userAgent' => str_repeat('a', 512),
             'headers' => [
                 'User-Agent' => 'Mozilla/5.0 (compatible; AppwriteBot/1.0)',
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
