@@ -6,18 +6,39 @@ use Appwrite\Auth\OAuth2\Exception;
 
 abstract class OAuth2
 {
+    /**
+     * @var string
+     */
     protected string $appID;
 
+    /**
+     * @var string
+     */
     protected string $appSecret;
 
+    /**
+     * @var string
+     */
     protected string $callback;
 
+    /**
+     * @var array
+     */
     protected array $state;
 
+    /**
+     * @var array
+     */
     protected array $scopes;
 
     /**
      * OAuth2 constructor.
+     *
+     * @param string $appId
+     * @param string $appSecret
+     * @param string $callback
+     * @param array  $state
+     * @param array $scopes
      */
     public function __construct(string $appId, string $appSecret, string $callback, array $state = [], array $scopes = [])
     {
@@ -30,23 +51,58 @@ abstract class OAuth2
         }
     }
 
+    /**
+     * @return string
+     */
     abstract public function getName(): string;
 
+    /**
+     * @return string
+     */
     abstract public function getLoginURL(): string;
 
+    /**
+     * @param string $code
+     *
+     * @return array
+     */
     abstract protected function getTokens(string $code): array;
 
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
     abstract public function refreshTokens(string $refreshToken): array;
 
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     abstract public function getUserID(string $accessToken): string;
 
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     abstract public function getUserEmail(string $accessToken): string;
 
     /**
      * Check if the OAuth email is verified
+     *
+     * @param string $accessToken
+     *
+     * @return bool
      */
     abstract public function isEmailVerified(string $accessToken): bool;
 
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     abstract public function getUserName(string $accessToken): string;
 
     /**
@@ -56,6 +112,10 @@ abstract class OAuth2
      * the user has not set one. Concrete adapters override this only when
      * their API reliably provides a photo URL; the base implementation is a
      * safe no-op so all existing adapters remain valid without changes.
+     *
+     * @param string $accessToken
+     *
+     * @return string
      */
     public function getUserPhoto(string $accessToken): string
     {
@@ -63,23 +123,33 @@ abstract class OAuth2
     }
 
     /**
+     * @param $scope
+     *
      * @return $this
      */
     protected function addScope(string $scope): OAuth2
     {
         // Add a scope to the scopes array if it isn't already present
-        if (! \in_array($scope, $this->scopes)) {
+        if (!\in_array($scope, $this->scopes)) {
             $this->scopes[] = $scope;
         }
 
         return $this;
     }
 
+    /**
+     * @return array
+     */
     protected function getScopes(): array
     {
         return $this->scopes;
     }
 
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
     public function getAccessToken(string $code): string
     {
         $tokens = $this->getTokens($code);
@@ -87,6 +157,11 @@ abstract class OAuth2
         return $tokens['access_token'] ?? '';
     }
 
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
     public function getRefreshToken(string $code): string
     {
         $tokens = $this->getTokens($code);
@@ -94,6 +169,11 @@ abstract class OAuth2
         return $tokens['refresh_token'] ?? '';
     }
 
+    /**
+     * @param string $code
+     *
+     * @return int
+     */
     public function getAccessTokenExpiry(string $code): int
     {
         $tokens = $this->getTokens($code);
@@ -105,6 +185,8 @@ abstract class OAuth2
     // The response from Amazon is html encoded and hence it needs to be html_decoded before
     // json_decoding
     /**
+     * @param $state
+     *
      * @return array
      */
     public function parseState(string $state)
@@ -112,6 +194,14 @@ abstract class OAuth2
         return \json_decode($state, true);
     }
 
+    /**
+     * @param string $method
+     * @param string $url
+     * @param array  $headers
+     * @param string $payload
+     *
+     * @return string
+     */
     protected function request(string $method, string $url = '', array $headers = [], string $payload = ''): string
     {
         $ch = \curl_init($url);
@@ -121,9 +211,9 @@ abstract class OAuth2
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_USERAGENT, 'Appwrite OAuth2');
 
-        if (! empty($payload)) {
+        if (!empty($payload)) {
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-            $headers[] = 'Content-length: '.\strlen($payload);
+            $headers[] = 'Content-length: ' . \strlen($payload);
         }
 
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -137,6 +227,6 @@ abstract class OAuth2
             throw new Exception($response, $code);
         }
 
-        return (string) $response;
+        return (string)$response;
     }
 }
