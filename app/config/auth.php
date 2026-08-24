@@ -12,9 +12,9 @@ return [
     ],
     'ldap' => [
         'name' => 'LDAP',
-        'key' => 'ldap',
+        'key' => 'LDAP',
         'icon' => '/images/users/ldap.png',
-        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateLdapSession',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateLDAPSession',
         'enabled' => true,
     ],
     'magic-url' => [

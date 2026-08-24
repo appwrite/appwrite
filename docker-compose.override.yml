@@ -412,7 +412,7 @@ services:
         until ldapsearch -x -H ldap://openldap -b dc=appwrite,dc=test \
           -D cn=admin,dc=appwrite,dc=test -w $${LDAP_ADMIN_PASSWORD} >/dev/null 2>&1; do sleep 2; done
         ldapadd -c -x -H ldap://openldap -D cn=admin,dc=appwrite,dc=test \
-          -w $${LDAP_ADMIN_PASSWORD} -f /seed/seed.ldif || true
+          -w $${LDAP_ADMIN_PASSWORD} -f /seed.ldif || true
         echo "LDAP fixtures loaded."
     environment:
       - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
