@@ -120,15 +120,29 @@ class Create extends Action
     ): void {
         $protocol = $request->getProtocol();
 
-        // Whether LDAP is enabled for the project is checked by the shared
-        // auth.type gate in app/controllers/shared/api/auth.php.
         $auths = $project->getAttribute('auths', []);
+        $directories = \json_decode($auths['ldapDirectories'] ?? '[]', true);
+        $directory = $directories[0] ?? [];
 
-        $identity = Client::fromProject($project)->authenticate($username, $password);
+        if(empty($directory)) {
+            throw new Exception('LDAP directory is not configured.', Exception::GENERAL_ARGUMENT_INVALID);
+        }
+        
+        $client = new Client(
+            host: $directory['host'] ?? '',
+            port: (int)($directory['port'] ?? Client::DEFAULT_PORT),
+            encryption: $directory['encryption'] ?? Client::ENCRYPTION_TLS,
+            baseDn: $directory['baseDn'] ?? '',
+            bindDn: $directory['bindDn'] ?? '',
+            bindPassword: $directory['bindPassword'] ?? '',
+            userFilter: $directory['userFilter'] ?? '(uid=' . Client::PLACEHOLDER . ')',
+            provisionFilter: $directory['provisionFilter'] ?? '',
+            emailAttribute: $directory['emailAttribute'] ?? 'mail',
+            nameAttribute: $directory['nameAttribute'] ?? 'cn',
+        );
 
-        // A wrong password, an unknown user, and a user outside the provisioning
-        // filter are deliberately indistinguishable: telling them apart lets a
-        // directory be probed for valid usernames.
+        $identity = $client->authenticate($username, $password);
+
         if ($identity === null) {
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }

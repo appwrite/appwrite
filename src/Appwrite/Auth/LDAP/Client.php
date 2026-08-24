@@ -10,65 +10,23 @@ use FreeDSx\Ldap\Operations;
 use FreeDSx\Ldap\Search\Filters;
 use Utopia\Database\Document;
 
-/**
- * Authenticates a user against one directory server.
- *
- * Deliberately describes a single directory. Supporting several per project is
- * then a matter of holding a list of configurations and choosing between them,
- * rather than reshaping the configuration itself.
- *
- * The flow is search-then-bind, which is what directories in the wild expect:
- * bind as a service account, search the subtree for the entry matching the
- * value the user signed in with, then attempt a second bind as that entry's DN
- * using the password they supplied. A successful second bind is the proof of
- * identity; the password is never compared by us and never stored.
- *
- * FreeDSx is used rather than ext-ldap deliberately. It is pure PHP over
- * stream_socket_client, which Swoole's SWOOLE_HOOK_TCP hooks, so binds are
- * non-blocking inside a coroutine. ext-ldap has no Swoole hook and would stall
- * the worker's event loop on every sign-in.
- */
 class Client
 {
-    /**
-     * Transport security. Plaintext is offered because directories on a private
-     * network sometimes have no certificate at all, but a simple bind sends the
-     * password in the clear, so it is never the default and the console should
-     * warn on it.
-     */
     public const string ENCRYPTION_NONE = 'none';
     public const string ENCRYPTION_SSL = 'ssl';
     public const string ENCRYPTION_TLS = 'tls';
-
     public const array ENCRYPTIONS = [
         self::ENCRYPTION_NONE,
         self::ENCRYPTION_SSL,
         self::ENCRYPTION_TLS,
     ];
-
-    /**
-     * Placeholder replaced with the value the user signed in with. Chosen to
-     * match the templating other directory-aware products use, so filters can be
-     * copied across with no edits.
-     */
     public const string PLACEHOLDER = '{{username}}';
-
     public const int DEFAULT_PORT = 389;
-
-    /**
-     * Long enough for a directory across a VPN, short enough that a dead server
-     * fails the request rather than holding it open.
-     */
     private const int TIMEOUT_CONNECT = 5;
     private const int TIMEOUT_OPERATION = 10;
 
     /**
-     * Naming attributes whose equality rule is caseIgnoreMatch in the standard
-     * schemas (RFC 4519) and in Active Directory, so two DNs differing only by
-     * the case of these values denote the same entry. Anything outside this
-     * list is compared exactly, because a schema is free to define a case-exact
-     * naming attribute and folding one would let a directory-distinct entry
-     * satisfy another's membership.
+     * RFC 4519
      *
      * @var array<int, string>
      */
@@ -88,20 +46,6 @@ class Client
         'mail',
     ];
 
-    /**
-     * @param string $host Directory hostname or IP.
-     * @param int $port Directory port.
-     * @param string $encryption One of ENCRYPTIONS.
-     * @param string $baseDn Subtree the user search starts from.
-     * @param string $bindDn Service account used to search for users. Empty for an anonymous bind.
-     * @param string $bindPassword Service account password.
-     * @param string $userFilter Search filter locating the user, containing PLACEHOLDER.
-     * @param string $provisionFilter Optional extra filter a user must also match to be granted an account.
-     * @param string $emailAttribute Attribute holding the email address.
-     * @param string $nameAttribute Attribute holding the display name.
-     *
-     * @throws Exception when the configuration cannot describe a usable directory.
-     */
     public function __construct(
         private readonly string $host,
         private readonly int $port = self::DEFAULT_PORT,
@@ -130,8 +74,6 @@ class Client
             throw new Exception('LDAP base DN is required.', AppwriteException::GENERAL_ARGUMENT_INVALID);
         }
 
-        // Without the placeholder the filter matches the same entry for every
-        // sign-in attempt, which would let anyone in as whoever it resolves to.
         if (!\str_contains($this->userFilter, self::PLACEHOLDER)) {
             throw new Exception('LDAP user filter must contain the ' . self::PLACEHOLDER . ' placeholder.', AppwriteException::GENERAL_ARGUMENT_INVALID);
         }
@@ -139,45 +81,6 @@ class Client
         if (empty(\trim($this->emailAttribute))) {
             throw new Exception('LDAP email attribute is required. Appwrite cannot create an account without an email address.', AppwriteException::GENERAL_ARGUMENT_INVALID);
         }
-    }
-
-    /**
-     * Build a client from a project's stored LDAP configuration.
-     *
-     * Reads a single directory today. The stored shape is a list so that
-     * supporting several per project later is a matter of choosing between
-     * entries rather than reshaping what is already persisted.
-     *
-     * @param Document $project
-     *
-     * @return self
-     *
-     * @throws Exception when no directory is configured, or its configuration is invalid.
-     */
-    public static function fromProject(Document $project): self
-    {
-        $auths = $project->getAttribute('auths', []);
-        $directories = \json_decode($auths['ldapDirectories'] ?? '[]', true);
-        $directories = \is_array($directories) ? $directories : [];
-
-        if (\count($directories) === 0) {
-            throw new Exception('No LDAP directory is configured for this project.', AppwriteException::GENERAL_ARGUMENT_INVALID);
-        }
-
-        $directory = $directories[0];
-
-        return new self(
-            host: $directory['host'] ?? '',
-            port: (int)($directory['port'] ?? self::DEFAULT_PORT),
-            encryption: $directory['encryption'] ?? self::ENCRYPTION_TLS,
-            baseDn: $directory['baseDn'] ?? '',
-            bindDn: $directory['bindDn'] ?? '',
-            bindPassword: $directory['bindPassword'] ?? '',
-            userFilter: $directory['userFilter'] ?? '(uid=' . self::PLACEHOLDER . ')',
-            provisionFilter: $directory['provisionFilter'] ?? '',
-            emailAttribute: $directory['emailAttribute'] ?? 'mail',
-            nameAttribute: $directory['nameAttribute'] ?? 'cn',
-        );
     }
 
     /**
