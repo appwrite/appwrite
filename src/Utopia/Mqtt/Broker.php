@@ -2,178 +2,8 @@
 
 namespace Utopia\Mqtt;
 
-use Appwrite\Utopia\Database\Documents\User;
-use Swoole\Coroutine;
-use Swoole\Runtime;
 use Swoole\Server;
-use Utopia\Cache\Adapter\Pool as CachePool;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
-use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as DatabasePool;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\DSN\DSN;
-use Utopia\System\System;
 
-// Currently using the realtime init only as its matching the requirements
-// TODO: scope the connection init to a separate mqtt connection
-require_once __DIR__ . '/../../../app/init.php';
-
-if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-    require_once __DIR__ . '/../../../app/init/span.php';
-}
-
-/** @var Registry $register */
-$register = $GLOBALS['register'] ?? throw new \RuntimeException('Registry not initialized');
-
-$registerConnectionResources ??= require __DIR__ . '/../../../app/init/realtime/connection.php';
-
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-
-
-// Allows overriding
-if (!function_exists('getConsoleDB')) {
-    function getConsoleDB(): Database
-    {
-        $ctx = Coroutine::getContext();
-
-        if (isset($ctx['dbForPlatform'])) {
-            return $ctx['dbForPlatform'];
-        }
-
-        global $register;
-
-        /** @var Group $pools */
-        $pools = $register->get('pools');
-
-        $adapter = new DatabasePool($pools->get('console'));
-        $database = new Database($adapter, getCache());
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setNamespace('_console')
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', '_console');
-        $database->setDocumentType('users', User::class);
-        return $ctx['dbForPlatform'] = $database;
-    }
-}
-
-// Allows overriding
-if (!function_exists('getProjectDB')) {
-    function getProjectDB(Document $project): Database
-    {
-        $ctx = Coroutine::getContext();
-
-        if (!isset($ctx['dbForProject'])) {
-            $ctx['dbForProject'] = [];
-        }
-
-        if (isset($ctx['dbForProject'][$project->getSequence()])) {
-            return $ctx['dbForProject'][$project->getSequence()];
-        }
-
-        global $register;
-
-        /** @var Group $pools */
-        $pools = $register->get('pools');
-
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return getConsoleDB();
-        }
-
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
-
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $database = new Database($adapter, getCache());
-
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-        if (\in_array($dsn->getHost(), $sharedTables)) {
-            $collections = Config::getParam('collections', []);
-            $projectCollections = $collections['projects'] ?? [];
-            $projectsGlobalCollections = array_keys($projectCollections);
-            $projectsGlobalCollections[] = 'audit';
-
-            $database
-                ->setSharedTables(true)
-                ->setGlobalCollections($projectsGlobalCollections)
-                ->setTenant($project->getSequence())
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
-        }
-
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId());
-
-        $database->setDocumentType('users', User::class);
-
-        return $ctx['dbForProject'][$project->getSequence()] = $database;
-    }
-}
-
-// Allows overriding
-if (!function_exists('getCache')) {
-    function getCache(): Cache
-    {
-        $ctx = Coroutine::getContext();
-
-        if (isset($ctx['cache'])) {
-            return $ctx['cache'];
-        }
-
-        global $register;
-
-        $pools = $register->get('pools'); /** @var Group $pools */
-
-        $list = Config::getParam('pools-cache', []);
-        $adapters = [];
-
-        foreach ($list as $value) {
-            $adapters[] = new CachePool($pools->get($value));
-        }
-
-        return $ctx['cache'] = new Cache(new Sharding($adapters));
-    }
-}
-
-// Allows overriding
-if (!function_exists('getRedis')) {
-    function getRedis(): \Redis
-    {
-        $ctx = Coroutine::getContext();
-
-        if (isset($ctx['redis'])) {
-            return $ctx['redis'];
-        }
-
-        $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
-        $port = System::getEnv('_APP_REDIS_PORT', 6379);
-        $pass = System::getEnv('_APP_REDIS_PASS', '');
-
-        $redis = new \Redis();
-        @$redis->pconnect($host, (int)$port);
-        if ($pass) {
-            $redis->auth($pass);
-        }
-        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
-
-        return $ctx['redis'] = $redis;
-    }
-}
-
-// TODO: Having it as a class but should be like functions like the realtime service with message handlers as action
 class Broker
 {
     // Control packet types (MQTT fixed header, high nibble).
@@ -192,6 +22,7 @@ class Broker
 
     // Reason codes (MQTT 5.0). 0x00 is Success across every acknowledgement.
     private const REASON_SUCCESS = 0x00;
+    private const REASON_NOT_AUTHORIZED = 0x87;
     private const AUTH_SUCCESS = 0x00;
     private const AUTH_CONTINUE = 0x18;
     private const AUTH_REAUTH = 0x19;
@@ -204,16 +35,36 @@ class Broker
     /** @var array<int, int> fd => protocol level (4 = 3.1.1, 5 = 5.0) */
     private array $protocol = [];
 
-    /** @var array<int, string> fd => project id (from the CONNECT username field) */
+    /** @var array<int, string> fd => project id (from a CONNECT User Property) */
     private array $project = [];
 
     /** @var array<int, array<string, true>> fd => set of subscribed topic filters */
     private array $subscriptions = [];
 
+    /** @var array<int, array<string, string>> fd => resolved identity (project/user ids) */
+    private array $identity = [];
+
+    /**
+     *
+     * @var (callable(string, string): array<string, string>)|null
+     */
+    private $authenticator = null;
+
     public function __construct(
         private readonly string $host = '0.0.0.0',
         private readonly int $port = 1883,
     ) {
+    }
+
+    /**
+     * Register the CONNECT authenticator. Without one the broker accepts every
+     * connection (raw protocol testing).
+     *
+     * @param callable(string, string): array<string, string> $authenticator
+     */
+    public function onConnect(callable $authenticator): void
+    {
+        $this->authenticator = $authenticator;
     }
 
     public function start(): void
@@ -262,35 +113,47 @@ class Broker
         $offset += 1; // connect flags
         $offset += 2; // keep alive
 
-        // CONNECT properties carry enhanced auth and our custom metadata.
-        [$userProperties] = $this->readUserProperties($fd, $body, $offset);
+        $properties = $this->getProperties($fd, $body, $offset);
 
-        // projectId is sent as a User Property. deviceType and any other client
-        // metadata can be added the same way, e.g. $userProperties['deviceType'].
-        $project = $userProperties['projectId'] ?? '';
+        $projectId = $properties['user']['projectId'] ?? '';
+        $this->project[$fd] = $projectId;
 
-        $this->project[$fd] = $project;
-        echo "CONNECT project={$project}\n";
+        // TODO: add abuse limiting keyed on the client ip.
+        if ($this->authenticator !== null) {
+            $identity = ($this->authenticator)($projectId, $properties['authData']);
 
-        // TODO: select the project DB from $project and verify the session credential.
+            if ($identity === []) {
+                $this->sendConnack($server, $fd, $level, self::REASON_NOT_AUTHORIZED);
+                $server->close($fd);
+                return;
+            }
 
+            $this->identity[$fd] = $identity;
+        }
+
+        $this->sendConnack($server, $fd, $level, self::REASON_SUCCESS);
+    }
+
+    private function sendConnack(Server $server, int $fd, int $level, int $reasonCode): void
+    {
         // CONNACK: [ack flags = 0][reason code](+ [property length = 0] for v5)
-        $variable = chr(0x00) . chr(self::REASON_SUCCESS) . ($level >= 5 ? $this->encodeLength(0) : '');
+        $variable = chr(0x00) . chr($reasonCode) . ($level >= 5 ? $this->encodeLength(0) : '');
         $server->send($fd, chr(self::CONNACK << 4) . $this->encodeLength(strlen($variable)) . $variable);
     }
 
     /**
-     * Read the User Properties from a v5 CONNECT property block as a key/value map,
-     * skipping the auth method/data. No-op for MQTT 3.1.1 (no properties).
+     * Read a v5 property block: User Properties as a key/value map plus the
+     * Authentication Method and Data. Shared by CONNECT and AUTH, which carry an
+     * identical block. No-op for MQTT 3.1.1 (no properties).
      *
-     * @return array{0: array<string, string>, 1: int} [userProperties, newOffset]
+     * @return array{user: array<string, string>, authMethod: string, authData: string}
      */
-    private function readUserProperties(int $fd, string $body, int $offset): array
+    private function getProperties(int $fd, string $body, int $offset): array
     {
-        $userProperties = [];
+        $properties = ['user' => [], 'authMethod' => '', 'authData' => ''];
 
         if (($this->protocol[$fd] ?? 4) < 5) {
-            return [$userProperties, $offset];
+            return $properties;
         }
 
         [$length, $lenBytes] = $this->decodeLength($body, $offset);
@@ -301,19 +164,25 @@ class Broker
             $id = ord($body[$offset]);
             $offset++;
 
-            if ($id === self::PROP_AUTH_METHOD || $id === self::PROP_AUTH_DATA) {
-                [, $offset] = $this->readString($body, $offset);
-            } elseif ($id === self::PROP_USER) {
-                [$key, $offset] = $this->readString($body, $offset);
-                [$value, $offset] = $this->readString($body, $offset);
-                $userProperties[$key] = $value;
-            } else {
-                // POC assumption: clients send only auth and user properties.
-                throw new \RuntimeException('Unhandled connect property 0x' . dechex($id));
+            switch ($id) {
+                case self::PROP_AUTH_METHOD:
+                    [$properties['authMethod'], $offset] = $this->readString($body, $offset);
+                    break;
+                case self::PROP_AUTH_DATA:
+                    [$properties['authData'], $offset] = $this->readString($body, $offset);
+                    break;
+                case self::PROP_USER:
+                    [$key, $offset] = $this->readString($body, $offset);
+                    [$value, $offset] = $this->readString($body, $offset);
+                    $properties['user'][$key] = $value;
+                    break;
+                default:
+                    // POC assumption: clients send only auth and user properties.
+                    throw new \RuntimeException('Unhandled connect property 0x' . dechex($id));
             }
         }
 
-        return [$userProperties, $offset];
+        return $properties;
     }
 
     private function handleSubscribe(Server $server, int $fd, string $body): void
@@ -360,51 +229,46 @@ class Broker
 
     private function handleAuth(Server $server, int $fd, string $body): void
     {
-        if ($body === '') {
-            // Shorthand: remaining length 0 means reason Success with no properties.
-            $reasonCode = self::AUTH_SUCCESS;
-            $method = $data = '';
-        } else {
-            $reasonCode = ord($body[0]);
-            [$method, $data] = $this->readAuthProperties($body, 1);
+        $method = '';
+        $data = '';
+        $userProperties = [];
+
+        if ($body !== '') {
+            // $body[0] is the reason code (0x19 re-authenticate)
+            // from the offset 1 everything is the mqtt v5 properties
+            $properties = $this->getProperties($fd, $body, 1);
+            $method = $properties['authMethod'];
+            $data = $properties['authData'];
+            $userProperties = $properties['user'];
         }
 
-        // $reasonCode: 0x19 re-authenticate, 0x18 continue.
-        // $method e.g. "appwrite-session"; $data is the credential to verify.
-        // TODO: verify $data and derive the identity, then persist it for this $fd.
-        // Success on a live connection is acknowledged with an AUTH packet;
-        // failure should DISCONNECT (or CONNACK 0x87 during the initial handshake).
+        // The AUTH packet re-sends projectId as a User Property.
+        // TODO: check the events for the reauth only refreshes
+        // the credential, so enforce it stays on the project resolved at CONNECT — the
+        // connection must not switch tenants — then verify the fresh credential.
+        if ($this->authenticator !== null) {
+            $projectId = $userProperties['projectId'] ?? '';
+
+            $identity = ($projectId !== '' && $projectId === ($this->project[$fd] ?? ''))
+                ? ($this->authenticator)($projectId, $data)
+                : [];
+
+            if ($identity === []) {
+                $this->sendDisconnect($server, $fd, self::REASON_NOT_AUTHORIZED);
+                return;
+            }
+
+            $this->identity[$fd] = $identity;
+        }
+
+        // Acknowledge success on the live connection with an AUTH packet.
         $server->send($fd, $this->encodeAuth(self::AUTH_SUCCESS, $method));
     }
 
-    /**
-     * Read the Authentication Method and Data from a property block.
-     * Works for both the AUTH packet and the CONNECT properties.
-     *
-     * @return array{0: string, 1: string} [authMethod, authData]
-     */
-    private function readAuthProperties(string $body, int $offset): array
+    private function sendDisconnect(Server $server, int $fd, int $reasonCode): void
     {
-        $method = $data = '';
-
-        [$length, $lenBytes] = $this->decodeLength($body, $offset);
-        $offset += $lenBytes;
-        $end = $offset + $length;
-
-        while ($offset < $end) {
-            $id = ord($body[$offset]);
-            $offset++;
-
-            match ($id) {
-                self::PROP_AUTH_METHOD => [$method, $offset] = $this->readString($body, $offset),
-                self::PROP_AUTH_DATA => [$data, $offset] = $this->readString($body, $offset),
-                // POC assumption: clients send only method and data. A general
-                // skip needs each property's wire type to advance correctly.
-                default => throw new \RuntimeException('Unhandled auth property 0x' . dechex($id)),
-            };
-        }
-
-        return [$method, $data];
+        $server->send($fd, chr(self::DISCONNECT << 4) . $this->encodeLength(1) . chr($reasonCode));
+        $server->close($fd);
     }
 
     private function encodeAuth(int $reasonCode, string $method, string $data = ''): string
@@ -462,7 +326,12 @@ class Broker
 
     private function onClose(Server $server, int $fd): void
     {
-        unset($this->subscriptions[$fd], $this->protocol[$fd], $this->project[$fd]);
+        unset(
+            $this->subscriptions[$fd],
+            $this->protocol[$fd],
+            $this->project[$fd],
+            $this->identity[$fd],
+        );
     }
 
     /**
