@@ -164,10 +164,6 @@ class Executor
                     // Only the echo tells the two apart: curl hands over the same runs either way.
                     if ($format !== '' && \version_compare($format, self::RESPONSE_FORMAT_STREAM, '>=')) {
                         $boundary = \trim(\explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '', '"');
-                        if ($boundary === '') {
-                            $buffered .= $data;
-                            return;
-                        }
 
                         $reader = new BodyMultipartStream(
                             $boundary,

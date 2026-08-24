@@ -58,6 +58,23 @@ final class BodyMultipartStreamTest extends TestCase
         $this->assertSame('first', $body);
     }
 
+    public function testPartOfARunIsEmittedBeforeTheRestArrives(): void
+    {
+        $body = '';
+        $stream = new BodyMultipartStream('X', function (string $name, string $data) use (&$body): void {
+            $body .= $data;
+        });
+
+        $stream->feed(
+            "--X\r\n"
+            . "Content-Disposition: form-data; name=\"body\"\r\n"
+            . "Content-Transfer-Encoding: chunked\r\n\r\n"
+            . "b\r\nhel"
+        );
+
+        $this->assertSame('hel', $body);
+    }
+
     public function testPartCompletionIsEmittedOnce(): void
     {
         $events = [];
@@ -90,9 +107,8 @@ final class BodyMultipartStreamTest extends TestCase
     }
 
     /**
-     * Golden fixture: the exact bytes open-runtimes/executor emits for a streamed execution
-     * (x-executor-response-format 0.12.0). Pins the cross-repo wire contract, so a change on
-     * either side that breaks the other fails here.
+     * The bytes open-runtimes/executor emits for a streamed execution, part for part. Update
+     * alongside its writer, which is where the format is defined.
      */
     public function testRealExecutorEnvelopeIsParsedInOrder(): void
     {
@@ -115,9 +131,17 @@ final class BodyMultipartStreamTest extends TestCase
             . "Content-Transfer-Encoding: chunked\r\n\r\n"
             . "0\r\n\r\n"
             . "--BOUNDARY\r\n"
+            . "Content-Disposition: form-data; name=\"errors\"\r\n"
+            . "Content-Transfer-Encoding: chunked\r\n\r\n"
+            . "0\r\n\r\n"
+            . "--BOUNDARY\r\n"
             . "Content-Disposition: form-data; name=\"duration\"\r\n"
             . "Content-Transfer-Encoding: chunked\r\n\r\n"
             . "6\r\n0.4213\r\n0\r\n\r\n"
+            . "--BOUNDARY\r\n"
+            . "Content-Disposition: form-data; name=\"startTime\"\r\n"
+            . "Content-Transfer-Encoding: chunked\r\n\r\n"
+            . "a\r\n1787506333\r\n0\r\n\r\n"
             . '--BOUNDARY--';
 
         $completed = [];
@@ -134,7 +158,7 @@ final class BodyMultipartStreamTest extends TestCase
         }
 
         $this->assertTrue($stream->isComplete());
-        $this->assertSame(['statusCode', 'headers', 'body', 'logs', 'duration'], $completed);
+        $this->assertSame(['statusCode', 'headers', 'body', 'logs', 'errors', 'duration', 'startTime'], $completed);
         $this->assertSame('200', $parts['statusCode']);
         $this->assertSame(['content-type' => 'text/html'], \json_decode($parts['headers'], true));
         $this->assertSame("<html>\n</html>\n", $parts['body']);
@@ -186,7 +210,7 @@ final class BodyMultipartStreamTest extends TestCase
         $stream = new BodyMultipartStream('X', function (): void {
         });
 
-        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Malformed chunk size');
 
         $stream->feed(
             "--X\r\n"

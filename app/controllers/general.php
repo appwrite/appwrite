@@ -553,7 +553,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView): void {
             if ($name !== 'body') {
-                $streamParts[$name] = ($streamParts[$name] ?? '') . $chunk;
+                // Only the parts read below, and only while they still can be.
+                if ($streamed === null) {
+                    $streamParts[$name] = ($streamParts[$name] ?? '') . $chunk;
+                }
 
                 return;
             }
@@ -851,8 +854,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 ->setContentType($contentType)
                 ->setStatusCode($execution['responseStatusCode'] ?? 200)
                 ->send($body);
-        } else {
-            $response->chunk('', true);
         }
 
         $bus->dispatch(new RequestCompleted(
