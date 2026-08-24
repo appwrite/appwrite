@@ -19,6 +19,7 @@ return function (Container $container): void {
         }
 
         $dbForPlatform = getConsoleDB();
+        $dbForPlatform->setAuthorization($authorization);
 
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     }, ['projectId', 'console', 'authorization']);
