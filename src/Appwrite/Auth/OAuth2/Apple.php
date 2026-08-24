@@ -212,6 +212,12 @@ class Apple extends OAuth2
             throw new Exception('Invalid Apple OAuth2 p8 private key. Make sure the value contains the full contents of the .p8 key file downloaded from the Apple Developer portal, including the PEM markers and line breaks.');
         }
 
+        $details = \openssl_pkey_get_details($pkey);
+
+        if (($details['type'] ?? -1) !== OPENSSL_KEYTYPE_EC || ($details['ec']['curve_name'] ?? '') !== 'prime256v1') {
+            throw new Exception('Invalid Apple OAuth2 p8 private key. The key must be an EC key on the P-256 curve, as issued by the Apple Developer portal.');
+        }
+
         $payload = $this->encode(\json_encode($headers)) . '.' . $this->encode(\json_encode($claims));
 
         $signature = '';

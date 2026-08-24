@@ -53,6 +53,38 @@ final class AppleTest extends TestCase
         $apple->verifyCredentials();
     }
 
+    public function testVerifyCredentialsWrongCurveKey(): void
+    {
+        // Apple-issued .p8 keys are always P-256. Any other curve signs
+        // successfully but produces a signature Apple rejects as ES256.
+        $resource = \openssl_pkey_new([
+            'private_key_type' => OPENSSL_KEYTYPE_EC,
+            'curve_name' => 'secp384r1',
+        ]);
+        \openssl_pkey_export($resource, $pem);
+        $apple = new Apple('com.example.service', $this->secret($pem), 'https://example.com/callback');
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('P-256');
+
+        $apple->verifyCredentials();
+    }
+
+    public function testVerifyCredentialsNonEcKey(): void
+    {
+        $resource = \openssl_pkey_new([
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+            'private_key_bits' => 2048,
+        ]);
+        \openssl_pkey_export($resource, $pem);
+        $apple = new Apple('com.example.service', $this->secret($pem), 'https://example.com/callback');
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('P-256');
+
+        $apple->verifyCredentials();
+    }
+
     public function testVerifyCredentialsMissingKeyId(): void
     {
         $secret = \json_encode(['p8' => $this->privateKey(), 'keyID' => '', 'teamID' => 'D4000000R6'], JSON_THROW_ON_ERROR);
