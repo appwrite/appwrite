@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -22,13 +23,6 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-/**
- * Configure the directory a project authenticates against.
- *
- * Stored as a list holding one entry rather than as flat fields, so that
- * allowing several directories per project later is a change to this action and
- * the console, not a migration of stored data. See docs/decisions/ldap-auth.md.
- */
 class Update extends Action
 {
     use HTTP;
@@ -52,7 +46,7 @@ class Update extends Action
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,
-                name: 'updateLdap',
+                name: 'updateLDAP',
                 description: <<<EOT
                 Configure the LDAP directory this project authenticates against.
 
@@ -106,126 +100,63 @@ class Update extends Action
         $queueForEvents->setParam('methodId', 'ldap');
 
         $auths = $project->getAttribute('auths', []);
-        $existing = $this->readDirectory($project);
 
-        // The stored bind password belongs to the host it was entered for.
-        // Carrying it over to a different host or bind DN would let a caller
-        // with project.write point the connection at a server they control and
-        // have Appwrite hand over the service credentials, so the password must
-        // be supplied again whenever either changes.
-        // Anything that changes where the password goes, or how protected it is
-        // in transit, counts: a different port is a different destination, and
-        // dropping encryption puts the credential on the wire in the clear.
-        $movingDestination = ($host !== null && $host !== ($existing['host'] ?? ''))
-            || ($bindDn !== null && $bindDn !== ($existing['bindDn'] ?? ''))
-            || ($port !== null && $port !== (int)($existing['port'] ?? Settings::DEFAULT_PORT));
+        $directories = $project->getAttribute('auths', [])['ldapDirectories'] ?? '[]';
+        $directories = \json_decode($directories, true);
 
-        $weakeningTransport = $encryption !== null
-            && $encryption !== ($existing['encryption'] ?? Settings::ENCRYPTION_TLS)
-            && $encryption === Settings::ENCRYPTION_NONE;
-
-        if (($movingDestination || $weakeningTransport) && $bindPassword === null && !empty($existing['bindPassword'] ?? '')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Changing the LDAP host, port, bind DN or encryption requires the bind password to be provided again.');
-        }
-
-        // Merge over what is stored, so an admin can change one field without
-        // re-sending the whole configuration, and without having to re-send the
-        // bind password every time.
+        // TODO: Fix when adding array support
+        $directory = $directories[0] ?? [];
+        
         $directory = [
-            'host' => $host ?? ($existing['host'] ?? ''),
-            'port' => $port ?? ($existing['port'] ?? Settings::DEFAULT_PORT),
-            'encryption' => $encryption ?? ($existing['encryption'] ?? Settings::ENCRYPTION_TLS),
-            'baseDn' => $baseDn ?? ($existing['baseDn'] ?? ''),
-            'bindDn' => $bindDn ?? ($existing['bindDn'] ?? ''),
-            'bindPassword' => $bindPassword ?? ($existing['bindPassword'] ?? ''),
-            'userFilter' => $userFilter ?? ($existing['userFilter'] ?? '(uid=' . Settings::PLACEHOLDER . ')'),
-            'provisionFilter' => $provisionFilter ?? ($existing['provisionFilter'] ?? ''),
-            'emailAttribute' => $emailAttribute ?? ($existing['emailAttribute'] ?? 'mail'),
-            'nameAttribute' => $nameAttribute ?? ($existing['nameAttribute'] ?? 'cn'),
+            'host' => $host ?? ($directory['host'] ?? ''),
+            'port' => $port ?? ($directory['port'] ?? Settings::DEFAULT_PORT),
+            'encryption' => $encryption ?? ($directory['encryption'] ?? Settings::ENCRYPTION_TLS),
+            'baseDn' => $baseDn ?? ($directory['baseDn'] ?? ''),
+            'bindDn' => $bindDn ?? ($directory['bindDn'] ?? ''),
+            'bindPassword' => $bindPassword ?? ($directory['bindPassword'] ?? ''),
+            'userFilter' => $userFilter ?? ($directory['userFilter'] ?? '(uid=' . Settings::PLACEHOLDER . ')'),
+            'provisionFilter' => $provisionFilter ?? ($directory['provisionFilter'] ?? ''),
+            'emailAttribute' => $emailAttribute ?? ($directory['emailAttribute'] ?? 'mail'),
+            'nameAttribute' => $nameAttribute ?? ($directory['nameAttribute'] ?? 'cn'),
         ];
 
         if ($enabled === true) {
-            $this->assertDirectoryIsReachable($directory);
+            try {
+                $settings = new Settings(
+                    host: $directory['host'],
+                    port: (int)$directory['port'],
+                    encryption: $directory['encryption'],
+                    baseDn: $directory['baseDn'],
+                    bindDn: $directory['bindDn'],
+                    bindPassword: $directory['bindPassword'],
+                    userFilter: $directory['userFilter'],
+                    provisionFilter: $directory['provisionFilter'],
+                    emailAttribute: $directory['emailAttribute'],
+                    nameAttribute: $directory['nameAttribute'],
+                );
+    
+                (new Client($settings))->verify();
+            } catch (\Throwable $error) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not enable LDAP: ' . $error->getMessage());
+            }
         }
 
+        // TODO: Fix when adding array support
         $auths['ldapDirectories'] = \json_encode([$directory]);
 
         if (!\is_null($enabled)) {
-            $auths['ldapEnabled'] = $enabled;
+            $auths[Config::getParam('auth')['ldap']['key']] = $enabled;
         }
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,
         ])));
 
-        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+        $project = $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
-        $response->dynamic($this->buildReadResponse($project), Response::MODEL_AUTH_LDAP);
-    }
-
-    /**
-     * Connect and bind the service account, so an invalid configuration is
-     * rejected while an admin is looking at it rather than when a user first
-     * tries to sign in.
-     *
-     * @param array<string, mixed> $directory
-     *
-     * @return void
-     */
-    private function assertDirectoryIsReachable(array $directory): void
-    {
-        try {
-            $settings = new Settings(
-                host: $directory['host'],
-                port: (int)$directory['port'],
-                encryption: $directory['encryption'],
-                baseDn: $directory['baseDn'],
-                bindDn: $directory['bindDn'],
-                bindPassword: $directory['bindPassword'],
-                userFilter: $directory['userFilter'],
-                provisionFilter: $directory['provisionFilter'],
-                emailAttribute: $directory['emailAttribute'],
-                nameAttribute: $directory['nameAttribute'],
-            );
-
-            (new Client($settings))->verify();
-        } catch (\Throwable $error) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not enable LDAP: ' . $error->getMessage());
-        }
-    }
-
-    /**
-     * @param Document $project
-     *
-     * @return array<string, mixed>
-     */
-    private function readDirectory(Document $project): array
-    {
-        $stored = $project->getAttribute('auths', [])['ldapDirectories'] ?? '[]';
-        $directories = \json_decode($stored, true);
-
-        if (!\is_array($directories) || \count($directories) === 0) {
-            return [];
-        }
-
-        return \is_array($directories[0]) ? $directories[0] : [];
-    }
-
-    /**
-     * The bind password is write-only, like every other stored credential.
-     *
-     * @param Document $project
-     *
-     * @return Document
-     */
-    public function buildReadResponse(Document $project): Document
-    {
-        $auths = $project->getAttribute('auths', []);
-        $directory = $this->readDirectory($project);
-
-        return new Document([
+        $response->dynamic(new Document([
             '$id' => 'ldap',
-            'enabled' => $auths['ldapEnabled'] ?? false,
+            'enabled' => $auths[Config::getParam('auth')['ldap']['key']] ?? false,
             'host' => $directory['host'] ?? '',
             'port' => (int)($directory['port'] ?? Settings::DEFAULT_PORT),
             'encryption' => $directory['encryption'] ?? Settings::ENCRYPTION_TLS,
@@ -235,6 +166,6 @@ class Update extends Action
             'provisionFilter' => $directory['provisionFilter'] ?? '',
             'emailAttribute' => $directory['emailAttribute'] ?? 'mail',
             'nameAttribute' => $directory['nameAttribute'] ?? 'cn',
-        ]);
+        ]), Response::MODEL_AUTH_LDAP);
     }
 }

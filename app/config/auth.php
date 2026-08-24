@@ -16,6 +16,9 @@ return [
         'icon' => '/images/users/ldap.png',
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateLDAPSession',
         'enabled' => true,
+        // Disabled on new projects, unlike the other methods: a project with
+        // no directory configured cannot authenticate anyone against one.
+        'default' => false,
     ],
     'magic-url' => [
         'name' => 'Magic URL',

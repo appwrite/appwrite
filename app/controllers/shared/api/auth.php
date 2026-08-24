@@ -105,7 +105,7 @@ Http::init()
             case 'ldap':
                 // Defaults to disabled, unlike the methods above: a project with
                 // no directory configured cannot authenticate anyone against one.
-                if (($auths[Config::getParam('auth')['ldap']['key'] . 'Enabled'] ?? false) === false) {
+                if (($auths[Config::getParam('auth')['ldap']['key']] ?? false) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'LDAP authentication is disabled for this project');
                 }
                 break;
