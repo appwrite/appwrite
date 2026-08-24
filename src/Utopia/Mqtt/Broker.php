@@ -46,7 +46,7 @@ class Broker
 
     /**
      *
-     * @var (callable(string, string): array<string, string>)|null
+     * @var (callable(string, string, string): array<string, string>)|null
      */
     private $authenticator = null;
 
@@ -60,7 +60,7 @@ class Broker
      * Register the CONNECT authenticator. Without one the broker accepts every
      * connection (raw protocol testing).
      *
-     * @param callable(string, string): array<string, string> $authenticator
+     * @param callable(string, string, string): array<string, string> $authenticator
      */
     public function onConnect(callable $authenticator): void
     {
@@ -120,7 +120,7 @@ class Broker
 
         // TODO: add abuse limiting keyed on the client ip.
         if ($this->authenticator !== null) {
-            $identity = ($this->authenticator)($projectId, $properties['authData']);
+            $identity = ($this->authenticator)($projectId, $properties['authMethod'], $properties['authData']);
 
             if ($identity === []) {
                 $this->sendConnack($server, $fd, $level, self::REASON_NOT_AUTHORIZED);
@@ -250,7 +250,7 @@ class Broker
             $projectId = $userProperties['projectId'] ?? '';
 
             $identity = ($projectId !== '' && $projectId === ($this->project[$fd] ?? ''))
-                ? ($this->authenticator)($projectId, $data)
+                ? ($this->authenticator)($projectId, $method, $data)
                 : [];
 
             if ($identity === []) {

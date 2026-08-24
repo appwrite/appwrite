@@ -1,5 +1,7 @@
 <?php
 
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
@@ -7,6 +9,7 @@ use Utopia\Auth\Store;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
+use Utopia\System\System;
 
 return function (Container $container): void {
     $container->set('authorization', function () {
@@ -24,23 +27,43 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     }, ['projectId', 'console', 'authorization']);
 
-    $container->set('user', function (Document $project, string $sessionSecret, Authorization $authorization) {
-        if ($project->isEmpty() || $sessionSecret === '') {
+    $container->set('user', function (Document $project, string $authMethod, string $credential, Authorization $authorization) {
+        if ($project->isEmpty() || $credential === '') {
             return new User([]);
         }
 
         $authorization->setDefaultStatus(true);
 
-        // The session secret arrives as the same Store-encoded "id:secret" blob the
-        // SDK sends over x-appwrite-session; decode it to recover both halves.
+        $dbForProject = getProjectDB($project);
+        $dbForProject->setAuthorization($authorization);
+
+        if ($authMethod === 'appwrite-jwt') {
+            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+
+            try {
+                $payload = $jwt->decode($credential);
+            } catch (JWTException) {
+                return new User([]);
+            }
+
+            $userId = $payload['userId'] ?? '';
+            $sessionId = $payload['sessionId'] ?? '';
+
+            /** @var User $user */
+            $user = $dbForProject->getDocument('users', $userId);
+
+            if ($user->isEmpty() || ($sessionId !== '' && !$user->sessionActive($sessionId))) {
+                return new User([]);
+            }
+
+            return $user;
+        }
+
         $store = new Store();
-        $store->decode($sessionSecret);
+        $store->decode($credential);
 
         $proofForToken = new Token();
         $proofForToken->setHash(new Sha());
-
-        $dbForProject = getProjectDB($project);
-        $dbForProject->setAuthorization($authorization);
 
         /** @var User $user */
         $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
@@ -53,5 +76,5 @@ return function (Container $container): void {
         }
 
         return $user;
-    }, ['project', 'sessionSecret', 'authorization']);
+    }, ['project', 'authMethod', 'credential', 'authorization']);
 };

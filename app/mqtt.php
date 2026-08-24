@@ -157,10 +157,11 @@ if (!function_exists('getProjectDB')) {
  *
  * @return array{projectId: string, userId: string}|array{}
  */
-$authenticate = function (string $projectId, string $secret) use ($container, $registerMqttConnectionResources): array {
+$authenticate = function (string $projectId, string $authMethod, string $credential) use ($container, $registerMqttConnectionResources): array {
     $connectionContainer = new Container($container);
     $connectionContainer->set('projectId', fn () => $projectId);
-    $connectionContainer->set('sessionSecret', fn () => $secret);
+    $connectionContainer->set('authMethod', fn () => $authMethod);
+    $connectionContainer->set('credential', fn () => $credential);
 
     $registerMqttConnectionResources($connectionContainer);
 
