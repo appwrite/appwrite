@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { WafRuleAction } from '@appwrite.io/console'
 import { Globe, Server, Zap } from 'lucide-react'
@@ -51,8 +51,6 @@ import {
   type FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import { draftsFromUsageFilterMap } from '@/lib/firewall/usage'
-import { normalizeFirewallLastResource } from '@/lib/firewall/last-resource'
-import { useFirewallLastResource } from '@/hooks/use-firewall-last-resource'
 import { queryParamToMap } from '@/lib/table-filters'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -117,13 +115,11 @@ export function View() {
     resourceId: initialResourceId,
     query: initialQuery,
   } = Route.useSearch()
-  const { lastResource, setLastResource } = useFirewallLastResource(projectId)
   const initialSelection: FirewallResourceSelection =
     parseFirewallListSearch({
       resourceType: initialResourceType,
       resourceId: initialResourceId,
-    }) ??
-    lastResource ?? { resourceType: 'api' }
+    }) ?? { resourceType: 'api' }
   const createMutation = useCreateFirewallRule(projectId)
   const [ruleId, setRuleId] = useState<string | undefined>()
   const [form, setForm] = useState({
@@ -137,14 +133,6 @@ export function View() {
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>(() =>
     initialConditionsFromSearch(initialQuery),
   )
-
-  useEffect(() => {
-    const next = normalizeFirewallLastResource({
-      resourceType: form.resourceType,
-      resourceId: form.resourceId,
-    })
-    if (next) setLastResource(next)
-  }, [form.resourceId, form.resourceType, setLastResource])
 
   const needsResourceId = form.resourceType !== 'api'
   const canSubmit =
@@ -489,13 +477,13 @@ export function View() {
                 <button
                   key={resource.value}
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     setForm({
                       ...form,
                       resourceType: resource.value,
                       resourceId: '',
                     })
-                  }
+                  }}
                   className={cn(
                     'flex w-full cursor-pointer items-start gap-3 rounded-xl border border-border bg-card/50 p-3.5 text-start transition-all hover:border-border/80 hover:bg-card/60',
                     selected &&

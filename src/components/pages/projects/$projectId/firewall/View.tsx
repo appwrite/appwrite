@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Shield } from 'lucide-react'
@@ -11,7 +10,6 @@ import {
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canWriteRules } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useFirewallLastResource } from '@/hooks/use-firewall-last-resource'
 import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-resources'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
@@ -40,33 +38,8 @@ export function View() {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const search = Route.useSearch()
-  const { lastResource, setLastResource } = useFirewallLastResource(projectId)
-  const explicitSelection = parseFirewallListSearch(search)
   const resourceSelection: FirewallResourceSelection =
-    explicitSelection ?? lastResource ?? { resourceType: 'api' }
-
-  useEffect(() => {
-    if (search.resourceType) {
-      const explicit = parseFirewallListSearch(search)
-      if (explicit) setLastResource(explicit)
-      return
-    }
-    if (lastResource && lastResource.resourceType !== 'api') {
-      void navigate({
-        to: '/projects/$projectId/firewall',
-        params: { projectId },
-        search: firewallListSearch(lastResource),
-        replace: true,
-      })
-    }
-  }, [
-    lastResource,
-    navigate,
-    projectId,
-    search.resourceId,
-    search.resourceType,
-    setLastResource,
-  ])
+    parseFirewallListSearch(search) ?? { resourceType: 'api' }
 
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
@@ -180,7 +153,6 @@ export function View() {
             canWrite={canWrite}
             resourceSelection={resourceSelection}
             onResourceSelectionChange={(next) => {
-              setLastResource(next)
               void navigate({
                 to: '/projects/$projectId/firewall',
                 params: { projectId },
