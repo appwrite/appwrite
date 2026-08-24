@@ -1952,7 +1952,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'identifier' => $email,
                 ]));
             } catch (Duplicate) {
-                // Another target already uses this identifier; leave it untouched
+                // The identifier unique index spans all users. Persisting the email while another
+                // user owns the target would leave this user unreachable by email messaging.
+                $existingTarget = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+                    Query::equal('identifier', [$email]),
+                ]));
+                if ($existingTarget->isEmpty() || $existingTarget->getAttribute('userInternalId') !== $user->getSequence()) {
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                }
             }
         }
 
