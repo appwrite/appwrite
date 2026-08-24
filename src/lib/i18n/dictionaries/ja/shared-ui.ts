@@ -40,6 +40,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Active session:': 'アクティブなセッション:',
   'Add account': 'アカウントを追加',
   'Add filter': 'フィルターを追加',
+  'Add value': '値を追加',
   'Add installation': 'インストールを追加',
   'Add variable': '変数を追加',
   'All shortcuts': 'すべてのショートカット',

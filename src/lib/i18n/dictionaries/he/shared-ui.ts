@@ -68,6 +68,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Active session:': 'סשן פעיל:',
   'Add account': 'הוספת חשבון',
   'Add filter': 'הוספת סינון',
+  'Add value': 'הוספת ערך',
   'Add installation': 'הוספת התקנה',
   'Add one or more environment variables. You can add multiple variables at once.':
     'הוסיפו משתנה סביבה אחד או יותר. אפשר להוסיף כמה משתנים בבת אחת.',
