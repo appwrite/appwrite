@@ -1220,15 +1220,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Light backgrounds': 'רקעים בהירים',
   'Dark backgrounds': 'רקעים כהים',
   'Plain, bottom pink & purple': 'חלק, ורוד וסגול מלמטה',
-  'Square grid': 'רשת ריבועים',
   'Plain, bottom teal ambient glow': 'חלק, זוהר טורקיז מלמטה',
   'Plain, monochrome shade glow': 'חלק, זוהר מונוכרום',
   'Solid background with soft corner glow, no texture.':
     'רקע אחיד עם זוהר רך בפינות, בלי טקסטורה.',
-  'Large square cells with scattered tinted tiles.':
-    'תאים ריבועיים עם אריחים צבעוניים מפוזרים.',
-  'Large square cells with monochrome shade tiles.':
-    'תאים ריבועיים עם אריחי מונוכרום מפוזרים.',
   'Plain dark background with a large teal light leak from the lower-left corner.':
     'רקע כהה אחיד עם דליפת אור טורקיז גדולה מהפינה השמאלית התחתונה.',
   'Plain dark background with soft corner washes in a darker shade of the same color.':

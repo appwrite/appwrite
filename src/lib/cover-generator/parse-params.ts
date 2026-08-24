@@ -9,7 +9,6 @@ import {
 } from '@/lib/cover-generator/constants'
 import {
   DEFAULT_COVER_THEME_ID,
-  isCoverThemeId,
   resolveCoverThemeId,
 } from '@/lib/cover-generator/themes'
 import {
@@ -208,9 +207,7 @@ function parseTemplate(value: string | null): CoverTemplateId {
 }
 
 function parseTheme(value: string | null): CoverThemeId {
-  const normalized = value?.trim().toLowerCase()
-  if (normalized && isCoverThemeId(normalized)) return normalized
-  return DEFAULT_COVER_THEME_ID
+  return resolveCoverThemeId(value?.trim().toLowerCase())
 }
 
 function parseCoverScreenshotFields(
