@@ -8,14 +8,20 @@ class Broker
 {
     // Control packet types (MQTT fixed header, high nibble).
     private const CONNECT = 1;
+    private const CONNACK = 2;
     private const PUBLISH = 3;
+    private const PUBACK = 4;
     private const SUBSCRIBE = 8;
+    private const SUBACK = 9;
     private const UNSUBSCRIBE = 10;
+    private const UNSUBACK = 11;
     private const PINGREQ = 12;
+    private const PINGRESP = 13;
     private const DISCONNECT = 14;
     private const AUTH = 15;
 
-    // Authenticate reason codes (MQTT 5.0).
+    // Reason codes (MQTT 5.0). 0x00 is Success across every acknowledgement.
+    private const REASON_SUCCESS = 0x00;
     private const AUTH_SUCCESS = 0x00;
     private const AUTH_CONTINUE = 0x18;
     private const AUTH_REAUTH = 0x19;
@@ -69,7 +75,7 @@ class Broker
             self::UNSUBSCRIBE => $this->handleUnsubscribe($server, $fd, $body),
             self::PUBLISH => $this->handlePublish($server, $fd, $flags, $body),
             self::AUTH => $this->handleAuth($server, $fd, $body),
-            self::PINGREQ => $server->send($fd, chr(0xD0) . chr(0x00)),
+            self::PINGREQ => $server->send($fd, chr(self::PINGRESP << 4) . $this->encodeLength(0)),
             self::DISCONNECT => $server->close($fd),
             default => null,
         };
@@ -98,9 +104,9 @@ class Broker
 
         // TODO: select the project DB from $project and verify the session credential.
 
-        // CONNACK: [ack flags = 0][reason code = 0](+ [property length = 0] for v5)
-        $variable = chr(0x00) . chr(0x00) . ($level >= 5 ? chr(0x00) : '');
-        $server->send($fd, chr(0x20) . $this->encodeLength(strlen($variable)) . $variable);
+        // CONNACK: [ack flags = 0][reason code](+ [property length = 0] for v5)
+        $variable = chr(0x00) . chr(self::REASON_SUCCESS) . ($level >= 5 ? $this->encodeLength(0) : '');
+        $server->send($fd, chr(self::CONNACK << 4) . $this->encodeLength(strlen($variable)) . $variable);
     }
 
     /**
@@ -152,12 +158,12 @@ class Broker
             [$filter, $offset] = $this->readString($body, $offset);
             $offset += 1; // subscription options byte
             $this->subscriptions[$fd][$filter] = true;
-            $granted .= chr(0x00); // granted QoS 0
+            $granted .= chr(self::REASON_SUCCESS); // granted QoS 0
         }
 
         // SUBACK: packet id (+ property length 0 for v5) + granted codes
-        $variable = $packetId . ($this->protocol[$fd] >= 5 ? chr(0x00) : '') . $granted;
-        $server->send($fd, chr(0x90) . $this->encodeLength(strlen($variable)) . $variable);
+        $variable = $packetId . ($this->protocol[$fd] >= 5 ? $this->encodeLength(0) : '') . $granted;
+        $server->send($fd, chr(self::SUBACK << 4) . $this->encodeLength(strlen($variable)) . $variable);
     }
 
     private function handleUnsubscribe(Server $server, int $fd, string $body): void
@@ -177,9 +183,9 @@ class Broker
         // UNSUBACK: packet id (+ property length 0 + one reason code per filter for v5)
         $variable = $packetId;
         if ($this->protocol[$fd] >= 5) {
-            $variable .= chr(0x00) . str_repeat(chr(0x00), $count);
+            $variable .= $this->encodeLength(0) . str_repeat(chr(self::REASON_SUCCESS), $count);
         }
-        $server->send($fd, chr(0xB0) . $this->encodeLength(strlen($variable)) . $variable);
+        $server->send($fd, chr(self::UNSUBACK << 4) . $this->encodeLength(strlen($variable)) . $variable);
     }
 
     private function handleAuth(Server $server, int $fd, string $body): void
@@ -264,7 +270,7 @@ class Broker
 
         if ($qos === 1 && $packetId !== null) {
             // PUBACK: packet id (reason/properties omitted -> valid for both versions)
-            $server->send($fd, chr(0x40) . chr(0x02) . $packetId);
+            $server->send($fd, chr(self::PUBACK << 4) . $this->encodeLength(strlen($packetId)) . $packetId);
         }
     }
 
@@ -274,10 +280,10 @@ class Broker
             foreach ($filters as $filter => $_) {
                 if ($this->matches($filter, $topic)) {
                     $variable = $this->encodeString($topic)
-                        . (($this->protocol[$fd] ?? 4) >= 5 ? chr(0x00) : '')
+                        . (($this->protocol[$fd] ?? 4) >= 5 ? $this->encodeLength(0) : '')
                         . $payload;
                     // PUBLISH, QoS 0
-                    $server->send($fd, chr(0x30) . $this->encodeLength(strlen($variable)) . $variable);
+                    $server->send($fd, chr(self::PUBLISH << 4) . $this->encodeLength(strlen($variable)) . $variable);
                     break; // one copy per subscriber even if several filters match
                 }
             }
