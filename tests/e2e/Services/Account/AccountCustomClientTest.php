@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Account;
 
-use Appwrite\Auth\OIDC\MockKeys;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -5231,12 +5230,23 @@ final class AccountCustomClientTest extends Scope
      */
     private function mintIdToken(array $claims, array $header = []): string
     {
-        return MockKeys::sign(array_merge([
-            'iss' => 'https://localhost/v1/mock',
-            'aud' => '1',
-            'iat' => \time(),
-            'exp' => \time() + 3600,
-        ], $claims), $header);
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'claims' => \json_encode(array_merge([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+            ], $claims)),
+            'header' => empty($header) ? '' : \json_encode($header),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return $response['body']['token'];
     }
 
     public function testCreateIdTokenSession(): void
@@ -5510,6 +5520,54 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(409, $response['headers']['status-code']);
         $this->assertEquals('user_already_exists', $response['body']['type']);
+    }
+
+    public function testCreateIdTokenSessionForeignSubjectKeepsSession(): void
+    {
+        $this->updateMockProvider(true);
+
+        $projectId = $this->getProject()['$id'];
+        $sub = 'idtoken-' . \uniqid('', true);
+
+        // The subject is claimed by its own account first
+        $owner = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => $sub,
+                'email' => 'idtoken.owner.' . \uniqid('', true) . '@localhost.test',
+                'email_verified' => true,
+            ]),
+        ]);
+        $this->assertEquals(201, $owner['headers']['status-code']);
+
+        // A different logged-in user presenting the same subject under a new
+        // provider email must be rejected, not hit the unique index
+        $other = $this->createFreshAccountWithSession();
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => $sub,
+                'email' => 'idtoken.changed.' . \uniqid('', true) . '@localhost.test',
+                'email_verified' => true,
+            ]),
+        ], [
+            'cookie' => 'a_session_' . $projectId . '=' . $other['session'],
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_already_exists', $response['body']['type']);
+
+        // A failed link must leave the caller's existing session intact
+        $account = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $other['session'],
+        ]));
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($other['id'], $account['body']['$id']);
     }
 
     public function testCreateIdTokenSessionProviderDisabled(): void

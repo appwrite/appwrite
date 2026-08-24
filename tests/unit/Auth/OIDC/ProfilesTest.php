@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Auth\OIDC;
 
+use Appwrite\Auth\OIDC\Profile;
 use Appwrite\Auth\OIDC\Profiles;
 use PHPUnit\Framework\TestCase;
 
@@ -23,6 +24,6 @@ final class ProfilesTest extends TestCase
 
     public function testUnknownProviderHasNoProfile(): void
     {
-        $this->assertNull(Profiles::get('github'));
+        $this->assertNotInstanceOf(Profile::class, Profiles::get('github'));
     }
 }

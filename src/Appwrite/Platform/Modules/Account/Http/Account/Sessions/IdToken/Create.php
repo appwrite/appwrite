@@ -166,9 +166,6 @@ class Create extends Action
         $sub = $claims['sub'];
         $providerEmail = \is_string($claims['email'] ?? null) ? $claims['email'] : '';
         $email = $providerEmail;
-        if (empty($email)) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
-        }
 
         // Apple attests the claim as the string "true"; Google as a boolean
         $isVerified = \filter_var($claims['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
@@ -180,33 +177,37 @@ class Create extends Action
         // Check if this identity is connected to a different user
         $sessionUpgrade = false;
         if (!$user->isEmpty()) {
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                Query::equal('providerEmail', [$providerEmail]),
+            $identityWithMatchingUid = $dbForProject->findOne('identities', [
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$sub]),
                 Query::notEqual('userInternalId', $user->getSequence()),
             ]);
-            if (!$identityWithMatchingEmail->isEmpty()) {
+            if (!$identityWithMatchingUid->isEmpty()) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
 
-            $userWithMatchingEmail = $dbForProject->find('users', [
-                Query::equal('email', [$email]),
-                Query::notEqual('$id', $user->getId()),
-            ]);
-            if (!empty($userWithMatchingEmail)) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            if (!empty($providerEmail)) {
+                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$providerEmail]),
+                    Query::notEqual('userInternalId', $user->getSequence()),
+                ]);
+                if (!$identityWithMatchingEmail->isEmpty()) {
+                    throw new Exception(Exception::USER_ALREADY_EXISTS);
+                }
+
+                $userWithMatchingEmail = $dbForProject->find('users', [
+                    Query::equal('email', [$email]),
+                    Query::notEqual('$id', $user->getId()),
+                ]);
+                if (!empty($userWithMatchingEmail)) {
+                    throw new Exception(Exception::USER_ALREADY_EXISTS);
+                }
             }
 
             $sessionUpgrade = true;
         }
 
         $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
-        if ($current) { // Delete current session of new one.
-            $currentDocument = $dbForProject->getDocument('sessions', $current);
-            if (!$currentDocument->isEmpty()) {
-                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-                $dbForProject->purgeCachedDocument('users', $user->getId());
-            }
-        }
 
         if ($user->isEmpty()) {
             $session = $dbForProject->findOne('sessions', [ // Get user by provider id
@@ -218,8 +219,10 @@ class Create extends Action
             }
         }
 
+        $newUser = null;
+        $newTarget = null;
         if ($user->isEmpty()) {
-            $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization);
+            [$newUser, $newTarget] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization);
         }
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -229,11 +232,11 @@ class Create extends Action
             throw new Exception(Exception::USER_BLOCKED);
         }
 
-        if (empty($user->getAttribute('email'))) {
-            $this->backfillEmail($user, $providerEmail, $isVerified, $dbForProject, $project, $plan);
+        if (empty($user->getAttribute('email')) && !empty($providerEmail)) {
+            $this->backfillEmail($user, $providerEmail, $isVerified, $dbForProject, $project, $plan, $authorization);
         }
 
-        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $accessToken, $dbForProject);
+        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $accessToken, $dbForProject, $authorization, $newUser, $newTarget);
 
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $name);
@@ -242,6 +245,14 @@ class Create extends Action
         $user->setAttribute('status', true);
 
         $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        if ($current) { // Replace the current session only now that linking succeeded
+            $currentDocument = $dbForProject->getDocument('sessions', $current);
+            if (!$currentDocument->isEmpty()) {
+                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
+                $dbForProject->purgeCachedDocument('users', $user->getId());
+            }
+        }
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -350,8 +361,11 @@ class Create extends Action
      * Resolve the ID token to a user: an existing identity wins, then a
      * verified-email match adopts the account, otherwise a new user is
      * created. Mutates `$user` in place. Mirrors the browser OAuth2 flow.
+     *
+     * @return array{?Document, ?Document} the user and email target created by
+     *     this request, if any, so they can be rolled back later
      */
-    private function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization): void
+    private function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization): array
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('provider', [$provider]),
@@ -371,12 +385,13 @@ class Create extends Action
             'emailIsDisposable' => null,
             'emailIsFree' => null,
         ];
-        if ($user->isEmpty()) {
-            [$email, $emails, $emailMetadata] = $this->parseEmail($providerEmail, $isVerified, $project, $plan);
+        $canonicalize = false;
+        if ($user->isEmpty() && !empty($providerEmail)) {
+            [$email, $emails, $emailMetadata, $canonicalize] = $this->parseEmail($providerEmail, $isVerified, $project, $plan);
         }
 
         // If user is not found, check if there is a user with the same email
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() && !empty($email)) {
             $userWithEmail = $dbForProject->findOne('users', [
                 Query::equal('email', $emails),
             ]);
@@ -389,7 +404,7 @@ class Create extends Action
         }
 
         // If user is not found, check if there is an identity with the same email
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() && !empty($providerEmail)) {
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$providerEmail]),
             ]);
@@ -402,7 +417,7 @@ class Create extends Action
         }
 
         if (!$user->isEmpty()) {
-            return;
+            return [null, null];
         }
 
         // Last option -> create the user
@@ -414,7 +429,7 @@ class Create extends Action
             }
         }
 
-        $this->assertEmailPolicy($emailMetadata, $project, $plan);
+        $this->assertEmailPolicy($emailMetadata, $email, $canonicalize, $project, $plan);
 
         try {
             $userId = ID::unique();
@@ -425,8 +440,8 @@ class Create extends Action
                     Permission::update(Role::user($userId)),
                     Permission::delete(Role::user($userId)),
                 ],
-                'email' => $email,
-                'emailVerification' => $isVerified, // Trust the provider's attestation, not the mere fact an email was returned
+                'email' => $email ?: null,
+                'emailVerification' => !empty($email) && $isVerified, // Trust the provider's attestation, not the mere fact an email was returned
                 'status' => true,
                 'password' => null,
                 'hash' => $proofForPassword->getHash()->getName(),
@@ -441,7 +456,7 @@ class Create extends Action
                 'tokens' => null,
                 'memberships' => null,
                 'authenticators' => null,
-                'search' => implode(' ', [$userId, $email, $name]),
+                'search' => implode(' ', \array_filter([$userId, $email, $name])),
                 'accessedAt' => DateTime::now(),
                 'emailCanonical' => $emailMetadata['emailCanonical'],
                 'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
@@ -452,17 +467,22 @@ class Create extends Action
 
             $user->removeAttribute('$sequence');
             $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
-            $dbForProject->createDocument('targets', new Document([
-                '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ],
-                'userId' => $userDoc->getId(),
-                'userInternalId' => $userDoc->getSequence(),
-                'providerType' => MESSAGE_TYPE_EMAIL,
-                'identifier' => $email,
-            ]));
+            $newTarget = null;
+            if (!empty($email)) {
+                $newTarget = $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'userId' => $userDoc->getId(),
+                    'userInternalId' => $userDoc->getSequence(),
+                    'providerType' => MESSAGE_TYPE_EMAIL,
+                    'identifier' => $email,
+                ]));
+            }
+
+            return [$userDoc, $newTarget];
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
@@ -473,9 +493,9 @@ class Create extends Action
      * anonymous account being linked). Never downgrades an already-verified
      * user. Mutates `$user` in place; persisted by the caller.
      */
-    private function backfillEmail(User $user, string $providerEmail, bool $isVerified, Database $dbForProject, Document $project, array $plan): void
+    private function backfillEmail(User $user, string $providerEmail, bool $isVerified, Database $dbForProject, Document $project, array $plan, Authorization $authorization): void
     {
-        [$email, $emails, $emailMetadata] = $this->parseEmail($providerEmail, $isVerified, $project, $plan);
+        [$email, $emails, $emailMetadata, $canonicalize] = $this->parseEmail($providerEmail, $isVerified, $project, $plan);
 
         $userWithMatchingEmail = $dbForProject->find('users', [
             Query::equal('email', $emails),
@@ -485,7 +505,7 @@ class Create extends Action
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
 
-        $this->assertEmailPolicy($emailMetadata, $project, $plan);
+        $this->assertEmailPolicy($emailMetadata, $email, $canonicalize, $project, $plan);
 
         $user->setAttribute('email', $email);
         // Never downgrade an already-verified user; only ever promote to verified
@@ -495,6 +515,29 @@ class Create extends Action
         $user->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate']);
         $user->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable']);
         $user->setAttribute('emailIsFree', $emailMetadata['emailIsFree']);
+
+        try {
+            $dbForProject->createDocument('targets', new Document([
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getSequence(),
+                'providerType' => MESSAGE_TYPE_EMAIL,
+                'identifier' => $email,
+            ]));
+        } catch (Duplicate) {
+            // The identifier unique index spans all users. Persisting the email while another
+            // user owns the target would leave this user unreachable by email messaging.
+            $existingTarget = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+                Query::equal('identifier', [$email]),
+            ]));
+            if ($existingTarget->isEmpty() || $existingTarget->getAttribute('userInternalId') !== $user->getSequence()) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
+        }
     }
 
     /**
@@ -502,7 +545,7 @@ class Create extends Action
      * access token. Guards against attaching an email already bound to
      * another user's identity.
      */
-    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $accessToken, Database $dbForProject): void
+    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $accessToken, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('userInternalId', [$user->getSequence()]),
@@ -512,29 +555,45 @@ class Create extends Action
 
         if ($identity->isEmpty()) {
             // Before creating the identity, check if the email is already associated with another user
-            $identitiesWithMatchingEmail = $dbForProject->find('identities', [
-                Query::equal('providerEmail', [$providerEmail]),
-                Query::notEqual('userInternalId', $user->getSequence()),
-            ]);
-            if (!empty($identitiesWithMatchingEmail)) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
+            if (!empty($providerEmail)) {
+                $identitiesWithMatchingEmail = $dbForProject->find('identities', [
+                    Query::equal('providerEmail', [$providerEmail]),
+                    Query::notEqual('userInternalId', $user->getSequence()),
+                ]);
+                if (!empty($identitiesWithMatchingEmail)) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
+                }
             }
 
-            $dbForProject->createDocument('identities', new Document([
-                '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ],
-                'userInternalId' => $user->getSequence(),
-                'userId' => $user->getId(),
-                'provider' => $provider,
-                'providerUid' => $sub,
-                'providerEmail' => $providerEmail,
-                'providerAccessToken' => $accessToken,
-            ]));
+            try {
+                $dbForProject->createDocument('identities', new Document([
+                    '$id' => ID::unique(),
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'userInternalId' => $user->getSequence(),
+                    'userId' => $user->getId(),
+                    'provider' => $provider,
+                    'providerUid' => $sub,
+                    'providerEmail' => $providerEmail,
+                    'providerAccessToken' => $accessToken,
+                ]));
+            } catch (Duplicate) {
+                // The (provider, providerUid) unique index guards the same identity being connected to two users.
+                // A request that lost the race must not leave behind the user it just created.
+                if ($newUser !== null) {
+                    $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
+                        if ($newTarget !== null) {
+                            $dbForProject->deleteDocument('targets', $newTarget->getId());
+                        }
+                        $dbForProject->deleteDocument('users', $newUser->getId());
+                    });
+                }
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
         } elseif (!empty($accessToken)) {
             $dbForProject->updateDocument('identities', $identity->getId(), new Document([
                 'providerAccessToken' => $accessToken,
@@ -547,7 +606,7 @@ class Create extends Action
      * email to store, the list of equivalent emails to match against, and the
      * email metadata attributes.
      *
-     * @return array{string, string[], array<string, mixed>}
+     * @return array{string, string[], array<string, mixed>, bool}
      */
     private function parseEmail(string $providerEmail, bool $isVerified, Document $project, array $plan): array
     {
@@ -560,17 +619,26 @@ class Create extends Action
             )
                 && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
                 && $isVerified;
-            $email = $canonicalize ? $canonical : $providerEmail;
-            $emails = array_values(array_unique([$email, $providerEmail]));
+            // Keep the provider domain for delivery (e.g. live.com must
+            // not become outlook.com). Still canonicalize the local part
+            // and include the full provider canonical in collision lookups.
+            if ($canonicalize) {
+                $canonicalLocal = \explode('@', $canonical, 2)[0];
+                $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
+                $email = $canonicalLocal . '@' . $providerDomain;
+            } else {
+                $email = $providerEmail;
+            }
+            $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
             $emailMetadata = [
                 'emailCanonical' => $canonical,
-                'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
+                'emailIsCanonical' => \mb_strtolower($email) === $canonical,
                 'emailIsCorporate' => $parsedEmail->isCorporate(),
                 'emailIsDisposable' => $parsedEmail->isDisposable(),
                 'emailIsFree' => $parsedEmail->isFree(),
             ];
 
-            return [$email, $emails, $emailMetadata];
+            return [$email, $emails, $emailMetadata, $canonicalize];
         } catch (\Throwable) {
             throw new Exception(Exception::GENERAL_INVALID_EMAIL);
         }
@@ -580,13 +648,19 @@ class Create extends Action
      * Enforce the project's email policies (disposable, canonical, free,
      * corporate), each gated on plan support.
      */
-    private function assertEmailPolicy(array $emailMetadata, Document $project, array $plan): void
+    private function assertEmailPolicy(array $emailMetadata, string $email, bool $canonicalize, Document $project, array $plan): void
     {
+        if (empty($email)) {
+            return;
+        }
+
         if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+        // When $canonicalize is true we already applied delivery-safe
+        // local-part normalization while preserving the provider domain.
+        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
