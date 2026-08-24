@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1cd34d77f1e40162d3873297b0b20742",
+    "content-hash": "71eb5f4ea21b4b082758bb66e68ec28e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -274,6 +274,61 @@
                 }
             ],
             "time": "2026-06-14T18:21:03+00:00"
+        },
+        {
+            "name": "captioning/captioning",
+            "version": "3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/captioning/captioning.git",
+                "reference": "ec3c9bf7d06b68d6556d3c991f4b8693302f7964"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/captioning/captioning/zipball/ec3c9bf7d06b68d6556d3c991f4b8693302f7964",
+                "reference": "ec3c9bf7d06b68d6556d3c991f4b8693302f7964",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.0|^9.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Captioning": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Julien Villetorte",
+                    "email": "j.villetorte@gmail.com",
+                    "homepage": "http://www.delphiki.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A collection of tools to manipulate subtitles",
+            "keywords": [
+                "ass",
+                "srt",
+                "ssa",
+                "subrip",
+                "substation",
+                "subtitle",
+                "vtt",
+                "webvtt"
+            ],
+            "support": {
+                "issues": "https://github.com/captioning/captioning/issues",
+                "source": "https://github.com/captioning/captioning/tree/3.0.0"
+            },
+            "time": "2022-09-14T17:15:53+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2145,6 +2200,96 @@
                 "source": "https://github.com/ramsey/uuid/tree/4.9.3"
             },
             "time": "2026-06-18T03:57:49+00:00"
+        },
+        {
+            "name": "shimonewman/streaming",
+            "version": "0.0.2",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:shimonewman/streaming.git",
+                "reference": "577ae1df8a191dd3c773351c046619df46401498"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/shimonewman/streaming/zipball/577ae1df8a191dd3c773351c046619df46401498",
+                "reference": "577ae1df8a191dd3c773351c046619df46401498",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-json": "*",
+                "php": ">=8.2",
+                "utopia-php/console": "0.1.* || ^0.2"
+            },
+            "require-dev": {
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "9.*",
+                "swoole/ide-helper": "6.2.2"
+            },
+            "suggest": {
+                "ext-swoole": "Needed to run the library inside Swoole coroutines."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Video\\": "src/Video"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Video"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "test:unit": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml --testsuite unit"
+                ],
+                "test:e2e": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml --testsuite e2e"
+                ],
+                "samples": [
+                    "@php -r \"require 'vendor/autoload.php'; Utopia\\\\Tests\\\\Samples::build();\""
+                ],
+                "samples:rebuild": [
+                    "@php -r \"require 'vendor/autoload.php'; Utopia\\\\Tests\\\\Samples::build(true);\""
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --memory-limit=512M"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Shimon Newman",
+                    "email": "shimon@appwrite.io"
+                }
+            ],
+            "description": "A simple library to probe, encode and package video for adaptive streaming",
+            "keywords": [
+                "cmaf",
+                "dash",
+                "ffmpeg",
+                "framework",
+                "hls",
+                "php",
+                "streaming",
+                "upf",
+                "utopia",
+                "video"
+            ],
+            "time": "2026-08-23T15:54:12+00:00"
         },
         {
             "name": "spomky-labs/otphp",

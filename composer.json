@@ -67,6 +67,10 @@
         },
         {
             "type": "vcs",
+            "url": "git@github.com:shimonewman/streaming.git"
+        },
+        {
+            "type": "vcs",
             "url": "https://github.com/utopia-php/auth"
         },
         {
@@ -137,7 +141,9 @@
         "enshrined/svg-sanitize": "0.22.*",
         "utopia-php/client": "^0.3.0",
         "open-runtimes/sdk-for-php": "0.11.*",
-        "utopia-php/schedule": "^0.2.0"
+        "utopia-php/schedule": "^0.2.0",
+        "shimonewman/streaming": "0.0.*",
+        "captioning/captioning": "^3.0"
     },
     "require-dev": {
         "ext-fileinfo": "*",
@@ -160,6 +166,10 @@
         },
         "audit": {
             "abandoned": "report"
+        },
+        "preferred-install": {
+            "shimonewman/streaming": "source",
+            "*": "dist"
         },
         "allow-plugins": {
             "php-http/discovery": true,

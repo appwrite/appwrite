@@ -106,7 +106,7 @@ services:
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_URL_SCHEME=legacy
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -235,24 +235,20 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:0.5.5
+    image: appwrite/console:7.4.7
     restart: unless-stopped
     networks:
       - appwrite
-    environment:
-      - VITE_CONSOLE_PROFILE=self-hosted
-      - APPWRITE_ENDPOINT_SAME_ORIGIN=true
-      - VITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
       - traefik.docker.network=appwrite
-      - traefik.http.services.appwrite_console.loadbalancer.server.port=3000
+      - traefik.http.services.appwrite_console.loadbalancer.server.port=80
       - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_console_http.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`)) && !PathPrefix(`/v1`) && !PathPrefix(`/.well-known`) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
+      - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
       - traefik.http.routers.appwrite_console_http.service=appwrite_console
       - traefik.http.routers.appwrite_console_https.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_console_https.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`)) && !PathPrefix(`/v1`) && !PathPrefix(`/.well-known`) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
+      - traefik.http.routers.appwrite_console_https.rule=PathPrefix(`/console`)
       - traefik.http.routers.appwrite_console_https.service=appwrite_console
       - traefik.http.routers.appwrite_console_https.tls=true
   appwrite-realtime:
@@ -335,6 +331,7 @@ services:
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-videos:/storage/videos:rw
       - appwrite-config:/storage/config:rw
       - appwrite-imports:/storage/imports:rw
     extra_hosts:
@@ -343,7 +340,7 @@ services:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
-      - _APP_WORKER_MAX_COROUTINES=69
+      - _APP_WORKER_MAX_COROUTINES=70
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -370,7 +367,7 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_URL_SCHEME=legacy
       - _APP_CONSOLE_DOMAIN
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN
@@ -541,7 +538,7 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_URL_SCHEME=legacy
   appwrite-worker-deletes:
     profiles:
       - separate
@@ -728,7 +725,7 @@ services:
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_URL_SCHEME=legacy
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -870,6 +867,8 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
   appwrite-worker-videos:
+    profiles:
+      - separate
     entrypoint: worker-videos
     logging:
       driver: json-file

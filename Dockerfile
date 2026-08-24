@@ -9,14 +9,14 @@ WORKDIR /usr/local/src/
 COPY composer.lock /usr/local/src/
 COPY composer.json /usr/local/src/
 
-# Private VCS deps (shimonewman/streaming) need git over SSH; GitHub zipballs
-# 404 without a token. Forward the host agent: docker compose build --ssh default
+# shimonewman/streaming is a private repo, so it installs from git over SSH
+# (composer.json preferred-install); its zipball 404s without a GitHub token.
+# Forward the host agent: docker compose build --ssh default
 RUN --mount=type=ssh \
     mkdir -p -m 0700 /root/.ssh \
     && ssh-keyscan github.com >> /root/.ssh/known_hosts \
-    && composer config --global --no-interaction github-protocols ssh \
     && composer install --ignore-platform-reqs --optimize-autoloader \
-        --no-plugins --no-scripts --prefer-source \
+        --no-plugins --no-scripts \
         `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
 FROM appwrite/base:2.0.0 AS base

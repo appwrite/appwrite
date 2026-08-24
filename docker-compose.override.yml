@@ -166,9 +166,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      # Host vendor includes private shimonewman/streaming (draft-v1); image
-      # builds cannot fetch that zipball without GitHub auth.
-      - ./vendor:/usr/src/code/vendor
   appwrite-worker-certificates:
     build:
       context: .
