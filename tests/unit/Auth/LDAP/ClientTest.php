@@ -172,4 +172,14 @@ final class ClientTest extends TestCase
         $this->assertFalse($none->useSsl());
         $this->assertFalse($none->useStartTls());
     }
+
+    /**
+     * A directory accepts an empty password as an "unauthenticated bind" and
+     * reports success, which would authenticate anyone. It is refused before
+     * any connection is made, which is why this needs no directory.
+     */
+    public function testEmptyPasswordIsRejectedWithoutConnecting(): void
+    {
+        $this->assertNull($this->client()->authenticate('alice', ''));
+    }
 }

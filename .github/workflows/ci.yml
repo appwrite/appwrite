@@ -513,6 +513,16 @@ jobs:
           echo "_APP_VCS_GITEA_CLIENT_ID=$(echo "$CREDS" | jq -r .client_id)" >> $GITHUB_ENV
           echo "_APP_VCS_GITEA_CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
 
+      # The seeder is a one-shot container, so it runs here explicitly rather
+      # than through COMPOSE_PROFILES, where `up --wait` would treat its exit
+      # as a failure.
+      - name: Provision OpenLDAP
+        if: matrix.service.name == 'Project'
+        timeout-minutes: 5
+        run: |
+          docker compose --profile openldap up -d --wait openldap
+          docker compose --profile openldap run --rm openldap-seed
+
       - name: Load and Start Appwrite
         timeout-minutes: 5
         env:

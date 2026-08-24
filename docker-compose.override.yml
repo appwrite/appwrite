@@ -388,9 +388,6 @@ services:
       - LDAP_ORGANISATION=Appwrite Test
       - LDAP_DOMAIN=appwrite.test
       - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
-    volumes:
-      # Seeded by the openldap-seed
-      - ./dev/openldap/seed:/seed:ro
 
   openldap-seed:
     profiles:
@@ -402,7 +399,7 @@ services:
     networks:
       - appwrite
     volumes:
-      - ./dev/openldap/seed:/seed:ro
+      - ./dev/openldap/seed.ldif:/seed.ldif:ro
     entrypoint:
       - sh
       - -c

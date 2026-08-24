@@ -1,9 +1,11 @@
 # Fixtures for developing and testing LDAP authentication.
 #
-# Loaded by the openldap-seed service in docker-compose.override.yml. Three
-# users and one group, enough to exercise sign-in, provisioning, the
-# provisioning filter that restricts who is allowed an account, and the refusal
-# of an entry with no email address.
+# Loaded by the openldap-seed service in docker-compose.override.yml, and
+# depended on by tests/e2e/Services/Project/LDAPSessionIntegrationTest.php.
+# Enough entries to exercise sign-in, provisioning, the provisioning filter
+# that restricts who is allowed an account, the refusal of entries with a
+# missing or malformed email address, and DN comparison across case and
+# spacing differences.
 
 dn: ou=people,dc=appwrite,dc=test
 objectClass: organizationalUnit
@@ -42,7 +44,48 @@ cn: No Email
 sn: Email
 userPassword: noemailpass
 
+# Valid credentials and a valid email. Used to prove an existing password
+# account with the same address is never silently adopted by an LDAP sign-in.
+dn: uid=carol,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: carol
+cn: Carol White
+sn: White
+givenName: Carol
+mail: carol@appwrite.test
+userPassword: carolpass
+
+# Valid credentials and a valid email. Used to prove a blocked Appwrite
+# account cannot keep signing in with valid directory credentials.
+dn: uid=dave,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: dave
+cn: Dave Green
+sn: Green
+givenName: Dave
+mail: dave@appwrite.test
+userPassword: davepass
+
+# The mail attribute holds a value that is not an email address, so the
+# post-bind validation refuses the sign-in.
+dn: uid=bademail,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: bademail
+cn: Bad Email
+sn: Email
+mail: not-an-email
+userPassword: bademailpass
+
 dn: cn=appwrite-users,ou=groups,dc=appwrite,dc=test
 objectClass: groupOfNames
 cn: appwrite-users
 member: uid=alice,ou=people,dc=appwrite,dc=test
+
+# Alice's DN recorded with different case and spacing than her entry. A
+# directory treats both as the same entry, so the membership check must too:
+# this is what exercises the component-wise DN comparison rather than the
+# byte-exact one.
+dn: cn=appwrite-users-cased,ou=groups,dc=appwrite,dc=test
+objectClass: groupOfNames
+cn: appwrite-users-cased
+member: uid=Alice, OU=People, DC=appwrite, DC=test
