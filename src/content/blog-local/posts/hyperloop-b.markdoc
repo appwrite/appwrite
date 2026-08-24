@@ -1,0 +1,94 @@
+---
+layout: post
+title: "Hyperloop B: the new engine behind Appwrite 2.0"
+description: Appwrite 2.0 runs on Swoole coroutines. Here is the path from PHP-FPM to worker pools to Hyperloop B, and the 7x I/O throughput it buys.
+date: 2026-08-31
+cover: /images/blog-local/hyperloop-b/cover.avif
+timeToRead: 6
+author: luke-silver
+category: architecture, announcement
+callToAction: true
+faqs:
+  - question: "What is Hyperloop B?"
+    answer: "Hyperloop B is the engine that [Appwrite 2.0](/blog/post/announcing-appwrite-2) runs on. It is the Swoole coroutine scheduler mode of `utopia-php/http`, where a single process serves many concurrent requests by yielding whenever it waits on I/O, rather than dedicating one worker process to each request for the duration."
+  - question: "What is the difference between Hyperloop A and Hyperloop B?"
+    answer: "Hyperloop A is the Swoole worker model: a pool of processes, each answering one request at a time, so concurrency is capped at the number of workers. Hyperloop B is the Swoole coroutine scheduler: concurrency is no longer tied to process count, so it becomes very cheap, and memory usage is an order of magnitude more efficient."
+  - question: "How much faster is Hyperloop B?"
+    answer: "On an I/O bound workload it serves roughly 7x the requests per second with a p95 latency around 16x lower, using 6x less memory. On minimal and CPU bound workloads the two modes are close, though Hyperloop B roughly halves p95 latency on CPU bound work."
+  - question: "Why is it called Hyperloop B?"
+    answer: "Hyperloop B is named in loving memory of Binyamin Yawitz (1991-2025), a Platform Engineer at Appwrite known as byawitz, who built the foundational work to bring coroutines to Appwrite and passed away before he could finish it."
+  - question: "Do I need to change anything in my app to use Hyperloop B?"
+    answer: "No. Hyperloop B is internal to the platform. There is nothing to call and nothing to configure, and no API or SDK behavior changes because of it."
+---
+
+Appwrite 2.0 ships on a new engine. We call it Hyperloop B, and if you never think about it again, it is doing its job.
+
+This is the story of how it got here, because the path from the first release of Appwrite to this one runs through three different answers to the same question: how should a PHP process answer a request?
+
+# Where we started: a process per request
+
+The first releases of Appwrite used PHP-FPM. Under FPM you spin up a process to respond to each request. It is a simple model and an easy one to reason about, and it is wasteful in both CPU and memory. Nothing survives between requests, so every request pays the full startup cost again.
+
+# Worker pools
+
+Then we found Swoole, and Appwrite got much faster. Swoole keeps a pool of worker processes alive and hands each of them a request to answer. Because a worker outlives the request, memory can be reused across requests instead of being thrown away with the process.
+
+That model has two consequences. Concurrency is capped at the number of workers, so N workers answer N requests at a time. And you have to start managing your memory usage. A per-request leak under FPM was invisible, because the process died and took the leak with it. Under worker mode the same leak accumulates until the worker exhausts its memory.
+
+# Coroutines make concurrency cheap
+
+More recently, Swoole built a coroutine scheduler, which takes the model a step further. Instead of a pool of processes each serving requests sequentially, a single process serves many concurrent requests by yielding whenever it waits on I/O. Concurrency stops being tied to process count, which makes it very cheap, and memory usage becomes an order of magnitude more efficient.
+
+# utopia-php/http, and two modes
+
+Swoole is a low level framework. It exposes a lot of tuning knobs without much documentation about which ones matter. That is why we built `utopia-php/http`, which runs on Swoole and on other backends, and which carries an opinionated set of configuration defaults so nobody has to rediscover them. Those [defaults are here](https://github.com/utopia-php/monorepo/pull/36).
+
+Two modes come out of that work. **Hyperloop A** is the worker model. **Hyperloop B** is the coroutine scheduler.
+
+# The name
+
+> Hyperloop B is named in loving memory of Binyamin Yawitz (1991-2025), aka byawitz, who built the foundational work to bring Coroutines to Appwrite, but tragically passed before he could finish it.
+
+[Binyamin](/blog/author/binyamin-yawitz) was a Platform Engineer on the team. The engine underneath Appwrite 2.0 began with his work, and it carries his name in his memory.
+
+# The benchmarks
+
+Both modes, measured on 4 cores with 200 virtual users, 20 seconds per run.
+
+| Workload | Mode | Requests/sec | p95 |
+| --- | --- | --- | --- |
+| Minimal | Hyperloop A | 14,653 | 29.22ms |
+| Minimal | Hyperloop B | 15,443 | 28.10ms |
+| I/O bound | Hyperloop A | 462 | 854.45ms |
+| I/O bound | Hyperloop B | 3,346 | 51.56ms |
+| CPU bound | Hyperloop A | 3,285 | 169.19ms |
+| CPU bound | Hyperloop B | 3,112 | 84.48ms |
+
+For a minimal workload and a CPU bound workload there is not much between the two. The CPU row rewards a close read: Hyperloop B gives up about 5% of raw throughput and halves p95 latency in exchange, which is a trade most production services would take.
+
+The I/O row is the one that matters. Hyperloop B serves 7x the requests per second at a p95 roughly 16x lower, and it does it while using 6x less memory.
+
+That row is also the one that looks like production. Real requests spend most of their time waiting, whether that is a reply from the database or a cached document coming back from Redis. Worker mode blocks an entire process for the length of that wait. Coroutine mode yields and picks up other work in the meantime.
+
+# Making a large codebase coroutine safe
+
+Promising benchmarks were not the hard part. Appwrite is a huge codebase, and it was built almost entirely under worker model assumptions, where a process handles one request at a time and memory is effectively private for the duration.
+
+Coroutines break that assumption. Concurrent requests inside a single process share memory, so state that used to be safe by construction becomes shared mutable state, and a new approach to building PHP services was necessary.
+
+We wanted coroutine safety to be a property of the ecosystem rather than a rule everyone has to remember. That is `utopia-php/di`, a new PSR compliant dependency injection library. It stores dependencies in two conceptual buckets:
+
+- **Shared singletons**: vetted, coroutine-safe code that can be reused freely across concurrent requests.
+- **Per-message data**: request-scoped state, plus anything we know to be coroutine unsafe, kept isolated so it is never shared across coroutines.
+
+We also enabled PHP 8.4's JIT and tuned opcache to 128M, for a modest boost on CPU bound work on top of everything above.
+
+# What this changes for you
+
+Nothing, in terms of code. There is no Hyperloop API, nothing to configure, and no SDK behavior that changes because of it. What changes is what the same hardware can absorb: more concurrent traffic, and sharply lower tail latency on the I/O heavy endpoints that make up most of a real application.
+
+That is the foundation the rest of [Appwrite 2.0](/blog/post/announcing-appwrite-2) is built on.
+
+- [Appwrite 2.0 announcement](/blog/post/announcing-appwrite-2)
+- [utopia-php on GitHub](https://github.com/utopia-php)
+- [Swoole configuration defaults PR](https://github.com/utopia-php/monorepo/pull/36)

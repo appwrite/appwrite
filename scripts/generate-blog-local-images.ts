@@ -116,10 +116,34 @@ async function generateAnnouncingAppwrite2Cover(
   await writeAvifFromPng(outputDir, png)
 }
 
+async function generateHyperloopBCover(outputDir: string): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'milestone-split',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    eyebrow: 'Engineering',
+    stat: '7x',
+    statLabel: 'I/O throughput',
+    title: 'Hyperloop B',
+    subtitle: 'The new engine behind Appwrite 2.0',
+    gradientStat: true,
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
   'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
+  'hyperloop-b': generateHyperloopBCover,
 }
 
 async function main() {
