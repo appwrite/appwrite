@@ -760,12 +760,12 @@ Http::init()
 
 Http::init()
     ->groups(['session'])
+    ->inject('route')
     ->inject('user')
-    ->inject('request')
-    ->action(function (User $user, Request $request) {
-        // OAuth2 and ID token sign-ins accept logged-in users for account
-        // linking and session upgrade (e.g. converting an anonymous account)
-        if (\str_contains($request->getURI(), 'oauth2') || \str_contains($request->getURI(), '/sessions/id-token')) {
+    ->action(function (Route $route, User $user) {
+        // Sign-ins that link to or upgrade the current account accept a caller
+        // who is already logged in (e.g. converting an anonymous account)
+        if ($route->getLabel('session.allowActive', false)) {
             return;
         }
 

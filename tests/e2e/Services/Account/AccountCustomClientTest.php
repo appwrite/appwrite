@@ -5570,6 +5570,27 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($other['id'], $account['body']['$id']);
     }
 
+    /**
+     * Only routes labelled `session.allowActive` (the OAuth2 and ID token
+     * sign-ins, which link to the current account) may be called with an
+     * active session. Everything else in the session group still refuses.
+     */
+    public function testCreateSessionRejectedWhileSessionActive(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $existing = $this->createFreshAccountWithSession();
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $existing['session'],
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_session_already_exists', $response['body']['type']);
+    }
+
     public function testCreateIdTokenSessionProviderDisabled(): void
     {
         $this->updateMockProvider(false);

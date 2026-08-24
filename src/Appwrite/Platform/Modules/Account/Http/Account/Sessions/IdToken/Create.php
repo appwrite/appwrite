@@ -62,6 +62,7 @@ class Create extends Action
             ->setHttpPath('/v1/account/sessions/id-token')
             ->desc('Create ID token session')
             ->groups(['api', 'account', 'session'])
+            ->label('session.allowActive', true)
             ->label('event', 'users.[userId].sessions.[sessionId].create')
             ->label('scope', 'sessions.write')
             ->label('audits.event', 'session.create')
