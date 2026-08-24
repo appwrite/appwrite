@@ -133,7 +133,7 @@ class Create extends Action
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $email = $identity->getEmail();
+        $email = $identity['email'];
 
         // Resolve the account another concurrent request provisioned for this
         // same directory entry. Two first-time sign-ins can race at either
@@ -147,7 +147,7 @@ class Create extends Action
             for ($attempt = 0; $attempt < 3; $attempt++) {
                 $winner = $authorization->skip(fn () => $dbForProject->findOne('identities', [
                     Query::equal('provider', [SESSION_PROVIDER_LDAP]),
-                    Query::equal('providerUid', [$identity->getDn()]),
+                    Query::equal('providerUid', [$identity['dn']]),
                 ]));
 
                 if (!$winner->isEmpty()) {
@@ -175,7 +175,7 @@ class Create extends Action
         // authenticated user yet at this point in the flow.
         $ldapIdentity = $authorization->skip(fn () => $dbForProject->findOne('identities', [
             Query::equal('provider', [SESSION_PROVIDER_LDAP]),
-            Query::equal('providerUid', [$identity->getDn()]),
+            Query::equal('providerUid', [$identity['dn']]),
         ]));
 
         $profile = $ldapIdentity->isEmpty()
@@ -235,14 +235,14 @@ class Create extends Action
                     'passwordUpdate' => null,
                     'registration' => DateTime::now(),
                     'reset' => false,
-                    'name' => $identity->getName() ?: null,
+                    'name' => $identity['name'] ?: null,
                     'mfa' => false,
                     'prefs' => new \stdClass(),
                     'sessions' => null,
                     'tokens' => null,
                     'memberships' => null,
                     'authenticators' => null,
-                    'search' => \implode(' ', [$userId, $email, $identity->getName()]),
+                    'search' => \implode(' ', [$userId, $email, $identity['name']]),
                     'accessedAt' => DateTime::now(),
                 ])));
 
@@ -273,7 +273,7 @@ class Create extends Action
                     'userInternalId' => $profile->getSequence(),
                     'userId' => $profile->getId(),
                     'provider' => SESSION_PROVIDER_LDAP,
-                    'providerUid' => $identity->getDn(),
+                    'providerUid' => $identity['dn'],
                     'providerEmail' => $email,
                     // LDAP issues no tokens: the bind is the whole exchange.
                     'providerAccessToken' => '',
@@ -319,7 +319,7 @@ class Create extends Action
                 'provider' => SESSION_PROVIDER_LDAP,
                 // The DN rather than the username: it is stable when display
                 // attributes change, and unambiguous across the directory.
-                'providerUid' => $identity->getDn(),
+                'providerUid' => $identity['dn'],
                 'secret' => $proofForToken->hash($secret),
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),

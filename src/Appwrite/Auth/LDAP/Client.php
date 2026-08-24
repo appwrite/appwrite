@@ -188,15 +188,19 @@ class Client
      * indistinguishable to the caller: telling them apart would let anyone probe
      * the directory for valid usernames.
      *
+     * The returned dn is the entry's distinguished name, stable across renames
+     * of display attributes and used as the provider identifier. The values are
+     * trusted because the bind that produced them succeeded.
+     *
      * @param string $username
      * @param string $password
      *
-     * @return Identity|null
+     * @return array{dn: string, email: string, name: string}|null
      *
      * @throws Exception when the directory cannot be reached or queried, which
      *                   is a server fault rather than a failed sign-in.
      */
-    public function authenticate(string $username, string $password): ?Identity
+    public function authenticate(string $username, string $password): ?array
     {
         // A directory will happily accept an empty password as an "unauthenticated
         // bind" and report success, which would authenticate anyone.
@@ -219,7 +223,26 @@ class Client
                 return null;
             }
 
-            return new Identity($entry['dn'], $entry['email'], $entry['name']);
+            // Normalize before validating: directories pad values more often
+            // than you would like, and a trailing space is not a malformed
+            // address. Only checked after the bind proved the password, so a
+            // misconfigured entry is reported to its owner alone and a failed
+            // sign-in stays indistinguishable from an unknown user.
+            $email = \strtolower(\trim($entry['email']));
+
+            if ($email === '') {
+                throw new Exception('The LDAP directory did not return an email address for this user. Check the email attribute mapping, or ensure the entry has one set.', AppwriteException::USER_UNAUTHORIZED);
+            }
+
+            if (!\filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('The LDAP directory returned an email attribute that is not a valid email address.', AppwriteException::USER_UNAUTHORIZED);
+            }
+
+            return [
+                'dn' => $entry['dn'],
+                'email' => $email,
+                'name' => \trim($entry['name']),
+            ];
         } finally {
             $client->unbind();
         }
