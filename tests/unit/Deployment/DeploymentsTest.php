@@ -126,4 +126,78 @@ final class DeploymentsTest extends TestCase
 
         $this->assertSame(['users.read'], Deployments::scopes($site));
     }
+
+    public function testShouldGoLiveRejectsWhenActivateIsFalse(): void
+    {
+        $candidate = new Document([
+            '$id' => 'new',
+            '$createdAt' => '2026-08-20T12:00:00.000+00:00',
+            'activate' => false,
+        ]);
+
+        $this->assertFalse(Deployments::shouldGoLive($candidate, new Document()));
+    }
+
+    public function testShouldGoLiveActivatesWhenNothingIsLive(): void
+    {
+        $candidate = new Document([
+            '$id' => 'new',
+            '$createdAt' => '2026-08-20T12:00:00.000+00:00',
+            'activate' => true,
+        ]);
+
+        $this->assertTrue(Deployments::shouldGoLive($candidate, new Document()));
+    }
+
+    public function testShouldGoLiveReplacesAnOlderLiveDeployment(): void
+    {
+        $candidate = new Document([
+            '$id' => 'new',
+            '$createdAt' => '2026-08-20T13:00:00.000+00:00',
+            'activate' => true,
+        ]);
+        $current = new Document([
+            '$id' => 'old',
+            '$createdAt' => '2026-08-20T12:00:00.000+00:00',
+        ]);
+
+        $this->assertTrue(Deployments::shouldGoLive($candidate, $current));
+    }
+
+    public function testShouldGoLiveSkipsWhenTheLiveDeploymentIsNewer(): void
+    {
+        $candidate = new Document([
+            '$id' => 'old',
+            '$createdAt' => '2026-08-20T12:00:00.000+00:00',
+            'activate' => true,
+        ]);
+        $current = new Document([
+            '$id' => 'new',
+            '$createdAt' => '2026-08-20T13:00:00.000+00:00',
+        ]);
+
+        $this->assertFalse(Deployments::shouldGoLive($candidate, $current));
+    }
+
+    public function testShouldGoLiveIsIdempotentForTheLiveDeployment(): void
+    {
+        $deployment = new Document([
+            '$id' => 'live',
+            '$createdAt' => '2026-08-20T12:00:00.000+00:00',
+            'activate' => true,
+        ]);
+
+        $this->assertTrue(Deployments::shouldGoLive($deployment, $deployment));
+    }
+
+    public function testShouldGoLiveTreatsIntegerOneAsRequested(): void
+    {
+        $candidate = new Document([
+            '$id' => 'new',
+            '$createdAt' => '2026-08-20T12:00:00.000+00:00',
+            'activate' => 1,
+        ]);
+
+        $this->assertTrue(Deployments::shouldGoLive($candidate, new Document()));
+    }
 }
