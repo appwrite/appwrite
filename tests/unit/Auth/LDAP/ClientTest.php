@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Auth\LDAP;
 
+use Appwrite\Auth\LDAP\Client;
 use Appwrite\Auth\LDAP\Exception;
-use Appwrite\Auth\LDAP\Settings;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -14,14 +14,14 @@ use PHPUnit\Framework\TestCase;
  * A search filter is assembled from a value the user supplies, so it carries the
  * same injection risk as a SQL query built by concatenation.
  */
-final class SettingsTest extends TestCase
+final class ClientTest extends TestCase
 {
-    private function settings(array $over = []): Settings
+    private function client(array $over = []): Client
     {
-        return new Settings(
+        return new Client(
             host: $over['host'] ?? 'ldap.example.com',
             port: $over['port'] ?? 389,
-            encryption: $over['encryption'] ?? Settings::ENCRYPTION_TLS,
+            encryption: $over['encryption'] ?? Client::ENCRYPTION_TLS,
             baseDn: $over['baseDn'] ?? 'dc=example,dc=com',
             bindDn: $over['bindDn'] ?? 'cn=service,dc=example,dc=com',
             bindPassword: $over['bindPassword'] ?? 'secret',
@@ -34,12 +34,10 @@ final class SettingsTest extends TestCase
 
     public function testValidConfigurationIsAccepted(): void
     {
-        $settings = $this->settings();
+        $client = $this->client();
 
-        $this->assertSame('ldap.example.com', $settings->getHost());
-        $this->assertSame(389, $settings->getPort());
-        $this->assertTrue($settings->useStartTls());
-        $this->assertFalse($settings->useSsl());
+        $this->assertTrue($client->useStartTls());
+        $this->assertFalse($client->useSsl());
     }
 
     public function testHostIsRequired(): void
@@ -47,7 +45,7 @@ final class SettingsTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessageMatches('/host is required/i');
 
-        $this->settings(['host' => '  ']);
+        $this->client(['host' => '  ']);
     }
 
     public function testBaseDnIsRequired(): void
@@ -55,7 +53,7 @@ final class SettingsTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessageMatches('/base DN is required/i');
 
-        $this->settings(['baseDn' => '']);
+        $this->client(['baseDn' => '']);
     }
 
     public function testPortMustBeInRange(): void
@@ -63,7 +61,7 @@ final class SettingsTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessageMatches('/port must be/i');
 
-        $this->settings(['port' => 70000]);
+        $this->client(['port' => 70000]);
     }
 
     public function testUnsupportedEncryptionIsRejected(): void
@@ -71,7 +69,7 @@ final class SettingsTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessageMatches('/encryption/i');
 
-        $this->settings(['encryption' => 'rot13']);
+        $this->client(['encryption' => 'rot13']);
     }
 
     /**
@@ -83,7 +81,7 @@ final class SettingsTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessageMatches('/placeholder/i');
 
-        $this->settings(['userFilter' => '(uid=admin)']);
+        $this->client(['userFilter' => '(uid=admin)']);
     }
 
     public function testEmailAttributeIsRequired(): void
@@ -91,12 +89,12 @@ final class SettingsTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessageMatches('/email attribute is required/i');
 
-        $this->settings(['emailAttribute' => '']);
+        $this->client(['emailAttribute' => '']);
     }
 
     public function testPlaceholderIsSubstituted(): void
     {
-        $this->assertSame('(uid=alice)', $this->settings()->getUserFilter('alice'));
+        $this->assertSame('(uid=alice)', $this->client()->getUserFilter('alice'));
     }
 
     /**
@@ -105,7 +103,7 @@ final class SettingsTest extends TestCase
      */
     public function testWildcardIsEscaped(): void
     {
-        $filter = $this->settings()->getUserFilter('*');
+        $filter = $this->client()->getUserFilter('*');
 
         $this->assertSame('(uid=\2a)', $filter);
         $this->assertStringNotContainsString('=*', $filter);
@@ -113,7 +111,7 @@ final class SettingsTest extends TestCase
 
     public function testFilterBreakoutIsEscaped(): void
     {
-        $filter = $this->settings()->getUserFilter('alice)(uid=*');
+        $filter = $this->client()->getUserFilter('alice)(uid=*');
 
         $this->assertStringNotContainsString(')(', $filter);
         $this->assertStringContainsString('\29\28', $filter);
@@ -121,20 +119,20 @@ final class SettingsTest extends TestCase
 
     public function testNullByteIsEscaped(): void
     {
-        $this->assertStringNotContainsString("\x00", $this->settings()->getUserFilter("alice\x00"));
+        $this->assertStringNotContainsString("\x00", $this->client()->getUserFilter("alice\x00"));
     }
 
     public function testBackslashIsEscaped(): void
     {
-        $this->assertStringContainsString('\5c', $this->settings()->getUserFilter('do\\main'));
+        $this->assertStringContainsString('\5c', $this->client()->getUserFilter('do\\main'));
     }
 
     public function testProvisionFilterIsAbsentByDefault(): void
     {
-        $settings = $this->settings();
+        $client = $this->client();
 
-        $this->assertFalse($settings->hasProvisionFilter());
-        $this->assertSame('', $settings->getProvisionFilter('alice'));
+        $this->assertFalse($client->hasProvisionFilter());
+        $this->assertSame('', $client->getProvisionFilter('alice'));
     }
 
     /**
@@ -144,30 +142,30 @@ final class SettingsTest extends TestCase
      */
     public function testProvisionFilterSubstitutesTheEntryDn(): void
     {
-        $settings = $this->settings([
-            'provisionFilter' => '(member=' . Settings::PLACEHOLDER . ')',
+        $client = $this->client([
+            'provisionFilter' => '(member=' . Client::PLACEHOLDER . ')',
         ]);
 
-        $filter = $settings->getProvisionFilter('uid=alice,ou=people,dc=example,dc=com');
+        $filter = $client->getProvisionFilter('uid=alice,ou=people,dc=example,dc=com');
 
         $this->assertStringContainsString('uid=alice,ou=people,dc=example,dc=com', $filter);
     }
 
     public function testProvisionFilterSubstitutesAndEscapes(): void
     {
-        $settings = $this->settings([
+        $client = $this->client([
             'provisionFilter' => '(&(cn=staff)(member=uid={{username}},ou=people,dc=example,dc=com))',
         ]);
 
-        $this->assertTrue($settings->hasProvisionFilter());
-        $this->assertStringContainsString('uid=alice,', $settings->getProvisionFilter('alice'));
-        $this->assertStringNotContainsString('=*', $settings->getProvisionFilter('*'));
+        $this->assertTrue($client->hasProvisionFilter());
+        $this->assertStringContainsString('uid=alice,', $client->getProvisionFilter('alice'));
+        $this->assertStringNotContainsString('=*', $client->getProvisionFilter('*'));
     }
 
     public function testSslAndStartTlsAreDistinct(): void
     {
-        $ssl = $this->settings(['encryption' => Settings::ENCRYPTION_SSL, 'port' => 636]);
-        $none = $this->settings(['encryption' => Settings::ENCRYPTION_NONE]);
+        $ssl = $this->client(['encryption' => Client::ENCRYPTION_SSL, 'port' => 636]);
+        $none = $this->client(['encryption' => Client::ENCRYPTION_NONE]);
 
         $this->assertTrue($ssl->useSsl());
         $this->assertFalse($ssl->useStartTls());

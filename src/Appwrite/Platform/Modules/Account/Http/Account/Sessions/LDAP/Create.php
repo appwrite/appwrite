@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\LDAP;
 
 use Appwrite\Auth\LDAP\Client;
-use Appwrite\Auth\LDAP\Settings;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -125,8 +124,7 @@ class Create extends Action
         // auth.type gate in app/controllers/shared/api/auth.php.
         $auths = $project->getAttribute('auths', []);
 
-        $settings = Settings::fromProject($project);
-        $identity = (new Client($settings))->authenticate($username, $password);
+        $identity = Client::fromProject($project)->authenticate($username, $password);
 
         // A wrong password, an unknown user, and a user outside the provisioning
         // filter are deliberately indistinguishable: telling them apart lets a

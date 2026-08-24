@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Auth\LDAP\Settings;
+use Appwrite\Auth\LDAP\Client;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
@@ -32,13 +32,13 @@ class AuthLdap extends Model
             ->addRule('port', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Directory port.',
-                'default' => Settings::DEFAULT_PORT,
+                'default' => Client::DEFAULT_PORT,
                 'example' => 389,
             ])
             ->addRule('encryption', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Transport security: none, ssl or tls.',
-                'default' => Settings::ENCRYPTION_TLS,
+                'default' => Client::ENCRYPTION_TLS,
                 'example' => 'tls',
             ])
             ->addRule('baseDn', [
@@ -55,15 +55,15 @@ class AuthLdap extends Model
             ])
             ->addRule('userFilter', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Search filter locating the user, containing the ' . Settings::PLACEHOLDER . ' placeholder.',
+                'description' => 'Search filter locating the user, containing the ' . Client::PLACEHOLDER . ' placeholder.',
                 'default' => '',
-                'example' => '(uid=' . Settings::PLACEHOLDER . ')',
+                'example' => '(uid=' . Client::PLACEHOLDER . ')',
             ])
             ->addRule('provisionFilter', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Filter a user must also match to be allowed an account. Empty means no restriction.',
                 'default' => '',
-                'example' => '(&(cn=staff)(member=' . Settings::PLACEHOLDER . '))',
+                'example' => '(&(cn=staff)(member=' . Client::PLACEHOLDER . '))',
             ])
             ->addRule('emailAttribute', [
                 'type' => self::TYPE_STRING,
