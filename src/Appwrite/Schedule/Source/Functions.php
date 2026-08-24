@@ -36,6 +36,17 @@ final class Functions extends Database
     }
 
     #[\Override]
+    protected function resource(\Utopia\Database\Database $projectDB, array $schedule): Document
+    {
+        // The functions worker reads variables fresh at execution time, so the
+        // snapshot must not carry them: they would go stale in memory.
+        return $projectDB->skipFilters(
+            fn () => $projectDB->getDocument($this->collection(), $schedule['resourceId']),
+            ['subQueryVariables', 'subQueryProjectVariables']
+        );
+    }
+
+    #[\Override]
     protected function trigger(array $schedule): Trigger
     {
         $window = ($this->spread)($schedule);
