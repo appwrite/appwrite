@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
-import { setLastLoginMethod } from '@/lib/utils/auth-storage'
+import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
@@ -48,11 +48,16 @@ export const Route = createFileRoute('/_public/')({
       urlParams.has('key') ||
       location.pathname.includes('callback')
     if (isOAuthCallback) {
-      const hasGitHubIdentity = account.identities?.some(
-        (identity) => identity.provider === 'github',
-      )
-      if (hasGitHubIdentity) {
-        setLastLoginMethod('github')
+      const oauthIdentity = account.identities?.find((identity) => {
+        const provider = identity.provider
+        return (
+          provider === 'github' ||
+          provider === 'gitlab' ||
+          provider === 'bitbucket'
+        )
+      })
+      if (oauthIdentity) {
+        setLastLoginMethod(oauthIdentity.provider as OAuthLoginMethod)
       }
     }
 

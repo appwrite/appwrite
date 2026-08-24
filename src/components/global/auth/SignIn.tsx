@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { AppwriteException, ID } from '@appwrite.io/console'
 import { Bug, Eye, EyeOff } from 'lucide-react'
@@ -22,9 +22,19 @@ import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { sdk } from '@/lib/appwrite/sdk'
-import { getLastLoginMethod } from '@/lib/utils/auth-storage'
+import {
+  getLastLoginMethod,
+  isOAuthLoginMethod,
+  type LoginMethod,
+  type OAuthLoginMethod,
+} from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
+import {
+  BitbucketIcon,
+  GitHubIcon,
+  GitLabIcon,
+} from '@/lib/vcs/providers'
 
 const DEMO_USER_EMAIL = 'dev@appwrite.io'
 const DEMO_USER_PASSWORD = 'appwritedev'
@@ -62,21 +72,154 @@ export type SignInSubmitOptions = {
   skipAccountCreate?: boolean
 }
 
+const OAUTH_PROVIDERS: {
+  id: OAuthLoginMethod
+  Icon: (props: { className?: string }) => ReactNode
+}[] = [
+  { id: 'github', Icon: GitHubIcon },
+  { id: 'gitlab', Icon: GitLabIcon },
+  { id: 'bitbucket', Icon: BitbucketIcon },
+]
+
+const OAUTH_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
+const OAUTH_ACCORDION_STYLES = `
+.oauth-login-row {
+  display: flex;
+  width: 100%;
+  gap: 0.5rem;
+}
+.oauth-login-row > * {
+  flex: 0 1 2.25rem;
+  min-width: 2.25rem;
+  overflow: visible;
+  transition: flex-grow 480ms ${OAUTH_EASE};
+}
+.oauth-login-row[data-expanded="github"] > :nth-child(1),
+.oauth-login-row[data-expanded="gitlab"] > :nth-child(2),
+.oauth-login-row[data-expanded="bitbucket"] > :nth-child(3) {
+  flex-grow: 1;
+}
+.oauth-login-label {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 0fr;
+  transition: grid-template-columns 480ms ${OAUTH_EASE} 160ms;
+}
+.oauth-login-label > span {
+  min-width: 0;
+  overflow: hidden;
+}
+.oauth-login-label-text {
+  display: block;
+  white-space: nowrap;
+  padding-inline-start: 0.375rem;
+  opacity: 0;
+  transition-property: opacity;
+  transition-duration: 160ms;
+  transition-timing-function: ease;
+  transition-delay: 0s;
+}
+.oauth-login-row[data-expanded="github"] [data-provider="github"] .oauth-login-label,
+.oauth-login-row[data-expanded="gitlab"] [data-provider="gitlab"] .oauth-login-label,
+.oauth-login-row[data-expanded="bitbucket"] [data-provider="bitbucket"] .oauth-login-label {
+  grid-template-columns: 1fr;
+  transition: grid-template-columns 480ms ${OAUTH_EASE};
+}
+.oauth-login-row[data-expanded="github"] [data-provider="github"] .oauth-login-label-text,
+.oauth-login-row[data-expanded="gitlab"] [data-provider="gitlab"] .oauth-login-label-text,
+.oauth-login-row[data-expanded="bitbucket"] [data-provider="bitbucket"] .oauth-login-label-text {
+  opacity: 1;
+  transition-property: opacity;
+  transition-duration: 240ms;
+  transition-timing-function: ease;
+  transition-delay: 320ms;
+}
+.oauth-last-used {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.oauth-last-used-dot,
+.oauth-last-used-pill {
+  position: absolute;
+  transition: opacity 180ms ease;
+}
+.oauth-last-used-dot {
+  top: -3px;
+  inset-inline-end: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--foreground);
+  box-shadow: 0 0 0 2px var(--card);
+  opacity: 1;
+}
+.oauth-last-used-pill {
+  top: -8px;
+  inset-inline-start: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+}
+.oauth-login-row[data-expanded="github"] [data-last-used="github"] .oauth-last-used-dot,
+.oauth-login-row[data-expanded="gitlab"] [data-last-used="gitlab"] .oauth-last-used-dot,
+.oauth-login-row[data-expanded="bitbucket"] [data-last-used="bitbucket"] .oauth-last-used-dot {
+  opacity: 0;
+}
+.oauth-login-row[data-expanded="github"] [data-last-used="github"] .oauth-last-used-pill,
+.oauth-login-row[data-expanded="gitlab"] [data-last-used="gitlab"] .oauth-last-used-pill,
+.oauth-login-row[data-expanded="bitbucket"] [data-last-used="bitbucket"] .oauth-last-used-pill {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .oauth-login-row > *,
+  .oauth-login-label,
+  .oauth-login-label-text,
+  .oauth-last-used-dot,
+  .oauth-last-used-pill {
+    transition: none;
+  }
+}
+`
+
+function oauthProviderLabel(
+  provider: OAuthLoginMethod,
+  mode: 'sign-in' | 'sign-up',
+  t: Translator,
+) {
+  if (mode === 'sign-up') {
+    if (provider === 'gitlab') return t('Sign up with GitLab')
+    if (provider === 'bitbucket') return t('Sign up with Bitbucket')
+    return t('Sign up with GitHub')
+  }
+  if (provider === 'gitlab') return t('Login with GitLab')
+  if (provider === 'bitbucket') return t('Login with Bitbucket')
+  return t('Login with GitHub')
+}
+
 interface SignInProps {
   mode?: 'sign-in' | 'sign-up'
   onSubmit: (data: FormValues, options?: SignInSubmitOptions) => void
-  onGitHubLogin?: () => void
+  onOAuthLogin?: (provider: OAuthLoginMethod) => void
   isLoading?: boolean
-  isGitHubLoading?: boolean
+  oauthLoading?: OAuthLoginMethod | null
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
 }
 
 export function SignIn({
   mode = 'sign-in',
   onSubmit,
-  onGitHubLogin,
+  onOAuthLogin,
   isLoading,
-  isGitHubLoading,
+  oauthLoading,
   redirect,
 }: SignInProps) {
   const t = useT()
@@ -97,10 +240,14 @@ export function SignIn({
   const emailValue = form.watch('email')
 
   const location = useLocation()
-  const [lastLoginMethod, setLastLoginMethod] = useState<
-    'github' | 'email' | null
-  >(null)
+  const [lastLoginMethod, setLastLoginMethod] = useState<LoginMethod | null>(
+    () => getLastLoginMethod(),
+  )
   const [showPassword, setShowPassword] = useState(false)
+  const [expandedOAuth, setExpandedOAuth] = useState<OAuthLoginMethod>(() => {
+    const last = getLastLoginMethod()
+    return isOAuthLoginMethod(last) ? last : 'github'
+  })
 
   // Function to update last login method from storage
   const updateLastLoginMethod = () => {
@@ -209,36 +356,54 @@ export function SignIn({
                 </p>
               </div>
 
-              {onGitHubLogin && (
+              {onOAuthLogin && (
                 <>
-                  <div className="relative">
-                    {lastLoginMethod === 'github' && (
-                      <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
-                        {t('Last used')}
-                      </span>
-                    )}
-                    <Button
-                      variant="outline"
-                      type="button"
-                      className="w-full"
-                      onClick={onGitHubLogin}
-                      disabled={isGitHubLoading || formBusy}
-                    >
-                      <svg
-                        className="me-1.5 h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                          d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.737 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"
-                        />
-                      </svg>
-                      {mode === 'sign-up'
-                        ? t('Sign up with GitHub')
-                        : t('Login with GitHub')}
-                    </Button>
+                  <style>{OAUTH_ACCORDION_STYLES}</style>
+                  <div className="oauth-login-row" data-expanded={expandedOAuth}>
+                    {OAUTH_PROVIDERS.map(({ id, Icon }) => {
+                      const label = oauthProviderLabel(id, mode, t)
+                      const isLastUsed = lastLoginMethod === id
+                      return (
+                        <div
+                          key={id}
+                          className="relative min-w-0"
+                          onMouseEnter={() => setExpandedOAuth(id)}
+                        >
+                          {isLastUsed && (
+                            <span
+                              data-last-used={id}
+                              className="oauth-last-used"
+                            >
+                              <span className="oauth-last-used-dot" />
+                              <span className="oauth-last-used-pill">
+                                {t('Last used')}
+                              </span>
+                            </span>
+                          )}
+                          <Button
+                            variant="outline"
+                            type="button"
+                            data-provider={id}
+                            aria-label={
+                              isLastUsed ? `${label}. ${t('Last used')}` : label
+                            }
+                            className="h-9 w-full min-w-0 justify-center gap-0 overflow-hidden px-0 has-[>svg]:px-0"
+                            onClick={() => onOAuthLogin(id)}
+                            onFocus={() => setExpandedOAuth(id)}
+                            disabled={!!oauthLoading || formBusy}
+                          >
+                            <Icon className="size-4 shrink-0" />
+                            <span className="oauth-login-label">
+                              <span>
+                                <span className="oauth-login-label-text">
+                                  {label}
+                                </span>
+                              </span>
+                            </span>
+                          </Button>
+                        </div>
+                      )
+                    })}
                   </div>
 
                   <div className="relative">

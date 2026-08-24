@@ -40,6 +40,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { Badge } from '@/components/ui/badge'
+import { DatabaseTypeBetaBadge } from '../_components/DatabaseTypeBetaBadge'
+import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
 import {
   Table,
   TableBody,
@@ -1174,15 +1176,9 @@ export function CreateDatabaseWizardView() {
                           <span className="text-[14px] font-medium text-foreground">
                             {opt.label}
                           </span>
-                          {(opt.id === 'DocumentsDB' ||
-                            opt.id === 'VectorsDB') && (
-                            <Badge
-                              variant="info"
-                              className="text-[10px] shrink-0"
-                            >
-                              {t('Beta')}
-                            </Badge>
-                          )}
+                          {isBetaDatabaseType(opt.id) ? (
+                            <DatabaseTypeBetaBadge />
+                          ) : null}
                           {optionMeta.comingSoon ? (
                             <Badge
                               variant="inactive"
