@@ -46,11 +46,14 @@ trait LDAPBase
 
     public function testUpdateConfigMergesOverStored(): void
     {
+        // The bind password rides along because this moves the endpoint, which
+        // is refused otherwise: see testMovingConnectionRequiresBindPasswordAgain.
         $this->updateLDAP([
             'host' => 'directory.appwrite.test',
             'port' => 389,
             'encryption' => 'tls',
             'baseDn' => 'dc=appwrite,dc=test',
+            'bindPassword' => 'servicepass',
         ]);
 
         // Sending one field must not blank the others.
@@ -80,6 +83,62 @@ trait LDAPBase
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('bindPassword', $response['body']);
+    }
+
+    public function testMovingConnectionRequiresBindPasswordAgain(): void
+    {
+        // Establish a known endpoint and credential. The password is sent in
+        // the same call that sets the endpoint, which is what authorises it.
+        $response = $this->updateLDAP([
+            'host' => 'directory.appwrite.test',
+            'port' => 389,
+            'encryption' => 'tls',
+            'baseDn' => 'dc=appwrite,dc=test',
+            'bindDn' => 'cn=service,dc=appwrite,dc=test',
+            'bindPassword' => 'servicepass',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code'], 'Could not establish the fixture: ' . \json_encode($response['body']));
+
+        // A stored password belongs to the endpoint it was entered for.
+        // Pointing the connection somewhere else without re-supplying it would
+        // hand the service credential to whatever answers at the new address.
+        foreach ([
+            ['host' => 'attacker.example.com'],
+            ['port' => 3899],
+            ['bindDn' => 'cn=other,dc=appwrite,dc=test'],
+            ['encryption' => 'none'],
+        ] as $change) {
+            $response = $this->updateLDAP($change);
+
+            $this->assertSame(400, $response['headers']['status-code'], 'Expected refusal for: ' . \json_encode($change));
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+        }
+
+        // Supplying it again is how the move is authorised.
+        $response = $this->updateLDAP([
+            'host' => 'directory2.appwrite.test',
+            'bindPassword' => 'servicepass',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('directory2.appwrite.test', $response['body']['host']);
+
+        // Changes that do not move the credential or expose it stay mergeable.
+        $response = $this->updateLDAP([
+            'nameAttribute' => 'displayName',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('displayName', $response['body']['nameAttribute']);
+
+        // Clear the stored credential again: with one held, every later test
+        // that moves the host would be refused by the guard proven above.
+        $response = $this->updateLDAP([
+            'bindPassword' => '',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
     }
 
     public function testResponseModel(): void

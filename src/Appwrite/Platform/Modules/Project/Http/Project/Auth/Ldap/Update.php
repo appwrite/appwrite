@@ -106,6 +106,26 @@ class Update extends Action
         // TODO: Fix when adding array support
         $directory = $directories[0] ?? [];
 
+        // The stored bind password belongs to the host it was entered for.
+        // Carrying it over to a different host or bind DN would let a caller
+        // with project.write point the connection at a server they control and
+        // have Appwrite hand over the service credentials, so the password must
+        // be supplied again whenever either changes.
+        // Anything that changes where the password goes, or how protected it is
+        // in transit, counts: a different port is a different destination, and
+        // dropping encryption puts the credential on the wire in the clear.
+        $movingDestination = ($host !== null && $host !== ($directory['host'] ?? ''))
+            || ($bindDn !== null && $bindDn !== ($directory['bindDn'] ?? ''))
+            || ($port !== null && $port !== (int)($directory['port'] ?? Client::DEFAULT_PORT));
+
+        $weakeningTransport = $encryption !== null
+            && $encryption !== ($directory['encryption'] ?? Client::ENCRYPTION_TLS)
+            && $encryption === Client::ENCRYPTION_NONE;
+
+        if (($movingDestination || $weakeningTransport) && $bindPassword === null && !empty($directory['bindPassword'] ?? '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Changing the LDAP host, port, bind DN or encryption requires the bind password to be provided again.');
+        }
+
         $directory = [
             'host' => $host ?? ($directory['host'] ?? ''),
             'port' => $port ?? ($directory['port'] ?? Client::DEFAULT_PORT),
