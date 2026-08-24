@@ -4,6 +4,7 @@ namespace Appwrite\Auth\LDAP;
 
 use Appwrite\Extend\Exception;
 use FreeDSx\Ldap\Entry\Dn;
+use FreeDSx\Ldap\Entry\Entry;
 use FreeDSx\Ldap\Exception\BindException;
 use FreeDSx\Ldap\LdapClient;
 use FreeDSx\Ldap\Operations;
@@ -53,7 +54,7 @@ class Client
         private readonly string $bindDn = '',
         private readonly string $bindPassword = '',
         private readonly string $userFilter = '(uid=' . self::PLACEHOLDER . ')',
-        private readonly string $provisionFilter = '',
+        private readonly string $provisionGroupDn = '',
         private readonly string $emailAttribute = 'mail',
         private readonly string $nameAttribute = 'cn',
     ) {
@@ -184,32 +185,14 @@ class Client
         return \str_replace(self::PLACEHOLDER, self::escape($username), $this->userFilter);
     }
 
-    public function hasProvisionFilter(): bool
+    public function hasProvisionGroup(): bool
     {
-        return !empty(\trim($this->provisionFilter));
+        return !empty(\trim($this->provisionGroupDn));
     }
 
-    /**
-     * The provisioning filter with the placeholder replaced, or an empty string
-     * when no restriction is configured.
-     *
-     * The placeholder receives the authenticated entry's DN rather than the
-     * value typed at sign-in, because this filter is evaluated against that
-     * entry directly. A membership check therefore reads
-     * `(memberOf=cn=staff,ou=groups,dc=example,dc=com)` and does not need the
-     * placeholder at all; it is substituted for filters that do want the DN.
-     *
-     * @param string $dn
-     *
-     * @return string
-     */
-    public function getProvisionFilter(string $dn): string
+    public function getProvisionGroupDn(): string
     {
-        if (!$this->hasProvisionFilter()) {
-            return '';
-        }
-
-        return \str_replace(self::PLACEHOLDER, self::escape($dn), $this->provisionFilter);
+        return \trim($this->provisionGroupDn);
     }
 
     public function useSsl(): bool
@@ -296,7 +279,10 @@ class Client
             $entries = $client->search(Operations::search(
                 Filters::raw($this->getUserFilter($username)),
                 $this->emailAttribute,
-                $this->nameAttribute
+                $this->nameAttribute,
+                // Active Directory records membership on the user rather than
+                // on the group, so it is read here and costs no extra search.
+                'memberOf'
             ));
         } catch (\Throwable $error) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Could not search the LDAP directory. Check the base DN and user filter.', previous: $error);
@@ -310,7 +296,7 @@ class Client
 
         $entry = $entries->first();
 
-        if ($this->hasProvisionFilter() && !$this->matchesProvisionFilter($client, (string)$entry->getDn())) {
+        if ($this->hasProvisionGroup() && !$this->isInProvisionGroup($client, $entry)) {
             return null;
         }
 
@@ -322,43 +308,59 @@ class Client
     }
 
     /**
-     * Whether the user also satisfies the provisioning restriction, typically a
-     * group membership.
+     * Whether the authenticated entry belongs to the configured provisioning
+     * group.
      *
-     * Evaluated on every sign-in rather than only at first sign-in, so removing
+     * Directories record membership in one of two directions and both are
+     * common, so both are accepted:
+     *
+     *  - the group entry lists the user in `member` or `uniqueMember`
+     *    (`groupOfNames`/`groupOfUniqueNames`, the OpenLDAP convention);
+     *  - the user entry lists the group in `memberOf` (Active Directory).
+     *
+     * Checked on every sign-in rather than only at first sign-in, so removing
      * someone from the group in the directory revokes their access rather than
      * only preventing a new account.
      *
      * @param LdapClient $client
-     * @param string $dn
+     * @param Entry $user
      *
      * @return bool
      */
-    private function matchesProvisionFilter(LdapClient $client, string $dn): bool
+    private function isInProvisionGroup(LdapClient $client, Entry $user): bool
     {
-        $filter = $this->getProvisionFilter($dn);
+        $groupDn = $this->getProvisionGroupDn();
+        $userDn = (string)$user->getDn();
 
-        try {
-            // Searched across the subtree so both filter shapes work: one that
-            // describes the user's own entry, and one that describes a group
-            // listing them as a member.
-            $entries = $client->search(Operations::search(
-                Filters::raw($filter),
-                'member',
-                'uniqueMember'
-            ));
-        } catch (\Throwable $error) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Could not evaluate the LDAP provisioning filter.', previous: $error);
+        // Active Directory: membership is recorded on the user, already read
+        // by the search that found them.
+        $memberOf = $user->get('memberOf');
+
+        if ($memberOf !== null) {
+            foreach ($memberOf->getValues() as $value) {
+                if (self::sameDn($groupDn, (string)$value)) {
+                    return true;
+                }
+            }
         }
 
-        // A match on its own proves nothing: the result has to name the entry
-        // being authenticated. Otherwise a filter satisfied by some unrelated
-        // object would authorise anyone able to bind.
-        foreach ($entries as $entry) {
-            if (self::sameDn($dn, (string)$entry->getDn())) {
-                return true;
-            }
+        // OpenLDAP: membership is recorded on the group, so it has to be read.
+        // Scoped to the group entry itself rather than searched for across the
+        // subtree: the DN names exactly one entry, and a subtree search could
+        // otherwise be satisfied by some unrelated object.
+        try {
+            $entries = $client->search(
+                Operations::search(Filters::present('objectClass'), 'member', 'uniqueMember')
+                    ->base($groupDn)
+                    ->useBaseScope()
+            );
+        } catch (\Throwable $error) {
+            // A group that does not exist is a configuration error, not a
+            // failed sign-in, but it must not admit anyone either.
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Could not read the LDAP provisioning group. Check that the group DN exists.', previous: $error);
+        }
 
+        foreach ($entries as $entry) {
             foreach (['member', 'uniqueMember'] as $attribute) {
                 $values = $entry->get($attribute);
 
@@ -367,7 +369,7 @@ class Client
                 }
 
                 foreach ($values->getValues() as $value) {
-                    if (self::sameDn($dn, (string)$value)) {
+                    if (self::sameDn($userDn, (string)$value)) {
                         return true;
                     }
                 }

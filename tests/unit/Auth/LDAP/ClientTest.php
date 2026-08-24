@@ -26,7 +26,7 @@ final class ClientTest extends TestCase
             bindDn: $over['bindDn'] ?? 'cn=service,dc=example,dc=com',
             bindPassword: $over['bindPassword'] ?? 'secret',
             userFilter: $over['userFilter'] ?? '(uid={{username}})',
-            provisionFilter: $over['provisionFilter'] ?? '',
+            provisionGroupDn: $over['provisionGroupDn'] ?? '',
             emailAttribute: $over['emailAttribute'] ?? 'mail',
             nameAttribute: $over['nameAttribute'] ?? 'cn',
         );
@@ -127,39 +127,29 @@ final class ClientTest extends TestCase
         $this->assertStringContainsString('\5c', $this->client()->getUserFilter('do\\main'));
     }
 
-    public function testProvisionFilterIsAbsentByDefault(): void
+    /**
+     * The provisioning group is a distinguished name rather than a filter, so
+     * there is no placeholder to substitute and no filter syntax for an admin
+     * to get wrong. Membership is resolved against the directory at sign-in.
+     */
+    public function testProvisionGroupIsStoredAsGivenOnceTrimmed(): void
     {
-        $client = $this->client();
+        $client = $this->client([
+            'provisionGroupDn' => '  cn=staff,ou=groups,dc=example,dc=com  ',
+        ]);
 
-        $this->assertFalse($client->hasProvisionFilter());
-        $this->assertSame('', $client->getProvisionFilter('alice'));
+        $this->assertTrue($client->hasProvisionGroup());
+        $this->assertSame('cn=staff,ou=groups,dc=example,dc=com', $client->getProvisionGroupDn());
     }
 
     /**
-     * The provisioning filter is evaluated against the authenticated entry, so
-     * the placeholder receives its DN rather than the typed username. A filter
-     * that merely matched something in the subtree would authorise anyone.
+     * No configured group means every user the directory authenticates is
+     * allowed an account, which is the default.
      */
-    public function testProvisionFilterSubstitutesTheEntryDn(): void
+    public function testProvisionGroupIsOptional(): void
     {
-        $client = $this->client([
-            'provisionFilter' => '(member=' . Client::PLACEHOLDER . ')',
-        ]);
-
-        $filter = $client->getProvisionFilter('uid=alice,ou=people,dc=example,dc=com');
-
-        $this->assertStringContainsString('uid=alice,ou=people,dc=example,dc=com', $filter);
-    }
-
-    public function testProvisionFilterSubstitutesAndEscapes(): void
-    {
-        $client = $this->client([
-            'provisionFilter' => '(&(cn=staff)(member=uid={{username}},ou=people,dc=example,dc=com))',
-        ]);
-
-        $this->assertTrue($client->hasProvisionFilter());
-        $this->assertStringContainsString('uid=alice,', $client->getProvisionFilter('alice'));
-        $this->assertStringNotContainsString('=*', $client->getProvisionFilter('*'));
+        $this->assertFalse($this->client()->hasProvisionGroup());
+        $this->assertFalse($this->client(['provisionGroupDn' => '   '])->hasProvisionGroup());
     }
 
     public function testSslAndStartTlsAreDistinct(): void

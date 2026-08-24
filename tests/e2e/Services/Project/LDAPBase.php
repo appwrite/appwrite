@@ -23,7 +23,7 @@ trait LDAPBase
             'bindDn' => 'cn=service,dc=appwrite,dc=test',
             'bindPassword' => 'servicepass',
             'userFilter' => '(uid={{username}})',
-            'provisionFilter' => '(memberOf=cn=staff,ou=groups,dc=appwrite,dc=test)',
+            'provisionGroupDn' => 'cn=staff,ou=groups,dc=appwrite,dc=test',
             'emailAttribute' => 'mail',
             'nameAttribute' => 'displayName',
         ]);
@@ -36,7 +36,7 @@ trait LDAPBase
         $this->assertSame('dc=appwrite,dc=test', $response['body']['baseDn']);
         $this->assertSame('cn=service,dc=appwrite,dc=test', $response['body']['bindDn']);
         $this->assertSame('(uid={{username}})', $response['body']['userFilter']);
-        $this->assertSame('(memberOf=cn=staff,ou=groups,dc=appwrite,dc=test)', $response['body']['provisionFilter']);
+        $this->assertSame('cn=staff,ou=groups,dc=appwrite,dc=test', $response['body']['provisionGroupDn']);
         $this->assertSame('mail', $response['body']['emailAttribute']);
         $this->assertSame('displayName', $response['body']['nameAttribute']);
 
@@ -96,7 +96,7 @@ trait LDAPBase
             'baseDn',
             'bindDn',
             'userFilter',
-            'provisionFilter',
+            'provisionGroupDn',
             'emailAttribute',
             'nameAttribute',
         ] as $key) {

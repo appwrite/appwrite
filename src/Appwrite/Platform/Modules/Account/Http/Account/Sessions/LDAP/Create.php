@@ -136,7 +136,7 @@ class Create extends Action
             bindDn: $directory['bindDn'] ?? '',
             bindPassword: $directory['bindPassword'] ?? '',
             userFilter: $directory['userFilter'] ?? '(uid=' . Client::PLACEHOLDER . ')',
-            provisionFilter: $directory['provisionFilter'] ?? '',
+            provisionGroupDn: $directory['provisionGroupDn'] ?? '',
             emailAttribute: $directory['emailAttribute'] ?? 'mail',
             nameAttribute: $directory['nameAttribute'] ?? 'cn',
         );

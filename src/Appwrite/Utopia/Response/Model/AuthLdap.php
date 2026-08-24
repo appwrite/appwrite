@@ -59,11 +59,11 @@ class AuthLdap extends Model
                 'default' => '',
                 'example' => '(uid=' . Client::PLACEHOLDER . ')',
             ])
-            ->addRule('provisionFilter', [
+            ->addRule('provisionGroupDn', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Filter a user must also match to be allowed an account. Empty means no restriction.',
+                'description' => 'Distinguished name of the group a user must belong to for an account to be created. Empty means no restriction.',
                 'default' => '',
-                'example' => '(&(cn=staff)(member=' . Client::PLACEHOLDER . '))',
+                'example' => 'cn=staff,ou=groups,dc=example,dc=com',
             ])
             ->addRule('emailAttribute', [
                 'type' => self::TYPE_STRING,

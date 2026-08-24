@@ -124,10 +124,10 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame('user_invalid_credentials', $response['body']['type']);
     }
 
-    public function testProvisionFilterRestrictsAccounts(): void
+    public function testProvisionGroupRestrictsAccounts(): void
     {
         $this->configureDirectory([
-            'provisionFilter' => '(&(cn=appwrite-users)(member={{username}}))',
+            'provisionGroupDn' => 'cn=appwrite-users,ou=groups,dc=appwrite,dc=test',
         ]);
 
         // Valid credentials, but not in the group: refused, and refused with
@@ -144,14 +144,14 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame(self::$aliceId, $response['body']['userId']);
     }
 
-    public function testProvisionFilterMatchesDnAcrossCaseAndSpacing(): void
+    public function testProvisionGroupMatchesDnAcrossCaseAndSpacing(): void
     {
         // The appwrite-users-cased group records Alice's DN with different
         // case and spacing than her entry. The directory treats both as the
         // same entry, so the membership check must admit her: this exercises
         // the component-wise DN comparison rather than the byte-exact one.
         $this->configureDirectory([
-            'provisionFilter' => '(&(cn=appwrite-users-cased)(member={{username}}))',
+            'provisionGroupDn' => 'cn=appwrite-users-cased,ou=groups,dc=appwrite,dc=test',
         ]);
 
         $response = $this->signIn('alice', 'alicepass');
@@ -260,7 +260,7 @@ final class LDAPSessionIntegrationTest extends Scope
             'bindDn' => 'cn=admin,dc=appwrite,dc=test',
             'bindPassword' => 'adminpassword',
             'userFilter' => '(uid={{username}})',
-            'provisionFilter' => '',
+            'provisionGroupDn' => '',
             'emailAttribute' => 'mail',
             'nameAttribute' => 'cn',
             'enabled' => true,

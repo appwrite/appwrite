@@ -66,7 +66,7 @@ class Update extends Action
             ->param('bindDn', null, new Nullable(new Text(512, 0)), 'Service account used to search for users. Leave empty if the directory allows anonymous search.', optional: true)
             ->param('bindPassword', null, new Nullable(new Text(512, 0)), 'Service account password.', optional: true)
             ->param('userFilter', null, new Nullable(new Text(1024, 0)), 'Search filter locating the user, containing the ' . Client::PLACEHOLDER . ' placeholder. For example: (uid=' . Client::PLACEHOLDER . ')', optional: true)
-            ->param('provisionFilter', null, new Nullable(new Text(1024, 0)), 'Optional filter a user must also match to be allowed an account, typically a group membership. ' . Client::PLACEHOLDER . ' is replaced with the entry\'s distinguished name, so a group check reads (&(cn=staff)(member=' . Client::PLACEHOLDER . ')). The match must name the entry signing in. Evaluated on every sign-in, so removing someone from the group revokes their access.', optional: true)
+            ->param('provisionGroupDn', null, new Nullable(new Text(1024, 0)), 'Optional group the user must belong to for an account to be created, given as its distinguished name, for example cn=staff,ou=groups,dc=example,dc=com. Membership is accepted whether the group lists the user in member or uniqueMember, or the user lists the group in memberOf. Checked on every sign-in, so removing someone from the group revokes their access. Leave empty to allow every user the directory authenticates.', optional: true)
             ->param('emailAttribute', null, new Nullable(new Text(128, 0)), 'Attribute holding the email address. Required, because an account cannot be created without one.', optional: true)
             ->param('nameAttribute', null, new Nullable(new Text(128, 0)), 'Attribute holding the display name.', optional: true)
             ->param('enabled', null, new Nullable(new Boolean()), 'LDAP sign-in status. Setting this to true validates the configuration and throws if the directory cannot be reached.', optional: true)
@@ -86,7 +86,7 @@ class Update extends Action
         ?string $bindDn,
         ?string $bindPassword,
         ?string $userFilter,
-        ?string $provisionFilter,
+        ?string $provisionGroupDn,
         ?string $emailAttribute,
         ?string $nameAttribute,
         ?bool $enabled,
@@ -114,7 +114,7 @@ class Update extends Action
             'bindDn' => $bindDn ?? ($directory['bindDn'] ?? ''),
             'bindPassword' => $bindPassword ?? ($directory['bindPassword'] ?? ''),
             'userFilter' => $userFilter ?? ($directory['userFilter'] ?? '(uid=' . Client::PLACEHOLDER . ')'),
-            'provisionFilter' => $provisionFilter ?? ($directory['provisionFilter'] ?? ''),
+            'provisionGroupDn' => $provisionGroupDn ?? ($directory['provisionGroupDn'] ?? ''),
             'emailAttribute' => $emailAttribute ?? ($directory['emailAttribute'] ?? 'mail'),
             'nameAttribute' => $nameAttribute ?? ($directory['nameAttribute'] ?? 'cn'),
         ];
@@ -129,7 +129,7 @@ class Update extends Action
                     bindDn: $directory['bindDn'],
                     bindPassword: $directory['bindPassword'],
                     userFilter: $directory['userFilter'],
-                    provisionFilter: $directory['provisionFilter'],
+                    provisionGroupDn: $directory['provisionGroupDn'],
                     emailAttribute: $directory['emailAttribute'],
                     nameAttribute: $directory['nameAttribute'],
                 );
@@ -162,7 +162,7 @@ class Update extends Action
             'baseDn' => $directory['baseDn'],
             'bindDn' => $directory['bindDn'],
             'userFilter' => $directory['userFilter'],
-            'provisionFilter' => $directory['provisionFilter'],
+            'provisionGroupDn' => $directory['provisionGroupDn'],
             'emailAttribute' => $directory['emailAttribute'],
             'nameAttribute' => $directory['nameAttribute'],
         ]), Response::MODEL_AUTH_LDAP);
