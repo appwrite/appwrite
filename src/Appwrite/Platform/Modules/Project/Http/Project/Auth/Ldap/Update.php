@@ -151,7 +151,7 @@ class Update extends Action
             'auths' => $auths,
         ])));
 
-        $project = $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $response->dynamic(new Document([
             '$id' => 'ldap',

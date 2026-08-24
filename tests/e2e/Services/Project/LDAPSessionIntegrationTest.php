@@ -213,9 +213,12 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame(200, $blocked['headers']['status-code']);
 
         // Valid directory credentials no longer help a blocked account.
+        // Reported as 403 rather than 401: the directory did authenticate
+        // them, so this is the same blocked-account response every other
+        // sign-in path in Appwrite gives.
         $response = $this->signIn('dave', 'davepass');
 
-        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame(403, $response['headers']['status-code']);
         $this->assertSame('user_blocked', $response['body']['type']);
     }
 
