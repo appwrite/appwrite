@@ -46,42 +46,15 @@ Appwrite 2.0 rejects that as a necessary cost. Three principles drive the releas
 
 **Own the layer in front, not just the backend.** A production app is a domain, a TLS certificate, DNS records, and traffic you need to control before it reaches your code. Domains and Firewall move that from your list of vendors into your organization.
 
-# Hyperloop B
-
-[Hyperloop B](/blog/post/hyperloop-b) is the new engine behind the platform. It moves Appwrite from Swoole's worker model onto Swoole's coroutine scheduler, so a single process serves many concurrent requests by yielding whenever it waits on I/O. On an I/O bound workload that is 7x the throughput at 6x less memory, which is what makes the rest of this release practical to run.
-
-You never call it directly, which is rather the point. The [Hyperloop B deep dive](/blog/post/hyperloop-b) covers the benchmarks and the work it took to make a large PHP codebase coroutine safe.
-
-# Console IV
-
-Console IV is the next-generation Appwrite Console, rebuilt with TanStack. It is the surface where the rest of this release becomes usable rather than merely available.
-
-Two developer tools we shipped ahead of 2.0 now count as part of the default workflow:
-
-- [Appwrite Terminal](/blog/post/announcing-console-terminal) runs the Appwrite CLI inside the Console, with your session and project context already configured.
-- [Appwrite Explorer](/blog/post/announcing-appwrite-explorer) loads your project's OpenAPI specification, builds requests with guided forms, and sends live calls against your project from the browser.
-
-# TablesDB
-
-[TablesDB](/docs/products/databases/tablesdb) handles structured, relational data with typed columns, rows, relationships, and indexes. It is the database most Appwrite apps are built on, and it keeps the permissions, queries, and realtime you already write against.
-
-# DocumentsDB
-
-[DocumentsDB](/blog/post/announcing-documentsdb) handles schemaless documents. A collection holds JSON, two documents in the same collection can have different fields, and adding a field is a write rather than a migration. You still get document-level permissions, queries, ordering, and pagination through the same SDK patterns.
-
-# VectorsDB
-
-[VectorsDB](/blog/post/announcing-vectorsdb) handles embeddings. A collection is created with a fixed `dimension`, every document stores an `embeddings` vector of that length plus optional `metadata`, and an [HNSW index](/docs/products/databases/vectorsdb/vector-search) keeps similarity search fast as the collection grows. You choose cosine, dot product, or Euclidean distance, and [built-in embedding models](/docs/products/databases/vectorsdb/embeddings) turn text into vectors without a separate embedding service in your stack.
-
 # Native PostgreSQL
 
 [Native PostgreSQL](/blog/post/announcing-native-postgresql-databases) is the point where the abstraction tax argument stops being theoretical. Appwrite provisions a real engine in your project's region with its own storage, networking, and credentials, exposed on a per-database hostname secured with TLS. There is no Appwrite layer in between. You get PostgreSQL 18 by default, 17 if you need it, on port 5432, reachable from `psql` or any driver.
 
 The operational work comes with it: [backups and point-in-time recovery](/docs/products/databases/postgresql/backups), [branches](/docs/products/databases/postgresql/branches) that clone from a snapshot in seconds, [high availability](/docs/products/databases/postgresql/high-availability) with automatic failover, a [connection pooler](/docs/products/databases/postgresql/connection-pooling) with read/write split, and online version upgrades with no read or write outage. [Extensions](/docs/products/databases/postgresql/extensions) including PostGIS, pgvector, and pg_trgm are supported, so a workload that needs pgvector rather than VectorsDB has a home too. Compute starts at $10 per month and [resizes between tiers](/docs/products/databases/postgresql/scaling) with zero downtime.
 
-# Native MySQL
+# VectorsDB
 
-[Native MySQL](/blog/post/announcing-native-mysql-databases) is the same deal for the other half of the SQL world: a real engine, your own credentials, your own driver and ORM and migrations, and no Appwrite API in the path. MySQL 8.4 is the default with 8.0 also supported, on port 3306, reachable from the `mysql` client or anything that speaks the protocol.
+[VectorsDB](/blog/post/announcing-vectorsdb) handles embeddings. A collection is created with a fixed `dimension`, every document stores an `embeddings` vector of that length plus optional `metadata`, and an [HNSW index](/docs/products/databases/vectorsdb/vector-search) keeps similarity search fast as the collection grows. You choose cosine, dot product, or Euclidean distance, and [built-in embedding models](/docs/products/databases/vectorsdb/embeddings) turn text into vectors without a separate embedding service in your stack.
 
 # The S3 API
 
@@ -89,21 +62,25 @@ The operational work comes with it: [backups and point-in-time recovery](/docs/p
 
 The same bucket stays addressable over the native Storage API at the same time. Files uploaded over S3 appear in the Console, and files uploaded through the Console are listable over S3. The announcement has the endpoint table, the AWS CLI and boto3 examples, and the full list of supported operations.
 
+# Native MySQL
+
+[Native MySQL](/blog/post/announcing-native-mysql-databases) does the same for the other half of the SQL world, on the same terms as PostgreSQL: a real engine, your own credentials, your own driver and ORM and migrations, and no Appwrite API in the path. MySQL 8.4 is the default with 8.0 also supported, on port 3306, reachable from the `mysql` client or anything that speaks the protocol.
+
+# Hyperloop B
+
+[Hyperloop B](/blog/post/hyperloop-b) is the new engine behind the platform. It moves Appwrite from Swoole's worker model onto Swoole's coroutine scheduler, so a single process serves many concurrent requests by yielding whenever it waits on I/O. On an I/O bound workload that is 7x the throughput at 6x less memory, which is what makes the rest of the platform practical to run at this size.
+
+You never call it directly, which is rather the point. The [Hyperloop B deep dive](/blog/post/hyperloop-b) covers the benchmarks and the work it took to make a large PHP codebase coroutine safe.
+
 # The OAuth2 server
 
 [The OAuth2 server](/blog/post/announcing-oauth2-server) turns an Appwrite project into an **OAuth 2.1 and OpenID Connect provider**. Third-party apps register as clients, your users approve what those apps can access, and your project issues the tokens. Integrators offer Sign in with your product the same way you offer Sign in with Google.
 
 Two decisions define it. You host the consent screen, so users approving access never leave your product's design language. And client registration is an API available in the Client SDKs, not a Console form, which is what makes a self-serve developer portal possible. Underneath, it implements the specs integrators expect: PKCE, token introspection and revocation, JWT access tokens with a published JWK Set, the device authorization grant, pushed authorization requests, and dynamic client registration, all described by a discovery document at a predictable URL.
 
-# Partner marketplaces
+# DocumentsDB
 
-The [Partners documentation](/docs/partners) covers the other half of the OAuth story: building a platform on top of Appwrite rather than an app inside it. The [Apps API](/docs/partners/apps) registers OAuth apps and manages secrets, redirect URIs, and branding, while [OAuth connect](/docs/partners/oauth-connect) sends users through consent and calls Console APIs with delegated tokens. A [marketplace](/docs/partners/guides/marketplaces) uses both: each listing maps to an OAuth app, an organization admin clicks install, and your backend exchanges the authorization code for tokens scoped to their organization.
-
-This is the path for vibe coding platforms, AI agents that manage a user's Appwrite resources, and multi-tenant control planes that provision a project per customer. Combined with [organization API keys](/docs/partners/org-api-keys), you can provision inside your own organization and connect to your customers' organizations from the same codebase.
-
-# Domains
-
-[Appwrite Domains](/docs/products/domains) makes Appwrite your registrar. Register new names, transfer existing registrations in with an authorization code, or delegate DNS for a domain you own elsewhere by pointing nameservers at `ns1.appwrite.zone` and `ns2.appwrite.zone`. Setup has two layers: the organization domain proves you control the apex zone, and product hostnames attach to [Sites](/docs/products/sites), [Functions](/docs/products/functions), or a custom API endpoint, with DNS verified and TLS issued automatically. [DNS presets](/docs/products/domains/presets) add MX and SPF record sets for Google Workspace, Outlook, and Mailgun in one click.
+[DocumentsDB](/blog/post/announcing-documentsdb) handles schemaless documents. A collection holds JSON, two documents in the same collection can have different fields, and adding a field is a write rather than a migration. You still get document-level permissions, queries, ordering, and pagination through the same SDK patterns.
 
 # Firewall
 
@@ -115,6 +92,25 @@ This is the path for vibe coding platforms, AI agents that manage a user's Appwr
 - **Priority**: lower numbers evaluate first, and the first matching enabled rule decides the outcome.
 
 Before you save a rule, Firewall previews how many recent requests would have matched it, so you ship a rule knowing its blast radius instead of guessing at it. Firewall never blocks you in the Console, so a rule that goes too far is always reversible.
+
+# Domains
+
+[Appwrite Domains](/docs/products/domains) makes Appwrite your registrar. Register new names, transfer existing registrations in with an authorization code, or delegate DNS for a domain you own elsewhere by pointing nameservers at `ns1.appwrite.zone` and `ns2.appwrite.zone`. Setup has two layers: the organization domain proves you control the apex zone, and product hostnames attach to [Sites](/docs/products/sites), [Functions](/docs/products/functions), or a custom API endpoint, with DNS verified and TLS issued automatically. [DNS presets](/docs/products/domains/presets) add MX and SPF record sets for Google Workspace, Outlook, and Mailgun in one click.
+
+# Partner marketplaces
+
+The [Partners documentation](/docs/partners) covers the other half of the OAuth story: building a platform on top of Appwrite rather than an app inside it. The [Apps API](/docs/partners/apps) registers OAuth apps and manages secrets, redirect URIs, and branding, while [OAuth connect](/docs/partners/oauth-connect) sends users through consent and calls Console APIs with delegated tokens. A [marketplace](/docs/partners/guides/marketplaces) uses both: each listing maps to an OAuth app, an organization admin clicks install, and your backend exchanges the authorization code for tokens scoped to their organization.
+
+This is the path for vibe coding platforms, AI agents that manage a user's Appwrite resources, and multi-tenant control planes that provision a project per customer. Combined with [organization API keys](/docs/partners/org-api-keys), you can provision inside your own organization and connect to your customers' organizations from the same codebase.
+
+# Console IV
+
+Console IV is the next-generation Appwrite Console, rebuilt with TanStack. It is the surface where everything above becomes usable rather than merely available.
+
+Two developer tools we shipped ahead of 2.0 now count as part of the default workflow:
+
+- [Appwrite Terminal](/blog/post/announcing-console-terminal) runs the Appwrite CLI inside the Console, with your session and project context already configured.
+- [Appwrite Explorer](/blog/post/announcing-appwrite-explorer) loads your project's OpenAPI specification, builds requests with guided forms, and sends live calls against your project from the browser.
 
 # Getting started with Appwrite 2.0
 
