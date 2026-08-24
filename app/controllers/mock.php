@@ -154,6 +154,25 @@ Http::get('/v1/mock/tests/general/oauth2/user-unverified')
         ]);
     });
 
+Http::get('/v1/mock/tests/general/oauth2/user-no-email')
+    ->desc('OAuth2 User Without Email')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('token', '', new Text(100), 'OAuth2 Access Token.')
+    ->inject('response')
+    ->action(function (string $token, Response $response) {
+
+        if ($token != '123456') {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
+        }
+
+        $response->json([
+            'id' => 3,
+            'name' => 'User Name NoEmail',
+        ]);
+    });
+
 Http::get('/v1/mock/tests/general/oauth2/success')
     ->desc('OAuth2 Success')
     ->groups(['mock'])
