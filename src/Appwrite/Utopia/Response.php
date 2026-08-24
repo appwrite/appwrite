@@ -631,8 +631,7 @@ class Response extends SwooleResponse
             return;
         }
 
-        // Both flags are read before the write: parent appends the headers and, on the
-        // terminating chunk, disables the payload.
+        // Read before the write: parent appends headers and disables the payload as it goes.
         $countHeaders = !$this->headersSent;
         $countBody = !$this->disablePayload;
 

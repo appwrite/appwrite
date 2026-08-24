@@ -161,9 +161,7 @@ class Executor
                 if ($reader === null) {
                     $format = $responseHeaders['x-executor-response-format'] ?? '';
 
-                    // An executor predating the streaming format answers with a complete document
-                    // and echoes nothing. Only the echo distinguishes the two: curl hands over the
-                    // same sized runs either way.
+                    // Only the echo tells the two apart: curl hands over the same runs either way.
                     if ($format !== '' && \version_compare($format, self::RESPONSE_FORMAT_STREAM, '>=')) {
                         $boundary = \trim(\explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '', '"');
                         if ($boundary === '') {
@@ -198,9 +196,7 @@ class Executor
 
         if ($onPart !== null) {
             if ($reader === null) {
-                // A callback suppresses decoding in call(), so the buffered body still has to be
-                // read here. It is not always multipart: the executor answers its own failures with
-                // JSON, and parsing that as multipart silently discards the message and type.
+                // call() skips decoding for a callback, and executor failures arrive as JSON.
                 $contentType = $response['headers']['content-type'] ?? '';
                 $separator = \strpos($contentType, ';');
                 $mime = \substr($contentType, 0, \is_bool($separator) ? \strlen($contentType) : $separator);
@@ -227,8 +223,7 @@ class Executor
             throw new ExecutorException($message, $status, type: $type);
         }
 
-        // A stream that stops before the closing delimiter has lost content, and the caller has
-        // already forwarded what did arrive. It must not be reported as a complete execution.
+        // A stream without its closing delimiter lost content, so it is not a complete execution.
         if ($reader !== null && !$reader->isComplete()) {
             throw new ExecutorException('Executor response ended before the envelope was complete');
         }
@@ -294,8 +289,7 @@ class Executor
 
         if (isset($callback)) {
             $handleEvent = function ($ch, $data) use ($callback, &$responseHeaders) {
-                // Headers are complete before the first body byte, so the callback can tell
-                // what the other side agreed to before deciding what to do with the payload.
+                // Headers are complete before the first body byte, so the callback can read the echo.
                 $callback($data, $responseHeaders);
                 return \strlen($data);
             };
