@@ -129,7 +129,7 @@ To import rows using the Appwrite Console:
 
 1. Go to your project -> Databases
 2. Navigate to your target Table
-3. Click on the **Import CSV** button in the action area
+3. Click the upload icon in the table action area
 4. Upload a new CSV file or choose an existing file from your Storage bucket
 
 {% only_dark %}
