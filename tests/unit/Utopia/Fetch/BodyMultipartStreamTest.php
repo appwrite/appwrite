@@ -236,6 +236,24 @@ final class BodyMultipartStreamTest extends TestCase
         $this->assertFalse($stream->isComplete());
     }
 
+    public function testEnvelopeAbandonedMidRunIsNotComplete(): void
+    {
+        $body = '';
+        $stream = new BodyMultipartStream('X', function (string $name, string $data) use (&$body): void {
+            $body .= $data;
+        });
+
+        // What a runtime dying mid-body leaves behind: content forwarded, run never finished.
+        $stream->feed(
+            "--X\r\n"
+            . "Content-Disposition: form-data; name=\"body\"\r\n"
+            . "Content-Transfer-Encoding: chunked\r\n\r\n"
+            . "64\r\nhalf a page"
+        );
+
+        $this->assertFalse($stream->isComplete());
+    }
+
     public function testMalformedContentTerminatorIsRejected(): void
     {
         $stream = new BodyMultipartStream('X', function (): void {
