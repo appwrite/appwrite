@@ -19,7 +19,7 @@ readonly class StatsResources extends Base
 
     public function enqueue(StatsResourcesMessage $message): string|bool
     {
-        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') === 'disabled') {
             return false;
         }
 
