@@ -24,12 +24,12 @@ class BodyMultipartStream
     private int $remaining = 0;
 
     /**
-     * @param callable(string, string, bool): void $onData Part name, content run, and whether the
+     * @param \Closure(string, string, bool): void $onData Part name, content run, and whether the
      *                                                     part is now complete.
      */
     public function __construct(
         private readonly string $boundary,
-        private readonly mixed $onData,
+        private readonly \Closure $onData,
     ) {
     }
 
