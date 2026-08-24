@@ -79,7 +79,7 @@ class Apple extends OAuth2
             ), true);
 
             $this->claims = (isset($this->tokens['id_token'])) ? \explode('.', $this->tokens['id_token']) : [0 => '', 1 => ''];
-            $this->claims = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) : [];
+            $this->claims = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) ?? [] : [];
         }
 
         return $this->tokens;
@@ -110,7 +110,7 @@ class Apple extends OAuth2
         }
 
         $this->claims = (isset($this->tokens['id_token'])) ? \explode('.', $this->tokens['id_token']) : [0 => '', 1 => ''];
-        $this->claims = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) : [];
+        $this->claims = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) ?? [] : [];
 
         return $this->tokens;
     }
@@ -163,6 +163,15 @@ class Apple extends OAuth2
         return '';
     }
 
+    /**
+     * Validate the configured credentials by building the client secret JWT,
+     * which fails on a missing field or an unusable p8 private key.
+     */
+    public function verifyCredentials(): void
+    {
+        $this->getAppSecret();
+    }
+
     protected function getAppSecret(): string
     {
         $secret = \json_decode($this->appSecret, true);
@@ -175,6 +184,14 @@ class Apple extends OAuth2
         $keyID = (isset($secret['keyID'])) ? $secret['keyID'] : ''; // Your Key ID
         $teamID = (isset($secret['teamID'])) ? $secret['teamID'] : ''; // Your Team ID (see Developer Portal)
         $bundleID =  $this->appID; // Your Bundle ID
+
+        if (empty($keyID)) {
+            throw new Exception('Apple OAuth2 Key ID is missing.');
+        }
+
+        if (empty($teamID)) {
+            throw new Exception('Apple OAuth2 Team ID is missing.');
+        }
 
         $headers = [
             'alg' => 'ES256',
@@ -189,7 +206,11 @@ class Apple extends OAuth2
             'sub' => $bundleID,
         ];
 
-        $pkey = \openssl_pkey_get_private($keyfile);
+        $pkey = \openssl_pkey_get_private($this->normalizePrivateKey($keyfile));
+
+        if ($pkey === false) {
+            throw new Exception('Invalid Apple OAuth2 p8 private key. Make sure the value contains the full contents of the .p8 key file downloaded from the Apple Developer portal.');
+        }
 
         $payload = $this->encode(\json_encode($headers)) . '.' . $this->encode(\json_encode($claims));
 
@@ -198,10 +219,27 @@ class Apple extends OAuth2
         $success = \openssl_sign($payload, $signature, $pkey, OPENSSL_ALGO_SHA256);
 
         if (!$success) {
-            return '';
+            throw new Exception('Failed to sign the Apple OAuth2 client secret with the provided p8 private key.');
         }
 
         return $payload . '.' . $this->encode($this->fromDER($signature, 64));
+    }
+
+    /**
+     * Repair common console paste formats OpenSSL rejects: literal \n escapes
+     * and PEM armor with the base64 body on a single line.
+     */
+    protected function normalizePrivateKey(string $key): string
+    {
+        $key = \str_replace(['\\r\\n', '\\n', '\\r'], "\n", $key);
+
+        if (\preg_match('/-----BEGIN ([A-Z0-9 ]+)-----(.+?)-----END \1-----/s', $key, $matches)) {
+            $body = \preg_replace('/\s+/', '', $matches[2]);
+
+            return '-----BEGIN ' . $matches[1] . "-----\n" . \chunk_split($body, 64, "\n") . '-----END ' . $matches[1] . "-----\n";
+        }
+
+        return $key;
     }
 
     /**
