@@ -173,6 +173,7 @@ if (!function_exists('getRedis')) {
     }
 }
 
+// TODO: Having it as a class but should be like functions like the realtime service with message handlers as action
 class Broker
 {
     // Control packet types (MQTT fixed header, high nibble).
