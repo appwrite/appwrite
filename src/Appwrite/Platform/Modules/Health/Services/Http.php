@@ -15,6 +15,7 @@ use Appwrite\Platform\Modules\Health\Http\Health\Stats\Get as GetStats;
 use Appwrite\Platform\Modules\Health\Http\Health\Storage\Get as GetStorage;
 use Appwrite\Platform\Modules\Health\Http\Health\Storage\Local\Get as GetStorageLocal;
 use Appwrite\Platform\Modules\Health\Http\Health\Time\Get as GetTime;
+use Appwrite\Platform\Modules\Health\Http\Health\Usage\Get as GetUsage;
 use Appwrite\Platform\Modules\Health\Http\Health\Version\Get as GetHealthVersion;
 use Utopia\Platform\Service;
 
@@ -35,6 +36,7 @@ class Http extends Service
         $this->addAction(GetStorage::getName(), new GetStorage());
         $this->addAction(GetAntivirus::getName(), new GetAntivirus());
         $this->addAction(GetGeo::getName(), new GetGeo());
+        $this->addAction(GetUsage::getName(), new GetUsage());
 
         $this->addAction(GetQueueVideos::getName(), new GetQueueVideos());
         $this->addAction(GetFailedJobs::getName(), new GetFailedJobs());

@@ -3235,7 +3235,7 @@
             "version": "0.10.1",
             "source": {
                 "type": "git",
-                "url": "git@github.com:utopia-php/auth.git",
+                "url": "https://github.com/utopia-php/auth.git",
                 "reference": "0f1a342bceebc2659736e52a4496daf24ca4954c"
             },
             "dist": {
@@ -5176,6 +5176,59 @@
                 "source": "https://github.com/utopia-php/telemetry/tree/0.4.6"
             },
             "time": "2026-08-05T17:56:48+00:00"
+        },
+        {
+            "name": "utopia-php/usage",
+            "version": "0.14.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/usage.git",
+                "reference": "baeef33bbcb673265550c83fe437cfa5c400a1e0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/usage/zipball/baeef33bbcb673265550c83fe437cfa5c400a1e0",
+                "reference": "baeef33bbcb673265550c83fe437cfa5c400a1e0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.4",
+                "psr/http-client": "^1.0",
+                "utopia-php/client": "^0.3",
+                "utopia-php/database": "^7.0.0",
+                "utopia-php/query": "0.1.*"
+            },
+            "require-dev": {
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^9.5",
+                "utopia-php/cache": "^4.0"
+            },
+            "suggest": {
+                "ext-curl": "Required by the default cURL transport for the ClickHouse adapter. Not needed if you inject a non-cURL utopia-php/client into the adapter."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Usage\\": "src/Usage"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Appwrite",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "Light and Fast Usage library",
+            "support": {
+                "issues": "https://github.com/utopia-php/usage/issues",
+                "source": "https://github.com/utopia-php/usage/tree/0.14.0"
+            },
+            "time": "2026-08-05T04:25:00+00:00"
         },
         {
             "name": "utopia-php/user-agent",

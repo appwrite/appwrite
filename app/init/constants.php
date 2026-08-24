@@ -370,6 +370,7 @@ const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 
 const METRIC_BUCKETS = 'buckets';
+const METRIC_STORAGE = 'storage';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
 const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
@@ -429,6 +430,19 @@ const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
+
+// Realtime concurrency
+// `realtime.connections` is served from the gauges table as a concurrency
+// level. The same name in the events table is the raw +/-1 deltas it is folded
+// from, so reads of this metric must pass an explicit $type.
+
+// Peak is the highest 5-minute level; shorter bursts are smoothed away.
+const REALTIME_CONCURRENCY_INTERVAL = '5m';
+
+// Hold the window back so in-flight writes land first. The level is carried
+// forward and never recomputed, so a delta arriving after its bucket was
+// sampled is lost for good.
+const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';

@@ -21,6 +21,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
@@ -32,6 +33,8 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
+use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
@@ -39,7 +42,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
+use Utopia\Pools\Pool as Connections;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
@@ -167,6 +172,32 @@ $container->set('publisherForStatsResources', fn (Publisher $publisher) => new S
     $publisher,
     new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
 ), ['publisher']);
+
+$container->set('usageConnection', function () {
+    $client = new HttpClientPool(new Connections(
+        new SwoolePoolAdapter(),
+        'usage',
+        max(1, (int) System::getEnv('_APP_POOL_SIZE_USAGE', 2)),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
+        timeout: 3.0,
+    ));
+
+    $defaultConnection = 'http://appwrite:'
+        . rawurlencode(System::getEnv('_APP_USAGE_PASS', 'appwrite'))
+        . '@clickhouse:8123/appwrite';
+
+    $connection = System::getEnv('_APP_CONNECTIONS_DB_USAGE', $defaultConnection);
+    if ($connection === '') {
+        $connection = $defaultConnection;
+    }
+
+    return new UsageConnection(
+        enabled: System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'disabled',
+        dsn: $connection,
+        client: $client,
+        retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_TTL', 180),
+    );
+}, []);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,

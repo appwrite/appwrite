@@ -116,8 +116,13 @@ return [
     ],
     Exception::GENERAL_USAGE_DISABLED => [
         'name' => Exception::GENERAL_USAGE_DISABLED,
-        'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
-        'code' => 501,
+        'description' => 'Usage stats are disabled. You can enable them by setting the _APP_USAGE_STATS environment variable of your Appwrite server.',
+        'code' => 403,
+    ],
+    Exception::GENERAL_USAGE_NOT_READY => [
+        'name' => Exception::GENERAL_USAGE_NOT_READY,
+        'description' => 'Usage storage is not ready. Please retry after the usage schema has been initialized.',
+        'code' => 503,
     ],
     Exception::GENERAL_NOT_IMPLEMENTED => [
         'name' => Exception::GENERAL_NOT_IMPLEMENTED,

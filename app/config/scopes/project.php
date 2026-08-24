@@ -13,6 +13,10 @@ return [
             "Access to update project\'s information",
         "category" => "Project",
     ],
+    'usage.read' => [
+        'description' => 'Access to read project usage metrics',
+        'category' => 'Project',
+    ],
     "keys.read" => [
         "description" =>
             "Access to read project\'s keys",

@@ -81,6 +81,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/interval && \
     chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/migrate && \
+    chmod +x /usr/local/bin/stats-resources && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/schedule-functions && \
@@ -93,6 +94,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/screenshot && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/upgrade && \
+    chmod +x /usr/local/bin/usage-setup && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/queue-retry && \
     chmod +x /usr/local/bin/queue-count-failed && \
@@ -112,6 +114,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \
     chmod +x /usr/local/bin/worker-videos && \
+    chmod +x /usr/local/bin/worker-stats-resources && \
+    chmod +x /usr/local/bin/worker-stats-usage && \
     chmod +x /usr/local/bin/worker-webhooks
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/

@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
@@ -16,6 +17,7 @@ use Appwrite\Realtime\Message\Handlers\Ping as PingHandler;
 use Appwrite\Realtime\Message\Handlers\Presence as PresenceHandler;
 use Appwrite\Realtime\Message\Handlers\Subscribe as SubscribeHandler;
 use Appwrite\Realtime\Message\Handlers\Unsubscribe as UnsubscribeHandler;
+use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -326,6 +328,35 @@ if (!function_exists('getQueueForRealtime')) {
 if (!function_exists('triggerStats')) {
     function triggerStats(array $event, string $projectId): void
     {
+        if ($projectId === '') {
+            return;
+        }
+
+        try {
+            global $container;
+
+            /** @var UsagePublisher $publisherForUsage */
+            $publisherForUsage = $container->get('publisherForUsage');
+            $dbForPlatform = getConsoleDB();
+            $project = $dbForPlatform->getAuthorization()->skip(
+                fn () => $dbForPlatform->getDocument('projects', $projectId)
+            );
+            if ($project->isEmpty()) {
+                return;
+            }
+
+            $usage = new UsageContext();
+            foreach ($event as $metric => $value) {
+                $usage->addMetric((string) $metric, (int) $value);
+            }
+
+            $publisherForUsage->enqueue(new UsageMessage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        } catch (\Throwable $th) {
+            Console::warning('Failed to publish realtime usage: ' . $th->getMessage());
+        }
     }
 }
 

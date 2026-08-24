@@ -465,6 +465,40 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
             Span::add('database.collections_created', $collectionsCreated);
             Span::current()?->finish();
         }
+
+        // Usage is in ClickHouse, not the primary database, so it sets itself up
+        // here. Giving up never blocks boot; reads and ingestion gate on
+        // Connection::isReady() and recover once the schema lands.
+        /** @var \Appwrite\Usage\Connection $usageConnection */
+        $usageConnection = $container->get('usageConnection');
+
+        if ($usageConnection->isEnabled()) {
+            Span::init('usage.setup');
+
+            $max = 15;
+            $sleep = 2;
+            $attempts = 0;
+
+            while (true) {
+                try {
+                    $attempts++;
+                    $usageConnection->setup();
+                    Console::success('[Setup] - Usage schema is ready');
+                    break;
+                } catch (\Throwable $e) {
+                    if ($attempts >= $max) {
+                        Span::add('usage.ready', false);
+                        Console::warning('[Setup] - Skip: usage schema is not ready: ' . $e->getMessage());
+                        break;
+                    }
+
+                    Console::warning("  └── Usage schema setup failed. Retrying ({$attempts})...");
+                    sleep($sleep);
+                }
+            }
+
+            Span::current()?->finish();
+        }
     });
 
     Span::init('http.server.start');
