@@ -42,7 +42,9 @@ class StatsResources extends Action
         }
 
         $this->disableSubqueries();
-        $interval = max(60, (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', 3600));
+        // Floor of 1 guards against a zero/negative interval spinning the loop;
+        // test stacks legitimately run short intervals (Cloud CI uses 2s).
+        $interval = max(1, (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', 3600));
 
         Console::loop(function () use ($dbForPlatform, $publisherForStatsResources, $usageConnection): void {
             if (!$usageConnection->isReady()) {
