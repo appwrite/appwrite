@@ -2,13 +2,12 @@
 
 namespace Appwrite\Auth\LDAP;
 
-use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Extend\Exception;
 use FreeDSx\Ldap\Entry\Dn;
 use FreeDSx\Ldap\Exception\BindException;
 use FreeDSx\Ldap\LdapClient;
 use FreeDSx\Ldap\Operations;
 use FreeDSx\Ldap\Search\Filters;
-use Utopia\Database\Document;
 
 class Client
 {
@@ -59,27 +58,27 @@ class Client
         private readonly string $nameAttribute = 'cn',
     ) {
         if (empty(\trim($this->host))) {
-            throw new Exception('LDAP host is required.', AppwriteException::GENERAL_ARGUMENT_INVALID);
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'LDAP host is required.');
         }
 
         if ($this->port < 1 || $this->port > 65535) {
-            throw new Exception('LDAP port must be between 1 and 65535.', AppwriteException::GENERAL_ARGUMENT_INVALID);
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'LDAP port must be between 1 and 65535.');
         }
 
         if (!\in_array($this->encryption, self::ENCRYPTIONS, true)) {
-            throw new Exception('Unsupported LDAP encryption: ' . $this->encryption, AppwriteException::GENERAL_ARGUMENT_INVALID);
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unsupported LDAP encryption: ' . $this->encryption);
         }
 
         if (empty(\trim($this->baseDn))) {
-            throw new Exception('LDAP base DN is required.', AppwriteException::GENERAL_ARGUMENT_INVALID);
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'LDAP base DN is required.');
         }
 
         if (!\str_contains($this->userFilter, self::PLACEHOLDER)) {
-            throw new Exception('LDAP user filter must contain the ' . self::PLACEHOLDER . ' placeholder.', AppwriteException::GENERAL_ARGUMENT_INVALID);
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'LDAP user filter must contain the ' . self::PLACEHOLDER . ' placeholder.');
         }
 
         if (empty(\trim($this->emailAttribute))) {
-            throw new Exception('LDAP email attribute is required. Appwrite cannot create an account without an email address.', AppwriteException::GENERAL_ARGUMENT_INVALID);
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'LDAP email attribute is required. Appwrite cannot create an account without an email address.');
         }
     }
 
@@ -134,11 +133,11 @@ class Client
             $email = \strtolower(\trim($entry['email']));
 
             if ($email === '') {
-                throw new Exception('The LDAP directory did not return an email address for this user. Check the email attribute mapping, or ensure the entry has one set.', AppwriteException::USER_UNAUTHORIZED);
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'The LDAP directory did not return an email address for this user. Check the email attribute mapping, or ensure the entry has one set.');
             }
 
             if (!\filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                throw new Exception('The LDAP directory returned an email attribute that is not a valid email address.', AppwriteException::USER_UNAUTHORIZED);
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'The LDAP directory returned an email attribute that is not a valid email address.');
             }
 
             return [
@@ -276,9 +275,9 @@ class Client
                 $client->bind($this->bindDn, $this->bindPassword);
             }
         } catch (BindException $error) {
-            throw new Exception('Could not authenticate with the LDAP service account. Check the bind DN and password.', AppwriteException::GENERAL_ARGUMENT_INVALID, $error);
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not authenticate with the LDAP service account. Check the bind DN and password.', previous: $error);
         } catch (\Throwable $error) {
-            throw new Exception('Could not reach the LDAP server. Check the host, port and encryption settings.', AppwriteException::GENERAL_SERVER_ERROR, $error);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Could not reach the LDAP server. Check the host, port and encryption settings.', previous: $error);
         }
     }
 
@@ -300,7 +299,7 @@ class Client
                 $this->nameAttribute
             ));
         } catch (\Throwable $error) {
-            throw new Exception('Could not search the LDAP directory. Check the base DN and user filter.', AppwriteException::GENERAL_SERVER_ERROR, $error);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Could not search the LDAP directory. Check the base DN and user filter.', previous: $error);
         }
 
         // More than one match means the filter is not specific enough. Binding
@@ -349,7 +348,7 @@ class Client
                 'uniqueMember'
             ));
         } catch (\Throwable $error) {
-            throw new Exception('Could not evaluate the LDAP provisioning filter.', AppwriteException::GENERAL_SERVER_ERROR, $error);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Could not evaluate the LDAP provisioning filter.', previous: $error);
         }
 
         // A match on its own proves nothing: the result has to name the entry
@@ -473,7 +472,7 @@ class Client
             // Wrong password. A normal outcome, not an error.
             return false;
         } catch (\Throwable $error) {
-            throw new Exception('Could not complete the LDAP bind.', AppwriteException::GENERAL_SERVER_ERROR, $error);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Could not complete the LDAP bind.', previous: $error);
         } finally {
             $client->unbind();
         }

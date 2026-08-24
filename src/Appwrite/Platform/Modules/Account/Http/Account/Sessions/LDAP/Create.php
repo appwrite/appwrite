@@ -124,10 +124,10 @@ class Create extends Action
         $directories = \json_decode($auths['ldapDirectories'] ?? '[]', true);
         $directory = $directories[0] ?? [];
 
-        if(empty($directory)) {
-            throw new Exception('LDAP directory is not configured.', Exception::GENERAL_ARGUMENT_INVALID);
+        if (empty($directory)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'LDAP directory is not configured.');
         }
-        
+
         $client = new Client(
             host: $directory['host'] ?? '',
             port: (int)($directory['port'] ?? Client::DEFAULT_PORT),

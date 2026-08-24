@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Auth\LDAP;
 
 use Appwrite\Auth\LDAP\Client;
-use Appwrite\Auth\LDAP\Exception;
+use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
 
 /**
