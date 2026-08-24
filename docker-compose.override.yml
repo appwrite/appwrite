@@ -389,9 +389,7 @@ services:
       - LDAP_DOMAIN=appwrite.test
       - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
     volumes:
-      # Seeded by the openldap-seed service below rather than by the image's own
-      # bootstrap, which rewrites and then deletes that directory and so cannot
-      # take a bind mount.
+      # Seeded by the openldap-seed
       - ./dev/openldap/seed:/seed:ro
 
   openldap-seed:

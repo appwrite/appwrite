@@ -6,12 +6,6 @@ use Appwrite\Auth\LDAP\Settings;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-/**
- * A project's LDAP configuration.
- *
- * The bind password is deliberately absent: it is write-only, like every other
- * stored credential.
- */
 class AuthLdap extends Model
 {
     public function __construct()
