@@ -17,8 +17,29 @@ function parseSectionAttributes(
   }
 }
 
+/**
+ * Blank out fenced code blocks, keeping the line count intact. A shell comment such as
+ * `# Create the bucket` is not a heading, so it must not reach the heading scan below.
+ */
+function blankFencedCode(body: string): string {
+  let fence: string | null = null
+
+  return body
+    .split('\n')
+    .map((line) => {
+      const marker = line.match(/^\s*(`{3,}|~{3,})/)?.[1]
+      if (fence === null) {
+        if (marker) fence = marker
+        return marker ? '' : line
+      }
+      if (marker && marker[0] === fence[0] && marker.length >= fence.length) fence = null
+      return ''
+    })
+    .join('\n')
+}
+
 export function extractDocsToc(raw: string): DocsTocItem[] {
-  const body = stripFrontmatter(raw)
+  const body = blankFencedCode(stripFrontmatter(raw))
   const items: DocsTocItem[] = []
   const seen = new Set<string>()
 

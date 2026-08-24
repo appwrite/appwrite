@@ -433,7 +433,7 @@ Document result = await vectorsDB.CreateDocument(
     collectionId: "<COLLECTION_ID>",
     documentId: ID.Unique(),
     data: new {
-        embeddings = generated.Embeddings[0].Embedding,
+        embeddings = generated.Embeddings[0].XEmbedding,
         metadata = new { text }
     }
 );

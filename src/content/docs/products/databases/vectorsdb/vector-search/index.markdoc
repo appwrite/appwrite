@@ -402,7 +402,7 @@ DocumentList result = await vectorsDB.ListDocuments(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     queries: new List<string> {
-        Query.VectorCosine("embeddings", new List<object> { 0.11, 0.21, 0.30, 0.40 }),
+        Query.VectorCosine("embeddings", new List<double> { 0.11, 0.21, 0.30, 0.40 }),
         Query.Limit(3)
     }
 );
@@ -492,7 +492,7 @@ let result = try await vectorsDB.listDocuments(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     queries: [
-        Query.vectorCosine("embeddings", [0.11, 0.21, 0.30, 0.40]),
+        Query.vectorCosine("embeddings", vector: [0.11, 0.21, 0.30, 0.40]),
         Query.limit(3)
     ]
 )
@@ -690,7 +690,7 @@ DocumentList result = await vectorsDB.CreateQuery(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     queries: new List<string> {
-        Query.VectorCosine("embeddings", new List<object> { 0.11, 0.21, 0.30, 0.40 }),
+        Query.VectorCosine("embeddings", new List<double> { 0.11, 0.21, 0.30, 0.40 }),
         Query.Limit(3)
     }
 );
@@ -780,7 +780,7 @@ let result = try await vectorsDB.createQuery(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     queries: [
-        Query.vectorCosine("embeddings", [0.11, 0.21, 0.30, 0.40]),
+        Query.vectorCosine("embeddings", vector: [0.11, 0.21, 0.30, 0.40]),
         Query.limit(3)
     ]
 )
