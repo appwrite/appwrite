@@ -4,13 +4,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { AiAgentWorkspace } from '@/components/pages/home/AiCodingChatVisual'
-import {
-  getMcpIntegrations,
-  getOfficialPlugins,
-  type HomePluginConfig,
-  type IDEConfig,
-} from '@/lib/config/ide'
-import { AiTileSoftLight } from '@/components/pages/home/HomeSoftLights'
+import { ProductAvatarsList } from '@/components/global/shared/ProductAvatarsList'
+import { getHomeMcpStackAvatarItems, getOfficialPlugins, type HomePluginConfig } from '@/lib/config/ide'
+import { AiChatSoftLight, AiTileSoftLight } from '@/components/pages/home/HomeSoftLights'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -24,7 +20,6 @@ import {
 } from '@/components/ui/table'
 
 const OFFICIAL_PLUGINS = getOfficialPlugins()
-const MCP_INTEGRATIONS = getMcpIntegrations()
 
 type BenchmarkRow = {
   model: string
@@ -140,21 +135,29 @@ function PluginTile({
   )
 }
 
+function MoreIntegrationsIcons() {
+  const t = useT()
+
+  return (
+    <ProductAvatarsList
+      items={getHomeMcpStackAvatarItems()}
+      ariaLabel={t('Integrations')}
+    />
+  )
+}
+
 function AiPluginsSection() {
   const t = useT()
   return (
-    <div className="mt-10 grid overflow-visible pb-4 lg:mt-12 lg:grid-cols-2 lg:divide-x lg:divide-border">
-      <div className="relative py-6 lg:py-0 lg:pe-10">
-        <AiTileSoftLight tone="plugins" />
-        <div className="relative space-y-1.5">
+    <div className="relative mt-10 overflow-visible pb-4 lg:mt-12">
+      <div className="relative mx-auto max-w-4xl py-8">
+        <AiTileSoftLight tone="plugins" align="center" />
+        <div className="relative space-y-1.5 text-center">
           <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
-            {t('Official plugins')}
+            {t('Works great with your favorite agents')}
           </h3>
-          <p className="text-[13px] leading-5 text-muted-foreground">
-            {t('One-click marketplace plugins for Cursor, Claude Code, and Codex.')}
-          </p>
         </div>
-        <div className="relative mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="relative mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
           {OFFICIAL_PLUGINS.map((plugin) => (
             <PluginTile
               key={plugin.id}
@@ -164,37 +167,8 @@ function AiPluginsSection() {
             />
           ))}
         </div>
-      </div>
-
-      <div className="relative border-t border-border py-6 lg:border-t-0 lg:py-0 lg:ps-10">
-        <AiTileSoftLight tone="integrations" />
-        <div className="relative space-y-1.5">
-          <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
-            {t('Integrations')}
-          </h3>
-          <p className="text-[13px] leading-5 text-muted-foreground">
-            {t('Connect Appwrite in other agents and IDEs.')} {/* pragma: allowlist secret */}
-          </p>
-        </div>
-        <div className="relative mt-4 grid grid-cols-2 gap-2">
-          {MCP_INTEGRATIONS.map((integration: IDEConfig) => (
-            <PluginTile
-              key={integration.id}
-              plugin={integration}
-              href={integration.mcpDocsUrl!}
-              badges={[
-                { label: 'MCP', variant: 'inactive' },
-                { label: 'Skills', variant: 'inactive' },
-              ]}
-            />
-          ))}
-        </div>
-        <div className="relative mt-4">
-          <Button variant="outline" className="h-9 text-[13px]" asChild>
-            <MarketingSiteLink href="/docs/tooling/mcp">
-              {t('Learn more')}
-            </MarketingSiteLink>
-          </Button>
+        <div className="relative mt-4 flex justify-center">
+          <MoreIntegrationsIcons />
         </div>
       </div>
     </div>
@@ -323,6 +297,7 @@ export function AiSection() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] opacity-70"
         aria-hidden
       />
+      <AiChatSoftLight />
 
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6">
         <div className="mx-auto max-w-3xl space-y-3 text-center">
