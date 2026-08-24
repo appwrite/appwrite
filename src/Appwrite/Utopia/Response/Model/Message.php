@@ -39,21 +39,21 @@ class Message extends Model
             ->addRule('topics', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Topic IDs set as recipients.',
-                'default' => '',
+                'default' => [],
                 'array' => true,
                 'example' => ['5e5ea5c16897e'],
             ])
             ->addRule('users', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User IDs set as recipients.',
-                'default' => '',
+                'default' => [],
                 'array' => true,
                 'example' => ['5e5ea5c16897e'],
             ])
             ->addRule('targets', [
                 'type' => self::TYPE_ENUM,
                 'description' => 'Target IDs set as recipients.',
-                'default' => '',
+                'default' => [],
                 'array' => true,
                 'example' => ['5e5ea5c16897e'],
             ])
@@ -75,7 +75,7 @@ class Message extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Delivery errors if any.',
                 'required' => false,
-                'default' => '',
+                'default' => [],
                 'array' => true,
                 'example' => ['Failed to send message to target 5e5ea5c16897e: Credentials not valid.'],
             ])
@@ -88,7 +88,7 @@ class Message extends Model
             ->addRule('data', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Data of the message.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => [
                     'subject' => 'Welcome to Appwrite',
                     'content' => 'Hi there, welcome to Appwrite family.',

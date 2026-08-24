@@ -33,7 +33,7 @@ class Execution extends Model
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Execution roles.',
-                'default' => '',
+                'default' => [],
                 'example' => [Role::any()->toString()],
                 'array' => true,
             ])

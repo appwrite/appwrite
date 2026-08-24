@@ -72,7 +72,7 @@ class Row extends Any
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Row permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
-                'default' => '',
+                'default' => [],
                 'example' => ['read("any")'],
                 'array' => true,
             ]);

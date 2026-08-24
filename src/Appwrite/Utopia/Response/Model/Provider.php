@@ -55,7 +55,7 @@ class Provider extends Model
             ->addRule('credentials', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Provider credentials.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => [
                     'key' => '123456789'
                 ],
@@ -63,7 +63,7 @@ class Provider extends Model
             ->addRule('options', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Provider options.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'required' => false,
                 'example' => [
                     'from' => 'sender-email@mydomain'

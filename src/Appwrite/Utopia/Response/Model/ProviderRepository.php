@@ -25,7 +25,7 @@ class ProviderRepository extends Model
             ->addRule('organization', [
                 'type' => self::TYPE_STRING,
                 'description' => 'VCS (Version Control System) organization name',
-                'default' => [],
+                'default' => '',
                 'example' => 'appwrite',
                 'array' => false,
             ])

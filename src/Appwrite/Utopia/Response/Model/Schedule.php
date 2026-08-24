@@ -61,7 +61,7 @@ class Schedule extends Model
             ->addRule('data', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Schedule data used to store resource-specific context needed for execution.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => [],
             ])
             ->addRule('active', [

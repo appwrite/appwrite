@@ -31,14 +31,14 @@ class Framework extends Model
             ->addRule('runtimes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'List of supported runtime versions.',
-                'default' => '',
+                'default' => [],
                 'example' => ['static-1', 'node-22'],
                 'array' => true,
             ])
             ->addRule('adapters', [
                 'type' => Response::MODEL_FRAMEWORK_ADAPTER,
                 'description' => 'List of supported adapters.',
-                'default' => '',
+                'default' => [],
                 'example' => [[ 'key' => 'static', 'buildRuntime' => 'node-22', 'buildCommand' => 'npm run build', 'installCommand' => 'npm install', 'outputDirectory' => './dist' ]],
                 'array' => true,
             ])

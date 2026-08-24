@@ -156,7 +156,7 @@ class Project extends Model
             ->addRule('onboarding', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Stage progress (completed or skipped) with timestamps and actor types, keyed by stage id.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => [],
             ])
 
