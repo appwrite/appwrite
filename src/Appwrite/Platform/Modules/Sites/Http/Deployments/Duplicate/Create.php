@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Duplicate;
 
+use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -10,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -70,6 +72,7 @@ class Create extends Action
             ->inject('deviceForSites')
             ->inject('vcsFactory')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -87,6 +90,7 @@ class Create extends Action
         Device $deviceForSites,
         VcsFactory $vcsFactory,
         Authorization $authorization,
+        Bus $bus,
         array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -178,12 +182,14 @@ class Create extends Action
             $vcs = $vcsFactory->fromInstallation($installation);
 
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            $deployment = $deployments->createFromUrl(
+            $deployment = $deployments->createFromVcs(
                 $site,
                 $deployment,
-                $vcs->getRepositoryPresignedUrl($owner, $repository, $ref),
+                $vcs,
+                $owner,
+                $repository,
+                $ref,
                 $deployment->getAttribute('providerRootDirectory', ''),
-                $vcs->getRepositoryPresignedUrlHeaders(),
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,
@@ -207,7 +213,7 @@ class Create extends Action
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        $authorization->skip(
+        $rule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
@@ -226,6 +232,7 @@ class Create extends Action
                 'region' => $project->getAttribute('region')
             ]))
         );
+        $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

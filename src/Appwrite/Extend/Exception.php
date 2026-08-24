@@ -59,6 +59,7 @@ class Exception extends \Exception
     public const string GENERAL_FEATURE_UNSUPPORTED = 'general_feature_unsupported';
     public const string GENERAL_CODES_DISABLED = 'general_codes_disabled';
     public const string GENERAL_USAGE_DISABLED = 'general_usage_disabled';
+    public const string GENERAL_USAGE_NOT_READY = 'general_usage_not_ready';
     public const string GENERAL_NOT_IMPLEMENTED = 'general_not_implemented';
     public const string GENERAL_INVALID_EMAIL = 'general_invalid_email';
     public const string GENERAL_INVALID_PHONE = 'general_invalid_phone';
@@ -189,6 +190,7 @@ class Exception extends \Exception
 
     /** Deployments */
     public const string DEPLOYMENT_NOT_FOUND = 'deployment_not_found';
+    public const string DEPLOYMENT_INVALID_FILE_SIZE = 'deployment_invalid_file_size';
 
     /** Builds */
     public const string BUILD_NOT_FOUND = 'build_not_found';
@@ -355,6 +357,7 @@ class Exception extends \Exception
     /** GraphqQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';
     public const string GRAPHQL_TOO_MANY_QUERIES = 'graphql_too_many_queries';
+    public const string GRAPHQL_METHOD_UNSUPPORTED = 'graphql_method_unsupported';
 
     /** Migrations */
     public const string MIGRATION_NOT_FOUND = 'migration_not_found';

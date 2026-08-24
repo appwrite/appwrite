@@ -42,7 +42,7 @@ const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels 
 const APP_LIMIT_ARRAY_SCOPES_SIZE = 200; // Default maximum of how many scope elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
-const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
+const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
@@ -114,6 +114,7 @@ const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_VCS_GITEA_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_VCS_GITLAB_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_VCS_BITBUCKET_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
+const APP_VCS_ORIGIN_EMAIL = 'vcs@utopia.dev'; // Used to detect commits the VCS adapter pushes over Git HTTPS
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Embeddings
@@ -365,6 +366,7 @@ const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 
 const METRIC_BUCKETS = 'buckets';
+const METRIC_STORAGE = 'storage';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
 const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
@@ -418,6 +420,19 @@ const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
+
+// Realtime concurrency
+// `realtime.connections` is served from the gauges table as a concurrency
+// level. The same name in the events table is the raw +/-1 deltas it is folded
+// from, so reads of this metric must pass an explicit $type.
+
+// Peak is the highest 5-minute level; shorter bursts are smoothed away.
+const REALTIME_CONCURRENCY_INTERVAL = '5m';
+
+// Hold the window back so in-flight writes land first. The level is carried
+// forward and never recomputed, so a delta arriving after its bucket was
+// sampled is lost for good.
+const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';

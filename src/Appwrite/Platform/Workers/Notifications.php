@@ -9,7 +9,6 @@ use Appwrite\Utopia\Messaging\Adapter\Webhook as WebhookAdapter;
 use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Exception;
-use Swoole\Runtime;
 use Throwable;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -59,9 +58,6 @@ class Notifications extends Action
 
     public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, Log $log): void
     {
-        if (\class_exists(Runtime::class)) {
-            Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-        }
         $payload = $message->getPayload();
 
         if (empty($payload)) {

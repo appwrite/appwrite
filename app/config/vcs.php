@@ -12,6 +12,7 @@ use Utopia\VCS\Adapter\Git\Bitbucket;
 use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Adapter\Git\GitLab;
+use Utopia\VCS\Adapter\Git\Origin;
 
 return [
     'github' => [
@@ -60,6 +61,20 @@ return [
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_SECRET'],
             'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_WEBHOOK_SECRET'],
+        ],
+    ],
+    'origin' => [
+        'adapter' => Origin::class,
+        // No 'oauth2': Origin has no OAuth2 user flow. Installs are approved
+        // on Cursor and confirmed by a signed receipt, a handshake the
+        // adapter itself owns (getInstallUrl / verifyReceipt).
+        'variables' => [
+            // Factory::fromInstallation() reads appId + privateKey; Origin's
+            // app id doubles as its client id.
+            'appId' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_CLIENT_ID'],
+            'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_PRIVATE_KEY'],
+            // No webhookSecret: Origin signs deliveries with its own Ed25519
+            // key, verified against its published JWKS instead of a shared secret.
         ],
     ],
     'bitbucket' => [

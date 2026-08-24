@@ -7,6 +7,7 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
+use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -22,6 +23,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User as DBUser;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
@@ -810,6 +812,45 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
 Http::init()
     ->groups(['api'])
+    ->inject('usage')
+    ->inject('request')
+    ->inject('geoRecord')
+    ->action(function (Context $usage, Request $request, GeoRecord $geoRecord) {
+        $uri = $request->getURI();
+        $parts = explode('/', trim($uri, '/'));
+        $country = $geoRecord->isEmpty() ? '' : strtolower($geoRecord->getCountryCode());
+
+        $usage
+            ->setPath($uri)
+            ->setMethod($request->getMethod())
+            ->setUserAgent($request->getUserAgent(''))
+            ->setHostname($request->getOrigin('') ?: $request->getHostname())
+            ->setCountry($country)
+            ->setIp($request->getIP())
+            ->setSdk(strtolower($request->getHeaderLine('x-sdk-name', '')))
+            ->setSdkVersion($request->getHeaderLine('x-sdk-version', ''))
+            ->setRegion(System::getEnv('_APP_REGION', 'default'))
+            ->setService($parts[1] ?? $parts[0])
+            ->setResourceType('')
+            ->setResourceId('')
+            ->setResourceInternalId('')
+            ->setResourcePath('');
+    });
+
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('usage')
+    ->inject('response')
+    ->inject('project')
+    ->action(function (Context $usage, Response $response, Document $project) {
+        $usage->setStatus($response->getStatusCode());
+        if ($usage->getResourcePath() === '' && !$project->isEmpty()) {
+            $usage->fillMissingResource('project', $project->getId(), (string) $project->getSequence());
+        }
+    });
+
+Http::init()
+    ->groups(['api'])
     ->inject('project')
     ->inject('mode')
     ->action(function (Document $project, string $mode) {
@@ -1058,7 +1099,8 @@ Http::init()
    ->inject('platform')
     ->inject('authorization')
     ->inject('certifiedDomains')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
+    ->inject('bus')
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains, Bus $bus) {
        $hostname = $request->getHostname();
        $platformHostnames = $platform['hostnames'] ?? [];
 
@@ -1084,7 +1126,7 @@ Http::init()
        }
 
        // 4. Check/create rule (requires DB access)
-       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $publisherForCertificates, $certifiedDomains) {
+       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $publisherForCertificates, $certifiedDomains, $bus) {
            try {
                // TODO: (@Meldiron) Remove after 1.7.x migration
                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
@@ -1137,7 +1179,8 @@ Http::init()
                    'region' => $console->getAttribute('region')
                ]);
 
-               $dbForPlatform->createDocument('rules', $document);
+               $document = $dbForPlatform->createDocument('rules', $document);
+               $bus->dispatch(new RuleCreated($document->getArrayCopy()));
 
                Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
                $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(

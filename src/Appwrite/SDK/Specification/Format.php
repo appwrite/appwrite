@@ -422,7 +422,6 @@ abstract class Format
         return \array_filter([
             'propertyName' => $primaryKey,
             'mapping' => !empty($primaryMapping) ? $primaryMapping : null,
-            'x-propertyNames' => $allKeys,
             'x-mapping' => $compoundMapping,
         ]);
     }

@@ -25,6 +25,9 @@ use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Detections\Cre
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Get as GetRepository;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\XList as ListRepositories;
 use Appwrite\Platform\Modules\VCS\Http\Installations\XList as ListInstallations;
+use Appwrite\Platform\Modules\VCS\Http\Origin\Authorize\Get as GetOriginAuthorize;
+use Appwrite\Platform\Modules\VCS\Http\Origin\Callback\Get as GetOriginCallback;
+use Appwrite\Platform\Modules\VCS\Http\Origin\Events\Create as CreateOriginEvent;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -50,6 +53,10 @@ class Http extends Service
         $this->addAction(GetBitbucketAuthorize::getName(), new GetBitbucketAuthorize());
         $this->addAction(GetBitbucketCallback::getName(), new GetBitbucketCallback());
 
+        // Origin Authorization & Callback
+        $this->addAction(GetOriginAuthorize::getName(), new GetOriginAuthorize());
+        $this->addAction(GetOriginCallback::getName(), new GetOriginCallback());
+
         // Installations
         $this->addAction(GetInstallation::getName(), new GetInstallation());
         $this->addAction(ListInstallations::getName(), new ListInstallations());
@@ -69,5 +76,6 @@ class Http extends Service
         $this->addAction(CreateGiteaEvent::getName(), new CreateGiteaEvent());
         $this->addAction(CreateGitlabEvent::getName(), new CreateGitlabEvent());
         $this->addAction(CreateBitbucketEvent::getName(), new CreateBitbucketEvent());
+        $this->addAction(CreateOriginEvent::getName(), new CreateOriginEvent());
     }
 }

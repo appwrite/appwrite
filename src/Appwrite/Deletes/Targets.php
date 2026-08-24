@@ -36,8 +36,13 @@ class Targets
             function (Document $subscriber) use ($database, $target) {
                 $topicId = $subscriber->getAttribute('topicId');
                 $topicInternalId = $subscriber->getAttribute('topicInternalId');
-                $topic = $database->getDocument('topics', $topicId);
-                if (!$topic->isEmpty() && $topic->getSequence() === $topicInternalId) {
+
+                $topic = $database->skipFilters(fn () => $database->findOne('topics', [
+                    Query::select(['$id', '$sequence']),
+                    Query::equal('$sequence', [$topicInternalId]),
+                ]), ['subQueryTopicTargets']);
+
+                if (!$topic->isEmpty()) {
                     $totalAttribute = match ($target->getAttribute('providerType')) {
                         MESSAGE_TYPE_EMAIL => 'emailTotal',
                         MESSAGE_TYPE_SMS => 'smsTotal',
@@ -46,12 +51,12 @@ class Targets
                     };
 
                     try {
-                        $database->decreaseDocumentAttribute(
+                        $database->skipFilters(fn () => $database->decreaseDocumentAttribute(
                             'topics',
                             $topicId,
                             $totalAttribute,
                             min: 0
-                        );
+                        ), ['subQueryTopicTargets']);
                     } catch (LimitException $e) {
                         Console::error("Delete subscribers decreaseDocumentAttribute (topicId={$topicId}): {$e->getMessage()}");
                     }

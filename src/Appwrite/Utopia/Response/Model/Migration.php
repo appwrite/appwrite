@@ -134,6 +134,7 @@ class Migration extends Model
                 'description' => 'An array of objects containing the report data of the resources that were migrated.',
                 'default' => [],
                 'example' => '[{"resource":"Database","id":"public","status":"SUCCESS","message":""}]',
+                'array' => true,
             ])
             ->addRule('errors', [
                 'type' => self::TYPE_STRING,
