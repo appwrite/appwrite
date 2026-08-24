@@ -7,6 +7,7 @@ use Throwable;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 
 class V26 extends Migration
 {
@@ -42,8 +43,16 @@ class V26 extends Migration
 
             switch ($id) {
                 case 'identities':
-                    $this->createAttributeFromCollection($this->dbForProject, $id, 'photoUrl');
-                    $this->createIndexFromCollection($this->dbForProject, $id, '_key_userId_photoUrl_updatedAt');
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'photoUrl');
+                    } catch (Duplicate) {
+                        Console::warning('Attribute "photoUrl" already exists in collection "identities"; skipping.');
+                    }
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_userId_photoUrl_updatedAt');
+                    } catch (Duplicate) {
+                        Console::warning('Index "_key_userId_photoUrl_updatedAt" already exists in collection "identities"; skipping.');
+                    }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
             }
