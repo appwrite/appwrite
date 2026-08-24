@@ -97,6 +97,8 @@ class StatsUsage extends Action
                     'resourceType' => $resourceType === '' ? 'project' : $resourceType,
                     'resourceId' => $resourceId !== '' ? $resourceId : ($projectScoped ? $projectId : ''),
                     'resourceInternalId' => $resourceInternalId !== '' ? $resourceInternalId : ($projectScoped ? $tenant : ''),
+                    'teamId' => $metric['teamId'] ?? '',
+                    'teamInternalId' => $metric['teamInternalId'] ?? '',
                     'country' => $metric['country'] ?? '',
                     'hostname' => $metric['hostname'] ?? '',
                     'ip' => $metric['ip'] ?? '',
