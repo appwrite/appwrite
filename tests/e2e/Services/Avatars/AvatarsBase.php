@@ -1423,20 +1423,10 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         /**
-         * Test for SUCCESS — OAuth2 identity photo (Priority 1)
-         *
-         * TODO: Once the full OAuth2 login flow is wired through the test
-         * infrastructure (requires a real OAuth2 session to populate
-         * identities.photo), add an integration test here that:
-         *   1. Creates a GitHub session via the OAuth2 callback.
-         *   2. Calls GET /avatars/photo and asserts the response is the
-         *      GitHub avatar (not initials or the static fallback).
-         *   3. Verifies that Cache-Control: private, no-store is set.
-         * Track in: https://github.com/appwrite/appwrite/issues/TODO
-         */
-
-        /**
          * Test for SUCCESS — Gravatar flow (Priority 2)
+         *
+         * Priority 1, the OAuth2 identity photo, needs an OAuth2 session and is
+         * covered in AvatarsCustomClientTest::testGetPhotoOAuth2.
          *
          * When no OAuth2 identity photo is available the chain falls through to
          * Gravatar. Wrapped in assertEventually to tolerate transient network
