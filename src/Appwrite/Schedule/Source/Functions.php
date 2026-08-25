@@ -10,9 +10,9 @@ use Utopia\Schedule\Trigger\Shifted;
 final class Functions extends Database
 {
     /**
-     * @param  callable(Document): \Utopia\Database\Database  $getProjectDB
-     * @param  callable(Document, string, string): bool  $isResourceBlocked
-     * @param  \Closure(array<string, mixed>): int  $spread  seconds to spread a
+     * @param callable(Document): \Utopia\Database\Database $getProjectDB
+     * @param callable(Document, string, string): bool $isResourceBlocked
+     * @param \Closure(array<string, mixed>): int $spread seconds to spread a
      */
     public function __construct(
         \Utopia\Database\Database $dbForPlatform,
