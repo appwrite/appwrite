@@ -118,4 +118,43 @@ final class GitHubTest extends Base
         $this->assertSame('deleted', $result['action']);
         $this->assertSame('1234', $result['installationId']);
     }
+
+    public function testInitializeVariablesSignsJwtWithPemString(): void
+    {
+        $keyPair = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+        $this->assertNotFalse($keyPair);
+        openssl_pkey_export($keyPair, $pem);
+        $publicKey = openssl_pkey_get_details($keyPair)['key'];
+
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var array<string, mixed> */
+            public array $captured = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured = ['method' => $method, 'path' => $path, 'headers' => $headers];
+
+                return [
+                    'body' => ['token' => 'installation-token'],
+                    'headers' => ['status-code' => 201],
+                ];
+            }
+        };
+
+        // The key reaches the adapter as a PEM string; it must survive JWT signing.
+        $adapter->initializeVariables('1234', $pem, '5678');
+
+        $this->assertSame('/app/installations/1234/access_tokens', $adapter->captured['path']);
+        $jwt = substr((string) $adapter->captured['headers']['Authorization'], \strlen('Bearer '));
+        [$header, $payload, $signature] = explode('.', $jwt);
+        $verified = openssl_verify(
+            $header . '.' . $payload,
+            base64_decode(strtr($signature, '-_', '+/')),
+            $publicKey,
+            OPENSSL_ALGO_SHA256,
+        );
+        $this->assertSame(1, $verified);
+        $claims = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
+        $this->assertSame('5678', $claims['iss']);
+    }
 }

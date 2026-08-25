@@ -5,3 +5,8 @@ parameters:
     # The suite asserts the shape of what an adapter returns even where a
     # docblock already claims it - the provider is the source of truth.
     treatPhpDocTypesAsCertain: false
+
+    # Corrects adhocore/jwt's stale `string|resource` key docblock: on PHP 8 it
+    # requires the parsed OpenSSL key object, and a PEM string never works.
+    stubFiles:
+        - phpstan/stubs/adhocore-jwt.stub

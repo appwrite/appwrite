@@ -644,7 +644,9 @@ class GitHub extends Git
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
-        if (openssl_pkey_get_private($privateKey) === false) {
+        // adhocore/jwt treats a string key as a file path, so it must receive the parsed key object
+        $privateKeyObj = openssl_pkey_get_private($privateKey);
+        if ($privateKeyObj === false) {
             throw new Exception('Failed to read the GitHub App private key');
         }
 
@@ -659,7 +661,7 @@ class GitHub extends Git
         ];
 
         // generate access token
-        $jwt = new JWT($privateKey, 'RS256');
+        $jwt = new JWT($privateKeyObj, 'RS256');
         $token = $jwt->encode($payload);
         $this->jwtToken = $token;
         $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $token]);
