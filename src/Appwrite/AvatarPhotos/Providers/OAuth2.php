@@ -12,7 +12,7 @@ use Utopia\Database\Query;
  *
  * Resolves a profile photo from the authenticated user's stored OAuth2
  * identities. At login time each OAuth2 adapter (GitHub, Google, …) stores
- * the provider's photo URL in the `photoUrl` field of the identity document.
+ * the provider's photo URL in the `photo` field of the identity document.
  * This provider reads those stored URLs, most-recently-updated first, and
  * proxies the first one that returns a valid image.
  *
@@ -41,7 +41,7 @@ class OAuth2 extends Photo
     /**
      * An OAuth2 photo is available as long as the user has at least one
      * identity. Whether any of those identities actually carries a valid
-     * photoUrl is determined at fetch time — we do not know without querying.
+     * photo is determined at fetch time — we do not know without querying.
      */
     public function supports(Document $user): bool
     {
@@ -52,13 +52,13 @@ class OAuth2 extends Photo
     {
         $identities = $this->dbForProject->find('identities', [
             Query::equal('userId', [$user->getId()]),
-            Query::isNotNull('photoUrl'),
+            Query::isNotNull('photo'),
             Query::orderDesc('$updatedAt'),
             Query::limit(self::MAX_ATTEMPTS),
         ]);
 
         foreach ($identities as $identity) {
-            $url = $identity->getAttribute('photoUrl', '');
+            $url = $identity->getAttribute('photo', '');
 
             if (empty($url)) {
                 continue;

@@ -44,14 +44,14 @@ class V26 extends Migration
             switch ($id) {
                 case 'identities':
                     try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'photoUrl');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'photo');
                     } catch (Duplicate) {
-                        Console::warning('Attribute "photoUrl" already exists in collection "identities"; skipping.');
+                        Console::warning('Attribute "photo" already exists in collection "identities"; skipping.');
                     }
                     try {
-                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_userId_photoUrl_updatedAt');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_userId_photo_updatedAt');
                     } catch (Duplicate) {
-                        Console::warning('Index "_key_userId_photoUrl_updatedAt" already exists in collection "identities"; skipping.');
+                        Console::warning('Index "_key_userId_photo_updatedAt" already exists in collection "identities"; skipping.');
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;

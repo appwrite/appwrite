@@ -2022,7 +2022,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => $refreshToken,
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-                    'photoUrl' => $oauth2->getUserPhoto($accessToken),
+                    'photo' => $oauth2->getUserPhoto($accessToken),
                 ]));
             } catch (Duplicate) {
                 // The (provider, providerUid) unique index guards the same identity being connected to two users.
@@ -2043,7 +2043,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'providerRefreshToken' => $refreshToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                 // Refresh the photo URL on every login so expired CDN links self-heal.
-                'photoUrl' => $oauth2->getUserPhoto($accessToken),
+                'photo' => $oauth2->getUserPhoto($accessToken),
             ]));
         }
 

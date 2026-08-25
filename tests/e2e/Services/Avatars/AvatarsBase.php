@@ -1427,7 +1427,7 @@ trait AvatarsBase
          *
          * TODO: Once the full OAuth2 login flow is wired through the test
          * infrastructure (requires a real OAuth2 session to populate
-         * identities.photoUrl), add an integration test here that:
+         * identities.photo), add an integration test here that:
          *   1. Creates a GitHub session via the OAuth2 callback.
          *   2. Calls GET /avatars/photo and asserts the response is the
          *      GitHub avatar (not initials or the static fallback).

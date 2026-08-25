@@ -1276,7 +1276,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('photoUrl'),
+                '$id' => ID::custom('photo'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -1412,9 +1412,9 @@ return [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_userId_photoUrl_updatedAt'),
+                '$id' => ID::custom('_key_userId_photo_updatedAt'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['userId', 'photoUrl', '$updatedAt'],
+                'attributes' => ['userId', 'photo', '$updatedAt'],
                 'lengths' => [Database::LENGTH_KEY, 128, 0],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC, Database::ORDER_DESC],
             ],
