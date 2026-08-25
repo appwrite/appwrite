@@ -25,7 +25,8 @@ abstract class Database implements Changes, Source
         protected readonly \Utopia\Database\Database $dbForPlatform,
         protected readonly mixed $getProjectDB,
         protected readonly mixed $isResourceBlocked,
-    ) {}
+    ) {
+    }
 
     abstract protected function type(): string;
 

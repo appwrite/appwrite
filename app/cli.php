@@ -37,7 +37,7 @@ require_once __DIR__.'/controllers/general.php';
 global $register;
 global $container;
 
-$platform = new Appwrite;
+$platform = new Appwrite();
 $args = $_SERVER['argv'] ?? [];
 
 \array_shift($args);
@@ -47,7 +47,7 @@ if (! isset($args[0])) {
 }
 
 $taskName = $args[0];
-$cli = new CLI(new Generic, $_SERVER['argv'] ?? [], $container);
+$cli = new CLI(new Generic(), $_SERVER['argv'] ?? [], $container);
 
 $platform->setCli($cli);
 $platform->init(Service::TYPE_TASK);
@@ -70,7 +70,7 @@ $container->set('pools', function (Registry $register) {
 }, ['register']);
 
 $container->set('authorization', function () {
-    $authorization = new Authorization;
+    $authorization = new Authorization();
     $authorization->disable();
 
     return $authorization;
@@ -182,7 +182,7 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
 }, ['pools', 'cache', 'authorization']);
 
 $container->set('usage', function () {
-    return new UsageContext;
+    return new UsageContext();
 }, []);
 $container->set('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
@@ -198,7 +198,7 @@ $container->set('logError', function (Registry $register) {
         if ($logger) {
             $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-            $log = new Log;
+            $log = new Log();
             $log->setNamespace($namespace);
             $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
             $log->setVersion($version);

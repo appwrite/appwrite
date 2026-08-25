@@ -46,7 +46,7 @@ final class Functions extends Database
                 ['subQueryVariables', 'subQueryProjectVariables']
             );
         } catch (\Throwable) {
-            $resource = new Document;
+            $resource = new Document();
         }
 
         // The worker re-fetches the function by id when the schedule fires.
