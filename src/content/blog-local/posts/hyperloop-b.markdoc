@@ -25,7 +25,11 @@ faqs:
     answer: "No. The engine is internal, so self-hosted deployments get the same concurrency and memory behavior without configuration changes. Community Edition ships the complete Appwrite 2.0 release for [self-hosting](/docs/advanced/self-hosting) when Init week wraps up."
 ---
 
-Appwrite 2.0 ships on a new engine. We call it Hyperloop B, and if you never think about it again, it is doing its job.
+Most of the time a backend spends on a request, it is not computing anything. It is waiting, for a reply from the database or for a cached document to come back from Redis. What a server does with that waiting time is most of what decides how much traffic it can carry.
+
+For most of Appwrite's history, it did nothing with it. A worker process picked up a request and stayed blocked for the length of every I/O call that request made, unavailable to anyone else until the response went out. Adding capacity meant adding processes, and a process costs memory whether it is serving a request or waiting on one.
+
+Appwrite 2.0 changes that. It runs on Hyperloop B, which serves many concurrent requests from a single process by yielding every time one of them waits. On an I/O bound benchmark that is 7x the requests per second of the model it replaces, at 6x less memory. Getting there took a new dependency injection layer and a careful audit of what the codebase had been quietly assuming while every process handled one request at a time.
 
 # What Hyperloop B is
 
@@ -51,11 +55,11 @@ Then we found Swoole, and Appwrite got much faster. Swoole keeps a pool of worke
 
 That model has two consequences, and together they are the actual problem.
 
-The first is a hard ceiling on concurrency. Requests are served by a fixed pool, so N workers answer N requests at a time and no more. Request N+1 waits for a worker to free up, no matter how little work it actually needs. Scaling concurrency means adding processes, and processes are expensive, so the ceiling is set by how much memory you are willing to spend rather than by how much work there is to do.
+**The first is a hard ceiling on concurrency.** Requests are served by a fixed pool, so N workers answer N requests at a time and no more. Request N+1 waits for a worker to free up, no matter how little work it actually needs. Scaling concurrency means adding processes, and processes are expensive, so the ceiling is set by how much memory you are willing to spend rather than by how much work there is to do.
 
-The second is that memory becomes your problem. A per-request leak under FPM was invisible, because the process died at the end of the request and took the leak with it. Under worker mode the same leak accumulates across every request that worker handles, until it exhausts its memory. Nothing about the code changed; the model stopped hiding it.
+**The second is that memory becomes your problem.** A per-request leak under FPM was invisible, because the process died at the end of the request and took the leak with it. Under worker mode the same leak accumulates across every request that worker handles, until it exhausts its memory. Nothing about the code changed; the model stopped hiding it.
 
-The ceiling is the part that hurts in production, and the reason is where real requests spend their time. They spend it waiting. Waiting for a reply from the database, or for a cached document to come back from Redis. Under the worker model, an entire process sits blocked for the length of that wait, holding its memory and doing nothing useful. A pool sized for the work is mostly a pool sized for waiting.
+The ceiling is the part that hurts in production, because a pool sized for the work is mostly a pool sized for waiting.
 
 The arithmetic is unforgiving. Suppose a pool of 64 workers, and suppose each request spends 200ms waiting on I/O. Each worker can retire at most five of those per second, so the pool tops out around 320 requests per second, and it does so with the CPU almost entirely idle. Adding cores does not help, because nothing is CPU bound. The only lever the worker model gives you is more processes, and each one costs memory whether it is working or waiting.
 
