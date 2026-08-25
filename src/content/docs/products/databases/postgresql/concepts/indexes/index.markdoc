@@ -31,12 +31,7 @@ ANALYZE users;
 
 # How an index works {% #how-it-works %}
 
-{% only_dark %}
-![Index lookup: binary search over the sorted index, entry pointing to the table row](/images/docs/products/databases/concepts/dark/index-lookup.avif)
-{% /only_dark %}
-{% only_light %}
-![Index lookup: binary search over the sorted index, entry pointing to the table row](/images/docs/products/databases/concepts/index-lookup.avif)
-{% /only_light %}
+{% index_lookup_animation /%}
 
 Table rows are stored in no order useful for searching an arbitrary column, so answering `WHERE email = '...'` without an index means reading every row and checking each one. The work grows with the table: ten times the rows, ten times the reads.
 
@@ -49,6 +44,13 @@ A **B-tree** (balanced tree) is the data structure indexes use to fix this. It k
 Indexes have a price: each one is a second copy of the column that must be kept correct, so every insert, update, and delete on the table also rewrites part of every index. They trade write work and disk space for read speed, which is why you add them for the queries you actually run rather than on every column.
 
 # Reading EXPLAIN ANALYZE {% #explain %}
+
+{% only_dark %}
+![EXPLAIN ANALYZE output in the SQL editor](/images/docs/products/databases/postgresql/dark/sql-explain.avif)
+{% /only_dark %}
+{% only_light %}
+![EXPLAIN ANALYZE output in the SQL editor](/images/docs/products/databases/postgresql/sql-explain.avif)
+{% /only_light %}
 
 Before adding indexes, you need to see what the database is currently doing. Prefix any query with `EXPLAIN ANALYZE` and instead of returning its result, the database runs it and reports the plan it used:
 

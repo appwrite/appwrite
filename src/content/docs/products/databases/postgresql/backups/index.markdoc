@@ -12,7 +12,14 @@ Every database gets a default backup policy when it is provisioned, so you have 
 
 # Backup policies {% #policies %}
 
-A policy defines a schedule (cron expression) and a retention period in days. Create one with:
+{% only_dark %}
+![Backups page with policies and the manual backup button](/images/docs/products/databases/postgresql/dark/backups-tab.avif)
+{% /only_dark %}
+{% only_light %}
+![Backups page with policies and the manual backup button](/images/docs/products/databases/postgresql/backups-tab.avif)
+{% /only_light %}
+
+A policy defines a schedule and a retention period in days. In the Console, open your database's **Backups** page and click **Create policy**, then pick the schedule and retention. Programmatically, create one with:
 
 {% multicode %}
 ```server-nodejs
@@ -251,7 +258,7 @@ List, update, and delete policies with `listBackupPolicies`, `updateBackupPolicy
 
 # Manual backups {% #manual %}
 
-Take an on-demand backup before a risky change:
+Take an on-demand backup before a risky change. In the Console, click **Manual backup** on the **Backups** page. Programmatically:
 
 {% multicode %}
 ```server-nodejs
