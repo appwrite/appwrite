@@ -204,6 +204,13 @@ function createDatabase(Container $resources, string $resourceKey, string $dbNam
             $resource = $resources->get($resourceKey);
             /* @var $database Database */
             $database = is_callable($resource) ? $resource() : $resource;
+
+            // Building a handle reaches no backend, so this loop has to ask for
+            // a connection to learn whether one can be had. Without it the loop
+            // breaks on the first pass against a database still starting, and
+            // the wait it is here to perform falls to the create() retry below.
+            $database->ping();
+
             break; // exit loop on success
         } catch (\Throwable $e) {
             Console::warning("  └── Database not ready ({$dbName}). Retrying connection ({$attempts}): " . $e->getMessage());
