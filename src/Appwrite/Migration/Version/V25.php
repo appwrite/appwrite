@@ -8,6 +8,7 @@ use Throwable;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 
@@ -173,6 +174,20 @@ class V25 extends Migration
 
                         $this->dbForProject->purgeCachedCollection($id);
                     }
+                    break;
+
+                case 'identities':
+                    // Only a duplicate is tolerated here: it means an earlier
+                    // run already created the attribute, so a retry can move
+                    // on. Any other failure leaves the schema without "photo"
+                    // and must abort the migration rather than be logged away.
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'photo');
+                    } catch (Duplicate) {
+                        Console::warning("Attribute \"photo\" already exists in collection {$id}; skipping.");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
             }
         }
