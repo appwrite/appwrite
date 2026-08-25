@@ -27,15 +27,26 @@ class Geo
             $ip = '0.0.0.0';
         }
 
-        $record = $this->cached($ip);
+        $attributes = $this->cached($ip);
 
-        if ($record === null) {
+        if ($attributes === null) {
             $record = $this->client?->lookup($ip);
             if ($record !== null) {
-                $this->store($ip, $record);
+                $attributes = $this->build($ip, $record);
+                $this->store($ip, $attributes);
             }
         }
 
+        return (new GeoRecord($attributes ?? $this->build($ip, [])))
+            ->setLocale($this->locale);
+    }
+
+    /**
+     * @param array<string, mixed> $record
+     * @return array<string, mixed>
+     */
+    private function build(string $ip, array $record): array
+    {
         $countryCode = \strtoupper($record['countryCode'] ?? '--');
         $continentCode = \strtoupper($record['continentCode'] ?? '--');
 
@@ -54,7 +65,7 @@ class Geo
 
         $autonomousSystemNumber = $record['autonomousSystemNumber'] ?? null;
 
-        return (new GeoRecord([
+        return [
             'ip' => $ip,
             'countryCode' => $countryCode,
             'continentCode' => $continentCode,
@@ -65,14 +76,15 @@ class Geo
             'timeZone' => $record['timeZone'] ?? null,
             'weatherCode' => $record['weatherCode'] ?? null,
             'postalCode' => $record['postalCode'] ?? null,
+            'city' => $record['city']['en'] ?? null,
+            'state' => $record['subdivision']['en'] ?? $record['subdivisions'][0]['en'] ?? null,
             'autonomousSystemNumber' => $autonomousSystemNumber === null ? null : (string) $autonomousSystemNumber,
             'autonomousSystemOrganization' => $record['autonomousSystemOrganization'] ?? null,
             'connectionType' => $record['connection'] ?? null,
             'connectionUsageType' => $record['user'] ?? $record['type'] ?? null,
             'connectionOrganization' => $record['organization'] ?? null,
             'isp' => $record['isp'] ?? null,
-        ]))
-            ->setLocale($this->locale);
+        ];
     }
 
     /**
@@ -91,15 +103,15 @@ class Geo
     }
 
     /**
-     * @param array<string, mixed> $record
+     * @param array<string, mixed> $attributes
      */
-    private function store(string $ip, array $record): void
+    private function store(string $ip, array $attributes): void
     {
         if ($this->cache === null) {
             return;
         }
 
-        $value = \json_encode($record);
+        $value = \json_encode($attributes);
         if ($value === false || \strlen($value) > self::CACHE_VALUE_SIZE) {
             return;
         }
