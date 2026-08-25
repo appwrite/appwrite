@@ -10,6 +10,16 @@ return [
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateEmailPasswordSession',
         'enabled' => true,
     ],
+    'ldap' => [
+        'name' => 'LDAP',
+        'key' => 'LDAP',
+        'icon' => '/images/users/ldap.png',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateLDAPSession',
+        'enabled' => true,
+        // Disabled on new projects, unlike the other methods: a project with
+        // no directory configured cannot authenticate anyone against one.
+        'default' => false,
+    ],
     'magic-url' => [
         'name' => 'Magic URL',
         'key' => 'usersAuthMagicURL',

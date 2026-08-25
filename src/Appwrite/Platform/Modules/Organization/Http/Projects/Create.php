@@ -112,7 +112,7 @@ class Create extends Action
         ];
 
         foreach ($auth as $method) {
-            $auths[$method['key'] ?? ''] = true;
+            $auths[$method['key'] ?? ''] = $method['default'] ?? true;
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;

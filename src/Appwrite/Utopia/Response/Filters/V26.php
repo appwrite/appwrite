@@ -171,7 +171,7 @@ class V26 extends Filter
 
         foreach (Config::getParam('auth', []) as $id => $method) {
             $key = $method['key'] ?? '';
-            $content['auth' . ucfirst($key)] = $authMethods[$id] ?? true;
+            $content['auth' . ucfirst($key)] = $authMethods[$id] ?? $method['default'] ?? true;
         }
     }
 

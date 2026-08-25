@@ -251,6 +251,7 @@ class Response extends SwooleResponse
 
     // Project
     public const MODEL_PROJECT = 'project';
+    public const MODEL_AUTH_LDAP = 'authLdap';
     public const MODEL_PROJECT_LIST = 'projectList';
     public const MODEL_STAGE = 'stage';
     public const MODEL_STAGE_LIST = 'stageList';

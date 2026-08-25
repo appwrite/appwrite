@@ -2526,6 +2526,29 @@ final class ProjectsConsoleClientTest extends Scope
 
         $session = $response['cookies']['a_session_' . $id];
 
+        // LDAP is the one method disabled on a fresh project: with no
+        // directory configured it cannot authenticate anyone.
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(false, $response['body']['authLDAP']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'username' => 'user',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(501, $response['headers']['status-code']);
+        $this->assertEquals('user_auth_method_unsupported', $response['body']['type']);
+
         /**
          * Test for SUCCESS
          */
@@ -2622,6 +2645,51 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]));
+
+        $this->assertEquals(501, $response['headers']['status-code']);
+
+        // Enabling LDAP through the generic auth method endpoint is honored
+        // by the auth gate: the sign-in now fails on the missing directory
+        // configuration instead of the method being disabled.
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/ldap', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'username' => 'user',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/ldap', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'username' => 'user',
+            'password' => 'password',
+        ]);
 
         $this->assertEquals(501, $response['headers']['status-code']);
 
