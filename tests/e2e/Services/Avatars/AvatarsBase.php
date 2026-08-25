@@ -1423,18 +1423,16 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         /**
-         * Test for SUCCESS — Gravatar flow
+         * Test for SUCCESS — Gravatar flow (Priority 2)
          *
-         * Use a well-known email that has a real Gravatar so we can verify the
-         * provider is actually being reached.  Wrapped in assertEventually to
-         * tolerate transient network hiccups.
+         * Priority 1, the OAuth2 identity photo, needs an OAuth2 session and is
+         * covered in AvatarsCustomClientTest::testGetPhotoOAuth2.
          *
-         * TODO: Once the OAuth2 session photo is implemented, add a test that
-         * verifies priority 1 takes precedence over Gravatar.
+         * When no OAuth2 identity photo is available the chain falls through to
+         * Gravatar. Wrapped in assertEventually to tolerate transient network
+         * hiccups.
          */
         $this->assertEventually(function () {
-            // When we have a Gravatar for the user's email the chain resolves at
-            // priority 2; result must be a non-trivial PNG.
             $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -1445,6 +1443,7 @@ trait AvatarsBase
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals('image/png', $response['headers']['content-type']);
             $this->assertNotEmpty($response['body']);
+            $this->assertEquals('private, no-store', $response['headers']['cache-control']);
         }, 30_000, 2_000);
 
         /**
