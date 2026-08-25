@@ -208,7 +208,6 @@ final class PresenceConsoleClientTest extends Scope
     private function receiveConnected(WebSocketClient $client, int $timeoutMs = 3000): void
     {
         $deadline = \microtime(true) + ($timeoutMs / 1000);
-        $lastFrame = [];
 
         while (\microtime(true) < $deadline) {
             try {
@@ -222,19 +221,15 @@ final class PresenceConsoleClientTest extends Scope
                 continue;
             }
 
-            $lastFrame = $frame;
-            if (($frame['type'] ?? null) === 'error') {
-                $this->fail('Realtime handshake returned error: ' . \json_encode($frame));
-            }
-            if (($frame['type'] ?? null) === 'connected') {
-                return;
-            }
+            $this->assertSame(
+                'connected',
+                $frame['type'] ?? null,
+                'First realtime frame must be the handshake, got: ' . \json_encode($frame)
+            );
+            return;
         }
 
-        $this->fail(
-            'Timed out waiting for connected websocket frame on console. Last frame: '
-            . \json_encode($lastFrame)
-        );
+        $this->fail('Timed out waiting for connected websocket frame on console.');
     }
 
     private function receivePresenceFrame(
