@@ -602,8 +602,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
                     memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
                     logging: $resource->getAttribute('logging', true),
-                    // Temporary mitigation for slow screenshot cold starts.
-                    requestTimeout: 60,
+                    // Temporary mitigation: preview (screenshot) requests allow a
+                    // 60s cold start; live traffic keeps the 30s budget.
+                    requestTimeout: $isPreview ? 60 : 30,
                     responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
                 );
             } catch (ExecutorTimeout $th) {
