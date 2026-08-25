@@ -114,9 +114,7 @@ Http::get('/v1/mock/tests/general/oauth2/photo')
     ->inject('response')
     ->action(function (Response $response) {
 
-        // Solid #00FF00 PNG, 64x64. Every pixel carries the same colour, so the
-        // avatars endpoint may crop and re-encode it however it likes and a test
-        // can still recognise the result by colour alone.
+        // Solid #00FF00 PNG, 64x64
         $photo = 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAATUlEQVR42u3PQQ0AAAgEoNP+nbWBfzdoQGXyWicCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArcFUYYBf4Fjt4EAAAAASUVORK5CYII=';
 
         $response

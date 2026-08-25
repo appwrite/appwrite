@@ -2038,8 +2038,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         } else {
-            // Reassign so $identity carries the values just written — later
-            // reads in this request must not see the pre-update document.
             $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,

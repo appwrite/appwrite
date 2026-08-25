@@ -1443,7 +1443,6 @@ trait AvatarsBase
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals('image/png', $response['headers']['content-type']);
             $this->assertNotEmpty($response['body']);
-            // The response must never be cached — profile photos change at any time.
             $this->assertEquals('private, no-store', $response['headers']['cache-control']);
         }, 30_000, 2_000);
 

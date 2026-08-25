@@ -177,10 +177,6 @@ class V25 extends Migration
                     break;
 
                 case 'identities':
-                    // Only a duplicate is tolerated here: it means an earlier
-                    // run already created the attribute, so a retry can move
-                    // on. Any other failure leaves the schema without "photo"
-                    // and must abort the migration rather than be logged away.
                     try {
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'photo');
                     } catch (Duplicate) {
