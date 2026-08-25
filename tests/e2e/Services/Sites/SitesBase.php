@@ -245,15 +245,24 @@ trait SitesBase
     protected function packageSite(string $site): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
-        $tarPath = "$folderPath/code.tar.gz";
+        // Unique archive per process: paratest --functional packs the same
+        // fixture from many methods at once. Sharing $folderPath/code.tar.gz
+        // lets one tar truncate the file another CURLFile is still reading
+        // (libcurl: "client mime read EOF fail, only N/M of needed bytes").
+        $tarPath = \sys_get_temp_dir() . '/appwrite-site-' . $site . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        Console::execute(
+            'tar --exclude code.tar.gz --exclude node_modules -czf ' . \escapeshellarg($tarPath) . ' -C ' . \escapeshellarg($folderPath) . ' .',
+            '',
+            $this->stdout,
+            $this->stderr
+        );
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        return new CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
     }
 
     protected function createDeployment(string $siteId, mixed $params = []): mixed

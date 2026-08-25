@@ -434,6 +434,14 @@ class Jobs extends Action
         ]);
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
+        // latestDeployment* must be written before activate(). activate() sets
+        // deploymentId then walks platform rules; under parallel Sites e2e that
+        // scan is slow enough that clients waiting on deploymentId observe a
+        // stale latestDeploymentId (still the previous deployment).
+        if (! $resource->isEmpty()) {
+            $this->updateLatestDeployment($dbForProject, $resource);
+        }
+
         if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
             $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
         }
@@ -455,11 +463,9 @@ class Jobs extends Action
             BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
         }
 
-        // Keep the resource's "latest deployment" pointer + status current, and
-        // (re)activate its schedule so the scheduler enqueues cron executions
+        // (Re)activate its schedule so the scheduler enqueues cron executions
         // (sites have no scheduleId, so schedule() no-ops for them).
         if (! $resource->isEmpty()) {
-            $this->updateLatestDeployment($dbForProject, $resource);
             $this->schedule($dbForProject, $dbForPlatform, $resource);
         }
 
@@ -568,6 +574,7 @@ class Jobs extends Action
             Query::equal('resourceType', [$resource->getCollection()]),
             Query::equal('resourceInternalId', [$resource->getSequence()]),
             Query::orderDesc('$createdAt'),
+            Query::orderDesc('$sequence'),
         ]);
 
         if ($latest->isEmpty()) {
