@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { getOAuth2App } from '@/lib/oauth2/cimd'
 import {
   matchKnownOAuthClient,
   type KnownOAuthClient,
@@ -45,9 +46,9 @@ export type AccountConnectedApp = {
   cimdUrl: string | null
   /**
    * Resolved client metadata. For registered apps this is the app record;
-   * for CIMD clients the server resolves the metadata document behind the
-   * same endpoint. Null when resolution fails (app deleted, document
-   * unreachable) - the consent is still real and revocable.
+   * for CIMD clients the browser fetches the metadata document directly
+   * (with hostname-only branding as the fallback). Null when resolution
+   * fails (app deleted) - the consent is still real and revocable.
    */
   app: Models.App | null
 }
@@ -125,7 +126,9 @@ function getDisplayName(
 export function groupConnectedApps(
   connectedApps: AccountConnectedApp[],
 ): AccountConnectedAppGroup[] {
-  const sorted = [...connectedApps].sort((a, b) => getGrantTime(b) - getGrantTime(a))
+  const sorted = [...connectedApps].sort(
+    (a, b) => getGrantTime(b) - getGrantTime(a),
+  )
 
   const groups = new Map<string, AccountConnectedAppGroup>()
   for (const connectedApp of sorted) {
@@ -170,11 +173,9 @@ export async function fetchAccountConnectedApps(): Promise<{
     consents.map(async (consent) => {
       const cimdUrl = consent.cimdUrl || null
       const clientId = consent.appId || consent.cimdUrl
-      // apps.get resolves CIMD URLs server-side (cached, SSRF-guarded), so
-      // one call covers both client forms.
-      const app = await sdk.forConsole.apps
-        .get({ appId: clientId })
-        .catch(() => null)
+      // Registered apps resolve via apps.get; CIMD URLs are fetched directly
+      // from the browser (the API no longer resolves them server-side).
+      const app = await getOAuth2App(clientId).catch(() => null)
       return { consent, clientId, cimdUrl, app }
     }),
   )

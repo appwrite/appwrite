@@ -217,12 +217,12 @@ export function useVerifyDomain(
 
       if (getActiveProfileId() === 'cloud' && organizationDomainId) {
         try {
-          await sdk.forConsole.domains.updateNameservers({
+          await sdk.forConsole.domains.verifyNameservers({
             domainId: organizationDomainId,
           })
         } catch {
-          // Match the old Console: nameserver update is best-effort before
-          // proxy rule verification, but should not block verification.
+          // Nameserver verification is best-effort before proxy rule
+          // verification, but should not block verification.
         }
       }
 

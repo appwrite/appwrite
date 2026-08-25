@@ -4,6 +4,7 @@
  */
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   Dialog,
   DialogContent,
@@ -27,9 +28,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
-  useProjectTable,
-  useProjectTableColumns,
-  useProjectTableRows,
+  tableQueryOptions,
+  tableColumnsQueryOptions,
+  tableRowsQueryOptions,
   useCreateCSVExport,
 } from '@/lib/react-query/hooks'
 import { useSessionMigrations } from '@/components/global/providers/SessionMigrationsContext'
@@ -47,6 +48,9 @@ const DELIMITERS = [
 ] as const
 
 const COLUMNS_VISIBLE_COLLAPSED = 6
+/** Export may need more attributes than the spreadsheet first page. */
+const EXPORT_COLUMNS_PAGE_SIZE = 1000
+const EXPORT_SAMPLE_ROWS_LIMIT = 50
 
 export interface ExportCsvProps {
   projectId: string
@@ -76,31 +80,42 @@ export function ExportCsv({
   onSuccess,
 }: ExportCsvProps) {
   const t = useT()
-  const dbLabels = getLocalizedDatabaseConsoleLabels(t, dbKind ?? 'tablesdb')
+  const resolvedDbKind = dbKind ?? 'tablesdb'
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, resolvedDbKind)
   const isCollectionExport = isCollectionDatabaseKind(dbKind)
-  const { table } = useProjectTable(
-    projectId,
-    databaseId,
-    dbKind ?? 'tablesdb',
-    tableId,
-  )
-  const { columns: apiColumns } = useProjectTableColumns(
-    projectId,
-    databaseId,
-    dbKind ?? 'tablesdb',
-    tableId,
-    undefined,
-    0,
-    1000,
-  )
-  const { rows: sampleDocumentRows } = useProjectTableRows(
-    projectId,
-    databaseId,
-    tableId,
-    dbKind ?? 'tablesdb',
-    0,
-    50,
-  )
+  // Fetch only while open. Always-on hooks with different limits (1000 / 50)
+  // duplicated listColumns/listRows on every table switch vs the spreadsheet
+  // cache (100 / 25). Sample rows are only needed for documents/vectors export.
+  const dialogEnabled = open && !!projectId && !!databaseId && !!tableId
+  const { data: table } = useQuery({
+    ...tableQueryOptions(projectId, databaseId, resolvedDbKind, tableId),
+    enabled: dialogEnabled,
+  })
+  const { data: columnsData } = useQuery({
+    ...tableColumnsQueryOptions(
+      projectId,
+      databaseId,
+      resolvedDbKind,
+      tableId,
+      undefined,
+      0,
+      EXPORT_COLUMNS_PAGE_SIZE,
+    ),
+    enabled: dialogEnabled,
+  })
+  const apiColumns = columnsData?.columns || []
+  const { data: sampleRowsData } = useQuery({
+    ...tableRowsQueryOptions(
+      projectId,
+      databaseId,
+      tableId,
+      resolvedDbKind,
+      0,
+      EXPORT_SAMPLE_ROWS_LIMIT,
+    ),
+    enabled: dialogEnabled && isCollectionExport,
+  })
+  const sampleDocumentRows = sampleRowsData?.rows || []
   const { addExportId } = useSessionMigrations(projectId)
   const createExport = useCreateCSVExport(projectId)
 

@@ -17,26 +17,48 @@ import type { QueryClient } from '@tanstack/react-query'
 import { setConsoleAccountCache } from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import { createConsoleProject } from '@/lib/appwrite/console-projects'
-import { sdk } from '@/lib/appwrite/sdk'
-import { createOrganization } from '@/lib/react-query/hooks/organizations'
-import { fetchOrganizations } from '@/lib/react-query/hooks/organizations'
-import { fetchOrganizationProjects } from '@/lib/react-query/hooks/organizations'
-import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
+import {
+  createOrganization,
+  fetchOrganizationById,
+  fetchOrganizationProjects,
+  fetchOrganizations,
+  organizationQueryOptions,
+  organizationsQueryOptions,
+} from '@/lib/react-query/hooks/organizations'
 import {
   fetchConsoleAccount,
   updateAccountPrefs,
 } from '@/lib/react-query/hooks/auth'
 import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
+import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 
 const PERSONAL_ORG_NAME = 'Personal Projects'
 const FIRST_PROJECT_NAME = 'My first project'
 
+async function organizationIsAccessible(
+  orgId: string,
+  queryClient?: QueryClient,
+): Promise<boolean> {
+  try {
+    const org = queryClient
+      ? await queryClient.ensureQueryData(organizationQueryOptions(orgId))
+      : await fetchOrganizationById(orgId)
+    return !!org
+  } catch (error) {
+    if (isHttpNotFoundError(error)) return false
+    throw error
+  }
+}
+
 /**
  * Preferred org from account prefs when still accessible, otherwise ensure a valid org.
  *
- * Pass `queryClient` when available so the organizations list goes through the
- * query cache and is reused by `prefetchOrganizationOverviewData` instead of
+ * Pass `queryClient` when available so the org/list queries go through the
+ * query cache and are reused by `prefetchOrganizationOverviewData` instead of
  * being fetched twice during initial load.
+ *
+ * Existence is checked with a single-org get (the same query the overview
+ * already needs), not a full organizations list.
  */
 export async function resolvePostAuthOrganizationId(
   account?: Awaited<ReturnType<typeof fetchConsoleAccount>>,
@@ -44,16 +66,19 @@ export async function resolvePostAuthOrganizationId(
 ): Promise<string> {
   const resolved = account ?? (await fetchConsoleAccount())
   const prefs = (resolved.prefs || {}) as Record<string, unknown>
-  const fromPrefs = prefs[USER_PREFS_KEY_ORGANIZATION] as string | undefined
+  const fromPrefs = prefs[USER_PREFS_KEY_ORGANIZATION]
+  const preferredId =
+    typeof fromPrefs === 'string' && fromPrefs.trim()
+      ? fromPrefs.trim()
+      : undefined
 
-  if (fromPrefs) {
-    const response = queryClient
-      ? await queryClient.ensureQueryData(organizationsQueryOptions())
-      : await fetchOrganizations()
-    const exists = response.teams?.some((org) => org.$id === fromPrefs)
-    if (exists) return fromPrefs
+  if (preferredId) {
+    if (await organizationIsAccessible(preferredId, queryClient)) {
+      return preferredId
+    }
 
-    const { [USER_PREFS_KEY_ORGANIZATION]: _removed, ...restPrefs } = prefs
+    const restPrefs = { ...prefs }
+    delete restPrefs[USER_PREFS_KEY_ORGANIZATION]
     const updatedAccount = await updateAccountPrefs(restPrefs)
     if (updatedAccount && typeof updatedAccount === 'object' && '$id' in updatedAccount) {
       setConsoleAccountCache(
@@ -63,14 +88,18 @@ export async function resolvePostAuthOrganizationId(
     }
   }
 
-  return await ensurePersonalOrgAndFirstProject()
+  return await ensurePersonalOrgAndFirstProject(queryClient)
 }
 
-export async function ensurePersonalOrgAndFirstProject(): Promise<string> {
+export async function ensurePersonalOrgAndFirstProject(
+  queryClient?: QueryClient,
+): Promise<string> {
   const account = await fetchConsoleAccount()
   const prefs = (account.prefs || {}) as Record<string, unknown>
 
-  const response = await fetchOrganizations()
+  const response = queryClient
+    ? await queryClient.ensureQueryData(organizationsQueryOptions())
+    : await fetchOrganizations()
   const orgs = response.teams || []
 
   if (orgs.length === 0) {

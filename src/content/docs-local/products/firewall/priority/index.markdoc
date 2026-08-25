@@ -29,6 +29,7 @@ The Console create wizard defaults priority to `100`. Common patterns:
 | Allowlist then deny | Bypass at `10`, deny at `100` |
 | Tight path before broad rate limit | Path-specific deny at `20`, broad rate limit at `200` |
 | Temporary override | Insert a new rule at a lower number than existing policies |
+| [Attack mode](/docs/products/firewall/attack-mode) on a site | Catch-all challenge at `0`. Bypass allowlists must use a **negative** priority to run first |
 
 Leave gaps between priorities (for example `10`, `20`, `30`) so you can insert rules later without renumbering everything.
 

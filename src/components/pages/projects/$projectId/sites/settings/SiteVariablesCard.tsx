@@ -59,6 +59,7 @@ export function SiteVariablesCard({
         globalVariableKeys.has(v.key) ? t('Global') : undefined
       }
       projectVariableKeysForWarning={globalVariableKeys}
+      projectVariablesProjectId={projectId}
     />
   )
 }

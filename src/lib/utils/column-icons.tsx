@@ -26,6 +26,10 @@ import {
 export function getColumnIcon(type: string): LucideIcon {
   const normalized = type.toLowerCase().trim()
 
+  if (normalized === 'enum' || normalized.startsWith('enum(')) {
+    return Columns3
+  }
+
   switch (normalized) {
     case 'string':
     case 'varchar':
@@ -82,8 +86,6 @@ export function getColumnIcon(type: string): LucideIcon {
       return Link2
     case 'ip':
       return MapPin
-    case 'enum':
-      return Columns3
     case 'json':
     case 'jsonb':
     case 'object':

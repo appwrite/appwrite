@@ -283,9 +283,36 @@ export function withSkippedPrompt(
 ): CommunitySupportPromptState {
   return {
     ...state,
-    // Impression should already have stamped lastShownAt; keep a fallback.
-    lastShownAt: state.lastShownAt ?? now.toISOString(),
+    // Always refresh so skip is a real prefs write (not a no-op after recordShown)
+    // and wins races against in-flight active-day updates.
+    lastShownAt: now.toISOString(),
   }
+}
+
+/**
+ * Whether `local` should be kept over `remote` after an account prefs write.
+ * Used to avoid older in-flight community-support writes clobbering newer state.
+ */
+export function isCommunitySupportStateAhead(
+  local: CommunitySupportPromptState,
+  remote: CommunitySupportPromptState,
+): boolean {
+  if (local.actionTakenAt && !remote.actionTakenAt) return true
+  if (remote.actionTakenAt && !local.actionTakenAt) return false
+
+  if (local.shownCount !== remote.shownCount) {
+    return local.shownCount > remote.shownCount
+  }
+
+  const localShown = local.lastShownAt ? Date.parse(local.lastShownAt) : 0
+  const remoteShown = remote.lastShownAt ? Date.parse(remote.lastShownAt) : 0
+  const localShownMs = Number.isFinite(localShown) ? localShown : 0
+  const remoteShownMs = Number.isFinite(remoteShown) ? remoteShown : 0
+  if (localShownMs !== remoteShownMs) {
+    return localShownMs > remoteShownMs
+  }
+
+  return local.uniqueDayCount > remote.uniqueDayCount
 }
 
 export function withTakenAction(
@@ -297,6 +324,6 @@ export function withTakenAction(
     ...state,
     actionId,
     actionTakenAt: now.toISOString(),
-    lastShownAt: state.lastShownAt ?? now.toISOString(),
+    lastShownAt: now.toISOString(),
   }
 }

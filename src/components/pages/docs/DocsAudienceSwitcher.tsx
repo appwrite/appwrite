@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
@@ -35,8 +36,15 @@ export function DocsAudienceSwitcher({
   const navigate = useNavigate()
   const { features } = useConsoleProfile()
   const audience = getDocsAudienceFromPathname(pathname)
+  const [hasMounted, setHasMounted] = useState(false)
 
-  if (!features.partnersDocs) {
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  // Avoid SSR/client mismatches when partnersDocs is enabled only via
+  // localStorage (unavailable during SSR) until the debug cookie is synced.
+  if (!hasMounted || !features.partnersDocs) {
     return null
   }
 

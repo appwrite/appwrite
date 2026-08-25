@@ -1,7 +1,7 @@
 import { getCoverBrandThemeForSvgExport } from '@/lib/cover-generator/brand-theme'
 import { COVER_HEIGHT } from '@/lib/cover-generator/constants'
 import { coverSvgTextBaseline } from '@/lib/cover-generator/cover-svg-text'
-import { escapeXml, formatCoverEyebrow, stripCoverTitleSuffix, wrapTextLines } from '@/lib/cover-generator/text-utils'
+import { COVER_EYEBROW_LETTER_SPACING, escapeXml, formatCoverEyebrow, stripCoverTitleSuffix, wrapTextLines } from '@/lib/cover-generator/text-utils'
 import type { CoverSimpleTitleData } from '@/lib/cover-generator/types'
 import type { CoverTheme } from '@/lib/cover-generator/constants'
 
@@ -132,7 +132,7 @@ export function renderSimpleTitleTemplateSvg(
   return `
     ${
       eyebrowText
-        ? `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="0.25em" x="${COVER_CONTENT_X}" y="${coverSvgTextBaseline(eyebrowLayoutY, COVER_EYEBROW_FONT_SIZE)}">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`
+        ? `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="${COVER_EYEBROW_LETTER_SPACING}" x="${COVER_CONTENT_X}" y="${coverSvgTextBaseline(eyebrowLayoutY, COVER_EYEBROW_FONT_SIZE)}">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`
         : ''
     }
     ${titleSvg}

@@ -1,17 +1,22 @@
 import { Hono } from 'hono'
 import { client } from './lib/appwrite'
-import { Databases } from 'node-appwrite'
+import { Project } from 'node-appwrite'
 
 const app = new Hono()
-const databases = new Databases(client)
+const project = new Project(client)
 
-app.get('/data', async (c) => {
-  try {
-    const list = await databases.listCollections('your-database-id')
-    return c.json(list)
-  } catch (err) {
-    return c.json({ error: String(err) }, 500)
-  }
+app.patch('/v1/policies', async (c) => {
+  const policy = await project.updatePasswordStrengthPolicy({
+    min: 8,
+    uppercase: true,
+    number: true,
+    symbols: true
+  })
+  return c.json(policy)
+})
+
+app.get('/v1/policies', async (c) => {
+  return c.json(await project.listPolicies())
 })
 
 export default app

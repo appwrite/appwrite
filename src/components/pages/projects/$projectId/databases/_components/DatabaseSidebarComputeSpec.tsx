@@ -24,19 +24,25 @@ import {
   hasDedicatedDatabaseCompute,
   resolveDatabaseComputeSpecId,
 } from '@/lib/databases/database-compute'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
+import { planSupportsDedicatedDatabases } from '@/lib/databases/dedicated-database-plan'
 import {
   projectSupportsDedicatedDatabaseCompute,
   formatDedicatedDatabaseRegionUnavailableDescription,
 } from '@/lib/databases/dedicated-database-regions'
 import { postgresNav } from '@/lib/postgres-database-routes'
+import { mysqlNav } from '@/lib/mysql-database-routes'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   POSTGRES_DATABASE_SPECS_SOURCE,
+  MYSQL_DATABASE_SPECS_SOURCE,
   dedicatedDatabaseSourceFromRouteKind,
   useDatabaseSpecifications,
+  useOrganizationPlan,
   useOrganizationScopes,
   usePostgresDatabase,
+  useMysqlDatabase,
   useProject,
   useProjectDatabase,
   useProjectDedicatedDatabases,
@@ -53,7 +59,7 @@ import { DatabaseSidebarComputeSpecDisplay } from './DatabaseSidebarComputeSpecD
 type DatabaseSidebarComputeSpecProps = {
   projectId: string
   databaseId: string
-  mode: 'product' | 'postgres'
+  mode: 'product' | 'postgres' | 'mysql'
   dbKind?: DatabaseRouteKind
   /** Renders inside the nav footer with a spaced separator above. */
   variant?: 'footer' | 'standalone'
@@ -87,10 +93,9 @@ function isDedicatedDbFeatureEnabled(
   dbKind: DatabaseRouteKind | undefined,
   features: ReturnType<typeof useConsoleProfile>['features'],
 ): boolean {
-  if (!dbKind) return true
   if (dbKind === 'documentsdb') return features.dedicatedDbsDocumentsDB
   if (dbKind === 'vectorsdb') return features.dedicatedDbsVectorsDB
-  return true
+  return features.dedicatedDbsSupport
 }
 
 export function DatabaseSidebarComputeSpec({
@@ -103,16 +108,19 @@ export function DatabaseSidebarComputeSpec({
   const t = useT()
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { access } = useOrganizationScopes(project?.teamId)
   const specificationsSource =
     mode === 'postgres'
       ? POSTGRES_DATABASE_SPECS_SOURCE
-      : dedicatedDatabaseSourceFromRouteKind(dbKind ?? 'tablesdb')
+      : mode === 'mysql'
+        ? MYSQL_DATABASE_SPECS_SOURCE
+        : dedicatedDatabaseSourceFromRouteKind(dbKind ?? 'tablesdb')
   const { data: specificationsData } = useDatabaseSpecifications(
     projectId,
     specificationsSource,
   )
-  // Only fetch product DB metadata on product routes. Passing the Postgres id into
+  // Only fetch product DB metadata on product routes. Passing a native DB id into
   // `useProjectDatabase` probes tablesdb/documentsdb/vectorsdb and fails noisily.
   const { database: productDatabase } = useProjectDatabase(
     projectId,
@@ -122,6 +130,10 @@ export function DatabaseSidebarComputeSpec({
   const { database: postgresDatabase } = usePostgresDatabase(
     projectId,
     mode === 'postgres' ? databaseId : null,
+  )
+  const { database: mysqlDatabase } = useMysqlDatabase(
+    projectId,
+    mode === 'mysql' ? databaseId : null,
   )
   const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
     projectId,
@@ -133,8 +145,10 @@ export function DatabaseSidebarComputeSpec({
     [specificationsData?.specifications],
   )
 
-  const supportsDedicatedDatabaseCompute =
+  const regionSupportsDedicatedCompute =
     projectSupportsDedicatedDatabaseCompute(project?.region)
+  const planSupportsDedicatedCompute =
+    planSupportsDedicatedDatabases(organizationPlan)
   const canManageCompute = canCreateDatabase(access, features)
   const billingEnabled = getActiveProfileFeatures().billing
 
@@ -149,16 +163,17 @@ export function DatabaseSidebarComputeSpec({
   const resolved = useMemo(() => {
     const connectionsUnit = t('connections')
 
-    if (mode === 'postgres') {
-      const postgresDedicated = dedicatedById.get(databaseId)
+    if (mode === 'postgres' || mode === 'mysql') {
+      const nativeDatabase =
+        mode === 'postgres' ? postgresDatabase : mysqlDatabase
+      const nativeDedicated = dedicatedById.get(databaseId)
       const specSlug =
-        postgresDatabase?.specification?.trim() ||
-        postgresDedicated?.specification?.trim() ||
+        coerceTrimmedString(nativeDatabase?.specification) ||
+        coerceTrimmedString(nativeDedicated?.specification) ||
         undefined
-      const cpu =
-        postgresDatabase?.cpu ?? postgresDedicated?.cpu ?? undefined
+      const cpu = nativeDatabase?.cpu ?? nativeDedicated?.cpu ?? undefined
       const memory =
-        postgresDatabase?.memory ?? postgresDedicated?.memory ?? undefined
+        nativeDatabase?.memory ?? nativeDedicated?.memory ?? undefined
       const displayParts = resolveDatabaseSpecDisplayParts(specs, specSlug, {
         cpuMillicores: cpu,
         memoryMb: memory,
@@ -170,11 +185,16 @@ export function DatabaseSidebarComputeSpec({
           : formatDatabaseSpecDisplayTooltip(displayParts, connectionsUnit) ??
             t('Compute tier')
 
+      const computeLink =
+        mode === 'postgres'
+          ? postgresNav({ projectId, databaseId }).computeSettings()
+          : mysqlNav({ projectId, databaseId }).computeSettings()
+
       return {
         displayParts,
         specTooltip,
         specSlug,
-        computeLink: postgresNav({ projectId, databaseId }).computeSettings(),
+        computeLink,
         serverless: false,
       }
     }
@@ -253,6 +273,7 @@ export function DatabaseSidebarComputeSpec({
     dbKind,
     mode,
     postgresDatabase,
+    mysqlDatabase,
     productDatabase,
     projectId,
     specificationsData?.specifications,
@@ -270,15 +291,19 @@ export function DatabaseSidebarComputeSpec({
   )
 
   // Prefer compute/spec settings when available; /upgrade only as a fallback.
+  const showUpgradeComingSoon =
+    !regionSupportsDedicatedCompute &&
+    (resolved.serverless || !!nextEnabledSpec || !!nextLockedSpec)
   const showComputeUpgrade =
-    supportsDedicatedDatabaseCompute &&
+    regionSupportsDedicatedCompute &&
+    planSupportsDedicatedCompute === true &&
     canManageCompute &&
     (!!nextEnabledSpec || !!nextLockedSpec || resolved.serverless)
   const showPlanUpgrade =
-    !showComputeUpgrade && !!nextLockedSpec && billingEnabled
-  const showUpgradeComingSoon =
-    supportsDedicatedDatabaseCompute === false &&
-    (resolved.serverless || !!nextEnabledSpec || !!nextLockedSpec)
+    !showUpgradeComingSoon &&
+    !showComputeUpgrade &&
+    billingEnabled &&
+    (planSupportsDedicatedCompute === false || !!nextLockedSpec)
 
   if (!isDedicatedDbFeatureEnabled(dbKind, features) && mode === 'product') {
     return null

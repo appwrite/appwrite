@@ -123,7 +123,7 @@ The important shift is the last row. A traditional backend is read and written b
 - [Appwrite Realtime](/docs/apis/realtime) pushes changes to connected clients so chat UIs and agent dashboards stay in sync without polling.
 - [Appwrite Messaging](/docs/products/messaging) sends email, SMS, and push notifications from the same permission and identity model.
 
-For AI workloads specifically, Appwrite exposes an agent-facing surface alongside the developer-facing one. The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers/api) lets coding agents inspect and act on project resources through a compact two-tool workflow. [Agent Skills](/docs/tooling/ai/skills) give AI tools grounded documentation context. [Appwrite Assistant](/docs/tooling/ai/assistant) answers questions against your project. [Appwrite Arena](/docs/tooling/ai/arena) benchmarks how well models understand Appwrite. Vector workloads plug in through [Functions](/docs/tooling/ai/vector-db-and-embeddings), with documented integrations for Pinecone, Weaviate, Milvus, Qdrant, Chroma, and Upstash Vector.
+For AI workloads specifically, Appwrite exposes an agent-facing surface alongside the developer-facing one. The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers) lets coding agents inspect and act on project resources through a compact two-tool workflow. [Agent Skills](/docs/tooling/ai/skills) give AI tools grounded documentation context. [Appwrite Assistant](/docs/tooling/ai/assistant) answers questions against your project. [Appwrite Arena](/docs/tooling/ai/arena) benchmarks how well models understand Appwrite. Vector workloads plug in through [Functions](/docs/tooling/ai/vector-db-and-embeddings), with documented integrations for Pinecone, Weaviate, Milvus, Qdrant, Chroma, and Upstash Vector.
 
 The result is one backend that stores users, data, files, and server-side logic for both the human side of the app and the agent side.
 
@@ -158,5 +158,5 @@ An AI backend is the durable server-side layer behind AI-native apps. It holds i
 - [Appwrite Realtime](/docs/apis/realtime)
 - [Appwrite Messaging](/docs/products/messaging)
 - [Appwrite AI tooling](/docs/tooling/ai)
-- [Appwrite API MCP server](/docs/tooling/ai/mcp-servers/api)
+- [Appwrite API MCP server](/docs/tooling/ai/mcp-servers)
 - [Vector DB and embeddings](/docs/tooling/ai/vector-db-and-embeddings)

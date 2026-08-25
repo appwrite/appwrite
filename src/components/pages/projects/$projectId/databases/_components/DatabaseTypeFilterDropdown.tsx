@@ -16,6 +16,8 @@ import {
 } from '@/components/pages/projects/$projectId/shared/service-header-container'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
+import { DatabaseTypeBetaBadge } from './DatabaseTypeBetaBadge'
 
 export type DatabaseTypeFilterOption = {
   value: DatabaseType
@@ -95,7 +97,7 @@ export function DatabaseTypeFilterDropdown({
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-52">
+      <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuLabel className="text-[12px] font-normal text-muted-foreground">
           {t('Database types')}
         </DropdownMenuLabel>
@@ -115,7 +117,12 @@ export function DatabaseTypeFilterDropdown({
             onCheckedChange={() => toggleType(option.value)}
             onSelect={(event) => event.preventDefault()}
           >
-            {option.label}
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span>{option.label}</span>
+              {isBetaDatabaseType(option.value) ? (
+                <DatabaseTypeBetaBadge />
+              ) : null}
+            </span>
           </DropdownMenuCheckboxItem>
         ))}
       </DropdownMenuContent>

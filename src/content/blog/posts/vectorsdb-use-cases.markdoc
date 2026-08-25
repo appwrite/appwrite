@@ -1,0 +1,328 @@
+---
+layout: post
+title: Four things you can build with Appwrite VectorsDB
+description: "Appwrite VectorsDB finds documents by meaning, not by words. This post builds four features with it: a help article search, a filtered search, a recommendation from user history, and an answer cache."
+date: 2026-08-17
+cover: /images/blog/vectorsdb-use-cases/cover.avif
+timeToRead: 8
+author: atharva
+category: ai
+featured: false
+draft: true
+faqs:
+  - question: "What is the difference between a keyword search and a vector search?"
+    answer: "A keyword search matches words. A document must contain the word that the user typed. A vector search matches meaning. It finds a document that has the same meaning in different words."
+  - question: "Does VectorsDB need a separate embedding model?"
+    answer: "No. Appwrite makes the vector from text. You can also store a vector from your own model. The length of that vector must be equal to the dimension of the collection."
+  - question: "What is a dimension?"
+    answer: "A dimension is the count of the numbers in one vector. You set the dimension when you create a collection. Every vector in that collection must have exactly that count."
+  - question: "Is a filter possible on a vector search?"
+    answer: "Yes. You can add a metadata filter to the same request. Appwrite applies the filter and the ranking together, so you send one request."
+  - question: "Does a vector search give a similarity score?"
+    answer: "No. A search gives the documents in order, from the closest document to the furthest document. The response contains the vectors, so you can calculate a score in your own code."
+  - question: "How many results does a vector search return?"
+    answer: "A search always returns the closest documents. It returns them even when no document is a good match. Use a score and a score limit if you must reject a bad match."
+---
+
+A keyword search matches words, but a vector search matches meaning.
+
+Users do not use your words. A user writes "my card was declined". Your article is called "payment authorization failure". The two texts share no word, so a keyword search cannot connect them. A vector search connects them, because it compares meaning.
+
+This post shows four features that use that difference:
+
+1. A search that finds the correct help article
+2. A search inside one group of the data
+3. A recommendation of the next item for a user
+4. A store of answers that stops repeat calls to a model
+
+# Three terms
+
+The examples below use three terms.
+
+A **vector** is a list of numbers that describes the meaning of a text. Two texts with a similar meaning get vectors that are near each other. All four examples rest on that one fact.
+
+An **embedding** is the vector that a model makes from your text.
+
+An **index** is the structure that makes the search fast.
+
+# Create a collection
+
+Go to **Databases** in your Appwrite project. Create a database, and select **VectorsDB** as the type.
+
+Then create a collection. A collection needs a `dimension`, which is the count of the numbers in one vector. Every vector in the collection must have that count. This post uses 256, and the next section shows why.
+
+```js
+import { Client, VectorsDB, VectorsDBIndexType } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const vectorsDB = new VectorsDB(client);
+
+await vectorsDB.createCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: 'articles',
+    name: 'articles',
+    dimension: 256
+});
+
+await vectorsDB.createIndex({
+    databaseId: '<DATABASE_ID>',
+    collectionId: 'articles',
+    key: 'similarity',
+    type: VectorsDBIndexType.HnswCosine,
+    attributes: ['embeddings']
+});
+```
+
+A document in this collection contains two fields:
+
+| Field | Content |
+| --- | --- |
+| `embeddings` | The vector. The length must be equal to the dimension of the collection |
+| `metadata` | A JSON object. You do not declare its fields first |
+
+Create the index one time, before you write your data.
+
+# Turn text into a vector
+
+Appwrite includes the embedding model. You send text to your project, and the response contains the vector. The application needs no model server and no external API.
+
+```js
+import { Embeddings } from 'node-appwrite';
+
+const embedder = new Embeddings(client);
+
+const { embeddings: [result] } = await embedder.createTextEmbeddings({
+    texts: ['You can ask for a refund within 30 days.']
+});
+
+console.log(result.embedding.length); // 768
+```
+
+The model returns 768 numbers, but a search cannot carry that many. Each query in a search request is limited to 4096 characters, and 768 numbers serialize past that limit. So use the first 256 numbers instead, both for the stored vector and for the search vector.
+
+A shorter vector still finds the correct documents. The Appwrite model puts the most important information at the start of the vector, so the first 256 numbers keep most of the meaning. This is a property of this model, and not of every embedding model. The shorter vector also makes a smaller index and a faster search.
+
+One helper does the whole step. It asks for the vector, cuts it to 256 numbers, and rescales it so that every vector is on the same scale. Every example below uses it.
+
+```js
+async function embed(text) {
+    const { embeddings: [item] } = await embedder.createTextEmbeddings({
+        texts: [text]
+    });
+
+    const part = item.embedding.slice(0, 256);
+    const magnitude = Math.hypot(...part);
+
+    return part.map(value => Number((value / magnitude).toFixed(6)));
+}
+```
+
+Write the document, with the vector in `embeddings` and all other data in `metadata`.
+
+```js
+import { ID } from 'node-appwrite';
+
+await vectorsDB.createDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: 'articles',
+    documentId: ID.unique(),
+    data: {
+        embeddings: await embed('You can ask for a refund within 30 days.'),
+        metadata: {
+            title: 'Refund policy',
+            group: 'billing'
+        }
+    }
+});
+```
+
+# Example 1: answer the question that the user asked
+
+The collection contains eight help articles, stored with the code from the previous section. The search text is the question exactly as the user typed it.
+
+```js
+import { Query } from 'node-appwrite';
+
+const results = await vectorsDB.createQuery({
+    databaseId: '<DATABASE_ID>',
+    collectionId: 'articles',
+    queries: [
+        Query.vectorCosine('embeddings', await embed('my card was declined')),
+        Query.select(['metadata']),
+        Query.limit(3)
+    ]
+});
+```
+
+The result:
+
+```text
+1. Declined payments
+2. Refund policy
+3. Billing cycle
+```
+
+The first article is the correct one. The other two articles are also about money. The articles about accounts and teams stay below them. No article contains the word "card".
+
+Add `Query.select(['metadata'])` to remove the vectors from the response, because a vector is large and your page does not need it.
+
+# Example 2: search in one part of the data
+
+Often a search must stay inside one part of the data. A user who searches from the account settings expects account articles, not billing articles.
+
+Put the group in the metadata when you write the document. Then add a filter to the same search.
+
+```js
+const results = await vectorsDB.createQuery({
+    databaseId: '<DATABASE_ID>',
+    collectionId: 'articles',
+    queries: [
+        Query.vectorCosine('embeddings', await embed('my card was declined')),
+        Query.equal('metadata.group', 'account'),
+        Query.select(['metadata']),
+        Query.limit(3)
+    ]
+});
+```
+
+The search text is the same as the search text in example 1. The result is different:
+
+```text
+1. Cannot sign in
+2. App requirements
+3. Change your password
+```
+
+Appwrite applies the filter and the ranking in one request, so you read the data one time and you sort nothing in your own code.
+
+{% info title="Metadata values compare as text" %}
+The `metadata` field uses JSON, so Appwrite compares the values as text. Pass every filter value as a string, as in `Query.equal('metadata.group', 'account')`. A number gives you an error.
+{% /info %}
+
+# Example 3: recommend the next item
+
+A vector is also a position, and products with a similar meaning are near each other. That closeness lets you build a recommendation from the history of a user.
+
+Read the items that the user opened, and calculate the average of their vectors. That average shows the preference of the user. The examples below use a second collection, `products`, created with the same dimension and the same index. `lastOpenedIds` is an array of the `$id` values of the documents that the user opened.
+
+```js
+const history = await vectorsDB.createQuery({
+    databaseId: '<DATABASE_ID>',
+    collectionId: 'products',
+    queries: [Query.equal('$id', lastOpenedIds)]
+});
+
+const size = history.documents[0].embeddings.length;
+
+const average = Array.from({ length: size }, (_, position) =>
+    history.documents.reduce((sum, doc) => sum + doc.embeddings[position], 0)
+        / history.documents.length);
+```
+
+Run a search with the average vector. Remove the items that the user already saw.
+
+```js
+const seen = history.documents.map(doc => doc.metadata.name);
+
+const suggestions = await vectorsDB.createQuery({
+    databaseId: '<DATABASE_ID>',
+    collectionId: 'products',
+    queries: [
+        Query.vectorCosine('embeddings', average.map(value => Number(value.toFixed(6)))),
+        ...seen.map(name => Query.notEqual('metadata.name', name)),
+        Query.select(['metadata']),
+        Query.limit(3)
+    ]
+});
+```
+
+The test collection contains eight products. Four products are for the outdoors, two products are clothes, and two products are for coffee. The history of the user contains two items:
+
+```text
+history: Trail runner, Wool base layer
+```
+
+The result:
+
+```text
+1. Mountain shell
+2. Road runner
+3. Hiking backpack
+```
+
+The espresso machine and the coffee grinder are not in the list. The result comes from the vectors alone, so the code contains no trained model and no category rule.
+
+# Example 4: do not pay for the same answer two times
+
+A cache that compares text finds a match only when two questions are identical. Users ask the same question in different words, so every question reaches your model and you pay for each one.
+
+Store each question as a vector. Store the answer in the metadata. Run a search in that collection before you call the model.
+
+A search returns the documents in order, but it does not return a score. Calculate the score in your own code. The response contains the vectors, so you have all the data that you need.
+
+```js
+function cosine(a, b) {
+    let dot = 0;
+    let lengthA = 0;
+    let lengthB = 0;
+
+    for (let i = 0; i < a.length; i++) {
+        dot += a[i] * b[i];
+        lengthA += a[i] ** 2;
+        lengthB += b[i] ** 2;
+    }
+
+    return dot / (Math.sqrt(lengthA) * Math.sqrt(lengthB));
+}
+```
+
+Then compare the score against a score limit. `callTheModel` stands for your own call to a model.
+
+```js
+async function answer(text) {
+    const question = await embed(text);
+
+    const cache = await vectorsDB.createQuery({
+        databaseId: '<DATABASE_ID>',
+        collectionId: 'answers',
+        queries: [
+            Query.vectorCosine('embeddings', question),
+            Query.limit(1)
+        ]
+    });
+
+    const best = cache.documents[0];
+    const score = cosine(question, best.embeddings);
+
+    if (score >= 0.75) {
+        return best.metadata.answer;
+    }
+
+    return await callTheModel(text);
+}
+
+const reply = await answer('I forgot my password, what do I do?');
+```
+
+The cache contains three questions. Two new questions give these results:
+
+| New question | Closest question in the cache | Score | Result |
+| --- | --- | --- | --- |
+| I forgot my password, what do I do? | How do I reset my password? | 0.827 | Return the stored answer |
+| How many moons does Jupiter have? | How do I add someone to my team? | 0.426 | Call the model |
+
+The first question and the stored question share one word. The score is still high, because the meaning is the same. The second question shares no meaning with the cache, so the score is low.
+
+The score limit controls the result. A high limit gives you fewer matches, but also fewer wrong answers, and a low limit does the opposite. Start at 0.75, then measure the limit against your own questions.
+
+A score limit also protects a feature that uses a model, because a search always returns the closest document, even when that document is wrong. A score and a limit let you answer that you do not know.
+
+# What to do next
+
+These four examples use the same three steps. You turn text into a vector, you store the vector with its metadata, and then you run a search with another vector. The rest of the work is data design: which text you embed, and which values you keep in the metadata.
+
+Read the [VectorsDB documentation](/docs/products/databases/vectorsdb) for the full API reference. The [embeddings page](/docs/products/databases/vectorsdb/embeddings) shows the models, and the [vector search page](/docs/products/databases/vectorsdb/vector-search) shows the index types and the search methods.

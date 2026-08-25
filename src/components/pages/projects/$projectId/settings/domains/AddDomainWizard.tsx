@@ -11,7 +11,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
-import { VerifyDomainContent } from './VerifyDomainContent'
+import {
+  VerifyDomainContent,
+  dnsPendingVerificationError,
+  type DomainVerificationError,
+} from './VerifyDomainContent'
 import {
   useCreateDomain,
   useProject,
@@ -45,9 +49,8 @@ export function AddDomainWizard({
   const [domain, setDomain] = useState(initialDomain ?? '')
   const [error, setError] = useState('')
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
-  const [verificationError, setVerificationError] = useState<string | null>(
-    null,
-  )
+  const [verificationError, setVerificationError] =
+    useState<DomainVerificationError | null>(null)
 
   const fallbackPath = `/projects/${projectId}/settings/domains`
   const isPending = createMutation.isPending || verifyMutation.isPending
@@ -123,7 +126,7 @@ export function AddDomainWizard({
         updated.status === 'created' ||
         updated.status === 'unverified'
       ) {
-        setVerificationError(t('Verification failed. Check DNS and retry.'))
+        setVerificationError(dnsPendingVerificationError(t))
       } else {
         await queryClient.refetchQueries({
           queryKey: ['proxy-rules', 'project', projectId],
@@ -135,7 +138,7 @@ export function AddDomainWizard({
         })
       }
     } catch {
-      setVerificationError(t('Failed to verify domain'))
+      setVerificationError(dnsPendingVerificationError(t))
     }
   }
 

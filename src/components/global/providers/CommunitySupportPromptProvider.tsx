@@ -50,6 +50,10 @@ export function CommunitySupportPromptProvider() {
   const accountCache = isAuthenticated
     ? (account as ConsoleAccountCache | undefined)
     : undefined
+  const accountId =
+    accountCache && typeof accountCache === 'object' && '$id' in accountCache
+      ? accountCache.$id
+      : undefined
   const isImpersonating = isConsoleImpersonationActive(
     account as { impersonatorUserId?: string } | null | undefined,
   )
@@ -63,7 +67,15 @@ export function CommunitySupportPromptProvider() {
   /** Keeps the wizard mounted for the current impression after prefs stamp lastShownAt. */
   const [impressionOpen, setImpressionOpen] = useState(false)
   const recordingShowRef = useRef(false)
+  /** Once the user closes/skips, never reopen this session (prefs races used to). */
+  const dismissedRef = useRef(false)
   const trackedDebugOpenRef = useRef(false)
+
+  useEffect(() => {
+    dismissedRef.current = false
+    recordingShowRef.current = false
+    setImpressionOpen(false)
+  }, [accountId])
 
   useEffect(() => {
     if (previewCommunitySupportWizard) {
@@ -76,15 +88,13 @@ export function CommunitySupportPromptProvider() {
 
   useEffect(() => {
     if (
+      dismissedRef.current ||
       debugOpen ||
       !isAuthenticated ||
       suppressed ||
       isImpersonating ||
       !shouldShow
     ) {
-      if (!shouldShow) {
-        recordingShowRef.current = false
-      }
       return
     }
     if (recordingShowRef.current) return
@@ -136,6 +146,12 @@ export function CommunitySupportPromptProvider() {
     })
   }
 
+  const dismissImpression = () => {
+    dismissedRef.current = true
+    recordingShowRef.current = true
+    setImpressionOpen(false)
+  }
+
   return (
     <CommunitySupportWizard
       onSkip={() => {
@@ -145,7 +161,7 @@ export function CommunitySupportPromptProvider() {
           setDebugOverride('previewCommunitySupportWizard', false)
           return
         }
-        setImpressionOpen(false)
+        dismissImpression()
         skip()
       }}
       onAction={(actionId) => {
@@ -155,7 +171,7 @@ export function CommunitySupportPromptProvider() {
           setDebugOverride('previewCommunitySupportWizard', false)
           return
         }
-        setImpressionOpen(false)
+        dismissImpression()
         takeAction(actionId)
       }}
     />

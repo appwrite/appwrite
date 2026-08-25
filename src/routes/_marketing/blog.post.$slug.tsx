@@ -15,6 +15,7 @@ import {
 import { getBlogPostRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import { NOINDEX_ROBOTS_META, NOINDEX_ROBOTS_HEADER } from '@/lib/seo/indexing'
 import { BLOG_RSS_PATH } from '@/lib/seo/rss'
 import { trackServerPageview } from '@/lib/server-analytics'
 
@@ -41,6 +42,11 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
           headers: {
             'Content-Type': 'text/markdown; charset=utf-8',
             'Cache-Control': 'public, max-age=3600',
+            // Drafts are only reachable with the blogDrafts flag on; keep them
+            // out of search indexes even then.
+            ...(getBlogPost(postSlug)?.draft
+              ? { 'X-Robots-Tag': NOINDEX_ROBOTS_HEADER }
+              : {}),
           },
         })
       },
@@ -93,7 +99,11 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
     }
 
     return {
-      meta: getBlogPostRouteMetaTags(loaderData.post, authors, seoOptions),
+      meta: [
+        ...getBlogPostRouteMetaTags(loaderData.post, authors, seoOptions),
+        // Draft pages only render with the blogDrafts flag on; never index them.
+        ...(loaderData.post.draft ? [NOINDEX_ROBOTS_META] : []),
+      ],
       links: [
         {
           rel: 'alternate',

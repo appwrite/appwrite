@@ -50,6 +50,7 @@ export async function fetchMarketplaceCatalogAppsRaw(organizationId: string) {
 
   const response = await sdk.forConsole.apps.list({
     queries: [
+      Query.contains('labels', 'official'),
       Query.equal('enabled', true),
       Query.orderDesc('$createdAt'),
       Query.limit(MARKETPLACE_APPS_LIMIT),

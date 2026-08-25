@@ -1,9 +1,11 @@
 import { expect, type Page } from '@playwright/test'
+import { acceptCookieBannerIfPresent } from './cookie-banner'
 
 const FATAL_PAGE_COPY = [
   /Something went wrong/i,
   /Unexpected Application Error/i,
   /This page could not be found/i,
+  /Project not found/i,
 ]
 
 /** Headless Chromium often cannot create WebGL; marketing pages still render. */
@@ -56,6 +58,7 @@ export async function expectPageRenders(
     }
 
     await expect(page.locator('body')).toBeVisible({ timeout })
+    await acceptCookieBannerIfPresent(page)
 
     if (options?.url) {
       await expect(page).toHaveURL(options.url, { timeout })

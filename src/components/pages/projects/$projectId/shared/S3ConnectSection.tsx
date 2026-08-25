@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Copy, Key, Plus } from 'lucide-react'
+import { Key, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
-import { cn } from '@/lib/utils'
 import { PostgresCopyableField } from '@/components/pages/projects/$projectId/databases/postgres/_components/PostgresCopyableField'
 import {
   getProjectS3StorageEndpoint,
@@ -129,7 +128,6 @@ export function S3ConnectSection({
   const noCreatePermission = !canCreateKey(access, features)
   const createMutation = useCreateApiKey(projectId)
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
-  const [copied, setCopied] = useState(false)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
@@ -152,22 +150,22 @@ export function S3ConnectSection({
     [s3Endpoint, projectId, s3Region],
   )
 
+  const codeFileTabs = useMemo(
+    () =>
+      codeFiles.map((file, index) => ({
+        id: String(index),
+        label: file.label,
+      })),
+    [codeFiles],
+  )
+
   const initialApiKeyName = t(S3_STORAGE_API_KEY_DEFAULT_NAME)
 
   useEffect(() => {
     setSelectedFileIndex(0)
-    setCopied(false)
   }, [s3Endpoint, projectId, s3Region])
 
   const selectedFile = codeFiles[selectedFileIndex] ?? codeFiles[0]
-
-  const handleCopyCode = () => {
-    if (!selectedFile) return
-    navigator.clipboard.writeText(selectedFile.code)
-    setCopied(true)
-    toast.success(t('Copied to clipboard'))
-    setTimeout(() => setCopied(false), 2000)
-  }
 
   const handleCopyKey = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -257,54 +255,15 @@ export function S3ConnectSection({
           </div>
         </div>
 
-        <div className="min-w-0 min-h-0 flex flex-col gap-2 flex-1">
-          <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
-            {codeFiles.length > 1 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {codeFiles.map((file, i) => (
-                  <button
-                    key={file.label}
-                    type="button"
-                    onClick={() => {
-                      setSelectedFileIndex(i)
-                      setCopied(false)
-                    }}
-                    className={cn(
-                      'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                      i === selectedFileIndex
-                        ? 'bg-muted text-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
-                    )}
-                  >
-                    {file.label}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                {selectedFile?.label}
-              </span>
-            )}
-            {selectedFile ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
-                onClick={handleCopyCode}
-              >
-                {copied ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                {t('Copy')}
-              </Button>
-            ) : null}
-          </div>
+        <div className="min-w-0 min-h-0 flex flex-col flex-1">
           {selectedFile ? (
-            <ConnectCodePanel
+            <ConnectCodeExample
               code={selectedFile.code}
               language={selectedFile.language ?? 'plaintext'}
+              tabs={codeFileTabs}
+              activeTabId={String(selectedFileIndex)}
+              onTabChange={(id) => setSelectedFileIndex(Number(id))}
+              selectorAriaLabel={t('Select file')}
               fixedHeight="100%"
               className="flex-1 min-h-0"
             />

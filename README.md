@@ -119,31 +119,31 @@ Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a fi
 
 **Namespaces:** `import:` pulls content from the sibling [`website`](https://github.com/appwrite/website) repo (`../website`); `generate:` writes derived artifacts. Vibes-native content in `src/content/docs-local/` and `src/content/blog-local/` is never overwritten by imports.
 
-| Command | Description |
-| ------- | ----------- |
-| `build` / `build:node` | Production build (CI vs Docker / Sites) |
-| `check` | TypeScript check |
-| `clean` | Remove build artifacts |
-| `dev` | Dev server on port 3000 |
-| `e2e` / `e2e:ui` / `test` / `test:ui` | Playwright e2e smoke tests |
-| `format` / `format:check` | Prettier |
-| `install-browsers` | Install Chromium for Playwright |
-| `lint` | ESLint |
-| `serve` | Preview production build |
-| `start` | Production Bun server |
-| `import:blog` | Import blog from website |
-| `import:docs` | Import docs from website, then `generate:docs` |
-| `import:integrations` | Import integrations catalog |
-| `generate:blog-local-images` | Blog-local cover images (optional slug) |
-| `generate:content-images` | Convert content images to AVIF |
-| `generate:docs` | Docs manifest, nav, LLM exports, sitemap |
-| `generate:docs-exports` | Curated `llms.txt` hub, `docs/llms.txt`, section indexes (`docs.md`, `blog.md`, …), `/.well-known` discovery, and `llms-full.txt` |
-| `generate:docs-nav` | Docs section navigation only |
-| `generate:github-stars` | GitHub star count JSON |
-| `generate:public-icon-manifest` | Public icon picker manifest |
-| `generate:routes` | TanStack Router types |
-| `generate:sitemap` | Sitemap files |
-| `generate:specs` | API reference versions; `--copy` after build for `dist/specs/` |
+| Command                               | Description                                                                                                                       |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `build` / `build:node`                | Production build (CI vs Docker / Sites)                                                                                           |
+| `check`                               | TypeScript check                                                                                                                  |
+| `clean`                               | Remove build artifacts                                                                                                            |
+| `dev`                                 | Dev server on port 3000                                                                                                           |
+| `e2e` / `e2e:ui` / `test` / `test:ui` | Playwright e2e smoke tests                                                                                                        |
+| `format` / `format:check`             | Prettier                                                                                                                          |
+| `install-browsers`                    | Install Chromium for Playwright                                                                                                   |
+| `lint`                                | ESLint                                                                                                                            |
+| `serve`                               | Preview production build                                                                                                          |
+| `start`                               | Production Bun server                                                                                                             |
+| `import:blog`                         | Import blog from website                                                                                                          |
+| `import:docs`                         | Import docs from website, then `generate:docs`                                                                                    |
+| `import:integrations`                 | Import integrations catalog                                                                                                       |
+| `generate:blog-local-images`          | Blog-local cover images (optional slug)                                                                                           |
+| `generate:content-images`             | Convert content images to AVIF                                                                                                    |
+| `generate:docs`                       | Docs manifest, nav, LLM exports, sitemap                                                                                          |
+| `generate:docs-exports`               | Curated `llms.txt` hub, `docs/llms.txt`, section indexes (`docs.md`, `blog.md`, …), `/.well-known` discovery, and `llms-full.txt` |
+| `generate:docs-nav`                   | Docs section navigation only                                                                                                      |
+| `generate:github-stars`               | GitHub star count JSON                                                                                                            |
+| `generate:public-icon-manifest`       | Public icon picker manifest                                                                                                       |
+| `generate:routes`                     | TanStack Router types                                                                                                             |
+| `generate:sitemap`                    | Sitemap files                                                                                                                     |
+| `generate:specs`                      | API reference versions; `--copy` after build for `dist/specs/`                                                                    |
 
 ## Project Structure
 
@@ -209,6 +209,31 @@ Use the performance monitor when:
 
 The monitor tracks intervals, React Query queries, frame rate, and memory usage without impacting performance when not actively monitoring.
 
+## Appwrite CLI terminal
+
+The console's in-browser terminal runs the real Appwrite CLI, compiled to
+WebAssembly (`GOOS=js GOARCH=wasm go build -tags browser`). It arrives through
+the `appwrite-cli-wasm` dependency — nothing to fetch by hand — and the build
+emits both halves of it as fingerprinted assets.
+
+Two files, always from the same build: `appwrite.wasm`, and Go's `wasm_exec.js`
+runtime glue, which only works with a module produced by the toolchain that
+generated it. `src/lib/cli-shell/wasm/asset-urls.ts` resolves both from the
+package for that reason.
+
+To upgrade the CLI, bump the dependency and the display version beside it:
+
+```sh
+bun add appwrite-cli-wasm@<version>
+# then update CLI_WASM_VERSION in src/lib/cli-shell/wasm/constants.ts
+```
+
+To try a local build instead, point `VITE_APPWRITE_CLI_WASM_URL` and
+`VITE_APPWRITE_CLI_WASM_EXEC_URL` at it — both, or the pair will not match.
+
+`bun test tests/unit/cli-wasm-runtime.test.ts` exercises the runtime against the
+real artifact and skips the wasm cases when it is absent.
+
 ## Testing
 
 This project uses [Playwright](https://playwright.dev/) for end-to-end smoke tests
@@ -258,14 +283,15 @@ bun run format:check
 
 ## Environment Variables
 
-| Variable                          | Required | Default                        | Description                                                      |
-| --------------------------------- | -------- | ------------------------------ | ---------------------------------------------------------------- |
-| `VITE_APPWRITE_ENDPOINT`          | Yes      | `https://cloud.appwrite.io/v1` | Appwrite API endpoint                                            |
-| `VITE_CONSOLE_PROFILE`            | No       | `cloud`                        | `cloud` or `self-hosted` – controls which features are available |
-| `VITE_STRIPE_PUBLISHABLE_KEY`     | No       | -                              | Stripe publishable key for billing                               |
-| `VITE_COMPANY_NAME`               | No       | `Appwrite`                     | Company name for branding                                        |
-| `VITE_CONTACT_SALES_URL`          | No       | -                              | Contact sales page URL                                           |
-| `VITE_LEGAL_EMAIL`                | No       | `legal@appwrite.io`            | Legal contact email                                              |
+| Variable                      | Required | Default                        | Description                                                      |
+| ----------------------------- | -------- | ------------------------------ | ---------------------------------------------------------------- |
+| `VITE_APPWRITE_ENDPOINT`      | Yes      | `https://cloud.appwrite.io/v1` | Appwrite API endpoint                                            |
+| `VITE_CONSOLE_PROFILE`        | No       | `cloud`                        | `cloud` or `self-hosted` – controls which features are available |
+| `VITE_CONSOLE_WEBSITE_ACCESS` | No       | on (unset)                     | Demo password gate (`/access`). Set `false` to disable           |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | No       | -                              | Stripe publishable key for billing                               |
+| `VITE_COMPANY_NAME`           | No       | `Appwrite`                     | Company name for branding                                        |
+| `VITE_CONTACT_SALES_URL`      | No       | -                              | Contact sales page URL                                           |
+| `VITE_LEGAL_EMAIL`            | No       | `legal@appwrite.io`            | Legal contact email                                              |
 
 ## License
 

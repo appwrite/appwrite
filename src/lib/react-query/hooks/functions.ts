@@ -14,8 +14,10 @@ import {
 import { useMemo } from 'react'
 import { Query, Runtime, FunctionTemplateUseCase, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { SpecificationType } from '@/lib/specifications'
+import { getVariableValueError, validateVariables } from '@/lib/variables'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -62,15 +64,13 @@ export async function fetchProjectFunctions(
     sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
+    ...buildAttributePrefixSearchQueries(['name', '$id'], search),
     orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.functions.list({
-    queries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.functions.list({ queries })
 
   return {
     functions: response.functions || [],
@@ -1224,13 +1224,9 @@ export function useCreateFunctionVariable(
       if (!projectId || !functionId) {
         throw new Error('Project ID and Function ID are required')
       }
-      if (!key.trim()) {
-        throw new Error('Variable key is required')
-      }
-      if (value.length > 8192) {
-        throw new Error(
-          `Variable ${key} is longer than 8192 allowed characters`,
-        )
+      const validationError = validateVariables([{ key: key.trim(), value }])
+      if (validationError) {
+        throw new Error(validationError)
       }
 
       const projectSdk = sdk.forProject(projectId)
@@ -1245,6 +1241,13 @@ export function useCreateFunctionVariable(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['variables', 'function', projectId, functionId],
+      })
+      // Env var changes set function.live=false; refresh parent so the redeploy alert shows
+      await queryClient.refetchQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['functions', 'project', projectId],
       })
     },
   })
@@ -1277,10 +1280,12 @@ export function useUpdateFunctionVariable(
       if (!key.trim()) {
         throw new Error('Variable key is required')
       }
-      if (value.length > 8192) {
-        throw new Error(
-          `Variable ${key} is longer than 8192 allowed characters`,
-        )
+      // The key is the stored one rather than something just typed, so its
+      // format is deliberately not checked: a variable created before the
+      // identifier rule has to stay editable.
+      const valueError = getVariableValueError(key, value)
+      if (valueError) {
+        throw new Error(valueError)
       }
 
       const projectSdk = sdk.forProject(projectId)
@@ -1295,6 +1300,12 @@ export function useUpdateFunctionVariable(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['variables', 'function', projectId, functionId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['functions', 'project', projectId],
       })
     },
   })
@@ -1324,6 +1335,12 @@ export function useDeleteFunctionVariable(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['variables', 'function', projectId, functionId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['functions', 'project', projectId],
       })
     },
   })

@@ -10,6 +10,9 @@ import {
   RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
 } from '@/lib/layout/horizontal-resize'
 import {
+  SPREADSHEET_FILLER_CELL_CLASS,
+  SPREADSHEET_FILLER_HEADER_CLASS,
+  SPREADSHEET_SCROLL_LAYER_CLASS,
   SPREADSHEET_STICKY_BODY_Z,
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
@@ -31,7 +34,8 @@ import {
   type MappedTableColumnListItem,
 } from '@/lib/utils/database-columns'
 import { NumericValueTooltip } from '@/components/global/shared/NumericValueTooltip'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { getErrorMessage, formatError } from '@/lib/utils/error-formatting'
+import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 import { copyToClipboard, openInNewWindow } from '@/lib/utils/context-menu'
 import {
   closeDialogBeforeOverlayUnmount,
@@ -64,6 +68,7 @@ import {
   Columns3,
   Eye,
   EyeOff,
+  AlertCircle,
 } from 'lucide-react'
 import {
   type Collection,
@@ -75,6 +80,7 @@ import {
   useRef,
   useCallback,
   useMemo,
+  type CSSProperties,
   type MouseEvent,
   type ReactNode,
 } from 'react'
@@ -331,15 +337,25 @@ const stickyTheadClass = 'sticky top-0 z-20 bg-background'
 const headerCellBorderClass =
   'border-e border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
 const bodyCellBorderClass = 'border-b border-e border-border'
-const lastCellBorderClass = 'border-b border-border'
 
 /** Checkbox + row-actions column width; documents list uses `table-fixed` so edges stay this size. */
 const ROWS_TABLE_EDGE_COL_PX = 40
-const spreadsheetActionsColStyle = {
-  width: ROWS_TABLE_EDGE_COL_PX,
-  minWidth: ROWS_TABLE_EDGE_COL_PX,
-  maxWidth: ROWS_TABLE_EDGE_COL_PX,
+const COLUMNS_GRID_MIN_WIDTH_PX =
+  200 + 120 + 120 + 80 + 108 + 80 + 80 + 80 + 80 + 120 + ROWS_TABLE_EDGE_COL_PX
+const ROWS_SEQUENCE_COL_PX = 72
+const ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX = 150
+const ROWS_ID_COLUMN_DEFAULT_WIDTH_PX = 200
+const ROWS_SYSTEM_DATE_COLUMN_DEFAULT_WIDTH_PX = 180
+const ROWS_DATA_COLUMN_MIN_WIDTH_PX = 72
+const ROWS_DATA_COLUMN_MAX_WIDTH_PX = 640
+const ROW_GRID_DEFAULT_DATE_KEYS = ['$createdAt', '$updatedAt'] as const
+
+function lockedColumnSizeStyle(widthPx: number): CSSProperties {
+  return { width: widthPx, minWidth: widthPx, maxWidth: widthPx }
 }
+
+const spreadsheetActionsColStyle = lockedColumnSizeStyle(ROWS_TABLE_EDGE_COL_PX)
+const spreadsheetSequenceColStyle = lockedColumnSizeStyle(ROWS_SEQUENCE_COL_PX)
 const stickyActionsHeaderClass = cn(
   'relative sticky end-0 z-30 bg-background p-0',
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
@@ -348,12 +364,58 @@ const stickyActionsCellBaseClass = cn(
   'sticky end-0 z-10 border-b border-border p-0',
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
 )
-/** Default width for user-defined row columns (system columns use fixed layout). */
-const ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX = 150
-const ROWS_DATA_COLUMN_MIN_WIDTH_PX = 72
-const ROWS_DATA_COLUMN_MAX_WIDTH_PX = 640
-/** System date columns default after all attribute columns in the rows grid. */
-const ROW_GRID_DEFAULT_DATE_KEYS = ['$createdAt', '$updatedAt'] as const
+
+function applyLockedColumnSize(
+  element: HTMLElement | null | undefined,
+  widthPx: number,
+  minWidthPx: number = widthPx,
+): void {
+  if (!element) return
+  element.style.width = `${widthPx}px`
+  element.style.minWidth = `${minWidthPx}px`
+  element.style.maxWidth = `${widthPx}px`
+}
+
+function clampRowGridColumnWidthPx(widthPx: number): number {
+  return Math.min(
+    ROWS_DATA_COLUMN_MAX_WIDTH_PX,
+    Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, widthPx),
+  )
+}
+
+/** Sequence is a fixed index column; every other visible rows-grid column can resize. */
+function isResizableRowGridColumn(key: string): boolean {
+  return key.length > 0 && key !== '$sequence'
+}
+
+function defaultRowGridColumnWidthPx(key: string): number {
+  if (key === '$id') return ROWS_ID_COLUMN_DEFAULT_WIDTH_PX
+  if (key === '$createdAt' || key === '$updatedAt') {
+    return ROWS_SYSTEM_DATE_COLUMN_DEFAULT_WIDTH_PX
+  }
+  return ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX
+}
+
+function getRowGridDataColumnLayoutStyle(
+  widthPx: number,
+  isDragResize: boolean,
+): CSSProperties | undefined {
+  if (isDragResize) return undefined
+  return lockedColumnSizeStyle(widthPx)
+}
+
+function computeRowsTableMinWidthPx(
+  gridKeys: readonly string[],
+  getColumnWidthPx: (key: string) => number,
+): number {
+  let total = ROWS_TABLE_EDGE_COL_PX * 2
+  for (const key of gridKeys) {
+    if (!key) continue
+    total +=
+      key === '$sequence' ? ROWS_SEQUENCE_COL_PX : getColumnWidthPx(key)
+  }
+  return total
+}
 /**
  * Same affordance as database `TableViewResizableLayout` / functions editor
  * `ResizableHandle`: hairline (`after`) + wider `before` strip on hover/drag.
@@ -561,6 +623,49 @@ function normalizeValueForColumn(
     return parseCommaSeparatedToArray(value, col.type)
   }
   return value as unknown[]
+}
+
+function findColumnForAttrKey(
+  columns: unknown[],
+  key: string,
+): unknown | undefined {
+  return columns.find((c) => {
+    const col = c as Record<string, unknown>
+    return (
+      col.key === key ||
+      col.name === key ||
+      col.$id === key ||
+      col.attribute === key
+    )
+  })
+}
+
+/** Map a full API row document into spreadsheet `RowData` (all non-$ attributes). */
+function mapApiRowToRowData(
+  apiRow: Record<string, unknown>,
+  columns: unknown[],
+  options?: { rowNumber?: number; fallbackId?: string },
+): RowData {
+  const data: Record<
+    string,
+    string | number | bigint | boolean | unknown[] | null
+  > = {}
+  Object.keys(apiRow).forEach((key) => {
+    if (key.startsWith('$')) return
+    data[key] = normalizeValueForColumn(
+      apiRow[key],
+      findColumnForAttrKey(columns, key),
+    ) as string | number | boolean | unknown[] | null
+  })
+  return {
+    $id: (apiRow.$id as string) ?? options?.fallbackId ?? '',
+    $sequence: apiRow.$sequence as number | undefined,
+    rowNumber: options?.rowNumber ?? 0,
+    data,
+    $createdAt: apiRow.$createdAt as string | undefined,
+    $updatedAt: apiRow.$updatedAt as string | undefined,
+    $permissions: (apiRow.$permissions as string[]) || [],
+  }
 }
 
 function getTableColumnKey(col: unknown): string | null {
@@ -2936,9 +3041,11 @@ export function RowsSpreadsheet({
     [displayedSearch, displayedFilterQueryString],
   )
   const hasInitedDisplayedRef = useRef(false)
-  const [displayedSortBy, setDisplayedSortBy] = useState<string>('$createdAt')
+  const [displayedSortBy, setDisplayedSortBy] = useState<string>(
+    urlDriven ? rowsSortBy : '$createdAt',
+  )
   const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
-    'desc',
+    urlDriven ? rowsSortOrder : 'desc',
   )
   const [pageSize, setPageSize] = useState(
     urlDriven ? rowsUrlLimit : ROWS_DEFAULT_PAGE_SIZE,
@@ -3152,28 +3259,37 @@ export function RowsSpreadsheet({
   useEffect(() => {
     setSelectedRows(new Set())
     setDeleteDialogOpen(false)
+    // Reset requested + displayed list state together so table switches do not
+    // keep the previous table's page/search/filters and fire a second listRows.
+    // Depend only on table identity (not page/search) so in-table pagination
+    // can still keep the previous page visible until the next page loads.
     if (!urlDriven) {
       setRequestedPage(1)
       setDisplayedPage(1)
+      setDisplayedSearch('')
+      setDisplayedFilterQueryString('')
       setDisplayedSortBy('$createdAt')
       setDisplayedSortOrder('desc')
       setSortBy('$createdAt')
       setSortOrder('desc')
+      setPageSize(ROWS_DEFAULT_PAGE_SIZE)
     } else {
+      const nextPage = rowsUrlPage ?? 1
+      const nextSearch = rowsUrlSearch ?? ''
+      const nextFilters = rowsFilterQueryString ?? ''
+      setRequestedPage(nextPage)
+      setDisplayedPage(nextPage)
+      setDisplayedSearch(nextSearch)
+      setDisplayedFilterQueryString(nextFilters)
       setDisplayedSortBy(rowsSortBy)
       setDisplayedSortOrder(rowsSortOrder)
       setSortBy(rowsSortBy)
       setSortOrder(rowsSortOrder)
+      if (rowsUrlLimit != null) setPageSize(rowsUrlLimit)
+      hasInitedDisplayedRef.current = true
     }
-  }, [
-    location.pathname,
-    projectId,
-    databaseId,
-    tableId,
-    urlDriven,
-    rowsSortBy,
-    rowsSortOrder,
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only on table/route identity change
+  }, [location.pathname, projectId, databaseId, tableId, urlDriven])
 
   const effectiveSearch = urlDriven ? (rowsUrlSearch ?? '') : ''
   const effectivePageSize = urlDriven ? rowsUrlLimit : pageSize
@@ -3190,6 +3306,8 @@ export function RowsSpreadsheet({
     isLoading: rowsLoading,
     refetch,
     isFetching: rowsFetching,
+    error: rowsError,
+    isPlaceholderData: rowsIsPlaceholderData,
   } = useProjectTableRows(
     projectId,
     databaseId,
@@ -3208,6 +3326,10 @@ export function RowsSpreadsheet({
     rows: apiRows,
     total: displayedRowsTotal,
     isLoading: displayedRowsLoading,
+    isFetching: displayedRowsFetching,
+    error: displayedRowsError,
+    isPlaceholderData: displayedRowsIsPlaceholderData,
+    refetch: refetchDisplayedRows,
   } = useProjectTableRows(
     projectId,
     databaseId,
@@ -3221,6 +3343,45 @@ export function RowsSpreadsheet({
     effectiveDisplayedFilterQueries,
     rowsListSelectAttrKeys,
   )
+
+  const rowsLoadError = displayedRowsError ?? rowsError
+  const rowsLoadFormatted = rowsLoadError
+    ? formatError(rowsLoadError, dbLabels.failedToLoadRecordsTitle)
+    : null
+  // keepPreviousData can leave prior-table rows in `apiRows` after a failed
+  // fetch (e.g. HTTP 408 database_timeout). Still show the error UI whenever
+  // the active query failed and we are not mid-load.
+  const showRowsLoadError =
+    !!rowsLoadError &&
+    !displayedRowsLoading &&
+    (apiRows.length === 0 ||
+      displayedRowsIsPlaceholderData ||
+      rowsIsPlaceholderData)
+
+  useEffect(() => {
+    if (!showRowsLoadError || !rowsLoadError) return
+    const err = rowsLoadError as {
+      code?: number
+      status?: number
+      type?: string
+    }
+    const status = Number(err.code ?? err.status)
+    captureExceptionWithContext(rowsLoadError, {
+      source: 'tablesdb-spreadsheet-rows-load',
+      projectId,
+      databaseId,
+      tableId,
+      httpStatus: Number.isFinite(status) ? status : undefined,
+      errorType: typeof err.type === 'string' ? err.type : undefined,
+    })
+  }, [showRowsLoadError, rowsLoadError, projectId, databaseId, tableId])
+
+  const handleRetryRowsLoad = () => {
+    void refetch()
+    if (refetchDisplayedRows !== refetch) {
+      void refetchDisplayedRows()
+    }
+  }
 
   useEffect(() => {
     if (!urlDriven || rowsFetching || rowsLoading) return
@@ -3498,9 +3659,8 @@ export function RowsSpreadsheet({
 
   const columns = useMemo((): string[] => {
     if (useInlineDocumentPane) return []
-    const schemaSet = new Set(schemaColumnKeys)
-    return visibleRowGridKeys.filter((k) => schemaSet.has(k))
-  }, [useInlineDocumentPane, visibleRowGridKeys, schemaColumnKeys])
+    return visibleRowGridKeys.filter((k) => isResizableRowGridColumn(k))
+  }, [useInlineDocumentPane, visibleRowGridKeys])
 
   const rowGridLayoutKey = useMemo(
     () => visibleRowGridKeys.join('\u0001'),
@@ -3532,50 +3692,45 @@ export function RowsSpreadsheet({
     (colKey: string) => {
       const w = rowColumnWidths[colKey]
       if (typeof w === 'number' && Number.isFinite(w)) {
-        return Math.min(
-          ROWS_DATA_COLUMN_MAX_WIDTH_PX,
-          Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, w),
-        )
+        return clampRowGridColumnWidthPx(w)
       }
-      return ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX
+      return defaultRowGridColumnWidthPx(colKey)
     },
     [rowColumnWidths],
+  )
+
+  const tableMinWidthPx = useMemo(
+    () => computeRowsTableMinWidthPx(visibleRowGridKeys, getDataColumnWidthPx),
+    [visibleRowGridKeys, getDataColumnWidthPx],
   )
 
   const repositionDataColumnRailsOnly = useCallback(() => {
     const layer = rowsTableLayerRef.current
     if (!layer) return
-    const cols = (columnsRef.current as string[]).filter(
-      (c) => typeof c === 'string' && c.length > 0 && !c.startsWith('$'),
-    )
-    for (const col of cols) {
+    const layerWidthPx = layer.getBoundingClientRect().width
+    for (const col of columnsRef.current) {
       const th = dataColumnHeaderThRefs.current.get(col)
       const rail = dataColumnRailRefs.current.get(col)
       if (!th || !rail) continue
-      applyColumnResizeRailPosition(rail, layer, th)
+      applyColumnResizeRailPosition(rail, layer, th, {
+        maxInsetInlineStartPx: layerWidthPx,
+      })
     }
   }, [])
 
   const applyDraggedDataColumnWidthPx = useCallback(
     (columnKey: string, widthPx: number) => {
-      const next = Math.min(
-        ROWS_DATA_COLUMN_MAX_WIDTH_PX,
-        Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, Math.round(widthPx)),
-      )
+      const next = clampRowGridColumnWidthPx(Math.round(widthPx))
       rowColumnWidthsRef.current = {
         ...rowColumnWidthsRef.current,
         [columnKey]: next,
       }
-      const colEl = dataColumnColRefs.current.get(columnKey)
-      if (colEl) {
-        colEl.style.width = `${next}px`
-        colEl.style.minWidth = `${next}px`
-      }
-      const thEl = dataColumnHeaderThRefs.current.get(columnKey)
-      if (thEl) {
-        thEl.style.width = `${next}px`
-        thEl.style.minWidth = `${ROWS_DATA_COLUMN_MIN_WIDTH_PX}px`
-      }
+      applyLockedColumnSize(dataColumnColRefs.current.get(columnKey), next)
+      applyLockedColumnSize(
+        dataColumnHeaderThRefs.current.get(columnKey),
+        next,
+        ROWS_DATA_COLUMN_MIN_WIDTH_PX,
+      )
       repositionDataColumnRailsOnly()
     },
     [repositionDataColumnRailsOnly],
@@ -3592,13 +3747,10 @@ export function RowsSpreadsheet({
     )
     const next: Record<string, number> = {}
     for (const [k, v] of Object.entries(raw)) {
-      if (!k || k.startsWith('$')) continue
+      if (!isResizableRowGridColumn(k)) continue
       const n = typeof v === 'number' ? v : Number(v)
       if (!Number.isFinite(n)) continue
-      next[k] = Math.min(
-        ROWS_DATA_COLUMN_MAX_WIDTH_PX,
-        Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, n),
-      )
+      next[k] = clampRowGridColumnWidthPx(n)
     }
     return next
   }, [databaseId, tableId, account])
@@ -3613,17 +3765,12 @@ export function RowsSpreadsheet({
       allowedKeys: readonly string[],
     ) => {
       if (!databaseId) return
-      const allowed = new Set(
-        allowedKeys.filter((k) => k && typeof k === 'string' && !k.startsWith('$')),
-      )
+      const allowed = new Set(allowedKeys.filter(isResizableRowGridColumn))
       const pruned: Record<string, number> = {}
       for (const k of allowed) {
         const w = widths[k]
         if (typeof w === 'number' && Number.isFinite(w)) {
-          pruned[k] = Math.min(
-            ROWS_DATA_COLUMN_MAX_WIDTH_PX,
-            Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, w),
-          )
+          pruned[k] = clampRowGridColumnWidthPx(w)
         }
       }
       try {
@@ -3647,7 +3794,7 @@ export function RowsSpreadsheet({
 
   const handleDataColumnResizePointerDown = useCallback(
     (columnKey: string) => (e: React.PointerEvent<HTMLButtonElement>) => {
-      if (!columnKey || columnKey.startsWith('$')) return
+      if (!columnKey || !isResizableRowGridColumn(columnKey)) return
       e.preventDefault()
       e.stopPropagation()
       setBodyResizeDragActive(true)
@@ -3681,7 +3828,7 @@ export function RowsSpreadsheet({
         })
         void persistRowColumnWidths(
           rowColumnWidthsRef.current,
-          columnsRef.current as string[],
+          columnsRef.current,
         )
       }
       window.addEventListener('pointermove', onMove)
@@ -3695,21 +3842,12 @@ export function RowsSpreadsheet({
     ],
   )
 
-  const columnResizeLayoutKey = (columns as string[])
-    .map((c) => String(c))
-    .join('\u0001')
+  const columnResizeLayoutKey = columns.join('\u0001')
 
   useLayoutEffect(() => {
     const scroll = rowsTableScrollRef.current
     const layer = rowsTableLayerRef.current
-    if (!scroll || !layer) {
-      return
-    }
-
-    const resizableCols = (columns as string[]).filter(
-      (c) => typeof c === 'string' && c.length > 0 && !c.startsWith('$'),
-    )
-    if (resizableCols.length === 0) {
+    if (!scroll || !layer || columns.length === 0) {
       return
     }
 
@@ -3875,19 +4013,53 @@ export function RowsSpreadsheet({
     }
   }
 
-  const openRowInDrawer = (
-    row: RowData,
-    options?: {
-      focusedField?: string | null
-      initialTab?: 'data' | 'permissions' | null
+  // List rows may be projected via Query.select (visible spreadsheet columns only).
+  // Always load the full row before opening the update drawer so hidden attrs are present.
+  const openRowInDrawerRequestRef = useRef(0)
+  const openRowInDrawer = useCallback(
+    (
+      row: RowData,
+      options?: {
+        focusedField?: string | null
+        initialTab?: 'data' | 'permissions' | null
+      },
+    ) => {
+      rowSelectionAnchorRef.current = row.$id
+      setFocusedField(options?.focusedField ?? null)
+      setDrawerInitialTab(options?.initialTab ?? 'data')
+
+      const applyRow = (fullRow: RowData) => {
+        setSelectedRowForEdit(fullRow)
+        setEditDrawerOpen(true)
+      }
+
+      if (!projectId || !databaseId || !tableId) {
+        applyRow(row)
+        return
+      }
+
+      const requestId = ++openRowInDrawerRequestRef.current
+      fetchProjectTableRow(projectId, databaseId, DB_KIND, tableId, row.$id)
+        .then((apiRow: unknown) => {
+          if (requestId !== openRowInDrawerRequestRef.current) return
+          if (!apiRow || typeof apiRow !== 'object') {
+            applyRow(row)
+            return
+          }
+          applyRow(
+            mapApiRowToRowData(apiRow as Record<string, unknown>, apiColumns, {
+              rowNumber: row.rowNumber,
+              fallbackId: row.$id,
+            }),
+          )
+        })
+        .catch(() => {
+          if (requestId !== openRowInDrawerRequestRef.current) return
+          applyRow(row)
+        })
     },
-  ) => {
-    rowSelectionAnchorRef.current = row.$id
-    setSelectedRowForEdit(row)
-    setFocusedField(options?.focusedField ?? null)
-    setDrawerInitialTab(options?.initialTab ?? 'data')
-    setEditDrawerOpen(true)
-  }
+    [projectId, databaseId, tableId, apiColumns],
+  )
 
   const handleRowMultiSelectPointer = (rowId: string, event: MouseEvent) => {
     if (!isRowMultiSelectModifierClick(event)) return false
@@ -4008,56 +4180,41 @@ export function RowsSpreadsheet({
       const rowId = match[1]
       const openToPermissions = !!match[2]
 
+      // Always fetch the full row. List rows may omit hidden spreadsheet columns
+      // via Query.select, so reusing `fromCurrentPage` would open an incomplete form.
       const fromCurrentPage = currentRows.find((r) => r.$id === rowId)
-      if (fromCurrentPage) {
-        setSelectedRowForEdit(fromCurrentPage)
-        setFocusedField(null)
-        setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
-        setEditDrawerOpen(true)
-        return
-      }
-
-      fetchProjectTableRow(projectId, databaseId, DB_KIND, tableId, rowId).then(
-        (apiRow: unknown) => {
-          if (!apiRow || typeof apiRow !== 'object') return
-          const rowObj = apiRow as Record<string, unknown>
-          const data: Record<
-            string,
-            string | number | bigint | boolean | unknown[] | null
-          > = {}
-          Object.keys(rowObj).forEach((key) => {
-            if (!key.startsWith('$')) {
-              const value = rowObj[key]
-              const col = columnsForNormalize.find(
-                (c: Record<string, unknown>) =>
-                  c.key === key ||
-                  c.name === key ||
-                  c.$id === key ||
-                  c.attribute === key,
-              )
-              data[key] = normalizeValueForColumn(value, col) as
-                | string
-                | number
-                | boolean
-                | unknown[]
-                | null
+      fetchProjectTableRow(projectId, databaseId, DB_KIND, tableId, rowId)
+        .then((apiRow: unknown) => {
+          if (!apiRow || typeof apiRow !== 'object') {
+            if (fromCurrentPage) {
+              setSelectedRowForEdit(fromCurrentPage)
+              setFocusedField(null)
+              setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
+              setEditDrawerOpen(true)
             }
-          })
-          const rowData: RowData = {
-            $id: (rowObj.$id as string) ?? rowId,
-            $sequence: rowObj.$sequence as number | undefined,
-            rowNumber: 0,
-            data,
-            $createdAt: rowObj.$createdAt as string | undefined,
-            $updatedAt: rowObj.$updatedAt as string | undefined,
-            $permissions: (rowObj.$permissions as string[]) || [],
+            return
           }
-          setSelectedRowForEdit(rowData)
+          setSelectedRowForEdit(
+            mapApiRowToRowData(
+              apiRow as Record<string, unknown>,
+              columnsForNormalize,
+              {
+                rowNumber: fromCurrentPage?.rowNumber ?? 0,
+                fallbackId: rowId,
+              },
+            ),
+          )
           setFocusedField(null)
           setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
           setEditDrawerOpen(true)
-        },
-      )
+        })
+        .catch(() => {
+          if (!fromCurrentPage) return
+          setSelectedRowForEdit(fromCurrentPage)
+          setFocusedField(null)
+          setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
+          setEditDrawerOpen(true)
+        })
     },
     [projectId, databaseId, tableId],
   )
@@ -4408,6 +4565,30 @@ export function RowsSpreadsheet({
   // This component fills available space and handles its own scrolling
   // Only show loading if we don't have data yet (data is prefetched in route loader)
   // This prevents showing loading when switching tables since data is already cached
+  if (showRowsLoadError && rowsLoadFormatted) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center px-6 py-12">
+        <AlertCircle className="h-9 w-9 text-destructive" />
+        <h3 className="mt-4 text-[15px] font-semibold text-foreground">
+          {rowsLoadFormatted.title}
+        </h3>
+        <p className="mt-2 max-w-md text-center text-[13px] text-muted-foreground">
+          {rowsLoadFormatted.message}
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-6"
+          onClick={handleRetryRowsLoad}
+          disabled={rowsFetching || displayedRowsFetching}
+        >
+          {t('Try again')}
+        </Button>
+      </div>
+    )
+  }
+
   if (showRowsLoading || (columnsLoading && apiColumns.length === 0)) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -4842,50 +5023,16 @@ export function RowsSpreadsheet({
           ) : (
           <div
             ref={rowsTableLayerRef}
-            className="relative inline-block min-w-full align-top"
+            className={SPREADSHEET_SCROLL_LAYER_CLASS}
+            style={{ minWidth: tableMinWidthPx }}
           >
-          <table
-            className={cn(
-              'w-full border-collapse',
-              (useInlineDocumentPane || visibleRowGridKeys.length > 0) &&
-                'table-fixed',
-            )}
-          >
+          <table className="relative z-0 w-full table-fixed border-collapse">
           <colgroup>
-            <col
-              style={
-                useInlineDocumentPane
-                  ? {
-                      width: ROWS_TABLE_EDGE_COL_PX,
-                      minWidth: ROWS_TABLE_EDGE_COL_PX,
-                      maxWidth: ROWS_TABLE_EDGE_COL_PX,
-                    }
-                  : { width: '40px' }
-              }
-            />
+            <col style={spreadsheetActionsColStyle} />
             {visibleRowGridKeys.map((gridKey) => {
               if (gridKey === '$sequence') {
                 return (
-                  <col
-                    key="col-$sequence"
-                    style={{ width: '72px', minWidth: '72px' }}
-                  />
-                )
-              }
-              if (
-                gridKey === '$id' ||
-                gridKey === '$createdAt' ||
-                gridKey === '$updatedAt'
-              ) {
-                return (
-                  <col
-                    key={`col-${gridKey}`}
-                    style={
-                      useInlineDocumentPane
-                        ? { minWidth: 180 }
-                        : { width: '180px' }
-                    }
-                  />
+                  <col key="col-$sequence" style={spreadsheetSequenceColStyle} />
                 )
               }
               const w = getDataColumnWidthPx(gridKey)
@@ -4897,21 +5044,12 @@ export function RowsSpreadsheet({
                     if (node) dataColumnColRefs.current.set(gridKey, node)
                     else dataColumnColRefs.current.delete(gridKey)
                   }}
-                  style={isDragResize ? undefined : { width: w, minWidth: w }}
+                  style={getRowGridDataColumnLayoutStyle(w, isDragResize)}
                 />
               )
             })}
-            <col
-              style={
-                useInlineDocumentPane
-                  ? {
-                      width: ROWS_TABLE_EDGE_COL_PX,
-                      minWidth: ROWS_TABLE_EDGE_COL_PX,
-                      maxWidth: ROWS_TABLE_EDGE_COL_PX,
-                    }
-                  : { width: '40px', minWidth: '40px', maxWidth: '40px' }
-              }
-            />
+            <col />
+            <col style={spreadsheetActionsColStyle} />
           </colgroup>
           <thead className={stickyTheadClass}>
             <tr>
@@ -4922,15 +5060,7 @@ export function RowsSpreadsheet({
                     'min-w-[40px] max-w-[40px] shrink-0 box-border',
                   SPREADSHEET_STICKY_START_HEADER_SHADOW,
                 )}
-                style={
-                  useInlineDocumentPane
-                    ? {
-                        width: ROWS_TABLE_EDGE_COL_PX,
-                        minWidth: ROWS_TABLE_EDGE_COL_PX,
-                        maxWidth: ROWS_TABLE_EDGE_COL_PX,
-                      }
-                    : undefined
-                }
+                style={spreadsheetActionsColStyle}
               >
                 <div className="flex justify-center">
                   <Checkbox
@@ -4948,9 +5078,10 @@ export function RowsSpreadsheet({
                     <th
                       key="th-$sequence"
                       className={cn(
-                        'w-[72px] min-w-[72px] px-2 py-2 text-start',
+                        'px-2 py-2 text-start',
                         headerCellBorderClass,
                       )}
+                      style={spreadsheetSequenceColStyle}
                     >
                       <div className="flex min-w-0 items-center gap-1">
                         <SequenceHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -4978,12 +5109,21 @@ export function RowsSpreadsheet({
                 }
 
                 if (gridKey === '$id') {
+                  const isDragResize = resizingDataColumnKey === '$id'
                   return (
                     <th
                       key="th-$id"
-                      className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}
+                      ref={(node) => {
+                        if (node) dataColumnHeaderThRefs.current.set('$id', node)
+                        else dataColumnHeaderThRefs.current.delete('$id')
+                      }}
+                      className={cn('px-3 py-2', headerCellBorderClass)}
+                      style={getRowGridDataColumnLayoutStyle(
+                        getDataColumnWidthPx('$id'),
+                        isDragResize,
+                      )}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 items-center gap-2 pe-1.5">
                         <IdHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         <button
                           type="button"
@@ -5025,12 +5165,24 @@ export function RowsSpreadsheet({
                 }
 
                 if (gridKey === '$createdAt' || gridKey === '$updatedAt') {
+                  const isDragResize = resizingDataColumnKey === gridKey
                   return (
                     <th
                       key={`th-${gridKey}`}
-                      className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}
+                      ref={(node) => {
+                        if (node) {
+                          dataColumnHeaderThRefs.current.set(gridKey, node)
+                        } else {
+                          dataColumnHeaderThRefs.current.delete(gridKey)
+                        }
+                      }}
+                      className={cn('px-3 py-2', headerCellBorderClass)}
+                      style={getRowGridDataColumnLayoutStyle(
+                        getDataColumnWidthPx(gridKey),
+                        isDragResize,
+                      )}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 items-center gap-2 pe-1.5">
                         <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         <button
                           type="button"
@@ -5104,14 +5256,10 @@ export function RowsSpreadsheet({
                       }
                     }}
                     className={cn('px-3 py-2', headerCellBorderClass)}
-                    style={
-                      isDragResize
-                        ? undefined
-                        : {
-                            width: getDataColumnWidthPx(col),
-                            minWidth: ROWS_DATA_COLUMN_MIN_WIDTH_PX,
-                          }
-                    }
+                    style={getRowGridDataColumnLayoutStyle(
+                      getDataColumnWidthPx(col),
+                      isDragResize,
+                    )}
                   >
                     <div className="flex min-w-0 items-center gap-2 pe-1.5">
                       <ColumnIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -5185,17 +5333,13 @@ export function RowsSpreadsheet({
                   </th>
                 )
               })}
+              <th aria-hidden className={SPREADSHEET_FILLER_HEADER_CLASS} />
               <th
                 className={cn(
-                  'relative sticky end-0 z-30 bg-background p-0',
+                  stickyActionsHeaderClass,
                   useInlineDocumentPane && 'shrink-0 box-border',
-                  SPREADSHEET_STICKY_END_HEADER_SHADOW,
                 )}
-                style={{
-                  width: ROWS_TABLE_EDGE_COL_PX,
-                  minWidth: ROWS_TABLE_EDGE_COL_PX,
-                  maxWidth: ROWS_TABLE_EDGE_COL_PX,
-                }}
+                style={spreadsheetActionsColStyle}
               >
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -5291,15 +5435,7 @@ export function RowsSpreadsheet({
                         : 'bg-muted/25 group-hover:bg-muted/35',
                       !isInlinePreviewRow && selectedRows.has(row.$id) && 'bg-muted',
                     )}
-                    style={
-                      useInlineDocumentPane
-                        ? {
-                            width: ROWS_TABLE_EDGE_COL_PX,
-                            minWidth: ROWS_TABLE_EDGE_COL_PX,
-                            maxWidth: ROWS_TABLE_EDGE_COL_PX,
-                          }
-                        : undefined
-                    }
+                    style={spreadsheetActionsColStyle}
                   >
                     <div className="flex justify-center">
                       <Checkbox
@@ -5327,13 +5463,16 @@ export function RowsSpreadsheet({
                       return (
                         <td
                           key="td-$id"
-                          className={cn(
-                            'w-[180px] px-3 py-1.5',
-                            bodyCellBorderClass,
-                          )}
+                          className={cn('px-3 py-1.5', bodyCellBorderClass)}
                           data-column="$id"
                         >
-                          <CopyableId id={row.$id} size="xs" />
+                          <div className="min-w-0 max-w-full overflow-hidden">
+                            <CopyableId
+                              id={row.$id}
+                              size="xs"
+                              constrainToContainer
+                            />
+                          </div>
                         </td>
                       )
                     }
@@ -5355,7 +5494,7 @@ export function RowsSpreadsheet({
                         <td
                           key={`td-${systemKey}`}
                           className={cn(
-                            'relative h-px w-[180px] p-0',
+                            'relative h-px p-0',
                             bodyCellBorderClass,
                           )}
                           data-column={systemKey}
@@ -5465,22 +5604,17 @@ export function RowsSpreadsheet({
                       </td>
                     )
                   })}
+                  <td aria-hidden className={SPREADSHEET_FILLER_CELL_CLASS} />
                   <td
                     className={cn(
-                      'sticky end-0 border-b border-border p-0',
-                      SPREADSHEET_STICKY_BODY_Z,
+                      stickyActionsCellBaseClass,
                       useInlineDocumentPane && 'shrink-0 box-border',
-                      SPREADSHEET_STICKY_END_EDGE_SHADOW,
                       !isInlinePreviewRow
                         ? 'bg-background'
                         : 'bg-muted/25 group-hover:bg-muted/35',
                       !isInlinePreviewRow && selectedRows.has(row.$id) && 'bg-muted',
                     )}
-                    style={{
-                      width: ROWS_TABLE_EDGE_COL_PX,
-                      minWidth: ROWS_TABLE_EDGE_COL_PX,
-                      maxWidth: ROWS_TABLE_EDGE_COL_PX,
-                    }}
+                    style={spreadsheetActionsColStyle}
                   >
                     <div
                       className="flex h-full items-center justify-center py-1.5"
@@ -5534,12 +5668,7 @@ export function RowsSpreadsheet({
             })}
           </tbody>
         </table>
-            {(columns as string[])
-              .filter(
-                (c): c is string =>
-                  typeof c === 'string' && c.length > 0 && !c.startsWith('$'),
-              )
-              .map((col) => {
+            {columns.map((col) => {
                 return (
                   <button
                     key={`col-resize-rail-${col}`}
@@ -6404,6 +6533,10 @@ export function ColumnsSpreadsheet({
               suggestedColumns.length > 0 && 'pb-24',
             )}
           >
+            <div
+              className={SPREADSHEET_SCROLL_LAYER_CLASS}
+              style={{ minWidth: COLUMNS_GRID_MIN_WIDTH_PX }}
+            >
             <table className="w-full border-collapse">
               <thead className={stickyTheadClass}>
                 <tr>
@@ -6507,6 +6640,7 @@ export function ColumnsSpreadsheet({
                       {t('Default')}
                     </span>
                   </th>
+                  <th aria-hidden className={SPREADSHEET_FILLER_HEADER_CLASS} />
                   <th
                     className={stickyActionsHeaderClass}
                     style={spreadsheetActionsColStyle}
@@ -6723,6 +6857,7 @@ export function ColumnsSpreadsheet({
                           </code>
                         )}
                       </td>
+                      <td aria-hidden className={SPREADSHEET_FILLER_CELL_CLASS} />
                       <td
                         className={cn(
                           stickyActionsCellBaseClass,
@@ -6764,6 +6899,7 @@ export function ColumnsSpreadsheet({
                 })}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Sticky Pagination Footer */}

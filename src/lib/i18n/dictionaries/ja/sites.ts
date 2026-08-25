@@ -31,6 +31,9 @@ export const jaSitesDictionary: Record<string, string> = {
   'Failed to download build output': 'ビルド出力のダウンロードに失敗しました',
   'Deployment rebuild started': 'デプロイの再ビルドを開始しました',
   'Failed to redeploy': '再デプロイに失敗しました',
+  'Settings changes are not live yet': '設定の変更はまだ反映されていません',
+  "You've updated site settings, but they won't take effect until you redeploy. The current deployment is still running with the previous settings.":
+    'サイトの設定を更新しましたが、再デプロイするまで反映されません。現在のデプロイは、以前の設定のまま実行され続けています。',
   'Deployment activated successfully': 'デプロイを有効化しました',
   'Failed to activate deployment': 'デプロイの有効化に失敗しました',
   'Build cancelled': 'ビルドをキャンセルしました',
@@ -89,6 +92,16 @@ export const jaSitesDictionary: Record<string, string> = {
   'Site name updated successfully': 'サイト名を更新しました',
   'Failed to update site name': 'サイト名の更新に失敗しました',
   'Site name is required': 'サイト名は必須です',
+  // Settings: status card
+  'Enable or disable this site without deleting it.':
+    'このサイトを削除せずに有効化・無効化できます。',
+  'Site has been enabled': 'サイトを有効化しました',
+  'Site has been disabled': 'サイトを無効化しました',
+  'Site is disabled': 'サイトは無効です',
+  'This site is disabled and not accessible to visitors. Console actions remain available.':
+    'このサイトは無効になっており、訪問者がアクセスすることはできません。コンソールからの操作は引き続き利用できます。',
+  'Enable this site in the Settings tab': '設定タブでこのサイトを有効にしてください',
+  'to make it available to visitors.': '訪問者が利用できるようにしてください。',
   // Settings: danger zone
   'Delete site': 'サイトの削除',
   'this site': 'このサイト',

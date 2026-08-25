@@ -333,7 +333,7 @@ export function BranchSelector({
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
             </div>
-            <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain">
+            <CommandList className="min-h-[180px] max-h-[240px] overflow-y-auto overscroll-contain">
               {!isLoadingList &&
                 displayBranches.length === 0 &&
                 debouncedSearch && (

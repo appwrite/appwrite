@@ -223,6 +223,17 @@ export function clampPostgresSqlEditorHeightPx(px: number): number {
   )
 }
 
+/** MySQL SQL workbench: same height bounds as Postgres (shared UX, separate prefs). */
+export const MYSQL_SQL_EDITOR_MIN_HEIGHT_PX = POSTGRES_SQL_EDITOR_MIN_HEIGHT_PX
+export const MYSQL_SQL_EDITOR_MAX_HEIGHT_PX = POSTGRES_SQL_EDITOR_MAX_HEIGHT_PX
+export const MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX =
+  POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX
+export const MYSQL_SQL_RESULTS_MIN_HEIGHT_PX = POSTGRES_SQL_RESULTS_MIN_HEIGHT_PX
+
+export function clampMysqlSqlEditorHeightPx(px: number): number {
+  return clampPostgresSqlEditorHeightPx(px)
+}
+
 /** Cover generator: templates | canvas | properties (%). */
 export const COVER_GENERATOR_COLUMNS_DEFAULT_LAYOUT = [22, 53, 25] as const
 export const COVER_GENERATOR_COLUMNS_MIN = [16, 28, 19] as const

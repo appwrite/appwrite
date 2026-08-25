@@ -44,8 +44,10 @@ async function getProjectAccess(
   if (!teamId) return null
 
   try {
+    // Scoped to this project so project-specific roles resolve to their real
+    // role; without the id the backend reports them as read-only analyst.
     const scopes = await queryClient.ensureQueryData(
-      organizationScopesQueryOptions(teamId),
+      organizationScopesQueryOptions(teamId, projectId),
     )
     if (!scopes) return null
     return deriveAccessFromRolesScopes(scopes.roles, scopes.scopes)
@@ -85,6 +87,17 @@ export async function canAccessDatabaseSecuritySettings(
 
 /** Native Postgres database Settings tab. */
 export async function canAccessPostgresDatabaseSettings(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canCreateDatabase(access, features)
+}
+
+/** Native MySQL database Settings tab. */
+export async function canAccessMysqlDatabaseSettings(
   queryClient: QueryClient,
   projectId: string,
 ): Promise<boolean> {

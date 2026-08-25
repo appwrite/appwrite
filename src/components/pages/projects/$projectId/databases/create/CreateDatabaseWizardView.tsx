@@ -12,6 +12,7 @@ import {
 } from '../_components/database-mascot-icons'
 import { CreateDatabaseSummary } from '../_components/CreateDatabaseSummary'
 import { CreateDatabaseDedicatedOptions } from '../_components/CreateDatabaseDedicatedOptions'
+import { ServerlessSpecPrice } from '../_components/ServerlessSpecPrice'
 import {
   BACKUP_POLICY_PRESETS,
   CreateDatabaseBackupPolicies,
@@ -24,14 +25,14 @@ import {
   type DatabaseSetupPhase,
   type DatabaseSetupProgressState,
 } from './CreateDatabaseSetupProgress'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk } from '@/lib/appwrite/sdk' // pragma: allowlist secret
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
 import {
   getBackupPoliciesPlanLimit,
   getBackupPoliciesRemainingSlots,
   supportsAdvancedBackupPolicies,
 } from '@/lib/databases/backup-policy-plan-limits'
-import { ID, BackupServices, type Models } from '@appwrite.io/console'
+import { ID, BackupServices, type Models } from '@appwrite.io/console' // pragma: allowlist secret
 import { DatabaseType } from '@/lib/databases/database-type'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
@@ -39,6 +40,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { Badge } from '@/components/ui/badge'
+import { DatabaseTypeBetaBadge } from '../_components/DatabaseTypeBetaBadge'
+import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
 import {
   Table,
   TableBody,
@@ -47,14 +50,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueries, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   createNativeDatabase,
@@ -85,11 +82,13 @@ import {
   SERVERLESS_DATABASE_SPEC_ID,
   TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS,
   getDefaultEnabledSpecId,
+  hasEnabledDedicatedComputeOptions,
   hasLockedDatabaseSpecifications,
   isServerlessDatabaseSpecId,
   mapDedicatedDatabaseSpecifications,
 } from '@/lib/database-specs'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import {
   getNewDatabaseNameForType,
   isAutoFilledNewDatabaseName,
@@ -97,7 +96,7 @@ import {
 import { useAnalytics } from '@/hooks/use-analytics'
 import {
   calculateDedicatedDatabaseMonthlyCost,
-  DATABASE_COMPUTE_CREDITS_NOTE,
+  formatDedicatedMonthlyPrice,
   getDedicatedDatabaseCreatePricing,
 } from '@/lib/database-create-pricing'
 import {
@@ -105,10 +104,15 @@ import {
   formatDedicatedDatabaseCreateError,
 } from '@/lib/dedicated-database-id'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
+import { mysqlDatabaseHome } from '@/lib/mysql-database-routes'
 import {
   formatDedicatedDatabaseRegionUnavailableDescription,
   projectSupportsDedicatedDatabaseCompute,
 } from '@/lib/databases/dedicated-database-regions'
+import {
+  getPlanDatabaseComputeCreditUsd,
+  planSupportsDedicatedDatabases,
+} from '@/lib/databases/dedicated-database-plan'
 import { useT } from '@/lib/i18n/translate'
 
 export type DatabaseTypeOption =
@@ -127,12 +131,16 @@ type DbTypeChoice = {
 }
 
 type DbTypeOptionMeta = DbTypeChoice & {
+  comingSoon?: boolean
   comingSoonMessage?: string
+  requiresUpgrade?: boolean
 }
 
 const DB_TYPE_GROUPS: {
   title: string
   description: string
+  /** Used when MySQL is hidden from the native group. */
+  descriptionPostgresOnly?: string
   options: DbTypeChoice[]
 }[] = [
   {
@@ -167,6 +175,8 @@ const DB_TYPE_GROUPS: {
     title: 'Native databases',
     description:
       'Dedicated PostgreSQL and MySQL engines for teams that need direct SQL compatibility.',
+    descriptionPostgresOnly:
+      'A dedicated PostgreSQL engine for teams that need direct SQL compatibility.',
     options: [
       {
         id: 'Postgres',
@@ -232,8 +242,14 @@ export function CreateDatabaseWizardView() {
   const { track } = useAnalytics()
   const { project } = useProject(pid)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
-  const supportsDedicatedDatabaseCompute =
+  const regionSupportsDedicatedCompute =
     projectSupportsDedicatedDatabaseCompute(project?.region)
+  const planSupportsDedicatedCompute =
+    planSupportsDedicatedDatabases(organizationPlan)
+  const databaseComputeCreditUsd =
+    getPlanDatabaseComputeCreditUsd(organizationPlan)
+  const computeCreditsUsd =
+    databaseComputeCreditUsd > 0 ? databaseComputeCreditUsd : null
 
   const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
   const specificationsSource = useMemo(
@@ -261,6 +277,65 @@ export function CreateDatabaseWizardView() {
       ),
     [organizationPlan, specificationsData?.pricing],
   )
+  const dedicatedTypeSpecSources = useMemo(() => {
+    const items: { id: DatabaseTypeOption; source: DedicatedDatabaseSource }[] =
+      []
+    if (features.dedicatedDbsDocumentsDB) {
+      items.push({
+        id: 'DocumentsDB',
+        source: dedicatedDatabaseSourceFromDatabaseType(
+          DatabaseType.Documentsdb,
+        ),
+      })
+    }
+    if (features.dedicatedDbsVectorsDB) {
+      items.push({
+        id: 'VectorsDB',
+        source: dedicatedDatabaseSourceFromDatabaseType(DatabaseType.Vectorsdb),
+      })
+    }
+    if (features.nativeDbsPostgres) {
+      items.push({
+        id: 'Postgres',
+        source: dedicatedDatabaseSourceFromEngine('postgresql'),
+      })
+    }
+    if (features.nativeDbsMySQL) {
+      items.push({
+        id: 'MySQL',
+        source: dedicatedDatabaseSourceFromEngine('mysql'),
+      })
+    }
+    return items
+  }, [
+    features.dedicatedDbsDocumentsDB,
+    features.dedicatedDbsVectorsDB,
+    features.nativeDbsPostgres,
+    features.nativeDbsMySQL,
+  ])
+  const dedicatedTypeSpecQueries = useQueries({
+    queries: dedicatedTypeSpecSources.map(({ source }) => ({
+      ...databaseSpecificationsQueryOptions(pid, source),
+      enabled:
+        !!pid &&
+        regionSupportsDedicatedCompute &&
+        databaseSpecificationsQueryOptions(pid, source).enabled,
+    })),
+  })
+  const dedicatedTypesWithoutCompute = useMemo(() => {
+    const unavailable = new Set<DatabaseTypeOption>()
+    dedicatedTypeSpecSources.forEach((item, index) => {
+      const query = dedicatedTypeSpecQueries[index]
+      if (!query?.isSuccess) return
+      const specs = mapDedicatedDatabaseSpecifications(
+        query.data?.specifications,
+      )
+      if (!hasEnabledDedicatedComputeOptions(specs)) {
+        unavailable.add(item.id)
+      }
+    })
+    return unavailable
+  }, [dedicatedTypeSpecQueries, dedicatedTypeSpecSources])
   const [specId, setSpecId] = useState<string | null>(null)
   const [haReplicaCount, setHaReplicaCount] = useState(0)
   const [pitrEnabled, setPitrEnabled] = useState(false)
@@ -293,60 +368,94 @@ export function CreateDatabaseWizardView() {
     formatDedicatedDatabaseRegionUnavailableDescription(t)
 
   const dbTypeOptions = useMemo((): DbTypeOptionMeta[] => {
+    const resolveDedicatedType = (
+      opt: DbTypeChoice,
+      featureEnabled: boolean,
+    ): DbTypeOptionMeta => {
+      if (!featureEnabled) {
+        return { ...opt, comingSoon: true }
+      }
+      if (!regionSupportsDedicatedCompute) {
+        return {
+          ...opt,
+          comingSoon: true,
+          comingSoonMessage: regionUnavailableMessage,
+        }
+      }
+      if (
+        planSupportsDedicatedCompute === false ||
+        dedicatedTypesWithoutCompute.has(opt.id)
+      ) {
+        return { ...opt, comingSoon: false, requiresUpgrade: true }
+      }
+      return { ...opt, comingSoon: false }
+    }
+
     return DB_TYPE_OPTIONS.map((opt) => {
       if (opt.id === 'Postgres') {
-        if (!features.nativeDbsPostgres) {
-          return { ...opt, comingSoon: true }
-        }
-        if (!supportsDedicatedDatabaseCompute) {
-          return {
-            ...opt,
-            comingSoon: true,
-            comingSoonMessage: regionUnavailableMessage,
-          }
-        }
-        return { ...opt, comingSoon: false }
+        return resolveDedicatedType(opt, features.nativeDbsPostgres)
       }
       if (opt.id === 'MySQL') {
-        if (!features.nativeDbsMySQL) {
-          return { ...opt, comingSoon: true }
-        }
-        if (!supportsDedicatedDatabaseCompute) {
-          return {
-            ...opt,
-            comingSoon: true,
-            comingSoonMessage: regionUnavailableMessage,
-          }
-        }
-        return { ...opt, comingSoon: false }
+        return resolveDedicatedType(opt, features.nativeDbsMySQL)
       }
-      if (opt.id === 'DocumentsDB' || opt.id === 'VectorsDB') {
-        if (!supportsDedicatedDatabaseCompute) {
-          return {
-            ...opt,
-            comingSoon: true,
-            comingSoonMessage: regionUnavailableMessage,
-          }
-        }
-        return { ...opt, comingSoon: opt.comingSoon }
+      if (opt.id === 'DocumentsDB') {
+        return resolveDedicatedType(opt, features.dedicatedDbsDocumentsDB)
+      }
+      if (opt.id === 'VectorsDB') {
+        return resolveDedicatedType(opt, features.dedicatedDbsVectorsDB)
       }
       return { ...opt, comingSoon: opt.comingSoon }
     })
   }, [
     features.nativeDbsPostgres,
     features.nativeDbsMySQL,
-    supportsDedicatedDatabaseCompute,
+    features.dedicatedDbsDocumentsDB,
+    features.dedicatedDbsVectorsDB,
+    regionSupportsDedicatedCompute,
+    planSupportsDedicatedCompute,
+    dedicatedTypesWithoutCompute,
     regionUnavailableMessage,
   ])
 
-  /** Show specs section when type uses dedicated compute (incl. TablesDB). */
+  const visibleDbTypeGroups = useMemo(() => {
+    return DB_TYPE_GROUPS.map((group) => {
+      const options = group.options.filter((opt) => {
+        // MySQL is fully gated behind the flag (no "coming soon" teaser).
+        if (opt.id === 'MySQL') return features.nativeDbsMySQL
+        return true
+      })
+      if (options.length === 0) return null
+      const description =
+        group.title === 'Native databases' &&
+        !features.nativeDbsMySQL &&
+        group.descriptionPostgresOnly
+          ? group.descriptionPostgresOnly
+          : group.description
+      return { ...group, description, options }
+    }).filter(
+      (group): group is NonNullable<typeof group> => group != null,
+    )
+  }, [features.nativeDbsMySQL])
+
+  /** Show specs when the region can list dedicated tiers. Locked rows stay visible. */
   const showSpecsForType =
-    supportsDedicatedDatabaseCompute &&
+    regionSupportsDedicatedCompute &&
     (isDocumentsDB || isVectorsDB || isTablesDB || isNativeDb)
 
   const selectableSpecs = useMemo(() => {
+    const dedicatedSpecs =
+      planSupportsDedicatedCompute === true
+        ? apiSpecOptions
+        : apiSpecOptions.map((spec) => ({ ...spec, comingSoon: true }))
+    const visibleDedicatedSpecs =
+      dedicatedSpecs.length > 0
+        ? dedicatedSpecs
+        : SPEC_OPTIONS.filter(
+            (spec) => spec.id !== SERVERLESS_DATABASE_SPEC_ID,
+          ).map((spec) => ({ ...spec, comingSoon: true }))
+
     if (isNativeDb || isDocumentsDB || isVectorsDB) {
-      return apiSpecOptions
+      return visibleDedicatedSpecs
     }
     if (isTablesDB) {
       const serverlessSpec = SPEC_OPTIONS.find(
@@ -354,11 +463,18 @@ export function CreateDatabaseWizardView() {
       )
       return [
         ...(serverlessSpec ? [{ ...serverlessSpec, comingSoon: false }] : []),
-        ...apiSpecOptions,
+        ...visibleDedicatedSpecs,
       ]
     }
-    return apiSpecOptions
-  }, [apiSpecOptions, isNativeDb, isTablesDB, isDocumentsDB, isVectorsDB])
+    return visibleDedicatedSpecs
+  }, [
+    apiSpecOptions,
+    isNativeDb,
+    isTablesDB,
+    isDocumentsDB,
+    isVectorsDB,
+    planSupportsDedicatedCompute,
+  ])
 
   const selectedSpec = useMemo(
     () => (specId ? selectableSpecs.find((s) => s.id === specId) : null),
@@ -368,6 +484,16 @@ export function CreateDatabaseWizardView() {
     () => (dbType ? dbTypeOptions.find((opt) => opt.id === dbType) : null),
     [dbType, dbTypeOptions],
   )
+
+  const isDbTypeUnavailable = Boolean(
+    selectedDbType?.comingSoon || selectedDbType?.requiresUpgrade,
+  )
+
+  useEffect(() => {
+    if (isDbTypeUnavailable) {
+      setDbType(null)
+    }
+  }, [isDbTypeUnavailable])
 
   const showDedicatedOptions = Boolean(
     usesDedicatedCompute &&
@@ -714,6 +840,16 @@ export function CreateDatabaseWizardView() {
         })
         return
       }
+      if (dbType === 'MySQL') {
+        navigate({
+          ...mysqlDatabaseHome({
+            projectId: pid,
+            databaseId: database.$id,
+            tableId: '-',
+          }),
+        })
+        return
+      }
       navigate({
         to: '/projects/$projectId/databases',
         params: { projectId: pid },
@@ -901,13 +1037,14 @@ export function CreateDatabaseWizardView() {
       selectedSpec != null &&
       !selectedSpec.comingSoon)
 
-  const showNameForm = Boolean(dbType && !selectedDbType?.comingSoon)
+  const showNameForm = Boolean(dbType && !selectedDbType?.comingSoon && !selectedDbType?.requiresUpgrade)
 
   const canCreate = Boolean(
     showNameForm &&
     name.trim().length > 0 &&
     dbType &&
     !selectedDbType?.comingSoon &&
+    !selectedDbType?.requiresUpgrade &&
     isSpecSelectionReady,
   )
   const isCreatePending = isCreating || createMutation.isPending
@@ -961,6 +1098,8 @@ export function CreateDatabaseWizardView() {
           showBackupPolicies={showBackupPoliciesSection && showNameForm}
           backupPoliciesLabel={backupPoliciesSummaryLabel}
           backupsEnabled={planBackupsEnabled}
+          computeCreditsUsd={computeCreditsUsd}
+          organizationPlan={organizationPlan}
           canCreate={canCreate}
         />
       }
@@ -969,15 +1108,15 @@ export function CreateDatabaseWizardView() {
         {/* 1. Database type */}
         <section>
           <div className="mb-8">
-            <h2 className="text-[15px] font-semibold text-foreground mb-1">
+            <h2 className="text-[15px] font-semibold text-foreground">
               {t('Choose database type')}
+              <span className="ms-2 text-[13px] font-normal text-muted-foreground">
+                {t('Pick an Appwrite database or a native SQL engine.')} {/* pragma: allowlist secret */}
+              </span>
             </h2>
-            <p className="text-[13px] text-muted-foreground">
-              {t('Pick an Appwrite database or a native SQL engine.')} {/* pragma: allowlist secret */}
-            </p>
           </div>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {DB_TYPE_GROUPS.map((group, groupIndex) => (
+            {visibleDbTypeGroups.map((group, groupIndex) => (
               <div
                 key={group.title}
                 className={cn(
@@ -986,34 +1125,35 @@ export function CreateDatabaseWizardView() {
                     'border-t border-border pt-6 lg:border-s lg:border-t-0 lg:ps-6 lg:pt-0',
                 )}
               >
-                <div className="mb-6 space-y-1">
+                <div className="mb-6 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                   <h3 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                     {t(group.title)}
                   </h3>
-                  <p className="text-[12px] leading-5 text-muted-foreground">
+                  <p className="text-[12px] text-muted-foreground">
                     {group.title === 'Native databases' &&
-                    !supportsDedicatedDatabaseCompute
+                    !regionSupportsDedicatedCompute
                       ? regionUnavailableMessage
                       : t(group.description)}
                   </p>
                 </div>
                 <div className="space-y-4">
                   {group.options.map((opt) => {
-                    const optionMeta = dbTypeOptions.find((item) => item.id === opt.id) ?? opt
-                    return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      disabled={optionMeta.comingSoon}
-                      onClick={() => handleDbTypeSelect(opt)}
-                      data-analytics-track="manual"
-                      className={cn(
-                        'flex w-full cursor-pointer items-start gap-4 rounded-xl border border-border bg-card/50 p-4 text-start transition-all hover:border-border/80 hover:bg-card/60 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border disabled:hover:bg-card/50',
-                        dbType === opt.id &&
-                          !optionMeta.comingSoon &&
-                          'border-primary ring-1 ring-primary/20 hover:border-primary',
-                      )}
-                    >
+                    const optionMeta: DbTypeOptionMeta =
+                      dbTypeOptions.find((item) => item.id === opt.id) ?? opt
+                    const requiresUpgrade = optionMeta.requiresUpgrade === true
+                    const isUnavailable =
+                      Boolean(optionMeta.comingSoon) || requiresUpgrade
+                    const cardClassName = cn(
+                      'flex w-full items-start gap-4 rounded-xl border border-border bg-card/50 p-4 text-start transition-all',
+                      isUnavailable
+                        ? 'cursor-not-allowed opacity-60'
+                        : 'cursor-pointer hover:border-border/80 hover:bg-card/60',
+                      dbType === opt.id &&
+                        !isUnavailable &&
+                        'border-primary ring-1 ring-primary/20 hover:border-primary',
+                    )
+                    const cardContent = (
+                      <>
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                         {opt.icon === 'table' && (
                           <TableIcon className="h-5 w-5" />
@@ -1036,30 +1176,58 @@ export function CreateDatabaseWizardView() {
                           <span className="text-[14px] font-medium text-foreground">
                             {opt.label}
                           </span>
-                          {(opt.id === 'DocumentsDB' ||
-                            opt.id === 'VectorsDB') && (
-                            <Badge
-                              variant="info"
-                              className="text-[10px] shrink-0"
-                            >
-                              {t('Beta')}
-                            </Badge>
-                          )}
-                          {optionMeta.comingSoon && (
+                          {isBetaDatabaseType(opt.id) ? (
+                            <DatabaseTypeBetaBadge />
+                          ) : null}
+                          {optionMeta.comingSoon ? (
                             <Badge
                               variant="inactive"
                               className="text-[10px] shrink-0"
                             >
                               {t('Coming soon')}
                             </Badge>
-                          )}
+                          ) : null}
+                          {requiresUpgrade ? (
+                            <Badge
+                              variant="inactive"
+                              className="text-[10px] shrink-0"
+                            >
+                              {t('Upgrade')}
+                            </Badge>
+                          ) : null}
                         </span>
-                        <p className="text-[12px] leading-5 text-muted-foreground">
-                          {optionMeta.comingSoonMessage
-                            ? optionMeta.comingSoonMessage
-                            : t(opt.description)}
-                        </p>
+                        {requiresUpgrade ? (
+                          <p className="text-[12px] leading-5 text-muted-foreground">
+                            {t('Not available on your current plan.')}{' '}
+                            <UpgradePlanLink orgId={project?.teamId} />{' '}
+                            {t('to unlock this database type.')}
+                          </p>
+                        ) : (
+                          <p className="text-[12px] leading-5 text-muted-foreground">
+                            {optionMeta.comingSoonMessage
+                              ? optionMeta.comingSoonMessage
+                              : t(opt.description)}
+                          </p>
+                        )}
                       </div>
+                      </>
+                    )
+                    if (isUnavailable) {
+                      return (
+                        <div key={opt.id} className={cardClassName}>
+                          {cardContent}
+                        </div>
+                      )
+                    }
+                    return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => handleDbTypeSelect(opt)}
+                      data-analytics-track="manual"
+                      className={cardClassName}
+                    >
+                      {cardContent}
                     </button>
                     )
                   })}
@@ -1073,12 +1241,12 @@ export function CreateDatabaseWizardView() {
         {showNameForm && (
           <section className="pt-6 border-t border-border">
             <div className="mb-8">
-              <h2 className="text-[15px] font-semibold text-foreground mb-1">
+              <h2 className="text-[15px] font-semibold text-foreground">
                 {t('Name your database')}
+                <span className="ms-2 text-[13px] font-normal text-muted-foreground">
+                  {t('Choose a display name and optional custom ID.')}
+                </span>
               </h2>
-              <p className="text-[13px] text-muted-foreground">
-                {t('Choose a display name and optional custom ID.')}
-              </p>
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -1129,17 +1297,23 @@ export function CreateDatabaseWizardView() {
         {/* 3. Specifications (table) – revealed when type selected and that type has dedicated support */}
         {dbType && showSpecsForType && (
           <section className="pt-6">
-            <h2 className="text-[15px] font-semibold text-foreground mb-1">
+            <h2 className="mb-4 text-[15px] font-semibold text-foreground">
               {t('Specifications')}
+              <span className="ms-2 text-[13px] font-normal text-muted-foreground">
+                {t('Select the compute and storage tier for your database.')}
+              </span>
             </h2>
-            <p className="text-[13px] text-muted-foreground mb-4">
-              {t('Select the compute and storage tier for your database.')}
-            </p>
-            <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 mb-4">
-              <p className="text-[13px] font-medium text-foreground">
-                {t(DATABASE_COMPUTE_CREDITS_NOTE)}
-              </p>
-            </div>
+            {computeCreditsUsd != null ? (
+              <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
+                <span className="text-[13px] text-muted-foreground">
+                  {t('Compute credits')}
+                </span>
+                <span className="text-[13px] font-semibold tabular-nums text-foreground">
+                  {formatDedicatedMonthlyPrice(computeCreditsUsd)}{' '}
+                  {t('included')}
+                </span>
+              </div>
+            ) : null}
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <RadioGroup
                 value={specId ?? ''}
@@ -1183,7 +1357,9 @@ export function CreateDatabaseWizardView() {
                           colSpan={6}
                           className="px-4 py-8 text-center text-[13px] text-muted-foreground"
                         >
-                          {t('No specifications are available for your plan.')}
+                          {t('Not available on your current plan.')}{' '}
+                          <UpgradePlanLink orgId={project?.teamId} />{' '}
+                          {t('to unlock this database type.')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -1235,25 +1411,7 @@ export function CreateDatabaseWizardView() {
                                 {t('Upgrade')}
                               </Badge>
                             ) : isServerlessDatabaseSpecId(spec.id) ? (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="inline-block text-end text-[13px] font-semibold tabular-nums tracking-tight text-foreground underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
-                                      {t(spec.price)}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent
-                                    side="top"
-                                    className="max-w-[240px]"
-                                  >
-                                    <p className="text-[12px]">
-                                      {t(
-                                        'Billed for disk storage and database operations.',
-                                      )}
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <ServerlessSpecPrice plan={organizationPlan} />
                             ) : (
                               <span className="inline-block text-end text-[13px] font-semibold tabular-nums tracking-tight text-foreground">
                                 {spec.price}

@@ -65,3 +65,5 @@ Firewall does not block Console access. To verify a rule, send a request with a 
 {% /info %}
 
 See [Monitor traffic](/docs/products/firewall/monitor) for metrics and date ranges, and [Actions](/docs/products/firewall/actions) for what each outcome means.
+
+To protect a **site** during an incident, select that site on the Firewall page and turn on [Attack mode](/docs/products/firewall/attack-mode).

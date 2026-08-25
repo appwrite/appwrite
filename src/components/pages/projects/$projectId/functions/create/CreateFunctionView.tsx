@@ -49,10 +49,6 @@ import {
 } from '@/lib/react-query/hooks/constants'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
-import { RESOURCE_CARD_GRID_2_COL_CLASSNAME } from '../../shared/ResourceCard'
-
-const TEMPLATE_CARD_FOCUS_CLASSNAME =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { VcsInstallationErrorState } from '@/components/global/shared/VcsInstallationError'
 import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
@@ -69,6 +65,28 @@ import {
   buildVcsOrgOptions,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '../../shared/ResourceCard'
+
+const TEMPLATE_CARD_FOCUS_CLASSNAME =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+
+/** Explicit viewport grid — fullscreen wizard has no `#main-content` `@container`. */
+const MORE_TEMPLATES_GRID_CLASSNAME =
+  'grid min-w-0 grid-cols-2 content-start gap-3 [&>*]:min-w-0'
+
+const RUNTIME_AVATAR_SIZE_CLASS = 'size-7'
+const MAX_VISIBLE_RUNTIMES = 4
+
+const runtimeTileClassName = cn(
+  'grid shrink-0 place-items-center overflow-hidden rounded-md border border-border/80 bg-muted/50 text-muted-foreground',
+  'transition-colors duration-150',
+  RUNTIME_AVATAR_SIZE_CLASS,
+)
 
 const REPO_PAGE_SIZE = 7
 
@@ -91,6 +109,29 @@ function getRuntimeBase(r: { name?: string; key?: string } | string): string {
   const raw =
     typeof r === 'string' ? r : (r?.name ?? (r as { key?: string })?.key ?? '')
   return raw.toLowerCase().split('-')[0]
+}
+
+function getBaseRuntimeNames(runtimes: Models.TemplateFunction['runtimes']) {
+  const names: string[] = []
+  const seen = new Set<string>()
+  for (const runtime of runtimes ?? []) {
+    const base = getRuntimeBase(runtime)
+    if (!base || seen.has(base)) continue
+    seen.add(base)
+    names.push(base)
+  }
+  return names
+}
+
+function formatRuntimeLabel(runtime: string) {
+  if (runtime === 'php') return 'PHP'
+  return runtime.charAt(0).toUpperCase() + runtime.slice(1)
+}
+
+function formatUseCaseLabel(useCase: string) {
+  const u = useCase.trim()
+  if (u.toLowerCase() === 'ai') return 'AI'
+  return u.charAt(0).toUpperCase() + u.slice(1)
 }
 
 function LanguageCard({
@@ -153,27 +194,112 @@ function TemplateCard({
   projectId: string
   template: Models.TemplateFunction
 }) {
+  const baseRuntimes = getBaseRuntimeNames(template.runtimes)
+  const visibleRuntimes = baseRuntimes.slice(0, MAX_VISIBLE_RUNTIMES)
+  const overflowRuntimes = baseRuntimes.slice(MAX_VISIBLE_RUNTIMES)
+  const overflowCount = overflowRuntimes.length
+  const useCases = Array.isArray(template.useCases) ? template.useCases : []
+  const primaryUseCase = useCases[0] ? formatUseCaseLabel(useCases[0]) : null
+  const hasRuntimes = visibleRuntimes.length > 0
+
   return (
     <Link
       to="/projects/$projectId/functions/create/template/$templateId"
       params={{ projectId, templateId: template.id }}
       className={cn(
-        'group block min-w-0 rounded-xl border border-border bg-card/50 p-4 text-start transition-all hover:border-border/80 hover:bg-card',
+        'group flex min-w-0 flex-col rounded-xl border border-border bg-card/50 p-4 pb-0 text-start transition-all hover:border-border/80 hover:bg-card',
         TEMPLATE_CARD_FOCUS_CLASSNAME,
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[14px] font-semibold text-foreground leading-tight group-hover:text-foreground transition-colors">
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <div className="space-y-1">
+          <h3 className="truncate text-[14px] font-semibold leading-snug text-foreground transition-colors group-hover:text-foreground">
             {template.name}
           </h3>
-          {template.tagline && (
-            <p className="text-[12px] text-muted-foreground mt-1 line-clamp-2">
+          {template.tagline ? (
+            <p className="line-clamp-1 text-[12px] leading-relaxed text-muted-foreground">
               {template.tagline}
             </p>
-          )}
+          ) : null}
         </div>
-        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
+
+        <div
+          className={cn(
+            RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+            'mt-auto flex items-center justify-between gap-2',
+          )}
+        >
+          <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-x-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {hasRuntimes ? (
+              <ul
+                className="m-0 inline-flex list-none items-center gap-1 p-0"
+                aria-label={baseRuntimes.map(formatRuntimeLabel).join(', ')}
+              >
+                {visibleRuntimes.map((runtime) => {
+                  const label = formatRuntimeLabel(runtime)
+                  return (
+                    <li key={runtime} className="shrink-0">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={cn(
+                              runtimeTileClassName,
+                              'hover:border-border hover:bg-muted hover:text-foreground',
+                            )}
+                            aria-label={label}
+                          >
+                            <RuntimeIcon
+                              runtime={runtime}
+                              size="sm"
+                              className="!size-3.5 shrink-0"
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-[12px]">
+                          {label}
+                        </TooltipContent>
+                      </Tooltip>
+                    </li>
+                  )
+                })}
+                {overflowCount > 0 ? (
+                  <li className="shrink-0">
+                    <div
+                      className={cn(
+                        runtimeTileClassName,
+                        'text-[10px] font-semibold tabular-nums tracking-tight text-muted-foreground',
+                      )}
+                      aria-label={overflowRuntimes
+                        .map(formatRuntimeLabel)
+                        .join(', ')}
+                      title={overflowRuntimes
+                        .map(formatRuntimeLabel)
+                        .join(', ')}
+                    >
+                      +{overflowCount}
+                    </div>
+                  </li>
+                ) : null}
+              </ul>
+            ) : null}
+            {hasRuntimes && primaryUseCase ? (
+              <span
+                className="shrink-0 text-[10px] text-muted-foreground/40"
+                aria-hidden
+              >
+                ·
+              </span>
+            ) : null}
+            {primaryUseCase ? (
+              <span className="min-w-0 truncate text-[12px] font-medium text-muted-foreground">
+                {primaryUseCase}
+              </span>
+            ) : !hasRuntimes ? (
+              <span className="text-[12px] text-muted-foreground">-</span>
+            ) : null}
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-60 transition-colors group-hover:opacity-100" />
+        </div>
       </div>
     </Link>
   )
@@ -441,7 +567,7 @@ export function CreateFunctionView() {
     const starterIds = new Set(quickStartTemplates.map((t) => t.id))
     const rest = allTemplatesForHighlighted
       .filter((t) => !starterIds.has(t.id))
-      .slice(0, 6)
+      .slice(0, 8)
     return { templateByLanguage: byLanguage, highlighted: rest }
   }, [quickStartTemplates, allTemplatesForHighlighted])
 
@@ -483,7 +609,7 @@ export function CreateFunctionView() {
       useSidebar={false}
       maxWidth="max-w-[1400px]"
     >
-      <div className="grid gap-12 lg:grid-cols-5">
+      <div className="grid items-stretch gap-12 lg:grid-cols-5">
         <CreateWizardLeftColumn title={t('Connect Git repository')}>
           {!hasInstallations ? (
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
@@ -511,6 +637,18 @@ export function CreateFunctionView() {
                   <a href={getVcsAuthUrl('gitlab')}>
                     <VcsIcon type="gitlab" className="me-1.5 h-3.5 w-3.5" />
                     {t('Connect GitLab')}
+                  </a>
+                </Button>
+                <Button size="sm" variant="secondary" asChild>
+                  <a href={getVcsAuthUrl('bitbucket')}>
+                    <VcsIcon type="bitbucket" className="me-1.5 h-3.5 w-3.5" />
+                    {t('Connect Bitbucket')}
+                  </a>
+                </Button>
+                <Button size="sm" variant="secondary" asChild>
+                  <a href={getVcsAuthUrl('origin')}>
+                    <VcsIcon type="origin" className="me-1.5 h-3.5 w-3.5" />
+                    {t('Connect Origin')}
                   </a>
                 </Button>
               </div>
@@ -732,8 +870,8 @@ export function CreateFunctionView() {
         </CreateWizardLeftColumn>
 
         <CreateWizardRightColumn title={t('Clone template')}>
-          <div className="flex flex-col gap-8">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="flex h-full min-h-0 flex-col gap-8">
+            <div className="grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-3">
               {LANGUAGE_RUNTIMES.map((lang) => (
                 <LanguageCard
                   key={lang}
@@ -744,8 +882,8 @@ export function CreateFunctionView() {
               ))}
             </div>
 
-            <div>
-              <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="mb-4 flex shrink-0 items-center justify-between gap-4">
                 <h3 className="text-[13px] font-semibold leading-none text-foreground">
                   {t('More templates')}
                 </h3>
@@ -759,9 +897,7 @@ export function CreateFunctionView() {
                 </Link>
               </div>
               {highlighted.length > 0 ? (
-                <div
-                  className={cn(RESOURCE_CARD_GRID_2_COL_CLASSNAME, 'gap-3')}
-                >
+                <div className={MORE_TEMPLATES_GRID_CLASSNAME}>
                   {highlighted.map((template) => (
                     <TemplateCard
                       key={template.id}

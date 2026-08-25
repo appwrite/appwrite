@@ -30,10 +30,6 @@ import {
   useCreateSiteDomain,
   useCreateTemplateDeployment,
 } from '@/lib/react-query/hooks'
-import {
-  getFrameworkAdapterDefaults,
-  getStartCommandForSiteCreate,
-} from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
@@ -41,6 +37,7 @@ import { VariablesSettingsCard } from '@/components/global/shared/VariablesSetti
 import type { WizardVariable } from './WizardContext'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { validateVariables } from '@/lib/variables'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -102,7 +99,10 @@ export function QuickDeployView({
   // Parse env keys
   const envKeysList = useMemo(() => {
     if (!envKeys) return []
-    return envKeys.split(',').filter((k) => k.trim())
+    return envKeys
+      .split(',')
+      .map((k) => k.trim())
+      .filter(Boolean)
   }, [envKeys])
 
   // Local form state
@@ -131,14 +131,9 @@ export function QuickDeployView({
       !initialOutput
     ) {
       const defaults = getFrameworkDefaults(framework)
-      const ssrDefaults = getFrameworkAdapterDefaults(
-        getFramework(framework),
-        'ssr',
-      )
       setInstallCommand(defaults.installCommand)
       setBuildCommand(defaults.buildCommand)
       setOutputDirectory(defaults.outputDirectory)
-      setStartCommand(ssrDefaults.startCommand)
     }
   }, [
     framework,
@@ -174,6 +169,15 @@ export function QuickDeployView({
       return
     }
 
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured site behind. Only the rows that
+    // get written are checked -- the valueless ones are dropped below.
+    const validationError = validateVariables(variables.filter((v) => v.value))
+    if (validationError) {
+      toast.error(validationError)
+      return
+    }
+
     setIsDeploying(true)
 
     try {
@@ -188,10 +192,7 @@ export function QuickDeployView({
         buildRuntime: defaults.buildRuntime,
         installCommand: installCommand || defaults.installCommand,
         buildCommand: buildCommand || defaults.buildCommand,
-        startCommand: getStartCommandForSiteCreate(
-          getFramework(framework),
-          startCommand,
-        ),
+        startCommand: startCommand || undefined,
         outputDirectory: outputDirectory || defaults.outputDirectory,
         adapter: defaults.adapter || undefined,
       })
@@ -441,14 +442,9 @@ export function QuickDeployView({
               onValueChange={(value) => {
                 setFramework(value)
                 const defaults = getFrameworkDefaults(value)
-                const ssrDefaults = getFrameworkAdapterDefaults(
-                  getFramework(value),
-                  'ssr',
-                )
                 setInstallCommand(defaults.installCommand)
                 setBuildCommand(defaults.buildCommand)
                 setOutputDirectory(defaults.outputDirectory)
-                setStartCommand(ssrDefaults.startCommand)
               }}
             >
               <SelectTrigger className="h-9 text-[13px]">
@@ -539,7 +535,10 @@ export function QuickDeployView({
             {t(
               'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.', // pragma: allowlist secret
             )}{' '}
-            <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
+            <DocsRouteLink
+              className="link-neutral font-medium"
+              href="/docs/products/sites/domains"
+            >
               {t('Learn more →')}
             </DocsRouteLink>
           </p>

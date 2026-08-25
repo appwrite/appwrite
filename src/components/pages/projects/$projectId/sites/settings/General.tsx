@@ -6,6 +6,7 @@ import {
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { NameCard } from './NameCard'
 import { SiteDetailsCard } from './SiteDetailsCard'
+import { SiteStatusCard } from './SiteStatusCard'
 import { DangerZoneCard } from './DangerZoneCard'
 import { useT } from '@/lib/i18n/translate'
 
@@ -53,6 +54,17 @@ export function View() {
         keywords: ['rename', 'display', 'site name'],
       },
       node: <NameCard projectId={projectId} siteId={siteId} site={site} />,
+    },
+    {
+      id: 'status',
+      search: {
+        title: 'Status',
+        description: 'Enable or disable this site without deleting it.',
+        keywords: ['enabled', 'disabled', 'toggle'],
+      },
+      node: (
+        <SiteStatusCard projectId={projectId} siteId={siteId} site={site} />
+      ),
     },
     {
       id: 'delete',

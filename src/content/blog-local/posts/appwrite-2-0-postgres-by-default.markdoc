@@ -1,0 +1,70 @@
+---
+layout: post
+title: "Introducing Postgres to self-hosted Appwrite"
+description: Appwrite 2.0 runs new self-hosted instances on Postgres by default. Choose Postgres, MariaDB, or MongoDB in the setup wizard when you install.
+date: 2026-09-04
+cover: /images/blog-local/appwrite-2-0-postgres-by-default/cover.avif
+timeToRead: 4
+author: atharva
+category: product, announcement
+draft: true
+faqs:
+  - question: "Which databases does self-hosted Appwrite 2.0 support?"
+    answer: "Self-hosted Appwrite 2.0 supports Postgres, MariaDB, and MongoDB as the database your instance runs on. All three are fully supported. Postgres is the default selection for new installations, and you pick the database in the setup wizard during installation."
+  - question: "Can I switch an existing self-hosted Appwrite instance to Postgres?"
+    answer: "No. An existing instance keeps the database it was installed with, and upgrading to Appwrite 2.0 does not change it. The database choice applies to new installations only."
+  - question: "How do I choose a database when installing Appwrite?"
+    answer: "Run the Appwrite installer with Docker and open the setup wizard in your browser. The first step of the wizard includes a database selection where you choose Postgres, MariaDB, or MongoDB. Postgres is selected by default."
+---
+
+Appwrite 2.0 changes the database your self-hosted instance runs on. New installations default to Postgres, and the installer lets you choose between Postgres, MariaDB, and MongoDB.
+
+Until now, Postgres was the one database self-hosters kept asking for and could not have. With 2.0, you can install Appwrite on it.
+
+# Why Postgres
+
+Plenty of teams already run Postgres. It backs their other services, their team knows how to operate it, and their host offers it managed. If that describes your setup, Appwrite now fits into it. The backups, monitoring, and operational knowledge you already have for Postgres apply to your Appwrite instance too.
+
+For some teams the reason is simpler than infrastructure reuse. They want Appwrite, and they want it on Postgres, and until now that combination did not exist.
+
+Whichever database you pick, your applications talk to the same Appwrite APIs. Your SDK code does not change based on what runs underneath.
+
+# Choose your database during installation
+
+Appwrite 2.0 ships with a web-based setup wizard, and the database choice is part of the first step. Start the installer with Docker:
+
+```bash
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
+    appwrite/appwrite:2.0.0
+```
+
+Then open `http://localhost:20080` in your browser to reach the setup wizard.
+
+![Setup your app step of the Appwrite installation wizard with the database selection](/images/blog-local/appwrite-2-0-postgres-by-default/wizard-setup.avif)
+
+The first step configures your hostname and database. Postgres comes preselected, and you can select MariaDB or MongoDB instead before you install. All three are fully supported, so pick whichever your team is comfortable operating.
+
+The wizard then generates a secret key for your instance, asks for your Console account credentials, and shows a review screen before it installs.
+
+![Review step of the Appwrite installation wizard](/images/blog-local/appwrite-2-0-postgres-by-default/wizard-review.avif)
+
+Click **Install** and the wizard sets up the full Appwrite stack on the database you picked.
+
+# Existing instances keep their database
+
+The database choice applies to new installations only. When you upgrade an existing instance to Appwrite 2.0, it detects the database you installed with and continues to run on it. There is no path to move an existing instance from one database to another, so running Appwrite on Postgres means a fresh install.
+
+# Get started
+
+Appwrite 2.0 is available now for self-hosting. Run the installer, pick your database, and you have an Appwrite instance on Postgres in a few minutes.
+
+# Resources
+
+- [Installation guide](/docs/advanced/self-hosting/installation)
+- [Database configuration](/docs/advanced/self-hosting/configuration/databases)
+- [Self-hosting docs](/docs/advanced/self-hosting)
+- [Discord community](https://appwrite.io/discord)

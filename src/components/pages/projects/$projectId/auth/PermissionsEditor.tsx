@@ -10,7 +10,16 @@ import {
   useImperativeHandle,
   useMemo,
 } from 'react'
-import { Plus, X, Users, User, Building2, Tag, Code } from 'lucide-react'
+import {
+  Plus,
+  X,
+  Users,
+  User,
+  Building2,
+  Tag,
+  Code,
+  ArrowLeft,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -39,7 +48,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { useProjectUsers, useProjectTeams } from '@/lib/react-query/hooks'
+import {
+  useProjectUsers,
+  useProjectTeams,
+  useUserMemberships,
+} from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
@@ -275,6 +288,13 @@ function RoleDisplay({ role, projectId }: RoleDisplayProps) {
     )
   }
 
+  // Member role: member:membershipId
+  const memberMatch = role.match(/^member:(.+)$/)
+  if (memberMatch) {
+    const [, membershipId] = memberMatch
+    return <MemberRoleDisplay membershipId={membershipId} />
+  }
+
   // Label role: label:labelName
   const labelMatch = role.match(/^label:(.+)$/)
   if (labelMatch) {
@@ -396,6 +416,37 @@ function LabelRoleDisplay({ labelName }: LabelRoleDisplayProps) {
           </span>
           <Badge variant="info" className="text-[10px] shrink-0">
             {t('Label')}
+          </Badge>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * MemberRoleDisplay - displays membership role
+ *
+ * The role string carries only the membership ID, and every membership lookup
+ * needs a teamId or a userId, so the ID is shown as-is rather than resolved.
+ */
+interface MemberRoleDisplayProps {
+  membershipId: string
+}
+
+function MemberRoleDisplay({ membershipId }: MemberRoleDisplayProps) {
+  const t = useT()
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <div className="size-6 shrink-0 rounded-full bg-muted flex items-center justify-center">
+        <Users className="size-3.5 text-muted-foreground" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[13px] font-medium text-foreground truncate max-w-[120px] sm:max-w-[200px]">
+            {membershipId}
+          </span>
+          <Badge variant="info" className="text-[10px] shrink-0">
+            {t('Member')}
           </Badge>
         </div>
       </div>
@@ -767,6 +818,332 @@ function TeamSelectionModal({
 }
 
 /**
+ * MemberSelectionModal - modal for selecting team memberships
+ *
+ * Two steps: pick the user first, then pick which of their team memberships to
+ * grant. `teams.listMemberships` only indexes membership and user IDs for
+ * search, so a team-first flow would have a search box that matches nothing.
+ */
+interface MemberSelectionModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSelect: (roles: string[]) => void
+  projectId?: string
+  existingRoles?: Set<string>
+}
+
+interface MemberSelectionUser {
+  $id: string
+  name?: string
+  email?: string
+  phone?: string
+  avatar?: string
+}
+
+function MemberSelectionModal({
+  open,
+  onOpenChange,
+  onSelect,
+  projectId,
+  existingRoles,
+}: MemberSelectionModalProps) {
+  const t = useT()
+  const [search, setSearch] = useState('')
+  const [selectedUser, setSelectedUser] = useState<MemberSelectionUser | null>(
+    null,
+  )
+  const [selectedMembershipIds, setSelectedMembershipIds] = useState<
+    Set<string>
+  >(new Set())
+  const [page, setPage] = useState(0)
+  const pageSize = 25
+
+  const { users, isLoading } = useProjectUsers(
+    projectId || null,
+    page,
+    pageSize,
+    search,
+  )
+
+  const { data: membershipsData, isLoading: isLoadingMemberships } =
+    useUserMemberships(projectId || null, selectedUser?.$id || null)
+  const memberships = membershipsData?.memberships || []
+
+  // Check if a membership is already in permissions
+  const isMembershipAlreadyAdded = (membershipId: string) => {
+    return existingRoles?.has(`member:${membershipId}`) || false
+  }
+
+  const handleToggleMembership = (membershipId: string) => {
+    const newSelected = new Set(selectedMembershipIds)
+    if (newSelected.has(membershipId)) {
+      newSelected.delete(membershipId)
+    } else {
+      newSelected.add(membershipId)
+    }
+    setSelectedMembershipIds(newSelected)
+  }
+
+  const resetState = () => {
+    setSelectedMembershipIds(new Set())
+    setSelectedUser(null)
+    setSearch('')
+    setPage(0)
+  }
+
+  const handleAdd = () => {
+    const membershipIds = Array.from(selectedMembershipIds)
+    if (membershipIds.length > 0) {
+      onSelect(membershipIds.map((membershipId) => `member:${membershipId}`))
+      resetState()
+      onOpenChange(false)
+    }
+  }
+
+  const handleCancel = () => {
+    resetState()
+    onOpenChange(false)
+  }
+
+  const handleBack = () => {
+    setSelectedUser(null)
+    setSelectedMembershipIds(new Set())
+  }
+
+  const selectedUserName =
+    selectedUser?.name ||
+    selectedUser?.email ||
+    selectedUser?.phone ||
+    selectedUser?.$id ||
+    ''
+  const selectedUserInitials = selectedUser?.name
+    ? selectedUser.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : selectedUser?.email
+      ? selectedUser.email[0].toUpperCase()
+      : '?'
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        // Escape, the overlay and the close button all route through here, so the step-two
+        // state has to be cleared here too or the next open resumes on the previous user.
+        if (!next) resetState()
+        onOpenChange(next)
+      }}
+    >
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 text-start">
+          <DialogTitle>{t('Select Memberships')}</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            {selectedUser
+              ? t('Choose one or more team memberships to add permissions for.')
+              : t('Choose a user to see the team memberships you can add.')}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+
+        <div className="px-6 pb-4 pt-0">
+          <div className="space-y-4">
+            {selectedUser ? (
+              <>
+                <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0"
+                    onClick={handleBack}
+                    aria-label={t('Back to users')}
+                  >
+                    <ArrowLeft className="size-4 rtl:-scale-x-100" />
+                  </Button>
+                  <Avatar className="size-8">
+                    {selectedUser.avatar && (
+                      <AvatarImage
+                        src={selectedUser.avatar}
+                        alt={selectedUserName}
+                      />
+                    )}
+                    <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                      {selectedUserInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {selectedUserName}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {selectedUser.$id}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="max-h-[300px] overflow-y-auto space-y-1">
+                  {isLoadingMemberships ? (
+                    <div className="text-center py-8 text-sm text-muted-foreground">
+                      {t('Loading memberships...')}
+                    </div>
+                  ) : memberships.length === 0 ? (
+                    <EmptyState
+                      icon={Users}
+                      title={t('No memberships available')}
+                      description={t('This user is not a member of any teams.')}
+                      isEmpty
+                      className="py-8"
+                    />
+                  ) : (
+                    memberships.map((membership) => {
+                      const isSelected = selectedMembershipIds.has(
+                        membership.$id,
+                      )
+                      const isAlreadyAdded = isMembershipAlreadyAdded(
+                        membership.$id,
+                      )
+
+                      return (
+                        <div
+                          key={membership.$id}
+                          onClick={() =>
+                            !isAlreadyAdded &&
+                            handleToggleMembership(membership.$id)
+                          }
+                          className={cn(
+                            'flex items-center gap-3 rounded-lg border p-3 transition-colors',
+                            isAlreadyAdded
+                              ? 'border-border bg-muted/30 opacity-50 cursor-not-allowed'
+                              : isSelected
+                                ? 'border-primary bg-primary/5 cursor-pointer'
+                                : 'border-border hover:bg-muted/50 cursor-pointer',
+                          )}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => {
+                              if (!isAlreadyAdded)
+                                handleToggleMembership(membership.$id)
+                            }}
+                            disabled={isAlreadyAdded}
+                            onClick={(e) => e.stopPropagation()}
+                            className="cursor-pointer"
+                          />
+                          <div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <Users className="size-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {membership.teamName || membership.teamId}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {membership.$id}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <Input
+                  placeholder={t('Search users by name, email, or ID...')}
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value)
+                    setPage(0)
+                  }}
+                />
+
+                <div className="max-h-[300px] overflow-y-auto space-y-1">
+                  {isLoading ? (
+                    <div className="text-center py-8 text-sm text-muted-foreground">
+                      {t('Loading users...')}
+                    </div>
+                  ) : users.length === 0 ? (
+                    <EmptyState
+                      icon={User}
+                      isEmpty={!search}
+                      hasFilters={!!search}
+                      className="py-8"
+                    />
+                  ) : (
+                    users.map((user) => {
+                      const displayName =
+                        user.name || user.email || user.phone || user.$id
+                      const initials = user.name
+                        ? user.name
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2)
+                        : user.email
+                          ? user.email[0].toUpperCase()
+                          : '?'
+
+                      return (
+                        <button
+                          key={user.$id}
+                          type="button"
+                          onClick={() => setSelectedUser(user)}
+                          className="w-full text-start flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50 cursor-pointer"
+                        >
+                          <Avatar className="size-8">
+                            {user.avatar && (
+                              <AvatarImage
+                                src={user.avatar}
+                                alt={displayName}
+                              />
+                            )}
+                            <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {displayName}
+                            </p>
+                            {user.email && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {user.email}
+                              </p>
+                            )}
+                          </div>
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={handleCancel}>
+            {t('Cancel')}
+          </Button>
+          <Button
+            onClick={handleAdd}
+            disabled={!selectedUser || selectedMembershipIds.size === 0}
+          >
+            {t('Add')}{' '}
+            {selectedMembershipIds.size > 0
+              ? `(${selectedMembershipIds.size})`
+              : ''}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/**
  * LabelInputModal - modal for entering label name
  */
 interface LabelInputModalProps {
@@ -835,7 +1212,7 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
   )
 }
 
-/** Valid permission format: user:ID, user:ID/role, team:ID, or team:ID/role */
+/** Valid permission format: user:ID, user:ID/role, team:ID, team:ID/role, or member:ID */
 function isValidPermissionFormat(value: string): boolean {
   const trimmed = value.trim()
   if (!trimmed) return false
@@ -843,11 +1220,13 @@ function isValidPermissionFormat(value: string): boolean {
   if (/^user:[^/]+(\/.+)?$/.test(trimmed)) return true
   // team:teamId or team:teamId/roleName
   if (/^team:[^/]+(\/.+)?$/.test(trimmed)) return true
+  // member:membershipId - a membership has no sub-roles
+  if (/^member:[^/]+$/.test(trimmed)) return true
   return false
 }
 
 /**
- * CustomRoleInputModal - modal for entering a role by permission string (user: or team: format)
+ * CustomRoleInputModal - modal for entering a role by permission string (user:, team: or member: format)
  */
 interface CustomRoleInputModalProps {
   open: boolean
@@ -885,13 +1264,17 @@ function CustomRoleInputModal({
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Add by role string')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t('Grant access using a user or team ID. Use')}{' '}
+            {t('Grant access using a user, team, or membership ID. Use')}{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
               user:[USER_ID]
+            </code>
+            ,{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
+              team:[TEAM_ID]/[ROLE]
             </code>{' '}
             {t('or')}{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-              team:[TEAM_ID]/[ROLE]
+              member:[MEMBERSHIP_ID]
             </code>
             .
           </DialogDescription>
@@ -904,7 +1287,7 @@ function CustomRoleInputModal({
               <Label htmlFor="custom-role">{t('Permission string')}</Label>
               <Input
                 id="custom-role"
-                placeholder="user:USER_ID or team:TEAM_ID/ROLE"
+                placeholder="user:USER_ID, team:TEAM_ID/ROLE or member:MEMBERSHIP_ID"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 onKeyDown={(e) => {
@@ -915,14 +1298,18 @@ function CustomRoleInputModal({
                 className={showFormatError ? 'border-destructive' : ''}
               />
               {showFormatError && (
-                <p className="text-[12px] text-destructive flex items-center gap-1.5">
+                <p className="text-[12px] text-destructive flex flex-wrap items-center gap-1.5">
                   <span>{t('Use format')}</span>
                   <code className="rounded bg-destructive/10 px-1 py-0.5">
                     user:USER_ID
                   </code>
-                  <span>{t('or')}</span>
+                  <span>,</span>
                   <code className="rounded bg-destructive/10 px-1 py-0.5">
                     team:TEAM_ID/ROLE
+                  </code>
+                  <span>{t('or')}</span>
+                  <code className="rounded bg-destructive/10 px-1 py-0.5">
+                    member:MEMBERSHIP_ID
                   </code>
                 </p>
               )}
@@ -1013,6 +1400,7 @@ export const PermissionsEditor = forwardRef<
   // Modal states
   const [userModalOpen, setUserModalOpen] = useState(false)
   const [teamModalOpen, setTeamModalOpen] = useState(false)
+  const [memberModalOpen, setMemberModalOpen] = useState(false)
   const [labelModalOpen, setLabelModalOpen] = useState(false)
   const [customModalOpen, setCustomModalOpen] = useState(false)
 
@@ -1249,6 +1637,15 @@ export const PermissionsEditor = forwardRef<
     [handleAddRole],
   )
 
+  const handleAddMembers = useCallback(
+    (roles: string[]) => {
+      roles.forEach((role) => {
+        handleAddRole(role)
+      })
+    },
+    [handleAddRole],
+  )
+
   const handleAddLabel = useCallback(
     (labelName: string) => {
       handleAddRole(`label:${labelName}`)
@@ -1282,6 +1679,7 @@ export const PermissionsEditor = forwardRef<
           onAddSpecialRole={handleAddRole}
           onOpenUserModal={() => setUserModalOpen(true)}
           onOpenTeamModal={() => setTeamModalOpen(true)}
+          onOpenMemberModal={() => setMemberModalOpen(true)}
           onOpenLabelModal={() => setLabelModalOpen(true)}
           onOpenCustomModal={() => setCustomModalOpen(true)}
           hasAny={hasAny}
@@ -1312,6 +1710,13 @@ export const PermissionsEditor = forwardRef<
           open={teamModalOpen}
           onOpenChange={setTeamModalOpen}
           onSelect={handleAddTeams}
+          projectId={projectId}
+          existingRoles={new Set(permissionsMap.keys())}
+        />
+        <MemberSelectionModal
+          open={memberModalOpen}
+          onOpenChange={setMemberModalOpen}
+          onSelect={handleAddMembers}
           projectId={projectId}
           existingRoles={new Set(permissionsMap.keys())}
         />
@@ -1362,6 +1767,7 @@ export const PermissionsEditor = forwardRef<
           onAddSpecialRole={handleAddRole}
           onOpenUserModal={() => setUserModalOpen(true)}
           onOpenTeamModal={() => setTeamModalOpen(true)}
+          onOpenMemberModal={() => setMemberModalOpen(true)}
           onOpenLabelModal={() => setLabelModalOpen(true)}
           onOpenCustomModal={() => setCustomModalOpen(true)}
           hasAny={hasAny}
@@ -1379,6 +1785,13 @@ export const PermissionsEditor = forwardRef<
           open={teamModalOpen}
           onOpenChange={setTeamModalOpen}
           onSelect={handleAddTeams}
+          projectId={projectId}
+          existingRoles={new Set(permissionsMap.keys())}
+        />
+        <MemberSelectionModal
+          open={memberModalOpen}
+          onOpenChange={setMemberModalOpen}
+          onSelect={handleAddMembers}
           projectId={projectId}
           existingRoles={new Set(permissionsMap.keys())}
         />
@@ -1525,6 +1938,7 @@ export const PermissionsEditor = forwardRef<
         onAddSpecialRole={handleAddRole}
         onOpenUserModal={() => setUserModalOpen(true)}
         onOpenTeamModal={() => setTeamModalOpen(true)}
+        onOpenMemberModal={() => setMemberModalOpen(true)}
         onOpenLabelModal={() => setLabelModalOpen(true)}
         onOpenCustomModal={() => setCustomModalOpen(true)}
         hasAny={hasAny}
@@ -1544,6 +1958,13 @@ export const PermissionsEditor = forwardRef<
         open={teamModalOpen}
         onOpenChange={setTeamModalOpen}
         onSelect={handleAddTeams}
+        projectId={projectId}
+        existingRoles={new Set(permissionsMap.keys())}
+      />
+      <MemberSelectionModal
+        open={memberModalOpen}
+        onOpenChange={setMemberModalOpen}
+        onSelect={handleAddMembers}
         projectId={projectId}
         existingRoles={new Set(permissionsMap.keys())}
       />
@@ -1568,6 +1989,7 @@ interface AddRoleDropdownProps {
   onAddSpecialRole: (role: string) => void
   onOpenUserModal: () => void
   onOpenTeamModal: () => void
+  onOpenMemberModal: () => void
   onOpenLabelModal: () => void
   onOpenCustomModal: () => void
   hasAny: boolean
@@ -1580,6 +2002,7 @@ function AddRoleDropdown({
   onAddSpecialRole,
   onOpenUserModal,
   onOpenTeamModal,
+  onOpenMemberModal,
   onOpenLabelModal,
   onOpenCustomModal,
   hasAny,
@@ -1638,6 +2061,12 @@ function AddRoleDropdown({
         >
           <Building2 className="size-4 me-2" />
           <span>{t('Select teams')}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={() => openDialogAfterOverlayCloses(onOpenMemberModal)}
+        >
+          <Users className="size-4 me-2" />
+          <span>{t('Select memberships')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

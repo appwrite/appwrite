@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: 'MCP documentation embeddings now refresh daily, independent of version releases'
+date: 2026-08-18
+cover: /images/changelog/2026-08-18.avif
+---
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers/api) now refreshes its documentation embeddings on a **daily cron**. When Appwrite documentation changes, that context is automatically reflected in `appwrite_search_docs` and in the AI tools that use it.
+
+This refresh runs independently of Appwrite version releases. Docs can iterate as soon as they ship, without waiting for the next product version to rebuild embeddings. AI tools therefore work against current Appwrite guidance on a daily cadence, not a release cadence.
+
+{% arrow_link href="/docs/tooling/ai/mcp-servers/api" %}
+Learn more about the Appwrite MCP server
+{% /arrow_link %}

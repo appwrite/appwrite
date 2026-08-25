@@ -13,6 +13,11 @@ export const QUICK_STARTS_HUB_CATEGORIES: QuickStartHubCategory[] = [
   {
     title: 'Web app',
     items: [
+      {
+        title: 'TanStack Start',
+        href: '/docs/quick-starts/tanstack-start',
+        iconSrc: '/icons/react.svg',
+      },
       { title: 'Next.js', href: '/docs/quick-starts/nextjs', iconSrc: '/icons/nextjs.svg' },
       { title: 'React', href: '/docs/quick-starts/react', iconSrc: '/icons/react.svg' },
       { title: 'Vue.js', href: '/docs/quick-starts/vue', iconSrc: '/icons/vue.svg' },
@@ -21,13 +26,8 @@ export const QUICK_STARTS_HUB_CATEGORIES: QuickStartHubCategory[] = [
       { title: 'Nuxt', href: '/docs/quick-starts/nuxt', iconSrc: '/icons/nuxt.svg' },
       { title: 'Refine', href: '/docs/quick-starts/refine', iconSrc: '/icons/refine.svg' },
       { title: 'Solid', href: '/docs/quick-starts/solid', iconSrc: '/icons/solid.svg' },
-      {
-        title: 'TanStack Start',
-        href: '/docs/quick-starts/tanstack-start',
-        iconSrc: '/icons/react.svg',
-      },
-      { title: 'Astro', href: '/docs/quick-starts/astro', iconSrc: '/icons/astro.svg' },
       { title: 'Qwik', href: '/docs/quick-starts/qwik', iconSrc: '/icons/qwik.svg' },
+      { title: 'Astro', href: '/docs/quick-starts/astro', iconSrc: '/icons/astro.svg' },
       { title: 'Web', href: '/docs/quick-starts/web', iconSrc: '/icons/js.svg' },
     ],
   },

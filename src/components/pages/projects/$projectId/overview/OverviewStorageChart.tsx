@@ -21,6 +21,7 @@ import {
 } from './chart-panel'
 import { OverviewChartPanelError } from './OverviewChartPanelError'
 import { MetricValueWithUnit } from './MetricValueWithUnit'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
   createUsageChartAxisTickFormatter,
@@ -144,7 +145,8 @@ function StorageTooltip({ active, payload }: StorageTooltipProps) {
             key={series.key}
             className="flex items-center justify-between gap-6"
           >
-            <span className="text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <ChartSeriesDot color={series.color} />
               {t(series.label)}
             </span>
             <span className="text-[12px] font-medium text-foreground">

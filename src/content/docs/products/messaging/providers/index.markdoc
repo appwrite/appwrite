@@ -29,6 +29,9 @@ Deliver custom email messages to users using Resend.
 {% cards_item href="/docs/products/messaging/sendgrid" title="SendGrid" icon="web-icon-sendgrid" %}
 Deliver custom email messages to users using SendGrid.
 {% /cards_item %}
+{% cards_item href="/docs/products/messaging/ses" title="Amazon SES" icon="web-icon-ses" %}
+Deliver custom email messages to users using Amazon SES.
+{% /cards_item %}
 {% cards_item href="/docs/products/messaging/smtp" title="SMTP" icon="icon-mail" %}
 Deliver custom email messages to users using standard SMTP settings.
 {% /cards_item %}

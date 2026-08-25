@@ -1,6 +1,8 @@
 import { createMiddleware } from '@tanstack/react-start'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 import {
   hasWebsiteAccessCookieFromHeader,
+  isWebsiteAccessEnabled,
   isWebsiteAccessProtectedPath,
 } from '@/lib/website-access'
 
@@ -22,6 +24,10 @@ export const websiteAccessMiddleware = createMiddleware({
 }).server(async ({ request, pathname, next }) => {
   // Prerender fetches must reach the page HTML; a 302 fails the build.
   if (process.env.TSS_PRERENDERING === 'true') {
+    return next()
+  }
+
+  if (!isWebsiteAccessEnabled(getRuntimeConfig().websiteAccess)) {
     return next()
   }
 

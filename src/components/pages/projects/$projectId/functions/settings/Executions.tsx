@@ -42,10 +42,11 @@ export function View() {
     }
   }, [func])
 
-  const invalidateFunction = () => {
-    queryClient.invalidateQueries({
-      queryKey: ['function', 'project', projectId, functionId],
-    })
+  const syncFunctionCache = (updated: Models.Function) => {
+    queryClient.setQueryData(
+      ['function', 'project', projectId, functionId],
+      updated,
+    )
     queryClient.invalidateQueries({
       queryKey: ['functions', 'project', projectId],
     })
@@ -60,9 +61,9 @@ export function View() {
         buildFunctionUpdateParams(func, updates),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Schedule updated successfully'))
-      invalidateFunction()
+      syncFunctionCache(updated)
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, t('Failed to update schedule')))
@@ -78,9 +79,9 @@ export function View() {
         buildFunctionUpdateParams(func, updates),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Events updated successfully'))
-      invalidateFunction()
+      syncFunctionCache(updated)
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, t('Failed to update events')))

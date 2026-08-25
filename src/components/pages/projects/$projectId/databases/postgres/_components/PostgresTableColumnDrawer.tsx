@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Button } from '@/components/ui/button'
@@ -61,7 +61,7 @@ type PostgresTableColumnDrawerProps = {
   databaseId: string
   tableId: string
   column: PostgresTableColumnRow | null
-  onSuccess: () => void
+  onSuccess: () => void | Promise<unknown>
 }
 
 function normalizeOptionalText(value: string): string {
@@ -128,6 +128,15 @@ export function PostgresTableColumnDrawer({
   const [foreignKeyState, setForeignKeyState] = useState<PostgresForeignKeyState>(
     () => createEmptyPostgresForeignKeyState(tableSchema),
   )
+  const nameInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!open || column) return
+    const timeout = window.setTimeout(() => {
+      nameInputRef.current?.focus()
+    }, 0)
+    return () => window.clearTimeout(timeout)
+  }, [open, column])
 
   useEffect(() => {
     if (!open) return
@@ -362,7 +371,7 @@ export function PostgresTableColumnDrawer({
       )
       toast.success(isEditing ? t('Column updated') : t('Column created'))
       onOpenChange(false)
-      onSuccess()
+      await onSuccess()
     } catch (error) {
       toast.error(
         getErrorMessage(error) ??
@@ -411,11 +420,13 @@ export function PostgresTableColumnDrawer({
                   {t('Name')} <span className="text-destructive">*</span>
                 </Label>
                 <Input
+                  ref={nameInputRef}
                   id="column-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   placeholder="column_name"
                   disabled={isExistingPrimaryKey}
+                  autoFocus={!isEditing}
                 />
                 <p className="text-[11px] text-muted-foreground">
                   {t(

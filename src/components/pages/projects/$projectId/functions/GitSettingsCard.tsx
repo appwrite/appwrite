@@ -142,11 +142,12 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
         buildFunctionUpdateParams(func, updates),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Function updated successfully'))
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, func.$id],
-      })
+      queryClient.setQueryData(
+        ['function', 'project', projectId, func.$id],
+        updated,
+      )
       // Refresh repository data if connected
       if (hasRepository) {
         queryClient.invalidateQueries({
@@ -201,13 +202,14 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
         }),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Repository connected successfully'))
       setConnectDialogOpen(false)
       setSelectedRepositoryId('')
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, func.$id],
-      })
+      queryClient.setQueryData(
+        ['function', 'project', projectId, func.$id],
+        updated,
+      )
     },
     onError: (error: unknown) => {
       toast.error(error.message || t('Failed to connect repository'))
@@ -230,14 +232,15 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
         }),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Repository disconnected successfully'))
       setDisconnectDialogOpen(false)
       setSelectedBranch('')
       setSelectedDir('')
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, func.$id],
-      })
+      queryClient.setQueryData(
+        ['function', 'project', projectId, func.$id],
+        updated,
+      )
     },
     onError: (error: unknown) => {
       toast.error(error.message || t('Failed to disconnect repository'))

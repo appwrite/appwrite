@@ -22,6 +22,7 @@ import {
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
+  useConsoleVariables,
   useCreateVcsRepository,
   useNamespacesForInstallations,
 } from '@/lib/react-query/hooks'
@@ -41,6 +42,7 @@ import { GitBranch } from 'lucide-react'
 import {
   buildVcsOrgOptions,
   getVcsProvider,
+  vcsProviderHasCapability,
   VCS_PROVIDERS,
   VcsIcon,
   type VcsProviderId,
@@ -148,13 +150,42 @@ export function ConnectRepositorySection({
     projectId,
     installations,
   )
+  const {
+    vcsProvidersWithRepositoryCreation,
+    vcsProvidersWithPublicRepositories,
+  } = useConsoleVariables()
   const orgOptions = useMemo(
     () => buildVcsOrgOptions(installations, namespacesByInstallation),
     [installations, namespacesByInstallation],
   )
+  // Only orgs whose provider can create repositories may appear in the
+  // "Create new repository" form; when none qualify the option is hidden.
+  const creationOrgOptions = useMemo(
+    () =>
+      orgOptions.filter((option) =>
+        vcsProviderHasCapability(
+          option.provider,
+          vcsProvidersWithRepositoryCreation,
+        ),
+      ),
+    [orgOptions, vcsProvidersWithRepositoryCreation],
+  )
+  const canCreateRepository = creationOrgOptions.length > 0
+  const effectiveBehaviour = canCreateRepository
+    ? repositoryBehaviour
+    : 'existing'
   const selectedOrgKey = selectedNamespace.providerNamespace
     ? `${selectedInstallationId}:${selectedNamespace.providerNamespace}`
     : selectedInstallationId
+  const selectedOrgProvider = orgOptions.find(
+    (option) => option.key === selectedOrgKey,
+  )?.provider
+  // Providers that cannot host public repositories get no visibility toggle;
+  // the repository is always created private.
+  const supportsPublicRepositories = vcsProviderHasCapability(
+    selectedOrgProvider,
+    vcsProvidersWithPublicRepositories,
+  )
   const selectOrgOption = (key: string) => {
     const option = orgOptions.find((o) => o.key === key)
     if (!option) return
@@ -169,17 +200,21 @@ export function ConnectRepositorySection({
   // current installation/namespace pair no longer matches one (initial
   // load, or the installations/namespaces list changing underneath it).
   useEffect(() => {
-    if (!orgOptions.length) return
-    const stillValid = orgOptions.some((o) => o.key === selectedOrgKey)
+    // The create form only lists creation-capable orgs, so while it is shown
+    // the selection must also come from that subset.
+    const validOptions =
+      effectiveBehaviour === 'new' ? creationOrgOptions : orgOptions
+    if (!validOptions.length) return
+    const stillValid = validOptions.some((o) => o.key === selectedOrgKey)
     if (!stillValid) {
-      const first = orgOptions[0]
+      const first = validOptions[0]
       setSelectedInstallationId(first.installationId)
       setSelectedNamespace({
         providerNamespace: first.providerNamespace,
         providerNamespaceId: first.providerNamespaceId,
       })
     }
-  }, [orgOptions, selectedOrgKey])
+  }, [orgOptions, creationOrgOptions, effectiveBehaviour, selectedOrgKey])
 
   const connectedInstallation = installations.find(
     (installation) => installation.$id === value.installationId,
@@ -224,7 +259,7 @@ export function ConnectRepositorySection({
       const repo = await createRepositoryMutation.mutateAsync({
         installationId: selectedInstallationId,
         name: repositoryName.trim(),
-        xprivate: repositoryPrivate,
+        xprivate: supportsPublicRepositories ? repositoryPrivate : true,
         providerNamespace: selectedNamespace.providerNamespaceId,
       })
       onValueChange({
@@ -292,6 +327,18 @@ export function ConnectRepositorySection({
               <a href={vcsAuthUrl('gitlab')}>
                 <VcsIcon type="gitlab" className="me-1.5 h-4 w-4" />
                 {t('Connect to GitLab')}
+              </a>
+            </Button>
+            <Button variant="secondary" asChild>
+              <a href={vcsAuthUrl('bitbucket')}>
+                <VcsIcon type="bitbucket" className="me-1.5 h-4 w-4" />
+                {t('Connect to Bitbucket')}
+              </a>
+            </Button>
+            <Button variant="secondary" asChild>
+              <a href={vcsAuthUrl('origin')}>
+                <VcsIcon type="origin" className="me-1.5 h-4 w-4" />
+                {t('Connect to Origin')}
               </a>
             </Button>
           </div>
@@ -388,73 +435,77 @@ export function ConnectRepositorySection({
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
-        <RadioGroup
-          value={repositoryBehaviour}
-          onValueChange={(v) => setRepositoryBehaviour(v as 'new' | 'existing')}
-          className="flex gap-4 mb-6"
-        >
-          <Label
-            htmlFor="repo-new"
-            className={cn(
-              'flex flex-1 items-start gap-3 rounded-xl border p-4 cursor-pointer transition-all',
-              repositoryBehaviour === 'new'
-                ? 'border-foreground bg-card/80'
-                : 'border-border bg-card/50 hover:border-border/80',
-            )}
+        {canCreateRepository && (
+          <RadioGroup
+            value={effectiveBehaviour}
+            onValueChange={(v) =>
+              setRepositoryBehaviour(v as 'new' | 'existing')
+            }
+            className="flex gap-4 mb-6"
           >
-            <RadioGroupItem
-              value="new"
-              id="repo-new"
-              className="mt-1 shrink-0"
-            />
-            <div>
-              <span className="text-[14px] font-medium text-foreground">
-                {t('Create new repository')}
-              </span>
-              <p className="text-[12px] text-muted-foreground mt-1">
-                {t(
-                  'Create a new Git repository and clone the template into it.',
-                )}
-              </p>
-            </div>
-          </Label>
-          <Label
-            htmlFor="repo-existing"
-            className={cn(
-              'flex flex-1 items-start gap-3 rounded-xl border p-4 cursor-pointer transition-all',
-              repositoryBehaviour === 'existing'
-                ? 'border-foreground bg-card/80'
-                : 'border-border bg-card/50 hover:border-border/80',
-            )}
-          >
-            <RadioGroupItem
-              value="existing"
-              id="repo-existing"
-              className="mt-1 shrink-0"
-            />
-            <div>
-              <span className="text-[14px] font-medium text-foreground">
-                {t('Connect existing repository')}
-              </span>
-              <p className="text-[12px] text-muted-foreground mt-1">
-                {t('Link this deployment to an existing repository.')}
-              </p>
-            </div>
-          </Label>
-        </RadioGroup>
+            <Label
+              htmlFor="repo-new"
+              className={cn(
+                'flex flex-1 items-start gap-3 rounded-xl border p-4 cursor-pointer transition-all',
+                repositoryBehaviour === 'new'
+                  ? 'border-foreground bg-card/80'
+                  : 'border-border bg-card/50 hover:border-border/80',
+              )}
+            >
+              <RadioGroupItem
+                value="new"
+                id="repo-new"
+                className="mt-1 shrink-0"
+              />
+              <div>
+                <span className="text-[14px] font-medium text-foreground">
+                  {t('Create new repository')}
+                </span>
+                <p className="text-[12px] text-muted-foreground mt-1">
+                  {t(
+                    'Create a new Git repository and clone the template into it.',
+                  )}
+                </p>
+              </div>
+            </Label>
+            <Label
+              htmlFor="repo-existing"
+              className={cn(
+                'flex flex-1 items-start gap-3 rounded-xl border p-4 cursor-pointer transition-all',
+                repositoryBehaviour === 'existing'
+                  ? 'border-foreground bg-card/80'
+                  : 'border-border bg-card/50 hover:border-border/80',
+              )}
+            >
+              <RadioGroupItem
+                value="existing"
+                id="repo-existing"
+                className="mt-1 shrink-0"
+              />
+              <div>
+                <span className="text-[14px] font-medium text-foreground">
+                  {t('Connect existing repository')}
+                </span>
+                <p className="text-[12px] text-muted-foreground mt-1">
+                  {t('Link this deployment to an existing repository.')}
+                </p>
+              </div>
+            </Label>
+          </RadioGroup>
+        )}
 
-        {repositoryBehaviour === 'new' && (
+        {effectiveBehaviour === 'new' && (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="git-org" className="text-[13px]">
-                {t('Git organization')}
+                {t('Organization')}
               </Label>
               <Select value={selectedOrgKey} onValueChange={selectOrgOption}>
                 <SelectTrigger id="git-org" className="h-9 text-[13px]">
                   <SelectValue placeholder={t('Select organization')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {orgOptions.map((org) => (
+                  {creationOrgOptions.map((org) => (
                     <SelectItem key={org.key} value={org.key}>
                       <span className="flex items-center gap-2">
                         <VcsIcon
@@ -466,16 +517,23 @@ export function ConnectRepositorySection({
                     </SelectItem>
                   ))}
                   <div className="border-t border-border mt-1 pt-1">
-                    {Object.values(VCS_PROVIDERS).map((p) => (
-                      <a
-                        key={p.id}
-                        href={vcsAuthUrl(p.id)}
-                        className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-                      >
-                        <p.Icon className="h-3 w-3" />
-                        {t(`Add ${p.label} account`)}
-                      </a>
-                    ))}
+                    {Object.values(VCS_PROVIDERS)
+                      .filter((p) =>
+                        vcsProviderHasCapability(
+                          p.id,
+                          vcsProvidersWithRepositoryCreation,
+                        ),
+                      )
+                      .map((p) => (
+                        <a
+                          key={p.id}
+                          href={vcsAuthUrl(p.id)}
+                          className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                        >
+                          <p.Icon className="h-3 w-3" />
+                          {t(`Add ${p.label} account`)}
+                        </a>
+                      ))}
                   </div>
                 </SelectContent>
               </Select>
@@ -492,19 +550,21 @@ export function ConnectRepositorySection({
                 className="h-9 text-[13px]"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="repo-private"
-                checked={repositoryPrivate}
-                onCheckedChange={(v) => setRepositoryPrivate(v === true)}
-              />
-              <Label
-                htmlFor="repo-private"
-                className="text-[13px] font-normal cursor-pointer"
-              >
-                {t('Keep repository private')}
-              </Label>
-            </div>
+            {supportsPublicRepositories && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="repo-private"
+                  checked={repositoryPrivate}
+                  onCheckedChange={(v) => setRepositoryPrivate(v === true)}
+                />
+                <Label
+                  htmlFor="repo-private"
+                  className="text-[13px] font-normal cursor-pointer"
+                >
+                  {t('Keep repository private')}
+                </Label>
+              </div>
+            )}
             <Button
               onClick={handleCreateRepository}
               disabled={
@@ -526,8 +586,12 @@ export function ConnectRepositorySection({
                   onRetry={handleCreateRepository}
                   isRetrying={createRepositoryMutation.isPending}
                 >
-                  {t(
-                    'The repository was not created because Appwrite could not reach this Git installation.',
+                  {/* A name already taken lands here too, so the API wins */}
+                  {getErrorMessage(
+                    createRepositoryMutation.error,
+                    t(
+                      'The repository was not created because Appwrite could not reach this Git installation.',
+                    ),
                   )}
                 </VcsInstallationErrorAlert>
               ) : (
@@ -543,7 +607,7 @@ export function ConnectRepositorySection({
           </div>
         )}
 
-        {repositoryBehaviour === 'existing' && (
+        {effectiveBehaviour === 'existing' && (
           <RepositoryPicker
             projectId={projectId}
             getGitHubAuthUrl={getGitHubAuthUrl}

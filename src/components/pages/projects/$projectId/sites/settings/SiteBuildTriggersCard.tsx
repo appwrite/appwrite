@@ -35,15 +35,16 @@ export function SiteBuildTriggersCard({
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (updated, variables) => {
       const summary = describeTriggerBehavior(
         variables.providerBranches,
         variables.providerPaths,
       )
       toast.success(`${t('Triggers updated.')} ${summary}`)
-      queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
+      queryClient.setQueryData(
+        ['site', 'project', projectId, siteId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })

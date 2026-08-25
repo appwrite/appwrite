@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
   Dialog,
@@ -205,6 +206,10 @@ export function TeamOverview() {
                 </p>
               </div>
               <div className="space-y-1 text-[13px] text-muted-foreground">
+                <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                  <span>{t('Team ID:')}</span>
+                  <CopyableId id={team.$id} size="sm" />
+                </p>
                 <div className="flex items-center gap-1.5">
                   <span>
                     {totalMembers}{' '}

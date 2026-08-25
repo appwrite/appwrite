@@ -241,6 +241,32 @@ export function GitConfigurationCard({
                   {t('Connect to GitLab')}
                 </a>
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 text-[13px]"
+                asChild
+              >
+                <a
+                  href={vcsAuthUrl('bitbucket')}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <VcsIcon type="bitbucket" className="me-1.5 h-4 w-4" />
+                  {t('Connect to Bitbucket')}
+                </a>
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 text-[13px]"
+                asChild
+              >
+                <a href={vcsAuthUrl('origin')} target="_blank" rel="noreferrer">
+                  <VcsIcon type="origin" className="me-1.5 h-4 w-4" />
+                  {t('Connect to Origin')}
+                </a>
+              </Button>
             </div>
           </div>
         </div>
@@ -445,11 +471,11 @@ export function GitConfigurationCard({
           </div>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <Button
               variant="secondary"
               size="sm"
-              className="h-9 text-[13px]"
+              className="h-9 w-full text-[13px] sm:w-auto"
               asChild
             >
               <a href={vcsAuthUrl('github')} target="_blank" rel="noreferrer">
@@ -460,12 +486,38 @@ export function GitConfigurationCard({
             <Button
               variant="secondary"
               size="sm"
-              className="h-9 text-[13px]"
+              className="h-9 w-full text-[13px] sm:w-auto"
               asChild
             >
               <a href={vcsAuthUrl('gitlab')} target="_blank" rel="noreferrer">
                 <VcsIcon type="gitlab" className="me-1.5 h-4 w-4" />
                 {t('Connect with GitLab')}
+              </a>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 w-full text-[13px] sm:w-auto"
+              asChild
+            >
+              <a
+                href={vcsAuthUrl('bitbucket')}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <VcsIcon type="bitbucket" className="me-1.5 h-4 w-4" />
+                {t('Connect with Bitbucket')}
+              </a>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 w-full text-[13px] sm:w-auto"
+              asChild
+            >
+              <a href={vcsAuthUrl('origin')} target="_blank" rel="noreferrer">
+                <VcsIcon type="origin" className="me-1.5 h-4 w-4" />
+                {t('Connect with Origin')}
               </a>
             </Button>
           </div>

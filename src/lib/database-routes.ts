@@ -1,6 +1,12 @@
-import { DatabaseType } from '@/lib/databases/database-type'
+import {
+  DatabaseType,
+  engineFromDatabaseTypeValue,
+  isNativeDatabaseTypeValue,
+} from '@/lib/databases/database-type'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
+import { mysqlDatabaseHome } from '@/lib/mysql-database-routes'
+import { isMysqlEngine } from '@/lib/databases/native-database-engines'
 
 /**
  * URL / route-file segment for the three database products.
@@ -35,6 +41,41 @@ export function isProductDatabaseTypeEnabled(
 ): boolean {
   if (type === DatabaseType.Documentsdb) return features.dedicatedDbsDocumentsDB
   if (type === DatabaseType.Vectorsdb) return features.dedicatedDbsVectorsDB
+  return true
+}
+
+/**
+ * Whether this database type is enabled on the active console profile.
+ * TablesDB is always on. DocumentsDB, VectorsDB, and native engines follow
+ * their feature flags. Databases whose flag is off can still appear in the
+ * unified list and should render as disabled.
+ */
+export function isDatabaseTypeFeatureEnabled(
+  type: string | DatabaseType | null | undefined,
+  features: Pick<
+    ConsoleProfileFeatures,
+    | 'dedicatedDbsDocumentsDB'
+    | 'dedicatedDbsVectorsDB'
+    | 'nativeDbsPostgres'
+    | 'nativeDbsMySQL'
+    | 'nativeDbsMongo'
+  >,
+): boolean {
+  const key = String(type ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, '')
+  if (!key) return true
+
+  if (key === 'documentsdb') return features.dedicatedDbsDocumentsDB
+  if (key === 'vectorsdb') return features.dedicatedDbsVectorsDB
+
+  const engine = engineFromDatabaseTypeValue(key)
+  if (engine === 'postgresql') return features.nativeDbsPostgres
+  if (engine === 'mysql') return features.nativeDbsMySQL
+  if (engine === 'mongodb') return features.nativeDbsMongo
+  if (isNativeDatabaseTypeValue(key)) return features.nativeDbsPostgres
+
   return true
 }
 
@@ -311,6 +352,14 @@ export function dedicatedDatabaseHomeLink(
 
   if (isPostgresDedicatedEngine(db.engine)) {
     return postgresDatabaseHome({
+      projectId,
+      databaseId: db.$id,
+      tableId: '-',
+    })
+  }
+
+  if (isMysqlEngine(db.engine)) {
+    return mysqlDatabaseHome({
       projectId,
       databaseId: db.$id,
       tableId: '-',

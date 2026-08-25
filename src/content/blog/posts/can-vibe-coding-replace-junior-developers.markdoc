@@ -18,7 +18,7 @@ faqs:
   - question: "Does vibe coding raise the bar on what juniors should know?"
     answer: "It shifts the bar. Memorizing every syntax detail matters less. Reading diffs critically, understanding system design, knowing what an agent gets wrong, and reviewing security implications matters more. A junior who can spot a missing permission check or a leaked API key in generated code is more valuable than one who can write the same code from scratch."
   - question: "How does Appwrite fit into a junior-friendly vibe coding workflow?"
-    answer: "Appwrite covers the primitives a junior would otherwise hand-roll: [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), and [Sites](/docs/products/sites). The [API MCP server](/docs/tooling/ai/mcp-servers/api), [Docs MCP server](/docs/tooling/ai/mcp-servers/docs), and [Agent Skills](/docs/tooling/ai/skills) give the agent enough context to produce code a junior can review without spending the first week guessing at SDK shapes."
+    answer: "Appwrite covers the primitives a junior would otherwise hand-roll: [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), and [Sites](/docs/products/sites). The [API MCP server](/docs/tooling/ai/mcp-servers), [Docs MCP server](/docs/tooling/ai/mcp-servers), and [Agent Skills](/docs/tooling/ai/skills) give the agent enough context to produce code a junior can review without spending the first week guessing at SDK shapes."
 ---
 
 The question shows up in every hiring discussion since 2025. If Cursor and Claude Code can scaffold a full feature in an afternoon, why hire someone who would have taken a week to do the same? The answer is more interesting than the question suggests, and it changes what a junior engineering role actually looks like.
@@ -73,7 +73,7 @@ The other signal that matters is curiosity about systems. The junior who asks ho
 
 The choice of backend matters more for a vibe coding team than it used to. A backend with clean primitives, scoped permissions, MCP support, and documented patterns lets a junior plus an agent produce production-grade code without the senior re-reading every line.
 
-[Appwrite Cloud](https://cloud.appwrite.io) gives you that shape. [Auth](/docs/products/auth) covers OAuth, sessions, MFA, and Teams. [Databases](/docs/products/databases) cover tables, typed columns, rows, relationships, and queries. [Storage](/docs/products/storage) covers files with permissions, antivirus, and encryption. [Functions](/docs/products/functions) cover server-side logic. [Sites](/docs/products/sites) covers hosting with custom domains and rollbacks. The [API MCP server](/docs/tooling/ai/mcp-servers/api) and [Docs MCP server](/docs/tooling/ai/mcp-servers/docs) keep the agent on current APIs, and [Agent Skills](/docs/tooling/ai/skills) give it SDK context. A junior reviewing this code does not have to debug whether the agent invented an SDK method that does not exist.
+[Appwrite Cloud](https://cloud.appwrite.io) gives you that shape. [Auth](/docs/products/auth) covers OAuth, sessions, MFA, and Teams. [Databases](/docs/products/databases) cover tables, typed columns, rows, relationships, and queries. [Storage](/docs/products/storage) covers files with permissions, antivirus, and encryption. [Functions](/docs/products/functions) cover server-side logic. [Sites](/docs/products/sites) covers hosting with custom domains and rollbacks. The [API MCP server](/docs/tooling/ai/mcp-servers) and [Docs MCP server](/docs/tooling/ai/mcp-servers) keep the agent on current APIs, and [Agent Skills](/docs/tooling/ai/skills) give it SDK context. A junior reviewing this code does not have to debug whether the agent invented an SDK method that does not exist.
 
 For teams that pair junior developers with vibe coding tools, the same checklist that applies to any production launch applies twice as hard. The [backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps) is a good place to anchor your team's pre-launch review.
 
@@ -84,6 +84,6 @@ Vibe coding does not replace junior developers. It replaces a specific slice of 
 If you are building a team that ships with vibe coding tools, start by giving your juniors a backend they can reason about. [Sign up for Appwrite Cloud](https://cloud.appwrite.io), install the [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugin, and let the agent handle the syntax while your junior owns the judgment.
 
 - [Appwrite AI tooling](/docs/tooling/ai)
-- [Appwrite API MCP server](/docs/tooling/ai/mcp-servers/api)
-- [Appwrite Docs MCP server](/docs/tooling/ai/mcp-servers/docs)
+- [Appwrite API MCP server](/docs/tooling/ai/mcp-servers)
+- [Appwrite Docs MCP server](/docs/tooling/ai/mcp-servers)
 - [Sign up for Appwrite Cloud](https://cloud.appwrite.io)

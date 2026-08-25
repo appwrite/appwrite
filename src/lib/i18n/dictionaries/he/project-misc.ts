@@ -38,7 +38,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   // pragma: allowlist secret
   'Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.':
     'צרו מפתח API כדי לאמת את האפליקציות שלכם ולגשת לשירותי Appwrite. מפתחות API מספקים גישה מאובטחת למשאבי הפרויקט שלכם.', // pragma: allowlist secret
-  'Create API key for your language': 'צרו מפתח API לשפה שלכם',
+  'Get started with your language of choice': 'התחילו עם השפה לבחירתכם',
   'No API keys match your search': 'אין מפתחות API התואמים לחיפוש שלכם',
   'Delete API key': 'מחיקת מפתח API',
   'this API key': 'מפתח API זה',
@@ -98,6 +98,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Map your app's hostname or bundle ID so the SDK can reach this project.":
     'מפו את שם המארח או מזהה החבילה של האפליקציה כדי שה-SDK יוכל להגיע לפרויקט הזה.',
   'Add platform': 'הוספת פלטפורמה',
+  Manage: 'ניהול',
   'Manage apps': 'ניהול אפליקציות',
   'Create a server API key': 'יצירת מפתח API לשרת',
   'Add a scoped secret for servers and CI; client apps use sessions instead.':
@@ -276,6 +277,27 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Search rules...': 'חיפוש כללים...',
   'Search logs...': 'חיפוש בלוגים...',
   'Create rule': 'יצירת כלל',
+  'Attack mode': 'מצב התקפה',
+  'Turn on attack mode': 'הפעלת מצב התקפה',
+  'Turn off attack mode': 'השבתת מצב התקפה',
+  'Turn on': 'הפעלה',
+  'Turn off': 'השבתה',
+  'Attack mode is on': 'מצב התקפה פעיל',
+  'Attack mode is off': 'מצב התקפה כבוי',
+  'Failed to turn on attack mode': 'הפעלת מצב התקפה נכשלה',
+  'Failed to turn off attack mode': 'השבתת מצב התקפה נכשלה',
+  'Challenge every visitor until you turn it off.':
+    'אתגרו כל מבקר עד שתשבתו את המצב.',
+  'Visitors must pass a challenge before they can continue.':
+    'מבקרים חייבים לעבור אתגר לפני שיוכלו להמשיך.',
+  'Bypass rules with a lower priority number still apply.':
+    'כללי עקיפה עם מספר עדיפות נמוך יותר עדיין חלים.',
+  'New requests will no longer be challenged by attack mode.':
+    'בקשות חדשות לא יאותגרו יותר על ידי מצב התקפה.',
+  'Your other firewall rules stay in place.':
+    'שאר כללי חומת האש נשארים במקומם.',
+  'Attack mode is on. Every visitor is challenged.':
+    'מצב התקפה פעיל. כל מבקר מאותגר.',
   'Apply as firewall rule': 'החלה ככלל חומת אש',
   "You don't have permission to create firewall rules.":
     'אין לכם הרשאה ליצור כללי חומת אש.',
@@ -368,11 +390,29 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Challenge matching requests before allowing them through.':
     'אתגרו בקשות תואמות לפני שתאפשרו להן לעבור.',
   'Lower numbers are evaluated first.': 'מספרים נמוכים יותר מוערכים קודם.',
+  'A rule with priority 10 is stronger than one with priority 100.':
+    'כלל עם עדיפות 10 חזק יותר מכלל עם עדיפות 100.',
   'Resource ID': 'מזהה משאב',
   'Function ID': 'מזהה פונקציה',
   'Site ID': 'מזהה אתר',
   'Request limit': 'מגבלת בקשות',
   'Interval (seconds)': 'מרווח (שניות)',
+  'Fixed window': 'חלון קבוע',
+  'Sliding window': 'חלון נע',
+  'Token bucket': 'דלי טוקנים',
+  'Max bucket size': 'גודל דלי מרבי',
+  'The largest burst allowed. Defaults to the request limit when left unset.':
+    'הפרץ הגדול ביותר המותר. כברירת מחדל שווה למגבלת הבקשות כשלא הוגדר.',
+  'Rate limit strategy illustration': 'איור אסטרטגיית מגבלת קצב',
+  'first request': 'בקשה ראשונה',
+  per: 'לכל',
+  'each request takes one token': 'כל בקשה צורכת טוקן אחד',
+  'Windows align to the clock. Rate limit resets for everyone when the next time interval starts.':
+    'החלונות מיושרים לפי השעון. מגבלת הקצב מתאפסת לכולם כשמרווח הזמן הבא מתחיל.',
+  "Windows align to the user. Helps prevent traffic spikes since the reset doesn't occur for all users at the same time.":
+    'החלונות מיושרים לפי המשתמש. כך נמנעות קפיצות בתנועה, מכיוון שהאיפוס אינו מתרחש אצל כל המשתמשים בו-זמנית.',
+  'Windows align to human behaviour. Allows accumulated short bursts, and refills for sustained pace.':
+    'החלונות מיושרים לפי התנהגות אנושית. מאפשר פרצים קצרים שנצברו, ומתמלא מחדש לקצב מתמשך.',
   'Redirect location': 'יעד הפניה',
   'Status code': 'קוד סטטוס',
   'Match requests when all conditions are true.':
@@ -635,6 +675,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Email: 'אימייל',
   'Actor ID': 'מזהה מבצע',
   'Actor type': 'סוג מבצע',
+  'Via MCP': 'דרך MCP',
   'Resource type (API)': 'סוג משאב (API)',
   'Resource path': 'נתיב משאב',
   'Resource parent': 'משאב אב',
@@ -1877,8 +1918,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '(Host, Port, Username, Password) and': '(מארח, פורט, שם משתמש, סיסמה) וכן',
   '(Region, Subdomain, Admin Secret) and':
     '(אזור, תת-דומיין, Admin Secret) וכן',
-  '(also called ALIAS or ANAME - e.g. Cloudflare, DNSimple, Route 53), you can keep the CNAME above. Otherwise, please verify using':
-    '(נקרא גם ALIAS או ANAME, למשל Cloudflare, DNSimple, Route 53), אפשר להשאיר את רשומת ה-CNAME שלמעלה. אחרת, יש לאמת באמצעות',
   'A list of domain providers and their DNS settings is available':
     'רשימת ספקי דומיינים והגדרות ה-DNS שלהם זמינה',
   'API Endpoint': 'נקודת קצה של API',
@@ -1913,7 +1952,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Authentication: 'אימות',
   'Before installing Git in a locally hosted Appwrite project, ensure your environment variables are configured.':
     'לפני התקנת Git בפרויקט Appwrite באירוח מקומי, ודאו שמשתני הסביבה שלכם מוגדרים.', // pragma: allowlist secret
-  'CNAME flattening': 'CNAME flattening',
   'Certificate verification (SSL/TLS)': 'אימות תעודה (SSL/TLS)',
   'Choose services you wish to enable or disable for the client API. When disabled, the services are not accessible to client SDKs but remain accessible to server SDKs.':
     'בחרו אילו שירותים להפעיל או להשבית עבור ה-API של הלקוח. כאשר שירות מושבת, הוא אינו נגיש ל-SDK של לקוח אך נשאר נגיש ל-SDK של שרת.',
@@ -2009,6 +2047,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Global variables': 'משתנים גלובליים',
   'GraphQL API access for queries and mutations.':
     'גישת API של GraphQL לשאילתות ולמוטציות.',
+  'Manage project variables': 'ניהול משתני פרויקט',
   'Import all deployments that are not currently active.':
     'ייבוא כל הפריסות שאינן פעילות כרגע.',
   'Import all environment variables.': 'ייבוא כל משתני הסביבה.',
@@ -2102,6 +2141,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Project Settings → Database': 'Project Settings → Database',
   'Project name has been updated': 'שם הפרויקט עודכן',
   'Project not found': 'הפרויקט לא נמצא',
+  'Project variables': 'משתני פרויקט',
   Protocol: 'פרוטוקול',
   'Protocol settings control access through REST, GraphQL, and WebSocket APIs independently from service-level access.':
     'הגדרות הפרוטוקול שולטות בגישה דרך ממשקי REST, GraphQL ו-WebSocket ללא תלות בגישה ברמת השירות.',
@@ -2157,6 +2197,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הגדירו את האירועים שיפעילו את ה-webhook שלכם. מקסימום',
   'Set up webhooks to receive real-time notifications about events in your project':
     'הגדירו webhooks כדי לקבל התראות בזמן אמת על אירועים בפרויקט שלכם',
+  'Shared with all Functions and Sites in this project.':
+    'משותפים לכל הפונקציות והאתרים בפרויקט הזה.',
   'Showing first': 'מוצגות',
   Since: 'מכיוון ש-',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':
@@ -2234,9 +2276,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'הופעלו.',
   here: 'כאן',
   installations: 'התקנות',
-  'instead.': 'במקום זאת.',
-  'is an apex domain, CNAME records are not supported by every DNS provider. If yours supports':
-    'הוא דומיין שורש (apex), ולכן רשומות CNAME אינן נתמכות אצל כל ספקי ה-DNS. אם הספק שלכם תומך ב-',
+  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.": // pragma: allowlist secret
+    'במקום זאת. אם אתם משתמשים ב-Cloudflare או ב-CDN אחר, ודאו שהפרוקסי מושבת (מוגדר כ-DNS only) עבור הרשומה הזו, כי Appwrite מגיש את הדומיין שלכם דרך ה-CDN שלו.', // pragma: allowlist secret
+  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
+    'הוא דומיין שורש (apex), ורשומת CNAME נתמכת רק אצל ספקים מסוימים. אם הספק שלכם לא תומך בכך, אמתו באמצעות',
   item: 'פריט',
   'key for the API key.': 'בתור מפתח ה-API.',
   nameservers: 'שרתי שמות',
@@ -2351,6 +2394,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הפעילו את מצב HTML אם ההודעה שלכם מכילה תגיות HTML.',
   'Enable when your Mailgun account is hosted in the EU.':
     'הפעילו כאשר חשבון ה-Mailgun שלכם מאוחסן באיחוד האירופי.',
+  'Select the AWS region of your verified SES identity.':
+    'בחרו את אזור ה-AWS שבו זהות ה-SES המאומתת שלכם נמצאת.',
   'Enter the SMS body for this message. Delivery uses topics, users, and targets you add on this page.':
     'הזינו את גוף ה-SMS עבור ההודעה הזו. השליחה משתמשת בנושאים, במשתמשים וביעדים שתוסיפו בעמוד זה.',
   'Failed to add subscribers': 'הוספת המנויים נכשלה',
@@ -2486,6 +2531,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת התראות Push דרך APNS (iOS).',
   'Send push notifications via FCM (Android, iOS, web).':
     'שליחת התראות Push דרך FCM (Android, iOS, ווב).',
+  'Send transactional email through Amazon SES.':
+    'שליחת אימייל טרנזקציוני דרך Amazon SES.',
   'Send transactional email through Mailgun.':
     'שליחת אימייל טרנזקציוני דרך Mailgun.',
   'Send transactional email through Resend.':

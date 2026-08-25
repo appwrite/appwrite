@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 
 const ORDER: WebFrameworkKey[] = [
   'react',
+  'tanstack-start',
   'nextjs',
   'vue',
   'nuxt',
@@ -12,11 +13,10 @@ const ORDER: WebFrameworkKey[] = [
   'sveltekit',
   'angular',
   'analog',
-  'astro',
   'remix',
   'solid',
-  'tanstack-start',
   'vite',
+  'astro',
   'js',
 ]
 

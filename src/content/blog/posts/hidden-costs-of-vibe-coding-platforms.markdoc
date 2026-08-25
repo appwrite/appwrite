@@ -81,7 +81,7 @@ Token bills are visible. The cost that is not visible is the time spent on promp
 
 The skills that lower this cost are not glamorous. Read the diff before you accept it. Keep prompts narrow. Tell the agent what you do not want, not just what you do. Verify against the docs the model may not have read recently. The [seven prompting mistakes you need to stop making right now](/blog/post/7-prompting-mistakes-you-need-to-stop-making-right-now) covers the failure modes most teams converge on.
 
-A backend with a docs MCP server pulls some of this work off the developer. The agent can read the current docs at call time instead of guessing from training data, which lowers the rate of wrong-method-name diffs. [Appwrite Docs MCP](/docs/tooling/ai/mcp-servers/docs) is the most visible example. The [API MCP server](/docs/tooling/ai/mcp-servers/api) covers the action side: the agent operates on your project through tool calls instead of synthesized HTTP.
+A backend with a docs MCP server pulls some of this work off the developer. The agent can read the current docs at call time instead of guessing from training data, which lowers the rate of wrong-method-name diffs. [Appwrite Docs MCP](/docs/tooling/ai/mcp-servers) is the most visible example. The [API MCP server](/docs/tooling/ai/mcp-servers) covers the action side: the agent operates on your project through tool calls instead of synthesized HTTP.
 
 # The cost of a security review that should have happened earlier
 

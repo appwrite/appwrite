@@ -44,6 +44,8 @@ The Firewall page filters rules with a resource selector above the list. The **P
 
 Each row shows the rule's status toggle, name, action, priority, conditions, and last update. Use the status toggle to enable or disable a rule directly from the list, or open the row's actions menu to update or delete it. See [Resource scopes](/docs/products/firewall/scopes).
 
+When a **site** is selected, the rules toolbar includes **Attack mode**. Turning it on creates (or re-enables) a catch-all [Challenge](/docs/products/firewall/actions#challenge) rule named **Attack mode**. See [Attack mode](/docs/products/firewall/attack-mode).
+
 # Plan limits {% #plan-limits %}
 
 Firewall rule limits are **per project** and depend on your organization plan:

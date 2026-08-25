@@ -3,13 +3,22 @@ import {
   Layers,
   Table as TableIcon,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { DatabaseTypeBetaBadge } from './DatabaseTypeBetaBadge'
+import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
 import { cn } from '@/lib/utils'
-import type { SpecOption } from '@/lib/database-specs'
+import type { Models } from '@appwrite.io/console'
+import { isServerlessDatabaseSpecId, type SpecOption } from '@/lib/database-specs'
 import {
-  DATABASE_COMPUTE_CREDITS_NOTE,
+  formatDedicatedMonthlyPrice,
   type DedicatedDatabaseMonthlyCost,
 } from '@/lib/database-create-pricing'
+import {
+  formatDatabaseOperationOverageRate,
+  getPlanDatabaseOperationLimits,
+  getPlanDatabaseOperationOverage,
+  type PlanDatabaseOperationLimit,
+} from '@/lib/databases/dedicated-database-plan'
+import { formatCompactCount } from '@/lib/usage/format-metric'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import {
   MySQLDolphinIcon,
@@ -22,6 +31,7 @@ type DbTypeMeta = {
   label: string
   icon: 'table' | 'braces' | 'layers' | 'elephant' | 'dolphin'
   comingSoon?: boolean
+  requiresUpgrade?: boolean
 }
 
 type CreateDatabaseSummaryProps = {
@@ -39,6 +49,8 @@ type CreateDatabaseSummaryProps = {
   backupPoliciesLabel?: string | null
   backupsEnabled?: boolean
   canCreate: boolean
+  computeCreditsUsd?: number | null
+  organizationPlan?: Models.BillingPlan | null
 }
 
 function DbTypeIcon({
@@ -76,6 +88,65 @@ function InlineRow({
     <div className="flex items-start justify-between gap-3 text-[13px] leading-snug">
       <span className="shrink-0 text-muted-foreground">{label}</span>
       <div className="min-w-0 text-end text-foreground">{children}</div>
+    </div>
+  )
+}
+
+function formatIncludedOpsValue(
+  value: PlanDatabaseOperationLimit,
+  t: (text: string) => string,
+): string {
+  if (value === 'unlimited') return t('Unlimited')
+  return `${formatCompactCount(value)} ${t('included')}`
+}
+
+function ServerlessPlanOps({
+  plan,
+}: {
+  plan: Models.BillingPlan | null | undefined
+}) {
+  const t = useT()
+  const { reads, writes } = getPlanDatabaseOperationLimits(plan)
+  const overage = getPlanDatabaseOperationOverage(plan)
+  const showOverage = overage.reads != null || overage.writes != null
+
+  return (
+    <div className="space-y-2.5">
+      <InlineRow label={t('Compute')}>
+        <span className="text-muted-foreground">{t('No compute fee')}</span>
+      </InlineRow>
+      {reads != null ? (
+        <InlineRow label={t('Reads')}>
+          <span className="font-medium tabular-nums">
+            {formatIncludedOpsValue(reads, t)}
+          </span>
+        </InlineRow>
+      ) : null}
+      {writes != null ? (
+        <InlineRow label={t('Writes')}>
+          <span className="font-medium tabular-nums">
+            {formatIncludedOpsValue(writes, t)}
+          </span>
+        </InlineRow>
+      ) : null}
+      {showOverage ? (
+        <div className="border-t border-border/80 pt-3 space-y-2.5">
+          {overage.reads ? (
+            <InlineRow label={t('Additional reads')}>
+              <span className="font-medium tabular-nums">
+                {formatDatabaseOperationOverageRate(overage.reads)}
+              </span>
+            </InlineRow>
+          ) : null}
+          {overage.writes ? (
+            <InlineRow label={t('Additional writes')}>
+              <span className="font-medium tabular-nums">
+                {formatDatabaseOperationOverageRate(overage.writes)}
+              </span>
+            </InlineRow>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -135,6 +206,8 @@ export function CreateDatabaseSummary({
   backupPoliciesLabel = null,
   backupsEnabled,
   canCreate,
+  computeCreditsUsd = null,
+  organizationPlan = null,
 }: CreateDatabaseSummaryProps) {
   const t = useT()
   const trimmedName = name.trim()
@@ -177,12 +250,9 @@ export function CreateDatabaseSummary({
                 <DbTypeIcon icon={selectedDbType!.icon} />
               </span>
               {selectedDbType!.label}
-              {(selectedDbType!.id === 'DocumentsDB' ||
-                selectedDbType!.id === 'VectorsDB') && (
-                <Badge variant="info" className="text-[10px] shrink-0">
-                  {t('Beta')}
-                </Badge>
-              )}
+              {isBetaDatabaseType(selectedDbType!.id) ? (
+                <DatabaseTypeBetaBadge />
+              ) : null}
             </span>
           ) : (
             <span className="text-muted-foreground">{t('Not selected')}</span>
@@ -195,23 +265,29 @@ export function CreateDatabaseSummary({
               <span className="text-[13px] font-semibold text-foreground">
                 {t(selectedSpec.label)}
               </span>
-              <span className="text-[13px] font-semibold tabular-nums text-foreground">
-                {selectedSpec.price}
-              </span>
-            </div>
-            <div className="space-y-2.5">
-              <InlineRow label="CPU">
-                <span className="font-medium tabular-nums">{selectedSpec.cpu}</span>
-              </InlineRow>
-              <InlineRow label={t('Memory')}>
-                <span className="font-medium tabular-nums">{selectedSpec.memory}</span>
-              </InlineRow>
-              <InlineRow label={t('Connections')}>
-                <span className="font-medium tabular-nums">
-                  {selectedSpec.connections}
+              {isServerlessDatabaseSpecId(selectedSpec.id) ? null : (
+                <span className="text-[13px] font-semibold tabular-nums text-foreground">
+                  {selectedSpec.price}
                 </span>
-              </InlineRow>
+              )}
             </div>
+            {isServerlessDatabaseSpecId(selectedSpec.id) ? (
+              <ServerlessPlanOps plan={organizationPlan} />
+            ) : (
+              <div className="space-y-2.5">
+                <InlineRow label="CPU">
+                  <span className="font-medium tabular-nums">{selectedSpec.cpu}</span>
+                </InlineRow>
+                <InlineRow label={t('Memory')}>
+                  <span className="font-medium tabular-nums">{selectedSpec.memory}</span>
+                </InlineRow>
+                <InlineRow label={t('Connections')}>
+                  <span className="font-medium tabular-nums">
+                    {selectedSpec.connections}
+                  </span>
+                </InlineRow>
+              </div>
+            )}
 
             {showPricing && monthlyCost && (
               <>
@@ -237,9 +313,18 @@ export function CreateDatabaseSummary({
                     emphasize
                   />
                 </div>
-                <div className="space-y-1.5 text-[12px] leading-relaxed text-muted-foreground">
-                  <p>{t(DATABASE_COMPUTE_CREDITS_NOTE)}</p>
-                  <p>{t('Storage and bandwidth overages billed separately.')}</p>
+                <div className="space-y-2.5 text-[13px]">
+                  {computeCreditsUsd != null && computeCreditsUsd > 0 ? (
+                    <InlineRow label={t('Compute credits')}>
+                      <span className="font-medium tabular-nums">
+                        {formatDedicatedMonthlyPrice(computeCreditsUsd)}{' '}
+                        {t('included')}
+                      </span>
+                    </InlineRow>
+                  ) : null}
+                  <p className="text-[12px] text-muted-foreground">
+                    {t('Storage and bandwidth overages billed separately.')}
+                  </p>
                 </div>
               </>
             )}
@@ -286,9 +371,11 @@ export function CreateDatabaseSummary({
               {t('Ready to create')}
             </span>
           ) : hasType && selectedDbType?.comingSoon ? (
-            'This database type is not available yet.'
+            t('This database type is not available yet.')
+          ) : hasType && selectedDbType?.requiresUpgrade ? (
+            t('Upgrade your plan to create this database type.')
           ) : (
-            'Complete the required fields to continue.'
+            t('Complete the required fields to continue.')
           )}
         </p>
       </div>

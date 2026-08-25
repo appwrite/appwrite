@@ -9,7 +9,7 @@ Transactions let you stage multiple database operations and apply them together,
 # How transactions work {% #how-transactions-work %}
 
 1. Call the [createTransaction](#create-a-transaction) method to create a transaction. This will return a transaction model, including its ID.
-2. Stage operations by passing the `transactionId` parameter to supported document, bulk, and atomic numeric methods. You can stage many operations at once with the [createOperations](#create-operations) method.
+2. Stage operations by passing the `transactionId` parameter to supported document and bulk methods. You can stage many operations at once with the [createOperations](#create-operations) method.
 3. Call the [updateTransaction](#commit-or-rollback) method to commit or roll back.
 
 On commit, Appwrite replays all staged logs in order inside a real database transaction. Staged operations see earlier staged changes (read your own writes). If any affected document changed outside your transaction, the commit fails with a conflict.
@@ -26,10 +26,11 @@ The maximum number of operations you can stage per transaction depends on your p
 |------|-------------------------------|
 | Free | 100 |
 | Pro | 1,000 |
+| Scale | 2,500 |
 
 # Create a transaction {% #create-a-transaction %}
 
-Call the `createTransaction` method to begin. It returns a transaction model that includes `$id`. Pass this ID as `transactionId` to subsequent operations. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+Call the `createTransaction` method to begin. It returns a transaction model that includes `$id`, a `status` of `pending`, and an `expiresAt` timestamp. Pass the ID as `transactionId` to subsequent operations. A transaction expires 300 seconds after it is created unless you pass a different `ttl`. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
 
 {% multicode %}
 ```server-nodejs
@@ -181,7 +182,7 @@ let tx = try await vectorsDB.createTransaction()
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -199,7 +200,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-transaction
+appwrite vectorsdb create-transaction
 ```
 {% /multicode %}
 
@@ -399,7 +400,7 @@ try await vectorsDB.deleteDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use serde_json::json;
 
 #[tokio::main]
@@ -435,7 +436,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db update-document \
+appwrite vectorsdb update-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id <DOCUMENT_ID> \
@@ -548,7 +549,7 @@ let staged = try await vectorsDB.getDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -574,7 +575,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db get-document \
+appwrite vectorsdb get-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id <DOCUMENT_ID> \
@@ -589,7 +590,7 @@ Use the `createOperations` method to stage multiple operations across databases 
 ```json
 [
   {
-    "action": "create|update|upsert|increment|decrement|delete|bulkCreate|bulkUpdate|bulkUpsert|bulkDelete",
+    "action": "create|update|upsert|delete",
     "databaseId": "<DATABASE_ID>",
     "collectionId": "<COLLECTION_ID>",
     "documentId": "<DOCUMENT_ID>",
@@ -821,7 +822,7 @@ try await vectorsDB.createOperations(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use serde_json::json;
 
 #[tokio::main]
@@ -862,7 +863,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 # Commit or roll back {% #commit-or-rollback %}
 
-When you are done staging operations, call the `updateTransaction` method to finalize the transaction. Set `commit` to `true` to apply the staged operations, or `rollback` to `true` to discard them.
+When you are done staging operations, call the `updateTransaction` method to finalize the transaction. Set `commit` to `true` to apply the staged operations, or `rollback` to `true` to discard them. A transaction takes one or the other, so a second call on the same transaction fails with `transaction_not_ready`.
 
 {% multicode %}
 ```server-nodejs
@@ -898,7 +899,7 @@ $vectorsDB->updateTransaction(
     commit: true
 );
 
-// Roll back
+// Or roll back
 $vectorsDB->updateTransaction(
     transactionId: $tx['$id'],
     rollback: true
@@ -911,7 +912,7 @@ vectors_db.update_transaction(
     commit = True
 )
 
-# Roll back
+# Or roll back
 vectors_db.update_transaction(
     transaction_id = tx['$id'],
     rollback = True
@@ -924,7 +925,7 @@ vectors_db.update_transaction(
     commit: true
 )
 
-# Roll back
+# Or roll back
 vectors_db.update_transaction(
     transaction_id: tx['$id'],
     rollback: true
@@ -937,7 +938,7 @@ await vectorsDB.UpdateTransaction(
     commit: true
 );
 
-// Roll back
+// Or roll back
 await vectorsDB.UpdateTransaction(
     transactionId: tx.Id,
     rollback: true
@@ -950,7 +951,7 @@ await vectorsDB.updateTransaction(
     commit: true
 );
 
-// Roll back
+// Or roll back
 await vectorsDB.updateTransaction(
     transactionId: tx.$id,
     rollback: true
@@ -963,7 +964,7 @@ vectorsDB.updateTransaction(
     commit = true
 )
 
-// Roll back
+// Or roll back
 vectorsDB.updateTransaction(
     transactionId = tx.id,
     rollback = true
@@ -985,7 +986,7 @@ vectorsDB.updateTransaction(
     })
 );
 
-// Roll back (asynchronous)
+// Or roll back (asynchronous)
 vectorsDB.updateTransaction(
     "<TRANSACTION_ID>",
     false,
@@ -1007,7 +1008,7 @@ try await vectorsDB.updateTransaction(
     commit: true
 )
 
-// Roll back
+// Or roll back
 try await vectorsDB.updateTransaction(
     transactionId: tx.id,
     rollback: true
@@ -1015,7 +1016,7 @@ try await vectorsDB.updateTransaction(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -1033,7 +1034,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None,
     ).await?;
 
-    // Roll back
+    // Or roll back
     vectors_db.update_transaction(
         "<TRANSACTION_ID>",
         None,
@@ -1045,12 +1046,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 ```bash
 # Commit
-appwrite vectors-db update-transaction \
+appwrite vectorsdb update-transaction \
     --transaction-id <TRANSACTION_ID> \
     --commit true
 
-# Roll back
-appwrite vectors-db update-transaction \
+# Or roll back
+appwrite vectorsdb update-transaction \
     --transaction-id <TRANSACTION_ID> \
     --rollback true
 ```
@@ -1190,7 +1191,7 @@ try await vectorsDB.deleteTransaction(transactionId: "<TRANSACTION_ID>")
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -1215,14 +1216,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 ```bash
 # Get one transaction
-appwrite vectors-db get-transaction \
+appwrite vectorsdb get-transaction \
     --transaction-id <TRANSACTION_ID>
 
 # List transactions
-appwrite vectors-db list-transactions
+appwrite vectorsdb list-transactions
 
 # Delete a transaction
-appwrite vectors-db delete-transaction \
+appwrite vectorsdb delete-transaction \
     --transaction-id <TRANSACTION_ID>
 ```
 {% /multicode %}

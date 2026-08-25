@@ -61,14 +61,11 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { CreateDomainDialog } from './CreateDomain'
-import { RetryVerification } from './RetryVerification'
 import { DomainContextMenu } from './_components/DomainContextMenu'
 import { useOrganizationDomainsPlanLimit } from './_components/useOrganizationDomainsPlanLimit'
-import type { Models } from '@appwrite.io/console'
 import {
   useCreateOrganizationDomain,
   useDeleteOrganizationDomain,
-  useRetryDomainVerification,
 } from '@/lib/react-query/hooks'
 import {
   GRID_DEFAULT_PAGE_SIZE,
@@ -174,11 +171,7 @@ export function View() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [retryDialogOpen, setRetryDialogOpen] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [selectedDomain, setSelectedDomain] = useState<Models.Domain | null>(
-    null,
-  )
 
   useEffect(() => {
     setSearchInput(urlSearch ?? '')
@@ -425,7 +418,6 @@ export function View() {
   useEffect(() => {
     setSelectedDomains(new Set())
     setDeleteDialogOpen(false)
-    setRetryDialogOpen(false)
   }, [location.pathname, orgId, urlSearch])
 
   const handleSearchChange = (value: string) => {
@@ -543,29 +535,6 @@ export function View() {
     } finally {
       setIsCreateDomainSubmitting(false)
     }
-  }
-
-  // Retry verification mutation
-  const retryVerificationMutation = useRetryDomainVerification(orgId)
-
-  const handleRetryVerification = (domainId: string) => {
-    retryVerificationMutation.mutate(domainId, {
-      onSuccess: (domain) => {
-        const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
-        if (isVerified) {
-          toast.success(t('Domain verification successful'))
-        } else {
-          toast.success(
-            t('Nameservers updated. Please wait for DNS propagation.'),
-          )
-        }
-        setRetryDialogOpen(false)
-        setSelectedDomain(null)
-      },
-      onError: (error) => {
-        toast.error(getErrorMessage(error))
-      },
-    })
   }
 
   return (
@@ -842,17 +811,6 @@ export function View() {
         onCreate={handleCreateDomain}
         isLoading={isCreateDomainSubmitting}
       />
-
-      {/* Retry Verification Dialog */}
-      {selectedDomain && (
-        <RetryVerification
-          open={retryDialogOpen}
-          onOpenChange={setRetryDialogOpen}
-          domain={selectedDomain}
-          onRetry={handleRetryVerification}
-          isLoading={retryVerificationMutation.isPending}
-        />
-      )}
     </div>
   )
 }

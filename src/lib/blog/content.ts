@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/lib/console-profiles'
 import { extractDocsToc } from '@/lib/docs/toc'
 import type { DocsTocItem } from '@/lib/docs/types'
 import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
@@ -159,13 +160,19 @@ export function getPublicBlogPosts(): BlogPostMeta[] {
   return allPosts.filter(isPublicPost).map(toBlogPostMeta)
 }
 
+/** Draft posts, newest first. Only surfaced when the blogDrafts flag is on. */
+export function getDraftBlogPosts(): BlogPostMeta[] {
+  return allPosts.filter((post) => post.draft).map(toBlogPostMeta)
+}
+
 export function getAllBlogPosts(): BlogPost[] {
   return allPosts
 }
 
 export function getBlogPost(slug: string): BlogPost | null {
   const post = allPosts.find((entry) => entry.slug === slug) ?? null
-  if (!post || post.draft) return null
+  if (!post) return null
+  if (post.draft && !isFeatureEnabled('blogDrafts')) return null
   return post
 }
 

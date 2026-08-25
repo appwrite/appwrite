@@ -4,7 +4,7 @@ import { getPageMetaTags } from '@/lib/seo/page-meta'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const MARKETING_HOMEPAGE_OG_DESCRIPTION =
-  'The open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. Build like a team of hundreds.'
+  'The open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. The open-source cloud for agents and developers.'
 
 type MetaTag = Record<string, string>
 

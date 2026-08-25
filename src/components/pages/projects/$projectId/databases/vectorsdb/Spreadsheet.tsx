@@ -7,6 +7,7 @@ import {
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import {
+  SPREADSHEET_SCROLL_LAYER_CLASS,
   SPREADSHEET_STICKY_BODY_Z,
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
@@ -4480,6 +4481,18 @@ export function RowsSpreadsheet({
               />
             </div>
           ) : (
+          <div
+            className={SPREADSHEET_SCROLL_LAYER_CLASS}
+            style={{
+              minWidth:
+                ROWS_TABLE_EDGE_COL_PX * 2 +
+                (hideSequenceColumn ? 0 : 72) +
+                180 +
+                columns.length * 150 +
+                180 +
+                180,
+            }}
+          >
           <table
             className={cn(
               'w-full border-collapse',
@@ -4585,7 +4598,12 @@ export function RowsSpreadsheet({
                   </div>
                 </th>
               ) : null}
-              <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
+              <th
+                className={cn(
+                  'w-[180px] min-w-[180px] max-w-[180px] px-3 py-2',
+                  headerCellBorderClass,
+                )}
+              >
                 <div className="flex items-center gap-2">
                   <IdHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <button
@@ -4892,12 +4910,18 @@ export function RowsSpreadsheet({
                   ) : null}
                   <td
                     className={cn(
-                      'w-[180px] px-3 py-1.5',
+                      'w-[180px] min-w-[180px] max-w-[180px] px-3 py-1.5',
                       bodyCellBorderClass,
                     )}
                     data-column="$id"
                   >
-                    <CopyableId id={row.$id} size="xs" />
+                    <div className="min-w-0 max-w-full overflow-hidden">
+                      <CopyableId
+                        id={row.$id}
+                        size="xs"
+                        constrainToContainer
+                      />
+                    </div>
                   </td>
                   {columns.map((col: string) => (
                     <td
@@ -5062,6 +5086,7 @@ export function RowsSpreadsheet({
             })}
           </tbody>
         </table>
+          </div>
           )}
         </div>
         {useInlineDocumentPane ? (

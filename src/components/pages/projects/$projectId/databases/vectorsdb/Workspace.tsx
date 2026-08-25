@@ -59,6 +59,7 @@ import { CreateTable } from '../CreateTable'
 import { TableContextMenu } from '../_components/TableContextMenu'
 import { DatabaseBackupsNavLink } from '../_components/DatabaseBackupsNavLink'
 import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComputeSpec'
+import { DatabaseSidebarNavItem } from '../_components/DatabaseSidebarNavItem'
 import {
   DATABASE_SIDEBAR_LIST_STRIP_CLASS,
   DATABASE_SIDEBAR_LIST_STRIP_ROW_CLASS,
@@ -95,6 +96,10 @@ import {
 } from '@/lib/database-routes'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
+import {
+  DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,
+  isDedicatedDatabaseProvisioning,
+} from '@/lib/databases/dedicated-database-status'
 import { IndexesSpreadsheet } from './IndexesSpreadsheet'
 import { CollectionAttributesSpreadsheet } from '../_components/CollectionAttributesSpreadsheet'
 import { DocumentsJsonSpreadsheet } from '../_components/DocumentsJsonSpreadsheet'
@@ -206,6 +211,16 @@ export function Workspace({
     databaseId,
     DB_KIND,
   )
+  const provisioning = isDedicatedDatabaseProvisioning(
+    (database as { status?: string | null } | null)?.status,
+  )
+  const provisioningDisabledSections = provisioning
+    ? {
+        monitor: DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,
+        backups: DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,
+        settings: DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,
+      }
+    : undefined
 
   const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
   const ContainerListIcon =
@@ -499,6 +514,14 @@ export function Workspace({
         : 'tables'
 
   const handleMobileSectionSelect = (sectionId: DatabaseSectionId) => {
+    if (
+      provisioning &&
+      (sectionId === 'monitor' ||
+        sectionId === 'backups' ||
+        sectionId === 'settings')
+    ) {
+      return
+    }
     if (sectionId === 'tables') {
       navigate({
         to: '/projects/$projectId/databases/$dbKind/$databaseId/',
@@ -1305,22 +1328,26 @@ export function Workspace({
           <span>{t('Visualizer')}</span>
         </Link>
         {features.usageStats && (
-          <Link
-            {...dbNav.monitor(tableNavParams)}
+          <DatabaseSidebarNavItem
+            disabled={provisioning}
+            disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
             className={cn(
               secondarySidebarNavLinkClassName(databaseTab === 'monitor'
                 , 'transition-colors duration-150'),
             SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
             )}
+            {...dbNav.monitor(tableNavParams)}
           >
             <Activity className="h-3.5 w-3.5 shrink-0" />
             <span>{t('Monitor')}</span>
-          </Link>
+          </DatabaseSidebarNavItem>
         )}
         {features.databaseBackups && (
           <DatabaseBackupsNavLink
             projectId={projectId}
             databaseId={databaseId}
+            disabled={provisioning}
+            disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
             {...dbNav.backups(tableNavParams)}
             className={cn(
               secondarySidebarNavLinkClassName(databaseTab === 'backups'
@@ -1342,17 +1369,19 @@ export function Workspace({
           <span>{t('Export / Import')}</span>
         </Link>
         {!noCreateDbPermission && (
-          <Link
-            {...dbNav.dbSettings(tableNavParams)}
+          <DatabaseSidebarNavItem
+            disabled={provisioning}
+            disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
             className={cn(
               secondarySidebarNavLinkClassName(databaseTab === 'settings'
                 , 'transition-colors duration-150'),
             SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
             )}
+            {...dbNav.dbSettings(tableNavParams)}
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
             <span>{t('Settings')}</span>
-          </Link>
+          </DatabaseSidebarNavItem>
         )}
         </div>
         <DatabaseSidebarComputeSpec
@@ -1624,6 +1653,7 @@ export function Workspace({
                 showMonitor={features.usageStats}
                 showBackups={features.databaseBackups}
                 showSettings={!noCreateDbPermission}
+                disabledSectionIds={provisioningDisabledSections}
                 onSelect={handleMobileSectionSelect}
               />
               <TableSelector

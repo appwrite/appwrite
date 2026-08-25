@@ -96,6 +96,9 @@ export const heSitesDictionary: Record<string, string> = {
   'Build output is available after the deployment has completed.':
     'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
   Redeploy: 'פריסה מחדש',
+  'Settings changes are not live yet': 'שינויי ההגדרות עדיין לא פעילים',
+  "You've updated site settings, but they won't take effect until you redeploy. The current deployment is still running with the previous settings.":
+    'עדכנתם את הגדרות האתר, אך הן לא ייכנסו לתוקף עד שתפרסו מחדש. הפריסה הנוכחית עדיין רצה עם ההגדרות הקודמות.',
   'Build logs': 'לוגי בנייה',
   Visit: 'מעבר לאתר',
   'There is no active deployment': 'אין פריסה פעילה',
@@ -186,6 +189,17 @@ export const heSitesDictionary: Record<string, string> = {
   'Site name updated successfully': 'שם האתר עודכן בהצלחה',
   'Failed to update site name': 'עדכון שם האתר נכשל',
   'Site name is required': 'נדרש שם אתר',
+
+  // Settings: status card
+  'Enable or disable this site without deleting it.':
+    'הפעילו או השביתו את האתר הזה מבלי למחוק אותו.',
+  'Site has been enabled': 'האתר הופעל',
+  'Site has been disabled': 'האתר הושבת',
+  'Site is disabled': 'האתר מושבת',
+  'This site is disabled and not accessible to visitors. Console actions remain available.':
+    'האתר הזה מושבת ואינו נגיש למבקרים. פעולות מהקונסולה עדיין זמינות.',
+  'Enable this site in the Settings tab': 'הפעילו את האתר בלשונית ההגדרות',
+  'to make it available to visitors.': 'כדי להפוך אותו לזמין למבקרים.',
 
   // Settings: danger zone
   'Delete site': 'מחיקת אתר',

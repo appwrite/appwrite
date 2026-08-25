@@ -18,6 +18,7 @@ import {
   normalizeUserCode,
 } from '@/components/global/auth/OAuth2DeviceCodeInput'
 import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
+import { getOAuth2App } from '@/lib/oauth2/cimd'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -63,9 +64,7 @@ function OAuth2DevicePage() {
       const loadedGrant = await sdk.forConsole.oauth2.createGrant({
         userCode,
       })
-      const loadedApp = await sdk.forConsole.apps.get({
-        appId: loadedGrant.appId,
-      })
+      const loadedApp = await getOAuth2App(loadedGrant.appId)
       return { loadedGrant, loadedApp }
     },
     onSuccess: ({ loadedGrant, loadedApp }, userCode) => {

@@ -14,6 +14,15 @@ import {
   getCoverChartValueKeys,
 } from '@/lib/cover-generator/chart/constants'
 import {
+  getCoverChecklistItemKeys,
+  getCoverLogoMarqueeIconKeys,
+  getCoverMetricTrendKeys,
+  getCoverStatLabelKeys,
+  getCoverStatValueKeys,
+  getCoverStepDescriptionKeys,
+  getCoverStepTitleKeys,
+} from '@/lib/cover-generator/extra-templates/constants'
+import {
   coverRenderDataToSearchParams,
   DEFAULT_COVER_VALUES,
   parseCoverRenderData,
@@ -89,6 +98,7 @@ function mapFieldType(field: CoverFieldDefinition): string {
     case 'range':
       return 'number'
     case 'select':
+    case 'color':
       return field.options?.length ? 'string' : 'string'
     case 'image':
       return 'string'
@@ -212,6 +222,50 @@ function buildSupplementalParameterDocs(templateId: CoverTemplateId): CoverApiPa
           },
         ]),
       ]
+    case 'checklist':
+      return getCoverChecklistItemKeys().map((key) => ({
+        name: key,
+        type: 'string',
+        description: `Checklist item ${key.replace('item', '')} text.`,
+      }))
+    case 'numbered-steps':
+      return [
+        ...getCoverStepTitleKeys().map((key) => ({
+          name: key,
+          type: 'string',
+          description: `Title of step ${key.replace('stepTitle', '')}.`,
+        })),
+        ...getCoverStepDescriptionKeys().map((key) => ({
+          name: key,
+          type: 'string',
+          description: `Description of step ${key.replace('stepDescription', '')}.`,
+        })),
+      ]
+    case 'logo-marquee':
+      return getCoverLogoMarqueeIconKeys().map((key) => ({
+        name: key,
+        type: 'string',
+        description: `Icon source for logo wall slot ${key.replace('icon', '')}.`,
+      }))
+    case 'stats-grid':
+      return [
+        ...getCoverStatValueKeys().map((key) => ({
+          name: key,
+          type: 'string',
+          description: `Value of stat ${key.replace('statValue', '')}.`,
+        })),
+        ...getCoverStatLabelKeys().map((key) => ({
+          name: key,
+          type: 'string',
+          description: `Label of stat ${key.replace('statLabel', '')}.`,
+        })),
+      ]
+    case 'metric-delta':
+      return getCoverMetricTrendKeys().map((key) => ({
+        name: key,
+        type: 'number',
+        description: `Line chart point value (0-100) for point ${key.replace('trend', '')}.`,
+      }))
     default:
       return []
   }

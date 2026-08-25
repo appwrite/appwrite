@@ -52,6 +52,8 @@ Use **Sites** for a single deployed web app's public traffic:
 
 Select the site in the create wizard. The rule appears when that site is selected in the resource selector.
 
+[Attack mode](/docs/products/firewall/attack-mode) is available only in this scope. Select a site on the Firewall page to challenge every visitor with one click during an incident.
+
 # Resource selector in the Console {% #resource-selector-in-the-console %}
 
 {% only_dark %}

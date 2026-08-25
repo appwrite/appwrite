@@ -1,0 +1,22 @@
+---
+layout: changelog
+title: Announcing Appwrite 1.9.6 for self-hosted deployments
+date: 2026-07-23
+cover: /images/blog/appwrite-1-9-6-self-hosted-release/cover.avif
+---
+
+Appwrite 1.9.6 is now available for self-hosting. It resolves the upgrade and migration issues the community reported after 1.9.5.
+
+Most notably, this release includes:
+
+- Automatic repair of missing Git provider attributes on Functions and Sites when upgrading from 1.9.5, with no manual database changes required
+- Idempotent migrations that skip attributes and collections that already exist instead of failing
+- More reliable healthchecks for the Appwrite container and MongoDB, and accurate connectivity reporting in the doctor task
+
+Head over to our [migration guide](https://appwrite.io/docs/advanced/self-hosting/production/updates) to learn how you can upgrade your Appwrite instance.
+
+For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/1.9.6) on GitHub.
+
+{% arrow_link href="/blog/post/appwrite-1-9-6-self-hosted-release" %}
+Read the announcement
+{% /arrow_link %}

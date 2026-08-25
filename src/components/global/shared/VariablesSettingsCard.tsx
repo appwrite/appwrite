@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
+import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
   Loader2,
@@ -72,6 +73,7 @@ import {
   wizardDialogContentClassName,
   wizardDropdownContentClassName,
 } from '@/lib/wizard-portal-z'
+import { getVariableValueError, validateVariables } from '@/lib/variables'
 
 /** Local variable for create wizards (no server id). */
 export interface EnvVariable {
@@ -282,6 +284,11 @@ export type VariablesSettingsCardSettingsProps = VariablesCardSharedProps & {
   projectVariableKeysForWarning?: Set<string>
   /** Tooltip for the duplicate project key warning; defaults to a message using `scopeLabel`. */
   duplicateProjectKeyTooltip?: string
+  /**
+   * When set (function/site variables), show a left-column shortcut to project-level variables.
+   * Omit on the project variables page itself.
+   */
+  projectVariablesProjectId?: string | null
 }
 
 export type VariablesSettingsCardWizardProps = VariablesCardSharedProps & {
@@ -332,6 +339,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
   const duplicateProjectKeyTooltip = isWizard
     ? undefined
     : props.duplicateProjectKeyTooltip
+  const projectVariablesProjectId = isWizard
+    ? undefined
+    : props.projectVariablesProjectId
 
   const actionsDisabled = isWizard ? wizardDisabled : isLoading
   const dialogContentClass = (extra?: string) =>
@@ -416,12 +426,14 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
         )
         return
       }
-      if (pair.value.length > 8192) {
-        toast.error(
-          `${t('Variable')} ${pair.key.trim()} ${t('is longer than 8192 allowed characters')}`,
-        )
-        return
-      }
+    }
+
+    const validationError = validateVariables(
+      createPairs.map((pair) => ({ key: pair.key.trim(), value: pair.value })),
+    )
+    if (validationError) {
+      toast.error(validationError)
+      return
     }
     const newVars = createPairs
       .filter((p) => p.key.trim())
@@ -477,6 +489,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
           newVars.push({ key, value, secret: false })
         }
       }
+      const validationError = validateVariables(newVars)
+      if (validationError) {
+        toast.error(validationError)
+        return
+      }
       if (newVars.length > 0) {
         onWizardChange([...wizardVariables, ...newVars])
       }
@@ -497,6 +514,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       const newVars: EnvVariable[] = Object.entries(parsed).map(
         ([key, value]) => ({ key, value, secret: false }),
       )
+      const validationError = validateVariables(newVars)
+      if (validationError) {
+        setEditorError(validationError)
+        return
+      }
       onWizardChange([...secretVars, ...newVars])
       setShowEditorModal(false)
     } catch (error: unknown) {
@@ -527,12 +549,14 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
         toast.error(t('All variable keys are required'))
         return
       }
-      if (pair.value.length > 8192) {
-        toast.error(
-          `${t('Variable')} ${pair.key} ${t('is longer than 8192 allowed characters')}`,
-        )
-        return
-      }
+    }
+
+    const validationError = validateVariables(
+      createPairs.map((pair) => ({ key: pair.key.trim(), value: pair.value })),
+    )
+    if (validationError) {
+      toast.error(validationError)
+      return
     }
 
     try {
@@ -628,16 +652,29 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
         setImportError(t('No variables found'))
         return
       }
-      for (const [key, value] of Object.entries(parsed)) {
-        if (value.length > 8192) {
-          setImportError(
-            `${t('Variable')} ${key} ${t('is longer than 8192 allowed characters')}`,
-          )
+      const existingKeys = new Set(variables.map((v) => v.key))
+      const entries = Object.entries(parsed)
+
+      // Only the keys being created are format-checked. An existing key is
+      // sent back unchanged, so a variable stored before the identifier rule
+      // has to stay updatable.
+      const keyError = validateVariables(
+        entries
+          .filter(([key]) => !existingKeys.has(key))
+          .map(([key, value]) => ({ key, value })),
+      )
+      if (keyError) {
+        setImportError(keyError)
+        return
+      }
+      for (const [key, value] of entries) {
+        const valueError = getVariableValueError(key, value)
+        if (valueError) {
+          setImportError(valueError)
           return
         }
       }
 
-      const existingKeys = new Set(variables.map((v) => v.key))
       const promises: Promise<unknown>[] = []
 
       for (const [key, value] of Object.entries(parsed)) {
@@ -687,19 +724,33 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
           ? envToObject(editorContent)
           : jsonToObject(editorContent)
 
-      for (const [key, value] of Object.entries(parsed)) {
-        if (value.length > 8192) {
-          setEditorError(
-            `${t('Variable')} ${key} ${t('is longer than 8192 allowed characters')}`,
-          )
-          return
-        }
-      }
-
       const editableVars = variables.filter((v) => !v.secret)
       const secretKeys = new Set(
         variables.filter((v) => v.secret).map((v) => v.key),
       )
+
+      // Only the keys being created are format-checked. An existing key is
+      // sent back unchanged, so a variable stored before the identifier rule
+      // has to stay updatable.
+      const keyError = validateVariables(
+        Object.entries(parsed)
+          .filter(
+            ([key]) =>
+              !editableVars.some((v) => v.key === key) && !secretKeys.has(key),
+          )
+          .map(([key, value]) => ({ key, value })),
+      )
+      if (keyError) {
+        setEditorError(keyError)
+        return
+      }
+      for (const [key, value] of Object.entries(parsed)) {
+        const valueError = getVariableValueError(key, value)
+        if (valueError) {
+          setEditorError(valueError)
+          return
+        }
+      }
 
       const updatePromises: Promise<unknown>[] = []
       const deletePromises: Promise<unknown>[] = []
@@ -866,11 +917,28 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
           <div
             className={cn(!isWizard && 'flex gap-6 @[600px]:flex-row flex-col')}
           >
-            {description ? (
-              <div className="@[600px]:w-64 shrink-0">
-                <p className="text-[13px] text-muted-foreground">
-                  {t(description)}
-                </p>
+            {description || projectVariablesProjectId ? (
+              <div className="@[600px]:w-64 shrink-0 space-y-4">
+                {description ? (
+                  <p className="text-[13px] text-muted-foreground">
+                    {t(description)}
+                  </p>
+                ) : null}
+                {projectVariablesProjectId ? (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-full text-[13px]"
+                  >
+                    <Link
+                      to="/projects/$projectId/settings/variables"
+                      params={{ projectId: projectVariablesProjectId }}
+                    >
+                      {t('Manage project variables')}
+                    </Link>
+                  </Button>
+                ) : null}
               </div>
             ) : null}
             <div className="flex-1 min-w-0">

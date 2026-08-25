@@ -33,6 +33,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
+import { DatabaseTypeBetaBadge } from './DatabaseTypeBetaBadge'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -361,6 +362,7 @@ export function DedicatedDatabasesSection({
           <h2 className="text-[15px] font-semibold text-foreground">
             {t(sectionCopy.title)}
           </h2>
+          {nativeEngine ? <DatabaseTypeBetaBadge /> : null}
           <DedicatedDatabaseRegionUnavailableBadge />
           <p className="w-full text-[13px] text-muted-foreground">
             {t(sectionCopy.description)}
@@ -434,11 +436,12 @@ function DedicatedDatabasesSectionContent({
 
   return (
     <section className="mt-10">
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <h2 className="text-[15px] font-semibold text-foreground">
           {t(sectionCopy.title)}
         </h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        {nativeEngine ? <DatabaseTypeBetaBadge /> : null}
+        <p className="mt-1 w-full text-[13px] text-muted-foreground">
           {t(sectionCopy.description)}
         </p>
       </div>

@@ -48,6 +48,7 @@ docker compose exec appwrite vars
 | `_APP_USAGE_TIMESERIES_INTERVAL` | **(version >= 1.0.0)** Deprecated since 1.1.0 uses `_APP_USAGE_AGGREGATION_INTERVAL` instead. |
 | `_APP_USAGE_DATABASE_INTERVAL` |  **(version >= 1.0.0)** Deprecated since 1.1.0 uses `_APP_USAGE_AGGREGATION_INTERVAL` instead. |
 | `_APP_WORKER_PER_CORE` |  **(version >= 0.13.0)** Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance. |
+| `_APP_WORKER_MAX_COROUTINES` | Maximum number of jobs a queue worker processes concurrently. In the combined [worker topology](/docs/advanced/self-hosting/configuration/topologies), this sets the size of the coroutine pool shared by all queues. In the separate topology, it overrides the concurrency limit of the worker it is set on. The databases worker always processes one job at a time regardless of this setting. |
 
 # Redis {% #redis %}
 Appwrite uses a Redis server for managing cache, queues and scheduled tasks. The Redis env vars are used to allow Appwrite server to connect to the Redis container.

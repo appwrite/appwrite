@@ -70,10 +70,8 @@ export function CreateDatabaseDedicatedOptions({
             <h2 className="text-[15px] font-semibold text-foreground">
               {t('Read replicas')}
             </h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-              {t('Add read-only instances to scale query traffic and improve failover resilience alongside your primary database.')}
-            </p>
-            <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+            <p className="mt-2 text-[13px] text-muted-foreground">
+              {t('Add read-only instances to scale query traffic and improve failover resilience alongside your primary database.')}{' '}
               {t('Each replica is billed at')} {haReplicaRatePercent}%{' '}
               {t('of your compute tier per month.')}
             </p>
@@ -176,10 +174,8 @@ export function CreateDatabaseDedicatedOptions({
             <h2 className="text-[15px] font-semibold text-foreground">
               {t('Point-in-time recovery (PITR)')}
             </h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-              {t('Restore your database to a specific moment in time, beyond the latest scheduled backup. Useful for recovering from accidental deletes, failed migrations, or bad writes.')}
-            </p>
-            <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+            <p className="mt-2 text-[13px] text-muted-foreground">
+              {t('Restore your database to a specific moment in time, beyond the latest scheduled backup. Useful for recovering from accidental deletes, failed migrations, or bad writes.')}{' '}
               {t('Billed at')} {pitrRatePercent}%{' '}
               {t('of your compute tier per month when enabled.')}
             </p>

@@ -740,6 +740,10 @@ function UserStatusCard({
               </Badge>
             </div>
             <div className="space-y-1 text-[13px] text-muted-foreground">
+              <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                <span>{t('User ID:')}</span>
+                <CopyableId id={user.$id} size="sm" />
+              </p>
               {user.email && (
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Mail className="h-3.5 w-3.5 shrink-0" />

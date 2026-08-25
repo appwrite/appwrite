@@ -41,9 +41,10 @@ import { CLISection } from '@/components/pages/projects/$projectId/shared/CLISec
 import { S3ConnectSection } from '@/components/pages/projects/$projectId/shared/S3ConnectSection'
 import { TerraformConnectSection } from '@/components/pages/projects/$projectId/shared/TerraformConnectSection'
 import { ApiKeyDrawer } from '@/components/pages/projects/$projectId/api-keys/ApiKeyDrawer'
-import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import {
+  buildConnectSdkPrompt,
   getCodeFiles,
   getInstallInstructions,
 } from '@/components/pages/projects/$projectId/shared/connect-snippets'
@@ -55,9 +56,10 @@ import {
   APPWRITE_AGENT_SKILLS_REPO,
 } from '@/lib/seo/agent-discovery'
 import { SKILLS_TRY_IT_PROMPTS } from '@/lib/skills-adoption'
-import { analyticsAttrs } from '@/lib/analytics-actions'
+import { analyticsAttrs, ANALYTICS_ACTIONS } from '@/lib/analytics-actions'
 import { canCreateKey } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useAnalytics } from '@/hooks/use-analytics'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 const APPWRITE_DOCS_URL = '/docs'
@@ -68,14 +70,36 @@ const SDK_API_KEY_DEFAULT_NAME = 'SDK'
 // not a user-connected VCS installation, so the provider is hardcoded here.
 const { Icon: GitHubIcon } = getVcsProvider('github')
 
-/** Client SDKs – [docs](https://appwrite.io/docs/sdks#client) */
-const CLIENT_SDK_OPTIONS: { id: string; platform: string; label: string }[] = [
-  { id: 'web', platform: 'web', label: 'Web' },
-  { id: 'flutter', platform: 'flutter', label: 'Flutter' },
-  { id: 'react-native', platform: 'react-native', label: 'React Native' },
-  { id: 'apple', platform: 'apple', label: 'Apple' },
-  { id: 'android', platform: 'android', label: 'Android' },
+/**
+ * Client platforms shown in the first dropdown –
+ * [docs](https://appwrite.io/docs/sdks#client). Ionic, Capacitor, and Tauri
+ * build on web tech, so they resolve to the Web SDK under the hood (`sdkId`,
+ * which drives snippets, install steps, and analytics) and register as a Web
+ * platform in the console; the other entries are Appwrite SDKs of their own.
+ */
+const CLIENT_PLATFORM_OPTIONS: {
+  id: string
+  label: string
+  /** Underlying SDK when it differs from the platform id. */
+  sdkId?: string
+}[] = [
+  { id: 'web', label: 'Web' },
+  { id: 'flutter', label: 'Flutter' },
+  { id: 'react-native', label: 'React Native' },
+  { id: 'ionic', label: 'Ionic', sdkId: 'web' },
+  { id: 'capacitor', label: 'Capacitor', sdkId: 'web' },
+  { id: 'tauri', label: 'Tauri', sdkId: 'web' },
+  { id: 'apple', label: 'Apple' },
+  { id: 'android', label: 'Android' },
 ]
+
+/** True for ids selectable in the platform dropdown (client or server). */
+function isKnownPlatform(id: string): boolean {
+  return (
+    CLIENT_PLATFORM_OPTIONS.some((o) => o.id === id) ||
+    SERVER_SDK_OPTIONS.some((o) => o.id === id)
+  )
+}
 
 /** Server SDKs – [docs](https://appwrite.io/docs/sdks#server) */
 const SERVER_SDK_OPTIONS: { id: string; platform: string; label: string }[] = [
@@ -94,11 +118,14 @@ const SERVER_SDK_OPTIONS: { id: string; platform: string; label: string }[] = [
   { id: 'rust', platform: 'web', label: 'Rust' },
 ]
 
-/** Framework options per SDK (id + label). Aligned with https://appwrite.io/docs/quick-starts */
-const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
+/** Framework options per platform (id + label). Aligned with https://appwrite.io/docs/quick-starts */
+const FRAMEWORK_OPTIONS: Record<
+  string,
+  { id: string; label: string; icon?: string }[]
+> = {
   web: [
-    { id: 'next', label: 'Next.js' },
     { id: 'tanstack', label: 'TanStack Start' },
+    { id: 'next', label: 'Next.js' },
     { id: 'react', label: 'React' },
     { id: 'sveltekit', label: 'SvelteKit' },
     { id: 'svelte', label: 'Svelte' },
@@ -108,9 +135,13 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'angular', label: 'Angular' },
     { id: 'solidstart', label: 'SolidStart' },
     { id: 'solid', label: 'Solid' },
+    { id: 'astro', label: 'Astro' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
   node: [
+    { id: 'hono', label: 'Hono' },
+    { id: 'fastify', label: 'Fastify' },
+    { id: 'nestjs', label: 'NestJS' },
     { id: 'express', label: 'Express' },
     { id: 'koa', label: 'Koa' },
     { id: 'vanilla', label: 'Vanilla' },
@@ -120,24 +151,72 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'elysia', label: 'ElysiaJS' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
-  // Single-framework platforms keep their platform-specific id (for the
-  // icon and code lookups) but read "Vanilla" when the framework would
-  // otherwise just repeat the platform name.
+  // Single-framework platforms keep their snippet-specific id (for the code
+  // lookups) but read "Vanilla" when the framework would otherwise just
+  // repeat the platform name.
   flutter: [{ id: 'flutter', label: 'Vanilla' }],
-  'react-native': [{ id: 'react-native', label: 'Vanilla' }],
+  'react-native': [{ id: 'expo', label: 'Vanilla', icon: 'react-native' }],
+  ionic: [{ id: 'ionic', label: 'Vanilla' }],
+  capacitor: [{ id: 'capacitor', label: 'Vanilla' }],
+  tauri: [{ id: 'tauri', label: 'Vanilla' }],
+  // Android and Apple render these as a "Language" dropdown.
   apple: [{ id: 'swift', label: 'Swift' }],
-  android: [{ id: 'kotlin', label: 'Kotlin' }],
-  python: [{ id: 'python', label: 'Vanilla' }],
-  dart: [{ id: 'dart', label: 'Vanilla' }],
-  php: [{ id: 'php', label: 'Vanilla' }],
-  ruby: [{ id: 'ruby', label: 'Vanilla' }],
-  dotnet: [{ id: 'dotnet', label: 'Vanilla' }],
-  go: [{ id: 'go', label: 'Vanilla' }],
-  java: [{ id: 'java', label: 'Vanilla' }],
-  rust: [{ id: 'rust', label: 'Vanilla' }],
-  swift: [{ id: 'swift', label: 'Vanilla' }],
-  kotlin: [{ id: 'kotlin', label: 'Vanilla' }],
+  android: [
+    { id: 'kotlin', label: 'Kotlin' },
+    { id: 'java', label: 'Java' },
+  ],
+  python: [
+    { id: 'fastapi', label: 'FastAPI' },
+    { id: 'django', label: 'Django' },
+    { id: 'flask', label: 'Flask' },
+    { id: 'python', label: 'Vanilla' },
+  ],
+  dart: [
+    { id: 'serverpod', label: 'Serverpod' },
+    { id: 'frog', label: 'Dart Frog' },
+    { id: 'dart', label: 'Vanilla' },
+  ],
+  php: [
+    { id: 'laravel', label: 'Laravel' },
+    { id: 'symfony', label: 'Symfony' },
+    { id: 'php', label: 'Vanilla' },
+  ],
+  ruby: [
+    { id: 'rails', label: 'Rails' },
+    { id: 'ruby', label: 'Vanilla' },
+  ],
+  dotnet: [
+    { id: 'minimal', label: 'Minimal API' },
+    { id: 'controllers', label: 'Controllers' },
+    { id: 'dotnet', label: 'Vanilla' },
+  ],
+  go: [
+    { id: 'gin', label: 'Gin' },
+    { id: 'echo', label: 'Echo' },
+    { id: 'fiber', label: 'Fiber' },
+    { id: 'go', label: 'Vanilla' },
+  ],
+  java: [
+    { id: 'spring', label: 'Spring Boot' },
+    { id: 'quarkus', label: 'Quarkus' },
+    { id: 'java', label: 'Vanilla' },
+  ],
+  rust: [
+    { id: 'axum', label: 'Axum' },
+    { id: 'actix', label: 'Actix Web' },
+    { id: 'rust', label: 'Vanilla' },
+  ],
+  swift: [
+    { id: 'vapor', label: 'Vapor' },
+    { id: 'swift', label: 'Vanilla' },
+  ],
+  kotlin: [
+    { id: 'ktor', label: 'Ktor' },
+    { id: 'spring', label: 'Spring Boot' },
+    { id: 'kotlin', label: 'Vanilla' },
+  ],
   deno: [
+    { id: 'hono', label: 'Hono' },
     { id: 'fresh', label: 'Fresh' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
@@ -167,6 +246,10 @@ const USING_OPTIONS: Record<string, { id: string; label: string }[]> = {
   angular: [{ id: 'cli', label: 'Angular CLI' }],
   solidstart: [{ id: 'vite', label: 'Vite' }],
   solid: [{ id: 'vite', label: 'Vite' }],
+  astro: [{ id: 'vite', label: 'Vite' }],
+  ionic: [{ id: 'vite', label: 'Ionic React' }],
+  capacitor: [{ id: 'vite', label: 'Vite' }],
+  tauri: [{ id: 'vite', label: 'Vite' }],
 }
 
 /** Package manager options per SDK; null = not applicable (use all in install). */
@@ -220,7 +303,12 @@ const PACKAGE_MANAGER_OPTIONS: Record<
 }
 
 export type ConnectProjectTab =
-  'app' | 'cli' | 'mcp' | 'skills' | 'terraform' | 's3'
+  | 'app'
+  | 'cli'
+  | 'mcp'
+  | 'skills'
+  | 'terraform'
+  | 's3'
 
 const CONNECT_PROJECT_TAB_IDS = [
   'mcp',
@@ -252,17 +340,24 @@ export function ConnectProject({
 }: ConnectProjectProps) {
   const t = useT()
   const navigate = useNavigate()
-  const [sdkId, setSdkId] = useState(() => {
-    const inClient = CLIENT_SDK_OPTIONS.some((o) => o.id === initialSdk)
-    const inServer = SERVER_SDK_OPTIONS.some((o) => o.id === initialSdk)
-    if (inClient || inServer) return initialSdk
-    return CLIENT_SDK_OPTIONS[0].id
-  })
+  const { track } = useAnalytics()
+  const [platformId, setPlatformId] = useState(() =>
+    isKnownPlatform(initialSdk) ? initialSdk : 'web',
+  )
   const [frameworkId, setFrameworkId] = useState('vanilla')
   const [usingId, setUsingId] = useState('vite')
   const [packageManagerId, setPackageManagerId] = useState('npm')
 
-  const frameworks = FRAMEWORK_OPTIONS[sdkId] ?? FRAMEWORK_OPTIONS.web
+  // The platform resolves to a real SDK (Ionic/Capacitor/Tauri use the Web
+  // SDK); snippets, install steps, and analytics all key off the SDK id.
+  const sdkId =
+    CLIENT_PLATFORM_OPTIONS.find((o) => o.id === platformId)?.sdkId ??
+    platformId
+
+  const frameworkOptions =
+    FRAMEWORK_OPTIONS[platformId] ?? FRAMEWORK_OPTIONS.web
+  // Android and Apple pick a language (Kotlin, Swift), not a framework.
+  const isLanguagePlatform = platformId === 'android' || platformId === 'apple'
   const usingVariants = USING_OPTIONS[frameworkId]
   const packageManagers = PACKAGE_MANAGER_OPTIONS[sdkId]
   const isServer = SERVER_SDK_OPTIONS.some((o) => o.id === sdkId)
@@ -270,27 +365,27 @@ export function ConnectProject({
 
   useEffect(() => {
     if (!open) return
-    const inClient = CLIENT_SDK_OPTIONS.some((o) => o.id === initialSdk)
-    const inServer = SERVER_SDK_OPTIONS.some((o) => o.id === initialSdk)
-    if (inClient || inServer) setSdkId(initialSdk)
+    if (isKnownPlatform(initialSdk)) setPlatformId(initialSdk)
   }, [open, initialSdk])
 
   useEffect(() => {
-    const nextFrameworks = FRAMEWORK_OPTIONS[sdkId] ?? FRAMEWORK_OPTIONS.web
-    const nextFwId = nextFrameworks[0]?.id ?? 'vanilla'
-    setFrameworkId(nextFwId)
-    const variants = USING_OPTIONS[nextFwId]
-    setUsingId(variants?.[0]?.id ?? 'vite')
-    const nextPm = PACKAGE_MANAGER_OPTIONS[sdkId]
-    setPackageManagerId(nextPm?.[0]?.id ?? 'npm')
-  }, [sdkId])
+    const nextFrameworks =
+      FRAMEWORK_OPTIONS[platformId] ?? FRAMEWORK_OPTIONS.web
+    setFrameworkId(nextFrameworks[0]?.id ?? 'vanilla')
+  }, [platformId])
 
   useEffect(() => {
-    const variants = USING_OPTIONS[frameworkId]
-    if (variants?.length && !variants.some((v) => v.id === usingId)) {
-      setUsingId(variants[0].id)
-    }
-  }, [frameworkId, usingId])
+    setUsingId((prev) => {
+      const variants = USING_OPTIONS[frameworkId]
+      return variants?.some((v) => v.id === prev)
+        ? prev
+        : (variants?.[0]?.id ?? 'vite')
+    })
+  }, [frameworkId])
+
+  useEffect(() => {
+    setPackageManagerId(PACKAGE_MANAGER_OPTIONS[sdkId]?.[0]?.id ?? 'npm')
+  }, [sdkId])
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -343,28 +438,92 @@ export function ConnectProject({
   }, [open, initialConnectTab])
 
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
-  const [copied, setCopied] = useState(false)
   const [copiedSkillsPrompt, setCopiedSkillsPrompt] = useState<string | null>(
     null,
   )
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [copiedPrompt, setCopiedPrompt] = useState(false)
   useEffect(() => {
     setSelectedFileIndex(0)
   }, [sdkId, frameworkId, usingId, runtime])
   const selectedFile = codeFiles[selectedFileIndex] ?? codeFiles[0]
-  const handleCopyCode = () => {
-    if (!selectedFile) return
-    navigator.clipboard.writeText(selectedFile.code)
-    setCopied(true)
-    toast.success(t('Copied to clipboard'))
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const codeFileTabs = useMemo(
+    () =>
+      codeFiles.map((file, index) => ({
+        id: String(index),
+        label: file.label,
+      })),
+    [codeFiles],
+  )
   const installInstructions = useMemo(
     () => getInstallInstructions(sdkId, packageManagerId),
     [sdkId, packageManagerId],
   )
+
+  // Label by platform, not SDK: the prompt should say "Ionic", not "Web".
+  const sdkLabel =
+    [...CLIENT_PLATFORM_OPTIONS, ...SERVER_SDK_OPTIONS].find(
+      (o) => o.id === platformId,
+    )?.label ?? platformId
+  const frameworkLabel = frameworkOptions.find(
+    (fw) => fw.id === frameworkId,
+  )?.label
+  const usingLabel = usingVariants?.find((v) => v.id === usingId)?.label
+  const packageManagerLabel = packageManagers?.find(
+    (pm) => pm.id === packageManagerId,
+  )?.label
+
+  const connectSdkPrompt = useMemo(
+    () =>
+      buildConnectSdkPrompt({
+        projectId,
+        projectName: project?.name,
+        endpoint: endpoint ?? getBaseEndpoint(),
+        sdkLabel,
+        runtime,
+        frameworkLabel: frameworkOptions.length > 0 ? frameworkLabel : undefined,
+        usingLabel:
+          usingVariants && usingVariants.length > 0 ? usingLabel : undefined,
+        packageManagerLabel:
+          packageManagers && packageManagers.length > 0
+            ? packageManagerLabel
+            : undefined,
+        installTitle: installInstructions.title,
+        installOptions: installInstructions.options,
+        codeFiles,
+      }),
+    [
+      projectId,
+      project?.name,
+      endpoint,
+      sdkLabel,
+      runtime,
+      frameworkOptions.length,
+      frameworkLabel,
+      usingVariants,
+      usingLabel,
+      packageManagers,
+      packageManagerLabel,
+      installInstructions,
+      codeFiles,
+    ],
+  )
+
+  const handleCopyConnectPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(connectSdkPrompt)
+      track(ANALYTICS_ACTIONS['copy-connect-sdk-prompt'], {
+        platform: sdkId,
+      })
+      setCopiedPrompt(true)
+      toast.success(t('Prompt copied to clipboard'))
+      setTimeout(() => setCopiedPrompt(false), 2000)
+    } catch {
+      toast.error(t('Failed to copy prompt'))
+    }
+  }
 
   const handleViewApiKeys = () => {
     onOpenChange(false)
@@ -462,16 +621,7 @@ export function ConnectProject({
                   <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
                     {t('SDK / Platform')}
                   </label>
-                  <Select
-                    value={
-                      [...CLIENT_SDK_OPTIONS, ...SERVER_SDK_OPTIONS].some(
-                        (o) => o.id === sdkId,
-                      )
-                        ? sdkId
-                        : 'web'
-                    }
-                    onValueChange={setSdkId}
-                  >
+                  <Select value={platformId} onValueChange={setPlatformId}>
                     <SelectTrigger className="w-full h-9 text-[13px]">
                       <SelectValue />
                     </SelectTrigger>
@@ -480,14 +630,18 @@ export function ConnectProject({
                         <SelectLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                           {t('Client')}
                         </SelectLabel>
-                        {CLIENT_SDK_OPTIONS.map((opt) => (
+                        {CLIENT_PLATFORM_OPTIONS.map((opt) => (
                           <SelectItem
                             key={opt.id}
                             value={opt.id}
                             className="text-[13px]"
                           >
                             <span className="flex items-center gap-1.5">
-                              <PlatformIcon platform={opt.platform} size="sm" />
+                              {opt.sdkId ? (
+                                <FrameworkIcon framework={opt.id} size="sm" />
+                              ) : (
+                                <PlatformIcon platform={opt.id} size="sm" />
+                              )}
                               {opt.label}
                             </span>
                           </SelectItem>
@@ -513,28 +667,31 @@ export function ConnectProject({
                     </SelectContent>
                   </Select>
                 </div>
-                {frameworks.length > 0 && (
+                {frameworkOptions.length > 0 && (
                   <div className="min-w-[120px]">
                     <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
-                      {t('Framework')}
+                      {isLanguagePlatform ? t('Language') : t('Framework')}
                     </label>
                     <Select
                       value={frameworkId}
                       onValueChange={setFrameworkId}
-                      disabled={frameworks.length === 1}
+                      disabled={frameworkOptions.length === 1}
                     >
                       <SelectTrigger className="w-full h-9 text-[13px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {frameworks.map((fw) => (
+                        {frameworkOptions.map((fw) => (
                           <SelectItem
                             key={fw.id}
                             value={fw.id}
                             className="text-[13px]"
                           >
                             <span className="flex items-center gap-1.5">
-                              <FrameworkIcon framework={fw.id} size="sm" />
+                              <FrameworkIcon
+                                framework={fw.icon ?? fw.id}
+                                size="sm"
+                              />
                               {fw.label}
                             </span>
                           </SelectItem>
@@ -603,6 +760,23 @@ export function ConnectProject({
                     </Select>
                   </div>
                 )}
+                <div className="ms-auto flex shrink-0 items-end self-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 gap-1.5 text-[12px]"
+                    data-analytics-track="manual"
+                    onClick={() => void handleCopyConnectPrompt()}
+                  >
+                    {copiedPrompt ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                    {t('Copy prompt')}
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-[0.9fr_1.4fr] gap-6 pt-4 min-h-0 flex-1">
@@ -687,49 +861,15 @@ export function ConnectProject({
                   </DocsRouteLink>
                 </div>
                 {/* Right: File-based code examples */}
-                <div className="min-w-0 min-h-0 flex flex-col gap-2 flex-1">
-                  <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
-                    {codeFiles.length > 1 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {codeFiles.map((file, i) => (
-                          <button
-                            key={file.label}
-                            type="button"
-                            onClick={() => setSelectedFileIndex(i)}
-                            className={cn(
-                              'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                              i === selectedFileIndex
-                                ? 'bg-muted text-foreground'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
-                            )}
-                          >
-                            {t(file.label)}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <span />
-                    )}
-                    {selectedFile && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
-                        onClick={handleCopyCode}
-                      >
-                        {copied ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                        {t('Copy')}
-                      </Button>
-                    )}
-                  </div>
+                <div className="min-w-0 min-h-0 flex flex-col flex-1">
                   {selectedFile && (
-                    <ConnectCodePanel
+                    <ConnectCodeExample
                       code={selectedFile.code}
                       language={selectedFile.language ?? 'plaintext'}
+                      tabs={codeFileTabs}
+                      activeTabId={String(selectedFileIndex)}
+                      onTabChange={(id) => setSelectedFileIndex(Number(id))}
+                      selectorAriaLabel={t('Select file')}
                       fixedHeight="100%"
                       className="flex-1 min-h-0"
                     />

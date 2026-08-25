@@ -115,7 +115,7 @@ The useful question is not "does this platform have an agent product?" It is "do
 
 Convex answers that with an Agent component plus a narrower TypeScript-centric platform. Appwrite answers it with a broader open-source backend where Auth, TablesDB, Storage, Functions, Realtime, Sites, and MCP line up with what agents need, without making you adopt a dedicated agent abstraction before your product shape is clear.
 
-If you want to explore Appwrite for an AI app or agent workflow, start with [Appwrite Cloud](https://cloud.appwrite.io), read the [AI tooling hub](/docs/tooling/ai), and check the [API MCP server](/docs/tooling/ai/mcp-servers/api), [Agent Skills](/docs/tooling/ai/skills), and the editor plugins for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor).
+If you want to explore Appwrite for an AI app or agent workflow, start with [Appwrite Cloud](https://cloud.appwrite.io), read the [AI tooling hub](/docs/tooling/ai), and check the [API MCP server](/docs/tooling/ai/mcp-servers), [Agent Skills](/docs/tooling/ai/skills), and the editor plugins for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor).
 
 - [Appwrite TablesDB](/docs/products/databases)
 - [Appwrite Functions](/docs/products/functions)

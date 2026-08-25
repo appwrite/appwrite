@@ -41,7 +41,7 @@ export function isOptionalAuthPage(pathname: string): boolean {
   // Soft-launch password gate; guests land here before marketing/console.
   if (pathname === '/access') return true
   if (pathname === '/init') return features.init
-  // Public fullscreen agent (guest can view empty state + sign-in CTA).
+  // Legacy `/agent` / `/assistant` still soft-auth while they redirect into org scope.
   if (
     pathname === '/agent' ||
     pathname.startsWith('/agent/') ||

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   MarketingCtaSection,
   MarketingCtaSignupButtons,
@@ -8,11 +8,13 @@ import {
 } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { normalizeCategory } from '@/lib/blog/content'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getDraftBlogPosts, normalizeCategory } from '@/lib/blog/content'
 import { buildBlogRouteSearch } from '@/lib/blog/search'
 import type { BlogPostsPage } from '@/lib/blog/types'
 import { cn } from '@/lib/utils'
 import { BlogCategorySpotlightsSection } from './BlogCategorySpotlightsSection'
+import { BlogDraftsSection } from './BlogDraftsSection'
 import { BlogFeaturedSection } from './BlogFeaturedSection'
 import { BlogPagination } from './BlogPagination'
 import { BlogPostCard } from './BlogPostCard'
@@ -40,6 +42,7 @@ export function View({
   search,
 }: ViewProps) {
   const navigate = useNavigate()
+  const { features } = useConsoleProfile()
   const [query, setQuery] = useState(search?.search ?? '')
   const selectedCategory = search?.category ?? 'Latest'
 
@@ -77,6 +80,14 @@ export function View({
 
   const showFeatured = showSpotlights && featured
 
+  // Read straight from the content module instead of the loader payload: drafts
+  // never reach the SSR/prerendered HTML while the flag is off, and a debug-menu
+  // toggle shows them without a reload.
+  const drafts = useMemo(
+    () => (features.blogDrafts ? getDraftBlogPosts() : []),
+    [features.blogDrafts],
+  )
+
   return (
     <div className="relative overflow-x-hidden bg-background">
       <MarketingHeroSection
@@ -92,6 +103,11 @@ export function View({
       {showSpotlights && secondaryFeatured.length > 0 ? (
         <BlogSecondaryFeaturedSection posts={secondaryFeatured} authors={authors} />
       ) : null}
+
+      {showSpotlights && features.blogDrafts ? (
+        <BlogDraftsSection posts={drafts} authors={authors} />
+      ) : null}
+
 
       {showSpotlights && categorySpotlights.length > 0 ? (
         <BlogCategorySpotlightsSection spotlights={categorySpotlights} />
