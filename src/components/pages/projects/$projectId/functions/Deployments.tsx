@@ -132,6 +132,7 @@ import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap } from '@/lib/table-filters'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { domainUrl } from '@/lib/domains/url'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -163,6 +164,10 @@ function detectVcsProvider(
       const { label, Icon } = getVcsProvider('bitbucket')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
+    if (url.includes('cursor.com')) {
+      const { label, Icon } = getVcsProvider('origin')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
   }
 
   // Check for vcsProvider field (if available)
@@ -178,6 +183,10 @@ function detectVcsProvider(
     }
     if (provider === 'bitbucket') {
       const { label, Icon } = getVcsProvider('bitbucket')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (provider === 'origin') {
+      const { label, Icon } = getVcsProvider('origin')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -744,15 +753,6 @@ export function View() {
     setSelectedDeployments(new Set()) // Clear selection on page size change
   }
 
-  const clearAllDeploymentsFilters = () => {
-    navigate({
-      to: location.pathname,
-      search: (prev) => ({ ...prev, query: undefined }),
-      replace: true,
-    })
-    setSelectedDeployments(new Set())
-  }
-
   // Only show full loading state on initial load when there's no data (not while refetching filters)
   if (
     (funcLoading || deploymentsLoading) &&
@@ -1027,7 +1027,7 @@ export function View() {
                         {activeDomains.map((rule) => (
                           <a
                             key={rule.$id}
-                            href={`https://${rule.domain}`}
+                            href={domainUrl(rule.domain)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"

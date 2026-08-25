@@ -92,6 +92,9 @@ export const MYSQL_LAST_CELL_BORDER_CLASS = 'border-b border-border'
 
 export function getMysqlColumnTypeColor(type: string): string {
   const normalized = type.toLowerCase()
+  if (normalized === 'enum' || normalized.startsWith('enum(')) {
+    return 'bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400'
+  }
   const colors: Record<string, string> = {
     text: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     varchar:

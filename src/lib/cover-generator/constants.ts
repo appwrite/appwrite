@@ -1,3 +1,5 @@
+import { COVER_EXTRA_TEMPLATE_IDS } from '@/lib/cover-generator/extra-templates/ids'
+
 export {
   COVER_THEME_IDS as COVER_THEMES,
   DEFAULT_COVER_THEME_ID,
@@ -67,6 +69,7 @@ export const COVER_TEMPLATE_IDS = [
   'milestone-centered',
   'version-number',
   'version-title',
+  ...COVER_EXTRA_TEMPLATE_IDS,
 ] as const
 
 export type CoverTemplateId = (typeof COVER_TEMPLATE_IDS)[number]

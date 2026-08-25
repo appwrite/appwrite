@@ -24,11 +24,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  createEnumValueEntry,
-  isMysqlEnumValueEntryNew,
-  type MysqlEnumValueEntry,
-} from '@/lib/mysql-enum-metadata'
 import { getAxisRestrictedDragModifiers, sortableAxisTransform } from '@/lib/dnd-modifiers'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -38,19 +33,29 @@ const enumValueDragModifiers = getAxisRestrictedDragModifiers('vertical')
 const rowIconButtonClass =
   'flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:text-foreground'
 
+type EnumValueEntry = {
+  id: string
+  value: string
+}
+
 type MysqlEnumValuesEditorProps = {
-  entries: MysqlEnumValueEntry[]
-  onChange: (entries: MysqlEnumValueEntry[]) => void
-  mode: 'create' | 'update'
+  values: string[]
+  onChange: (values: string[]) => void
+  /** When true, warn that dropping a label fails if rows still use it. */
+  existing?: boolean
 }
 
 type SortableEnumValueRowProps = {
-  entry: MysqlEnumValueEntry
+  entry: EnumValueEntry
   canRemove: boolean
   autoFocus?: boolean
   onAutoFocused?: () => void
   onValueChange: (value: string) => void
   onRemove: () => void
+}
+
+function createEntry(value = ''): EnumValueEntry {
+  return { id: crypto.randomUUID(), value }
 }
 
 function SortableEnumValueRow({
@@ -97,7 +102,8 @@ function SortableEnumValueRow({
       onClick={onRemove}
       className={cn(
         rowIconButtonClass,
-        !canRemove && 'cursor-not-allowed opacity-40 hover:bg-transparent hover:text-muted-foreground',
+        !canRemove &&
+          'cursor-not-allowed opacity-40 hover:bg-transparent hover:text-muted-foreground',
       )}
       aria-label={t('Remove value')}
     >
@@ -143,7 +149,7 @@ function SortableEnumValueRow({
             <span className="inline-flex shrink-0">{removeControl}</span>
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-xs text-[12px]">
-            {t('Existing enum values cannot be removed from MySQL.')}
+            {t('Enum columns need at least one value.')}
           </TooltipContent>
         </Tooltip>
       )}
@@ -151,7 +157,7 @@ function SortableEnumValueRow({
   )
 }
 
-function EnumValueRowPreview({ entry }: { entry: MysqlEnumValueEntry }) {
+function EnumValueRowPreview({ entry }: { entry: EnumValueEntry }) {
   return (
     <div className="flex h-10 items-center gap-1 overflow-hidden rounded-lg border border-border bg-background px-1.5 shadow-md">
       <div className={cn(rowIconButtonClass, 'pointer-events-none')}>
@@ -167,13 +173,21 @@ function EnumValueRowPreview({ entry }: { entry: MysqlEnumValueEntry }) {
 }
 
 export function MysqlEnumValuesEditor({
-  entries,
+  values,
   onChange,
-  mode,
+  existing = false,
 }: MysqlEnumValuesEditorProps) {
   const t = useT()
+  const [entries, setEntries] = useState<EnumValueEntry[]>(() =>
+    (values.length > 0 ? values : ['']).map((value) => createEntry(value)),
+  )
   const [activeId, setActiveId] = useState<string | null>(null)
   const [focusEntryId, setFocusEntryId] = useState<string | null>(null)
+
+  const commit = (next: EnumValueEntry[]) => {
+    setEntries(next)
+    onChange(next.map((entry) => entry.value))
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -203,7 +217,7 @@ export function MysqlEnumValuesEditor({
     const newIndex = entries.findIndex((entry) => entry.id === over.id)
     if (oldIndex === -1 || newIndex === -1) return
 
-    onChange(arrayMove(entries, oldIndex, newIndex))
+    commit(arrayMove(entries, oldIndex, newIndex))
   }
 
   const handleDragCancel = () => {
@@ -211,9 +225,9 @@ export function MysqlEnumValuesEditor({
   }
 
   const handleAddValue = () => {
-    const newEntry = createEnumValueEntry()
+    const newEntry = createEntry()
     setFocusEntryId(newEntry.id)
-    onChange([...entries, newEntry])
+    commit([...entries, newEntry])
   }
 
   const handleAutoFocused = useCallback(() => {
@@ -238,20 +252,16 @@ export function MysqlEnumValuesEditor({
                 entry={entry}
                 autoFocus={focusEntryId === entry.id}
                 onAutoFocused={handleAutoFocused}
-                canRemove={
-                  mode === 'create'
-                    ? entries.length > 1
-                    : isMysqlEnumValueEntryNew(entry)
-                }
+                canRemove={entries.length > 1}
                 onValueChange={(value) =>
-                  onChange(
+                  commit(
                     entries.map((current) =>
                       current.id === entry.id ? { ...current, value } : current,
                     ),
                   )
                 }
                 onRemove={() =>
-                  onChange(entries.filter((current) => current.id !== entry.id))
+                  commit(entries.filter((current) => current.id !== entry.id))
                 }
               />
             ))}
@@ -275,11 +285,9 @@ export function MysqlEnumValuesEditor({
       </Button>
 
       <p className="text-[11px] text-muted-foreground">
-        {mode === 'create'
-          ? t('Drag values to set their sort order in the enum type.')
-          : t(
-              'Rename existing values inline, add new rows, and drag to choose where new values are inserted.',
-            )}
+        {existing
+          ? t('Removing a value fails if existing rows still use it.')
+          : t('Drag to set the order of allowed values.')}
       </p>
     </div>
   )

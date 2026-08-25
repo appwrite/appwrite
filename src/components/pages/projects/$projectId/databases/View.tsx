@@ -545,7 +545,6 @@ export function View() {
           </div>
         }
         fullWidthBorder
-        fullWidth
         rightContent={<ViewToggle />}
         contentAfterBorder={
           // Data is prefetched in route loader, only render if data exists
@@ -562,13 +561,13 @@ export function View() {
               })}
               resourceName="databases"
               orgId={project?.teamId}
-              fullWidth
+              fullWidth={false}
             />
           ) : undefined
         }
       />
 
-      <div className="w-full flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {projectId ? (
           <AllDatabasesSection
             projectId={projectId}

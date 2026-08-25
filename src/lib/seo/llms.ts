@@ -257,7 +257,7 @@ export function buildAppwriteLlmsTxt(
         {
           title: 'MCP documentation',
           url: `${origin}${APPWRITE_MCP_DOCS_PATH}.md`,
-          description: 'Setup guides for the API and docs MCP servers.',
+          description: 'Setup guide for the Appwrite MCP server.',
         },
       ],
     },
@@ -562,7 +562,7 @@ export function buildDocsMarkdownIndex(
     { slug: 'products/sites', title: 'Sites' },
     { slug: 'products/domains', title: 'Domains' },
     { slug: 'apis', title: 'APIs' },
-    { slug: 'tooling/ai', title: 'AI tooling' },
+    { slug: 'tooling', title: 'Tooling' },
     { slug: 'tooling/command-line/installation', title: 'CLI' },
     { slug: 'advanced/platform', title: 'Platform' },
     { slug: 'advanced/migrations', title: 'Migrations' },

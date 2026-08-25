@@ -7,8 +7,8 @@ You can send custom email messages to your app's users using Appwrite Messaging 
 This guide takes you through the implementation path of adding email messaging to your app.
 
 # Add a provider {% #add-a-provider %}
-Appwrite supports [Mailgun](/docs/products/messaging/mailgun/), [Resend](/docs/products/messaging/resend/), and [Sendgrid](/docs/products/messaging/sendgrid/) as
-SMTP providers. You must configure one of them as a provider.
+Appwrite supports [Mailgun](/docs/products/messaging/mailgun/), [Resend](/docs/products/messaging/resend/), [Sendgrid](/docs/products/messaging/sendgrid/), [Amazon SES](/docs/products/messaging/ses/), and [SMTP](/docs/products/messaging/smtp/) as
+email providers. You must configure one of them as a provider.
 {% only_dark %}
 ![Add a SMTP provider](/images/docs/messaging/providers/mailgun/dark/add-mailgun.avif)
 {% /only_dark %}
@@ -17,7 +17,7 @@ SMTP providers. You must configure one of them as a provider.
 {% /only_light %}
 To add a new provider navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Add provider** > **Email**
 and follow the wizard. You can find more details about configuring in the provider guides for
-[Mailgun](/docs/products/messaging/mailgun#configure-provider), [Resend](/docs/products/messaging/resend#configure-provider), and [Sendgrid](/docs/products/messaging/sendgrid#configure-provider).
+[Mailgun](/docs/products/messaging/mailgun#configure-provider), [Resend](/docs/products/messaging/resend#configure-provider), [Sendgrid](/docs/products/messaging/sendgrid#configure-provider), and [Amazon SES](/docs/products/messaging/ses#configure-provider).
 
 # Add targets {% #add-targets %}
 In Appwrite Messaging, each user has **targets** like their email, phone number, and devices with your app installed.

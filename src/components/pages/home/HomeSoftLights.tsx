@@ -250,10 +250,38 @@ const tileLights = {
 
 export type AiTileSoftLightTone = keyof typeof tileLights
 
-export function AiTileSoftLight({ tone }: { tone: AiTileSoftLightTone }) {
+const tileLightAlign = {
+  start: '',
+  center: 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+} as const
+
+export function AiTileSoftLight({
+  tone,
+  align = 'start',
+}: {
+  tone: AiTileSoftLightTone
+  align?: keyof typeof tileLightAlign
+}) {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden>
-      <div className={tileLights[tone]} />
+      <div className={cn(tileLights[tone], tileLightAlign[align])} />
+    </div>
+  )
+}
+
+/** Orange ambient wash for the home AI section - top end side. */
+export function AiChatSoftLight() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
+      <div
+        className={cn(
+          'absolute -end-[32%] -top-[8%] h-[520px] w-[780px]',
+          'bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.14)_0%,rgba(254,149,103,0.05)_36%,transparent_70%)]',
+          'dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.09)_0%,rgba(254,149,103,0.028)_36%,transparent_70%)]',
+          'sm:-end-[28%] sm:-top-[10%] sm:h-[620px] sm:w-[920px]',
+          'lg:-end-[24%] lg:-top-[12%] lg:h-[720px] lg:w-[1060px]',
+        )}
+      />
     </div>
   )
 }

@@ -333,7 +333,6 @@ import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRouteImport 
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings'
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.roles'
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.monitor'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.enums'
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.connections'
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.connect'
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.backups'
@@ -2297,12 +2296,6 @@ const PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute =
     path: '/monitor',
     getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRouteImport.update({
-    id: '/enums',
-    path: '/enums',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
-  } as any)
 const PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute =
   PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport.update({
     id: '/connections',
@@ -3299,7 +3292,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/mysql/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute
   '/projects/$projectId/databases/mysql/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute
   '/projects/$projectId/databases/mysql/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute
-  '/projects/$projectId/databases/mysql/$databaseId/enums': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute
   '/projects/$projectId/databases/mysql/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute
   '/projects/$projectId/databases/mysql/$databaseId/roles': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute
   '/projects/$projectId/databases/mysql/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteWithChildren
@@ -3661,7 +3653,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/mysql/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute
   '/projects/$projectId/databases/mysql/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute
   '/projects/$projectId/databases/mysql/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute
-  '/projects/$projectId/databases/mysql/$databaseId/enums': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute
   '/projects/$projectId/databases/mysql/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute
   '/projects/$projectId/databases/mysql/$databaseId/roles': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute
   '/projects/$projectId/databases/mysql/$databaseId/sql': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute
@@ -4068,7 +4059,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/mysql/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute
   '/_public/projects/$projectId/databases/mysql/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute
   '/_public/projects/$projectId/databases/mysql/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute
-  '/_public/projects/$projectId/databases/mysql/$databaseId/enums': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute
   '/_public/projects/$projectId/databases/mysql/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute
   '/_public/projects/$projectId/databases/mysql/$databaseId/roles': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute
   '/_public/projects/$projectId/databases/mysql/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteWithChildren
@@ -4477,7 +4467,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/mysql/$databaseId/backups'
     | '/projects/$projectId/databases/mysql/$databaseId/connect'
     | '/projects/$projectId/databases/mysql/$databaseId/connections'
-    | '/projects/$projectId/databases/mysql/$databaseId/enums'
     | '/projects/$projectId/databases/mysql/$databaseId/monitor'
     | '/projects/$projectId/databases/mysql/$databaseId/roles'
     | '/projects/$projectId/databases/mysql/$databaseId/settings'
@@ -4839,7 +4828,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/mysql/$databaseId/backups'
     | '/projects/$projectId/databases/mysql/$databaseId/connect'
     | '/projects/$projectId/databases/mysql/$databaseId/connections'
-    | '/projects/$projectId/databases/mysql/$databaseId/enums'
     | '/projects/$projectId/databases/mysql/$databaseId/monitor'
     | '/projects/$projectId/databases/mysql/$databaseId/roles'
     | '/projects/$projectId/databases/mysql/$databaseId/sql'
@@ -5245,7 +5233,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/mysql/$databaseId/backups'
     | '/_public/projects/$projectId/databases/mysql/$databaseId/connect'
     | '/_public/projects/$projectId/databases/mysql/$databaseId/connections'
-    | '/_public/projects/$projectId/databases/mysql/$databaseId/enums'
     | '/_public/projects/$projectId/databases/mysql/$databaseId/monitor'
     | '/_public/projects/$projectId/databases/mysql/$databaseId/roles'
     | '/_public/projects/$projectId/databases/mysql/$databaseId/settings'
@@ -7662,13 +7649,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
     }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/enums': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/enums'
-      path: '/enums'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/enums'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
-    }
     '/_public/projects/$projectId/databases/mysql/$databaseId/connections': {
       id: '/_public/projects/$projectId/databases/mysql/$databaseId/connections'
       path: '/connections'
@@ -9150,7 +9130,6 @@ interface PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteChildren {
   PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute
   PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute
   PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute
   PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute
   PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute
   PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteWithChildren
@@ -9168,8 +9147,6 @@ const PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteChildren: PublicProjec
       PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute,
     PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute:
       PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute,
-    PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute:
-      PublicProjectsProjectIdDatabasesMysqlDatabaseIdEnumsRoute,
     PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute:
       PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute,
     PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute:

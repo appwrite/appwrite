@@ -1,9 +1,12 @@
+/** Tracking for small uppercase cover eyebrows (`cover-eyebrow`). */
+export const COVER_EYEBROW_LETTER_SPACING = '0.1em'
+
 /** Strip trailing brand underscores - templates append `_` in brand pink. */
 export function stripCoverTitleSuffix(value: string): string {
   return value.trimEnd().replace(/_+$/u, '')
 }
 
-/** Marketing eyebrows are uppercase with wide tracking. */
+/** Marketing eyebrows are uppercase with modest tracking. */
 export function formatCoverEyebrow(value: string | undefined): string | undefined {
   const raw = value?.trim()
   if (!raw) return undefined

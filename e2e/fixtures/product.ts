@@ -14,6 +14,7 @@ import {
 import {
   createE2eProject,
   deleteE2eProject,
+  DATABASE_SUITE_FIXTURE_TIMEOUT_MS,
   type CreatedProject,
 } from '../helpers/project-lifecycle'
 
@@ -56,10 +57,13 @@ async function setupDatabaseSuite(
     )
     await use({ project, database })
   } finally {
-    if (project?.projectId) {
-      await deleteE2eProject(page, project).catch(() => undefined)
+    try {
+      if (project?.projectId) {
+        await deleteE2eProject(page, project)
+      }
+    } finally {
+      await context.close()
     }
-    await context.close()
   }
 }
 
@@ -71,7 +75,7 @@ export const tablesdbTest = base.extend<
     async ({ browser }, use) => {
       await setupDatabaseSuite(browser, 'tablesdb', 'e2e-tdb', use)
     },
-    { scope: 'worker', timeout: 20 * 60_000 },
+    { scope: 'worker', timeout: DATABASE_SUITE_FIXTURE_TIMEOUT_MS },
   ],
 })
 
@@ -83,7 +87,7 @@ export const documentsdbTest = base.extend<
     async ({ browser }, use) => {
       await setupDatabaseSuite(browser, 'documentsdb', 'e2e-ddb', use)
     },
-    { scope: 'worker', timeout: 25 * 60_000 },
+    { scope: 'worker', timeout: DATABASE_SUITE_FIXTURE_TIMEOUT_MS },
   ],
 })
 
@@ -95,7 +99,7 @@ export const vectorsdbTest = base.extend<
     async ({ browser }, use) => {
       await setupDatabaseSuite(browser, 'vectorsdb', 'e2e-vdb', use)
     },
-    { scope: 'worker', timeout: 25 * 60_000 },
+    { scope: 'worker', timeout: DATABASE_SUITE_FIXTURE_TIMEOUT_MS },
   ],
 })
 

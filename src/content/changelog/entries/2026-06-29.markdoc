@@ -1,0 +1,11 @@
+---
+layout: changelog
+title: 'Paused free projects are deleted after 90 days'
+date: 2026-06-29
+---
+
+Starting today, free projects that stay paused for 90 days will be deleted, including all of their resources. Affected projects receive email alerts before anything is deleted.
+
+Reclaiming resources from long-inactive free projects keeps the platform sustainable, affordable, and reliable for everyone building on Appwrite. Projects on Pro and Enterprise plans are never paused or deleted for inactivity, so your production workloads stay untouched.
+
+This only applies to projects on free-tier organizations. To keep a paused project, open it in the Appwrite Console to resume it, or upgrade its organization to a paid plan before the 90-day window ends.

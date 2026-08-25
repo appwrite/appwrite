@@ -34,6 +34,9 @@ Learn how to quickly setup a web app developed using any of the following framew
 
 {% cards %}
 
+{% cards_item href="/docs/products/sites/quick-start/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+
 {% cards_item href="/docs/products/sites/quick-start/nextjs" title="Next.js" icon="icon-nextjs" %}
 {% /cards_item %}
 
@@ -49,13 +52,13 @@ Learn how to quickly setup a web app developed using any of the following framew
 {% cards_item href="/docs/products/sites/quick-start/remix" title="Remix" icon="web-icon-remix" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/products/sites/quick-start/astro" title="Astro" icon="icon-astro" %}
-{% /cards_item %}
-
 {% cards_item href="/docs/products/sites/quick-start/react" title="React" icon="icon-react" %}
 {% /cards_item %}
 
 {% cards_item href="/docs/products/sites/quick-start/vue" title="Vue.js" icon="web-icon-vue" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/products/sites/quick-start/astro" title="Astro" icon="icon-astro" %}
 {% /cards_item %}
 
 {% cards_item href="/docs/products/sites/quick-start/flutter" title="Flutter" icon="icon-flutter" %}
@@ -65,9 +68,6 @@ Learn how to quickly setup a web app developed using any of the following framew
 {% /cards_item %}
 
 {% cards_item href="/docs/products/sites/quick-start/vanilla" title="Vanilla JS" icon="icon-js" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/products/sites/quick-start/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
 {% /cards_item %}
 
 {% /cards %}

@@ -130,6 +130,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search rules...': 'ルールを検索...',
   'Search logs...': 'ログを検索...',
   'Create rule': 'ルールの作成',
+  'Attack mode': '攻撃モード',
+  'Turn on attack mode': '攻撃モードをオンにする',
+  'Turn off attack mode': '攻撃モードをオフにする',
+  'Turn on': 'オンにする',
+  'Turn off': 'オフにする',
+  'Attack mode is on': '攻撃モードがオンです',
+  'Attack mode is off': '攻撃モードがオフです',
+  'Failed to turn on attack mode': '攻撃モードをオンにできませんでした',
+  'Failed to turn off attack mode': '攻撃モードをオフにできませんでした',
+  'Challenge every visitor until you turn it off.':
+    'オフにするまで、すべての訪問者をチャレンジします。',
+  'Visitors must pass a challenge before they can continue.':
+    '訪問者は続行する前にチャレンジを通過する必要があります。',
+  'Bypass rules with a lower priority number still apply.':
+    '優先度の数値がより小さいバイパスルールは引き続き適用されます。',
+  'New requests will no longer be challenged by attack mode.':
+    '新しいリクエストは攻撃モードではチャレンジされなくなります。',
+  'Your other firewall rules stay in place.':
+    '他のファイアウォールルールはそのまま残ります。',
+  'Attack mode is on. Every visitor is challenged.':
+    '攻撃モードがオンです。すべての訪問者がチャレンジされます。',
   'Apply as firewall rule': 'ファイアウォールルールとして適用',
   'No firewall rules': 'ファイアウォールルールがありません',
   'No API firewall rules': 'API のファイアウォールルールがありません',
@@ -184,6 +205,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Challenge matching requests before allowing them through.':
     '一致するリクエストを通過させる前にチャレンジします。',
   'Lower numbers are evaluated first.': '数値が小さいほど先に評価されます。',
+  'A rule with priority 10 is stronger than one with priority 100.':
+    '優先度 10 のルールは、優先度 100 のルールより先に適用されます。',
   'Resource ID': 'リソース ID',
   'Function ID': 'Function ID',
   'Site ID': 'サイト ID',
@@ -1892,6 +1915,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'メッセージに HTML タグが含まれる場合は HTML モードを有効にしてください。',
   'Enable when your Mailgun account is hosted in the EU.':
     'Mailgun アカウントが EU でホストされている場合に有効にしてください。',
+  'Select the AWS region of your verified SES identity.':
+    '検証済み SES ID がある AWS リージョンを選択してください。',
   'Enter the SMS body for this message. Delivery uses topics, users, and targets you add on this page.':
     'このメッセージの SMS 本文を入力してください。配信には、このページで追加したトピック、ユーザー、ターゲットを使用します。',
   'Failed to add subscribers': 'サブスクライバーの追加に失敗しました',
@@ -2030,6 +2055,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'APNS (iOS) 経由でプッシュ通知を送信します。',
   'Send push notifications via FCM (Android, iOS, web).':
     'FCM (Android、iOS、Web) 経由でプッシュ通知を送信します。',
+  'Send transactional email through Amazon SES.':
+    'Amazon SES 経由でトランザクションメールを送信します。',
   'Send transactional email through Mailgun.':
     'Mailgun 経由でトランザクションメールを送信します。',
   'Send transactional email through Resend.':

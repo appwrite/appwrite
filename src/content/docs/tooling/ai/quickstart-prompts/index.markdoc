@@ -20,8 +20,8 @@ Quick start prompts offer several advantages when building with Appwrite:
 3. Paste the prompt and let the AI guide you through the setup process.
 4. When prompted, provide your Appwrite project details (region and project ID) from the Appwrite Console.
 
-{% info title="MCP servers" %}
-For the best experience, consider using Appwrite's [MCP servers](/docs/tooling/ai/mcp-servers) alongside quick start prompts. MCP servers allow AI assistants to directly interact with your Appwrite project and access up-to-date documentation.
+{% info title="MCP server" %}
+For the best experience, consider using Appwrite's [MCP server](/docs/tooling/ai/mcp-servers) alongside quick start prompts. The MCP server allows AI assistants to directly interact with your Appwrite project and access up-to-date documentation.
 {% /info %}
 
 # Available quick start prompts {% #available-quick-start-prompts %}
@@ -31,6 +31,9 @@ Use the following quick start prompts with your preferred AI assistant to integr
 ## Web {% #web %}
 
 {% cards %}
+
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
 {% /cards_item %}
@@ -54,9 +57,6 @@ Use the following quick start prompts with your preferred AI assistant to integr
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/quickstart-prompts/refine" title="Refine" icon="web-icon-refine" %}
-{% /cards_item %}
-
-{% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/quickstart-prompts/web" title="Web" icon="icon-js" %}

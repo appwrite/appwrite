@@ -1,5 +1,6 @@
 import { buildCoverApiUrl } from '@/lib/cover-generator/parse-params'
 import { getCoverCardsAngledIconKeys } from '@/lib/cover-generator/cards-angled/constants'
+import { getCoverLogoMarqueeIconKeys } from '@/lib/cover-generator/extra-templates/constants'
 import type { CoverImageFormat } from '@/lib/cover-generator/constants'
 import { getCoverImageMimeType } from '@/lib/cover-generator/cover-image-format'
 import { resolveCoverRenderDataInlineAssets } from '@/lib/cover-generator/editor-image-fields'
@@ -26,6 +27,13 @@ function getCoverImageFieldValues(data: CoverRenderData): (string | undefined)[]
       return [data.screenshot]
     case 'cards-angled':
       return getCoverCardsAngledIconKeys().map((key) => data[key])
+    case 'logo-marquee':
+      return getCoverLogoMarqueeIconKeys().map((key) => data[key])
+    case 'quote':
+    case 'blog-post':
+    case 'profile-card':
+    case 'social-post':
+      return [data.avatar]
     default:
       return []
   }

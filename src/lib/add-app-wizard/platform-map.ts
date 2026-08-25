@@ -115,6 +115,12 @@ export const WEB_FRAMEWORK_META: Record<WebFrameworkKey, WebFrameworkMetaEntry> 
     envPrefix: 'PUBLIC_',
     starterRepo: 'starter-for-svelte',
   },
+  'tanstack-start': {
+    label: 'TanStack Start',
+    port: 3000,
+    runCommand: 'pnpm dev',
+    envPrefix: 'VITE_',
+  },
   nextjs: {
     label: 'Next.js',
     port: 3000,
@@ -140,13 +146,6 @@ export const WEB_FRAMEWORK_META: Record<WebFrameworkKey, WebFrameworkMetaEntry> 
     envPrefix: 'VITE_',
     starterRepo: 'starter-for-analog',
   },
-  astro: {
-    label: 'Astro',
-    port: 4321,
-    runCommand: 'pnpm dev',
-    envPrefix: 'PUBLIC_',
-    starterRepo: 'starter-for-astro',
-  },
   remix: {
     label: 'Remix',
     port: 3000,
@@ -161,18 +160,19 @@ export const WEB_FRAMEWORK_META: Record<WebFrameworkKey, WebFrameworkMetaEntry> 
     envPrefix: 'VITE_',
     starterRepo: 'starter-for-js',
   },
-  'tanstack-start': {
-    label: 'TanStack Start',
-    port: 3000,
-    runCommand: 'pnpm dev',
-    envPrefix: 'VITE_',
-  },
   vite: {
     label: 'Vite',
     port: 5173,
     runCommand: 'pnpm dev',
     envPrefix: 'VITE_',
     starterRepo: 'starter-for-js',
+  },
+  astro: {
+    label: 'Astro',
+    port: 4321,
+    runCommand: 'pnpm dev',
+    envPrefix: 'PUBLIC_',
+    starterRepo: 'starter-for-astro',
   },
   js: {
     label: 'No framework',

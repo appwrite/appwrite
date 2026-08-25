@@ -119,6 +119,7 @@ import { useT } from '@/lib/i18n/translate'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { domainUrl } from '@/lib/domains/url'
 
 const DEPLOYMENTS_PER_PAGE = 25
 
@@ -149,6 +150,10 @@ function detectVcsProvider(
     }
     if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
       const { label, Icon } = getVcsProvider('bitbucket')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (url.includes('cursor.com')) {
+      const { label, Icon } = getVcsProvider('origin')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -332,7 +337,8 @@ export function SiteDeploymentsView() {
   }, [deployments, site?.deploymentId, activeDeployment])
 
   const activeDeploymentForCard = useMemo(
-    () => mergeActiveDeploymentForCard(activeDeployment, activeDeploymentResolved),
+    () =>
+      mergeActiveDeploymentForCard(activeDeployment, activeDeploymentResolved),
     [activeDeployment, activeDeploymentResolved],
   )
 
@@ -983,7 +989,7 @@ export function SiteDeploymentsView() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={`https://${rule.domain}`}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"
@@ -1178,7 +1184,7 @@ export function SiteDeploymentsView() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={`https://${rule.domain}`}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"

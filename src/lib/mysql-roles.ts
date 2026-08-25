@@ -1,5 +1,9 @@
 import { isMysqlTruthyFlag } from '@/lib/mysql-rls'
-import { prefixMysqlSqlComment, quoteMysqlStringLiteral } from '@/lib/mysql-sql'
+import {
+  buildMysqlSingleRequestDdlSql,
+  prefixMysqlSqlComment,
+  quoteMysqlStringLiteral,
+} from '@/lib/mysql-sql'
 
 export type MysqlRoleRow = {
   role_name: string
@@ -47,9 +51,18 @@ const MYSQL_BUILTIN_PROTECTED_ROLES = new Set([
 ])
 
 export function isMysqlRoleFlag(
-  value: boolean | string | null | undefined,
+  value: boolean | string | number | null | undefined,
 ): boolean {
-  return isMysqlTruthyFlag(value)
+  if (typeof value === 'number') return value !== 0
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (['1', 'y', 'yes'].includes(normalized)) return true
+  }
+  return isMysqlTruthyFlag(
+    typeof value === 'boolean' || typeof value === 'string' || value == null
+      ? value
+      : undefined,
+  )
 }
 
 export function isMysqlBuiltinRole(row: MysqlRoleRow): boolean {
@@ -203,25 +216,101 @@ function quoteMysqlUserAccount(userName: string, host = '%'): string {
   return `${quoteMysqlStringLiteral(userName)}@${quoteMysqlStringLiteral(host)}`
 }
 
+function mysqlMaxUserConnectionsClause(
+  formState: MysqlRoleFormState,
+): string {
+  if (formState.unlimitedConnections) {
+    return 'WITH MAX_USER_CONNECTIONS 0'
+  }
+  const limit = Number.parseInt(formState.connectionLimit.trim(), 10)
+  return `WITH MAX_USER_CONNECTIONS ${limit}`
+}
+
+function mysqlAccountLockClause(formState: MysqlRoleFormState): string {
+  return formState.canLogin ? 'ACCOUNT UNLOCK' : 'ACCOUNT LOCK'
+}
+
+function buildMysqlRolePrivilegeStatements(
+  account: string,
+  formState: MysqlRoleFormState,
+): string[] {
+  // Only GRANT. REVOKE of a privilege the account never had fails the whole
+  // multi-statement request on MySQL.
+  const statements: string[] = []
+  if (formState.canCreateDb) {
+    statements.push(`GRANT CREATE ON *.* TO ${account}`)
+  }
+  if (formState.canCreateRole) {
+    statements.push(`GRANT CREATE USER ON *.* TO ${account}`)
+  }
+  if (formState.canReplicate) {
+    statements.push(
+      `GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO ${account}`,
+    )
+  }
+  if (formState.isSuperuser) {
+    statements.push(`GRANT ALL ON *.* TO ${account} WITH GRANT OPTION`)
+  }
+  return statements
+}
+
+function buildMysqlRoleMembershipStatements(
+  account: string,
+  previousMembers: string[],
+  nextMembers: string[],
+  inherit: boolean,
+): string[] {
+  const statements: string[] = []
+  const previous = new Set(previousMembers)
+  const next = new Set(nextMembers)
+
+  for (const member of next) {
+    if (!previous.has(member)) {
+      statements.push(`GRANT ${quoteMysqlUserAccount(member)} TO ${account}`)
+    }
+  }
+  for (const member of previous) {
+    if (!next.has(member)) {
+      statements.push(`REVOKE ${quoteMysqlUserAccount(member)} FROM ${account}`)
+    }
+  }
+
+  if (next.size > 0) {
+    statements.push(
+      inherit
+        ? `ALTER USER ${account} DEFAULT ROLE ALL`
+        : `ALTER USER ${account} DEFAULT ROLE NONE`,
+    )
+  } else if (previous.size > 0) {
+    statements.push(`ALTER USER ${account} DEFAULT ROLE NONE`)
+  }
+
+  return statements
+}
+
 export function buildMysqlListRolesSql(): string {
-  // Prefer mysql.user; callers may fall back to CURRENT_USER() if permission denied.
   return prefixMysqlSqlComment(
     `
 SELECT
-  User AS role_name,
-  Host AS host,
-  TRUE AS can_login,
-  FALSE AS can_create_role,
-  FALSE AS can_create_db,
-  FALSE AS is_superuser,
-  FALSE AS can_replicate,
-  TRUE AS inherit,
-  FALSE AS bypass_rls,
-  NULL AS connection_limit,
+  u.User AS role_name,
+  MAX(IF(u.account_locked = 'N', 1, 0)) AS can_login,
+  MAX(IF(u.Create_user_priv = 'Y', 1, 0)) AS can_create_role,
+  MAX(IF(u.Create_priv = 'Y', 1, 0)) AS can_create_db,
+  MAX(IF(u.Super_priv = 'Y', 1, 0)) AS is_superuser,
+  MAX(IF(u.Repl_slave_priv = 'Y' OR u.Repl_client_priv = 'Y', 1, 0)) AS can_replicate,
+  1 AS inherit,
+  0 AS bypass_rls,
+  CASE
+    WHEN MAX(u.max_user_connections) = 0 THEN -1
+    ELSE MAX(u.max_user_connections)
+  END AS connection_limit,
   NULL AS valid_until,
   NULL AS member_of
-FROM mysql.user
-ORDER BY User ASC, Host ASC
+FROM mysql.user u
+WHERE u.User <> ''
+  AND u.User NOT LIKE 'mysql.%'
+GROUP BY u.User
+ORDER BY u.User ASC
 `.trim(),
     'List MySQL users',
   )
@@ -232,19 +321,22 @@ export function buildMysqlListRolesFallbackSql(): string {
   return prefixMysqlSqlComment(
     `
 SELECT
-  CURRENT_USER() AS role_name,
-  TRUE AS can_login,
-  FALSE AS can_create_role,
-  FALSE AS can_create_db,
-  FALSE AS is_superuser,
-  FALSE AS can_replicate,
-  TRUE AS inherit,
-  FALSE AS bypass_rls,
+  REPLACE(SUBSTRING_INDEX(GRANTEE, '@', 1), '''', '') AS role_name,
+  1 AS can_login,
+  MAX(PRIVILEGE_TYPE = 'CREATE USER') AS can_create_role,
+  MAX(PRIVILEGE_TYPE = 'CREATE') AS can_create_db,
+  MAX(PRIVILEGE_TYPE = 'SUPER') AS is_superuser,
+  MAX(PRIVILEGE_TYPE IN ('REPLICATION SLAVE', 'REPLICATION CLIENT')) AS can_replicate,
+  1 AS inherit,
+  0 AS bypass_rls,
   NULL AS connection_limit,
   NULL AS valid_until,
   NULL AS member_of
+FROM information_schema.USER_PRIVILEGES
+GROUP BY GRANTEE
+ORDER BY role_name ASC
 `.trim(),
-    'List current MySQL user (fallback)',
+    'List MySQL users from information_schema',
   )
 }
 
@@ -257,30 +349,52 @@ export function buildMysqlCreateRoleSql(
   const identified = password
     ? ` IDENTIFIED BY ${quoteMysqlStringLiteral(password)}`
     : ''
+  const statements = [
+    `CREATE USER ${account}${identified} ${mysqlMaxUserConnectionsClause(formState)} ${mysqlAccountLockClause(formState)}`,
+    ...buildMysqlRolePrivilegeStatements(account, formState),
+    ...buildMysqlRoleMembershipStatements(
+      account,
+      [],
+      formState.memberOf,
+      formState.inherit,
+    ),
+  ]
 
-  return prefixMysqlSqlComment(
-    `CREATE USER ${account}${identified}`,
+  return buildMysqlSingleRequestDdlSql(
+    statements,
     `Create MySQL user ${roleName}`,
   )
 }
 
 export function buildMysqlUpdateRoleSql(
   formState: MysqlRoleFormState,
-  _previousMembers: string[],
+  previousMembers: string[],
 ): string {
   const roleName = formState.roleName.trim()
   const password = formState.password.trim()
   const account = quoteMysqlUserAccount(roleName)
+  const statements = [
+    `ALTER USER ${account} ${mysqlMaxUserConnectionsClause(formState)} ${mysqlAccountLockClause(formState)}`,
+  ]
 
-  if (!password) {
-    return prefixMysqlSqlComment(
-      `SELECT 1`,
-      `Update MySQL user ${roleName} (no password change)`,
+  if (password) {
+    statements.push(
+      `ALTER USER ${account} IDENTIFIED BY ${quoteMysqlStringLiteral(password)}`,
     )
   }
 
-  return prefixMysqlSqlComment(
-    `ALTER USER ${account} IDENTIFIED BY ${quoteMysqlStringLiteral(password)}`,
+  statements.push(
+    ...buildMysqlRolePrivilegeStatements(account, formState),
+    ...buildMysqlRoleMembershipStatements(
+      account,
+      previousMembers,
+      formState.memberOf,
+      formState.inherit,
+    ),
+  )
+
+  return buildMysqlSingleRequestDdlSql(
+    statements,
     `Update MySQL user ${roleName}`,
   )
 }

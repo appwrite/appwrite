@@ -35,6 +35,7 @@ import {
 } from '@/lib/mysql-column-types'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { MysqlEnumValuesEditor } from './MysqlEnumValuesEditor'
 
 type MysqlColumnTypeSelectorProps = {
   value: MysqlColumnTypeState
@@ -48,6 +49,8 @@ type MysqlColumnTypeSelectorProps = {
   showArrayOption?: boolean
   /** Show the type picker trigger. Defaults to true. */
   showTypePicker?: boolean
+  /** When editing an existing enum column, show the in-use-value warning. */
+  existing?: boolean
 }
 
 function MysqlColumnTypePropertyField({
@@ -133,11 +136,13 @@ export function MysqlColumnTypeSelector({
   showTypeOptions,
   showArrayOption,
   showTypePicker = true,
+  existing = false,
 }: MysqlColumnTypeSelectorProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
   const definition = getMysqlColumnTypeDefinition(value.typeId)
-  const resolvedShowTypeOptions = showTypeOptions ?? !compact
+  const resolvedShowTypeOptions =
+    showTypeOptions ?? (!compact || value.typeId === 'enum')
   const resolvedShowArrayOption = showArrayOption ?? !compact
 
   const visibleDefinitions = useMemo(
@@ -148,11 +153,16 @@ export function MysqlColumnTypeSelector({
     [allowSerialTypes],
   )
 
-  const supportsArray = !isMysqlSerialColumnType(value.typeId)
+  const supportsArray =
+    !isMysqlSerialColumnType(value.typeId) && value.typeId !== 'enum'
 
   const handleTypeChange = (nextTypeId: MysqlColumnTypeId) => {
     const next = createDefaultMysqlColumnTypeState(nextTypeId)
-    if (value.isArray && !isMysqlSerialColumnType(nextTypeId)) {
+    if (
+      value.isArray &&
+      !isMysqlSerialColumnType(nextTypeId) &&
+      nextTypeId !== 'enum'
+    ) {
       next.isArray = true
     }
     onChange(next)
@@ -277,19 +287,28 @@ export function MysqlColumnTypeSelector({
         </div>
       ) : null}
 
-      {resolvedShowTypeOptions && definition.properties.length > 0 ? (
+      {resolvedShowTypeOptions &&
+      (definition.properties.length > 0 || value.typeId === 'enum') ? (
         <div className="space-y-3 rounded-lg border border-border bg-muted/20 px-3 py-3">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('Type options')}
+            {value.typeId === 'enum' ? t('Allowed values') : t('Type options')}
           </p>
-          {definition.properties.map((property) => (
-            <MysqlColumnTypePropertyField
-              key={property.key}
-              property={property}
-              value={value}
-              onChange={onChange}
+          {value.typeId === 'enum' ? (
+            <MysqlEnumValuesEditor
+              values={value.enumValues?.length ? value.enumValues : ['']}
+              onChange={(enumValues) => onChange({ ...value, enumValues })}
+              existing={existing}
             />
-          ))}
+          ) : (
+            definition.properties.map((property) => (
+              <MysqlColumnTypePropertyField
+                key={property.key}
+                property={property}
+                value={value}
+                onChange={onChange}
+              />
+            ))
+          )}
         </div>
       ) : null}
     </div>

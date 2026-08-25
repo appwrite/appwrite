@@ -55,6 +55,8 @@ import { VCSDetectionType, ID } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
+import { getSiteTemplateScreenshotUrl } from '@/lib/sites/site-template-wizard'
+import { validateVariables } from '@/lib/variables'
 
 // Fade-in image component
 function FadeImage({
@@ -221,10 +223,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteName, generateDomain])
 
-  // Get screenshot URL - templates include full URLs
   const screenshotUrl = useMemo(() => {
     if (!template) return null
-    return isDark ? template.screenshotDark : template.screenshotLight
+    return getSiteTemplateScreenshotUrl(template, isDark) ?? null
   }, [template, isDark])
 
   // Mutations
@@ -258,6 +259,15 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         toast.error(t('Please select a repository'))
         return
       }
+    }
+
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured site behind. Only the rows that
+    // get written are checked -- the valueless ones are dropped below.
+    const validationError = validateVariables(variables.filter((v) => v.value))
+    if (validationError) {
+      toast.error(validationError)
+      return
     }
 
     setIsDeploying(true)

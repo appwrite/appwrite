@@ -13,7 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { ArrowLeftRight, ArrowRight, Info, X, Plus } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, Info } from 'lucide-react'
+import { InputTags } from '@/components/ui/input-tags'
 import { PointEditor, LineEditor, PolygonEditor } from './spatial/index'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
@@ -69,14 +70,14 @@ export interface ColumnFormData {
   required?: boolean
   array?: boolean
   xdefault?:
-  | string
-  | number
-  | bigint
-  | boolean
-  | [number, number]
-  | number[][]
-  | number[][][]
-  | null
+    | string
+    | number
+    | bigint
+    | boolean
+    | [number, number]
+    | number[][]
+    | number[][][]
+    | null
 }
 
 const VARCHAR_SIZE_MIN = 1
@@ -132,23 +133,23 @@ const RELATIONSHIP_TYPES: {
   value: 'oneToOne' | 'oneToMany' | 'manyToOne' | 'manyToMany'
   label: string
 }[] = [
-    { value: 'oneToOne', label: 'One to one' },
-    { value: 'oneToMany', label: 'One to many' },
-    { value: 'manyToOne', label: 'Many to one' },
-    { value: 'manyToMany', label: 'Many to many' },
-  ]
+  { value: 'oneToOne', label: 'One to one' },
+  { value: 'oneToMany', label: 'One to many' },
+  { value: 'manyToOne', label: 'Many to one' },
+  { value: 'manyToMany', label: 'Many to many' },
+]
 
 const ON_DELETE_OPTIONS: {
   value: 'setNull' | 'cascade' | 'restrict'
   label: string
 }[] = [
-    {
-      value: 'setNull',
-      label: 'Set NULL - set row ID as NULL in all related rows',
-    },
-    { value: 'cascade', label: 'Cascade - delete all related rows' },
-    { value: 'restrict', label: 'Restrict - row can not be deleted' },
-  ]
+  {
+    value: 'setNull',
+    label: 'Set NULL - set row ID as NULL in all related rows',
+  },
+  { value: 'cascade', label: 'Cascade - delete all related rows' },
+  { value: 'restrict', label: 'Restrict - row can not be deleted' },
+]
 
 function getRelationshipPreviewText(
   relationshipType: ColumnFormData['relationshipType'],
@@ -205,8 +206,7 @@ export function ColumnDrawer({
     array: false,
   })
 
-  const [enumElements, setEnumElements] = useState<string[]>([''])
-  const [enumElementInput, setEnumElementInput] = useState('')
+  const [enumElements, setEnumElements] = useState<string[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   /** Text inputs for bigint min/max - avoids Number precision loss past MAX_SAFE_INTEGER. */
   const [bigintMinText, setBigintMinText] = useState('')
@@ -217,40 +217,54 @@ export function ColumnDrawer({
   // Initialize form data from column
   useEffect(() => {
     if (column) {
+      // The API reports formatted columns (enum, email, ip, url) as
+      // type "string"/"varchar" with a `format` field — resolve the
+      // effective type the same way the columns list does.
+      const rawType = (column.type || 'string') as string
+      const format = typeof column.format === 'string' ? column.format : null
+      const effectiveType = (
+        format &&
+        (rawType === 'string' ||
+          rawType === 'varchar' ||
+          rawType === 'datetime' ||
+          rawType === 'date')
+          ? format
+          : rawType
+      ) as ColumnType
+
       const data: ColumnFormData = {
         key: column.key || column.name || '',
-        type: (column.type || 'string') as ColumnType,
+        type: effectiveType,
         required: column.required || false,
         array: column.array || false,
         xdefault: column.default !== undefined ? column.default : null,
       }
 
-      if (column.type === 'string') {
+      if (effectiveType === 'string') {
         data.size = column.size
         data.encrypt = column.encrypt || false
-      } else if (column.type === 'varchar') {
+      } else if (effectiveType === 'varchar') {
         data.size = column.size ?? 255
         data.encrypt = column.encrypt || false
       } else if (
-        column.type === 'text' ||
-        column.type === 'mediumtext' ||
-        column.type === 'longtext'
+        effectiveType === 'text' ||
+        effectiveType === 'mediumtext' ||
+        effectiveType === 'longtext'
       ) {
         data.encrypt = column.encrypt || false
       } else if (
-        column.type === 'integer' ||
-        column.type === 'bigint' ||
-        column.type === 'double'
+        effectiveType === 'integer' ||
+        effectiveType === 'bigint' ||
+        effectiveType === 'double'
       ) {
         data.min = column.min
         data.max = column.max
-      } else if (column.type === 'enum') {
+      } else if (effectiveType === 'enum') {
         data.elements = column.elements || []
-        setEnumElements(column.elements || [''])
-      } else if (column.type === 'relationship') {
+        setEnumElements(column.elements || [])
+      } else if (effectiveType === 'relationship') {
         data.relatedTableId = column.relatedTableId || column.relatedTable
-        data.relationshipType =
-          column.relationshipType || column.relationType
+        data.relationshipType = column.relationshipType || column.relationType
         data.twoWay = column.twoWay || false
         data.twoWayKey = column.twoWayKey
         data.onDelete = column.onDelete || 'setNull'
@@ -258,7 +272,7 @@ export function ColumnDrawer({
 
       setFormData(data)
       encryptCheckedRef.current = data.encrypt === true
-      if (column.type === 'bigint') {
+      if (effectiveType === 'bigint') {
         setBigintMinText(formatInt64Bound(column.min))
         setBigintMaxText(formatInt64Bound(column.max))
       } else {
@@ -273,8 +287,7 @@ export function ColumnDrawer({
         required: false,
         array: false,
       })
-      setEnumElements([''])
-      setEnumElementInput('')
+      setEnumElements([])
       setErrors({})
       setBigintMinText('')
       setBigintMaxText('')
@@ -330,8 +343,7 @@ export function ColumnDrawer({
           required: false,
           array: false,
         })
-        setEnumElements([''])
-        setEnumElementInput('')
+        setEnumElements([])
         setErrors({})
         setBigintMinText('')
         setBigintMaxText('')
@@ -381,7 +393,10 @@ export function ColumnDrawer({
         toByteCount(table.bytesMax) > 0
       ) {
         const newColumnBytes = formData.size * 4 + 2
-        if (toByteCount(table.bytesUsed) + newColumnBytes > toByteCount(table.bytesMax)) {
+        if (
+          toByteCount(table.bytesUsed) + newColumnBytes >
+          toByteCount(table.bytesMax)
+        ) {
           newErrors.size = t(
             'This column exceeds the remaining row space. Consider using text, mediumtext, or longtext instead.',
           )
@@ -435,11 +450,7 @@ export function ColumnDrawer({
         newErrors.max = int64RangeHint
       }
 
-      if (
-        minParsed !== null &&
-        maxParsed !== null &&
-        minParsed > maxParsed
-      ) {
+      if (minParsed !== null && maxParsed !== null && minParsed > maxParsed) {
         newErrors.max = t('Max must be greater than or equal to min')
       }
     }
@@ -503,31 +514,6 @@ export function ColumnDrawer({
         error instanceof Error ? error.message : t('Failed to save column'),
       )
     }
-  }
-
-  const addEnumElement = () => {
-    if (enumElementInput.trim()) {
-      if (enumElementInput.length > 255) {
-        toast.error(t('Enum elements have a maximum length of 255 characters'))
-        return
-      }
-      setEnumElements([...enumElements, enumElementInput.trim()])
-      setEnumElementInput('')
-    }
-  }
-
-  const removeEnumElement = (index: number) => {
-    setEnumElements(enumElements.filter((_, i) => i !== index))
-  }
-
-  const updateEnumElement = (index: number, value: string) => {
-    if (value.length > 255) {
-      toast.error(t('Enum elements have a maximum length of 255 characters'))
-      return
-    }
-    const newElements = [...enumElements]
-    newElements[index] = value
-    setEnumElements(newElements)
   }
 
   const isSpatialType = ['point', 'linestring', 'polygon'].includes(
@@ -625,14 +611,14 @@ export function ColumnDrawer({
                       onDelete: undefined,
                       array:
                         newType === 'point' ||
-                          newType === 'linestring' ||
-                          newType === 'polygon'
+                        newType === 'linestring' ||
+                        newType === 'polygon'
                           ? false
                           : prev.array,
                     }
                   })
                   if (value === 'enum') {
-                    setEnumElements([''])
+                    setEnumElements([])
                   }
                 }}
                 disabled={isLoading || isEditMode}
@@ -686,7 +672,9 @@ export function ColumnDrawer({
                   )}
                   {formData.encrypt && (
                     <p className="text-[11px] text-muted-foreground">
-                      {t('Encrypted string columns require a minimum size of 150.')}
+                      {t(
+                        'Encrypted string columns require a minimum size of 150.',
+                      )}
                     </p>
                   )}
                 </div>
@@ -727,7 +715,9 @@ export function ColumnDrawer({
                   )}
                   {formData.encrypt && (
                     <p className="text-[11px] text-muted-foreground">
-                      {t('Encrypted varchar columns require a minimum size of 150.')}
+                      {t(
+                        'Encrypted varchar columns require a minimum size of 150.',
+                      )}
                     </p>
                   )}
                   <p className="text-[11px] text-muted-foreground">
@@ -746,24 +736,27 @@ export function ColumnDrawer({
                         {t('Row size usage')}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
-                        {t('Database rows have a maximum size of 64 KB. varchar columns use 4 bytes per character plus a small overhead. text, mediumtext, and longtext columns only use ~20 bytes regardless of content length.')}
+                        {t(
+                          'Database rows have a maximum size of 64 KB. varchar columns use 4 bytes per character plus a small overhead. text, mediumtext, and longtext columns only use ~20 bytes regardless of content length.',
+                        )}
                       </p>
                       <Progress
                         value={
                           toByteCount(table.bytesMax) > 0
                             ? Math.min(
-                              100,
-                              (toByteCount(table.bytesUsed) /
-                                toByteCount(table.bytesMax)) *
                                 100,
-                            )
+                                (toByteCount(table.bytesUsed) /
+                                  toByteCount(table.bytesMax)) *
+                                  100,
+                              )
                             : 0
                         }
                         className="h-2"
                       />
                       <p className="text-[11px] text-muted-foreground">
-                        Current: {(toByteCount(table.bytesUsed) / 1024).toFixed(1)}{' '}
-                        KB / {(toByteCount(table.bytesMax) / 1024).toFixed(1)} KB
+                        Current:{' '}
+                        {(toByteCount(table.bytesUsed) / 1024).toFixed(1)} KB /{' '}
+                        {(toByteCount(table.bytesMax) / 1024).toFixed(1)} KB
                         {formData.size
                           ? ` · New column: ~${((formData.size * 4 + 2) / 1024).toFixed(1)} KB`
                           : ''}
@@ -849,7 +842,9 @@ export function ColumnDrawer({
                       />
                     )}
                     {errors.min && (
-                      <p className="text-[11px] text-destructive">{errors.min}</p>
+                      <p className="text-[11px] text-destructive">
+                        {errors.min}
+                      </p>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -899,7 +894,9 @@ export function ColumnDrawer({
                       />
                     )}
                     {errors.max && (
-                      <p className="text-[11px] text-destructive">{errors.max}</p>
+                      <p className="text-[11px] text-destructive">
+                        {errors.max}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -919,45 +916,15 @@ export function ColumnDrawer({
                 <Label className="text-[12px] font-medium">
                   Elements <span className="text-destructive">*</span>
                 </Label>
-                <div className="space-y-2">
-                  {enumElements.map((element, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Input
-                        value={element}
-                        onChange={(e) =>
-                          updateEnumElement(index, e.target.value)
-                        }
-                        placeholder={t('Add elements here')}
-                        maxLength={255}
-                        disabled={isLoading}
-                      />
-                      {enumElements.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 shrink-0"
-                          onClick={() => removeEnumElement(index)}
-                          disabled={isLoading}
-                          aria-label={t('Remove enum value')}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addEnumElement}
-                    disabled={isLoading || !enumElementInput.trim()}
-                    className="w-full"
-                  >
-                    <Plus className="h-3.5 w-3.5 me-1.5" />
-                    {t('Add element')}
-                  </Button>
-                </div>
+                <InputTags
+                  id="enum-elements"
+                  value={enumElements}
+                  onChange={setEnumElements}
+                  placeholder={t('Add elements here')}
+                  splitOnComma
+                  maxTagLength={255}
+                  disabled={isLoading}
+                />
                 {errors.elements && (
                   <p className="text-[12px] text-destructive">
                     {errors.elements}
@@ -966,22 +933,10 @@ export function ColumnDrawer({
                 <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
                   <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
                   <p className="text-[11px] text-muted-foreground">
-                    {t('Enum elements have a maximum length of 255 characters. This limit can not be exceeded.')}
+                    {t(
+                      'Enum elements have a maximum length of 255 characters. This limit can not be exceeded.',
+                    )}
                   </p>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={enumElementInput}
-                    onChange={(e) => setEnumElementInput(e.target.value)}
-                    placeholder={t('Type to add element')}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        addEnumElement()
-                      }
-                    }}
-                    disabled={isLoading}
-                  />
                 </div>
               </div>
             )}
@@ -1029,7 +984,9 @@ export function ColumnDrawer({
                           {t('Two-way relationship')}
                         </div>
                         <div className="text-[11px] text-muted-foreground">
-                          {t('One Relation column within this table and another within the related table')}
+                          {t(
+                            'One Relation column within this table and another within the related table',
+                          )}
                         </div>
                       </Label>
                     </div>
@@ -1142,7 +1099,9 @@ export function ColumnDrawer({
                           </p>
                         )}
                         <p className="text-[11px] text-muted-foreground">
-                          {t('Allowed characters: a-z, A-Z, 0-9, -, ., _. Once created, column key cannot be adjusted to maintain data integrity.')}
+                          {t(
+                            'Allowed characters: a-z, A-Z, 0-9, -, ., _. Once created, column key cannot be adjusted to maintain data integrity.',
+                          )}
                         </p>
                       </div>
                     )}
@@ -1251,7 +1210,9 @@ export function ColumnDrawer({
                             errors.onDelete ? 'border-destructive' : ''
                           }
                         >
-                          <SelectValue placeholder={t('Select a deletion method')} />
+                          <SelectValue
+                            placeholder={t('Select a deletion method')}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           {ON_DELETE_OPTIONS.map((option) => (
@@ -1312,16 +1273,16 @@ export function ColumnDrawer({
                             ? [0, 0]
                             : formData.type === 'linestring'
                               ? [
-                                [0, 0],
-                                [0, 0],
-                              ]
+                                  [0, 0],
+                                  [0, 0],
+                                ]
                               : [
-                                [
-                                  [0, 0],
-                                  [0, 0],
-                                  [0, 0],
-                                ],
-                              ]
+                                  [
+                                    [0, 0],
+                                    [0, 0],
+                                    [0, 0],
+                                  ],
+                                ]
                           : null,
                         required: checked ? false : prev.required,
                       }))
@@ -1462,11 +1423,7 @@ export function ColumnDrawer({
                 ) : formData.type === 'datetime' ? (
                   <DateTimePicker
                     id="column-default"
-                    value={
-                      formData.xdefault
-                        ? String(formData.xdefault)
-                        : null
-                    }
+                    value={formData.xdefault ? String(formData.xdefault) : null}
                     onChange={(value) => {
                       setFormData((prev) => ({
                         ...prev,
@@ -1512,7 +1469,7 @@ export function ColumnDrawer({
                     inputMode="numeric"
                     value={
                       formData.xdefault !== null &&
-                        formData.xdefault !== undefined
+                      formData.xdefault !== undefined
                         ? String(formData.xdefault)
                         : ''
                     }
@@ -1533,12 +1490,8 @@ export function ColumnDrawer({
                               : parseFloat(e.target.value)
                       setFormData((prev) => ({ ...prev, xdefault: value }))
                     }}
-                    min={
-                      formData.type === 'bigint' ? undefined : formData.min
-                    }
-                    max={
-                      formData.type === 'bigint' ? undefined : formData.max
-                    }
+                    min={formData.type === 'bigint' ? undefined : formData.min}
+                    max={formData.type === 'bigint' ? undefined : formData.max}
                     step={formData.type === 'double' ? 0.1 : 1}
                     placeholder={t('Enter value')}
                     disabled={isLoading}
@@ -1572,8 +1525,8 @@ export function ColumnDrawer({
                     />
                   )
                 ) : ['text', 'mediumtext', 'longtext'].includes(
-                  formData.type,
-                ) ? (
+                    formData.type,
+                  ) ? (
                   <Textarea
                     id="column-default"
                     value={formData.xdefault ? String(formData.xdefault) : ''}
@@ -1634,8 +1587,8 @@ export function ColumnDrawer({
                           encrypt: value,
                           ...((formData.type === 'string' ||
                             formData.type === 'varchar') &&
-                            value &&
-                            (!prev.size || prev.size < 150)
+                          value &&
+                          (!prev.size || prev.size < 150)
                             ? { size: 150 }
                             : {}),
                         }))

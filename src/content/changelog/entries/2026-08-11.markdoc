@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "The Appwrite CLI is now written in Go"
+date: 2026-08-11
+cover: /images/blog/rewriting-the-appwrite-cli-in-go/cover.avif
+---
+
+The Appwrite CLI is now a **single native binary** written in Go. Commands start in about **10 ms** instead of 200 ms, `npm install -g appwrite-cli` pulls **two packages instead of 330**, and a `push` holds its memory near **28 MB** rather than 283 MB.
+
+Nothing about the command surface changes. Flag names, shorthands, the `appwrite.config.json` schema, exit codes, and `--json` and `--raw` output are all identical, so existing scripts and CI pipelines keep working. Install it the way you already do:
+
+```bash
+npm install -g appwrite-cli
+```
+
+Homebrew, scoop, and the install script are unchanged, and `appwrite update` moves an existing install across. Run `appwrite login` once after upgrading, because credentials do not carry over from the old binary's keyring.
+
+{% arrow_link href="/blog/post/rewriting-the-appwrite-cli-in-go" %}
+Read the announcement
+{% /arrow_link %}

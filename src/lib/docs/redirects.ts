@@ -13,6 +13,7 @@ const DOCS_REDIRECTS: Record<string, string> = {
   'references/quick-start': 'references/cloud/client-web/account',
   'tooling/command-line': 'tooling/command-line/installation',
   'tooling/assistant': 'products/agent',
+  'tooling/ai': 'tooling',
   'tooling/ai/assistant': 'products/agent',
   'tooling/skills': 'tooling/ai/skills',
   'products/databases/spatial': 'products/databases/geo-queries#spatial-columns',
@@ -37,6 +38,8 @@ const DOCS_REDIRECTS: Record<string, string> = {
   'partners/guides/marketplace': 'partners/guides/marketplaces',
   'partners/guides/multi-tenant': 'partners/guides/multi-tenancy',
   'products/network/waf': 'products/firewall',
+  'tooling/ai/mcp-servers/api': 'tooling/ai/mcp-servers',
+  'tooling/ai/mcp-servers/docs': 'tooling/ai/mcp-servers',
 }
 
 function parseFullPathTarget(fullPath: string): DocsRedirectTarget {

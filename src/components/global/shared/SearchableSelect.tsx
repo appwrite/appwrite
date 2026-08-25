@@ -66,6 +66,8 @@ export interface SearchableSelectProps {
   listFooter?: ReactNode
   /** Called when the popover opens or closes. */
   onOpenChange?: (open: boolean) => void
+  /** Applied to the trigger button (e.g. for label `htmlFor`). */
+  id?: string
 }
 
 function SearchableSelectItemContent({ item }: { item: SearchableSelectItem }) {
@@ -130,6 +132,7 @@ export function SearchableSelect({
   onLoadMore,
   listFooter,
   onOpenChange,
+  id,
 }: SearchableSelectProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
@@ -183,6 +186,7 @@ export function SearchableSelect({
     >
       <PopoverTrigger asChild>
         <Button
+          id={id}
           type="button"
           variant="outline"
           role="combobox"

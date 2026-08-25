@@ -67,6 +67,7 @@ import { getVcsProvider } from '@/lib/vcs/providers'
 import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
 import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
+import { validateVariables } from '@/lib/variables'
 
 interface RepositoryConfigViewProps {
   installationId: string
@@ -284,6 +285,14 @@ export function RepositoryConfigView({
 
     if (!domainValid) {
       toast.error(t('Please enter a valid domain'))
+      return
+    }
+
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured site behind.
+    const validationError = validateVariables(variables)
+    if (validationError) {
+      toast.error(validationError)
       return
     }
 

@@ -84,6 +84,16 @@ Your site's dependencies should be managed by the package manager of each langua
 
 ---
 
+- {% only_dark %}{% icon_image src="/images/platforms/dark/tanstack.svg" alt="TanStack Start logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/tanstack.svg" alt="TanStack Start logo" size="m" /%}{% /only_light %}
+- **TanStack Start**
+- `npm`
+- `npm install`
+- `npm run build`
+- `./dist`
+
+---
+
 - {% icon icon="nextjs" size="m" /%}
 - **Next.js**
 - `npm`
@@ -120,15 +130,6 @@ Your site's dependencies should be managed by the package manager of each langua
 
 ---
 
-- {% icon icon="astro" size="m" /%}
-- **Astro**
-- `npm`
-- `npm install`
-- `npm run build`
-- `./dist`
-
----
-
 - {% only_dark %}{% icon_image src="/images/platforms/dark/remix.svg" alt="Remix logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/remix.svg" alt="Remix logo" size="m" /%}{% /only_light %}
 - **Remix**
@@ -139,9 +140,8 @@ Your site's dependencies should be managed by the package manager of each langua
 
 ---
 
-- {% only_dark %}{% icon_image src="/images/platforms/dark/tanstack.svg" alt="TanStack Start logo" size="m" /%}{% /only_dark %}
-{% only_light %}{% icon_image src="/images/platforms/light/tanstack.svg" alt="TanStack Start logo" size="m" /%}{% /only_light %}
-- **TanStack Start**
+- {% icon icon="astro" size="m" /%}
+- **Astro**
 - `npm`
 - `npm install`
 - `npm run build`

@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Appwrite Explorer brings the REST API into the Console"
+date: 2026-06-23
+cover: /images/blog-local/announcing-appwrite-explorer/cover.avif
+---
+
+**Appwrite Explorer** is an API workspace in every project. Browse the Appwrite REST surface by product, fill in path, query, and body fields with guided forms, and send live requests against the project you are viewing.
+
+Responses open next to the request with status, timing, formatted JSON, and headers. Destructive calls ask for confirmation first. You can authenticate with an API key on the Server API, or impersonate a user on the Client API, without switching to an external client.
+
+{% arrow_link href="/blog/post/announcing-appwrite-explorer" %}
+Read the announcement
+{% /arrow_link %}

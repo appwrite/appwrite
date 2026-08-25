@@ -33,7 +33,6 @@ import {
   Server,
   Share2,
   Shield,
-  Sparkles,
   Terminal,
   Type,
   UserCircle,
@@ -54,9 +53,17 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { GraphqlIcon } from '@/components/global/shared/GraphqlIcon'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { OAuthIcon } from '@/components/global/shared/OAuthIcon'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
-import { DOCS_NAV_ACTIVE_BG_CLASS, DOCS_NAV_SCROLL_CLASS } from '@/lib/docs/nav-styles'
+import {
+  DOCS_NAV_CATEGORY_LABEL_CLASS,
+  DOCS_NAV_CATEGORY_TRIGGER_CLASS,
+  DOCS_NAV_ITEM_LIST_CLASS,
+  DOCS_NAV_SCROLL_CLASS,
+  DOCS_NAV_TREE_GAP_CLASS,
+  docsNavLinkClassName,
+} from '@/lib/docs/nav-styles'
 import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
 import { isFirewallDocsPathname } from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
@@ -120,7 +127,6 @@ const ICON_MAP: Record<string, LucideIcon> = {
   link: Link2,
   key: Key,
   'user-circle': UserCircle,
-  sparkles: Sparkles,
   bot: BotMessageSquare,
   terminal: Terminal,
   share: Share2,
@@ -168,10 +174,20 @@ function DocsOAuthNavIcon({ className, isActive }: DocsCustomNavIconProps) {
   )
 }
 
+function DocsMcpNavIcon({ className, isActive }: DocsCustomNavIconProps) {
+  return (
+    <McpIcon
+      variant="nav"
+      className={cn(isActive && 'opacity-100', className)}
+    />
+  )
+}
+
 const CUSTOM_ICON_MAP: Record<string, ComponentType<DocsCustomNavIconProps>> = {
   terraform: DocsTerraformNavIcon,
   graphql: DocsGraphqlNavIcon,
   oauth: DocsOAuthNavIcon,
+  mcp: DocsMcpNavIcon,
 }
 
 function isDocsNavActive(
@@ -236,11 +252,8 @@ function DocsGlobalNavItem({
   const hasTrailing = (!collapsed || isMobile) && (external || showNewBadge)
 
   const className = cn(
-    'rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
-    'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-    isActive
-      ? cn(DOCS_NAV_ACTIVE_BG_CLASS, 'text-foreground')
-      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+    'group',
+    docsNavLinkClassName(isActive),
     collapsed && !isMobile
       ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
       : hasTrailing
@@ -343,7 +356,7 @@ function DocsGlobalNavCategory({
   const sectionAnalytics = label ? DOCS_NAV_GROUP_ACTIONS[label] : undefined
 
   const itemList = (
-    <div className="space-y-0.5">
+    <div className={DOCS_NAV_ITEM_LIST_CLASS}>
       {items.map((item) => (
         <DocsGlobalNavItem
           key={item.href}
@@ -365,10 +378,7 @@ function DocsGlobalNavCategory({
     return (
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger
-          className={cn(
-            'mb-1.5 flex w-full cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 transition-colors hover:bg-accent/50 hover:text-muted-foreground',
-            isMobile && 'px-3',
-          )}
+          className={cn(DOCS_NAV_CATEGORY_TRIGGER_CLASS, isMobile && 'px-3')}
           aria-expanded={open}
         >
           <span className="flex-1 text-start">{label}</span>
@@ -390,14 +400,9 @@ function DocsGlobalNavCategory({
   }
 
   return (
-    <div className="space-y-0.5">
+    <div className={DOCS_NAV_ITEM_LIST_CLASS}>
       {(!collapsed || isMobile) && (
-        <p
-          className={cn(
-            'mb-1.5 px-2.5 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60',
-            isMobile && 'px-3',
-          )}
-        >
+        <p className={cn(DOCS_NAV_CATEGORY_LABEL_CLASS, isMobile && 'px-3')}>
           {label}
         </p>
       )}
@@ -422,7 +427,7 @@ function DocsGlobalNavTree({
   marketingEnabled: boolean
 }) {
   return (
-    <div className="space-y-6">
+    <div className={DOCS_NAV_TREE_GAP_CLASS}>
       {navigation.map((entry, index) =>
         isDocsNavGroup(entry) ? (
           <DocsGlobalNavCategory
@@ -516,7 +521,7 @@ export function DocsGlobalSidebar({
           )}
         >
           <nav
-            className={cn('flex-1 space-y-6 overflow-y-auto px-3 py-4', DOCS_NAV_SCROLL_CLASS)}
+            className={cn('flex-1 overflow-y-auto px-3 py-4', DOCS_NAV_TREE_GAP_CLASS, DOCS_NAV_SCROLL_CLASS)}
             role="navigation"
             aria-label="Docs navigation"
           >
@@ -575,7 +580,7 @@ export function DocsGlobalSidebar({
         </div>
 
         <nav
-          className={cn('flex-1 space-y-6 overflow-y-auto px-4 py-2', DOCS_NAV_SCROLL_CLASS)}
+          className={cn('flex-1 overflow-y-auto px-4 py-2', DOCS_NAV_TREE_GAP_CLASS, DOCS_NAV_SCROLL_CLASS)}
           role="navigation"
           aria-label="Mobile docs navigation"
         >

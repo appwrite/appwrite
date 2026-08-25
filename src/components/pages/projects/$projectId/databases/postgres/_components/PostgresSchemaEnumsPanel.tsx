@@ -21,6 +21,11 @@ import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import {
+  SPREADSHEET_FILLER_CELL_CLASS,
+  SPREADSHEET_FILLER_HEADER_CLASS,
+  SPREADSHEET_SCROLL_LAYER_CLASS,
+} from '@/lib/layout/spreadsheet-sticky'
+import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
@@ -42,6 +47,7 @@ import { useT } from '@/lib/i18n/translate'
 import {
   getPostgresEnumValueBadgeClass,
   matchesPostgresLocalSearch,
+  POSTGRES_ACTIONS_COL_PX,
   POSTGRES_ACTIONS_COL_STYLE,
   POSTGRES_BODY_CELL_BORDER_CLASS,
   POSTGRES_HEADER_CELL_BORDER_CLASS,
@@ -49,6 +55,9 @@ import {
   POSTGRES_STICKY_THEAD_CLASS,
   postgresStickyActionsCellClass,
 } from './postgres-spreadsheet-chrome'
+
+const POSTGRES_ENUMS_GRID_MIN_WIDTH_PX =
+  200 + 280 + 120 + 180 + POSTGRES_ACTIONS_COL_PX
 
 type PostgresSchemaEnumsPanelProps = {
   databaseId: string
@@ -208,6 +217,10 @@ export function PostgresSchemaEnumsPanel({
     <>
       <div className="relative flex h-full flex-col">
         <div className="flex-1 overflow-auto overscroll-contain">
+          <div
+            className={SPREADSHEET_SCROLL_LAYER_CLASS}
+            style={{ minWidth: POSTGRES_ENUMS_GRID_MIN_WIDTH_PX }}
+          >
           <table className="w-full border-collapse">
             <thead className={POSTGRES_STICKY_THEAD_CLASS}>
               <tr>
@@ -251,6 +264,7 @@ export function PostgresSchemaEnumsPanel({
                     {t('Description')}
                   </span>
                 </th>
+                <th aria-hidden className={SPREADSHEET_FILLER_HEADER_CLASS} />
                 <th
                   className={POSTGRES_STICKY_ACTIONS_HEADER_CLASS}
                   style={POSTGRES_ACTIONS_COL_STYLE}
@@ -319,6 +333,7 @@ export function PostgresSchemaEnumsPanel({
                           {comment || t('No description')}
                         </span>
                       </td>
+                      <td aria-hidden className={SPREADSHEET_FILLER_CELL_CLASS} />
                       <td
                         className={postgresStickyActionsCellClass()}
                         style={POSTGRES_ACTIONS_COL_STYLE}
@@ -356,6 +371,7 @@ export function PostgresSchemaEnumsPanel({
               })}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 

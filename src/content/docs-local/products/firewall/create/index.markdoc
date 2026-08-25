@@ -59,6 +59,8 @@ For **Challenge**, set:
 
 Challenge rules use the platform default challenge type. See [Challenge](/docs/products/firewall/actions#challenge).
 
+To challenge **every** visitor to a site without building this rule by hand, use [Attack mode](/docs/products/firewall/attack-mode) from the Firewall page instead of the create wizard.
+
 For **Rate limit**, set:
 
 - **Request limit** (Console default `100`)

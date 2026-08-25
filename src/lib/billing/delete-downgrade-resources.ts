@@ -16,6 +16,11 @@ export type ResourcesToDeleteEntry = {
   buckets?: string[]
   functions?: string[]
   sites?: string[]
+  teams?: string[]
+  topics?: string[]
+  platforms?: string[]
+  webhooks?: string[]
+  wafRules?: string[]
 }
 
 export type ResourcesToDelete = Record<string, ResourcesToDeleteEntry>
@@ -52,6 +57,26 @@ export async function deleteDowngradeResources(
 
     for (const siteId of resourceMap.sites ?? []) {
       tasks.push(projectSdk.sites.delete({ siteId }))
+    }
+
+    for (const teamId of resourceMap.teams ?? []) {
+      tasks.push(projectSdk.teams.delete({ teamId }))
+    }
+
+    for (const topicId of resourceMap.topics ?? []) {
+      tasks.push(projectSdk.messaging.deleteTopic({ topicId }))
+    }
+
+    for (const platformId of resourceMap.platforms ?? []) {
+      tasks.push(projectSdk.project.deletePlatform({ platformId }))
+    }
+
+    for (const webhookId of resourceMap.webhooks ?? []) {
+      tasks.push(projectSdk.webhooks.delete({ webhookId }))
+    }
+
+    for (const ruleId of resourceMap.wafRules ?? []) {
+      tasks.push(projectSdk.waf.deleteRule({ ruleId }))
     }
   }
 

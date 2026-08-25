@@ -1,4 +1,9 @@
-import { useEffect, useState, type ClipboardEvent, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useState,
+  type ClipboardEvent,
+  type KeyboardEvent,
+} from 'react'
 import { X } from 'lucide-react'
 import { Input } from './input'
 import { Badge } from './badge'
@@ -16,6 +21,8 @@ interface InputTagsProps {
   disabled?: boolean
   /** Tags shown inside the field that cannot be removed. */
   lockedTags?: string[]
+  /** Maximum length of a single tag. Longer tags are rejected with an error. */
+  maxTagLength?: number
   /**
    * Fills the text field when `id` changes (e.g. example chip clicked).
    * Does not add a tag until the user presses Enter or comma.
@@ -34,6 +41,7 @@ export function InputTags({
   splitOnComma = false,
   disabled = false,
   lockedTags = [],
+  maxTagLength,
   prefillRequest,
   onPrefillConsumed,
 }: InputTagsProps) {
@@ -90,6 +98,10 @@ export function InputTags({
         setError('Please enter a valid email address')
         return
       }
+      if (maxTagLength !== undefined && tag.length > maxTagLength) {
+        setError(`Values have a maximum length of ${maxTagLength} characters`)
+        return
+      }
       if (lockedTags.includes(tag) || next.includes(tag)) continue
       next.push(tag)
       added = true
@@ -97,7 +109,9 @@ export function InputTags({
 
     if (!added && tokens.length > 0) {
       setError(
-        validateEmail ? 'This email is already added' : 'This value is already added',
+        validateEmail
+          ? 'This email is already added'
+          : 'This value is already added',
       )
       return
     }
@@ -126,7 +140,9 @@ export function InputTags({
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     if (!validateEmail && !splitOnComma) return
     const text = e.clipboardData.getData('text')
-    const hasSeparators = validateEmail ? /[,\s]/.test(text) : text.includes(',')
+    const hasSeparators = validateEmail
+      ? /[,\s]/.test(text)
+      : text.includes(',')
     if (!hasSeparators) return
     e.preventDefault()
     const combined = inputValue ? `${inputValue}${text}` : text

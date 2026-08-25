@@ -24,18 +24,13 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { TrafficOverview } from './TrafficOverview'
 import { RulesList } from './Rules'
+import { AttackModeBanner } from './_components/AttackMode'
 import { Route } from '@/routes/_public/projects.$projectId.firewall.index'
-import type { FirewallResourceSelection } from './_components/FirewallResourceSelector'
-
-function firewallListSearch(selection: FirewallResourceSelection) {
-  if (selection.resourceType === 'api') {
-    return { resourceType: 'api' as const }
-  }
-  return {
-    resourceType: selection.resourceType,
-    resourceId: selection.resourceId,
-  }
-}
+import {
+  firewallListSearch,
+  parseFirewallListSearch,
+  type FirewallResourceSelection,
+} from '@/lib/firewall/conditions'
 
 export function View() {
   const t = useT()
@@ -43,10 +38,8 @@ export function View() {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const search = Route.useSearch()
-  const resourceSelection: FirewallResourceSelection = {
-    resourceType: search.resourceType ?? 'api',
-    resourceId: search.resourceId,
-  }
+  const resourceSelection: FirewallResourceSelection =
+    parseFirewallListSearch(search) ?? { resourceType: 'api' }
 
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
@@ -143,6 +136,12 @@ export function View() {
             />
           ) : undefined
         }
+      />
+
+      <AttackModeBanner
+        projectId={projectId}
+        resourceSelection={resourceSelection}
+        canWrite={canWrite}
       />
 
       <div className="flex-1 overflow-y-auto">

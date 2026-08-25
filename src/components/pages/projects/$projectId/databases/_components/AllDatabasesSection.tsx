@@ -59,9 +59,14 @@ import { DatabaseOperationsChartPreview } from './DatabaseOperationsChartPreview
 import { NoBackupPoliciesWarningIcon } from './DatabaseBackupsNavLink'
 import { DedicatedDatabaseStatusBadge } from './DedicatedDatabaseStatusBadge'
 import { DatabaseTypeBadge } from './DatabaseTypeIcon'
+import { DatabaseTypeBetaBadge } from './DatabaseTypeBetaBadge'
+import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowDatabaseSecuritySettings } from '@/lib/console-access-checks'
-import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
+import {
+  isDedicatedDatabaseProvisioning,
+  isDedicatedDatabaseReady,
+} from '@/lib/databases/dedicated-database-status'
 import {
   buildProductDedicatedCardSource,
   hasDedicatedDatabaseCompute,
@@ -204,9 +209,17 @@ function AllDatabasesGridCardShell({
     t,
     computeLabelOptions,
   )
-  const showFooter = Boolean(computeLabel || connectionsLabel)
+  const isBeta = isBetaDatabaseType({
+    apiType: db.apiType ?? db.databaseType,
+    engine: dedicated?.engine,
+    product: dedicated?.api,
+  })
+  const showFooter = Boolean(computeLabel || connectionsLabel || isBeta)
   const typeUnavailable = isListedDatabaseTypeUnavailable(db, features)
   const appearDisabled = typeUnavailable || db.enabled === false
+  const provisioningDisabled = isDedicatedDatabaseProvisioning(
+    dedicated?.status ?? db.status,
+  )
 
   const card = (
     <div
@@ -256,16 +269,21 @@ function AllDatabasesGridCardShell({
 
       {showFooter ? (
         <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
-            {computeLabel ? (
-              <span className="truncate text-muted-foreground">
-                {computeLabel}
-              </span>
-            ) : null}
-            {connectionsLabel ? (
-              <span className="truncate tabular-nums text-muted-foreground">
-                {connectionsLabel}
-              </span>
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
+              {computeLabel ? (
+                <span className="truncate text-muted-foreground">
+                  {computeLabel}
+                </span>
+              ) : null}
+              {connectionsLabel ? (
+                <span className="truncate tabular-nums text-muted-foreground">
+                  {connectionsLabel}
+                </span>
+              ) : null}
+            </div>
+            {isBeta ? (
+              <DatabaseTypeBetaBadge className="shrink-0" />
             ) : null}
           </div>
         </div>
@@ -299,6 +317,7 @@ function AllDatabasesGridCardShell({
       showSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
       showBackups={showBackups}
+      provisioningDisabled={provisioningDisabled}
     >
       {cardBody}
     </DatabaseContextMenu>

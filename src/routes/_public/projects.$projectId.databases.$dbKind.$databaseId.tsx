@@ -7,10 +7,14 @@ import {
 } from '@/lib/database-routes'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { throwRedirectPostgresDbKind, throwRedirectMysqlDbKind } from '@/lib/database-route-redirects'
+import { throwRedirectIfDedicatedDatabaseProvisioning } from '@/lib/databases/dedicated-database-provisioning-access'
 import { DatabaseOperationsLockProvider } from '@/components/pages/projects/$projectId/databases/_components/DatabaseOperationsLockContext'
 import { DedicatedDatabaseStatusHeaderAlert } from '@/components/pages/projects/$projectId/databases/_components/DedicatedDatabaseStatusHeaderAlert'
 import { DatabaseTypeUnavailable } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeUnavailable'
+import { useRedirectIfDedicatedDatabaseProvisioning } from '@/components/pages/projects/$projectId/databases/_components/useRedirectIfDedicatedDatabaseProvisioning'
 import {
+  databaseQueryOptions,
+  dedicatedDatabasesQueryOptions,
   productRouteKindQueryOptions,
   projectQueryOptions,
   resolveProductRouteKindForDatabase,
@@ -23,7 +27,7 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$dbKind/$databaseId',
 )({
   head: () => ({ meta: [{ title: pageTitle('Databases') }] }),
-  beforeLoad: async ({ params, context }) => {
+  beforeLoad: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return
     const { projectId, dbKind, databaseId } = params
         throwRedirectPostgresDbKind(dbKind, { projectId, databaseId })
@@ -97,6 +101,35 @@ export const Route = createFileRoute(
 
     // Re-seed after resolution in case cache was cleared during validation.
     seedDatabaseProductRouteKind(projectId, databaseId, dbKind)
+
+    let status: string | null | undefined
+    try {
+      const database = await queryClient.ensureQueryData(
+        databaseQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+        ),
+      )
+      status = (database as { status?: string | null } | null)?.status
+    } catch {
+      status = undefined
+    }
+    if (!status) {
+      try {
+        const dedicated = await queryClient.ensureQueryData(
+          dedicatedDatabasesQueryOptions(projectId),
+        )
+        status = dedicated?.databases?.find((db) => db.$id === databaseId)
+          ?.status
+      } catch {
+        /* Restriction is best-effort; page still loads if status is unknown. */
+      }
+    }
+    throwRedirectIfDedicatedDatabaseProvisioning(status, location.pathname, {
+      to: '/projects/$projectId/databases/$dbKind/$databaseId/',
+      params: { projectId, dbKind, databaseId },
+    })
   },
   component: DatabaseKindLayout,
 })
@@ -119,6 +152,12 @@ function DatabaseKindLayout() {
     (database as { status?: string | null } | null)?.status ??
     dedicatedStatus ??
     null
+
+  useRedirectIfDedicatedDatabaseProvisioning(
+    status,
+    '/projects/$projectId/databases/$dbKind/$databaseId/',
+    { projectId, dbKind, databaseId },
+  )
 
   if (
     isDatabaseRouteKind(dbKind) &&

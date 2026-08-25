@@ -40,6 +40,10 @@ Set `ssr: true` in `analog` plugin in the `vite.config.ts` file.
 Ensure the `src/server.ts` file uses `@angular/ssr/node` package.
 {% /tabsitem %}
 
+{% tabsitem #tanstack-start title="TanStack Start" %}
+No additional configuration is needed as SSR is enabled by default.
+{% /tabsitem %}
+
 {% tabsitem #nextjs title="Next.js" %}
 The following output modes are supported:
 
@@ -55,16 +59,12 @@ Set build command to `npm run build` in site settings.
 Use `@sveltejs/adapter-node` adapter in the `svelte.config.js` file.
 {% /tabsitem %}
 
-{% tabsitem #astro title="Astro" %}
-Use `@astrojs/node` adapter in the `astro.config.mjs` file.
-{% /tabsitem %}
-
 {% tabsitem #remix title="Remix" %}
 Ensure the `entry.server.tsx` file uses `@remix-run/node` package.
 {% /tabsitem %}
 
-{% tabsitem #tanstack-start title="TanStack Start" %}
-No additional configuration is needed as SSR is enabled by default.
+{% tabsitem #astro title="Astro" %}
+Use `@astrojs/node` adapter in the `astro.config.mjs` file.
 {% /tabsitem %}
 
 {% /tabs %}

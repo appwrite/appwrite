@@ -645,6 +645,12 @@ export function CreateFunctionView() {
                     {t('Connect Bitbucket')}
                   </a>
                 </Button>
+                <Button size="sm" variant="secondary" asChild>
+                  <a href={getVcsAuthUrl('origin')}>
+                    <VcsIcon type="origin" className="me-1.5 h-3.5 w-3.5" />
+                    {t('Connect Origin')}
+                  </a>
+                </Button>
               </div>
             </div>
           ) : (

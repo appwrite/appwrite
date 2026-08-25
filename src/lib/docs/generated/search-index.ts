@@ -457,7 +457,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting/configuration/databases",
     "title": "Databases",
     "description": "Configure the database backend for your self-hosted Appwrite instance. Learn about the supported database options and their configuration.",
-    "excerpt": "Appwrite supports PostgreSQL, MariaDB, and MongoDB as database backends. The database is selected during installation via the setup wizard and **cannot be changed after installation**. Regardless of which database you choose, the Appwrite API remains the same. Only the underlying storage engine differs. PostgreSQL is the default database for new installations. CLI installation If you prefer to skip the setup wizard, you can set the database directly using the flag: Accepted values are , , and . Supported databases PostgreSQL…",
+    "excerpt": "Appwrite supports PostgreSQL, MariaDB, and MongoDB as database backends. You select the database during installation via the setup wizard and **cannot change it after installation**. Regardless of which database you choose, the Appwrite API remains the same. Only the underlying storage engine differs. PostgreSQL is the default database for new installations. CLI installation If you prefer to skip the setup wizard, you can set the database directly using the flag: Accepted values are , , and . Supported databases PostgreSQL…",
     "breadcrumbs": [
       "Self-hosting",
       "Configuration",
@@ -572,6 +572,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Self-hosting",
       "Getting started",
       "Installation"
+    ]
+  },
+  {
+    "slug": "advanced/self-hosting/mcp",
+    "title": "MCP server",
+    "description": "Connect LLMs and code-generation tools to your self-hosted Appwrite instance with the local MCP server.",
+    "excerpt": "The hosted Appwrite MCP server authenticates against Appwrite Cloud. If you are running a self-hosted Appwrite instance, use the local MCP server instead. It runs on your machine over the stdio transport and connects to your instance with an API key, allowing LLMs and code-generation tools to perform various operations on your Appwrite resources, such as creating users, managing databases, and more, using natural language commands. Here are some of the key benefits of using the local MCP server: -…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Tooling",
+      "MCP server"
     ]
   },
   {
@@ -945,6 +956,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Apps",
       "Concepts",
       "Device flow"
+    ]
+  },
+  {
+    "slug": "partners/apps/installations",
+    "title": "Installations",
+    "description": "Install your app on an organization and act with installation tokens that need no signed-in user.",
+    "excerpt": "An installation connects your app to one organization. An organization owner installs your app once. After that, your app creates its own access tokens for that organization. The tokens carry the scopes the installation granted, and they work without a signed-in user. Use an installation when your app acts as itself: a sync job that runs at night, a bot that posts build results, a backend that provisions resources. Use Sign in with Appwrite when your app acts as a…",
+    "breadcrumbs": [
+      "Apps",
+      "Concepts",
+      "Installations"
     ]
   },
   {
@@ -1481,7 +1503,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/agent/mcp",
     "title": "MCP connections",
-    "description": "Learn how the Appwrite Agent uses MCP servers to call tools and take actions in your projects.",
+    "description": "Learn how the Appwrite Agent uses MCP to call tools and take actions in your projects.",
     "excerpt": "**MCP connections** tell the Agent which Model Context Protocol servers it can use for tools. For Appwrite Agent, the primary connection is **Appwrite MCP**, the hosted server that lets the Agent take actions in your Appwrite projects with your account. Without a connected, enabled server, the Agent still answers questions and guides you through the Console. With Appwrite MCP ready, it can list tools and call Appwrite APIs, and empty-state suggestions shift from how-to chips to action-oriented prompts. Manage the…",
     "breadcrumbs": [
       "Agent",
@@ -2069,6 +2091,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "OAuth2 server",
       "Concepts",
       "Device flow"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/installations",
+    "title": "Installations",
+    "description": "Let clients install on teams in your project and act with installation tokens that need no signed-in user.",
+    "excerpt": "A client is a third-party app registered on your OAuth2 server. Your server can grant a client access in two ways. The first is **user consent**: the authorization flow sends a user to your consent screen, the user approves, and the client receives tokens that act as that user. The grant ends when the user revokes it or leaves. An **installation** is the second way. It connects a client to one team in your project. A team owner installs the…",
+    "breadcrumbs": [
+      "OAuth2 server",
+      "Concepts",
+      "Installations"
     ]
   },
   {
@@ -3846,7 +3879,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/vectorsdb/databases",
     "title": "Databases",
     "description": "Dive deeper into Appwrite VectorsDB and database configuration. Learn how to create and manage multiple vector databases for your application.",
-    "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. Shared and dedicated databases VectorsDB databases run on either shared or dedicated infrastructure. Shared databases run on infrastructure that Appwrite manages and scales for you. They are the fastest way to get started and you can create them from the Console or programmatically with a Server SDK. Dedicated databases run on infrastructure provisioned for your project alone. They can only be created from the Appwrite…",
+    "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. Shared and dedicated databases A VectorsDB database runs either on a shared pool that Appwrite manages for you, or on compute provisioned for your project alone. Leave out and the database lands on the shared pool, where it is ready to use as soon as the call returns. Pass a specification instead and Appwrite provisions a dedicated database on that tier, which you can then…",
     "breadcrumbs": [
       "VectorsDB",
       "Concepts",
@@ -3868,7 +3901,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/vectorsdb/embeddings",
     "title": "Embeddings",
     "description": "Generate text embeddings with Appwrite VectorsDB. Turn text into vector embeddings with built-in models and store them in your documents for vector search.",
-    "excerpt": "An embedding is a list of numbers that represents the meaning of a piece of text. VectorsDB can generate embeddings for you with built-in models, so you can turn text into vectors and store them in a collection without running a separate embedding service. The typical flow is two steps: generate an embedding from your text, then store that embedding in a document's field. Once stored, you can run vector search over your documents. Generate embeddings Use the method to…",
+    "excerpt": "An embedding is a list of numbers that represents the meaning of a piece of text. Appwrite generates embeddings for you with built-in models, so you can turn text into vectors and store them in a collection without running a separate embedding service. The typical flow is two steps: generate an embedding from your text, then store that embedding in a document's field. Once stored, you can run vector search over your documents. Generate embeddings Embeddings come from the Embeddings…",
     "breadcrumbs": [
       "VectorsDB",
       "Concepts",
@@ -3922,8 +3955,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/databases/vectorsdb/quick-start",
     "title": "Start with VectorsDB",
-    "description": "Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and read them back.",
-    "excerpt": "VectorsDB stores embedding vectors so you can build features like semantic search, recommendations, and retrieval for AI applications. This guide walks through creating a database, adding a collection with a fixed , storing a document with its and , and reading it back. These steps use a Server SDK, which requires an API key. Head to your Appwrite Console and click **Create database**. Name it and choose **VectorsDB** as the database type. Optionally, add a custom database ID. Select your…",
+    "description": "Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and search them by similarity.",
+    "excerpt": "An embedding is a list of numbers that represents the meaning of a piece of text. Text that means similar things gets similar numbers, even when the wording is different. VectorsDB stores those numbers for you and finds the closest ones to a question you ask, so you can search by meaning instead of by keyword. In this guide you store three sentences about Appwrite as embeddings, then ask a question in plain English and get back the sentence that…",
     "breadcrumbs": [
       "VectorsDB",
       "Getting started",
@@ -3945,7 +3978,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/vectorsdb/transactions",
     "title": "Transactions",
     "description": "Stage multiple VectorsDB operations and commit them atomically. Group changes across databases and collections with ordering, isolation, and conflict detection.",
-    "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and collections. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported document, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…",
+    "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and collections. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported document and bulk methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to commit or…",
     "breadcrumbs": [
       "VectorsDB",
       "Guides",
@@ -4140,6 +4173,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/firewall/attack-mode",
+    "title": "Attack mode",
+    "description": "Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.",
+    "excerpt": "**Attack mode** is a one-click challenge for a site you are viewing in Firewall. Use it when you need to put a proof-of-work challenge in front of all visitors quickly, for example during a traffic spike or abuse incident. Attack mode is available only for **Sites**. It does not apply to the project API or to Functions. Select a site in the Firewall resource picker to see the **Attack mode** button. Turn it on 1. Open **Firewall** in your project.…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Attack mode"
+    ]
+  },
+  {
     "slug": "products/firewall/conditions",
     "title": "Conditions",
     "description": "Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.",
@@ -4165,7 +4209,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/firewall/delete",
     "title": "Delete a rule",
     "description": "Remove an Appwrite Firewall rule from a project and understand the impact on traffic.",
-    "excerpt": "Deleting a Firewall rule removes it from the project permanently. Matching traffic is no longer affected by that rule. This action cannot be undone. Before you delete - Confirm no other process depends on the rule (for example an allowlist bypass that protects a broad deny). - Prefer **disable** from Update a rule if you only need to pause the policy temporarily. Disabled rules still count toward plan limits. - Note the rule's priority and conditions if you might recreate…",
+    "excerpt": "Deleting a Firewall rule removes it from the project permanently. Matching traffic is no longer affected by that rule. This action cannot be undone. Before you delete - Confirm no other process depends on the rule (for example an allowlist bypass that protects a broad deny). - Prefer **disable** from Update a rule if you only need to pause the policy temporarily. Disabled rules still count toward plan limits. - For the **Attack mode** rule on a site, turn Attack…",
     "breadcrumbs": [
       "Firewall",
       "Guides",
@@ -4494,7 +4538,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/send-email-messages",
     "title": "Send email messages",
     "description": "Send email messages to your users using Appwrite Messaging.",
-    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun, Resend, and Sendgrid as SMTP providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more details about configuring…",
+    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun, Resend, Sendgrid, Amazon SES, and SMTP as email providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more…",
     "breadcrumbs": [
       "Messaging",
       "Guides",
@@ -4532,6 +4576,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Messaging",
       "Providers",
       "Email with SendGrid"
+    ]
+  },
+  {
+    "slug": "products/messaging/ses",
+    "title": "Amazon SES",
+    "description": "Send emails to your Appwrite users using Amazon SES and Appwrite Messaging.",
+    "excerpt": "Amazon SES lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Amazon SES as a provider, navigate to **Messaging** > **Providers** > **Add provider**, then choose **Amazon SES** under Email. Give your provider a name and complete the configuration, then click **Create provider**. In the configuration step, you will need credentials from the AWS console…",
+    "breadcrumbs": [
+      "Messaging",
+      "Amazon SES"
     ]
   },
   {
@@ -5222,7 +5276,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Improve the docs, add this guide. We still don't have this guide in place, but we do have some great news. The Appwrite docs, just like Appwrite, is completely open sourced. This means, anyone can help improve them and add new guides and tutorials. If you see this page, **we're actively looking for contributions to this page**. Follow our contribution guidelines, open a PR to our Website repo, and collaborate with our core team to improve this page.",
     "breadcrumbs": [
       "Quick start",
-      "Start with Astro"
+      "Web app",
+      "Astro"
     ]
   },
   {
@@ -5508,12 +5563,12 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "tooling/ai",
-    "title": "AI",
-    "description": "Discover Appwrite's AI tooling ecosystem. Build with AI-powered development tools, integrate AI capabilities into your apps, and leverage documentation designed for AI consumption.",
-    "excerpt": "Appwrite provides a comprehensive set of tools and resources to help you build with AI, from AI-powered development tools that accelerate your workflow to infrastructure for building AI-powered applications. IDEs AI-powered IDEs and code editors provide intelligent code completion and context-aware assistance as you write code. These tools support our MCP servers, giving AI agents direct access to your Appwrite project. Vibe coding Vibe coding platforms let you build applications through natural language. Describe what you want to build and…",
+    "slug": "tooling",
+    "title": "Tooling",
+    "description": "CLI, Terraform, Command Center, MCP, agent skills, IDEs, and vibe coding platforms for building with Appwrite.",
+    "excerpt": "Appwrite tooling covers everything you use to build, automate, and operate projects. The CLI, Terraform, Command Center, MCP server, and agent skills sit alongside the IDEs and vibe coding platforms that connect to Appwrite. Tools First-party tools for the terminal, Console, infrastructure, and AI agents. Use them together; they are all part of the same Appwrite toolchain. Give AI tools direct access to your Appwrite project and docs. Create projects, manage resources, and deploy Functions and Sites from your terminal.…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Getting started",
       "Overview"
     ]
@@ -5524,18 +5579,18 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Generate an AGENTS.md file to give AI agents project-specific context about Appwrite SDKs, APIs, and services.",
     "excerpt": "files are instruction files that developers place in their repositories to provide context and guidelines to AI agents. These files help AI tools understand your project structure, coding conventions, and preferences, resulting in more accurate and consistent code suggestions. Most IDEs and agents support this file. When an AI agent encounters an file, it uses the instructions to tailor its responses to your specific project requirements. This includes details about your tech stack, file organization, naming conventions, and architectural patterns.…",
     "breadcrumbs": [
-      "AI",
       "Tooling",
+      "Tools",
       "AGENTS.md"
     ]
   },
   {
     "slug": "tooling/ai/agents/antigravity",
     "title": "Google Antigravity",
-    "description": "Learn how you can add the Appwrite MCP servers to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Antigravity for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. To add the Appwrite MCP server, open Antigravity and go to the drop-down (...) menu in the Agent window .…",
+    "description": "Learn how you can add the Appwrite MCP server to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Antigravity for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. To add the Appwrite MCP server, open Antigravity and go to the drop-down (...) menu in the Agent window . From there, navigate to Manage MCP Servers in the MCP Store, and then click…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "Google Antigravity"
     ]
@@ -5543,10 +5598,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
-    "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs and sets up MCP servers for both the Appwrite API and documentation, giving Claude Code everything it needs to work with your Appwrite projects. To install the plugin, run the following command in your terminal: Once installed, run Claude Code and configure the plugin: - Run in…",
+    "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
+    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs, giving Claude Code the context it needs to work with your Appwrite projects. To install the plugin, run the following command in your terminal: Once installed, run Claude Code and configure the plugin: - Run in Claude Code. - Go to the **Installed** tab. - Select the…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "Claude Code"
     ]
@@ -5554,10 +5609,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/codex",
     "title": "Codex",
-    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Codex is to install the **Appwrite plugin** from the Appwrite marketplace. The plugin includes agent skills for the Appwrite CLI and all major SDKs and registers the Appwrite Docs MCP server, giving Codex access to the Appwrite documentation so that it follows the latest and suggested code patterns. Add the Appwrite marketplace to Codex by running the following command in your terminal: Then run and open the plugins menu to install…",
+    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
+    "excerpt": "The fastest way to get started with Appwrite in Codex is to install the **Appwrite plugin** from the Appwrite marketplace. The plugin includes agent skills for the Appwrite CLI and all major SDKs, giving Codex the context it needs to follow the latest Appwrite code patterns. Add the Appwrite marketplace to Codex by running the following command in your terminal: Then run and open the plugins menu to install the Appwrite plugin: - Run in Codex. - Select the **Appwrite**…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "Codex"
     ]
@@ -5565,21 +5620,32 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/cursor",
     "title": "Cursor",
-    "description": "Learn how to use Cursor with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Cursor is to install the **Appwrite plugin** from the Cursor Marketplace. The plugin includes agent skills, MCP servers, and commands, giving Cursor's AI agents everything they need to work with your Appwrite projects. To install the plugin: 1. Visit the Appwrite plugin page on the Cursor Marketplace. 2. Sign in with your Cursor account. 3. Click **Add to Cursor**. 4. The plugin will be added to your editor automatically. Once installed,…",
+    "description": "Learn how to use Cursor with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
+    "excerpt": "The fastest way to get started with Appwrite in Cursor is to install the **Appwrite plugin** from the Cursor Marketplace. The plugin includes agent skills and commands, giving Cursor's AI agents the context they need to work with your Appwrite projects. To install the plugin: 1. Visit the Appwrite plugin page on the Cursor Marketplace. 2. Sign in with your Cursor account. 3. Click **Add to Cursor**. 4. The plugin will be added to your editor automatically. Once installed, add…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "Cursor"
     ]
   },
   {
+    "slug": "tooling/ai/agents/grok-build",
+    "title": "Grok Build",
+    "description": "Learn how you can add the Appwrite MCP server to Grok Build to interact with both the Appwrite API and documentation.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Grok Build for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. Run the following command in your terminal to add the MCP server: The server uses OAuth for authentication. When Grok Build first connects to the server, your browser opens so you can sign…",
+    "breadcrumbs": [
+      "Tooling",
+      "IDEs",
+      "Grok Build"
+    ]
+  },
+  {
     "slug": "tooling/ai/agents/opencode",
     "title": "OpenCode",
-    "description": "Learn how you can add the Appwrite MCP servers to OpenCode to interact with both the Appwrite API and documentation.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to OpenCode for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. Use the following configuration in your file to use the Appwrite MCP servers. **Configuration:** - Replace with your actual Appwrite…",
+    "description": "Learn how you can add the Appwrite MCP server to OpenCode to interact with both the Appwrite API and documentation.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to OpenCode for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. Use the following configuration in your file to use the Appwrite MCP server. The server uses OAuth for authentication. When OpenCode first connects to the server, complete the sign-in flow in your browser to…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "OpenCode"
     ]
@@ -5587,10 +5653,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/vscode",
     "title": "VS Code",
-    "description": "Learn how you can use Appwrite with VS Code and GitHub Copilot for AI-assisted development. Get started quickly with pre-built prompts and connect to Appwrite MCP servers for deeper integration.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to VS Code for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. In VS Code, open the **Command Palette** (press on Windows or on MacOS) and run the command. Choose which…",
+    "description": "Learn how you can use Appwrite with VS Code and GitHub Copilot for AI-assisted development. Get started quickly with pre-built prompts and connect to the Appwrite MCP server for deeper integration.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to VS Code for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. In VS Code, open the **Command Palette** (press on Windows or on MacOS) and run the command. Update the file to include the Appwrite MCP server: The server uses OAuth for authentication. When…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "VS Code"
     ]
@@ -5598,10 +5664,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/windsurf",
     "title": "Windsurf",
-    "description": "Learn how you can use Windsurf Editor with Appwrite by leveraging MCP servers and quick start prompts to build applications faster.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Windsurf for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. Open the **Windsurf Settings** page, head to the **Cascade** tab, find the **Model Context Protocol (MCP) Servers** section, and click…",
+    "description": "Learn how you can use Windsurf Editor with Appwrite by leveraging the MCP server and quick start prompts to build applications faster.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Windsurf for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. Open the **Windsurf Settings** page, head to the **Cascade** tab, find the **Model Context Protocol (MCP) Servers** section, and click on the **View raw config** button. Update the file to include the Appwrite MCP…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "agents",
       "Windsurf"
     ]
@@ -5609,10 +5675,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/zed",
     "title": "Zed",
-    "description": "Learn how you can use Zed with Appwrite by adding Appwrite MCP servers and installing Appwrite skills for AI-assisted development.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Zed for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. No additional prerequisites. The docs server runs as a remote HTTP endpoint. In Zed, open the **Command Palette** (press on MacOS or on Linux), run the action, and choose…",
+    "description": "Learn how you can use Zed with Appwrite by adding the Appwrite MCP server and installing Appwrite skills for AI-assisted development.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Zed for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. In Zed, open the **Command Palette** (press on MacOS or on Linux) and run the action. In the **Remote** tab, update the JSON configuration to include the Appwrite MCP server: The server uses OAuth…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "Zed"
     ]
@@ -5623,7 +5689,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
     "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI. Appwrite Functions do not currently support streaming responses. Support for streaming is coming…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Guides",
       "AI in Functions"
     ]
@@ -5634,8 +5700,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "An open-source benchmark that evaluates how well AI models understand Appwrite's services, SDKs, and APIs.",
     "excerpt": "Appwrite Arena is an open-source benchmark that evaluates how well AI models understand Appwrite. It tests models across real-world Appwrite usage scenarios, covering services, SDKs, and APIs, to help you choose the best model for building with Appwrite. Arena ranks models by their ability to answer questions drawn from actual Appwrite platform usage, both with and without access to Appwrite skills. This makes it easy to see which models generate the most accurate Appwrite code out of the box and…",
     "breadcrumbs": [
-      "AI",
       "Tooling",
+      "Tools",
       "Appwrite Arena"
     ]
   },
@@ -5645,7 +5711,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, and take approved actions.",
     "excerpt": "The Console **Appwrite Assistant** has been replaced by **Appwrite Agent**. Appwrite Agent is the AI chat built into Appwrite Cloud. It inspects your project context, answers how-to questions, clarifies ambiguous requests, and can run approved actions through Appwrite MCP. Appwrite Agent documentation Bookmarks to this page should use Appwrite Agent. Legacy URLs redirect there.",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Appwrite Agent"
     ]
   },
@@ -5655,41 +5721,19 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Access Appwrite documentation as Markdown for AI consumption.",
     "excerpt": "Appwrite documentation is available as Markdown, making it easy to use with AI-powered development tools, code editors, and LLMs. Markdown lets AI tools process more content within their context limits and focus on the documentation itself instead of parsing HTML. This leads to more accurate responses based on official documentation. Copy as Markdown Every page in the Appwrite documentation includes a **Copy page** button that copies the entire page content as Markdown to your clipboard. This is useful when you…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Docs as Markdown"
     ]
   },
   {
     "slug": "tooling/ai/mcp-servers",
-    "title": "Model Context Protocol",
-    "description": "Enable LLMs and code-generation tools to interact with your Appwrite project",
-    "excerpt": "Appwrite offers Model Context Protocol (MCP) servers that allow LLMs to directly interact with Appwrite's API and docs. Using MCP servers, you can use applications such as Claude Code, Codex, Cursor, Claude Desktop, and others to operate on your Appwrite project as well as gain context about the latest updates to Appwrite's SDKs, APIs, and CLI. What is MCP? The Model Context Protocol (MCP) is an open standard that enables Large Language Models (LLMs) and AI code-generation tools to interact…",
+    "title": "Appwrite MCP server",
+    "description": "Enable LLMs and code-generation tools to interact with your Appwrite project and documentation",
+    "excerpt": "Appwrite offers a Model Context Protocol (MCP) server that allows LLMs to directly interact with Appwrite's API and docs. Using the MCP server, you can use applications such as Claude Code, Codex, Cursor, Claude Desktop, and others to operate on your Appwrite project as well as gain context about the latest updates to Appwrite's SDKs, APIs, and CLI. What is MCP? The Model Context Protocol (MCP) is an open standard that enables Large Language Models (LLMs) and AI code-generation tools…",
     "breadcrumbs": [
-      "AI",
       "Tooling",
-      "MCP servers"
-    ]
-  },
-  {
-    "slug": "tooling/ai/mcp-servers/api",
-    "title": "MCP server for Appwrite API",
-    "description": "Enable LLMs and code-generation tools to interact with the Appwrite API",
-    "excerpt": "The MCP server for Appwrite API allows LLMs and code-generation tools to interact with the Appwrite platform and perform various operations on your Appwrite resources, such as creating users, managing databases, and more, using natural language commands. Here are some of the key benefits of using the MCP server: - **Direct API interaction**: Enables LLMs to perform actions directly on your Appwrite project - **Real-time data access**: Allows LLMs to fetch and manipulate live data from your Appwrite instance -…",
-    "breadcrumbs": [
-      "AI",
-      "Model Context Protocol",
-      "MCP server for Appwrite API"
-    ]
-  },
-  {
-    "slug": "tooling/ai/mcp-servers/docs",
-    "title": "MCP server for Appwrite docs",
-    "description": "Enable LLMs and code-generation tools to interact with the Appwrite docs",
-    "excerpt": "The MCP server for Appwrite documentation allows LLMs and code-generation tools to interact with comprehensive Appwrite documentation, enabling intelligent code generation for Appwrite's APIs and SDKs, troubleshooting assistance, and implementation guidance using natural language commands. Here are some of the key benefits of using the MCP server: - **Complete documentation access**: Provides AI assistants with access to all Appwrite documentation - **Real-time context**: Ensures AI responses are based on the latest documentation - **Intelligent search**: Enables semantic search across documentation…",
-    "breadcrumbs": [
-      "AI",
-      "Model Context Protocol",
-      "MCP server for Appwrite docs"
+      "Tools",
+      "MCP server"
     ]
   },
   {
@@ -5698,7 +5742,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Building persistent AI agents using Appwrite Realtime.",
     "excerpt": "AI agents that maintain conversation history across sessions provide more contextual and personalized responses. By storing LLM responses in Appwrite Databases and subscribing to changes through Realtime, you can build chat applications where multiple clients receive updates instantly. Architecture 1. **Store messages**: Save user messages and LLM responses in an Appwrite table 2. **Subscribe to changes**: Use Realtime to listen for new messages 3. **Maintain context**: Load conversation history to provide context to the LLM Set up the messages table…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Guides",
       "Persistent agents with Realtime"
     ]
@@ -5709,7 +5753,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use AI assistants and code-generation tools to build Appwrite-powered applications faster using quick start prompts.",
     "excerpt": "**Quick start prompts** are pre-built instructions designed to help AI assistants integrate Appwrite into your project. These prompts guide AI tools like Claude Code, Codex, Cursor, and others through the process of setting up authentication, databases, and other Appwrite services in your application. Quick start prompts offer several advantages when building with Appwrite: - **Faster setup**: Skip the manual configuration and let AI handle the boilerplate code and SDK integration. - **Best practices**: Prompts are crafted to follow Appwrite's recommended…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Getting started",
       "Quick start prompts"
     ]
@@ -5720,7 +5764,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Android using Java.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Android (Java)"
     ]
@@ -5731,7 +5775,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Android using Kotlin.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Android (Kotlin)"
     ]
@@ -5742,7 +5786,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Angular.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Angular"
     ]
@@ -5753,7 +5797,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Apple platforms using Swift.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Apple (Swift)"
     ]
@@ -5764,7 +5808,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Dart.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Dart"
     ]
@@ -5775,7 +5819,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Deno.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Deno"
     ]
@@ -5786,7 +5830,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with .NET.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       ".NET"
     ]
@@ -5797,7 +5841,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Flutter.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Flutter"
     ]
@@ -5808,7 +5852,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Go.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Go"
     ]
@@ -5819,7 +5863,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Kotlin.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Kotlin"
     ]
@@ -5830,7 +5874,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Next.js.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Next.js"
     ]
@@ -5841,7 +5885,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Node.js.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Node.js"
     ]
@@ -5852,7 +5896,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Nuxt.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Nuxt"
     ]
@@ -5863,7 +5907,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with PHP.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "PHP"
     ]
@@ -5874,7 +5918,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Python.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Python"
     ]
@@ -5885,7 +5929,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with React.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "React"
     ]
@@ -5896,7 +5940,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with React Native.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "React Native"
     ]
@@ -5907,7 +5951,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Refine.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Refine"
     ]
@@ -5918,7 +5962,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Ruby.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Ruby"
     ]
@@ -5929,7 +5973,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Rust.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Rust"
     ]
@@ -5940,7 +5984,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Solid.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Solid"
     ]
@@ -5951,7 +5995,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with SvelteKit.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "SvelteKit"
     ]
@@ -5962,7 +6006,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Swift.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Swift"
     ]
@@ -5973,7 +6017,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with TanStack Start.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "TanStack Start"
     ]
@@ -5984,7 +6028,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Vue.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Vue"
     ]
@@ -5995,7 +6039,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Web.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Web"
     ]
@@ -6006,7 +6050,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Best practices for responsible AI usage with Appwrite. Learn how to protect user data, secure API keys, and build transparent AI-powered applications.",
     "excerpt": "Building AI-powered applications comes with responsibility toward your users and their data. Whether you're using AI development tools to build with Appwrite or integrating AI capabilities into your applications, following these best practices helps you build trustworthy and secure experiences. Protect user data When sending data to AI providers like OpenAI, Anthropic, or others, be mindful of what information leaves your application. - **Avoid sending personal data** to AI providers unless necessary for the feature. Strip personally identifiable information (PII)…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Responsible AI"
     ]
   },
@@ -6016,18 +6060,18 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Install Appwrite skills to give AI agents pre-built knowledge of Appwrite SDKs and services for your preferred language.",
     "excerpt": "Skills are open-source Markdown files that give AI agents deep knowledge of Appwrite SDKs and services. When installed, skills provide your AI tools with accurate, language-specific context about Appwrite APIs, so they generate correct code without needing to look up documentation. You can find all Appwrite skills on GitHub. Skills work across all major AI dev tools that support them. They are installed per-project or globally, and are available for all Appwrite client and server SDKs. Supported tools include but…",
     "breadcrumbs": [
-      "AI",
       "Tooling",
+      "Tools",
       "Agent skills"
     ]
   },
   {
     "slug": "tooling/ai/vector-db-and-embeddings",
     "title": "Vector DB and embeddings",
-    "description": "Using vector databases and embeddings with Appwrite.",
-    "excerpt": "Vector databases store high-dimensional vectors (embeddings) that represent text, images, or other data. They enable semantic search, where results are based on meaning rather than exact keyword matches. This makes them essential for AI applications like recommendation systems, search engines, and retrieval-augmented generation (RAG). Embeddings are numerical representations of data that capture semantic meaning. Text with similar meanings will have embeddings that are close together in vector space. Appwrite integrates with vector databases through Functions, allowing you to index your…",
+    "description": "Build semantic search on Appwrite VectorsDB. Generate embeddings, store them alongside your content, and rank results by meaning with a TanStack Start app.",
+    "excerpt": "An embedding is a list of numbers that represents the meaning of a piece of text. Text with similar meaning produces vectors that sit close together, so you can rank content by meaning instead of by matching words. This is what powers semantic search, recommendations, and retrieval for AI applications. Appwrite VectorsDB stores those vectors and searches them. It generates embeddings with built-in models, keeps each vector next to the content it came from, and returns results ordered by distance.…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Guides",
       "Vector DB and embeddings"
     ]
@@ -6035,10 +6079,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vibe-coding/bolt",
     "title": "Bolt",
-    "description": "Learn how to connect the Appwrite docs MCP server to Bolt for AI-assisted development with access to Appwrite documentation.",
-    "excerpt": "To connect the Appwrite docs MCP server to Bolt: 1. Go to **Settings** → **Connectors (MCP)**. 2. Click **Custom MCP server**. 3. Enter the following details: - **Name**: - **URL**: - **Transport Type**: HTTP - **Authentication**: None 4. Click **Add MCP server**. The Appwrite docs MCP server will now be available in your Bolt projects. Once connected, Bolt has access to Appwrite documentation context. You can use prompts like: **Example prompts:** - - - - -",
+    "description": "Learn how to connect the Appwrite MCP server to Bolt for AI-assisted development with access to the Appwrite API and documentation.",
+    "excerpt": "Connect the Appwrite MCP server to Bolt for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. To add the Appwrite MCP server to Bolt: 1. Go to **Settings** → **Connectors (MCP)**. 2. Click **Custom MCP server**. 3. Enter the following details: - **Name**: - **URL**: - **Transport Type**: HTTP - **Authentication**: MCP OAuth 4. Click **Add MCP server**. The server uses OAuth for authentication. When Bolt…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Vibe coding",
       "Bolt"
     ]
@@ -6046,10 +6090,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vibe-coding/claude-desktop",
     "title": "Claude Desktop",
-    "description": "Learn how to use Claude Desktop with Appwrite through quick start prompts and MCP servers for AI-assisted development.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Claude Desktop for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. In the Claude Desktop app, open the app's **Settings** page (press on Windows or on MacOS) and head to…",
+    "description": "Learn how to use Claude Desktop with Appwrite through quick start prompts and the Appwrite MCP server for AI-assisted development.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Claude Desktop for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have Node.js and npm installed on your system. Unlike other IDEs, Claude Desktop only supports local (stdio) MCP servers and not remote servers. The package acts as a proxy to connect to the remote Appwrite MCP server. In the Claude Desktop app,…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Vibe coding",
       "Claude Desktop"
     ]
@@ -6057,10 +6101,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vibe-coding/emergent",
     "title": "Emergent",
-    "description": "Learn how to connect Appwrite MCP servers to Emergent for AI-assisted development with access to the Appwrite API and documentation.",
-    "excerpt": "To connect Appwrite MCP servers to Emergent: 1. On the homepage, click **Advanced Controls**. 2. Click **Select MCP Tools**. 3. Click **New MCP Server**. 4. Enter a name for your server (e.g., or ). 5. Paste one of the following JSON configurations: **Configuration:** - Replace with your actual Appwrite project ID - Replace with your Appwrite API key - Replace with your Appwrite Cloud region (e.g., , ) Once connected, you can use natural language to interact with Appwrite. Try…",
+    "description": "Learn how to connect the Appwrite MCP server to Emergent for AI-assisted development with access to the Appwrite API and documentation.",
+    "excerpt": "To connect the Appwrite MCP server to Emergent: 1. On the homepage, click **Advanced Controls**. 2. Click **Select MCP Tools**. 3. Click **New MCP Server**. 4. Enter a name for your server (e.g., ). 5. Paste the following JSON configuration: The server uses OAuth for authentication. When Emergent first connects to the server, complete the sign-in flow in your browser to sign in to your Appwrite account and authorize access. Once connected, you can use natural language to interact with…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Vibe coding",
       "Emergent"
     ]
@@ -6068,10 +6112,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vibe-coding/lovable",
     "title": "Lovable",
-    "description": "Learn how to connect the Appwrite docs MCP server to Lovable for AI-assisted development with access to Appwrite documentation.",
-    "excerpt": "To connect the Appwrite docs MCP server to Lovable: 1. Go to **Settings** → **Connectors** → **Personal connectors**. 2. Click **New MCP server**. 3. Enter the following details: - **Server name**: - **Server URL**: - **Authentication**: Select **No authentication** 4. Click **Add server**. The Appwrite docs MCP server will now appear in your list of personal connectors. Once connected, Lovable has access to Appwrite documentation context. You can use prompts like: **Example prompts:** - - - - -",
+    "description": "Learn how to connect the Appwrite MCP server to Lovable for AI-assisted development with access to the Appwrite API and documentation.",
+    "excerpt": "Connect the Appwrite MCP server to Lovable for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. To add the Appwrite MCP server to Lovable: 1. Go to **Settings** → **Connectors** → **Personal connectors**. 2. Click **New MCP server**. 3. Enter the following details: - **Server name**: - **Server URL**: - **Authentication**: Select **OAuth** 4. Click **Add server**. The server uses OAuth for authentication. When Lovable first…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Vibe coding",
       "Lovable"
     ]
@@ -6079,10 +6123,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vibe-coding/zenflow",
     "title": "Zenflow",
-    "description": "Learn how to add the Appwrite MCP servers to agents in Zenflow to interact with both the Appwrite API and documentation.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Zenflow for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. To add the Appwrite MCP server, open Zenflow and go to the **Settings** > **MCP servers**. From there, select your…",
+    "description": "Learn how to add the Appwrite MCP server to agents in Zenflow to interact with both the Appwrite API and documentation.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Zenflow for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. To add the Appwrite MCP server, open Zenflow and go to the **Settings** > **MCP servers**. From there, select your agent you want to configure MCP for, and then add your custom MCP server.…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Vibe coding",
       "Zenflow"
     ]
@@ -6093,8 +6137,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn about the custom Appwriter mechanical keyboard and its specifications",
     "excerpt": "The Appwriter is an exclusive mechanical keyboard custom-designed by the Appwrite team. It is optimized to improve developer productivity and is specially tuned to use with the Appwrite Console. The Appwriter uses icons from the Appwrite Console and Docs on specific keys, making memorizing keyboard shortcuts easier. For example, then is the shortcut for navigating to your project's databases, and the icon on the key matches the icon for Appwrite Databases. What's in the box - Appwriter keyboard - USB-C…",
     "breadcrumbs": [
-      "The Appwriter",
-      "tooling",
+      "Tooling",
+      "Tools",
       "The Appwriter"
     ]
   },
@@ -6104,7 +6148,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "An open-source benchmark that evaluates how well AI models understand Appwrite's services, SDKs, and APIs.",
     "excerpt": "Appwrite Arena is an open-source benchmark that evaluates how well AI models understand Appwrite. It tests models across real-world Appwrite usage scenarios, covering services, SDKs, and APIs, to help you choose the best model for building with Appwrite. Arena ranks models by their ability to answer questions drawn from actual Appwrite platform usage, both with and without access to Appwrite skills. This makes it easy to see which models generate the most accurate Appwrite code out of the box and…",
     "breadcrumbs": [
-      "tooling",
+      "Tooling",
       "Arena"
     ]
   },
@@ -6114,7 +6158,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
     "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. The Command Center is enhanced with AI capabilities and is the home of the Appwrite assistant. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows…",
     "breadcrumbs": [
-      "Command Center",
+      "Tooling",
       "Getting started",
       "Overview"
     ]
@@ -6125,7 +6169,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn to navigate the Appwrite Console efficiently and effectively with your keyboard",
     "excerpt": "The Appwrite Console was designed with a keyboard first approach. The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform actions quicker. Shortcuts The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform common actions quicker. The shortcuts use the following pattern: use the first letter from the call to action followed by the resource, product, service, or page you're targeting. For example, the shortcut keys + navigates to the project's Storage…",
     "breadcrumbs": [
-      "Command Center",
+      "Tooling",
       "Getting started",
       "Shortcuts"
     ]
@@ -6136,7 +6180,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite buckets using the Command-Line Tool (CLI).",
     "excerpt": "The Appwrite CLI allows you to configure and deploy buckets across projects. You can also configure your files using the CLI commands. Initialize bucket Create a new bucket using the following command: Pull bucket You can also pull your existing Appwrite buckets from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing buckets, your file should look similar to the following: You can also move the array…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Buckets"
     ]
@@ -6147,7 +6191,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.",
     "excerpt": "All commands are compatible with the latest version of the CLI. We recommend running the CLI on its latest version. Other than commands to create and push databases, tables, functions, messaging-topics, teams, and buckets, the Appwrite CLI can be used as a Server SDK as well. The Appwrite CLI has a command for every Server API endpoint. Commands generally follow the following syntax: Commands Below is a list of the available commands in the Appwrite CLI. You can get more…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Commands"
     ]
@@ -6158,7 +6202,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite functions using the Command-Line Tool (CLI).",
     "excerpt": "The CLI handles the creation, deployment, and execution of Appwrite Functions, as well as the configuration of the variables. You can also develop your function locally using CLI commands. Initialize function Create a new function using the following command: Pull function You can also pull your existing Appwrite Functions from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing functions, your file should look similar to the…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Functions"
     ]
@@ -6169,7 +6213,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Generate a type-safe SDK for your Appwrite project using the Command-Line Tool (CLI). Automatically create typed helpers based on your database schema.",
     "excerpt": "The command creates a type-safe SDK tailored to your Appwrite project. It reads your database schema and generates typed helpers, so you can interact with your tables using auto-completed methods, resulting in a better developer experience. Generate SDK Run the following command in your project directory: The CLI automatically detects your project's language and generates the SDK to a directory. Options * Option * Description --- * * Output directory for generated files (default: ) --- * * Target language…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Generate SDK"
     ]
@@ -6180,7 +6224,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
     "excerpt": "The Appwrite Command Line Interface (CLI) is an application that allows you to interact with Appwrite to perform server-side tasks using your terminal. This includes creating and managing projects, managing resources (rows, files, users), creating and deploying Appwrite Functions, and other operations available through Appwrite's API. Getting started The CLI is packaged both as an npm module as well as a standalone binary for your operating system, making it completely dependency free, platform independent, and language agnostic. If you plan…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Installation"
     ]
@@ -6191,7 +6235,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Deploy changes to Appwrite projects to migrate databases and tables schema, functions, teams, buckets, and more.",
     "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner, without saving configuration or sessions. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : When you set the global configuration parameters using the command, they take precedence over the local configuration parameters in your thereby switching the CLI to non-interactive mode. In this mode, the…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Non interactive"
     ]
@@ -6202,7 +6246,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite Sites using the Command-Line Tool (CLI).",
     "excerpt": "The CLI handles the creation, deployment, and execution of Appwrite Sites, as well as the configuration of the variables. Initialize site Create a new site using the following command: Pull site You can also pull your existing Appwrite Sites from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing sites, your file should look similar to the following: You can also move the array into a separate…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Sites"
     ]
@@ -6213,7 +6257,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite tables using the Command-Line Tool (CLI).",
     "excerpt": "Create and manage your tables using the CLI commands. The Appwrite CLI also helps you push your project's databases and tables schema from one project to another. Initialize table Create a new table using the following command: Pull table You can also pull your existing Appwrite tables and databases from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing tables, your file should look similar to the…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Tables"
     ]
@@ -6224,7 +6268,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite teams using the Command-Line Tool (CLI).",
     "excerpt": "The Appwrite CLI can create teams to organize users. Teams can be used to configure permissions for a group of users. Initialize team Create a new team using the following command: Pull team You can also pull your existing Appwrite teams from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing teams, your file should look similar to the following: You can also move the array into…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Teams"
     ]
@@ -6235,7 +6279,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite topics using the Command-Line Tool (CLI).",
     "excerpt": "The Appwrite CLI can create, update, delete, and get topics, as well as configure the provider and the subscribers. Initialize topic Create a new topic using the following command: Pull topics You can also pull your existing Appwrite topics from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing topics, your file should look similar to the following: You can also move the array into a separate…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Topics"
     ]
@@ -6246,7 +6290,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
     "excerpt": "The Terraform provider for Appwrite lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, and more in files, and apply those changes through HashiCorp Terraform. It is the official way to automate Appwrite project configuration alongside the rest of your stack. Resources Resource types use the prefix and match the Terraform Registry documentation. | Area | Resources…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Getting started",
       "Overview"
     ]
@@ -6257,7 +6301,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure the Appwrite Terraform provider for Cloud or Community Edition using endpoints, API keys, and optional environment variables.",
     "excerpt": "The Appwrite provider is published as on the Terraform Registry. The registry hosts **generated reference docs** for the provider and every resource and data source: latest docs. Full examples and attribute tables also live in the provider repository. Terraform block Declare the provider source in a block. You can add a constraint when you want to pin a release; see published versions on the registry provider page. Appwrite Cloud Replace with your project’s region subdomain (see Regions). Community Edition For…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Getting started",
       "Configuration"
     ]
@@ -6268,7 +6312,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite users and teams with the Terraform provider.",
     "excerpt": "The provider exposes **Auth** resources so you can align users and teams with the rest of your infrastructure-as-code workflow. For generated schemas and import syntax, see the Terraform Registry: auth_user and auth_team. The provider repository contains source and examples. Resources | Resource | Purpose | |----------|---------| | | Create and manage users | | | Create and manage teams | Use these together with your normal Auth and permission models; scope API keys appropriately when Terraform manages identity resources. Examples…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Auth"
     ]
@@ -6279,7 +6323,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure Appwrite backup policies with Terraform where your plan supports them.",
     "excerpt": "The resource configures **backup policies** for supported resources. Availability depends on your Appwrite Cloud plan or self-hosted setup. See the Terraform Registry: backup_policy. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Configure backup policies for supported resources | Policies use **** (CRON), **** (days), and **** (for example ). Omit **** to cover all databases in the project, or set **** to a specific database ID (often ) to back up…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Backups"
     ]
@@ -6290,7 +6334,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.",
     "excerpt": "The provider exposes Appwrite **TablesDB** as Terraform resources. Typical order: create a **database** (), then **tables**, then **columns** and **indexes**, and optionally **rows**. For full generated schemas, see the Terraform Registry: tablesdb, tablesdb_table, tablesdb_column, tablesdb_index, and tablesdb_row. The provider repository contains the source and examples. Resources | Resource | Purpose | |----------|---------| | | Create a database in your project | | | Create a table within a database | | | Define columns (types, constraints, defaults) | | |…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Databases"
     ]
@@ -6301,7 +6345,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite Functions, environment variables, and deployments with Terraform.",
     "excerpt": "Functions can be declared as Terraform resources, including **runtime**, **entrypoint**, **build commands**, **events**, and **per-function environment variables**. The provider also exposes an **** resource so you can ship code from a local tar archive or from a Git template alongside the rest of your configuration. See the Terraform Registry: function, function_variable, and function_deployment. The provider repository includes examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a function (runtime, entrypoint, commands, events, timeout, and related settings)…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Functions"
     ]
@@ -6312,7 +6356,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure Appwrite Messaging providers, topics, and subscribers with Terraform for email, SMS, and push delivery.",
     "excerpt": "Messaging integrates email, SMS, and push providers. The Terraform provider exposes **providers** (credentials and channel configuration), **topics** (groupings of subscribers for broadcasts), and **subscribers** (who receives messages on a topic). See the Terraform Registry for generated schemas: messaging_provider, messaging_topic, and messaging_subscriber. The provider repository lists every and optional field in source; provider-specific arguments apply only to the matching provider (for example Twilio , SMTP and , FCM ). Resources | Resource | Purpose | |----------|---------| | | Register an email,…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Messaging"
     ]
@@ -6323,7 +6367,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite Sites, environment variables, and deployments with Terraform.",
     "excerpt": "Sites supports Terraform resources for the **site** definition, **build-time environment variables**, and **deployments** that publish your site from a local artifact or a Git template. See the Terraform Registry: site, site_variable, and site_deployment. The provider repository includes examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a site (framework, build and install commands, runtimes, and related settings) | | | Set environment variables for a site (for example keys) | | | Push a new deployment…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Sites"
     ]
@@ -6334,7 +6378,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite Storage buckets and files with the Terraform provider, including file limits, extensions, compression, and security options.",
     "excerpt": "The resource manages Storage buckets in your Appwrite project: file size limits, allowed extensions, compression, image transformations, encryption, and optional antivirus. The resource uploads and manages **files** inside a bucket from a local path on the machine running Terraform. See the Terraform Registry for generated schemas: storage_bucket and storage_file. The provider repository contains source and examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a storage bucket | | | Upload and manage a file in…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Storage"
     ]
@@ -6345,7 +6389,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Register Appwrite webhooks with Terraform to deliver events to your HTTP endpoints.",
     "excerpt": "The resource registers a **URL** and **event** subscriptions so Appwrite can notify your services when resources change. Configure **** for TLS verification on the webhook URL, **** and **** when your endpoint expects HTTP basic authentication, and read **** from Terraform state when you verify **incoming** webhook signatures on your server. See the Terraform Registry: webhook. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Register a webhook URL and subscribe to…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Webhooks"
     ]

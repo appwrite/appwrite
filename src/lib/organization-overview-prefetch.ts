@@ -1,5 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
@@ -15,11 +17,46 @@ import {
   consoleTeamQueryOptions,
   organizationMembershipsQueryOptions,
 } from '@/lib/react-query/hooks/teams'
+import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
 
 export type PrefetchOrganizationOverviewOptions = {
   projectsPage?: number
   projectsLimit?: number
   search?: string
+}
+
+/** 0-indexed page and limit for the org overview projects list (URL is 1-indexed). */
+export function organizationOverviewProjectsParamsFromUrl(url: URL): {
+  projectsPage: number
+  projectsLimit: number
+} {
+  const pageRaw = url.searchParams.get('projectsPage')
+  const limitRaw = url.searchParams.get('projectsLimit')
+  const pageNum = Number(pageRaw)
+  const limitNum = Number(limitRaw)
+  return {
+    projectsPage:
+      pageRaw == null || pageRaw === ''
+        ? 0
+        : Number.isInteger(pageNum) && pageNum >= 1
+          ? pageNum - 1
+          : 0,
+    projectsLimit:
+      limitRaw == null || limitRaw === ''
+        ? GRID_DEFAULT_PAGE_SIZE
+        : Number.isInteger(limitNum) && limitNum >= 1
+          ? limitNum
+          : GRID_DEFAULT_PAGE_SIZE,
+  }
+}
+
+function preferredOrganizationIdFromAccount(
+  account: Pick<Models.User, 'prefs'>,
+): string | undefined {
+  const value = (account.prefs as Record<string, unknown> | undefined)?.[
+    USER_PREFS_KEY_ORGANIZATION
+  ]
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
 /**
@@ -47,14 +84,51 @@ export async function prefetchOrganizationOverviewData(
     )
   }
 
-  // Everything except the projects lists is independent: fetch in parallel.
   const teamPromise = queryClient.ensureQueryData(
     consoleTeamQueryOptions(orgId),
   )
+  const projectScopePromise = features.orgRoles
+    ? queryClient
+        .ensureQueryData(organizationProjectScopeQueryOptions(orgId))
+        .catch(() => null)
+    : Promise.resolve(null)
+
+  // Projects depend only on team prefs (pinned ids) and project-scope. Start
+  // that second hop as soon as those two resolve; do not wait for memberships,
+  // plan, or the organizations list.
+  const projectsPromise = (async () => {
+    const [team, projectScope] = await Promise.all([
+      teamPromise,
+      projectScopePromise,
+    ])
+    const pinnedIds = parsePinnedProjectIds(
+      (team as { prefs?: Record<string, unknown> } | null | undefined)?.prefs,
+    )
+
+    await Promise.all([
+      queryClient.ensureQueryData(
+        activeProjectsQueryOptions(
+          orgId,
+          projectsPage,
+          projectsLimit,
+          search,
+          pinnedIds,
+          projectScope ?? null,
+        ),
+      ),
+      ...(pinnedIds.length > 0
+        ? [
+            queryClient.ensureQueryData(
+              pinnedProjectsQueryOptions(orgId, pinnedIds),
+            ),
+          ]
+        : []),
+    ])
+  })()
+
   const parallel: Promise<unknown>[] = [
     queryClient.ensureQueryData(organizationsQueryOptions()),
     queryClient.ensureQueryData(organizationQueryOptions(orgId)),
-    teamPromise,
     queryClient.ensureQueryData(
       organizationMembershipsQueryOptions(
         orgId,
@@ -63,6 +137,7 @@ export async function prefetchOrganizationOverviewData(
         '',
       ),
     ),
+    projectsPromise,
   ]
 
   if (features.billing) {
@@ -79,40 +154,65 @@ export async function prefetchOrganizationOverviewData(
     )
   }
 
-  await Promise.all(parallel)
+  try {
+    await Promise.all(parallel)
+  } catch (error) {
+    // If a sibling query failed first, observe projectsPromise so a later
+    // rejection is not an unhandled rejection.
+    await projectsPromise.catch(() => {})
+    throw error
+  }
+}
 
-  // Projects query keys depend on pinned IDs from team prefs, so these two
-  // must wait for the team document (second and final round trip).
-  const team = (await teamPromise) as
-    | { prefs?: Record<string, unknown> }
-    | null
-    | undefined
-  const pinnedIds = parsePinnedProjectIds(team?.prefs)
+/**
+ * Resolve the default organization and prefetch its overview, overlapping the
+ * two. When prefs already name an org, overview fetches start immediately
+ * instead of waiting to validate that id.
+ */
+export async function resolveAndPrefetchDefaultOrganization(
+  queryClient: QueryClient,
+  account: Models.User,
+): Promise<string> {
+  const preferredId = preferredOrganizationIdFromAccount(account)
+  const resolvePromise = resolvePostAuthOrganizationId(account, queryClient)
 
-  // Resolved first so the prefetch lands on the key the overview reads.
-  const projectScope = await queryClient
-    .ensureQueryData(organizationProjectScopeQueryOptions(orgId))
-    .catch(() => null)
+  if (!preferredId) {
+    const orgId = await resolvePromise
+    await prefetchOrganizationOverviewData(queryClient, orgId)
+    return orgId
+  }
 
-  await Promise.all([
-    queryClient.ensureQueryData(
-      activeProjectsQueryOptions(
-        orgId,
-        projectsPage,
-        projectsLimit,
-        search,
-        pinnedIds,
-        projectScope ?? null,
-      ),
-    ),
-    ...(pinnedIds.length > 0
-      ? [
-          queryClient.ensureQueryData(
-            pinnedProjectsQueryOptions(orgId, pinnedIds),
-          ),
-        ]
-      : []),
-  ])
+  const speculative = prefetchOrganizationOverviewData(queryClient, preferredId)
+
+  try {
+    const orgId = await resolvePromise
+    if (orgId === preferredId) {
+      await speculative
+      return orgId
+    }
+    void speculative.catch(() => {})
+    await prefetchOrganizationOverviewData(queryClient, orgId)
+    return orgId
+  } catch (error) {
+    void speculative.catch(() => {})
+    throw error
+  }
+}
+
+/**
+ * Start overview fetches for the preferred org without awaiting them.
+ * Used by the `_public` parent loader so work is in-flight before the `/`
+ * child loader runs.
+ */
+export function kickoffDefaultOrganizationPrefetch(
+  queryClient: QueryClient,
+  account: Models.User,
+): void {
+  const preferredId = preferredOrganizationIdFromAccount(account)
+  if (!preferredId) return
+  void prefetchOrganizationOverviewData(queryClient, preferredId).catch(
+    () => {},
+  )
 }
 
 /** Extract org id from `/organizations/:orgId` paths for post-auth prefetch. */

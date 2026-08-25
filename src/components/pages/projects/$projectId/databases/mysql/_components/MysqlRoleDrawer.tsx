@@ -58,6 +58,7 @@ function RoleOptionSwitch({
         checked={checked}
         onCheckedChange={onCheckedChange}
         disabled={disabled}
+        aria-label={title}
       />
     </div>
   )

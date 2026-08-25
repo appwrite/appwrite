@@ -24,6 +24,7 @@ const CATEGORY_ORDER = [
 
 const FRAMEWORK_ORDER = [
   'React',
+  'TanStack Start',
   'Next.js',
   'Vue',
   'Nuxt',

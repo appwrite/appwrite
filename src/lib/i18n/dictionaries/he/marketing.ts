@@ -65,6 +65,7 @@ export const heMarketingDictionary: Record<string, string> = {
   Advisor: 'יועץ',
   'After': 'אחרי',
   'Agencies and consultancies': 'סוכנויות וחברות ייעוץ',
+  'AI Arena': 'AI Arena',
   'AI-native': 'AI-native',
   'AI-native team': 'צוות AI-native',
   'AI-powered development': 'פיתוח מבוסס AI',
@@ -80,6 +81,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Allowed': 'מאושר',
   'Analytics': 'אנליטיקה',
   'and': 'וכן',
+  'and more below': 'ועוד למטה',
   'And more': 'ועוד',
   'Angel Investor': "משקיע אנג'ל",
   'Angel Investors': "משקיעי אנג'ל",
@@ -201,7 +203,6 @@ export const heMarketingDictionary: Record<string, string> = {
   'Budget caps and alerts': 'תקרות תקציב והתראות',
   'Build': 'בנייה',
   'Build duration': 'משך בנייה',
-  'Build like a team of hundreds.': 'בנו כמו צוות של מאות.',
   'Build logs': 'לוגי בנייה',
   'Build triggers': 'טריגרים לבנייה',
   'Build with any framework': 'בנו עם כל פריימוורק',
@@ -545,6 +546,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Git branch · staging': 'ענף Git · staging',
   'Git push': 'Git push',
   'Git repository': 'Git repo',
+  'GitHub and Origin': 'GitHub ו-Origin',
   'GitHub stars': 'כוכבי GitHub',
   'GitHub Stars': 'כוכבי GitHub',
   'GitLab, Bitbucket, Gitea, and more coming soon.': 'GitLab, Bitbucket, Gitea ועוד בקרוב.',
@@ -729,7 +731,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Number of projects': 'מספר פרויקטים',
   'of original': 'מהמקור',
   'Official': 'רשמי',
-  'Official plugins': 'תוספים רשמיים',
+  'Works great with your favorite agents': 'עובד מצוין עם הסוכנים האהובים עליכם',
   'on GitHub': 'ב-GitHub',
   'On this page': 'בעמוד זה',
   'Online now': 'אונליין עכשיו',
@@ -948,8 +950,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'שלחו קודי OTP, עדכוני משלוח והתראות מחוץ לאפליקציה דרך Twilio, Vonage, MSG91, Telesign, Textmagic וספקי SMS נוספים.',
   'Send realtime alerts to signed-in users without leaving your application experience.': 'שלחו התראות בזמן אמת למשתמשים מחוברים בלי לצאת מחוויית האפליקציה.',
   'Send receipt, update inventory, and notify fulfillment': 'שלחו קבלה, עדכנו מלאי והודיעו למערך האספקה',
-  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, SMTP, and other email providers.':
-    'שלחו קבלות, סיכומים ודואר טרנזקציוני דרך SendGrid, Mailgun, SMTP וספקי אימייל נוספים.',
+  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, Amazon SES, SMTP, and other email providers.':
+    'שלחו קבלות, סיכומים ודואר טרנזקציוני דרך SendGrid, Mailgun, Amazon SES, SMTP וספקי אימייל נוספים.',
   'Series A': 'סבב Series A',
   'Series A coverage': 'סיקור ה-Series A',
   'Serve WebP or AVIF without storing duplicate files.': 'הגישו WebP או AVIF בלי לאחסן קבצים כפולים.',
@@ -1132,6 +1134,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'The integrated user authentication and the ease of creating data structures have undoubtedly saved us several weeks\u2019 worth of time.':
     'אימות המשתמשים המשולב והקלות ביצירת מבני נתונים חסכו לנו ללא ספק שבועות של עבודה.',
   'The new logo': 'הלוגו החדש',
+  'The open-source cloud for agents and developers':
+    'הענן בקוד פתוח לסוכנים ולמפתחים',
   'The power of open source benefits us all': 'העוצמה של קוד פתוח מיטיבה עם כולנו',
   'The Sites view in Console, ready to deploy your first web app': 'תצוגת אתרים בקונסולה, מוכנה לפריסת אפליקציית הווב הראשונה שלכם',
   'The Startups program is for companies with traction through funding or revenue. If you have neither, Appwrite Cloud Pro is the right place to start building.': // pragma: allowlist secret
@@ -1214,6 +1218,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'We adhere to all needed compliance: GDPR, HIPAA, CCPA, SOC-2.': 'אנחנו עומדים בכל דרישות התאימות הנדרשות: GDPR, HIPAA, CCPA, SOC-2.',
   'We are a remote-first, AI-native team built to stay lean. We recruit exceptional talent worldwide, communicate with clarity, and combine human judgment with AI to ship ambitious work at speed.':
     'אנחנו צוות remote-first ו-AI-native שנבנה להישאר רזה. אנחנו מגייסים כישרונות יוצאי דופן מכל העולם, מתקשרים בבהירות ומשלבים שיקול דעת אנושי עם AI כדי לספק עבודה שאפתנית בקצב מהיר.',
+  'We constantly benchmark platform performance against every leading model so you can see which one works best with Appwrite.': // pragma: allowlist secret
+    'אנחנו משווים באופן מתמיד את ביצועי הפלטפורמה מול כל המודלים המובילים, כדי שתוכלו לראות איזה מהם עובד הכי טוב עם Appwrite.', // pragma: allowlist secret
   'We hire the best people wherever they are. Being remote-first keeps us thoughtful about communication across time zones and cultures. We stay humble, treat each other with respect, and work to help everyone on the team do their best work.':
     'אנחנו מגייסים את האנשים הטובים ביותר בכל מקום שבו הם נמצאים. העבודה מרחוק שומרת אותנו קשובים לתקשורת בין אזורי זמן ותרבויות. אנחנו נשארים צנועים, מתייחסים זה לזה בכבוד ועוזרים לכל אחד בצוות לעשות את עבודתו הטובה ביותר.',
   'We keep overhead lean and our investments close to the product. Most of our team is dedicated to creating products developers genuinely enjoy using.':
@@ -1265,7 +1271,6 @@ export const heMarketingDictionary: Record<string, string> = {
   'Work email address': 'כתובת אימייל עבודה',
   'Works for external viewers without third-party cookie issues.': 'עובד לצופים חיצוניים בלי בעיות עוגיות צד שלישי.',
   'Works with': 'עובד עם',
-  'Works with every major LLM. Find out how well your model integrates with Appwrite.': 'עובד עם כל LLM מוביל. גלו עד כמה המודל שלכם משתלב עם Appwrite.', // pragma: allowlist secret
   "Write 'Appwrite,' with a lowercase 'w' and no space between the two words. Please refrain from using variations like 'AppWrite' or 'App Write'.": // pragma: allowlist secret
     "כתבו 'Appwrite' עם w קטנה וללא רווח בין שתי המילים. הימנעו משימוש בווריאציות כמו 'AppWrite' או 'App Write'.", // pragma: allowlist secret
   'Writes': 'כתיבות',
@@ -1476,4 +1481,83 @@ export const heMarketingDictionary: Record<string, string> = {
   'Create and share your first link': 'צרו ושתפו את הקישור הראשון',
   'Generate an invite link for each campaign or channel. Signups stay attributed for 180 days, and you earn $15 when a referral upgrades to Pro.':
     'צרו קישור הזמנה לכל קמפיין או ערוץ. הרשמות מיוחסות למשך 180 ימים, ואתם מרוויחים 15$ כשמופנה משדרג ל-Pro.',
+  'A skill loads first, then MCP tools fetch live Auth and Functions data.':
+    'Skill נטען קודם, ואז כלי MCP שולפים נתוני Auth ו-Functions חיים.',
+  'Agents call Appwrite MCP and Skills from the same composer you already use.': // pragma: allowlist secret
+    'הסוכנים קוראים ל-MCP ול-Skills של Appwrite מאותו Composer שאתם כבר עובדים בו.',
+  'Ask to chart usage, scaffold auth, or query tables...':
+    'בקשו לשרטט שימוש, להקים auth או לשלוף טבלאות...',
+  'Artifact': 'Artifact',
+  'Auth is up 18% week over week. Functions executions followed the same curve after the Friday deploy.':
+    'Auth עלה ב-18% משבוע לשבוע. הרצות Functions עקבו אחרי אותה עקומה אחרי הפריסה ביום שישי.',
+  'Auth signups vs function executions': 'הרשמות Auth מול הרצות Functions',
+  "Chart this week's Auth signups against Functions executions":
+    'שרטטו את הרשמות ה-Auth השבוע מול הרצות Functions',
+  'Compare layouts': 'השוואת פריסות',
+  'Composer': 'Composer',
+  'Install Appwrite in Cursor, Claude Code, Codex, and other agents.': // pragma: allowlist secret
+    'התקינו את Appwrite ב-Cursor, Claude Code, Codex ובסוכנים אחרים.',
+  'MCP and Skills show up in the chat, complete with live Appwrite data and a usage chart.': // pragma: allowlist secret
+    'MCP ו-Skills מופיעים בצ׳אט, כולל נתוני Appwrite חיים ותרשים שימוש.',
+  'Query Postgres, chart traffic, and ship a campaign. Your agent does it on a live Appwrite project.': // pragma: allowlist secret
+    'שלפו מ-Postgres, שרטטו תעבורה ושלחו קמפיין. הסוכן מריץ את זה על פרויקט Appwrite אמיתי.',
+  'MCP docs': 'מסמכי MCP',
+  'Official plugin with MCP and Skills.': 'תוסף רשמי עם MCP ו-Skills.',
+  'Plugins and integrations': 'תוספים ואינטגרציות',
+  'Ran MCP': 'הרצת MCP',
+  'Rendered chart': 'תרשים הוצג',
+  'Skills docs': 'מסמכי Skills',
+  'Skills ready': 'Skills מוכנים',
+  'Spotlight': 'Spotlight',
+  'Steps': 'שלבים',
+  'Using skill': 'שימוש ב-Skill',
+  'Usage chart from Appwrite MCP': 'תרשים שימוש מ-Appwrite MCP',
+  'Weekly activity': 'פעילות שבועית',
+  'Workbench': 'Workbench',
+  'Agent chat with Appwrite MCP': 'צ׳אט סוכן עם Appwrite MCP',
+  "Query Postgres for Friday's new users. Did the launch convert?":
+    'שלפו מ-Postgres את המשתמשים החדשים מיום שישי. ההשקה המירה?',
+  '2,184 new accounts since Friday. Email verification is at 91%, so they are staying.':
+    '2,184 חשבונות חדשים מאז יום שישי. אימות האימייל עומד על 91%, כך שהם נשארים.',
+  'Show requests since Friday. Did the launch spike traffic?':
+    'הציגו את הבקשות מאז יום שישי. ההשקה הקפיצה את התעבורה?',
+  '184K requests since Friday, 3.2x Thursday. Traffic is holding through the weekend.':
+    '184K בקשות מאז יום שישי, פי 3.2 מיום חמישי. התעבורה מחזיקה לאורך סוף השבוע.',
+  'Queue a Messaging campaign for the 9% who have not verified yet.':
+    'תזמנו קמפיין Messaging ל-9% שעדיין לא אומתו.',
+  'Draft is ready for 187 unverified accounts, scheduled tomorrow at 9am.':
+    'הטיוטה מוכנה ל-187 חשבונות לא מאומתים, מתוזמנת למחר ב-9:00.',
+  'Ask to inspect logs, ship a campaign, or query tables...':
+    'בקשו לבדוק לוגים, לשלוח קמפיין או לשלוף טבלאות...',
+  '2,184 new rows in users since Friday. Email verification is at 91%. Opening the latest signups.':
+    '2,184 שורות חדשות ב-users מאז יום שישי. אימות האימייל עומד על 91%. פותחים את ההרשמות האחרונות.',
+  '2,184 rows since Friday': '2,184 שורות מאז יום שישי',
+  'Postgres': 'Postgres',
+  'Any failed executions from Friday?': 'יש הרצות שנכשלו ביום שישי?',
+  '12 executions timed out on cold start. The rest completed.':
+    '12 הרצות חרגו מזמן ב-cold start. השאר הושלמו.',
+  'Latest signups': 'ההרשמות האחרונות',
+  '2,184 accounts since Friday': '2,184 חשבונות מאז יום שישי',
+  'Friday executions': 'הרצות מיום שישי',
+  '12 timed out on cold start': '12 חרגו מזמן ב-cold start',
+  'Verify your account': 'אמתו את החשבון שלכם',
+  '187 unverified accounts': '187 חשבונות לא מאומתים',
+  'Audience': 'קהל',
+  'Unverified users': 'משתמשים לא מאומתים',
+  'Schedule': 'תזמון',
+  'Tomorrow, 9:00 AM': 'מחר, 9:00',
+  'Finish creating your account to keep your data and start building.':
+    'סיימו ליצור את החשבון כדי לשמור על הנתונים ולהתחיל לבנות.',
+  'Campaign': 'קמפיין',
+  'Upload this photo to a new Storage bucket.':
+    'העלו את התמונה הזו לבאקט Storage חדש.',
+  'Created the campaign-assets bucket and uploaded kittens.jpg.':
+    'יצרנו את הבאקט campaign-assets והעלינו את kittens.jpg.',
+  '1 file': 'קובץ אחד',
+  'Remote MCP': 'MCP מרוחק',
+  'Authorize Appwrite MCP': 'אישור Appwrite MCP',
+  'No API key needed. Sign in with OAuth.':
+    'אין צורך ב-API key. התחברו עם OAuth.',
+  'Allow access': 'אישור גישה',
+  'Authenticated with OAuth': 'מאומת עם OAuth',
 }
