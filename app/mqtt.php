@@ -10,6 +10,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Mqtt\Broker;
@@ -180,6 +181,47 @@ $authenticate = function (string $projectId, string $authMethod, string $credent
     ];
 };
 
+/**
+ * ACL for SUBSCRIBE: refuse blocked accounts. Re-checked per subscribe so a block
+ * applied mid-connection takes effect on the next subscription.
+ *
+ * TODO: also authorize the topic itself — verify it maps to an existing messaging
+ * Topic in the project (topics API/collection) and that this user is allowed on it.
+ * A subscription to a non-existent or unauthorized topic should be denied. Deferred
+ * until the topic subscription model is wired.
+ */
+$authorize = function (array $identity, string $topic) use ($container, $registerMqttConnectionResources): bool {
+    $userId = $identity['userId'] ?? '';
+    $projectId = $identity['projectId'] ?? '';
+    if ($userId === '' || $projectId === '') {
+        return false;
+    }
+
+    $connectionContainer = new Container($container);
+    $connectionContainer->set('projectId', fn () => $projectId);
+    $registerMqttConnectionResources($connectionContainer);
+
+    /** @var Authorization $authorization */
+    $authorization = $connectionContainer->get('authorization');
+    /** @var Document $project */
+    $project = $connectionContainer->get('project');
+    if ($project->isEmpty()) {
+        return false;
+    }
+
+    $dbForProject = getProjectDB($project);
+    $dbForProject->setAuthorization($authorization);
+    $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
+
+    // status: true = enabled, false = blocked.
+    return !$user->isEmpty() && $user->getAttribute('status', true) !== false;
+};
+
+/** @var \Utopia\Telemetry\Adapter $telemetry */
+$telemetry = $container->get('telemetry');
+
 $broker = new Broker(host: '0.0.0.0', port: 1883);
 $broker->onConnect($authenticate);
+$broker->onSubscribe($authorize);
+$broker->withTelemetry($telemetry);
 $broker->start();
