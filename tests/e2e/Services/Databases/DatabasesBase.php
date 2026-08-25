@@ -7631,14 +7631,20 @@ trait DatabasesBase
             $this->waitForAttribute($data['databaseId'], $data['$id'], 'longtext');
         }
 
+        // The fixture is ~12MB — just under Swoole's package_max_length. Posting it
+        // ten times over HTTP (headers + JSON escaping on top) stalls curl's
+        // Expect: 100-continue handshake under paratest. A 1MiB slice is enough
+        // for statement_timeout=1ms while staying well under the 12MiB ceiling.
+        $longtext = substr(file_get_contents(__DIR__ . '/../../../resources/longtext.txt'), 0, 1024 * 1024);
+
         for ($i = 0; $i < 10; $i++) {
-            $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
+            $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 $this->getRecordIdParam() => ID::unique(),
                 'data' => [
-                    'longtext' => file_get_contents(__DIR__ . '/../../../resources/longtext.txt'),
+                    'longtext' => $longtext,
                 ],
                 'permissions' => [
                     Permission::read(Role::user($this->getUser()['$id'])),
@@ -7646,6 +7652,7 @@ trait DatabasesBase
                     Permission::delete(Role::user($this->getUser()['$id'])),
                 ]
             ]);
+            $this->assertEquals(201, $document['headers']['status-code']);
         }
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([

@@ -140,6 +140,11 @@ class Client
             }
         }
 
+        // libcurl sends Expect: 100-continue for POST bodies > 1KiB. Traefik/Swoole
+        // often never finish that handshake, so large uploads hang until CURLOPT_TIMEOUT
+        // with "0 bytes received" and HTTP status 100.
+        $formattedHeaders[] = 'Expect:';
+
         curl_setopt($ch, CURLOPT_PATH_AS_IS, 1);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
