@@ -67,6 +67,35 @@
             }
         },
         {
+            "type": "package",
+            "package": {
+                "name": "utopia-php/messaging",
+                "version": "2.1.999",
+                "source": {
+                    "url": "https://github.com/utopia-php/monorepo.git",
+                    "type": "git",
+                    "reference": "appwrite-mqtt-poc"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Utopia\\Messaging\\": "packages/messaging/src/Utopia/Messaging"
+                    }
+                },
+                "require": {
+                    "php": ">=8.5.0",
+                    "ext-curl": "*",
+                    "ext-openssl": "*",
+                    "ext-swoole": "*",
+                    "psr/http-client": "^1.0",
+                    "psr/http-message": "^1.1 || ^2.0",
+                    "utopia-php/client": "^0.3",
+                    "utopia-php/pools": "^2.0",
+                    "utopia-php/smtp": "^0.1",
+                    "utopia-php/telemetry": "^0.4"
+                }
+            }
+        },
+        {
             "type": "vcs",
             "url": "https://github.com/utopia-php/auth"
         },

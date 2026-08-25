@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4fd078c5f4c652e6b07c639e275b520c",
+    "content-hash": "69ee43671963861ad7266732f31d62b4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -609,23 +609,23 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v5.35.1",
+            "version": "v5.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "55bb4a7d6739b5af0927b96213c1371a3afb7cfb"
+                "reference": "9c105104b54709ecd902494ab340ed2122789b2d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/55bb4a7d6739b5af0927b96213c1371a3afb7cfb",
-                "reference": "55bb4a7d6739b5af0927b96213c1371a3afb7cfb",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/9c105104b54709ecd902494ab340ed2122789b2d",
+                "reference": "9c105104b54709ecd902494ab340ed2122789b2d",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": ">=11.5.0 <12.0.0"
+                "phpunit/phpunit": ">=11.5.50 <12.0.0"
             },
             "suggest": {
                 "ext-bcmath": "Need to support JSON deserialization"
@@ -647,9 +647,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v5.35.1"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v5.36.0"
             },
-            "time": "2026-06-11T21:19:23+00:00"
+            "time": "2026-08-20T13:06:50+00:00"
         },
         {
             "name": "halaxa/json-machine",
@@ -2289,16 +2289,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v7.4.16",
+            "version": "v7.4.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "c513ed0ba5d1784a6b55fc84190dbe4451b12f41"
+                "reference": "d0aca330a822fe40376cd04c335cb48a24743d0c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/c513ed0ba5d1784a6b55fc84190dbe4451b12f41",
-                "reference": "c513ed0ba5d1784a6b55fc84190dbe4451b12f41",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/d0aca330a822fe40376cd04c335cb48a24743d0c",
+                "reference": "d0aca330a822fe40376cd04c335cb48a24743d0c",
                 "shasum": ""
             },
             "require": {
@@ -2366,7 +2366,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v7.4.16"
+                "source": "https://github.com/symfony/http-client/tree/v7.4.17"
             },
             "funding": [
                 {
@@ -2386,7 +2386,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-29T16:20:51+00:00"
+            "time": "2026-08-21T17:40:08+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -4229,17 +4229,11 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "2.1.0",
+            "version": "2.1.999",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "58b1ae43b35d72901907901d2ff73f1599cefc20"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/58b1ae43b35d72901907901d2ff73f1599cefc20",
-                "reference": "58b1ae43b35d72901907901d2ff73f1599cefc20",
-                "shasum": ""
+                "url": "https://github.com/utopia-php/monorepo.git",
+                "reference": "appwrite-mqtt-poc"
             },
             "require": {
                 "ext-curl": "*",
@@ -4253,33 +4247,12 @@
                 "utopia-php/smtp": "^0.1",
                 "utopia-php/telemetry": "^0.4"
             },
-            "require-dev": {
-                "swoole/ide-helper": "^6.0"
-            },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\Messaging\\": "src/Utopia/Messaging"
+                    "Utopia\\Messaging\\": "packages/messaging/src/Utopia/Messaging"
                 }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple, light and advanced PHP messaging library",
-            "keywords": [
-                "library",
-                "messaging",
-                "php",
-                "upf",
-                "utopia",
-                "utopia-php"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/2.1.0"
-            },
-            "time": "2026-08-13T21:35:53+00:00"
+            }
         },
         {
             "name": "utopia-php/migration",
