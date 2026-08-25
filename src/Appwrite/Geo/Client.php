@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Locale\Geo;
+namespace Appwrite\Geo;
 
 use Psr\Http\Client\ClientInterface;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;

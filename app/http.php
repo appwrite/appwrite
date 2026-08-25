@@ -5,7 +5,7 @@ require_once __DIR__ . '/init/span.php';
 
 $setRequestContext = require __DIR__ . '/init/resources/request.php';
 
-use Appwrite\Locale\Geo;
+use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;

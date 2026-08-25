@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Users\Http\Users\Sessions;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\Geo;
+use Appwrite\Geo\Geo;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;

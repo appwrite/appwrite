@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\Geo;
+use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Utopia\Config\Config;

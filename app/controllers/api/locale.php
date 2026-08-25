@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Locale\Geo;
+use Appwrite\Geo\Geo;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;

@@ -1,8 +1,8 @@
 <?php
 
-namespace Appwrite\Locale;
+namespace Appwrite\Geo;
 
-use Appwrite\Locale\Geo\Client;
+use Appwrite\Locale\GeoRecord;
 use Swoole\Table;
 use Utopia\Config\Config;
 use Utopia\Console;

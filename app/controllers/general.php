@@ -14,7 +14,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Locale\Geo;
+use Appwrite\Geo\Geo;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
 use Appwrite\Platform\Appwrite;
