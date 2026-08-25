@@ -106,9 +106,13 @@ class Geo
         }
 
         if (!$this->cache->set($ip, ['value' => $value])) {
-            // Table full — flush so the cache keeps tracking current traffic.
+            // Table full — evict a slice so most hot records survive.
+            $evict = (int) (self::CACHE_SIZE / 10);
             foreach ($this->cache as $key => $row) {
                 $this->cache->del($key);
+                if (--$evict <= 0) {
+                    break;
+                }
             }
             $this->cache->set($ip, ['value' => $value]);
         }
