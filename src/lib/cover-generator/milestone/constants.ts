@@ -6,7 +6,6 @@ export const COVER_MILESTONE_DEFAULTS = {
   statLabel: 'developers',
   title: 'Thank you for building with us',
   subtitle: 'And we are just getting started.',
-  gradientStat: true,
 } as const
 
 export const COVER_MILESTONE_FIELD_DEFINITIONS: CoverFieldDefinition[] = [
@@ -42,12 +41,6 @@ export const COVER_MILESTONE_FIELD_DEFINITIONS: CoverFieldDefinition[] = [
     type: 'textarea',
     placeholder: COVER_MILESTONE_DEFAULTS.subtitle,
   },
-  {
-    key: 'gradientStat',
-    label: 'Gradient stat',
-    type: 'boolean',
-    description: 'Use the brand pink-to-purple gradient on the stat.',
-  },
 ]
 
 export type CoverMilestoneFields = {
@@ -56,5 +49,4 @@ export type CoverMilestoneFields = {
   title: string
   subtitle?: string
   eyebrow?: string
-  gradientStat: boolean
 }

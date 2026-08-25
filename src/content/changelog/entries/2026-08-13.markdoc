@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Up to 4x faster dependency installs with the build cache"
+date: 2026-08-13
+cover: /images/blog/inside-appwrites-new-build-cache/cover.avif
+---
+
+Appwrite now caches your dependencies between builds. The package manager's store is saved after each successful build and restored before the next one, so installs reuse what was already downloaded instead of fetching every package from the registry again.
+
+On a real-world Next.js app, install time dropped from **11.7s to 2.8s** with pnpm and from **9.6s to 2.3s** with bun, with no configuration changes.
+
+{% arrow_link href="/blog/post/inside-appwrites-new-build-cache" %}
+Read the announcement
+{% /arrow_link %}

@@ -119,7 +119,7 @@ Neon answers that with one excellent primitive: serverless Postgres for agents, 
 
 Pick the one that matches your product. If the product is a database an agent can drive, Neon is built for that. If the product is an AI app with users, files, workflows, and a frontend, Appwrite is built for that.
 
-If you want to explore Appwrite for an AI app backend, start with [Appwrite Cloud](https://cloud.appwrite.io), read the [AI tooling hub](/docs/tooling/ai), and check the [API MCP server](/docs/tooling/ai/mcp-servers/api), [Agent Skills](/docs/tooling/ai/skills), and the editor plugins for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor).
+If you want to explore Appwrite for an AI app backend, start with [Appwrite Cloud](https://cloud.appwrite.io), read the [AI tooling hub](/docs/tooling/ai), and check the [API MCP server](/docs/tooling/ai/mcp-servers), [Agent Skills](/docs/tooling/ai/skills), and the editor plugins for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor).
 
 - [Appwrite TablesDB](/docs/products/databases)
 - [Appwrite Auth](/docs/products/auth)

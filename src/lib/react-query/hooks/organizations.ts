@@ -231,6 +231,8 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     supportsOrganizationRoles: false,
     supportsProjectSpecificRoles: false,
     supportsCredits: false,
+    supportsDedicatedDatabases: true,
+    databaseComputeCredit: 0,
     supportsDisposableEmailValidation: false,
     supportsCanonicalEmailValidation: false,
     supportsFreeEmailValidation: false,
@@ -783,15 +785,18 @@ export async function fetchEstimationCreateOrganization(
 }
 
 /**
- * Query function to get cost estimation for updating a plan
+ * Query function to estimate a plan change (upgrade or downgrade)
+ *
+ * Returns both the cost estimation and the target plan's resource limits,
+ * including per-project compliance for downgrades.
  *
  * @param organizationId - The organization ID
- * @param billingPlan - The billing plan
+ * @param billingPlan - The target billing plan
  * @param couponId - Optional coupon ID
  * @param collaborators - Array of collaborator emails
- * @returns Estimation data
+ * @returns Plan change estimation data
  */
-export async function fetchEstimationUpdatePlan(
+export async function fetchPlanEstimation(
   organizationId: string,
   billingPlan: BillingPlanTierType,
   couponId: string | null | undefined,
@@ -806,7 +811,7 @@ export async function fetchEstimationUpdatePlan(
       ? couponId.trim()
       : undefined
 
-  return await sdk.forConsole.organizations.estimationUpdatePlan({
+  return await sdk.forConsole.organizations.createPlanEstimation({
     organizationId,
     billingPlan,
     invites: collaborators,
@@ -2889,15 +2894,19 @@ export function useEstimationCreateOrganization(
 }
 
 /**
- * Hook to get cost estimation for updating a plan
+ * Hook to estimate a plan change (upgrade or downgrade)
+ *
+ * Exposes the cost estimation alongside the target plan's resource limits.
+ * For downgrades the server also returns per-project compliance and
+ * `canChangePlan`, which is the authority on whether the change is allowed.
  *
  * @param organizationId - The organization ID
- * @param billingPlan - The billing plan
+ * @param billingPlan - The target billing plan
  * @param couponId - Optional coupon ID
  * @param collaborators - Array of collaborator emails
- * @returns Estimation data with loading state
+ * @returns Plan change estimation data with loading state
  */
-export function useEstimationUpdatePlan(
+export function usePlanEstimation(
   organizationId: string | null | undefined,
   billingPlan: BillingPlanTierType | null | undefined,
   couponId: string | null | undefined,
@@ -2912,14 +2921,14 @@ export function useEstimationUpdatePlan(
 
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: [
-      'estimation-update-plan',
+      'plan-estimation',
       organizationId,
       billingPlan,
       couponId ?? null,
       collaboratorsKey,
     ],
     queryFn: () =>
-      fetchEstimationUpdatePlan(
+      fetchPlanEstimation(
         organizationId!,
         billingPlan!,
         couponId ?? undefined,
@@ -2936,6 +2945,8 @@ export function useEstimationUpdatePlan(
 
   return {
     estimation: data,
+    limits: data?.limits ?? null,
+    direction: data?.direction ?? null,
     isLoading,
     isFetching,
     error,

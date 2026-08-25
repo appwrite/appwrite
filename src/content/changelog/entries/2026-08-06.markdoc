@@ -1,0 +1,22 @@
+---
+layout: changelog
+title: "Deploy your own MCP server with the new Functions template"
+date: 2026-08-06
+cover: /images/blog/announcing-mcp-server-template/cover.avif
+---
+
+The new **MCP server** [function template](/docs/products/functions/templates) deploys a stateless [Model Context Protocol](https://modelcontextprotocol.io/) server over HTTPS, built with the official MCP Python SDK. It ships with two demo tools, optional **bearer authentication**, and support for both the legacy MCP handshake and the stateless `2026-07-28` protocol.
+
+Create it from the Console under **Functions** > **Templates**, and your function's domain becomes an MCP endpoint you can connect to Claude Code, Cursor, and other AI clients:
+
+```bash
+claude mcp add --transport http my-mcp https://<your-function>.appwrite.run
+```
+
+Register your own tools in `src/app.py` with the `@server.tool` decorator, and use the [dynamic API key](/docs/products/functions/develop#dynamic-api-key) to build tools that read and write your Appwrite project's data.
+
+Two trade-offs to know: the server is stateless JSON only, so there is no SSE streaming or server-initiated messages, and tool calls are synchronous with a **30-second execution cap** (25-second soft deadline by default). The announcement covers both in more detail.
+
+{% arrow_link href="/blog/post/announcing-mcp-server-template" %}
+Read the announcement
+{% /arrow_link %}

@@ -16,17 +16,17 @@ export type ProductHeroLogoStripConfig = {
  * @see src/content/docs/products/sites/frameworks/index.markdoc
  */
 const SITES_FRAMEWORK_ITEMS: ProductHeroLogoStripItem[] = [
+  { name: 'TanStack Start', key: 'tanstack-start' },
   { name: 'Next.js', key: 'nextjs' },
   { name: 'Nuxt', key: 'nuxt' },
   { name: 'SvelteKit', key: 'sveltekit' },
   { name: 'Angular', key: 'angular' },
-  { name: 'Astro', key: 'astro' },
   { name: 'Remix', key: 'remix' },
-  { name: 'TanStack Start', key: 'tanstack-start' },
   { name: 'React', key: 'react' },
   { name: 'Vue', key: 'vue' },
   { name: 'Vite', key: 'vite' },
   { name: 'Analog', key: 'analog' },
+  { name: 'Astro', key: 'astro' },
   { name: 'Flutter', key: 'flutter' },
   { name: 'React Native', key: 'react-native' },
   { name: 'JavaScript', key: 'vanilla' },

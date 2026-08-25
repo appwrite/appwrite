@@ -1,7 +1,18 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { refetchProjectBandwidthUsageQueries, refetchProjectDatabaseUsageQueries, refetchProjectAuthUsageQueries, refetchProjectAvatarsUsageQueries, refetchProjectMessagingUsageQueries, refetchProjectWebhooksUsageQueries, refetchProjectComputeUsageQueries, refetchProjectRealtimeUsageQueries, refetchProjectRequestsUsageQueries, refetchProjectStorageUsageQueries } from '@/lib/react-query/hooks'
+import {
+  refetchProjectBandwidthUsageQueries,
+  refetchProjectDatabaseUsageQueries,
+  refetchProjectAuthUsageQueries,
+  refetchProjectAvatarsUsageQueries,
+  refetchProjectMessagingUsageQueries,
+  refetchProjectWebhooksUsageQueries,
+  refetchProjectComputeUsageQueries,
+  refetchProjectRealtimeUsageQueries,
+  refetchProjectRequestsUsageQueries,
+  refetchProjectStorageUsageQueries,
+} from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import {
@@ -53,7 +64,11 @@ import { UsageChartIntervalToggle } from '../overview/UsageChartIntervalToggle'
 import { categorySupportsChartInterval } from './category-filter-state'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
-import { useProject, useOrganizationPlan, useOrganizationScopes } from '@/lib/react-query/hooks'
+import {
+  useProject,
+  useOrganizationPlan,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
 import { canWriteRules } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
@@ -91,9 +106,7 @@ import {
   getUsageFilterQueriesForSurface,
   sanitizeUsageFilterMap,
 } from '@/lib/usage/usage-filter-queries'
-import {
-  canApplyUsageFiltersAsFirewallRule,
-} from '@/lib/firewall/usage'
+import { canApplyUsageFiltersAsFirewallRule } from '@/lib/firewall/usage'
 import type { UsageBreakdownFilterEntry } from '@/lib/usage/usage-resource-filters'
 import {
   RefreshProvider,
@@ -291,9 +304,11 @@ function UsageLoadingState() {
             {Array.from({ length: 2 }).map((_, groupIndex) => (
               <div key={groupIndex} className="space-y-0.5">
                 <Skeleton className="mb-1.5 h-3 w-16" />
-                {Array.from({ length: groupIndex === 0 ? 4 : 5 }).map((__, i) => (
-                  <Skeleton key={i} className="h-9 w-full rounded-md" />
-                ))}
+                {Array.from({ length: groupIndex === 0 ? 4 : 5 }).map(
+                  (__, i) => (
+                    <Skeleton key={i} className="h-9 w-full rounded-md" />
+                  ),
+                )}
               </div>
             ))}
           </div>
@@ -327,7 +342,9 @@ function UsageErrorState({ onRetry }: UsageErrorStateProps) {
           {t('Failed to load usage data')}
         </h2>
         <p className="mb-4 text-[13px] text-muted-foreground">
-          {t("We couldn't retrieve your usage metrics. This might be a temporary issue. Please try again.")}
+          {t(
+            "We couldn't retrieve your usage metrics. This might be a temporary issue. Please try again.",
+          )}
         </p>
         <Button onClick={onRetry} variant="outline" className="gap-2">
           <RefreshCw className="h-4 w-4" />
@@ -344,7 +361,9 @@ function UsageEmptyState() {
     <EmptyState
       icon={Database}
       title={t('No usage data available')}
-      description={t('Usage metrics will appear here once your project starts receiving traffic. Deploy your first function or create some data to get started.')}
+      description={t(
+        'Usage metrics will appear here once your project starts receiving traffic. Deploy your first function or create some data to get started.',
+      )}
       isEmpty={true}
       variant="centered"
     />
@@ -380,34 +399,57 @@ function UsageLayoutContent({
     plan,
   )
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const { features, isSelfHosted } = useConsoleProfile()
+  const filterAvailability = useMemo(
+    () => ({ allowCity: !isSelfHosted }),
+    [isSelfHosted],
+  )
 
-  const usageFilterMap = useMemo(() => {
+  const usageQueryParam = useMemo(() => {
     const search = location.search
-    const queryParam =
-      typeof search === 'object' && search !== null && 'query' in search
-        ? ((search as { query?: string }).query ?? null)
-        : null
-    return sanitizeUsageFilterMap(queryParamToMap(queryParam), categoryId)
-  }, [location.search, categoryId])
+    return typeof search === 'object' && search !== null && 'query' in search
+      ? ((search as { query?: string }).query ?? null)
+      : null
+  }, [location.search])
+  const usageFilterMap = useMemo(
+    () =>
+      sanitizeUsageFilterMap(
+        queryParamToMap(usageQueryParam),
+        categoryId,
+        filterAvailability,
+      ),
+    [usageQueryParam, categoryId, filterAvailability],
+  )
 
   const usageFilterColumns = useMemo(
-    () => getUsageFilterColumnsForCategory(categoryId),
-    [categoryId],
+    () => getUsageFilterColumnsForCategory(categoryId, filterAvailability),
+    [categoryId, filterAvailability],
   )
   const usageEventFilterQueries = useMemo(
-    () => getUsageFilterQueriesForSurface(usageFilterMap, categoryId, 'events'),
-    [usageFilterMap, categoryId],
+    () =>
+      getUsageFilterQueriesForSurface(
+        usageFilterMap,
+        categoryId,
+        'events',
+        filterAvailability,
+      ),
+    [usageFilterMap, categoryId, filterAvailability],
   )
   const usageGaugeFilterQueries = useMemo(
-    () => getUsageFilterQueriesForSurface(usageFilterMap, categoryId, 'gauges'),
-    [usageFilterMap, categoryId],
+    () =>
+      getUsageFilterQueriesForSurface(
+        usageFilterMap,
+        categoryId,
+        'gauges',
+        filterAvailability,
+      ),
+    [usageFilterMap, categoryId, filterAvailability],
   )
   const usageFilterScope = getUsageSavedFilterScope(categoryId)
   const showUsageFilters = categorySupportsUsageFilters(categoryId)
 
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
-  const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const canWriteFirewallRules = canWriteRules(access, features)
   const canApplyFiltersAsFirewallRule =
@@ -427,25 +469,48 @@ function UsageLayoutContent({
     [navigate, projectId, categoryId],
   )
 
+  useEffect(() => {
+    const sanitizedQuery =
+      usageFilterMap.size > 0 ? mapToQueryParam(usageFilterMap) : undefined
+    if (sanitizedQuery !== (usageQueryParam ?? undefined)) {
+      navigateUsageFilters(sanitizedQuery)
+    }
+  }, [navigateUsageFilters, usageFilterMap, usageQueryParam])
+
   const applyUsageFilter = useCallback(
-    (key: CompactFilterKey, queryStr: string, replaceKey?: CompactFilterKey) => {
+    (
+      key: CompactFilterKey,
+      queryStr: string,
+      replaceKey?: CompactFilterKey,
+    ) => {
       if (USAGE_FILTER_EXCLUDED_ATTRIBUTES.has(String(key.c))) return
-      if (!isUsageFilterDimensionAllowed(categoryId, String(key.c))) return
+      if (
+        !isUsageFilterDimensionAllowed(
+          categoryId,
+          String(key.c),
+          filterAvailability,
+        )
+      )
+        return
       const newMap = new Map(usageFilterMap)
       if (replaceKey) newMap.delete(replaceKey)
       newMap.set(key, queryStr)
       navigateUsageFilters(
-        mapToQueryParam(sanitizeUsageFilterMap(newMap, categoryId)),
+        mapToQueryParam(
+          sanitizeUsageFilterMap(newMap, categoryId, filterAvailability),
+        ),
       )
     },
-    [usageFilterMap, navigateUsageFilters, categoryId],
+    [usageFilterMap, navigateUsageFilters, categoryId, filterAvailability],
   )
 
   const removeUsageFilter = useCallback(
     (key: CompactFilterKey) => {
       const newMap = new Map(usageFilterMap)
       newMap.delete(key)
-      navigateUsageFilters(newMap.size > 0 ? mapToQueryParam(newMap) : undefined)
+      navigateUsageFilters(
+        newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+      )
     },
     [usageFilterMap, navigateUsageFilters],
   )
@@ -463,22 +528,30 @@ function UsageLayoutContent({
       const sanitizedMap = sanitizeUsageFilterMap(
         queryParamToMap(queryParam),
         categoryId,
+        filterAvailability,
       )
       navigateUsageFilters(
         sanitizedMap.size > 0 ? mapToQueryParam(sanitizedMap) : undefined,
       )
     },
-    [navigateUsageFilters, categoryId],
+    [navigateUsageFilters, categoryId, filterAvailability],
   )
 
   const addBreakdownUsageFilter = useCallback(
     (filters: UsageBreakdownFilterEntry[]) => {
       if (filters.length === 0) return
 
-      let newMap = new Map(usageFilterMap)
+      const newMap = new Map(usageFilterMap)
       for (const { dimension, value } of filters) {
         if (USAGE_FILTER_EXCLUDED_ATTRIBUTES.has(dimension)) continue
-        if (!isUsageFilterDimensionAllowed(categoryId, dimension)) continue
+        if (
+          !isUsageFilterDimensionAllowed(
+            categoryId,
+            dimension,
+            filterAvailability,
+          )
+        )
+          continue
         const trimmed = value.trim()
         if (!trimmed) continue
         const key: CompactFilterKey = { c: dimension, o: 'equal', v: trimmed }
@@ -486,10 +559,12 @@ function UsageLayoutContent({
       }
 
       navigateUsageFilters(
-        mapToQueryParam(sanitizeUsageFilterMap(newMap, categoryId)),
+        mapToQueryParam(
+          sanitizeUsageFilterMap(newMap, categoryId, filterAvailability),
+        ),
       )
     },
-    [usageFilterMap, navigateUsageFilters, categoryId],
+    [usageFilterMap, navigateUsageFilters, categoryId, filterAvailability],
   )
 
   const applyFiltersAsFirewallRule = useCallback(() => {
@@ -530,13 +605,14 @@ function UsageLayoutContent({
     [organizationPlan],
   )
 
-  const { showAlert: showUsageHistoryLimitAlert } = useUsageHistoryLimitAlertState({
-    projectId,
-    dateRange: usageDateRange,
-    dateRangePresetId,
-    retentionHours: usageLogRetentionHours,
-    organizationPlan,
-  })
+  const { showAlert: showUsageHistoryLimitAlert } =
+    useUsageHistoryLimitAlertState({
+      projectId,
+      dateRange: usageDateRange,
+      dateRangePresetId,
+      retentionHours: usageLogRetentionHours,
+      organizationPlan,
+    })
 
   const handleAdjustUsageDateRange = useCallback(() => {
     const fallbackPreset = resolveShorterUsageDateRangePreset(
@@ -547,15 +623,11 @@ function UsageLayoutContent({
     }
   }, [setUsageDateRange, usageLogRetentionHours])
 
-  const [state, setState] = useState<UsageState>('success')
+  const [state] = useState<UsageState>('success')
   const contentScrollRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
   const pageDirection = usePageDirection()
-  const {
-    triggerRefresh,
-    hasRefreshHandler,
-    isRefreshing,
-  } = useRefresh()
+  const { triggerRefresh, hasRefreshHandler, isRefreshing } = useRefresh()
 
   const categories = useMemo(() => getUsageCategories(plan), [plan])
   const navGroups = useMemo(() => getUsageNavGroups(plan), [plan])
@@ -769,10 +841,7 @@ function UsageLayoutContent({
           </div>
         </aside>
 
-        <div
-          ref={contentScrollRef}
-          className={SECONDARY_SIDEBAR_CONTENT_CLASS}
-        >
+        <div ref={contentScrollRef} className={SECONDARY_SIDEBAR_CONTENT_CLASS}>
           <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
             <div className="mb-6 lg:hidden">
               <MobileCategoryDrawer

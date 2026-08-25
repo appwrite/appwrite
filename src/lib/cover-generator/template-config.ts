@@ -14,12 +14,11 @@ import {
 import {
   COVER_CARDS_ANGLED_GRID,
 } from '@/lib/cover-generator/cards-angled/constants'
-import { COVER_TABLE_GRID, COVER_TABLE_DEFAULT_FRAME_WIDTH_PERCENT } from '@/lib/cover-generator/table/constants'
+import { COVER_TABLE_GRID } from '@/lib/cover-generator/table/constants'
 import {
   COVER_CHART,
 } from '@/lib/cover-generator/chart/constants'
 import {
-  COVER_CLI_CODE_DEFAULT_FRAME_WIDTH_PERCENT,
   DEFAULT_CLI_CODE,
   DEFAULT_CLI_CODE_SUBTITLE,
   DEFAULT_CLI_CODE_TITLE,
@@ -27,7 +26,6 @@ import {
   DEFAULT_CLI_TERMINAL_TITLE,
 } from '@/lib/cover-generator/cli-code/constants'
 import {
-  COVER_CODE_SNIPPET_DEFAULT_FRAME_WIDTH_PERCENT,
   COVER_CODE_SNIPPET_FONT_SIZE,
   COVER_CODE_SNIPPET_LANGUAGE_LABELS,
   COVER_CODE_SNIPPET_LANGUAGES,
@@ -35,6 +33,7 @@ import {
   DEFAULT_CODE_SNIPPET_TITLE,
 } from '@/lib/cover-generator/code-snippet/constants'
 import { COVER_SCREENSHOT_ANGLED_3D_LIMITS } from '@/lib/perspective-screenshot-card/constants'
+import { COVER_EXTRA_TEMPLATE_DEFINITIONS } from '@/lib/cover-generator/extra-templates/fields'
 
 const COVER_SCREENSHOT_ANGLED_3D_TEMPLATE_FIELDS: CoverFieldDefinition[] = [
   {
@@ -518,7 +517,7 @@ export const COVER_TEMPLATE_DEFINITIONS: CoverTemplateDefinition[] = [
   {
     id: 'version-number',
     label: 'Version number',
-    description: 'Centered version number with a release eyebrow and brand gradient.',
+    description: 'Centered version number with a release eyebrow.',
     fields: COVER_VERSION_NUMBER_FIELD_DEFINITIONS,
   },
   {
@@ -711,6 +710,7 @@ export const COVER_TEMPLATE_DEFINITIONS: CoverTemplateDefinition[] = [
       },
     ],
   },
+  ...COVER_EXTRA_TEMPLATE_DEFINITIONS,
 ]
 
 export function getCoverTemplateDefinition(templateId: string) {

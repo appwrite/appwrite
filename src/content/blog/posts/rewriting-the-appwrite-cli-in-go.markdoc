@@ -1,0 +1,207 @@
+---
+layout: post
+title: "The Appwrite CLI is now written in Go"
+description: The Appwrite CLI moves from TypeScript to Go. It starts 17 times faster and installs two packages in place of 330. Every flag, exit code, and byte of JSON output stays the same.
+date: 2026-08-11
+cover: /images/blog/rewriting-the-appwrite-cli-in-go/cover.avif
+timeToRead: 9
+author: chirag-aggarwal
+category: announcement
+featured: false
+callToAction: true
+draft: false
+faqs:
+  - question: "Is a change necessary when you upgrade?"
+    answer: "In almost all conditions, no. Install the new version in the same way that you installed the old version. Your appwrite.config.json file, your flags, your scripts, and your CI pipelines continue to operate. Only your stored login does not move, because the credentials go to a different keyring entry. Run appwrite login one time after you upgrade."
+  - question: "Can the new CLI break your CI pipeline?"
+    answer: "It must not. The flag names, the shorthands, the exit codes, and the --json output are a contract. A parity test suite compares the two implementations command by command. The npm package name and the appwrite binary name do not change, and npm i -g appwrite-cli operates as before."
+  - question: "Why Go and not Rust?"
+    answer: "The two languages give the same start time, and both are much faster than the 200 ms that they replace. Go is better for this project for four reasons. The work of the CLI is parallel network operations, which goroutines do well. A first-party Appwrite Go SDK comes from the same generator. GOOS and GOARCH build all six release targets without a toolchain for each target. A community contributor can learn Go in one week."
+  - question: "Does the TypeScript CLI stay available?"
+    answer: "Yes, but not for a long time. It stays installable for a minimum of one minor cycle, so that you can go back to it if you find a problem. It is removed from the generator only after the Go CLI operates as the default for one full release cycle with no rollback."
+  - question: "Is the CLI still generated from the API specification?"
+    answer: "Yes. The same generator makes the two CLIs from the same API specification. That generator also makes all the other Appwrite SDKs. The commands, the flags, and the query helpers come from shared code, and the two implementations cannot become different by accident."
+---
+
+The Appwrite CLI is now written in Go.
+
+The command surface does not change. The flags, the `appwrite.config.json` file, the exit codes, and the `--json` output stay the same. Only the internals change. A JavaScript bundle of 6.9 MB on Node, with 189 packages below it, becomes one native binary of 14 MB. That binary has no runtime and no dependencies.
+
+This post gives the measurements, the reasons for the rewrite, the interfaces that stay the same, and the process that kept the work safe.
+
+# What changes on the first day
+
+Four measurements changed, and you see all four immediately:
+
+- **Start time: 207.6 ms to 11.1 ms.** Every command pays this cost.
+- **Installation: 330 packages to 2.** On disk, that is **209 MB to 13 MB**.
+- **Memory during push: 283.5 MB to 28.0 MB.** The CLI streams the archive instead of holding it in memory.
+- **Binary size: 66 MB to 14 MB.** The new binary needs no runtime below it.
+
+Each measurement comes from the same machine, against the Bun binary that shipped before.
+
+## The CLI starts in about 10 ms
+
+The recording below runs `appwrite --help` on the two CLIs, 30 runs for each CLI on the same machine. The time decreases from **207.6 ms** to **11.1 ms**.
+
+![The hyperfine benchmark of appwrite --help on the two CLIs: 207.6 ms for TypeScript and 11.1 ms for Go, a speed increase of 18.65 times](/images/blog/rewriting-the-appwrite-cli-in-go/startup.gif "contain")
+
+Three commands show the same result. The measurements use `hyperfine` on an Apple M2 Pro.
+
+| Command | TypeScript | Go | Speed increase |
+|---|---|---|---|
+| `appwrite --version` | 235.0 ms | **10.4 ms** | 22.5× |
+| `appwrite --help` (full command tree) | 173.5 ms | **10.3 ms** | 16.9× |
+| `appwrite push function --help` | 175.2 ms | **8.1 ms** | 21.6× |
+
+The target was under **10 ms**, and one measurement is above it. Root help shows the full command tree in **10.3 ms** on macOS. The same command takes **5.6 ms** on Linux. Most of the macOS cost comes from process start, not from the CLI:
+
+- `/usr/bin/true` takes **2.65 ms** on the same machine.
+- An empty Go binary takes **4.35 ms**.
+
+## The installation pulls two packages, not 330
+
+The old CLI pulled 330 packages from npm. One of these packages was a native module that needed a code signature. The new CLI pulls two packages: a launcher and one platform binary for your machine.
+
+![The npm install of the two CLIs: 330 packages in 24 seconds against 2 packages in 1 second](/images/blog/rewriting-the-appwrite-cli-in-go/install.gif "contain")
+
+On disk, the installation decreases from **209 MB** to **13 MB**.
+
+![du -sh on the two installations, which shows 209M and 13M, and file, which reports one Mach-O executable](/images/blog/rewriting-the-appwrite-cli-in-go/footprint.gif "contain")
+
+The new CLI does not use a `postinstall` script to download a binary. Postinstall scripts break in three common setups:
+
+- **Your CI runner can use `--ignore-scripts`.** npm installs the package, but it does not run the script. The binary is missing, and the CLI does not operate.
+- **Your registry can have no internet access.** The script cannot reach GitHub to download the binary.
+- **npm cannot check what the script downloads.** A binary from a script has no checksum in your lockfile.
+
+The new CLI ships one package for each platform instead. Each of these packages declares its `os` and `cpu`, and npm downloads only the one that matches your machine. That binary arrives as a normal dependency, so npm checks it against your lockfile and keeps it in the cache. No script runs, and no download happens outside npm. The tools esbuild, swc, and turbo install their binaries in the same way.
+
+## Push uses 28 MB of memory, not 283 MB
+
+This measurement is the primary reason for the rewrite. The test pushes a function directory of incompressible data to a live instance, and the peak RSS comes from `/usr/bin/time -l`. With a 40 MB archive:
+
+- **Peak memory: 283.5 MB to 28.0 MB**, which is 10 times less.
+- **Wall clock: 18.4 s to 11.0 s**, which is 40 percent less.
+- **Chunked file uploads are 2.3 times faster.**
+
+The difference is the upload path. The TypeScript implementation read the full archive into a Buffer before the upload, so its memory increased with the size of your deployment. The Go implementation sends each chunk through an `io.SectionReader` with an exact `Content-Length`, so the peak memory is the size of the HTTP write buffer.
+
+## One binary of 14 MB, with no runtime below it
+
+The Bun binary was 66 MB, and one native module in it needed a code signature. The Go binary is near 14 MB. It needs no runtime, and it has no native modules.
+
+# Why we rewrote the CLI
+
+The rewrite started with a measurement, not with an opinion. We first found where the time goes in a usual command. A rewrite is only correct if it removes a cost that you pay each day, and two costs met that condition.
+
+The TypeScript CLI had near 27,000 lines of manual code and 24 generated service files. The bundle was 9.5 MB, and it shipped in two forms: a Node bundle on npm, and a Bun binary from the install script. Each command loaded that bundle and registered 606 commands with `commander` before the first work started.
+
+The time in the CLI divides into three groups:
+
+1. **The start time, which every command pays.** Each command loaded a bundle of 9.5 MB and registered 606 commands before it ran one subcommand. Tab completion was slow for the same reason, because each completion request paid the full start time.
+2. **The `push` command, the only heavy computation in the CLI.** It read your project tree, wrote a `tar.gz` file to disk, then read the full archive back into a Buffer and put it in a `File` before the upload. The peak memory increased with the size of your deployment.
+3. **Everything else, which waits for the network or for you.** A faster language does not change the time that a request takes, or the time that you take to answer a prompt.
+
+Two of the three groups justified the rewrite: the start time, and the memory during `push`. The third group is in this list because the plan had to say what a rewrite does not fix. "The CLI is slow" is not a problem that you can finish. "The start time and the memory during `push`" is.
+
+## Why Go and not Rust
+
+We examined the two languages. The start times are equivalent, near 1 ms for Rust and 2 ms to 3 ms for the Go runtime initialization. The two values are much faster than the 200 ms that they replace. The primary advantages of Rust are no GC pauses and zero-cost abstractions for CPU-bound loops. This CLI does not have that type of work.
+
+Go was better for four reasons:
+
+- **The work is parallel network operations on shared mutable state.** The deploy, poll, and report loop in `push` maps directly onto goroutines and `errgroup.SetLimit`. The same code in Rust needs tokio and `Arc<Mutex<_>>` around the spinner, the config, and the pool. That is more complexity, and there is no increase in throughput for work that waits for the network.
+- **A first-party Appwrite Go SDK already comes from the same generator.** Rust made two projects necessary: to make the Rust client SDK ready for production, and to rewrite the CLI.
+- **Cross-compilation.** `GOOS` and `GOARCH` build all six release targets, which include `windows-arm64`, without a toolchain for each target.
+- **Contributors.** Appwrite uses PHP and TypeScript, and the CLI accepts community pull requests. A contributor can learn Go in one week. The async model and the lifetimes of Rust are a permanent cost for each person who changes the code.
+
+Rust was better in binary size, near **8 MB to 15 MB** against **20 MB to 25 MB** for Go. The two values are much less than the **66 MB** Bun binary that they replace, and this difference did not change the decision.
+
+# What did not change
+
+A rewrite that changes the user experience is a rewrite that you cannot adopt. Before the first line of code, we recorded the interfaces that must not change. Each intentional change needed a separate pull request and an approval:
+
+1. **Each flag name, shorthand, and alias**, in more than 600 commands.
+2. **The `appwrite.config.json` schema**, which the two CLIs read and write in a compatible format. A Go `push` after a TypeScript `pull` must operate correctly.
+3. **The exit codes.**
+4. **The `--json` and `--raw` output, byte for byte.** Users write scripts against this output.
+5. **The redaction of secrets.** A defect here is a security defect, not a format defect.
+6. **The location and the format of the global config.**
+7. **The install paths.** The files `install.sh` and `install.ps1`, the scoop manifest, and the Homebrew tap keep their current locations and binary names.
+
+Two things were left off that list on purpose:
+
+- **The table output that you read on screen.** It looks almost the same, but we do not promise it byte for byte.
+- **Your saved login.** The new binary cannot read the keyring entry of the old binary, so you log in one time after the upgrade. An automatic migration was more work than one login is worth.
+
+We wrote down seven interfaces that must not change, and all seven survived. The help screen was not one of them, and it broke.
+
+The old CLI grouped the commands on `appwrite --help` and put `login` and `init` at the top, where a new user needs them. The new CLI lost that grouping. It is built on cobra, a command framework for Go, and cobra writes a help screen for you: every command in one alphabetical list, with a paragraph of API text under each one. We built the CLI in nine phases, and that screen survived seven of them before anyone compared the two.
+
+The new CLI prints the grouped screen again:
+
+![The appwrite --help screen of the Go CLI, with the usage line and the commands grouped under GET STARTED](/images/blog/rewriting-the-appwrite-cli-in-go/help.avif "contain")
+
+# How we ran the project
+
+We estimated three months to six months. The command `push` alone was a state machine of 4,380 lines with no test coverage below the end-to-end suite. A project of this size fails in one usual way: it gives no results for months, then it returns with one hundred small defects that nobody can attribute to a cause.
+
+The project used nine phases. Each phase had written entry criteria, work, and exit criteria. A rule prevented the start of a phase before the entry criteria were complete.
+
+**Phase 0 was a stop point.** Before we committed months of work, we built a temporary Go binary with 608 empty commands and a temporary streaming uploader. Two gates applied: the start time must be a minimum of 5 times faster, and the `push` packaging a minimum of 20 percent faster. If not, we recorded a decision to stop. The start time was 41 times faster, and the packaging was 56 percent faster. The project continued.
+
+Phase 0 also corrected our plan. Three measurements disagreed with the estimate:
+
+- The TypeScript baseline was **206 ms**, not the 40 ms to 150 ms in the estimate.
+- The CLI had **23 services**, not 24.
+- **Lazy command registration gives no improvement**, although the plan listed it two times.
+
+The eager build of all 608 commands has no measurable cost at the speed of Go. That result saved one week of work.
+
+**Phase 4 was the test plan.** The old CLI already had an end-to-end test suite of 2,754 lines. We did not rewrite it in Go. We ran that same suite against the new binary, so any difference between the old CLI and the new one showed up as a failed test. We also refused to edit the tests. If a test passed only after we changed what it expected, we treated that as a defect in the new CLI.
+
+The two CLIs are also built from the same source. Flag names, query flags, root commands, service scopes, and help groups are written down once, and the generator reads them when it builds either CLI. Neither CLI can change one of them on its own.
+
+A CI check does the same job for the start time. It measures the start time on every build, and the build fails if the time goes above 60 ms.
+
+**We compared the new CLI to the old CLI, command by command.** That comparison found 23 items, and all of them are now closed: 19 corrections, 3 accepted differences with a written reason, and 1 defect that was in the TypeScript CLI. The number of byte-identical commands increased from 237 of 606 to 532.
+
+The most important items show the value of that work:
+
+- **`--enabled false` sent `true`.** The test showed this when it made the email of a live account verified.
+- **`--json` made a string of each number**, and it removed the large numbers.
+- **`--raw` output was not raw.**
+
+Three defects are important, because they were almost in a release:
+
+- **The build for `darwin/amd64` shipped with no signature.** The Go linker applies an ad-hoc signature to `darwin/arm64`, because Apple Silicon needs one, but it does not sign `amd64`. The install script stops if the binary has no embedded signature. This defect stopped each installation on an Intel Mac, and an arm64 development machine cannot show it.
+- **The version ldflag did nothing.** It named a symbol that does not exist. A wrong `-X` path is not a build error, and the linker ignores it with no message. The correction then had a second defect, which only a real release showed: a release reported the version before it.
+- **The end-to-end build loop called `exec()` with no check of the exit code.** The 21 Go test packages in that loop reported nothing.
+
+A review of the code did not find these three defects. An examination of the artifacts, a real release, and use of the preview build found them.
+
+# How to get it
+
+Install the CLI in the same way as before. The package name, the binary name, and the install paths do not change.
+
+```bash
+npm install -g appwrite-cli
+```
+
+Or use the install script:
+
+```bash
+curl -sL https://appwrite.io/cli/install.sh | bash
+```
+
+Homebrew and scoop do not change, and `appwrite update` moves an existing installation to the new version.
+
+Do one task after the upgrade: run `appwrite login` one time. The credentials do not move from the keyring of the old binary. If you use the CLI in CI with an API key, and not with a session, nothing changes for you.
+
+# More resources
+
+- [Read the documentation to install the CLI](/docs/tooling/command-line/installation)
+- [Every CLI command and flag](/docs/tooling/command-line/commands)
+- [Announcing device authorization for the Appwrite CLI](/blog/post/announcing-cli-device-authorization)
+- [Announcing Go support in Appwrite Functions](/blog/post/announcing-go-support)

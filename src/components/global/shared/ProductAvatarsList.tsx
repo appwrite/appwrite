@@ -5,12 +5,15 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
 export type ProductAvatarItem = {
   name: string
-  icon: LucideIcon
+  icon?: LucideIcon
+  imageSrc?: string
+  label?: string
   href?: string
 }
 
@@ -41,12 +44,28 @@ export function ProductAvatarsList({
     >
       {items.map((item, index) => {
         const Icon = item.icon
+        const avatarContent = item.label ? (
+          <span className="text-[11px] font-medium text-muted-foreground/80 sm:text-[12px]">
+            {item.label}
+          </span>
+        ) : item.imageSrc ? (
+          <img
+            src={item.imageSrc}
+            alt=""
+            className={cn(
+              'size-4 object-contain sm:size-[17px]',
+              PUBLIC_ICON_MUTED_CLASSES,
+            )}
+          />
+        ) : Icon ? (
+          <Icon className={iconClassName} strokeWidth={1.5} aria-hidden />
+        ) : null
 
         return (
           <li
             key={item.name}
             className={cn('relative shrink-0', index > 0 && '-ms-2 sm:-ms-2.5')}
-            style={{ zIndex: index + 1 }}
+            style={{ zIndex: items.length - index }}
           >
             <Tooltip>
               <TooltipTrigger asChild>
@@ -56,11 +75,14 @@ export function ProductAvatarsList({
                     className={cn(avatarClassName, 'cursor-pointer')}
                     aria-label={t(item.name)}
                   >
-                    <Icon className={iconClassName} strokeWidth={1.5} aria-hidden />
+                    {avatarContent}
                   </MarketingSiteLink>
                 ) : (
-                  <div className={cn(avatarClassName, 'cursor-default')} aria-label={t(item.name)}>
-                    <Icon className={iconClassName} strokeWidth={1.5} aria-hidden />
+                  <div
+                    className={cn(avatarClassName, 'cursor-default')}
+                    aria-label={t(item.name)}
+                  >
+                    {avatarContent}
                   </div>
                 )}
               </TooltipTrigger>

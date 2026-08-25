@@ -10,6 +10,7 @@ Deleting a Firewall rule removes it from the project permanently. Matching traff
 
 - Confirm no other process depends on the rule (for example an allowlist bypass that protects a broad deny).
 - Prefer **disable** from [Update a rule](/docs/products/firewall/update) if you only need to pause the policy temporarily. Disabled rules still count toward [plan limits](/docs/products/firewall/rules#plan-limits).
+- For the **Attack mode** rule on a site, turn Attack mode off from the Firewall page instead of deleting it. See [Attack mode](/docs/products/firewall/attack-mode).
 - Note the rule's priority and conditions if you might recreate a similar policy later.
 
 # Delete a single rule {% #delete-a-single-rule %}

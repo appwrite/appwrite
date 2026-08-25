@@ -28,7 +28,10 @@ import {
   USAGE_CHART_MARGIN,
   USAGE_CHART_RESPONSIVE_CONTAINER_PROPS,
 } from '@/lib/usage/chart-layout'
-import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import {
+  UsageChartXAxis,
+  UsageChartYAxis,
+} from '@/components/global/shared/ChartXAxis'
 import { useOptionalUsageFilters } from '../usage-filters-context'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { UsageChartErrorMessage } from '../../shared/UsageChartErrorMessage'
@@ -45,10 +48,7 @@ import {
   type UsageChartAxisFormat,
 } from '@/lib/usage/format-metric'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
-import {
-  UsageMetricCardFooter,
-  UsageMetricCardShell,
-} from './UsageMetricCard'
+import { UsageMetricCardFooter, UsageMetricCardShell } from './UsageMetricCard'
 import { UsageChartBrushReferenceArea } from './UsageChartBrushReferenceArea'
 
 const usageMetricHeaderClass =
@@ -64,13 +64,16 @@ function ChartMetricHeaderSkeleton() {
   )
 }
 
-function ChartSkeleton() {
+function ChartSkeleton({ label }: { label: string }) {
   return (
     <div
+      role="status"
+      aria-label={label}
       className="relative w-full shrink-0"
       style={{ height: OVERVIEW_CHART_HEIGHT }}
     >
       <Skeleton className="absolute inset-0 rounded-lg" />
+      <span className="sr-only">{label}</span>
     </div>
   )
 }
@@ -217,7 +220,9 @@ export function UsageTimeSeriesChartCard({
         )}
       >
         <div className="min-w-0 flex-1">
-          <h3 className="text-[14px] font-medium text-foreground">{t(title)}</h3>
+          <h3 className="text-[14px] font-medium text-foreground">
+            {t(title)}
+          </h3>
 
           <div className={usageMetricHeaderClass}>
             {isLoading ? (
@@ -286,7 +291,7 @@ export function UsageTimeSeriesChartCard({
             )}
           </UsageChartArea>
         ) : isLoading ? (
-          <ChartSkeleton />
+          <ChartSkeleton label={t('Loading usage data')} />
         ) : chartData.length === 0 ? (
           <UsageChartArea>
             <div className="absolute inset-0 flex items-center justify-center text-[13px] text-muted-foreground">
@@ -344,7 +349,8 @@ export function UsageTimeSeriesChartCard({
                     isAnimationActive={false}
                     cursor={!isSelecting}
                     content={({ active, payload }) => {
-                      if (isSelecting || !active || !payload?.length) return null
+                      if (isSelecting || !active || !payload?.length)
+                        return null
                       const data = payload[0].payload as {
                         fullDate: string
                         value: number

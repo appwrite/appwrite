@@ -1,3 +1,5 @@
+import { COVER_EYEBROW_LETTER_SPACING } from '@/lib/cover-generator/text-utils'
+
 /** Minimal SVG text styles for cover export and in-browser SVG previews. */
 export function buildCoverExportFontStyleBlock(fontFaceCss = ''): string {
   return `
@@ -11,7 +13,7 @@ export function buildCoverExportFontStyleBlock(fontFaceCss = ''): string {
       .cover-eyebrow {
         font-family: 'Inter', Arial, Helvetica, sans-serif;
         font-weight: 600;
-        letter-spacing: 0.25em;
+        letter-spacing: ${COVER_EYEBROW_LETTER_SPACING};
         text-transform: uppercase;
       }
       .cover-body {

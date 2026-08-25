@@ -11,7 +11,7 @@ description: Learn how Appwrite Firewall evaluates rules by priority and first-m
 1. Appwrite loads **enabled** rules for the project, ordered by priority ascending (for example `10` before `100`).
 2. Rules that do not apply to the current [resource scope](/docs/products/firewall/scopes) are skipped.
 3. For each remaining rule in order, Appwrite checks whether all [conditions](/docs/products/firewall/conditions) match.
-4. On the first match, the rule action runs (deny, bypass, rate limit, or redirect).
+4. On the first match, the rule action runs (deny, bypass, challenge, rate limit, or redirect).
 5. Later rules are not applied to that request.
 
 Disabled rules are not loaded. If no rule matches, the request continues.
@@ -29,6 +29,7 @@ The Console create wizard defaults priority to `100`. Common patterns:
 | Allowlist then deny | Bypass at `10`, deny at `100` |
 | Tight path before broad rate limit | Path-specific deny at `20`, broad rate limit at `200` |
 | Temporary override | Insert a new rule at a lower number than existing policies |
+| [Attack mode](/docs/products/firewall/attack-mode) on a site | Catch-all challenge at `0`. Bypass allowlists must use a **negative** priority to run first |
 
 Leave gaps between priorities (for example `10`, `20`, `30`) so you can insert rules later without renumbering everything.
 

@@ -54,10 +54,10 @@ const HOME_COPY = getEnglishCatalog().website.home
 
 const frameworkTools = [
   { name: HOME_COPY.frameworkTools.react, icon: '/icons/react.svg', href: '/docs/quick-starts/react' },
+  { name: HOME_COPY.frameworkTools.tanstackStart, icon: '/icons/tanstack.svg', href: '/docs/quick-starts/tanstack-start' },
   { name: HOME_COPY.frameworkTools.nextjs, icon: '/icons/nextjs.svg', href: '/docs/quick-starts/nextjs' },
   { name: HOME_COPY.frameworkTools.vue, icon: '/icons/vue.svg', href: '/docs/quick-starts/vue' },
   { name: HOME_COPY.frameworkTools.sveltekit, icon: '/icons/svelte.svg', href: '/docs/quick-starts/sveltekit' },
-  { name: HOME_COPY.frameworkTools.astro, icon: '/icons/astro.svg', href: '/docs/quick-starts/astro' },
   { name: HOME_COPY.frameworkTools.android, icon: '/icons/android.svg', href: '/docs/quick-starts/android' },
   { name: HOME_COPY.frameworkTools.ios, icon: '/icons/apple.svg', href: '/docs/quick-starts/apple' },
   { name: HOME_COPY.frameworkTools.flutter, icon: '/icons/flutter.svg', href: '/docs/quick-starts/flutter' },
@@ -67,12 +67,6 @@ const frameworkTools = [
   { name: HOME_COPY.frameworkTools.lovable, icon: '/icons/lovable.svg', href: '/docs/tooling/ai/vibe-coding/lovable' },
   { name: HOME_COPY.frameworkTools.opencode, icon: '/icons/opencode.svg', href: '/docs/tooling/mcp/opencode' },
   { name: HOME_COPY.frameworkTools.bun, icon: '/icons/bun.svg', href: '/docs/products/functions/runtimes' },
-] as const
-
-const aiDocLinks = [
-  { label: HOME_COPY.aiDocLinks.mcpServers, href: '/docs/tooling/ai/mcp-servers' },
-  { label: HOME_COPY.aiDocLinks.skills, href: '/docs/tooling/ai/skills' }, // pragma: allowlist secret
-  { label: HOME_COPY.aiDocLinks.aiArena, href: 'https://arena.appwrite.io/', external: true }, // pragma: allowlist secret
 ] as const
 
 type ProductBentoProductId = Extract<
@@ -308,11 +302,13 @@ function HomePage() {
               <span className="text-[var(--brand-cta)]">_</span>
             </h1>
 
-            <p className="mx-auto mt-5 max-w-2xl text-balance text-[15px] leading-6 text-muted-foreground sm:text-[16px] sm:leading-7">
-              {homeCopy.heroDescription}
+            <p className="mx-auto mt-7 max-w-4xl text-[15px] leading-6 text-muted-foreground sm:text-[16px] sm:leading-7">
+              {homeCopy.heroDescriptionLineOne}
+              <br />
+              {homeCopy.heroDescriptionLineTwo}
             </p>
 
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
               <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
                 <Link
                   to="/sign-up"
@@ -333,7 +329,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="relative z-[1] mt-8 w-full sm:mt-10">
+          <div className="relative z-[1] mt-12 w-full sm:mt-16">
             <div className="mx-auto w-full max-w-full px-3 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
               <div className="relative isolate z-[1] flex w-full flex-col overflow-hidden rounded-t-[20px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-1.5 pb-0 pt-1 sm:rounded-t-[28px] sm:px-4 dark:border-muted/30 dark:bg-muted/10">
                 <div className="relative z-10 flex h-8 shrink-0 items-center gap-2 text-start sm:h-10">
@@ -405,35 +401,6 @@ function HomePage() {
               ))}
             </div>
           </div>
-
-          <nav
-            className="mt-7 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[12px] font-medium text-muted-foreground"
-            aria-label={homeCopy.aiDocsNavLabel}
-          >
-            {aiDocLinks.map((link, index) => (
-              <span key={link.href} className="flex items-center gap-2">
-                {index > 0 ? (
-                  <span className="text-muted-foreground/40" aria-hidden>
-                    ·
-                  </span>
-                ) : null}
-                {'external' in link && link.external ? (
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="link-neutral text-[12px]"
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <MarketingSiteLink href={link.href} className="link-neutral text-[12px]">
-                    {link.label}
-                  </MarketingSiteLink>
-                )}
-              </span>
-            ))}
-          </nav>
         </section>
 
         {/* Top customer logos - hidden for now. Restore from git history when needed. */}

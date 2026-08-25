@@ -70,7 +70,9 @@ const PRODUCT: Record<
   },
 }
 
-export const PRODUCT_PROVISION_TIMEOUT_MS = 10 * 60_000
+export const PRODUCT_PROVISION_TIMEOUT_MS = 15 * 60_000
+/** After the fixture has already waited for ready, later navigations use a short cap. */
+export const PRODUCT_READY_NAV_TIMEOUT_MS = 90_000
 
 export function productDatabasePath(
   kind: ProductDbKind,
@@ -101,7 +103,7 @@ export function productContainerPath(
 /**
  * Create a TablesDB / DocumentsDB / VectorsDB database via the wizard.
  * TablesDB uses serverless compute (fast). DocumentsDB and VectorsDB provision
- * dedicated compute and can take several minutes.
+ * dedicated compute and can take several minutes (up to PRODUCT_PROVISION_TIMEOUT_MS).
  */
 export async function createProductDatabaseViaWizard(
   page: Page,
@@ -204,7 +206,7 @@ export async function expectProductTabRenders(
   })
   await waitForFullscreenLoaderHidden(page, timeout)
   if (PRODUCT[kind].usesDedicatedCompute) {
-    await waitForDedicatedDatabaseReady(page, PRODUCT_PROVISION_TIMEOUT_MS)
+    await waitForDedicatedDatabaseReady(page, PRODUCT_READY_NAV_TIMEOUT_MS)
   }
   await expect(page.getByText(/Database not found/i)).toHaveCount(0)
   await expect(page.getByText(/trim is not a function/i)).toHaveCount(0)
@@ -230,7 +232,7 @@ export async function gotoProductDatabase(
   await acceptCookieBannerIfPresent(page)
   await waitForFullscreenLoaderHidden(page, 30_000)
   if (PRODUCT[kind].usesDedicatedCompute) {
-    await waitForDedicatedDatabaseReady(page, PRODUCT_PROVISION_TIMEOUT_MS)
+    await waitForDedicatedDatabaseReady(page, PRODUCT_READY_NAV_TIMEOUT_MS)
   }
 }
 
@@ -329,6 +331,9 @@ export async function gotoProductContainerTab(
   )
   await acceptCookieBannerIfPresent(page)
   await waitForFullscreenLoaderHidden(page, 30_000)
+  if (PRODUCT[kind].usesDedicatedCompute) {
+    await waitForDedicatedDatabaseReady(page, PRODUCT_READY_NAV_TIMEOUT_MS)
+  }
   await expect(page.getByText(/trim is not a function/i)).toHaveCount(0)
 }
 

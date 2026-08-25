@@ -1,0 +1,128 @@
+---
+layout: post
+title: What is CRUD? Explained
+description: Learn what CRUD means, how create, read, update, and delete map to APIs and databases, and how to build CRUD apps faster with Appwrite.
+date: 2026-07-24
+cover: /images/blog/what-is-crud-explained/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: architecture
+featured: false
+unlisted: true
+faqs:
+  - question: What does CRUD stand for?
+    answer: CRUD stands for Create, Read, Update, and Delete, the four basic operations for managing stored data in an application.
+  - question: What is CRUD in simple terms?
+    answer: "CRUD is the set of four things you can do with data: add it (create), view it (read), change it (update), and remove it (delete). Nearly every app does all four."
+  - question: Is CRUD the same as REST?
+    answer: "No. CRUD is the four data operations, while REST is a style for building web APIs. REST APIs commonly expose CRUD operations, which is why they're often confused, but they're different concepts."
+  - question: What is a CRUD app?
+    answer: A CRUD app is any application whose main job is to create, read, update, and delete records. To-do lists, blogs, and online stores are all CRUD apps at their core.
+---
+CRUD stands for Create, Read, Update, and Delete, the four basic operations for managing data in almost any application. Together they cover everything you do with stored data: adding new records, retrieving them, changing them, and removing them. If an app stores information, it's almost certainly doing CRUD.
+
+Whether you're building a to-do list, a social network, or an enterprise dashboard, the underlying data work comes down to these four actions. This guide explains what CRUD is, what each operation does, how it maps to APIs and databases, and how to build a CRUD app, in plain language.
+
+# What does CRUD stand for?
+
+CRUD is an acronym for the four persistent storage operations every data-driven application relies on:
+
+* **Create:** add a new record.
+* **Read:** retrieve one or more existing records.
+* **Update:** change an existing record.
+* **Delete:** remove a record.
+
+The term has been around [since the 1980s](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) and remains one of the most useful mental models in software. Almost any feature you can name, posting a comment, editing a profile, deleting a photo, viewing a feed, is a CRUD operation underneath.
+
+# The four CRUD operations explained
+
+Each operation maps to a specific action on your data.
+
+Create adds something new, such as registering a user or writing a blog post. It's the operation that grows your dataset.
+
+Read retrieves data without changing it, such as loading a profile page or listing search results. Reads are usually the most frequent operation in an app.
+
+Update modifies an existing record, such as editing a caption or changing a setting. Updates can replace an entire record or just change specific fields.
+
+Delete removes a record, such as discarding a draft or closing an account. Many apps use a "soft delete" that hides data instead of erasing it, so it can be recovered later.
+
+# How does CRUD map to HTTP methods and SQL?
+
+CRUD isn't tied to one technology. Its real power is that the same four ideas show up consistently across databases and web APIs, which makes systems predictable.
+
+In a REST API, CRUD maps to [HTTP methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods): Create is POST, Read is GET, Update is PUT or PATCH, and Delete is DELETE.
+
+In a SQL database, CRUD maps to statements: Create is [INSERT](https://www.postgresql.org/docs/current/sql-insert.html), Read is SELECT, Update is UPDATE, and Delete is DELETE.
+
+So a single "delete a comment" action might travel from a DELETE HTTP request in the browser, through your API, down to a DELETE SQL statement in the database. Recognizing this pattern makes unfamiliar codebases much easier to read.
+
+# CRUD vs REST: What's the difference?
+
+CRUD and REST are related but not the same, and mixing them up is common.
+
+CRUD describes the four operations you perform on data. [REST](https://developer.mozilla.org/en-US/docs/Glossary/REST) is an architectural style for designing web APIs, using resources, URLs, and HTTP methods. REST APIs very often expose CRUD operations, which is why the two get conflated.
+
+The simplest way to hold them apart: CRUD is what you do to data, and REST is how you might expose those actions over the web. You can do CRUD without REST, for example directly against a database, and a REST API can do more than plain CRUD.
+
+# Why is CRUD important?
+
+CRUD matters because it's a shared vocabulary and a reliable structure that shows up everywhere:
+
+* **A universal pattern.** Once you understand CRUD, you can reason about almost any app's data layer, because they nearly all follow it.
+* **Predictable design.** Structuring an API or database around CRUD makes it consistent and easier for other developers to use.
+* **Faster development.** Many frameworks and platforms scaffold CRUD automatically, so you get standard data operations without writing them from scratch.
+* **A clear foundation.** More advanced features are usually built on top of solid CRUD, so getting it right early pays off.
+
+# What does a CRUD app look like?
+
+Almost every app you use is a CRUD app at its core. A to-do list is the clearest example: you create tasks, read your list, update a task when it's done, and delete tasks you no longer need.
+
+The same holds for bigger products. On a social network, creating is posting, reading is scrolling the feed, updating is editing a post, and deleting is removing it. On an online store, products, orders, and customer records are all created, read, updated, and deleted. Strip away the branding and most software is a well-organized set of CRUD operations with a nice interface on top.
+
+# How do I build a CRUD app?
+
+Building CRUD from scratch means setting up a database, writing an API layer with an endpoint for each operation, handling validation and permissions, and connecting a frontend. It's straightforward but repetitive, and every project reinvents much of the same plumbing.
+
+Alternatively, you can use a backend platform that provides CRUD operations out of the box. Instead of writing your own create, read, update, and delete endpoints, you define your data and call ready-made methods from an SDK. For most teams this removes a large chunk of boilerplate and lets you focus on the parts of your app that are actually unique.
+
+# Start building CRUD apps with Appwrite
+
+[Appwrite](/) provides CRUD operations through its TablesDB API, so you can work with your data directly from the SDK without building a separate endpoint for each operation.
+
+Here's the full CRUD lifecycle for the to-do list from earlier, using Appwrite's TablesDB API:
+
+```js
+// Create a row
+await tablesDB.createRow({
+    databaseId: DB,
+    tableId: TABLE,
+    rowId: ID.unique(),
+    data: { title: "Buy groceries", completed: false },
+});
+
+// Read all rows
+await tablesDB.listRows({ databaseId: DB, tableId: TABLE });
+
+// Update a row
+await tablesDB.updateRow({
+    databaseId: DB,
+    tableId: TABLE,
+    rowId: taskId,
+    data: { completed: true },
+});
+
+// Delete a row
+await tablesDB.deleteRow({ databaseId: DB, tableId: TABLE, rowId: taskId });
+```
+
+That's every operation from the article, create, read, update, and delete, with no custom backend to build or maintain. Appwrite handles the database, API layer, and validation, while built-in [permissions](/docs/products/databases/permissions) and [queries](/docs/products/databases/queries) cover the parts that usually take the most work to get right.
+
+Whether you're prototyping an idea or scaling a production app, Appwrite gives you auth, databases, storage, functions, sites and real-time in one place, all open-source. [Sign up for Appwrite Cloud](https://cloud.appwrite.io/) or spin up a self-hosted instance in minutes, and give your next build a real backend to grow on.
+
+## Resources
+
+* [Appwrite Databases docs](/docs/products/databases)
+* [Create and manage documents](/docs/products/databases/documents)
+* [Appwrite quick start guides](/docs/quick-starts)
+* [Appwrite on GitHub](https://github.com/appwrite/appwrite)
+* [Join the Appwrite Discord](https://appwrite.io/discord)

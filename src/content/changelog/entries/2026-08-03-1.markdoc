@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "Pricing update: storage costs for builds and deployments will be enforced"
+date: 2026-08-03
+---
+
+Starting **September 1st, 2026**, we will begin enforcing storage costs for build artifacts and deployments on [Appwrite Cloud](https://cloud.appwrite.io).
+
+Build outputs and deployment artifacts for [Functions](/docs/products/functions/deployments) and [Sites](/docs/products/sites/deployments) have always counted toward your project's storage allowance, but until now they were not enforced as part of your billed storage usage. From September 1st, this storage will be included in your project's storage usage, and any usage beyond your plan's limits will be billed at the standard additional storage rate.
+
+To reduce your storage footprint before enforcement begins, you can:
+
+- Configure [deployment retention](/docs/products/functions/deployments#deployment-retention) for Functions and Sites to automatically delete old non-active deployments
+- Manually delete deployments you no longer need from the Console or via the APIs
+
+You can review your current storage usage in the Console under your project's usage dashboard.
+
+{% arrow_link href="/pricing" %}
+View Appwrite's pricing plans
+{% /arrow_link %}

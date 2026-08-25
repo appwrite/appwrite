@@ -31,7 +31,7 @@ This article looks at Appwrite as a Firebase alternative for AI apps, focused on
 
 Firebase is a managed platform on Google Cloud that bundles Authentication, Cloud Firestore, Cloud Storage, Cloud Functions, App Hosting, Cloud Messaging, and a growing AI assistance layer. Its AI assistance story is organized around three surfaces: [Gemini in Firebase](https://firebase.google.com/docs/ai-assistance/gemini-in-firebase) inside Firebase services and the console, the [Firebase MCP server](https://firebase.google.com/docs/ai-assistance/mcp-server) for AI-powered editors, and a [Gemini CLI extension](https://firebase.google.com/docs/ai-assistance/gcli-extension) that wraps the MCP tools with Firebase-specific commands. Firebase also ships [AI Logic](https://firebase.google.com/docs/ai-logic), a client SDK for calling Gemini from Firebase apps.
 
-Appwrite is an open-source backend you can run on [Appwrite Cloud](/cloud) or host yourself. It presents a single suite covering [Auth](/docs/products/auth), [databases with tables, rows, and columns](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Realtime](/docs/apis/realtime), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for deploying full-stack web apps. Its AI tooling hub covers [MCP servers for the API and the docs](/docs/tooling/ai/mcp-servers/api), [Agent Skills](/docs/tooling/ai), an in-console [Assistant](/docs/tooling/ai), and plugin integrations with editors like [Cursor](/docs/tooling/ai/ai-dev-tools/cursor), [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code), and [Lovable](/docs/tooling/ai/ai-dev-tools/lovable).
+Appwrite is an open-source backend you can run on [Appwrite Cloud](/cloud) or host yourself. It presents a single suite covering [Auth](/docs/products/auth), [databases with tables, rows, and columns](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Realtime](/docs/apis/realtime), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for deploying full-stack web apps. Its AI tooling hub covers [MCP servers for the API and the docs](/docs/tooling/ai/mcp-servers), [Agent Skills](/docs/tooling/ai), an in-console [Assistant](/docs/tooling/ai), and plugin integrations with editors like [Cursor](/docs/tooling/ai/ai-dev-tools/cursor), [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code), and [Lovable](/docs/tooling/ai/ai-dev-tools/lovable).
 
 Both platforms expose an MCP server to AI-powered editors. The difference is everything around those servers: data model, permissions, SDK coverage, runtime choice, hosting surface, and whether you can run the whole stack on your own infrastructure.
 
@@ -144,6 +144,6 @@ If your agent is going to ship the next year of your product, pick the platform 
 - [Appwrite Functions](/docs/products/functions)
 - [Appwrite Sites](/docs/products/sites)
 - [AI tooling on Appwrite](/docs/tooling/ai)
-- [MCP server for the Appwrite API](/docs/tooling/ai/mcp-servers/api)
+- [MCP server for the Appwrite API](/docs/tooling/ai/mcp-servers)
 - [Appwrite Claude Code plugin](/blog/post/announcing-appwrite-claude-code-plugin)
 - [Appwrite Cursor plugin](/blog/post/announcing-appwrite-cursor-plugin)

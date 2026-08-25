@@ -5,7 +5,7 @@ export const sitesProductFeatures: ProductFeatureContent[] = [
     id: 'git-previews',
     title: 'Deploy from Git with preview URLs',
     description:
-      'Connect a Git repository and ship on every push. Commits to your production branch build and auto-activate on your primary domain; other branches get preview links for org members to review before merge.',
+      'Connect GitHub or Origin and ship on every push. Commits to your production branch build and auto-activate on your primary domain; other branches get preview links for org members to review before merge.',
     docsHref: '/docs/products/sites/deploy-from-git',
     docsLabel: 'Deploy from Git docs',
   },
@@ -93,7 +93,7 @@ export const sitesProductFeatures: ProductFeatureContent[] = [
     id: 'templates',
     title: 'Framework quick-starts and templates',
     description:
-      'Start from official quick-starts or pick a template in the create wizard. Filter by framework and use case, connect GitHub, and deploy with build settings already tuned for Appwrite.',
+      'Start from official quick-starts or pick a template in the create wizard. Filter by framework and use case, connect GitHub or Origin, and deploy with build settings already tuned for Appwrite.',
     docsHref: '/docs/products/sites/templates',
     docsLabel: 'Templates docs',
     layout: 'stacked',

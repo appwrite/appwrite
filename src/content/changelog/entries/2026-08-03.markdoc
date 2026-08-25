@@ -1,0 +1,17 @@
+---
+layout: changelog
+title: Easier project discovery and targeting in the Appwrite CLI
+date: 2026-08-03
+---
+
+The latest Appwrite CLI makes it easier to find and manage projects from any directory. Use `appwrite list-projects` and `appwrite list-organizations` to see what your current session can access, then pass `--project-id` or `--organization-id` to project and organization commands without first linking a local directory. The same IDs can be supplied with `APPWRITE_PROJECT_ID` and `APPWRITE_ORGANIZATION_ID` in scripts.
+
+Cloud regional endpoints now route Console-level commands correctly, and project discovery and organization lookup also work with supported self-hosted installations. Custom endpoints are validated before login and produce concise, actionable errors when the URL or `/v1` path is incorrect.
+
+The CLI now groups root help by task, formats responses for easier reading, and offers safer account recovery and reset flows. Use `appwrite login --switch` to return to a saved account after changing endpoints. `appwrite client --reset` now asks before signing out saved accounts, while `--force` provides explicit confirmation for scripts.
+
+Update to the latest CLI version to use these improvements.
+
+{% arrow_link href="/docs/tooling/command-line/installation#update-your-cli" %}
+Update the Appwrite CLI
+{% /arrow_link %}

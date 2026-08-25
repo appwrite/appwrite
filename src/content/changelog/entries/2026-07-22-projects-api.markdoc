@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: "Announcing the Projects API: Configure your project with Server SDKs"
+date: 2026-07-22T12:00:00
+cover: /images/blog/announcing-projects-api/cover.avif
+---
+
+Every project setting, from auth methods and OAuth providers to SMTP and labels, can now be configured programmatically through the Appwrite Server SDKs. The new **Projects API** exposes the same configuration you reach through the Console, so you can script, version, and review project setup instead of clicking through it.
+
+Reading a project uses `project.read` and most configuration uses `project.write`, with dedicated scopes such as `platforms.write`, `templates.write`, and `keys.write` for specific resources. Every Appwrite Server SDK supports it, along with the Appwrite CLI. See the [Projects API documentation](/docs/partners/project) for per-language examples.
+
+{% arrow_link href="/blog/post/announcing-projects-api" %}
+Read the announcement
+{% /arrow_link %}

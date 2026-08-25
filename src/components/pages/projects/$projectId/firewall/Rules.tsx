@@ -88,6 +88,8 @@ import {
   FirewallResourceSelector,
   type FirewallResourceSelection,
 } from './_components/FirewallResourceSelector'
+import { AttackModeButton } from './_components/AttackMode'
+import { PriorityHint } from './_components/PriorityHint'
 import { UpdateRule } from './_components/UpdateRule'
 import { DeleteRule } from './_components/DeleteRule'
 
@@ -280,7 +282,16 @@ export function RulesList({
           />
         </div>
       </div>
-      {createButton}
+      <div className="flex shrink-0 items-center gap-2">
+        <AttackModeButton
+          projectId={projectId}
+          resourceSelection={resourceSelection}
+          canWrite={canWrite}
+          createDisabled={resolvedCreateDisabled}
+          createDisabledTooltip={resolvedCreateDisabledTooltip}
+        />
+        {createButton}
+      </div>
     </div>
   )
 
@@ -568,7 +579,10 @@ export function RulesList({
                   {t('Action')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Priority')}
+                  <span className="inline-flex items-center gap-1.5">
+                    {t('Priority')}
+                    <PriorityHint className="normal-case tracking-normal" />
+                  </span>
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {t('Conditions')}

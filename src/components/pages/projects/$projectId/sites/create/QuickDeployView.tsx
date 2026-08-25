@@ -37,6 +37,7 @@ import { VariablesSettingsCard } from '@/components/global/shared/VariablesSetti
 import type { WizardVariable } from './WizardContext'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { validateVariables } from '@/lib/variables'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -98,7 +99,10 @@ export function QuickDeployView({
   // Parse env keys
   const envKeysList = useMemo(() => {
     if (!envKeys) return []
-    return envKeys.split(',').filter((k) => k.trim())
+    return envKeys
+      .split(',')
+      .map((k) => k.trim())
+      .filter(Boolean)
   }, [envKeys])
 
   // Local form state
@@ -162,6 +166,15 @@ export function QuickDeployView({
 
     if (!domainValid) {
       toast.error(t('Please enter a valid domain'))
+      return
+    }
+
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured site behind. Only the rows that
+    // get written are checked -- the valueless ones are dropped below.
+    const validationError = validateVariables(variables.filter((v) => v.value))
+    if (validationError) {
+      toast.error(validationError)
       return
     }
 

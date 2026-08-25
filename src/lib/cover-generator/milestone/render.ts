@@ -1,10 +1,8 @@
-import { getTitleFill } from '@/lib/cover-generator/brand-background'
 import { getCoverBrandThemeForSvgExport } from '@/lib/cover-generator/brand-theme'
 import { COVER_HEIGHT, COVER_WIDTH } from '@/lib/cover-generator/constants'
-import type { CoverTitleGradientBounds } from '@/lib/cover-generator/cover-title-gradient'
 import { coverSvgTextBaseline } from '@/lib/cover-generator/cover-svg-text'
 import type { CoverMilestoneFields } from '@/lib/cover-generator/milestone/constants'
-import { escapeXml, formatCoverEyebrow, stripCoverTitleSuffix, wrapTextLines, clampNumber } from '@/lib/cover-generator/text-utils'
+import { COVER_EYEBROW_LETTER_SPACING, escapeXml, formatCoverEyebrow, stripCoverTitleSuffix, wrapTextLines, clampNumber } from '@/lib/cover-generator/text-utils'
 import type { CoverTheme } from '@/lib/cover-generator/constants'
 
 const COVER_CONTENT_X = 96
@@ -14,11 +12,6 @@ const COVER_STAT_LABEL_FONT_SIZE = 22
 const COVER_TITLE_FONT_SIZE = 58
 const COVER_SUBTITLE_FONT_SIZE = 26
 const COVER_TITLE_LINE_STEP = COVER_TITLE_FONT_SIZE + 8
-
-export type MilestoneTemplateSvgResult = {
-  content: string
-  titleGradientBounds?: CoverTitleGradientBounds
-}
 
 export function getMilestoneStatFontSize(stat: string): number {
   const length = stat.trim().length
@@ -61,21 +54,6 @@ function getMilestoneCenteredTitleFontSize(title: string): number {
   return clampNumber(computed, 28, 46)
 }
 
-function buildStatGradientBounds(
-  x: number,
-  y: number,
-  stat: string,
-  fontSize: number,
-): CoverTitleGradientBounds {
-  const width = Math.min(COVER_WIDTH - x - COVER_CONTENT_X, stat.length * fontSize * 0.62)
-  return {
-    x,
-    y,
-    width: Math.max(width, 120),
-    height: fontSize,
-  }
-}
-
 function renderEyebrow(
   eyebrow: string | undefined,
   x: number,
@@ -85,7 +63,7 @@ function renderEyebrow(
   const eyebrowText = formatCoverEyebrow(eyebrow)
   if (!eyebrowText) return ''
 
-  return `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="0.25em" x="${x}" y="${coverSvgTextBaseline(layoutY, COVER_EYEBROW_FONT_SIZE)}">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`
+  return `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="${COVER_EYEBROW_LETTER_SPACING}" x="${x}" y="${coverSvgTextBaseline(layoutY, COVER_EYEBROW_FONT_SIZE)}">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`
 }
 
 function renderTitleBlock(
@@ -124,13 +102,12 @@ function renderStatBlock(params: {
   statLabel?: string
   x: number
   statLayoutY: number
-  statFill: string
   brand: ReturnType<typeof getCoverBrandThemeForSvgExport>
   textAnchor?: 'start' | 'middle'
   statFontSize?: number
   statLabelFontSize?: number
   statLabelGap?: number
-}): { svg: string; fontSize: number } {
+}): string {
   const fontSize = params.statFontSize ?? getMilestoneStatFontSize(params.stat)
   const statLabelFontSize = params.statLabelFontSize ?? COVER_STAT_LABEL_FONT_SIZE
   const statLabelGap = params.statLabelGap ?? 16
@@ -138,24 +115,21 @@ function renderStatBlock(params: {
   const statBaseline = coverSvgTextBaseline(params.statLayoutY, fontSize)
   const labelLayoutY = params.statLayoutY + fontSize + statLabelGap
 
-  const svg = `
-    <text class="cover-title" fill="${params.statFill}" font-size="${fontSize}" x="${params.x}" y="${statBaseline}" text-anchor="${anchor}">${escapeXml(params.stat.trim())}</text>
+  return `
+    <text class="cover-title" fill="${params.brand.foreground}" font-size="${fontSize}" x="${params.x}" y="${statBaseline}" text-anchor="${anchor}">${escapeXml(params.stat.trim())}</text>
     ${
       params.statLabel
         ? `<text class="cover-body" fill="${params.brand.mutedForeground}" font-size="${statLabelFontSize}" x="${params.x}" y="${coverSvgTextBaseline(labelLayoutY, statLabelFontSize)}" text-anchor="${anchor}">${escapeXml(params.statLabel)}</text>`
         : ''
     }
   `
-
-  return { svg, fontSize }
 }
 
 export function renderMilestoneSplitTemplateSvg(
   data: CoverMilestoneFields,
   theme: CoverTheme,
-): MilestoneTemplateSvgResult {
+): string {
   const brand = getCoverBrandThemeForSvgExport(theme)
-  const statFill = getTitleFill(brand, data.gradientStat)
   const eyebrowLayoutY = 188
   const copyStartY = data.eyebrow
     ? eyebrowLayoutY + COVER_EYEBROW_FONT_SIZE + COVER_EYEBROW_TITLE_GAP
@@ -167,48 +141,28 @@ export function renderMilestoneSplitTemplateSvg(
     statFontSize + (data.statLabel ? statLabelFontSize + statLabelGap : 0)
   const statLayoutY = Math.round((COVER_HEIGHT - statBlockHeight) / 2)
 
-  const statBlock = renderStatBlock({
-    stat: data.stat,
-    statLabel: data.statLabel,
-    x: COVER_MILESTONE_SPLIT_CENTER_X,
-    statLayoutY,
-    statFill,
-    brand,
-    textAnchor: 'middle',
-    statFontSize,
-    statLabelFontSize,
-    statLabelGap,
-  })
-
-  const gradientWidth = Math.min(
-    COVER_WIDTH / 2 - COVER_CONTENT_X,
-    data.stat.length * statBlock.fontSize * 0.62,
-  )
-  const titleGradientBounds = data.gradientStat
-    ? buildStatGradientBounds(
-        COVER_MILESTONE_SPLIT_CENTER_X - gradientWidth / 2,
-        statLayoutY,
-        data.stat,
-        statBlock.fontSize,
-      )
-    : undefined
-
-  return {
-    titleGradientBounds,
-    content: `
+  return `
       ${renderEyebrow(data.eyebrow, COVER_CONTENT_X, eyebrowLayoutY, brand)}
       ${renderTitleBlock(data.title, data.subtitle, COVER_CONTENT_X, copyStartY, brand, 20)}
-      ${statBlock.svg}
-    `,
-  }
+      ${renderStatBlock({
+        stat: data.stat,
+        statLabel: data.statLabel,
+        x: COVER_MILESTONE_SPLIT_CENTER_X,
+        statLayoutY,
+        brand,
+        textAnchor: 'middle',
+        statFontSize,
+        statLabelFontSize,
+        statLabelGap,
+      })}
+    `
 }
 
 export function renderMilestoneCenteredTemplateSvg(
   data: CoverMilestoneFields,
   theme: CoverTheme,
-): MilestoneTemplateSvgResult {
+): string {
   const brand = getCoverBrandThemeForSvgExport(theme)
-  const statFill = getTitleFill(brand, data.gradientStat)
   const centerX = COVER_WIDTH / 2
   const statFontSize = getMilestoneCenteredHeroStatFontSize(data.stat)
   const statLabelFontSize = COVER_MILESTONE_CENTERED_STAT_LABEL_FONT_SIZE
@@ -239,7 +193,7 @@ export function renderMilestoneCenteredTemplateSvg(
 
   if (eyebrowText) {
     parts.push(
-      `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="0.25em" x="${centerX}" y="${coverSvgTextBaseline(cursorY, COVER_EYEBROW_FONT_SIZE)}" text-anchor="middle">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`,
+      `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="${COVER_EYEBROW_LETTER_SPACING}" x="${centerX}" y="${coverSvgTextBaseline(cursorY, COVER_EYEBROW_FONT_SIZE)}" text-anchor="middle">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`,
     )
     cursorY += eyebrowBlockHeight
   }
@@ -251,13 +205,12 @@ export function renderMilestoneCenteredTemplateSvg(
       statLabel: data.statLabel,
       x: centerX,
       statLayoutY,
-      statFill,
       brand,
       textAnchor: 'middle',
       statFontSize,
       statLabelFontSize,
       statLabelGap,
-    }).svg,
+    }),
   )
   cursorY += statBlockHeight + COVER_MILESTONE_CENTERED_STAT_TITLE_GAP
 
@@ -272,12 +225,5 @@ export function renderMilestoneCenteredTemplateSvg(
     )
   }
 
-  const titleGradientBounds = data.gradientStat
-    ? buildStatGradientBounds(centerX - 280, statLayoutY, data.stat, statFontSize)
-    : undefined
-
-  return {
-    titleGradientBounds,
-    content: parts.join(''),
-  }
+  return parts.join('')
 }

@@ -276,6 +276,7 @@ function buildCoverScreenshotSideFrameShellLayout(
     paddingX,
     paddingTop,
     chromeHeight,
+    closed: false,
   }
 }
 

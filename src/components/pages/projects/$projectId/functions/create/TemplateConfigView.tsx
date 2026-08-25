@@ -57,6 +57,7 @@ import { VCSDetectionType } from '@appwrite.io/console'
 import type { FunctionWizardVariable } from './RepositoryConfigView'
 import { useT } from '@/lib/i18n/translate'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
+import { validateVariables } from '@/lib/variables'
 
 interface TemplateConfigViewProps {
   templateId: string
@@ -248,6 +249,17 @@ export function TemplateConfigView({
         toast.error(t('Please select a repository'))
         return
       }
+    }
+
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured function behind. Only the rows
+    // that get written are checked -- the keyless ones are skipped below.
+    const validationError = validateVariables(
+      variables.filter((v) => v.key.trim()),
+    )
+    if (validationError) {
+      toast.error(validationError)
+      return
     }
 
     setIsDeploying(true)
