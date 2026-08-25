@@ -16,6 +16,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Locale\Geo;
+use Appwrite\Locale\Geo\Client as GeoClient;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
@@ -1214,10 +1215,9 @@ return function (Container $context): void {
         return new Agent($adapter);
     }, ['register']);
 
-    $context->set('geo', fn (Locale $locale, Table $geoRecords) => new Geo(
-        System::getEnv('_APP_GEO_ENDPOINT', ''),
-        System::getEnv('_APP_GEO_SECRET', ''),
+    $context->set('geo', fn (Locale $locale, ?GeoClient $geoClient, Table $geoRecords) => new Geo(
+        $geoClient,
         $locale,
         $geoRecords
-    ), ['locale', 'geoRecords']);
+    ), ['locale', 'geoClient', 'geoRecords']);
 };

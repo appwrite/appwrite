@@ -2,10 +2,10 @@
 
 namespace Appwrite\Locale;
 
+use Appwrite\Locale\Geo\Client;
 use Swoole\Table;
 use Utopia\Config\Config;
 use Utopia\Console;
-use Utopia\Fetch\Client;
 use Utopia\Locale\Locale;
 
 class Geo
@@ -14,8 +14,7 @@ class Geo
     public const CACHE_VALUE_SIZE = 512;
 
     public function __construct(
-        private string $endpoint,
-        private string $secret,
+        private ?Client $client,
         private Locale $locale,
         private ?Table $cache = null,
     ) {
@@ -31,7 +30,7 @@ class Geo
         $record = $this->cached($ip);
 
         if ($record === null) {
-            $record = $this->fetch($ip);
+            $record = $this->client?->lookup($ip);
             if ($record !== null) {
                 $this->store($ip, $record);
             }
@@ -116,33 +115,5 @@ class Geo
             }
             $this->cache->set($ip, ['value' => $value]);
         }
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    private function fetch(string $ip): ?array
-    {
-        if (empty($this->endpoint) || empty($this->secret)) {
-            return null;
-        }
-
-        try {
-            $client = new Client();
-            $client->addHeader('Authorization', 'Bearer ' . $this->secret);
-            $client->setTimeout(3000);
-
-            $response = $client->fetch(\rtrim($this->endpoint, '/') . "/ips/{$ip}", Client::METHOD_GET);
-            if ($response->getStatusCode() === 200) {
-                $body = $response->json();
-                if (\is_array($body)) {
-                    return $body;
-                }
-            }
-        } catch (\Throwable $th) {
-            Console::warning('Geo service unavailable: ' . $th->getMessage());
-        }
-
-        return null;
     }
 }
