@@ -346,6 +346,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
+    "slug": "advanced/self-hosting/configuration/topologies",
+    "title": "Worker topologies",
+    "description": "Choose between the combined and separate worker topologies for your self-hosted Appwrite instance. Learn which containers each topology runs and when to use each one.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "advanced/self-hosting/configuration/version-control",
     "title": "Version control",
     "description": "Configure version control integration for Functions and Sites in your self-hosted Appwrite instance.",
@@ -357,7 +364,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "advanced/self-hosting/mcp",
@@ -585,8 +592,8 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "partners/apps",
-    "title": "Apps",
-    "description": "Register and manage OAuth apps with the Appwrite Console Apps API. Publish integrations, manage client secrets, and connect users through OAuth 2.0.",
+    "title": "Sign in with Appwrite",
+    "description": "Build apps that access your users' Appwrite projects and organizations with consent-based, scoped OAuth2 tokens instead of pasted API keys.",
     "layout": "article",
     "readingTimeMinutes": 3
   },
@@ -1475,6 +1482,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "How to implement SSR authentication with Appwrite",
     "layout": "article",
     "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/auth/sign-in-with-appwrite",
+    "title": "Sign in with Appwrite",
+    "description": "Let users sign in to your app with their Appwrite account. Enable the Appwrite OAuth2 provider and create sessions with a consent-based flow.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/auth/team-invites",
@@ -2489,7 +2503,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Documents",
     "description": "Create, read, update, and delete documents in Appwrite VectorsDB. Learn how to store embedding vectors and metadata in your collections.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/vectorsdb/embeddings",
@@ -2529,9 +2543,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/databases/vectorsdb/quick-start",
     "title": "Start with VectorsDB",
-    "description": "Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and read them back.",
+    "description": "Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and search them by similarity.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/vectorsdb/timestamp-overrides",
@@ -2552,7 +2566,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Vector search",
     "description": "Run similarity search over your documents with Appwrite VectorsDB. Create an HNSW index on the embeddings field and rank documents by cosine, dot product, or Euclidean distance.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/domains",
@@ -3880,9 +3894,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "tooling/ai/vector-db-and-embeddings",
     "title": "Vector DB and embeddings",
-    "description": "Using vector databases and embeddings with Appwrite.",
+    "description": "Build semantic search on Appwrite VectorsDB. Generate embeddings, store them alongside your content, and rank results by meaning with a TanStack Start app.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "tooling/ai/vibe-coding/bolt",

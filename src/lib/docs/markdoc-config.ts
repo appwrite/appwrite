@@ -74,6 +74,7 @@ export const docsMarkdocConfig: Config = {
       render: 'RateLimitStrategyAnimation',
       attributes: { strategy: { type: String, required: true } },
     },
+    compose_generator: { render: 'ComposeGenerator' },
     table: { render: 'MarkdocTableTag' },
   },
   nodes: {

@@ -311,6 +311,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
               href: "/docs/advanced/self-hosting/configuration/environment-variables",
             },
             {
+              label: "Topologies",
+              href: "/docs/advanced/self-hosting/configuration/topologies",
+            },
+            {
               label: "Email delivery",
               href: "/docs/advanced/self-hosting/configuration/email",
             },

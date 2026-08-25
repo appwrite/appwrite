@@ -83,8 +83,9 @@ Configure your Appwrite instance's basic settings.
 {% /only_light %}
 
 - **Hostname** - The domain or IP address where your Appwrite instance will be accessible.
-- **Database** - Choose between [MongoDB or MariaDB](/docs/advanced/self-hosting/configuration/databases) as your database backend. MongoDB is selected by default.
-- **Advanced settings** - Optionally configure HTTP and HTTPS ports, SSL certificate email, and an OpenAI API key for the [Appwrite Assistant](/docs/tooling/assistant).
+- **Use HTTPS** - Turn this on when your Appwrite domain uses HTTPS, including behind a reverse proxy.
+- **Database** - Choose [PostgreSQL, MariaDB, or MongoDB](/docs/advanced/self-hosting/configuration/databases) as your database backend. PostgreSQL is selected by default.
+- **Advanced settings** - Optionally configure the [worker topology](/docs/advanced/self-hosting/configuration/topologies) under **Workers and schedulers**, HTTP and HTTPS ports, SSL certificate email, and an OpenAI API key for the [Appwrite Assistant](/docs/tooling/assistant).
 
 ## Step 2: Secure your app {% #wizard-secure %}
 
@@ -135,13 +136,17 @@ For advanced users who prefer manual setup, you can install Appwrite using Docke
 
 ## Install Appwrite {% #install-appwrite %}
 
-1. Create a directory named `appwrite` and place both `docker-compose.yml` and `.env` inside
+1. Create a directory named `appwrite` and place the generated files inside. Every installation needs `docker-compose.yml` and `.env`; MongoDB installations also need `mongo-init.js` and `mongo-entrypoint.sh`
 2. Edit the `.env` file to customize your installation. At minimum, update `_APP_OPENSSL_KEY_V1` and `_APP_EXECUTOR_SECRET` with unique secret values
 3. Start the Appwrite stack:
 
 ```bash
 docker compose up -d --remove-orphans
 ```
+
+{% info title="Worker topologies" %}
+By default, Appwrite runs all queue workers in a single container. To run one container per queue instead, see [Worker topologies](/docs/advanced/self-hosting/configuration/topologies).
+{% /info %}
 
 # Post-installation {% #post-installation %}
 
