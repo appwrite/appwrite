@@ -3,6 +3,11 @@
 namespace Utopia\Mqtt;
 
 use Swoole\Server;
+use Utopia\Span\Span;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
+use Utopia\Telemetry\Counter;
+use Utopia\Telemetry\UpDownCounter;
 
 class Broker
 {
@@ -49,17 +54,50 @@ class Broker
     /** @var array<int, int> fd => last outbound packet id (QoS 1 delivery) */
     private array $packetId = [];
 
+    /** @var array<int, true> fds counted as active (accepted CONNECT), for a balanced gauge */
+    private array $active = [];
+
     /**
      *
      * @var (callable(string, string, string): array<string, string>)|null
      */
     private $authenticator = null;
 
+    /**
+     * ACL for SUBSCRIBE: given the connection identity and a topic filter, may it subscribe?
+     * Without one, every authenticated connection may subscribe to anything.
+     *
+     * @var (callable(array<string, string>, string): bool)|null
+     */
+    private $authorizer = null;
+
+    private Counter $connectionsOpened;
+    private UpDownCounter $connectionsActive;
+    private Counter $subscriptionsCounter;
+    private Counter $messagesPublished;
+    private Counter $messagesDelivered;
+    private Counter $messagesDropped;
+
     public function __construct(
         private readonly string $host = '0.0.0.0',
         private readonly int $port = 1883,
     ) {
         $this->subscriptions = new SubscriptionStore();
+        $this->withTelemetry(new NoTelemetry());
+    }
+
+    /**
+     * Register telemetry instruments for connection and delivery metrics. Defaults to a
+     * no-op adapter, so the broker works untelemetered (e.g. raw protocol testing).
+     */
+    public function withTelemetry(Telemetry $telemetry): void
+    {
+        $this->connectionsOpened = $telemetry->createCounter('mqtt.connections.opened');
+        $this->connectionsActive = $telemetry->createUpDownCounter('mqtt.connections.active');
+        $this->subscriptionsCounter = $telemetry->createCounter('mqtt.subscriptions');
+        $this->messagesPublished = $telemetry->createCounter('mqtt.messages.published');
+        $this->messagesDelivered = $telemetry->createCounter('mqtt.messages.delivered');
+        $this->messagesDropped = $telemetry->createCounter('mqtt.messages.dropped');
     }
 
     /**
@@ -71,6 +109,17 @@ class Broker
     public function onConnect(callable $authenticator): void
     {
         $this->authenticator = $authenticator;
+    }
+
+    /**
+     * Register the SUBSCRIBE authorizer (ACL). Denied filters are answered with a
+     * Not Authorized reason code and never enter the subscription store.
+     *
+     * @param callable(array<string, string>, string): bool $authorizer
+     */
+    public function onSubscribe(callable $authorizer): void
+    {
+        $this->authorizer = $authorizer;
     }
 
     public function start(): void
@@ -96,16 +145,43 @@ class Broker
         [$remaining, $lenBytes] = $this->decodeLength($data, 1);
         $body = substr($data, 1 + $lenBytes, $remaining);
 
-        match ($type) {
-            self::CONNECT => $this->handleConnect($server, $fd, $body),
-            self::SUBSCRIBE => $this->handleSubscribe($server, $fd, $body),
-            self::UNSUBSCRIBE => $this->handleUnsubscribe($server, $fd, $body),
-            self::PUBLISH => $this->handlePublish($server, $fd, $flags, $body),
-            self::PUBACK => null,
-            self::AUTH => $this->handleAuth($server, $fd, $body),
-            self::PINGREQ => $server->send($fd, chr(self::PINGRESP << 4) . $this->encodeLength(0)),
-            self::DISCONNECT => $server->close($fd),
-            default => null,
+        // One span per control packet, tagged with the connection's identity for tracing.
+        $span = Span::init('mqtt.' . $this->packetName($type));
+        $span->set('mqtt.fd', $fd);
+        $span->set('project.id', $this->project[$fd] ?? '');
+        $span->set('user.id', $this->identity[$fd]['userId'] ?? '');
+
+        try {
+            match ($type) {
+                self::CONNECT => $this->handleConnect($server, $fd, $body),
+                self::SUBSCRIBE => $this->handleSubscribe($server, $fd, $body),
+                self::UNSUBSCRIBE => $this->handleUnsubscribe($server, $fd, $body),
+                self::PUBLISH => $this->handlePublish($server, $fd, $flags, $body),
+                self::PUBACK => null,
+                self::AUTH => $this->handleAuth($server, $fd, $body),
+                self::PINGREQ => $server->send($fd, chr(self::PINGRESP << 4) . $this->encodeLength(0)),
+                self::DISCONNECT => $server->close($fd),
+                default => null,
+            };
+            $span->finish();
+        } catch (\Throwable $error) {
+            $span->finish(error: $error);
+            throw $error;
+        }
+    }
+
+    private function packetName(int $type): string
+    {
+        return match ($type) {
+            self::CONNECT => 'connect',
+            self::SUBSCRIBE => 'subscribe',
+            self::UNSUBSCRIBE => 'unsubscribe',
+            self::PUBLISH => 'publish',
+            self::PUBACK => 'puback',
+            self::AUTH => 'auth',
+            self::PINGREQ => 'pingreq',
+            self::DISCONNECT => 'disconnect',
+            default => 'unknown',
         };
     }
 
@@ -124,20 +200,29 @@ class Broker
 
         $projectId = $properties['user']['projectId'] ?? '';
         $this->project[$fd] = $projectId;
+        $authMethod = $properties['authMethod'];
+        Span::add('project.id', $projectId);
+        Span::add('mqtt.auth_method', $authMethod);
 
         // TODO: add abuse limiting keyed on the client ip.
         if ($this->authenticator !== null) {
-            $identity = ($this->authenticator)($projectId, $properties['authMethod'], $properties['authData']);
+            $identity = ($this->authenticator)($projectId, $authMethod, $properties['authData']);
 
             if ($identity === []) {
+                $this->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'rejected']);
+                Span::add('mqtt.result', 'rejected');
                 $this->sendConnack($server, $fd, $level, self::REASON_NOT_AUTHORIZED);
                 $server->close($fd);
                 return;
             }
 
             $this->identity[$fd] = $identity;
+            Span::add('user.id', $identity['userId'] ?? '');
         }
 
+        $this->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'accepted']);
+        $this->connectionsActive->add(1);
+        $this->active[$fd] = true;
         $this->sendConnack($server, $fd, $level, self::REASON_SUCCESS);
     }
 
@@ -203,13 +288,25 @@ class Broker
 
         $projectId = $this->project[$fd] ?? '';
         $userId = $this->identity[$fd]['userId'] ?? '';
+        $identity = $this->identity[$fd] ?? [];
 
         $granted = '';
         while ($offset < strlen($body)) {
             [$filter, $offset] = $this->readString($body, $offset);
             $offset += 1; // subscription options byte
+            Span::add('mqtt.topic', $filter);
+
+            // ACL: an unauthorized filter is answered Not Authorized and never stored.
+            if ($this->authorizer !== null && !($this->authorizer)($identity, $filter)) {
+                $granted .= chr(self::REASON_NOT_AUTHORIZED);
+                $this->subscriptionsCounter->add(1, ['result' => 'denied']);
+                Span::add('mqtt.result', 'denied');
+                continue;
+            }
+
             $this->subscriptions->subscribe($projectId, $userId, $subId ?: $filter, $filter, $fd, self::QOS_1);
             $granted .= chr(self::QOS_1); // granted max QoS 1
+            $this->subscriptionsCounter->add(1, ['result' => 'granted']);
         }
         // SUBACK: packet id (+ property length 0 for v5) + granted codes
         $variable = $packetId . ($this->protocol[$fd] >= 5 ? $this->encodeLength(0) : '') . $granted;
@@ -313,8 +410,20 @@ class Broker
         $offset = $this->skipProperties($fd, $body, $offset);
         $payload = substr($body, $offset);
 
-        foreach ($this->subscriptions->getSubscribers($this->project[$fd] ?? '', $topic) as $subscriberFd => $grantedQos) {
-            $this->send($server, $subscriberFd, $topic, $payload, min($qos, $grantedQos));
+        Span::add('mqtt.topic', $topic);
+        $this->messagesPublished->add(1, ['qos' => $qos]);
+
+        $subscribers = $this->subscriptions->getSubscribers($this->project[$fd] ?? '', $topic);
+        Span::add('mqtt.subscribers', count($subscribers));
+
+        if ($subscribers === []) {
+            $this->messagesDropped->add(1, ['reason' => 'no_subscriber']);
+        }
+
+        foreach ($subscribers as $subscriberFd => $grantedQos) {
+            $effectiveQos = min($qos, $grantedQos);
+            $this->send($server, $subscriberFd, $topic, $payload, $effectiveQos);
+            $this->messagesDelivered->add(1, ['qos' => $effectiveQos]);
         }
 
         if ($qos === 1) {
@@ -349,12 +458,16 @@ class Broker
 
     private function onClose(Server $server, int $fd): void
     {
+        if (isset($this->active[$fd])) {
+            $this->connectionsActive->add(-1);
+        }
         $this->subscriptions->close($fd);
         unset(
             $this->protocol[$fd],
             $this->project[$fd],
             $this->identity[$fd],
             $this->packetId[$fd],
+            $this->active[$fd],
         );
     }
 
