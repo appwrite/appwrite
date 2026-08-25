@@ -52,7 +52,11 @@ return function (Container $container): void {
             /** @var User $user */
             $user = $dbForProject->getDocument('users', $userId);
 
-            if ($user->isEmpty() || ($sessionId !== '' && !$user->sessionActive($sessionId))) {
+            if (
+                $user->isEmpty()
+                || $user->getAttribute('status', true) === false // blocked account
+                || ($sessionId !== '' && !$user->sessionActive($sessionId))
+            ) {
                 return new User([]);
             }
 
@@ -70,6 +74,7 @@ return function (Container $container): void {
 
         if (
             $user->isEmpty()
+            || $user->getAttribute('status', true) === false // blocked account
             || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
         ) {
             return new User([]);
