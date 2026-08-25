@@ -7631,14 +7631,21 @@ trait DatabasesBase
             $this->waitForAttribute($data['databaseId'], $data['$id'], 'longtext');
         }
 
+        // The fixture is ~12MB, just under Swoole's 12MiB package_max_length /
+        // output_buffer_size. Ten concurrent HTTP creates of that size never
+        // complete under paratest (curl: 0 bytes, 120s) — isolated they take ~1s
+        // each. A 1MiB slice plus contains() still exceeds statement_timeout=1ms
+        // (notEqual on 1MiB returned 200 on DocumentsDB).
+        $longtext = substr(file_get_contents(__DIR__ . '/../../../resources/longtext.txt'), 0, 1024 * 1024);
+
         for ($i = 0; $i < 10; $i++) {
-            $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
+            $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 $this->getRecordIdParam() => ID::unique(),
                 'data' => [
-                    'longtext' => file_get_contents(__DIR__ . '/../../../resources/longtext.txt'),
+                    'longtext' => $longtext,
                 ],
                 'permissions' => [
                     Permission::read(Role::user($this->getUser()['$id'])),
@@ -7646,6 +7653,7 @@ trait DatabasesBase
                     Permission::delete(Role::user($this->getUser()['$id'])),
                 ]
             ]);
+            $this->assertEquals(201, $document['headers']['status-code']);
         }
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
@@ -7654,7 +7662,7 @@ trait DatabasesBase
             'x-appwrite-timeout' => 1,
         ], $this->getHeaders()), [
             'queries' => [
-                Query::notEqual('longtext', 'appwrite')->toString(),
+                Query::contains('longtext', ['needle-that-does-not-exist'])->toString(),
             ],
         ]);
 
