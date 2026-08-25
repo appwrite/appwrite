@@ -4,7 +4,7 @@ title: Priority
 description: Learn how Appwrite Firewall evaluates rules by priority and first-match behavior.
 ---
 
-**Priority** controls the order in which enabled Firewall rules are evaluated. Lower numbers are evaluated first. Valid values range from `-100000` to `100000`. The first matching enabled rule applies its [action](/docs/products/firewall/actions) and evaluation stops for that request.
+**Priority** controls the order in which enabled Firewall rules are evaluated. Lower numbers are evaluated first. The Console accepts values from `0` to `100000`; the API also accepts negative values down to `-100000`. The first matching enabled rule applies its [action](/docs/products/firewall/actions) and evaluation stops for that request.
 
 # How evaluation works {% #how-evaluation-works %}
 
@@ -45,8 +45,8 @@ Use [impact preview](/docs/products/firewall/monitor#impact-preview) while editi
 
 # Updating priority {% #updating-priority %}
 
-Change priority from [Update a rule](/docs/products/firewall/update). After saving, new requests use the updated order immediately. Historical traffic metrics are not rewritten.
+To change a rule's priority, open the rule's actions menu in the rules list and choose **Update**. After saving, new requests use the updated order immediately. Historical traffic metrics are not rewritten.
 
-{% arrow_link href="/docs/products/firewall/create" %}
-Create a rule
+{% arrow_link href="/docs/products/firewall/allowlist-ips" %}
+Allowlist trusted IP addresses
 {% /arrow_link %}

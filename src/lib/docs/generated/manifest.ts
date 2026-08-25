@@ -2681,6 +2681,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 7
   },
   {
+    "slug": "products/firewall/allowlist-ips",
+    "title": "Allowlist trusted IP addresses",
+    "description": "Pair an Appwrite Firewall bypass rule with a deny rule so only trusted IP addresses reach a protected path.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
     "slug": "products/firewall/attack-mode",
     "title": "Attack mode",
     "description": "Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.",
@@ -2688,25 +2695,25 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
+    "slug": "products/firewall/block-countries",
+    "title": "Block traffic by country",
+    "description": "Create Appwrite Firewall deny rules that block project API traffic from specific countries.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/firewall/challenge-bots",
+    "title": "Challenge automated traffic",
+    "description": "Create Appwrite Firewall challenge rules that verify suspected bots before their requests continue.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "products/firewall/conditions",
     "title": "Conditions",
     "description": "Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.",
     "layout": "article",
     "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/firewall/create",
-    "title": "Create a rule",
-    "description": "Create an Appwrite Firewall rule with resource scope, conditions, action, and priority from the Console wizard.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/firewall/delete",
-    "title": "Delete a rule",
-    "description": "Remove an Appwrite Firewall rule from a project and understand the impact on traffic.",
-    "layout": "article",
-    "readingTimeMinutes": 2
   },
   {
     "slug": "products/firewall/monitor",
@@ -2730,6 +2737,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/firewall/rate-limit-auth",
+    "title": "Rate limit authentication traffic",
+    "description": "Create an Appwrite Firewall rate limit rule that slows brute-force attempts on authentication paths.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "products/firewall/rules",
     "title": "Rules",
     "description": "Learn what Appwrite Firewall rules contain, how enabled state works, and how plan limits apply.",
@@ -2744,11 +2758,11 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
-    "slug": "products/firewall/update",
-    "title": "Update a rule",
-    "description": "Change an existing Appwrite Firewall rule's name, scope, conditions, action settings, priority, or enabled state.",
+    "slug": "products/firewall/site-maintenance",
+    "title": "Redirect a site for maintenance",
+    "description": "Create Appwrite Firewall rules that send visitors of a site to a maintenance page and back.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/functions",

@@ -8,6 +8,13 @@ Appwrite **Firewall** is project-level traffic control on Appwrite Cloud. You de
 
 Rules live on each project under **Firewall**. You can scope them to the project API or to a specific function or site, preview how many recent requests would match, and monitor request volume alongside denied, rate-limited, redirected, and challenged outcomes.
 
+{% only_dark %}
+![Firewall page with traffic overview and rules](/images/docs/firewall/dark/traffic-overview.avif)
+{% /only_dark %}
+{% only_light %}
+![Firewall page with traffic overview and rules](/images/docs/firewall/traffic-overview.avif)
+{% /only_light %}
+
 {% info title="Appwrite Cloud" %}
 Firewall is available on Appwrite Cloud. Rule limits depend on your organization plan (see [Plan limits](/docs/products/firewall/rules#plan-limits)).
 {% /info %}
@@ -19,7 +26,7 @@ Each Firewall rule combines four ideas:
 1. **Resource scope**: Which traffic the rule considers. Choose the project **API**, a specific **Function**, or a specific **Site**. See [Resource scopes](/docs/products/firewall/scopes).
 2. **Conditions**: Filters on request attributes (for example IP equals a value, path starts with `/v1/account`, country equals `US`). All conditions on a rule must match (AND). At least one condition is required.
 3. **Action**: What happens when conditions match: **Deny**, **Bypass**, **Challenge**, **Rate limit**, or **Redirect**.
-4. **Priority**: Lower numbers are evaluated first (range `-100000` to `100000`). The first matching enabled rule decides the outcome for that request and stops evaluation.
+4. **Priority**: Lower numbers are evaluated first. The first matching enabled rule decides the outcome for that request and stops evaluation.
 
 Disabled rules stay in your project and still count toward plan limits, but they are not evaluated.
 
@@ -63,23 +70,29 @@ Evaluation order, first-match behavior, and tips for stacking rules safely.
 
 # Guides {% #guides %}
 
-Step-by-step guides for common Firewall tasks in the Console.
+Step-by-step guides for common Firewall policies in the Console.
 
 {% cards %}
-{% cards_item href="/docs/products/firewall/create" title="Create a rule" %}
-Open the create wizard, set scope, conditions, and action, then review impact before saving.
+{% cards_item href="/docs/products/firewall/block-countries" title="Block traffic by country" %}
+Deny project API traffic from specific countries, or serve only the countries you allow.
 {% /cards_item %}
-{% cards_item href="/docs/products/firewall/update" title="Update a rule" %}
-Change name, scope, conditions, action settings, priority, or enabled state.
+{% cards_item href="/docs/products/firewall/allowlist-ips" title="Allowlist trusted IP addresses" %}
+Pair a bypass rule with a deny rule so only trusted IP addresses reach a protected path.
+{% /cards_item %}
+{% cards_item href="/docs/products/firewall/rate-limit-auth" title="Rate limit authentication traffic" %}
+Set a request quota on authentication paths to slow brute-force attempts.
+{% /cards_item %}
+{% cards_item href="/docs/products/firewall/challenge-bots" title="Challenge automated traffic" %}
+Verify suspected bots with a challenge before their requests continue.
+{% /cards_item %}
+{% cards_item href="/docs/products/firewall/site-maintenance" title="Redirect a site for maintenance" %}
+Send visitors of a site to a maintenance page and back without a new deployment.
 {% /cards_item %}
 {% cards_item href="/docs/products/firewall/monitor" title="Monitor traffic" %}
 Read traffic overview metrics and use impact preview when designing new rules.
 {% /cards_item %}
 {% cards_item href="/docs/products/firewall/attack-mode" title="Attack mode" %}
 Challenge every visitor to a site with one click during an incident.
-{% /cards_item %}
-{% cards_item href="/docs/products/firewall/delete" title="Delete a rule" %}
-Remove a rule from the project and understand what happens to active traffic.
 {% /cards_item %}
 {% /cards %}
 

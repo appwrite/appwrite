@@ -4184,6 +4184,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/firewall/allowlist-ips",
+    "title": "Allowlist trusted IP addresses",
+    "description": "Pair an Appwrite Firewall bypass rule with a deny rule so only trusted IP addresses reach a protected path.",
+    "excerpt": "An allowlist uses two rules. A **bypass** rule with a low priority number lets trusted traffic through. A **deny** rule with a higher priority number blocks all other traffic to the same path. The pair works because of priority. Appwrite evaluates rules with lower priority numbers first. A matching bypass rule stops evaluation, so the deny rule never runs for trusted traffic. Create the bypass rule 1. Open **Firewall** in your project. 2. Click **Create rule**. 3. Enter a **Rule…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Allowlist trusted IPs"
+    ]
+  },
+  {
     "slug": "products/firewall/attack-mode",
     "title": "Attack mode",
     "description": "Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.",
@@ -4192,6 +4203,28 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Firewall",
       "Guides",
       "Attack mode"
+    ]
+  },
+  {
+    "slug": "products/firewall/block-countries",
+    "title": "Block traffic by country",
+    "description": "Create Appwrite Firewall deny rules that block project API traffic from specific countries.",
+    "excerpt": "A deny rule with a country condition blocks all matching traffic from that country. Use this pattern to comply with regional restrictions or to stop abuse that comes from one region. Country conditions use the geo location of the client IP address. Country and continent conditions are available on every plan. City and state conditions require the premium Geo DB addon. See Conditions. Create the deny rule 1. Open **Firewall** in your project. 2. Click **Create rule**. 3. Enter a…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Block traffic by country"
+    ]
+  },
+  {
+    "slug": "products/firewall/challenge-bots",
+    "title": "Challenge automated traffic",
+    "description": "Create Appwrite Firewall challenge rules that verify suspected bots before their requests continue.",
+    "excerpt": "A challenge rule verifies matching clients before their requests continue. Clients that pass the challenge continue to your application. Clients that fail do not. Use challenge instead of deny when automated traffic and normal users share the same paths. The interactive challenge page is served for **site** and **function** traffic when a browser navigates to the resource. **API**-scoped challenge rules reject matching requests with a challenge-required error, because API clients cannot solve an interactive challenge. Scope challenge rules to a…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Challenge automated traffic"
     ]
   },
   {
@@ -4206,32 +4239,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "products/firewall/create",
-    "title": "Create a rule",
-    "description": "Create an Appwrite Firewall rule with resource scope, conditions, action, and priority from the Console wizard.",
-    "excerpt": "You create Firewall rules from the project Console. The wizard collects scope, conditions, and action, and shows an impact preview before you save. This guide walks through the full create flow. Open the create wizard 1. Open your project. 2. Go to **Firewall**. 3. Optionally select the **API**, **Functions**, or **Sites** tab for the scope you want. 4. Click **Create rule**. The wizard opens fullscreen. Closing it returns you to the Firewall list for the same scope tab. Name and…",
-    "breadcrumbs": [
-      "Firewall",
-      "Guides",
-      "Create a rule"
-    ]
-  },
-  {
-    "slug": "products/firewall/delete",
-    "title": "Delete a rule",
-    "description": "Remove an Appwrite Firewall rule from a project and understand the impact on traffic.",
-    "excerpt": "Deleting a Firewall rule removes it from the project permanently. Matching traffic is no longer affected by that rule. This action cannot be undone. Before you delete - Confirm no other process depends on the rule (for example an allowlist bypass that protects a broad deny). - Prefer **disable** from Update a rule if you only need to pause the policy temporarily. Disabled rules still count toward plan limits. - For the **Attack mode** rule on a site, turn Attack…",
-    "breadcrumbs": [
-      "Firewall",
-      "Guides",
-      "Delete a rule"
-    ]
-  },
-  {
     "slug": "products/firewall/monitor",
     "title": "Monitor traffic",
     "description": "Use Firewall traffic overview and rule impact preview to understand how Appwrite Firewall handles project requests.",
-    "excerpt": "Firewall includes a **traffic overview** on the project Firewall page and an **impact preview** while creating rules. Together they help you validate policies before and after you enable them. Traffic overview Open **Firewall** in your project. Above the rules list, the overview chart and metrics summarize recent traffic for the selected date range and interval. Series include: | Series | Source | Meaning | |--------|--------|---------| | **Passed** | Project request volume () | Overall requests in the window (not a…",
+    "excerpt": "Firewall includes a **traffic overview** on the project Firewall page and an **impact preview** while creating rules. Together they help you validate policies before and after you enable them. Traffic overview Open **Firewall** in your project. Above the rules list, the overview chart and metrics summarize recent traffic for the selected date range and interval. Series include: | Series | Source | Meaning | |--------|--------|---------| | **Passed** | Project request volume () | Requests that got through to your application,…",
     "breadcrumbs": [
       "Firewall",
       "Guides",
@@ -4242,7 +4253,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/firewall/priority",
     "title": "Priority",
     "description": "Learn how Appwrite Firewall evaluates rules by priority and first-match behavior.",
-    "excerpt": "**Priority** controls the order in which enabled Firewall rules are evaluated. Lower numbers are evaluated first. Valid values range from to . The first matching enabled rule applies its action and evaluation stops for that request. How evaluation works 1. Appwrite loads **enabled** rules for the project, ordered by priority ascending (for example before ). 2. Rules that do not apply to the current resource scope are skipped. 3. For each remaining rule in order, Appwrite checks whether all conditions…",
+    "excerpt": "**Priority** controls the order in which enabled Firewall rules are evaluated. Lower numbers are evaluated first. The Console accepts values from to ; the API also accepts negative values down to . The first matching enabled rule applies its action and evaluation stops for that request. How evaluation works 1. Appwrite loads **enabled** rules for the project, ordered by priority ascending (for example before ). 2. Rules that do not apply to the current resource scope are skipped. 3. For…",
     "breadcrumbs": [
       "Firewall",
       "Concepts",
@@ -4258,6 +4269,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Firewall",
       "Getting started",
       "Quick start"
+    ]
+  },
+  {
+    "slug": "products/firewall/rate-limit-auth",
+    "title": "Rate limit authentication traffic",
+    "description": "Create an Appwrite Firewall rate limit rule that slows brute-force attempts on authentication paths.",
+    "excerpt": "A rate limit rule sets a request quota for matching traffic. Use it on authentication paths to slow brute-force attacks without blocking normal users. This guide limits session creation. Each client IP address can send matching requests per seconds. Requests over the quota receive a response with a header. Create the rate limit rule 1. Open **Firewall** in your project. 2. Click **Create rule**. 3. Enter a **Rule name** (for example ). 4. Keep **Resource type** set to **API**. 5.…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Rate limit auth traffic"
     ]
   },
   {
@@ -4283,14 +4305,14 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "products/firewall/update",
-    "title": "Update a rule",
-    "description": "Change an existing Appwrite Firewall rule's name, scope, conditions, action settings, priority, or enabled state.",
-    "excerpt": "You can update Firewall rules from the rules list without recreating them. Changes apply to new requests after save. Historical metrics are not rewritten. Open update 1. Open **Firewall** in your project. 2. Select the **API**, **Functions**, or **Sites** tab that contains the rule. 3. Open the rule's actions menu and choose **Update**, or use the update action from the rule context menu. What you can change | Field | Notes | |-------|-------| | Name and description | Labels only;…",
+    "slug": "products/firewall/site-maintenance",
+    "title": "Redirect a site for maintenance",
+    "description": "Create Appwrite Firewall rules that send visitors of a site to a maintenance page and back.",
+    "excerpt": "A redirect rule sends matching visitors to another location. Use it to put a deployed site into maintenance without a new deployment. This guide uses two rules on one site. A **bypass** rule keeps the maintenance page itself reachable. A **redirect** rule sends every other path to the maintenance page. Without the bypass rule, requests to the maintenance page would match the redirect rule and loop. Create the bypass rule 1. Open **Firewall** in your project. 2. Click **Create rule**.…",
     "breadcrumbs": [
       "Firewall",
       "Guides",
-      "Update a rule"
+      "Redirect for maintenance"
     ]
   },
   {
