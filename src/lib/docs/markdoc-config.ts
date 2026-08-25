@@ -69,6 +69,11 @@ export const docsMarkdocConfig: Config = {
       },
     },
     prompt_content: { selfClosing: true, render: 'PromptContent' },
+    rate_limit_animation: {
+      selfClosing: true,
+      render: 'RateLimitStrategyAnimation',
+      attributes: { strategy: { type: String, required: true } },
+    },
     compose_generator: { render: 'ComposeGenerator' },
     table: { render: 'MarkdocTableTag' },
   },
