@@ -126,11 +126,6 @@ $container->set(
 );
 
 $container->set('getProjectDB', function (DatabaseFactory $databaseFactory, Database $dbForPlatform) {
-    // One Database per call. The previous host-keyed cache mutated namespace /
-    // tenant / skipFilters on a shared instance; the combined scheduler runs
-    // functions, executions, and messages as sibling coroutines, so a lookup
-    // for project A could run against project B's namespace and treat a live
-    // function as missing.
     return function (Document $project) use ($databaseFactory, $dbForPlatform): Database {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
