@@ -259,14 +259,6 @@ class Create extends Action
 
         $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        if ($current) { // Replace the current session only now that linking succeeded
-            $currentDocument = $dbForProject->getDocument('sessions', $current);
-            if (!$currentDocument->isEmpty()) {
-                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-                $dbForProject->purgeCachedDocument('users', $user->getId());
-            }
-        }
-
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
@@ -309,6 +301,13 @@ class Create extends Action
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
         ]));
+
+        if ($current) { // Delete the replaced session only now that its successor exists
+            $currentDocument = $dbForProject->getDocument('sessions', $current);
+            if (!$currentDocument->isEmpty()) {
+                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
+            }
+        }
 
         if ($sessionUpgrade) {
             foreach ($user->getAttribute('targets', []) as $target) {
