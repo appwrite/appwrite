@@ -10,6 +10,7 @@ use Utopia\Schedule\Source;
 use Utopia\Schedule\Source\Entry;
 use Utopia\Schedule\Source\Row;
 use Utopia\Schedule\Trigger;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 abstract class Database implements Source, Changes
@@ -82,9 +83,8 @@ abstract class Database implements Source, Changes
         $schedule['resource'] = $this->resource(($this->getProjectDB)($project), $schedule);
 
         if ($schedule['resource']->isEmpty()) {
-            // Delete already deactivates the schedule. A miss can also be a
-            // concurrent lookup against the wrong project namespace; deleting
-            // the row here dropped live crons until the next resource write.
+            $this->deleteOrphan($document->getId());
+
             throw new \InvalidArgumentException("Resource not found: {$schedule['resourceId']}");
         }
 
@@ -171,5 +171,22 @@ abstract class Database implements Source, Changes
         );
 
         return $this->projects[$projectId] = $project;
+    }
+
+    private function deleteOrphan(string $scheduleId): void
+    {
+        \go(function () use ($scheduleId): void {
+            Span::init('schedule.orphan.delete');
+            Span::add('schedule.id', $scheduleId);
+            $error = null;
+
+            try {
+                $this->dbForPlatform->deleteDocument('schedules', $scheduleId);
+            } catch (\Throwable $th) {
+                $error = $th;
+            } finally {
+                Span::current()?->finish(error: $error);
+            }
+        });
     }
 }
