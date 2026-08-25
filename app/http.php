@@ -5,6 +5,7 @@ require_once __DIR__ . '/init/span.php';
 
 $setRequestContext = require __DIR__ . '/init/resources/request.php';
 
+use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
@@ -45,9 +46,14 @@ $certifiedDomains = new Table(100_000);
 $certifiedDomains->column('value', Table::TYPE_INT, 1);
 $certifiedDomains->create();
 
+$geoRecords = new Table(Geo::CACHE_SIZE);
+$geoRecords->column('value', Table::TYPE_STRING, Geo::CACHE_VALUE_SIZE);
+$geoRecords->create();
+
 global $container;
 $container->set('riskyDomains', fn () => $riskyDomains);
 $container->set('certifiedDomains', fn () => $certifiedDomains);
+$container->set('geoRecords', fn () => $geoRecords);
 $container->set('pools', function ($register) {
     return $register->get('pools');
 }, ['register']);
