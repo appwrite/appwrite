@@ -31,16 +31,8 @@ export async function fetchDeletedOrganizationImpact(
 ): Promise<DeletedOrganizationImpact> {
   const [projectsData, membershipsData, domainsData] = await Promise.all([
     fetchOrganizationProjects(organizationId),
-    fetchOrganizationMemberships(
-      organizationId,
-      0,
-      DELETED_ORG_LIST_LIMIT,
-    ),
-    fetchOrganizationDomains(
-      organizationId,
-      0,
-      DELETED_ORG_LIST_LIMIT,
-    ),
+    fetchOrganizationMemberships(organizationId, 0, DELETED_ORG_LIST_LIMIT),
+    fetchOrganizationDomains(organizationId, 0, DELETED_ORG_LIST_LIMIT),
   ])
 
   const fetchedProjects = projectsData.projects ?? []

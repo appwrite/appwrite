@@ -377,9 +377,9 @@ export function buildDedicatedDbBillingSpecLookup(
 
   const specOptions = Array.isArray(specifications)
     ? specifications.length > 0 &&
-        typeof specifications[0] === 'object' &&
-        specifications[0] !== null &&
-        'slug' in specifications[0]
+      typeof specifications[0] === 'object' &&
+      specifications[0] !== null &&
+      'slug' in specifications[0]
       ? mapDedicatedDatabaseSpecifications(
           specifications as Models.DedicatedDatabaseSpecification[],
         )
@@ -479,9 +479,7 @@ export function formatDedicatedDbBillingUsageLabel(
     case 'dedicatedDbCrossRegionReplica':
       return usage === 1 ? '1 replica' : `${usage.toLocaleString()} replicas`
     case 'dedicatedDbCrossRegion':
-      return usage === 1
-        ? '1 transfer'
-        : `${usage.toLocaleString()} transfers`
+      return usage === 1 ? '1 transfer' : `${usage.toLocaleString()} transfers`
     default:
       return usage.toLocaleString()
   }
@@ -658,7 +656,10 @@ function getBillingProjectResourceSortIndex(resourceId: string): number {
 function compareBillingProjectResourceIds(a: string, b: string): number {
   const dedicatedCompare = compareDedicatedDbBillingResourceIds(a, b)
   if (dedicatedCompare !== 0) return dedicatedCompare
-  return getBillingProjectResourceSortIndex(a) - getBillingProjectResourceSortIndex(b)
+  return (
+    getBillingProjectResourceSortIndex(a) -
+    getBillingProjectResourceSortIndex(b)
+  )
 }
 
 export function getBillingProjectResourceIdMap(
@@ -832,7 +833,10 @@ export function buildOrganizationUsageCategoriesFromAggregation(
     // Prefer metered `storage`; fall back to `totalStorage` when storage is unset
     storage: {
       usage: (() => {
-        const storage = aggregationResourceValue(aggregationResources, 'storage')
+        const storage = aggregationResourceValue(
+          aggregationResources,
+          'storage',
+        )
         if (storage > 0) return storage
         return aggregationResourceValue(aggregationResources, 'totalStorage')
       })(),
@@ -896,8 +900,14 @@ export function buildOrganizationUsageCategoriesFromAggregation(
       cost: aggregationResourceAmount(aggregationResources, 'realtimeMessages'),
     },
     realtimeBandwidth: {
-      usage: aggregationResourceValue(aggregationResources, 'realtimeBandwidth'),
-      cost: aggregationResourceAmount(aggregationResources, 'realtimeBandwidth'),
+      usage: aggregationResourceValue(
+        aggregationResources,
+        'realtimeBandwidth',
+      ),
+      cost: aggregationResourceAmount(
+        aggregationResources,
+        'realtimeBandwidth',
+      ),
     },
   }
 
@@ -930,5 +940,3 @@ export function buildOrganizationUsageCategoriesFromAggregation(
 
   return groupBillingProjectResources(items)
 }
-
-

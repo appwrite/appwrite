@@ -1,0 +1,17 @@
+---
+layout: changelog
+title: Non-destructive column updates and renames in the Appwrite CLI
+date: 2026-07-30
+---
+
+Running `appwrite push tables` no longer deletes and recreates a column when the change is one the API can apply in place, so the column keeps its data.
+
+Settings such as `required`, `default`, `size`, `min` and `max`, enum `elements`, and relationship `onDelete` now update in place. Changes to what the column fundamentally is, such as `type` or `array`, still recreate it, and push warns you first.
+
+Columns can also be renamed. Set the column's `key` to the new name and add a `previousKey` field naming the column that still exists on the server, and push renames it instead of dropping and re-adding it.
+
+Update to the latest version of the CLI to get these changes.
+
+{% arrow_link href="/docs/tooling/command-line/tables#update-columns" %}
+Learn more about updating and renaming columns
+{% /arrow_link %}

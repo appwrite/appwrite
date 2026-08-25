@@ -37,6 +37,24 @@ export const CODE_SYNTAX_COLORS_LIGHT: CodeSyntaxColors = {
   string: '#2DB88A',
 }
 
+/**
+ * CSS variable references, mirrored by `--code-*` in styles.css.
+ *
+ * CodeBlock renders on the server, where the active theme is unknown, so it
+ * emits these instead of hex. The theme class on `<html>` supplies the values,
+ * which keeps code readable before hydration. Monaco needs literal hex and
+ * keeps using the palettes above.
+ */
+export const CODE_SYNTAX_COLORS_CSS_VARS: CodeSyntaxColors = {
+  moduleKeyword: 'var(--code-module-keyword)',
+  function: 'var(--code-function)',
+  keyword: 'var(--code-keyword)',
+  escape: 'var(--code-escape)',
+  comment: 'var(--code-comment)',
+  property: 'var(--code-property)',
+  string: 'var(--code-string)',
+}
+
 export function getCodeSyntaxColors(isDarkChrome: boolean): CodeSyntaxColors {
   return isDarkChrome ? CODE_SYNTAX_COLORS_DARK : CODE_SYNTAX_COLORS_LIGHT
 }

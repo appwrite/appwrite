@@ -6,6 +6,7 @@ import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 import {
   parseOrganizationIdFromPath,
   prefetchOrganizationOverviewData,
+  resolveAndPrefetchDefaultOrganization,
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 
@@ -127,12 +128,11 @@ export async function prefetchPostAuthDestination(
     }
   }
 
-  let orgId = await resolvePostAuthOrganizationId(account, queryClient)
   try {
-    await prefetchOrganizationOverviewData(queryClient, orgId)
+    await resolveAndPrefetchDefaultOrganization(queryClient, account)
   } catch (error) {
     if (!isHttpNotFoundError(error)) return
-    orgId = await resolvePostAuthOrganizationId()
+    const orgId = await resolvePostAuthOrganizationId()
     await prefetchOrganizationOverviewSafe(queryClient, orgId)
   }
 }

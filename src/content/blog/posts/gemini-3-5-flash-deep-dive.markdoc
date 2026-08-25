@@ -150,13 +150,13 @@ Three observations from the Arena data.
 
 # Workloads where 3.5 Flash is the right choice
 
-- **MCP-driven agents.** MCP Atlas at 83.6% is the highest result Google has published on the benchmark. For agents driving an MCP server such as [Appwrite's API MCP](/docs/tooling/ai/mcp-servers/api), 3.5 Flash is the most cost-efficient frontier option.
+- **MCP-driven agents.** MCP Atlas at 83.6% is the highest result Google has published on the benchmark. For agents driving an MCP server such as [Appwrite's API MCP](/docs/tooling/ai/mcp-servers), 3.5 Flash is the most cost-efficient frontier option.
 - **Throughput-bound multimodal pipelines.** CharXiv at 84.2% and MMMU-Pro at 83.6% at 278 tokens per second is a combination no other top-ten Intelligence Index model provides. Document ingestion with charts, audio and video reasoning, and pipelines with many small multimodal calls benefit directly.
 - **Iterative coding agents on bounded scope.** Terminal-Bench 2.1 at 76.2%, a 1M context window, and the highest throughput in the top ten allow more iterations per wall-clock minute than any frontier alternative. The reasoning gap to Opus 4.7 and GPT-5.5 only becomes a constraint on research-grade tasks.
 
 # Model selection for Appwrite projects
 
-[Appwrite](https://cloud.appwrite.io) provides the primitives an agent needs to operate on a project: typed tables, scoped API keys, an [API MCP server](/docs/tooling/ai/mcp-servers/api), a [Docs MCP server](/docs/tooling/ai/mcp-servers/docs), and [Agent Skills](/docs/tooling/ai/skills) for every major SDK. The Arena results above show how each model performs against this surface.
+[Appwrite](https://cloud.appwrite.io) provides the primitives an agent needs to operate on a project: typed tables, scoped API keys, an [API MCP server](/docs/tooling/ai/mcp-servers), a [Docs MCP server](/docs/tooling/ai/mcp-servers), and [Agent Skills](/docs/tooling/ai/skills) for every major SDK. The Arena results above show how each model performs against this surface.
 
 Speed is the column where Gemini 3.5 Flash dominates, but speed is not coding intelligence. On the Arena freeform scores and the SOTA Intelligence Index comparison above, GPT 5.5 and Claude Opus 4.7 lead 3.5 Flash by a meaningful margin on the same Appwrite coding tasks.
 

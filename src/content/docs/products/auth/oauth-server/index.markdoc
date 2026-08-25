@@ -70,6 +70,9 @@ Access, refresh, and ID tokens, their lifetimes, introspection, and revocation.
 {% cards_item href="/docs/products/auth/oauth-server/scopes" title="Scopes" %}
 The built-in OpenID scopes and the custom scopes your clients can request.
 {% /cards_item %}
+{% cards_item href="/docs/products/auth/oauth-server/installations" title="Installations" %}
+Let clients install on teams and act with tokens that need no signed-in user.
+{% /cards_item %}
 {% cards_item href="/docs/products/auth/oauth-server/device-flow" title="Device flow" %}
 Authorize TVs, CLIs, and other input-constrained devices.
 {% /cards_item %}

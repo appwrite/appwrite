@@ -54,9 +54,9 @@ Put together, these shifts mean backend platforms are being evaluated against a 
 
 Appwrite is designed so that agents can reason about it, manage it, and build on top of it, using the same primitives a human developer uses.
 
-On the management side, the [API MCP server](/docs/tooling/ai/mcp-servers/api) lets LLMs and coding agents perform operations directly on an Appwrite project: creating users, managing databases, tables, and columns, handling storage, invoking functions, and more. The server works with API keys, supports scoping through flags like `--tablesdb`, `--users`, `--teams`, `--storage`, `--functions`, and `--messaging`, and installs into the same editors as other MCP servers.
+On the management side, the [API MCP server](/docs/tooling/ai/mcp-servers) lets LLMs and coding agents perform operations directly on an Appwrite project: creating users, managing databases, tables, and columns, handling storage, invoking functions, and more. The server works with API keys, supports scoping through flags like `--tablesdb`, `--users`, `--teams`, `--storage`, `--functions`, and `--messaging`, and installs into the same editors as other MCP servers.
 
-On the knowledge side, the [Docs MCP server](/docs/tooling/ai/mcp-servers/docs) gives AI assistants access to Appwrite documentation at call time, so agents can answer questions about APIs, SDKs, and patterns without relying on training data. Together, these two servers cover the "act on your project" and "read the docs at call time" pillars of agent-native.
+On the knowledge side, the [Docs MCP server](/docs/tooling/ai/mcp-servers) gives AI assistants access to Appwrite documentation at call time, so agents can answer questions about APIs, SDKs, and patterns without relying on training data. Together, these two servers cover the "act on your project" and "read the docs at call time" pillars of agent-native.
 
 Appwrite's agent surface goes further than MCP alone.
 
@@ -121,11 +121,11 @@ Second, treat MCP, skills, and docs quality as product choices, not marketing. A
 
 The rise of agent-native backend platforms is not a rebrand. It is an admission that two audiences now read your product: the human who decides and the agent who writes the code. Platforms that take that seriously are the ones both audiences will reach for.
 
-To see what this looks like in practice, start with the [Appwrite AI tooling hub](/docs/tooling/ai), install the [API MCP server](/docs/tooling/ai/mcp-servers/api) and the [Docs MCP server](/docs/tooling/ai/mcp-servers/docs), add [Agent Skills](/docs/tooling/ai/skills) for your SDK, or grab the editor plugin for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) to install everything in one step.
+To see what this looks like in practice, start with the [Appwrite AI tooling hub](/docs/tooling/ai), install the [API MCP server](/docs/tooling/ai/mcp-servers) and the [Docs MCP server](/docs/tooling/ai/mcp-servers), add [Agent Skills](/docs/tooling/ai/skills) for your SDK, or grab the editor plugin for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) to install everything in one step.
 
 - [Appwrite AI tooling](/docs/tooling/ai)
-- [API MCP server](/docs/tooling/ai/mcp-servers/api)
-- [Docs MCP server](/docs/tooling/ai/mcp-servers/docs)
+- [API MCP server](/docs/tooling/ai/mcp-servers)
+- [Docs MCP server](/docs/tooling/ai/mcp-servers)
 - [Agent Skills](/docs/tooling/ai/skills)
 - [Appwrite Arena](/docs/tooling/ai/arena)
 - [Appwrite Assistant](/docs/tooling/ai/assistant)

@@ -121,6 +121,6 @@ That covers the gap between "Lovable's default Supabase integration" and "a back
 Further reading:
 
 - [Appwrite AI tooling overview](/docs/tooling/ai)
-- [Appwrite API MCP server](/docs/tooling/ai/mcp-servers/api)
+- [Appwrite API MCP server](/docs/tooling/ai/mcp-servers)
 - [Appwrite Docs MCP server in Lovable](/docs/tooling/ai/ai-dev-tools/lovable)
 - [Announcing the Appwrite MCP server](/blog/post/announcing-appwrite-mcp-server-2)

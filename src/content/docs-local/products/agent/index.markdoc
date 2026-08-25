@@ -4,7 +4,7 @@ title: Agent
 description: Chat with the Appwrite Agent in the Console to inspect your project, explain issues, suggest next steps, and run approved actions.
 ---
 
-Appwrite **Agent** is the AI assistant built into the Appwrite Cloud Console. It sits next to the work you are already doing: the organization and project you have open, the page you are on, and the resources you are configuring. You ask in natural language; the Agent answers with Appwrite-aware guidance, asks clarifying questions when a request is ambiguous, and (when authorized) takes actions through [Appwrite MCP](/docs/tooling/ai/mcp-servers/api).
+Appwrite **Agent** is the AI assistant built into the Appwrite Cloud Console. It sits next to the work you are already doing: the organization and project you have open, the page you are on, and the resources you are configuring. You ask in natural language; the Agent answers with Appwrite-aware guidance, asks clarifying questions when a request is ambiguous, and (when authorized) takes actions through [Appwrite MCP](/docs/tooling/ai/mcp-servers).
 
 You can keep the Agent as a right-hand panel while you stay on a Console page, or move to the fullscreen experience at `/agent` for longer sessions. Conversations, models, memory, MCP authorization, and automations are stored on your Console account, not on a single project.
 
@@ -87,11 +87,11 @@ Schedule a recurring prompt with a cron schedule and optional model.
 
 # Related AI tooling {% #related-ai-tooling %}
 
-Appwrite Agent is the in-Console assistant. The same platform also ships MCP servers and skills for coding agents outside the Console. Use Agent when you are operating a project in the UI; use external MCP and skills when you are writing code in an IDE.
+Appwrite Agent is the in-Console assistant. The same platform also ships an MCP server and skills for coding agents outside the Console. Use Agent when you are operating a project in the UI; use external MCP and skills when you are writing code in an IDE.
 
 {% cards %}
-{% cards_item href="/docs/tooling/ai/mcp-servers" title="MCP servers" %}
-Hosted API and docs MCP for external coding agents and tools.
+{% cards_item href="/docs/tooling/ai/mcp-servers" title="MCP server" %}
+Hosted MCP for API and docs, for external coding agents and tools.
 {% /cards_item %}
 {% cards_item href="/docs/tooling/ai/skills" title="Agent skills" %}
 Installable Appwrite knowledge packs for coding agents across SDKs.

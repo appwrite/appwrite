@@ -341,6 +341,15 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           ],
         },
         {
+          label: "Tooling",
+          items: [
+            {
+              label: "MCP server",
+              href: "/docs/advanced/self-hosting/mcp",
+            },
+          ],
+        },
+        {
           label: "Production",
           items: [
             {
@@ -538,6 +547,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Tokens",
               href: "/docs/partners/apps/tokens",
+            },
+            {
+              label: "Installations",
+              href: "/docs/partners/apps/installations",
             },
             {
               label: "Device flow",
@@ -957,6 +970,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Scopes",
               href: "/docs/products/auth/oauth-server/scopes",
+            },
+            {
+              label: "Installations",
+              href: "/docs/products/auth/oauth-server/installations",
             },
             {
               label: "Device flow",
@@ -2201,6 +2218,15 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       },
       navigation: [
         {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/quick-starts",
+            },
+          ],
+        },
+        {
           label: "Web app",
           items: [
             {
@@ -2332,8 +2358,8 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
     {
       prefix: "tooling/ai",
       parent: {
-        href: "/docs",
-        label: "AI",
+        href: "/docs/tooling",
+        label: "Tooling",
       },
       navigation: [
         {
@@ -2341,7 +2367,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           items: [
             {
               label: "Overview",
-              href: "/docs/tooling/ai",
+              href: "/docs/tooling",
             },
             {
               label: "Quick start prompts",
@@ -2350,19 +2376,31 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           ],
         },
         {
-          label: "Tooling",
+          label: "Tools",
           items: [
             {
-              label: "MCP servers",
+              label: "MCP server",
               href: "/docs/tooling/ai/mcp-servers",
+            },
+            {
+              label: "CLI",
+              href: "/docs/tooling/command-line/installation",
             },
             {
               label: "Agent skills",
               href: "/docs/tooling/ai/skills",
             },
             {
+              label: "Terraform",
+              href: "/docs/tooling/terraform",
+            },
+            {
               label: "AGENTS.md",
               href: "/docs/tooling/ai/agents-md",
+            },
+            {
+              label: "Command Center",
+              href: "/docs/tooling/command-center",
             },
             {
               label: "Assistant",
@@ -2371,6 +2409,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Appwrite Arena",
               href: "/docs/tooling/ai/arena",
+            },
+            {
+              label: "The Appwriter",
+              href: "/docs/tooling/appwriter",
             },
           ],
         },
@@ -2404,6 +2446,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Google Antigravity",
               href: "/docs/tooling/ai/agents/antigravity",
+            },
+            {
+              label: "Grok Build",
+              href: "/docs/tooling/ai/agents/grok-build",
             },
           ],
         },
@@ -2454,8 +2500,8 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
     {
       prefix: "tooling/command-center",
       parent: {
-        href: "/docs",
-        label: "Command Center",
+        href: "/docs/tooling",
+        label: "Tooling",
       },
       navigation: [
         {
@@ -2476,8 +2522,8 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
     {
       prefix: "tooling/command-line",
       parent: {
-        href: "/docs",
-        label: "CLI",
+        href: "/docs/tooling",
+        label: "Tooling",
       },
       navigation: [
         {
@@ -2535,8 +2581,8 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
     {
       prefix: "tooling/terraform",
       parent: {
-        href: "/docs",
-        label: "Terraform provider",
+        href: "/docs/tooling",
+        label: "Tooling",
       },
       navigation: [
         {

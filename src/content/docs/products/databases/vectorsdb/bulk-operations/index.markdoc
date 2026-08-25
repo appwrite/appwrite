@@ -35,6 +35,7 @@ Bulk operations have different limits based on your Appwrite plan:
 |------|----------------------|
 | Free | 100 |
 | Pro  | 1,000 |
+| Scale | 2,500 |
 
 These limits apply to all bulk operations including create, update, upsert, and delete operations. If you need higher limits than what the Pro plan offers, you can [inquire](/contact-us/enterprise) about a custom plan.
 
@@ -52,8 +53,8 @@ const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
-    .setKey('<API_KEY>');
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
 
 const vectorsDB = new sdk.VectorsDB(client);
 
@@ -82,8 +83,8 @@ from appwrite.id import ID
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
-client.set_project('<PROJECT_ID>')
-client.set_key('<API_KEY>')
+client.set_project('<YOUR_PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
 
 vectors_db = VectorsDB(client)
 
@@ -107,7 +108,7 @@ result = vectors_db.create_documents(
 
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use serde_json::json;
 
@@ -115,8 +116,8 @@ use serde_json::json;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 
@@ -158,8 +159,8 @@ const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
-    .setKey('<API_KEY>');
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
 
 const vectorsDB = new sdk.VectorsDB(client);
 
@@ -182,8 +183,8 @@ from appwrite.query import Query
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
-client.set_project('<PROJECT_ID>')
-client.set_key('<API_KEY>')
+client.set_project('<YOUR_PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
 
 vectors_db = VectorsDB(client)
 
@@ -201,7 +202,7 @@ result = vectors_db.update_documents(
 
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 use serde_json::json;
 
@@ -209,8 +210,8 @@ use serde_json::json;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 
@@ -247,8 +248,8 @@ const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
-    .setKey('<API_KEY>');
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
 
 const vectorsDB = new sdk.VectorsDB(client);
 
@@ -277,8 +278,8 @@ from appwrite.id import ID
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
-client.set_project('<PROJECT_ID>')
-client.set_key('<API_KEY>')
+client.set_project('<YOUR_PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
 
 vectors_db = VectorsDB(client)
 
@@ -302,7 +303,7 @@ result = vectors_db.upsert_documents(
 
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use serde_json::json;
 
@@ -310,8 +311,8 @@ use serde_json::json;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 
@@ -354,8 +355,8 @@ const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
-    .setKey('<API_KEY>');
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
 
 const vectorsDB = new sdk.VectorsDB(client);
 
@@ -375,8 +376,8 @@ from appwrite.query import Query
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
-client.set_project('<PROJECT_ID>')
-client.set_key('<API_KEY>')
+client.set_project('<YOUR_PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
 
 vectors_db = VectorsDB(client)
 
@@ -391,15 +392,15 @@ result = vectors_db.delete_documents(
 
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
-    client.set_project("<PROJECT_ID>");
-    client.set_key("<API_KEY>");
+    client.set_project("<YOUR_PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
 

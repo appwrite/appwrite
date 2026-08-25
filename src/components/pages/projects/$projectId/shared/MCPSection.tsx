@@ -77,7 +77,7 @@ function getCloudMcpTools(t: Translator): McpToolConfig[] {
     {
       id: 'codex',
       name: 'Codex',
-      iconPath: '/icons/chatgpt.svg',
+      iconPath: '/icons/codex.svg',
       language: 'bash',
       code: MCP_CODEX_INSTALL_COMMAND,
     },
@@ -132,7 +132,7 @@ function getSelfHostedMcpTools(
     {
       id: 'codex',
       name: 'Codex',
-      iconPath: '/icons/chatgpt.svg',
+      iconPath: '/icons/codex.svg',
       language: 'toml',
       code: getSelfHostedCodexConfig(projectId, endpoint),
     },

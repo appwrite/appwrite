@@ -119,6 +119,8 @@ const config: PlaywrightTestConfig = {
       timeout: 25 * 60_000,
       fullyParallel: false,
       workers: 1,
+      // Dedicated provision waits are long; retries re-create DBs and stack those waits.
+      retries: 0,
       use: consoleDatabaseUse,
     },
     {
@@ -128,6 +130,8 @@ const config: PlaywrightTestConfig = {
       timeout: 25 * 60_000,
       fullyParallel: false,
       workers: 1,
+      // Dedicated provision waits are long; retries re-create DBs and stack those waits.
+      retries: 0,
       use: consoleDatabaseUse,
     },
     {
@@ -146,6 +150,8 @@ const config: PlaywrightTestConfig = {
       timeout: 25 * 60_000,
       fullyParallel: false,
       workers: 1,
+      // Dedicated provision waits are long; retries re-create DBs and stack those waits.
+      retries: 0,
       use: consoleDatabaseUse,
     },
     {
@@ -155,6 +161,8 @@ const config: PlaywrightTestConfig = {
       timeout: 25 * 60_000,
       fullyParallel: false,
       workers: 1,
+      // Dedicated provision waits are long; retries re-create DBs and stack those waits.
+      retries: 0,
       use: consoleDatabaseUse,
     },
   ],

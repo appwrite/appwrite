@@ -46,6 +46,7 @@ import { FunctionDomainCard } from './_components/FunctionDomainCard'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import type { FunctionWizardVariable } from './RepositoryConfigView'
 import { useT } from '@/lib/i18n/translate'
+import { validateVariables } from '@/lib/variables'
 
 function parseRepo(repo?: string): { owner: string; name: string } | null {
   if (!repo?.trim()) return null
@@ -140,6 +141,17 @@ export function DeployFromUrlView({
     }
     if (!domain.trim()) {
       toast.error(t('Please enter a domain'))
+      return
+    }
+
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured function behind. Only the rows
+    // that get written are checked -- the keyless ones are skipped below.
+    const validationError = validateVariables(
+      variables.filter((v) => v.key.trim()),
+    )
+    if (validationError) {
+      toast.error(validationError)
       return
     }
 

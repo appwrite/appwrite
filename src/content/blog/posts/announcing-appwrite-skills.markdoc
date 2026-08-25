@@ -18,7 +18,7 @@ faqs:
   - question: "Which AI agents work with Appwrite Skills?"
     answer: "Any agent that supports the [Agent Skills](https://skills.agents.md/) format works, including Claude Code, Cursor, and Windsurf. Install once and the same skill files can be linked from each tool, so you do not have to maintain separate sets of prompts."
   - question: "What is the difference between Skills and the Appwrite MCP server?"
-    answer: "Skills give the agent static knowledge about how to write Appwrite code correctly. The [MCP server](/docs/tooling/ai/mcp-servers/api) gives the agent runtime access to your Appwrite project so it can actually call APIs (create users, query databases, deploy Functions). They complement each other: Skills handle code quality, MCP handles project operations."
+    answer: "Skills give the agent static knowledge about how to write Appwrite code correctly. The [MCP server](/docs/tooling/ai/mcp-servers) gives the agent runtime access to your Appwrite project so it can actually call APIs (create users, query databases, deploy Functions). They complement each other: Skills handle code quality, MCP handles project operations."
   - question: "Are Skills useful if I am not building with Appwrite directly?"
     answer: "Skills are designed specifically for projects that use Appwrite. If you are not using Appwrite, they will not help your agent generate better non-Appwrite code. They become valuable as soon as you have at least one Appwrite SDK in the project."
 ---

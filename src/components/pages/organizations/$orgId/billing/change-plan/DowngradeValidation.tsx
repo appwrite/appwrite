@@ -20,6 +20,10 @@ import {
   type DowngradeResourceValidationHandle,
 } from './DowngradeResourceValidation'
 import type { DowngradeResourceImpact } from '@/lib/billing/downgrade-plan-limits'
+import {
+  getOrganizationLimits,
+  type PlanChangeLimits,
+} from '@/lib/billing/plan-change-compliance'
 import type { DeletedOrganizationImpact } from '@/lib/billing/fetch-deleted-org-impact'
 
 const DOWNGRADE_SELECTION_PAGE_SIZE = 5
@@ -94,8 +98,11 @@ interface DowngradeValidationProps {
   projects: Models.Project[]
   projectsTotal?: number
   targetPlan: Record<string, unknown> | null | undefined
+  /** Server-side compliance for the target plan; authoritative over `targetPlan`. */
+  planChangeLimits?: PlanChangeLimits | null
+  planChangeLimitsLoading?: boolean
   onRef: (ref: DowngradeValidationHandle | null) => void
-  onValidityChange?: (valid: boolean) => void
+  onValidityChange?: (valid: boolean, reason?: string | null) => void
   deletedOrganizationImpact?: DeletedOrganizationImpact | null
   deletedOrganizationLoading?: boolean
   expectDeletedOrganizationImpact?: boolean
@@ -107,6 +114,8 @@ export function DowngradeValidation({
   projects,
   projectsTotal = projects.length,
   targetPlan,
+  planChangeLimits = null,
+  planChangeLimitsLoading = false,
   onRef,
   onValidityChange,
   deletedOrganizationImpact = null,
@@ -117,9 +126,17 @@ export function DowngradeValidation({
   const { account } = useAuth()
   const accountModel = account as Models.User | undefined
   const limits = useMemo(() => getDowngradePlanLimits(targetPlan), [targetPlan])
-  const projectsLimit = limits.projects
-  const membersLimit = limits.members
-  const domainsLimit = limits.domains
+
+  // The server reports org-level caps authoritatively; the plan-config
+  // derivation (which leans on plan-name heuristics) is only the fallback for
+  // upgrades and for a console running ahead of cloud.
+  const serverOrgLimits = useMemo(
+    () => getOrganizationLimits(planChangeLimits),
+    [planChangeLimits],
+  )
+  const projectsLimit = serverOrgLimits?.projects ?? limits.projects
+  const membersLimit = serverOrgLimits?.members ?? limits.members
+  const domainsLimit = serverOrgLimits?.domains ?? limits.domains
 
   const needsProjectSelection =
     projectsLimit !== null && projectsTotal > projectsLimit
@@ -260,10 +277,11 @@ export function DowngradeValidation({
     staleTime: 30_000,
   })
   const queriedCurrentUserMembership = useMemo(
-    () => findCurrentUserMembership(
-      (currentUserMembershipData?.memberships ?? []) as Models.Membership[],
-      accountModel,
-    ),
+    () =>
+      findCurrentUserMembership(
+        (currentUserMembershipData?.memberships ?? []) as Models.Membership[],
+        accountModel,
+      ),
     [currentUserMembershipData?.memberships, accountModel],
   )
   const currentUserMembership =
@@ -364,6 +382,9 @@ export function DowngradeValidation({
 
   const resourceRef = useRef<DowngradeResourceValidationHandle | null>(null)
   const resourceValidRef = useRef(false)
+  const [resourceBlockReason, setResourceBlockReason] = useState<string | null>(
+    null,
+  )
   const [resourceImpact, setResourceImpact] = useState<DowngradeResourceImpact>(
     {},
   )
@@ -473,13 +494,53 @@ export function DowngradeValidation({
     [domains, needsDomainSelection, domainsLimit],
   )
 
+  // A single sentence naming what is still outstanding. The submit button is
+  // otherwise disabled with no explanation of which section is holding it.
+  const blockReason = useMemo(() => {
+    if (orgSelectionsLoading) return t('Loading organization resources...')
+
+    if (!projectSelectionValid && projectsLimit !== null) {
+      return `${t('Choose the')} ${projectsLimit} ${t('projects to keep.')}`
+    }
+    if (!memberSelectionValid && membersLimit !== null) {
+      return `${t('Choose the')} ${membersLimit} ${t('members to keep.')}`
+    }
+    if (!domainSelectionValid && domainsLimit !== null) {
+      return `${t('Choose the')} ${domainsLimit} ${t('domains to keep.')}`
+    }
+    if (keptProjects.length > 0 && !resourceValidRef.current) {
+      return resourceBlockReason
+        ? t(resourceBlockReason)
+        : t('Finish adjusting project resources for the target plan.')
+    }
+    return null
+  }, [
+    t,
+    orgSelectionsLoading,
+    projectSelectionValid,
+    projectsLimit,
+    memberSelectionValid,
+    membersLimit,
+    domainSelectionValid,
+    domainsLimit,
+    keptProjects.length,
+    resourceBlockReason,
+  ])
+
+  const blockReasonRef = useRef<string | null>(null)
+  blockReasonRef.current = blockReason
+
   const syncValidity = useCallback(() => {
-    const resourceValid =
-      keptProjects.length === 0 || resourceValidRef.current
-    onValidityChange?.(
-      projectSelectionValid && orgSelectionsValid && resourceValid,
-    )
-  }, [onValidityChange, projectSelectionValid, orgSelectionsValid, keptProjects.length])
+    const resourceValid = keptProjects.length === 0 || resourceValidRef.current
+    const valid = projectSelectionValid && orgSelectionsValid && resourceValid
+
+    onValidityChange?.(valid, valid ? null : blockReasonRef.current)
+  }, [
+    onValidityChange,
+    projectSelectionValid,
+    orgSelectionsValid,
+    keptProjects.length,
+  ])
 
   const handleResourceRef = useCallback(
     (ref: DowngradeResourceValidationHandle | null) => {
@@ -489,16 +550,19 @@ export function DowngradeValidation({
   )
 
   const handleResourceValidityChange = useCallback(
-    (resourceValid: boolean) => {
+    (resourceValid: boolean, reason?: string | null) => {
       resourceValidRef.current = resourceValid
+      setResourceBlockReason(reason ?? null)
       syncValidity()
     },
     [syncValidity],
   )
 
   useEffect(() => {
+    // blockReason is a dependency so the wizard's explanation updates as the
+    // user works through the sections, not only when validity flips.
     syncValidity()
-  }, [projectSelectionValid, orgSelectionsValid, syncValidity])
+  }, [projectSelectionValid, orgSelectionsValid, blockReason, syncValidity])
 
   const onRefRef = useRef(onRef)
   const keptProjectsRef = useRef(keptProjects)
@@ -619,19 +683,22 @@ export function DowngradeValidation({
 
   const orgSelectionReady = orgSelectionsValid && !orgSelectionsLoading
 
+  // The resource step only needs to know which projects are being kept. Gating
+  // it on member and domain selection too left it hidden behind unrelated
+  // sections, so picking projects appeared to do nothing. Submit validity is
+  // tracked separately and still requires every org selection.
+  const projectSelectionReady =
+    projectSelectionValid && !(needsProjectSelection && projectsLoading)
+
   const showProjectResourceValidation =
-    orgSelectionReady && keptProjects.length > 0
+    projectSelectionReady && keptProjects.length > 0
 
   const showImpactSummary =
     deletedOrganizationLoading ||
     !!deletedOrganizationImpact ||
     (orgSelectionReady && (hasOrgLevelSelections || keptProjects.length > 0))
 
-  if (
-    projects.length === 0 &&
-    !needsMemberSelection &&
-    !needsDomainSelection
-  ) {
+  if (projects.length === 0 && !needsMemberSelection && !needsDomainSelection) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -700,6 +767,8 @@ export function DowngradeValidation({
         <DowngradeResourceValidation
           projects={keptProjects}
           targetPlan={targetPlan}
+          planChangeLimits={planChangeLimits}
+          planChangeLimitsLoading={planChangeLimitsLoading}
           onRef={handleResourceRef}
           onValidityChange={handleResourceValidityChange}
           onImpactChange={handleResourceImpactChange}
@@ -725,7 +794,7 @@ export function DowngradeValidation({
         />
       ) : null}
 
-      {hasOrgLevelSelections && !orgSelectionReady ? (
+      {hasOrgLevelSelections && !showProjectResourceValidation ? (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
@@ -734,9 +803,9 @@ export function DowngradeValidation({
             <p className="text-[13px] text-muted-foreground mt-2">
               {orgSelectionsLoading
                 ? t('Loading organization resources...')
-                : needsProjectSelection && keptProjects.length === 0
-                  ? t('Select projects above to review their resources.')
-                  : t('Complete the selections above to review project resources.')}
+                : needsProjectSelection && projectsLimit !== null
+                  ? `${t('Choose the')} ${projectsLimit} ${t('projects to keep above to review their resources.')}`
+                  : t('Select projects above to review their resources.')}
             </p>
           </div>
         </div>

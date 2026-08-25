@@ -28,7 +28,9 @@ export function findActiveOrPendingAddon(
   )
 }
 
-export function isAddonScheduledForRemoval(addon: Models.Addon | undefined): boolean {
+export function isAddonScheduledForRemoval(
+  addon: Models.Addon | undefined,
+): boolean {
   return !!addon && addon.status === 'active' && addon.nextValue === 0
 }
 

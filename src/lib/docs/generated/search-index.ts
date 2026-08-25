@@ -564,6 +564,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/self-hosting/mcp",
+    "title": "MCP server",
+    "description": "Connect LLMs and code-generation tools to your self-hosted Appwrite instance with the local MCP server.",
+    "excerpt": "The hosted Appwrite MCP server authenticates against Appwrite Cloud. If you are running a self-hosted Appwrite instance, use the local MCP server instead. It runs on your machine over the stdio transport and connects to your instance with an API key, allowing LLMs and code-generation tools to perform various operations on your Appwrite resources, such as creating users, managing databases, and more, using natural language commands. Here are some of the key benefits of using the local MCP server: -…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Tooling",
+      "MCP server"
+    ]
+  },
+  {
     "slug": "advanced/self-hosting/platforms/aws",
     "title": "AWS deployment",
     "description": "Deploy Appwrite on Amazon Web Services using the one-click Marketplace app.",
@@ -910,8 +921,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "The Apps API () lets partner platforms register **OAuth apps** that connect to Appwrite organizations. Use it when you publish integrations, run a marketplace, or need programmatic control over OAuth client settings. Apps pair with the OAuth2 service () to start authorization and receive tokens after user consent. Console SDK access Authenticate with an organization API key that includes apps scopes: Common operations | Operation | Use case | | --------- | -------- | | | Show OAuth apps owned…",
     "breadcrumbs": [
       "Apps",
-      "Partners",
-      "Apps"
+      "Getting started",
+      "Overview"
     ]
   },
   {
@@ -920,8 +931,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "What users see on the Sign in with Appwrite consent screen, what they can change, and what your app receives.",
     "excerpt": "Consent is where the user decides. Appwrite hosts the screen, renders what your app asked for, and gives the user the final say over scopes and targets. Your app never sees the screen; it sees the outcome. The consent screen The screen is built from your registration and your request: - **Your app's identity**: the name, logo, and tagline you registered. - **Permissions**: each requested scope as a plain-language line, under a one-line summary of the overall reach. - **Project…",
     "breadcrumbs": [
-      "Partners",
       "Apps",
+      "Concepts",
       "Consent"
     ]
   },
@@ -931,9 +942,20 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Sign in with Appwrite from TVs, CLIs, and other input-constrained devices with the OAuth2 device authorization grant.",
     "excerpt": "Some clients cannot run the redirect flow: a TV has no browser to send the user back to, and a CLI has no redirect URI to receive a code. The device flow (RFC 8628) replaces the redirect with a short code. Your app shows the code, the user approves it from their phone or laptop, and your app picks up the tokens by polling. The flow is off by default. Turn it on with the device flow toggle on your…",
     "breadcrumbs": [
-      "Partners",
       "Apps",
+      "Concepts",
       "Device flow"
+    ]
+  },
+  {
+    "slug": "partners/apps/installations",
+    "title": "Installations",
+    "description": "Install your app on an organization and act with installation tokens that need no signed-in user.",
+    "excerpt": "An installation connects your app to one organization. An organization owner installs your app once. After that, your app creates its own access tokens for that organization. The tokens carry the scopes the installation granted, and they work without a signed-in user. Use an installation when your app acts as itself: a sync job that runs at night, a bot that posts build results, a backend that provisions resources. Use Sign in with Appwrite when your app acts as a…",
+    "breadcrumbs": [
+      "Apps",
+      "Concepts",
+      "Installations"
     ]
   },
   {
@@ -942,9 +964,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Register an app and run the full Sign in with Appwrite flow, from consent screen to your first authorized API call.",
     "excerpt": "This guide builds Sign in with Appwrite into an app, start to finish. The running example is Horizon, a deployment dashboard: - A user clicks its sign-in button. - They approve access on the Appwrite consent screen. - Horizon reads their projects with the tokens it receives. By the end, you will have run the same journey with your own app. You need a server that can receive a redirect and keep a client secret. The examples use as the…",
     "breadcrumbs": [
-      "Partners",
       "Apps",
-      "Start with Sign in with Appwrite"
+      "Getting started",
+      "Quick start"
     ]
   },
   {
@@ -953,8 +975,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Register your app for Sign in with Appwrite through the Console.",
     "excerpt": "Your app appears on the consent screen as a registered client: a name, a logo, and a set of credentials tied to redirect URIs. Registration happens in the Console, in your organization's Marketplace tab. Client types Every client is or , and the choice decides how it authenticates. - **Confidential** clients have a backend that keeps a secret. They authenticate token requests with the client secret, and their tokens live longer: 8 hours for access tokens and 365 days for…",
     "breadcrumbs": [
-      "Partners",
       "Apps",
+      "Concepts",
       "Registration"
     ]
   },
@@ -964,8 +986,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "The Sign in with Appwrite scope catalog, and how grants target the projects and organizations a user chooses.",
     "excerpt": "A scope names an action your app wants to perform. A grant pairs scopes with the projects and organizations they apply to. Both halves matter: by itself says what, and the user's project selection on the consent screen says where. Request the smallest set that serves your app. Every scope you ask for appears on the consent screen as a permission line, and users decline requests that want too much. Identity scopes The OpenID Connect scopes cover who the user…",
     "breadcrumbs": [
-      "Partners",
       "Apps",
+      "Concepts",
       "Scopes"
     ]
   },
@@ -975,8 +997,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use, refresh, and revoke the tokens Appwrite issues to your app through Sign in with Appwrite.",
     "excerpt": "Your app holds three tokens with different jobs: - The **access token** calls APIs. - The **refresh token** replaces expired access tokens. - The **ID token** proves who signed in. All three come from one call. After the user approves your app on the consent screen, exchange the authorization code at the token endpoint, sending your client credentials in the request body: The response carries all three tokens, along with what the user granted: Public clients Mobile apps, desktop apps,…",
     "breadcrumbs": [
-      "Partners",
       "Apps",
+      "Concepts",
       "Tokens"
     ]
   },
@@ -1372,7 +1394,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent",
     "title": "Agent",
     "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, suggest next steps, and run approved actions.",
-    "excerpt": "Appwrite **Agent** is the AI chat built into the Appwrite Cloud Console. It helps you inspect the organization and project you are working in, answer Appwrite how-to questions, clarify ambiguous requests, and take approved actions through Appwrite MCP. You can open the Agent as a right-hand panel while you work, or use the dedicated fullscreen experience at . Conversations, custom models, memory, MCP connections, and automations are stored on your Console account. Agent is available on Appwrite Cloud. Self-hosted deployments…",
+    "excerpt": "Appwrite **Agent** is the AI assistant built into the Appwrite Cloud Console. It sits next to the work you are already doing: the organization and project you have open, the page you are on, and the resources you are configuring. You ask in natural language; the Agent answers with Appwrite-aware guidance, asks clarifying questions when a request is ambiguous, and (when authorized) takes actions through Appwrite MCP. You can keep the Agent as a right-hand panel while you stay on…",
     "breadcrumbs": [
       "Agent",
       "Getting started",
@@ -1383,7 +1405,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent/actions",
     "title": "Actions",
     "description": "Learn what the Appwrite Agent can inspect, clarify, and do in your projects and in the Console.",
-    "excerpt": "The Agent can answer questions from documentation and project context alone. When MCP is connected, it can also call tools and drive Console UI through approved actions. Answer and guide Without tools, the Agent can: - Explain Appwrite concepts and how-to steps - Troubleshoot common setup issues - Suggest next steps for Auth, Databases, Storage, Functions, Sites, and other products - Use your current Console page as context for more relevant answers Empty-state suggestions focus on how-to questions until MCP…",
+    "excerpt": "The Agent has two modes of helpfulness. With documentation and Console context alone, it can explain Appwrite and guide you through setup. With MCP connected, it can also call tools against your projects and drive parts of the Console UI so lists, wizards, and charts stay in sync with what just happened. You stay in control of anything that changes project data. Ambiguous or destructive work should surface as clarification before it proceeds. Answer and guide Without tools, the Agent…",
     "breadcrumbs": [
       "Agent",
       "Concepts",
@@ -1394,7 +1416,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent/add-memory",
     "title": "Add memory",
     "description": "Save a preference, instruction, or fact for the Appwrite Agent to reuse across conversations.",
-    "excerpt": "Add memory when you want the Agent to remember standing guidance without repeating it in every chat. Add memory 1. Sign in to Appwrite Cloud. 2. Go to , or open **Agent** > **Settings** > **Memory**. 3. Click **Add memory**. 4. Enter a **key** (short label) and **content**. 5. Choose a category: **Preference**, **Instruction**, or **Fact**. 6. Optionally set a **priority** so important memories are preferred when context is limited. 7. Leave the memory **active**, then save. Update or archive…",
+    "excerpt": "Add memory when you want the Agent to remember standing guidance without repeating it in every chat. Use preferences for reply style, instructions for org conventions, and facts for stable stack details. Do not put one-off incident context or secrets into memory. Add memory 1. Sign in to Appwrite Cloud. 2. Go to , or open **Agent** > **Settings** > **Memory**. 3. Click **Add memory**. 4. Enter a **key** (short label; fixed after create) and **content**. 5. Choose a category:…",
     "breadcrumbs": [
       "Agent",
       "Guides",
@@ -1405,7 +1427,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent/add-model",
     "title": "Add a custom model",
     "description": "Register a provider API key so the Appwrite Agent can use your own LLM credentials.",
-    "excerpt": "Add a custom model when you want conversations or automations to run on a provider and model you control. Add a model 1. Sign in to Appwrite Cloud. 2. Go to , or open **Agent** > **Settings** > **Models**. 3. Click **Add model**. 4. Choose a provider (OpenAI, Anthropic, Google, OpenRouter, Azure, or Custom). 5. Enter the API key and model id. Adjust the base URL if your provider requires a non-default endpoint. 6. Save the model. Use the model…",
+    "excerpt": "Add a custom model when you want conversations or automations to run on a provider and model you control. Leave the picker on Appwrite default when you do not need a specific vendor. Custom models are useful when your team already has OpenAI, Anthropic, Google, OpenRouter, or Azure keys, or when you expose an OpenAI-compatible endpoint. Add a model 1. Sign in to Appwrite Cloud. 2. Go to , or open **Agent** > **Settings** > **Models**. 3. Click **Add model**.…",
     "breadcrumbs": [
       "Agent",
       "Guides",
@@ -1416,7 +1438,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent/automations",
     "title": "Automations",
     "description": "Learn how Appwrite Agent automations run scheduled prompts and create conversations on a cron schedule.",
-    "excerpt": "**Automations** run Agent prompts on a schedule. Each run creates a new conversation with your prompt, optional model, and project context so you can review the result later. Manage automations from or the Agent automations panel in the Console. What an automation contains | Field | Purpose | |-------|---------| | Name | Label in the automations list | | Prompt | The message sent to the Agent on each run | | Schedule | Cron expression (UI helpers cover common…",
+    "excerpt": "**Automations** run Agent prompts on a schedule. Each run creates a **new conversation** with your prompt, optional model, and project context so you can review the result later the same way you read an ordinary Agent thread. Use automations for recurring checks you would otherwise open the Console to do by hand: weekly summaries, deployment hygiene, or \"what changed?\" reviews for a project you do not visit every day. Manage them from or the Agent automations panel. What an automation…",
     "breadcrumbs": [
       "Agent",
       "Concepts",
@@ -1427,7 +1449,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent/chat",
     "title": "Chat with the Agent",
     "description": "Open the Appwrite Agent panel or fullscreen chat, send prompts, and manage a conversation.",
-    "excerpt": "Chat is the primary way you use the Appwrite Agent. You can work in a side panel while staying on a Console page, or open the fullscreen Agent for longer sessions. Open the Agent Right-hand panel 1. Sign in to Appwrite Cloud. 2. Click the **Agent** control in the Console header. 3. The Agent panel opens on the right. Your panel open state can persist in account preferences. Fullscreen 1. Go to (or for a specific thread). 2. Use the…",
+    "excerpt": "Chat is the primary way you use the Appwrite Agent. The same conversations appear in the side panel and in fullscreen; choose the shell that matches the job. Stay in the panel when the Console page is still your focus. Switch to fullscreen when the thread itself is the work. Open the Agent Right-hand panel 1. Sign in to Appwrite Cloud. 2. Click the **Agent** control in the Console header. 3. The Agent panel opens on the right. Your panel…",
     "breadcrumbs": [
       "Agent",
       "Guides",
@@ -1438,7 +1460,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent/connect-mcp",
     "title": "Connect Appwrite MCP",
     "description": "Authorize Appwrite MCP so Appwrite Agent can take approved actions in your projects.",
-    "excerpt": "Connecting **Appwrite MCP** lets the Agent call Appwrite tools with scopes you grant through OAuth. Without this connection, the Agent can still answer questions and guide you through the Console. Connect 1. Sign in to Appwrite Cloud. 2. Open the Agent panel, or go to . 3. Find **Appwrite MCP**. 4. Click **Connect**. 5. Complete the OAuth consent for the **Appwrite Agent** client. 6. Return to the Console and confirm the badge shows **Connected**. You can also open the connect…",
+    "excerpt": "Connecting **Appwrite MCP** lets the Agent call Appwrite tools with the authorization you grant as **Appwrite Agent**. Without this connection, the Agent can still answer questions and guide you through the Console. With it enabled, empty-state suggestions become action-oriented, and the conversation timeline can show live tool activity. On Appwrite Cloud, the Console often connects Appwrite MCP automatically when you open the Agent, using your existing session. Use this guide when the connection is missing, shows **Reconnect**, or you want…",
     "breadcrumbs": [
       "Agent",
       "Guides",
@@ -1448,8 +1470,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/agent/conversations",
     "title": "Conversations",
-    "description": "Learn how Appwrite Agent conversations work, including threading, attachments, voice, and conversation management.",
-    "excerpt": "A **conversation** is a chat thread with the Appwrite Agent. Each conversation belongs to your Console account. You can keep many conversations, pin important ones, archive others, and open any thread in the panel or at . What a conversation contains | Piece | Purpose | |-------|---------| | Messages | User and assistant turns, including edits, retries, and scores | | Timeline | Tool calls and multi-agent activity for a turn | | Attachments | Files you upload for the…",
+    "description": "Learn how Appwrite Agent conversations work, including context, attachments, voice, queueing, and thread management.",
+    "excerpt": "A **conversation** is a chat thread with the Appwrite Agent. Each conversation belongs to your Console account. You can keep many threads, pin the ones you return to often, archive ones you are done with, and open any thread from the right-hand panel or at . Conversations created by automations are linked to the automation that produced them. Those runs do not appear in the main Agents list; open them from the automations views so scheduled work stays separate from…",
     "breadcrumbs": [
       "Agent",
       "Concepts",
@@ -1460,7 +1482,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent/create-automation",
     "title": "Create an automation",
     "description": "Schedule a recurring Appwrite Agent prompt with a cron schedule and optional model.",
-    "excerpt": "Create an automation when you want the Agent to run the same prompt on a schedule and leave the result in a conversation you can review. Create 1. Sign in to Appwrite Cloud. 2. Go to (or ). 3. Click the create action if you are on the list view. 4. Enter a **name**. 5. Write the **prompt** the Agent should run each time. 6. Set a **schedule** with the cron editor (for example weekly on Monday). 7. Optionally set…",
+    "excerpt": "Create an automation when you want the Agent to run the same prompt on a schedule and leave each result in a conversation you can review later. Every run creates a new thread linked to the automation, so history stays organized outside the main Agents list. Write the prompt as if you will not be present to clarify. Name what to inspect, how to format the answer, and whether the run should only report or also take actions. Create 1.…",
     "breadcrumbs": [
       "Agent",
       "Guides",
@@ -1470,8 +1492,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/agent/mcp",
     "title": "MCP connections",
-    "description": "Learn how the Appwrite Agent uses MCP servers to call tools and take actions in your projects.",
-    "excerpt": "**MCP connections** tell the Agent which Model Context Protocol servers it can use. The primary connection is **Appwrite MCP**, the hosted server that lets the Agent take actions in your Appwrite projects. You can also manage other MCP servers from Agent settings. Manage connections under **Agent** > **Settings** > **MCP**, or from the MCP controls in the Agent UI. Appwrite MCP **Appwrite MCP** is listed by default. Its purpose is to let the Agent call Appwrite tools with your account…",
+    "description": "Learn how the Appwrite Agent uses MCP to call tools and take actions in your projects.",
+    "excerpt": "**MCP connections** tell the Agent which Model Context Protocol servers it can use for tools. For Appwrite Agent, the primary connection is **Appwrite MCP**, the hosted server that lets the Agent take actions in your Appwrite projects with your account. Without a connected, enabled server, the Agent still answers questions and guides you through the Console. With Appwrite MCP ready, it can list tools and call Appwrite APIs, and empty-state suggestions shift from how-to chips to action-oriented prompts. Manage the…",
     "breadcrumbs": [
       "Agent",
       "Concepts",
@@ -1482,7 +1504,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent/memory",
     "title": "Memory",
     "description": "Learn how Appwrite Agent memory stores preferences, instructions, and facts across conversations.",
-    "excerpt": "**Memory** lets you save durable notes the Agent can reuse across chats. Use it for standing preferences (response style), instructions (how to treat your projects), and facts (stable details about your stack). Manage memory under **Agent** > **Settings** > **Memory**. Categories | Category | Use for | |----------|---------| | Preference | How you want the Agent to respond (tone, format, verbosity) | | Instruction | Standing rules the Agent should follow when helping you | | Fact | Stable information…",
+    "excerpt": "**Memory** stores durable notes the Agent can reuse across chats so you do not restate the same guidance every time. Use it for how you want replies shaped, standing rules for your org’s Appwrite usage, and stable facts about your stack. Manage memory under **Agent** > **Settings** > **Memory**. Memories you create in the Console belong to your user account and apply when they are active. They are not a substitute for project secrets or team-wide policy documents. Categories Pick…",
     "breadcrumbs": [
       "Agent",
       "Concepts",
@@ -1493,7 +1515,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent/models",
     "title": "Models",
     "description": "Learn how Appwrite Agent models work, including the default model and bring-your-own provider keys.",
-    "excerpt": "**Models** control which large language model the Agent uses for a conversation. You can use Appwrite's default model options, or register your own provider credentials under **Agent** > **Settings** > **Models**. Default vs custom - **Default**: Use the models Appwrite provides in the Agent model picker without adding your own keys. - **Custom**: Add a model with your provider API key. The Agent calls that provider with your credentials for conversations that select it. Pick a model per conversation from…",
+    "excerpt": "**Models** control which large language model the Agent uses for a conversation. Most of the time you can leave the picker on **Appwrite default** and focus on the prompt. When you need a specific provider, latency profile, or model family, register your own credentials under **Agent** > **Settings** > **Models** and select that model on the thread. The choice is stored on the conversation (and optionally on an automation), so different threads can use different models without changing a global…",
     "breadcrumbs": [
       "Agent",
       "Concepts",
@@ -1504,7 +1526,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/agent/quick-start",
     "title": "Start with Agent",
     "description": "Open the Appwrite Agent in the Console, ask your first question, and optionally connect MCP so it can take actions.",
-    "excerpt": "You can start chatting with the Agent in under a minute. This quick start opens the Agent, sends a prompt with your current project context, and optionally connects Appwrite MCP for live actions. Open the Agent 1. Sign in to Appwrite Cloud. 2. Open any project (or stay on an organization page). 3. Click the **Agent** control in the Console header to open the right-hand panel. To use the fullscreen experience, go to in the Console. Guests see a sign-in…",
+    "excerpt": "This quick start gets you from a signed-in Console session to a useful first reply, then optionally unlocks live project actions. You do not need MCP to ask how-to questions. You do need it if you want the Agent to list or change resources for you. Open the Agent 1. Sign in to Appwrite Cloud. 2. Open any project you can access (or stay on an organization page and pick a project in the Agent composer). 3. Click the **Agent**…",
     "breadcrumbs": [
       "Agent",
       "Getting started",
@@ -1945,8 +1967,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.",
     "excerpt": "Your Appwrite project can act as an **OAuth 2.1 and OpenID Connect provider** (OIDC provider). When you enable the OAuth2 server, third-party apps register as clients, send your users to a consent screen you host, and receive tokens your project issues. Your project becomes an identity provider that any standards-compliant OAuth or OIDC library can integrate with: the same way apps offer \"Sign in with Google\" or \"Sign in with GitHub\", integrators can offer **Sign in with your product**. How…",
     "breadcrumbs": [
-      "Auth",
-      "OAuth2 server"
+      "OAuth2 server",
+      "Getting started",
+      "Overview"
     ]
   },
   {
@@ -1955,8 +1978,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "How clients request authorization and how to host a consent screen for your Appwrite OAuth2 server.",
     "excerpt": "Authorization is the step where a user allows a client to act on their behalf. Appwrite's OAuth2 server uses the authorization code flow. Public clients protect the flow with PKCE. Confidential clients authenticate with a client secret and can also use PKCE when your project requires it. The authorization code flow 1. The client sends the user to the **authorization endpoint** with its client ID, a registered redirect URI, , and the scopes it wants. 2. Appwrite checks whether the…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
+      "Concepts",
       "Authorization"
     ]
   },
@@ -1966,8 +1989,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Register confidential and public OAuth clients against your Appwrite project's OAuth2 server and manage them from your own developer platform.",
     "excerpt": "A **client** is a third-party app that authenticates users through your project's OAuth2 server. Each client registers the redirect URIs it is allowed to return to and the post-logout redirect URIs it can end sessions at, sets its type, and chooses whether the device flow is enabled. Its other attributes serve two surfaces: branding like the name, logo, and tagline can appear on your consent screen, while attributes like tags, images, and the privacy policy URL are for your project's…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
+      "Concepts",
       "Clients"
     ]
   },
@@ -1977,10 +2000,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Define custom scopes on your Appwrite OAuth2 server, request them from a client, and enforce them on your own API.",
     "excerpt": "The Sign in with your product guide gave Vantage the user's identity. Identity alone only answers who the user is. To let an integration read the user's data from your product, you need custom scopes: permissions you define, users approve, and your API enforces. This tutorial continues with the same two apps. TaskFlow gains a task API that checks scopes, and Vantage asks for permission to read the user's tasks and shows them on its dashboard. What you will build…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
-      "custom scopes",
-      "Protect your API with custom scopes"
+      "Guides",
+      "Custom scopes"
     ]
   },
   {
@@ -1989,7 +2011,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Add tasks.read and tasks.write to your OAuth2 server's scopes.",
     "excerpt": "Scopes have to be defined on the OAuth2 server before a client can request them. Requesting a scope you have not defined fails the authorization request with . Add the scopes In the Console, open **Auth**, select the **OAuth2 server** tab, and find the **Scopes** field on the **Integration** card. Add two scopes and click **Update**: - grants read access to the user's tasks. - grants permission to create and update tasks. The , , , and scopes stay locked…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "custom scopes",
       "Define the scopes"
@@ -2001,7 +2022,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Ask for the task scopes during authorization and let the user grant each one individually.",
     "excerpt": "A client receives a scope by asking for it during authorization. Vantage requests both task scopes, and TaskFlow's consent screen lets the user decide which of them to grant. Add the scopes to the request In the consumer, extend the scope list in : already passes as the parameter, so nothing else changes on the consumer. The OAuth2 server carries the requested scopes into the grant and shows them to the user. Label the scopes on the consent screen TaskFlow's…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "custom scopes",
       "Request the scopes"
@@ -2013,7 +2033,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Verify incoming access tokens against your project's JWKS and read their scopes.",
     "excerpt": "TaskFlow's API is about to accept access tokens from the outside world, so it first needs a way to tell a token it issued from one somebody made up. Access tokens from your OAuth2 server are RS256-signed JWTs, and the matching public keys are published at your project's JWKS endpoint. That means TaskFlow can verify tokens locally, with no call back to the OAuth2 server on each request. Install jose jose handles the JWT verification and the JWKS fetching. Install…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "custom scopes",
       "Validate access tokens"
@@ -2025,7 +2044,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Serve tasks only to tokens that carry tasks.read.",
     "excerpt": "With the guard in place, TaskFlow can expose its task API. This is where the scope stops being a label and becomes a rule. The task data Create with an in-memory store, keyed by user ID. It stands in for your product's database so the tutorial stays focused on the OAuth side: The guarded route Create . TanStack Start serves the and handlers at : Each handler applies the same two checks, in order: 1. **Authentication**: is the token real?…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "custom scopes",
       "Protect the API route"
@@ -2037,7 +2055,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Read tasks with the granted access token and add a task composer that lives or dies by its scope.",
     "excerpt": "Vantage already holds the access token in its session after the token exchange. Reading tasks is one authenticated fetch away, and a small composer will exercise the write path. Point Vantage at the API Add TaskFlow's API base to : The API client Create . Every request carries the access token as a Bearer header, and TaskFlow's guard does the rest: does not check any scope itself. Vantage cannot know what the user granted until it tries; the refusal comes…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "custom scopes",
       "Call the API from Vantage"
@@ -2049,7 +2066,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Grant the read scope, watch a write get refused, then grant the write scope and watch it succeed.",
     "excerpt": "Everything is wired up. Run the flow twice: once granting only read access, and once granting the write too. The same button on the dashboard behaves differently each time, and the only thing that changed is what the user agreed to. Start both apps In two terminals: Grant read, withhold write Open and click **Sign in with TaskFlow**. On the consent screen, switch **Create and update your tasks** off and authorize. The OAuth2 server narrows the grant to what was…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "custom scopes",
       "Run the flow"
@@ -2061,9 +2077,20 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Authorize TVs, CLIs, and other input-constrained devices against your Appwrite OAuth2 server with the device authorization grant.",
     "excerpt": "The device authorization grant (RFC 8628) lets a client request access even when it cannot open a browser or accept a callback. A TV app, command-line tool, or hardware device shows the user a code, and the user completes authorization on a phone or computer. This flow involves two applications: - The **device client** is the third-party application requesting access. It communicates with Appwrite over HTTP. - The **verification page** belongs to your project. You build this page with an…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
+      "Concepts",
       "Device flow"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/installations",
+    "title": "Installations",
+    "description": "Let clients install on teams in your project and act with installation tokens that need no signed-in user.",
+    "excerpt": "A client is a third-party app registered on your OAuth2 server. Your server can grant a client access in two ways. The first is **user consent**: the authorization flow sends a user to your consent screen, the user approves, and the client receives tokens that act as that user. The grant ends when the user revokes it or leaves. An **installation** is the second way. It connects a client to one team in your project. A team owner installs the…",
+    "breadcrumbs": [
+      "OAuth2 server",
+      "Concepts",
+      "Installations"
     ]
   },
   {
@@ -2072,9 +2099,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Enable Appwrite's OAuth2 server, register a client, and run your first authorization code sign-in end to end.",
     "excerpt": "This guide turns your project into an OAuth2 provider and runs one sign-in through it. By the end you will have an enabled server, a registered client, and an access token issued by your project. The examples follow two apps, the same pair the tutorials build out in full: - **TaskFlow** (): your product and the **OAuth2 provider**, also called the authorization server. It authenticates users, presents the consent screen, and issues tokens. - **Vantage** (): the third-party **consumer**, called…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
-      "OAuth2 server quick start"
+      "Getting started",
+      "Quick start"
     ]
   },
   {
@@ -2083,8 +2110,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "The built-in OpenID Connect scopes and the custom scopes clients can request from your Appwrite OAuth2 server.",
     "excerpt": "Scopes are the permissions a client asks for during authorization. The user sees the requested scopes on the consent screen and approves or declines them. The access token the server issues carries the scopes that were granted. Built-in scopes Four OpenID Connect scopes are always available and cannot be removed: | Scope | Grants access to | | --- | --- | | | The user's subject identifier. Required for OpenID Connect and to receive an ID token. | |…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
+      "Concepts",
       "Scopes"
     ]
   },
@@ -2094,9 +2121,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Build an end-to-end \"Sign in with your product\" experience against your Appwrite OAuth2 server, from the consent screen to the token exchange.",
     "excerpt": "Once your project's OAuth2 server is enabled, other apps can offer \"Sign in with your product\". This tutorial builds that experience end to end with two small TanStack Start apps, so you can see every part of the flow. What you will build Two apps play the two sides of an OAuth integration: - **TaskFlow**, the provider. It owns the Appwrite project with the OAuth2 server enabled, and it hosts the **consent screen** where its users approve access. - **Vantage**,…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
-      "sign in with your product",
+      "Guides",
       "Sign in with your product"
     ]
   },
@@ -2106,7 +2132,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Turn on the OAuth2 server on your Appwrite project and register the client app.",
     "excerpt": "Before writing any code, turn TaskFlow's project into an OAuth provider and register Vantage as a client. Enable the server In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **Enable OAuth2 server**. Set the **Authorization URL** to where TaskFlow will host its consent screen. In this tutorial that is . This is where the OAuth2 server sends users to sign in and approve. Leave the scopes at their defaults. , , and are always included, which…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "sign in with your product",
       "Enable the OAuth2 server"
@@ -2118,7 +2143,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Scaffold the two TanStack Start apps and wire up their environment.",
     "excerpt": "Both sides are TanStack Start apps. Scaffold them in a single folder. Scaffold the projects Create the consumer (Vantage) and the provider (TaskFlow): This gives you two full TanStack Start apps with server functions, file-based routing, and Tailwind CSS already set up. Give each a fixed port so the redirect URIs stay stable. In each app's , set the dev script: Configure the environment The apps read the OAuth values from environment variables. Add a to each. Vantage needs the…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "sign in with your product",
       "Create the apps"
@@ -2130,7 +2154,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Build the consumer's sign-in button and the redirect that starts the OAuth flow.",
     "excerpt": "Start with Vantage, the consumer. It needs a helper for the OAuth values, a landing page with a **Sign in with TaskFlow** button, and a route that kicks off the flow. The OAuth helper Create . It reads the config and builds the authorization URL. Import at the top: it makes the build fail if this module is ever pulled into the browser bundle, which keeps the client secret server-side. The start route Clicking the button navigates to . Its…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "sign in with your product",
       "Add Sign in with your product"
@@ -2142,7 +2165,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Host the consent screen where your users sign in and approve access.",
     "excerpt": "The consent screen is the page TaskFlow hosts at its authorization URL. When the OAuth2 server sends a user here, the screen signs them in, shows what the client is asking for, and records their decision. All of it runs on TaskFlow's server, carrying the user's Appwrite session. Types for the consent card Create . It holds only client-safe values, so the browser can import it: The server helpers Create . Every function here calls the OAuth2 server on behalf…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "sign in with your product",
       "Build the consent screen"
@@ -2154,7 +2176,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Handle the callback, exchange the authorization code for tokens on the server, and sign the user in.",
     "excerpt": "The OAuth2 server redirects back to Vantage's redirect URI with a and the . Vantage exchanges that code for tokens on its server, reads the user's profile, and signs them in. Add the token functions Extend with the exchange and userinfo calls. The exchange authenticates with the client secret using HTTP Basic auth, which is why it must run on the server. Handle the callback Create . Its loader runs on the server: it checks the against the session, exchanges…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "sign in with your product",
       "Exchange the code for tokens"
@@ -2166,7 +2187,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Start both apps and sign in with your product end to end.",
     "excerpt": "Everything is in place. Run both apps and sign in. Start both apps In two terminals: Vantage is at and TaskFlow's consent screen at . Sign in Open and click **Sign in with TaskFlow**. You will: 1. Land on TaskFlow's consent screen and sign in with a TaskFlow user. 2. See exactly what Vantage is requesting, and approve it. 3. Return to Vantage, signed in, with your TaskFlow name and email on the dashboard. That round trip is a complete…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
       "sign in with your product",
       "Run the flow"
@@ -2178,8 +2198,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Access, refresh, and ID tokens issued by Appwrite's OAuth2 server, their lifetimes, and how to validate, refresh, introspect, revoke, and end sessions.",
     "excerpt": "When a client redeems an authorization code, the OAuth2 server issues an access token and refresh token. It also issues an ID token when the scope was granted. This page covers what each token does and how clients and resource servers validate, refresh, introspect, revoke, and end sessions. The three tokens - **Access token.** A signed JWT that a client presents to a resource server when it calls an API on the user's behalf. It contains the authorization information the…",
     "breadcrumbs": [
-      "Auth",
       "OAuth2 server",
+      "Concepts",
       "Tokens"
     ]
   },
@@ -2453,8 +2473,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Store and query schemaless documents with Appwrite DocumentsDB. Collections give you flexible, JSON-style storage for your application, business, and user data.",
     "excerpt": "Appwrite DocumentsDB lets you store and query schemaless documents. Collections hold documents as flexible JSON, so you can add fields as your data evolves without defining a schema up front. Databases store data, if you need to store files like images, PDFs or videos, use Appwrite Storage. You can organize data into databases, collections, and documents. You can also paginate, order, and query documents. Quick start",
     "breadcrumbs": [
-      "Databases",
-      "DocumentsDB"
+      "DocumentsDB",
+      "Getting started",
+      "Overview"
     ]
   },
   {
@@ -2463,8 +2484,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.",
     "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full document. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. These operations work on numeric document fields, whether the value is an integer or a floating-point number. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations use dedicated methods to…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Guides",
       "Atomic numeric operations"
     ]
   },
@@ -2474,8 +2495,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn how to back up and restore your DocumentsDB databases, ensuring data security and seamless recovery.",
     "excerpt": "Backups protect your DocumentsDB data by capturing a full copy of a database that you can restore later. Every backup is **encrypted** and taken as a **hot** backup, so your database keeps serving traffic with zero downtime and recovery stays fast. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. Backup policies Backup policies automate your backups on a schedule. To create one, open your database's **Backups** tab…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Concepts",
       "Backups"
     ]
   },
@@ -2485,8 +2506,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Perform bulk operations on documents within your collections for efficient data handling.",
     "excerpt": "Appwrite DocumentsDB supports bulk operations for documents, allowing you to create, update, or delete multiple documents in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Guides",
       "Bulk operations"
     ]
   },
@@ -2496,8 +2517,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Organize documents with Appwrite DocumentsDB collections. Learn how to create collections, configure permissions, and add indexes for fast queries.",
     "excerpt": "Appwrite uses collections as containers of documents. Collections are schemaless, so documents in the same collection can hold different fields. You shape data in your application instead of defining columns up front. Create collection You can create collections using the Appwrite Console, a Server SDK, or using the CLI. Head to the **Databases** page, open a database, and click **Create collection**. You can also create collections programmatically using a Server SDK. Appwrite Server SDKs require an API key. Permissions Appwrite…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Concepts",
       "Collections"
     ]
   },
@@ -2507,8 +2528,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Dive deeper into Appwrite DocumentsDB and database configuration. Learn how to create and manage multiple databases for your application.",
     "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. Create in Console The easiest way to create a database is using the Appwrite Console. Navigate to the **Databases** page and click **Create database**, choose **DocumentsDB** as the database type, and select your preferred tier. Create using Server SDKs You can programmatically create databases using a Server SDK. Appwrite Server SDKs require an API key.",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Concepts",
       "Databases"
     ]
   },
@@ -2518,8 +2539,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Create, read, update, and delete documents in Appwrite DocumentsDB. Learn how to work with schemaless JSON documents in your collections.",
     "excerpt": "Each piece of data in Appwrite DocumentsDB is a document. Documents are schemaless JSON, so each document in a collection can hold its own set of fields. Create documents You must grant _create_ permissions to users at the _collection level_ before users can create documents. Learn more about permissions Use the method to add a document to a collection. Appwrite Server SDKs require an API key. List documents Use the method to read documents from a collection. Pass queries to…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Concepts",
       "Documents"
     ]
   },
@@ -2529,8 +2550,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Export documents from a DocumentsDB collection to a JSON file. Share datasets, create custom backups, or move data to another system without writing custom scripts.",
     "excerpt": "Appwrite's JSON Export feature allows you to export documents from a collection to a JSON file. This is especially useful for creating custom backups, sharing data with other teams, or moving datasets to another system. Export configuration Before exporting, you can configure a few options to control the contents of the output. These settings let you export exactly the data you need. Select fields You can choose which fields to include in your export. By default, every field is exported,…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Guides",
       "JSON exports"
     ]
   },
@@ -2540,8 +2561,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Create documents in a DocumentsDB collection by uploading a JSON file. Seed test data, restore a dataset, or migrate from another system without writing custom scripts.",
     "excerpt": "Appwrite's JSON Import feature allows you to create multiple documents in a collection by uploading a single JSON file. This is especially useful for importing existing data, seeding test environments, or migrating from other systems. Prepare your JSON file Your JSON file is an array of objects, where each object becomes one document in the collection. DocumentsDB is schemaless, so each object can hold its own set of fields. An example of a valid JSON file: Each object is validated…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Guides",
       "JSON imports"
     ]
   },
@@ -2551,8 +2572,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Understand how to do data ordering in Appwrite DocumentsDB. Learn how to order and sort your database records for efficient data retrieval.",
     "excerpt": "You can order results returned by Appwrite DocumentsDB by using an order query. For best performance, create an index on the field you plan to order by. Ordering one field When querying using the listDocuments endpoint, you can specify the order of the documents returned using the and query methods. Multiple fields To sort based on multiple fields, simply provide multiple query methods. For better performance, create an index on the first field that you order by. In the example…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Concepts",
       "Order"
     ]
   },
@@ -2562,8 +2583,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Implement pagination for large data sets in Appwrite DocumentsDB. Explore techniques for splitting and displaying data across multiple pages.",
     "excerpt": "As your collection grows in size, you'll need to paginate the documents returned. Pagination improves performance by returning a subset of documents that match a query at a time, called a page. By default, list operations return 25 documents per page, which can be changed using the query method. There is no hard limit on the number of documents you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination divides documents into pages of documents…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Guides",
       "Pagination"
     ]
   },
@@ -2573,9 +2594,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Control access to your DocumentsDB data with permissions. Learn how to set collection level and document level access rules.",
     "excerpt": "Permissions define who can access documents in a collection. By default **no permissions** are granted to any users, so no user can access any documents. Permissions exist at two levels, collection level and document level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receives access when granted. A user with access granted at either collection level or document level will be able to access a document. Users **don't need access at both levels**…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
-      "Database permissions"
+      "Concepts",
+      "Permissions"
     ]
   },
   {
@@ -2584,8 +2605,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Harness the power of querying with Appwrite DocumentsDB. Discover various query options, filtering, sorting, and advanced querying techniques.",
     "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Concepts",
       "Queries"
     ]
   },
@@ -2595,9 +2616,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Get started with Appwrite DocumentsDB. Follow a step-by-step guide to create your first database, add a collection, and perform basic document operations.",
     "excerpt": "Head to your Appwrite Console and click **Create database**. Name it and choose **DocumentsDB** as the database type. Optionally, add a custom database ID. Select your preferred tier, then click **Create database**. In the database, click **Create collection** and name it . Optionally, add a custom collection ID. Collections are schemaless, so there are no columns to define. Each document holds its own fields as flexible JSON. Open the collection's **Security** tab. Under **Permissions**, add a new role **Any** and…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
-      "Start with DocumentsDB"
+      "Getting started",
+      "Quick start"
     ]
   },
   {
@@ -2606,8 +2627,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Set custom $createdAt and $updatedAt timestamps for your documents when using server SDKs.",
     "excerpt": "When creating or updating documents, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These attributes can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a document's timestamps by…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Guides",
       "Timestamp overrides"
     ]
   },
@@ -2617,8 +2638,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Stage multiple database operations and commit them atomically. Group changes across databases and collections with ordering, isolation, and conflict detection.",
     "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and collections. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported document, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…",
     "breadcrumbs": [
-      "Databases",
       "DocumentsDB",
+      "Guides",
       "Transactions"
     ]
   },
@@ -2628,8 +2649,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Run a native MySQL database provisioned for your project and connect to it directly with standard MySQL clients.",
     "excerpt": "Appwrite native MySQL databases give you a managed MySQL instance provisioned for your project. You pick the compute specification, and Appwrite provisions the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS. Native databases are different from Appwrite databases like TablesDB, DocumentsDB, and VectorsDB, which are accessed through Appwrite SDKs and platform APIs. A native MySQL database gives you the raw engine. You connect with the client or…",
     "breadcrumbs": [
-      "Databases",
-      "MySQL"
+      "MySQL",
+      "Getting started",
+      "Overview"
     ]
   },
   {
@@ -2638,8 +2660,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Scheduled backups, manual backups, restores, and point-in-time recovery for your MySQL database.",
     "excerpt": "Native databases are backed up automatically. Backups are stored off the database instance and restorable from the API. For finer recovery granularity than scheduled backups, enable point-in-time recovery. Automatic backups Every database gets a default backup policy when it is provisioned, so you have scheduled backups from day one. You can adjust the default policy, or add more policies with different schedules and retention windows. Backup policies A policy defines a schedule (cron expression) and a retention period in days.…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
+      "Manage",
       "Backups"
     ]
   },
@@ -2649,8 +2671,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Spin up an ephemeral, isolated copy of your MySQL database in seconds from a storage snapshot. Use branches for previews, migrations, and testing.",
     "excerpt": "A branch is a short-lived, isolated copy of your database. It has its own hostname and reuses the parent's credentials, because it is a snapshot copy of the parent's storage volume taken at a point in time. Branches are not replicas: once created, they diverge from the parent and never sync back. There is no branch merge operation. Use a branch to validate a migration, data repair, or application change, then intentionally cut application traffic over to the validated database…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
+      "Manage",
       "Branches"
     ]
   },
@@ -2660,9 +2682,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "How MySQL privileges work, what the admin account on your database can do, and patterns for restricting access to data.",
     "excerpt": "MySQL controls access in two layers: - An **account** is an identity that can connect. - **Privileges** decide what an account may do to each schema, table, or column. This page covers how that model works, what your Appwrite database's account can and cannot do, and the patterns that restrict access to data in practice. The privilege model A MySQL account is a user name plus a host pattern, such as . Privileges attach to accounts at four scopes: global,…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "concepts",
+      "Concepts",
       "Security and access control"
     ]
   },
@@ -2672,10 +2693,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Design MySQL schemas with normalization, decide when to denormalize, and use views to shape data for readers.",
     "excerpt": "Data modeling decides where each fact lives. Normalization is the discipline of storing every fact exactly once, so it can't contradict itself. This page walks a flat spreadsheet-style table through the normal forms, then covers when to deliberately break the rules, and how views let you reshape data without duplicating it. The problem with one big table Start with an orders table designed the way a spreadsheet would be: Every design flaw here causes a concrete failure: - Ada's email…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "concepts",
-      "Data modeling and normalization"
+      "Concepts",
+      "Data modeling"
     ]
   },
   {
@@ -2684,9 +2704,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Speed up MySQL queries with B-tree, composite, prefix, functional, and invisible indexes, and read EXPLAIN ANALYZE output.",
     "excerpt": "An index is a sorted data structure the database maintains next to a table so it can find rows without scanning everything. Reads get faster; writes pay a small tax to keep each index current. Knowing when an index helps, and how to confirm it's being used, is the highest-leverage performance skill in SQL. Setup Index behavior only shows up with enough data on the table, so the setup seeds 100,000 users to give the query optimizer a real choice…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "concepts",
+      "Concepts",
       "Indexes"
     ]
   },
@@ -2696,9 +2715,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Model relationships with foreign keys and combine MySQL tables with INNER, LEFT, RIGHT, and CROSS joins.",
     "excerpt": "Relational databases keep each entity in its own table and connect them through **keys**. A join combines rows from two tables by matching values, usually a **foreign key** on one side against a **primary key** on the other. This page covers how to model the two relationship shapes you'll meet constantly, and the join types you'll use in practice. Setup The examples below use two tables, customers and orders, where every order records which customer placed it. Create and seed…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "concepts",
+      "Concepts",
       "Joins and relationships"
     ]
   },
@@ -2708,9 +2726,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Read and write MySQL rows with SELECT, INSERT, UPDATE, and DELETE. Covers filtering, aggregation, pagination, and upserts.",
     "excerpt": "Four statements do almost all the work in a relational database: - **SELECT** reads rows - **INSERT** adds new rows - **UPDATE** changes existing rows - **DELETE** removes rows SQL is declarative: a query describes the result you want, and the database's optimizer decides how to produce it, choosing between indexes, scans, and join strategies on its own. That's why the same query keeps working as data grows and indexes change. This page walks through each statement, plus the querying…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "concepts",
+      "Concepts",
       "Querying rows"
     ]
   },
@@ -2720,9 +2737,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Create MySQL tables with the right column types and constraints. Covers numeric, string, date and time, JSON, ENUM, and generated columns.",
     "excerpt": "A table is the unit of storage in a relational database, a named grid where: - each **row** is one record: one customer, one order - each **column** is one attribute every record shares: name, price, creation time - each column has a **type** that determines what values it accepts and how they compare, sort, and calculate Unlike a spreadsheet, the set of columns is declared up front and enforced; every row has exactly those columns. This fixed shape is…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "concepts",
+      "Concepts",
       "Tables and data types"
     ]
   },
@@ -2732,9 +2748,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Group MySQL statements into atomic transactions. Covers COMMIT, ROLLBACK, savepoints, isolation levels, locking, and deadlocks.",
     "excerpt": "A transaction groups statements into a single all-or-nothing unit. Either every statement takes effect, or none do, and no other connection ever sees a half-finished state. Two distinct things go wrong without that: - **Partial failure**: a crash or dropped connection after the debit but before the credit leaves data in a state that was never supposed to exist. - **Interleaving**: two concurrent processes both read a balance of 100, both compute a new value, both write, and one update…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "concepts",
+      "Concepts",
       "Transactions"
     ]
   },
@@ -2744,8 +2759,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure the per-database connection pooler to serve many short-lived clients, with automatic read/write splitting when high availability is enabled.",
     "excerpt": "MySQL creates one backend process per connection, which makes each connection relatively expensive. Serverless functions, edge runtimes, and horizontally scaled application servers can easily exhaust the connection limit of your specification. The connection pooler sits in front of your database and multiplexes many client connections onto a small pool of server connections. The pooler runs next to your database and is reachable on port on the same hostname. Your application connects to the pooler exactly like it would connect to…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
+      "Connecting",
       "Connection pooling"
     ]
   },
@@ -2755,8 +2770,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect to your MySQL database with the mysql client or any standard driver. Retrieve connection details and rotate the primary password.",
     "excerpt": "A native MySQL database exposes a MySQL endpoint over TLS. You connect to it the same way you would connect to any MySQL server: with the client, any driver in any language, or any ORM. Get connection details with the API The connection details are returned on the database object itself. Fetch the database with an API key that has the scope: The response includes the connection fields alongside the database configuration: The primary user is and the database name…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
+      "Connecting",
       "Connections"
     ]
   },
@@ -2766,8 +2781,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Run up to five read replicas with asynchronous, synchronous, or quorum replication and automatic failover for your MySQL database.",
     "excerpt": "A single database instance is a single point of failure. High availability (HA) adds streaming replicas next to your primary: they replicate continuously, serve read traffic through the connection pooler, and take over automatically when the primary becomes unhealthy. High availability requires a specification that runs on dedicated compute; the smallest specifications run on shared capacity and do not support replicas. How it works Replicas receive changes from the primary through MySQL binary log replication. Each replica is a full…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
+      "Manage",
       "High availability"
     ]
   },
@@ -2777,9 +2792,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use an Appwrite native MySQL database as the backing store for Auth.js (NextAuth.js). Persist users, accounts, and sessions through the Prisma adapter.",
     "excerpt": "Auth.js (formerly NextAuth.js) persists users, accounts, sessions, and verification tokens through a database adapter. When you configure an adapter, those records live in your database, which makes database sessions, account linking, and email sign-in possible. An Appwrite native MySQL database is a standard MySQL engine, so Auth.js works through the same ORM adapters you use with other MySQL databases. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one with the…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Auth.js"
     ]
   },
@@ -2789,9 +2803,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use an Appwrite native MySQL database as the database for Better Auth. Configure mysql2, run schema generation and migrations over a direct connection, and store users and sessions in MySQL.",
     "excerpt": "Better Auth is a framework-agnostic authentication library for TypeScript that stores users, sessions, accounts, and verification records in your database. An Appwrite native MySQL database gives Better Auth a standard MySQL engine, so you can use , run the Better Auth CLI, and keep auth data in your Appwrite project. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the connection string. The primary user is…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Better Auth"
     ]
   },
@@ -2801,9 +2814,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Run dbt Core transformations against an Appwrite native MySQL database with the community dbt-mysql adapter.",
     "excerpt": "Use dbt Core with an Appwrite native MySQL database through the community [](https://docs.getdbt.com/docs/local/connect-data-platform/mysql-setup) adapter. Appwrite exposes standard MySQL on port , so dbt connects with the same host, username, password, and database name you use with other MySQL clients. dbt compiles your models into and statements, then runs them in dependency order to build transformed tables and views inside the MySQL database you configure. dbt Labs lists MySQL as a community adapter. The published [](https://pypi.org/project/dbt-mysql/) package is experimental and is…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "dbt"
     ]
   },
@@ -2813,9 +2825,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Django's ORM with an Appwrite native MySQL database. Configure the DATABASES setting, run migrations against the direct MySQL port, and choose the right pooler mode for Django connections.",
     "excerpt": "A native MySQL database is a standard MySQL engine, so Django's ORM works against it with no Appwrite-specific configuration. Point the setting at the credentials from the Connections page, then use migrations, models, and the rest of Django as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one with the create-database wizard, then use [](/docs/products/databases/mysql/connections#credentials) to read the hostname, port, username, password, and generated…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Django"
     ]
   },
@@ -2825,9 +2836,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect to an Appwrite native MySQL database from Node.js with mysql2 or MariaDB Connector/Node.js. Configure pools, TLS verification, serverless connection management, and troubleshooting.",
     "excerpt": "A native MySQL database works with standard Node.js drivers that speak the MySQL wire protocol. The Connections page shows the smallest query. This guide covers driver pools, TLS verification, serverless connection management, and common connection errors. You'll need a native MySQL database in a state and the connection values returned by the database object: host, port, username, password, and database name. Store the password in an environment variable and keep it out of source control. Raw driver, ORM, or SQL…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Node.js drivers"
     ]
   },
@@ -2837,9 +2847,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Drizzle ORM with an Appwrite native MySQL database. Configure mysql2, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
     "excerpt": "Appwrite's native MySQL database is a standard MySQL engine, so Drizzle ORM works against it with no Appwrite-specific configuration. Point Drizzle's mysql2 driver at the connection string from the Connections page and use Drizzle Kit, the query builder, and the rest of the toolchain as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the connection string. The primary user…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Drizzle"
     ]
   },
@@ -2849,9 +2858,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Entity Framework Core with an Appwrite native MySQL database. Configure the MySQL provider, run migrations against the direct MySQL host, and rely on the provider's connection pool from an ASP.NET server.",
     "excerpt": "A native MySQL database is a standard MySQL engine, so Entity Framework Core works with it through a MySQL EF Core provider. Point the provider at the connection details from the Connections page, then use , migrations, and LINQ queries as you would with any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the connection details. Install the provider Add Oracle's EF Core…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "EF Core"
     ]
   },
@@ -2861,9 +2869,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use FastAPI and SQLAlchemy 2.x with an Appwrite native MySQL database. Configure the async asyncmy engine, pass TLS through connect_args, inject a session per request, and run Alembic migrations against the direct database port.",
     "excerpt": "An Appwrite native MySQL database is a standard MySQL engine, so FastAPI with SQLAlchemy and an async MySQL driver works against it with no Appwrite-specific runtime code. You point at the connection string from the connections page and use the SQLAlchemy ORM, the FastAPI dependency system, and Alembic the same way you would against any self-hosted MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and connections to…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "FastAPI"
     ]
   },
@@ -2873,9 +2880,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use GORM with an Appwrite native MySQL database in Go. Build the MySQL DSN, open a connection, size the database/sql pool, and run migrations with AutoMigrate or golang-migrate.",
     "excerpt": "A native MySQL database is a standard MySQL engine, so GORM talks to it through the regular MySQL driver. Build a go-sql-driver DSN from the credentials returned by Appwrite, hand it to , and use models, , and the query API as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the hostname, password, and generated database name. The primary…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "GORM"
     ]
   },
@@ -2885,9 +2891,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect Grafana to an Appwrite native MySQL database as a data source and build dashboards. Configure the MySQL data source and provision it from YAML.",
     "excerpt": "An Appwrite native MySQL database exposes a standard managed MySQL 8.4 or 8.0 engine, so Grafana connects to it through the built-in **MySQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with your database credentials, and query your tables to build dashboards and alerts. You'll need a native MySQL database in a state and its credentials. Call from the Appwrite API to read , , , , and . The primary user is…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Grafana"
     ]
   },
@@ -2897,9 +2902,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Laravel and Eloquent with an Appwrite native MySQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.",
     "excerpt": "A native MySQL database is a standard MySQL engine, so Laravel works against it with no Appwrite-specific configuration. Point the connection in at the credentials from the Connections page, then use Eloquent, the query builder, migrations, and queues as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See MySQL databases to create one. To retrieve credentials, call [](/docs/products/databases/mysql/connections#credentials) and use the returned hostname, port, username, password, and database name. The…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Laravel"
     ]
   },
@@ -2909,9 +2913,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect Metabase to an Appwrite native MySQL database for analytics. Configure MySQL connection details, require TLS on Cloud, and build dashboards on a session-safe connection.",
     "excerpt": "Appwrite's native MySQL database is a standard MySQL engine, so Metabase can connect to it without an Appwrite-specific adapter. Add the database in Metabase, use the host and credentials from the Connections page, and Metabase will sync the schema so your team can build questions and dashboards. You'll need a native MySQL database in a state and its credentials. Fetch them with [](/docs/products/databases/mysql/connections#credentials). The response includes , , , , and . The primary user is , and the database…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Metabase"
     ]
   },
@@ -2921,9 +2924,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect a Next.js App Router application to an Appwrite native MySQL database from Route Handlers, Server Actions, and Server Components, pool from serverless, and fall back to the SQL API on the Edge runtime.",
     "excerpt": "An Appwrite native MySQL database works with standard MySQL drivers and ORMs, so a Next.js App Router application can query it from server-side code. Point your driver at the connection string from the Connections page and keep all database access on the server. You'll need a native MySQL database in a state and its credentials. See MySQL to create one and Connections to retrieve the connection string. The primary user is , and Appwrite generates the database name for each…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Next.js"
     ]
   },
@@ -2933,9 +2935,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Prisma ORM with an Appwrite native MySQL database. Configure the Prisma 7 datasource, apply schema changes through the direct connection, and instantiate Prisma Client with the MySQL driver adapter.",
     "excerpt": "Prisma ORM works with Appwrite's native MySQL database as a standard MySQL target. Configure Prisma with the connection string from Appwrite, apply schema changes through the direct database connection, and use Prisma Client from your application code. You'll need a native MySQL database in a state and its credentials. The database object returned by the Appwrite API includes , , , and ; you can read it with or from the response when you create the database. Initialize Prisma Install…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Prisma"
     ]
   },
@@ -2945,9 +2946,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Ruby on Rails and ActiveRecord with an Appwrite native MySQL database. Configure database.yml, run migrations against the direct database port, and size the ActiveRecord pool.",
     "excerpt": "A native MySQL database is a standard MySQL engine, so Ruby on Rails works against it through ActiveRecord with no Appwrite-specific configuration. Point at the connection details from the Connections page and use ActiveRecord, migrations, and the rest of the Rails toolchain exactly as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. Call from the Appwrite API to read , , , and . The primary user is , and…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Rails"
     ]
   },
@@ -2957,9 +2957,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect Retool to an Appwrite native MySQL database to build internal and admin tools. Fetch connection details with the API, configure the MySQL resource with TLS, and allow Retool Cloud network access when needed.",
     "excerpt": "An Appwrite native MySQL database exposes a standard MySQL connection, so Retool connects to it through the built-in **MySQL** resource. Use the database hostname, generated database name, and credentials from Appwrite, then build queries, tables, and forms in Retool for dashboards and admin panels. You'll need a native MySQL database in a state, an Appwrite API key with , and permission to create resources in Retool. Fetch connection details by calling , which returns , , , , and .…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Retool"
     ]
   },
@@ -2969,9 +2968,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect a Spring Boot application to an Appwrite native MySQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against MySQL.",
     "excerpt": "An Appwrite native MySQL database is a standard MySQL engine, so a Spring Boot application connects to it through MySQL Connector/J with no Appwrite-specific runtime configuration. Point at the JDBC URL from your database credentials, size the built-in HikariCP pool, and use Spring Data JPA, Hibernate, Flyway, or Liquibase as you would with any managed MySQL server. You'll need a native MySQL database in a state and its credentials. You can fetch credentials with the API by calling , which…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
-      "integrations",
+      "Integrations",
       "Spring Boot"
     ]
   },
@@ -2981,8 +2979,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Maintenance windows, online engine version upgrades, pause and resume, and the lifecycle states of your MySQL database.",
     "excerpt": "Appwrite manages the infrastructure around your database: security patches, engine upgrades, and instance health. This page covers the controls you have over when and how that maintenance happens. Maintenance window Routine maintenance that can briefly affect the database runs inside a weekly window that you choose. Set it through the API by picking a day and start hour (UTC): accepts through , and accepts to . Engine version upgrades You can upgrade the MySQL version online, such as from 8.0…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
+      "Manage",
       "Maintenance"
     ]
   },
@@ -2992,8 +2990,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Check database health, watch lifecycle states, and inspect active connections on your native MySQL database.",
     "excerpt": "Every native MySQL database ships with programmatic health checks, and the engine's own instrumentation is fully available to you. There is nothing to install in the database for these checks. Database health Poll the database status for live health information after the database is ready: uptime, connection counts, replica state, and storage volumes. Use it from your own monitoring: For the database lifecycle state (, , , and friends), read the field of the database object itself. Use that field…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
+      "Manage",
       "Monitoring"
     ]
   },
@@ -3003,8 +3001,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "TLS by default, IP allowlists, and idle timeouts for your MySQL database.",
     "excerpt": "Every native database is reachable through a unique public hostname, secured with TLS, and protected by network controls that you configure per database. Hostname Each database gets a stable hostname in the form: The hostname does not change for the lifetime of the database, across restarts, resizes, failovers, and version upgrades. You can copy it from the database response. TLS Connections on Appwrite Cloud are encrypted with TLS, terminated at Appwrite's edge and forwarded to your database over the internal…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
+      "Manage",
       "Network security"
     ]
   },
@@ -3014,8 +3012,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Create your first native MySQL database in the Appwrite Console, retrieve its credentials, and run your first queries with the mysql client.",
     "excerpt": "You can create a MySQL database and run your first query in a few minutes. Create a database 1. In your project, go to **Databases**. 2. Click **Create database**. 3. Give your database a name, and optionally a custom database ID. 4. Under **Choose database type**, select **MySQL** from the **Native databases** group. 5. Under **Specifications**, select your preferred tier. 6. Optionally configure **Read replicas** and **Point-in-time recovery (PITR)**. You can change both later. 7. Review the database summary and…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
+      "Getting started",
       "Quick start"
     ]
   },
@@ -3025,8 +3023,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Resize the compute specification of your MySQL database with zero downtime and grow storage automatically as your data grows.",
     "excerpt": "Native databases scale in two dimensions: the compute specification (CPU, memory, and connection limit) and storage. Both can change after creation, without dump-and-restore migrations. List available specifications Each database runs against a specification that defines its CPU, memory, included storage, and maximum connections. List the specifications available to your plan: Change the compute specification From the API, pass the new specification ID: Resizes apply with zero downtime through a rolling cutover: a new instance is provisioned on the target specification,…",
     "breadcrumbs": [
-      "Databases",
       "MySQL",
+      "Manage",
       "Scaling"
     ]
   },
@@ -3036,8 +3034,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Run a dedicated, native PostgreSQL database provisioned for your project and connect to it directly with standard PostgreSQL clients.",
     "excerpt": "Appwrite native PostgreSQL databases give you a managed PostgreSQL instance provisioned for your project. You pick the compute specification, and Appwrite provisions the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS. Native databases are different from Appwrite databases like TablesDB, DocumentsDB, and VectorsDB, which are accessed through Appwrite SDKs and platform APIs. A native PostgreSQL database gives you the raw engine. You connect with or any PostgreSQL…",
     "breadcrumbs": [
-      "Databases",
-      "PostgreSQL"
+      "PostgreSQL",
+      "Getting started",
+      "Overview"
     ]
   },
   {
@@ -3046,8 +3045,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Scheduled backups, manual backups, restores, and point-in-time recovery for your PostgreSQL database.",
     "excerpt": "Native databases are backed up automatically. Backups are stored off the database instance and restorable from the API. For finer recovery granularity than scheduled backups, enable point-in-time recovery. Automatic backups Every database gets a default backup policy when it is provisioned, so you have scheduled backups from day one. You can adjust the default policy, or add more policies with different schedules and retention windows. Backup policies A policy defines a schedule (cron expression) and a retention period in days.…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Manage",
       "Backups"
     ]
   },
@@ -3057,8 +3056,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Spin up an ephemeral, isolated copy of your PostgreSQL database in seconds from a storage snapshot. Use branches for previews, migrations, and testing.",
     "excerpt": "A branch is a short-lived, isolated copy of your database. It has its own endpoint and reuses the parent's credentials, because it is a snapshot copy of the parent's storage volume taken at a point in time. Branches are not replicas: once created, they diverge from the parent and never sync back. There is no branch merge operation. Use a branch to validate a migration, data repair, or application change, then intentionally cut application traffic over to the validated database…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Manage",
       "Branches"
     ]
   },
@@ -3068,9 +3067,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Control access to PostgreSQL with roles, GRANT and REVOKE, and row-level security policies for multi-tenant data.",
     "excerpt": "PostgreSQL controls access in three layers: - A **role** is an identity that can connect. - **Privileges** decide what a role may do to each table. - **Row-level security** narrows that further, to which rows. Your database's primary role can create additional roles, so you can give every service and teammate exactly the access it needs instead of sharing one all-powerful login. Setup The examples below protect a documents table whose rows belong to different owners. Create and seed it…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "concepts",
+      "Concepts",
       "Security and access control"
     ]
   },
@@ -3080,10 +3078,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Design PostgreSQL schemas with normalization, decide when to denormalize, and use views to shape data for readers.",
     "excerpt": "Data modeling decides where each fact lives. Normalization is the discipline of storing every fact exactly once, so it can't contradict itself. This page walks a flat spreadsheet-style table through the normal forms, then covers when to deliberately break the rules, and how views let you reshape data without duplicating it. The problem with one big table Start with an orders table designed the way a spreadsheet would be: Every design flaw here causes a concrete failure: - Ada's email…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "concepts",
-      "Data modeling and normalization"
+      "Concepts",
+      "Data modeling"
     ]
   },
   {
@@ -3092,9 +3089,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Speed up PostgreSQL queries with B-tree, composite, partial, and expression indexes, and read EXPLAIN ANALYZE output.",
     "excerpt": "An index is a lookup structure the database maintains next to a table so it can find rows without scanning everything; the default B-tree kind keeps its entries sorted. Reads get faster; writes pay a small tax to keep each index current. Knowing when an index helps, and how to confirm it's being used, is the highest-leverage performance skill in SQL. Setup Index behavior only shows up with enough data on the table, so the setup seeds 100,000 users to…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "concepts",
+      "Concepts",
       "Indexes"
     ]
   },
@@ -3104,9 +3100,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Model relationships with foreign keys and combine PostgreSQL tables with INNER, LEFT, FULL, and CROSS joins.",
     "excerpt": "Relational databases keep each entity in its own table and connect them through **keys**. A join combines rows from two tables by matching values, usually a **foreign key** on one side against a **primary key** on the other. This page covers how to model the two relationship shapes you'll meet constantly, and the join types you'll use in practice. Setup The examples below use two tables, customers and orders, where every order records which customer placed it. Create and seed…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "concepts",
+      "Concepts",
       "Joins and relationships"
     ]
   },
@@ -3116,9 +3111,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Read and write PostgreSQL rows with SELECT, INSERT, UPDATE, and DELETE. Covers filtering, aggregation, pagination, and upserts.",
     "excerpt": "Four statements do almost all the work in a relational database: - **SELECT** reads rows - **INSERT** adds new rows - **UPDATE** changes existing rows - **DELETE** removes rows SQL is declarative: a query describes the result you want, and the database's planner decides how to produce it, choosing between indexes, scans, and join strategies on its own. That's why the same query keeps working as data grows and indexes change. This page walks through each statement, plus the querying…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "concepts",
+      "Concepts",
       "Querying rows"
     ]
   },
@@ -3128,9 +3122,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Create PostgreSQL tables with the right column types and constraints. Covers numeric, text, date and time, JSON, and array types.",
     "excerpt": "A table is the unit of storage in a relational database, a named grid where: - each **row** is one record: one customer, one order - each **column** is one attribute every record shares: name, price, creation time - each column has a **type** that determines what values it accepts and how they compare, sort, and calculate Unlike a spreadsheet, the set of columns is declared up front and enforced; every row has exactly those columns. This fixed shape is…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "concepts",
+      "Concepts",
       "Tables and data types"
     ]
   },
@@ -3140,9 +3133,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Group PostgreSQL statements into atomic transactions. Covers COMMIT, ROLLBACK, savepoints, isolation levels, locking, and deadlocks.",
     "excerpt": "A transaction groups statements into a single all-or-nothing unit. Either every statement takes effect, or none do, and no other connection ever sees a half-finished state. Two distinct things go wrong without that: - **Partial failure**: a crash or dropped connection after the debit but before the credit leaves data in a state that was never supposed to exist. - **Interleaving**: two concurrent processes both read a balance of 100, both compute a new value, both write, and one update…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "concepts",
+      "Concepts",
       "Transactions"
     ]
   },
@@ -3152,8 +3144,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure the per-database connection pooler to serve many short-lived clients, with automatic read/write splitting when high availability is enabled.",
     "excerpt": "PostgreSQL creates one backend process per connection, which makes each connection relatively expensive. Serverless functions, edge runtimes, and horizontally scaled application servers can easily exhaust the connection limit of your specification. The connection pooler sits in front of your database and multiplexes many client connections onto a small pool of server connections. The pooler runs next to your database and is reachable on port on the same hostname. Your application connects to the pooler exactly like it would connect to…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Connecting",
       "Connection pooling"
     ]
   },
@@ -3163,8 +3155,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect to your PostgreSQL database with psql or any standard driver. Retrieve connection details and rotate the primary password.",
     "excerpt": "A native PostgreSQL database exposes a PostgreSQL endpoint over TLS. You connect to it the same way you would connect to any PostgreSQL server: with , any driver in any language, or any ORM. Get connection details in the Console The fastest way to connect is through the Appwrite Console: 1. In your project, go to **Databases** and select your PostgreSQL database. 2. Click **Credentials** to open the credentials dialog. 3. Copy the individual values from the **Details** tab, or…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Connecting",
       "Connections"
     ]
   },
@@ -3174,8 +3166,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Install and manage PostgreSQL extensions like PostGIS, pgvector, and pg_trgm on your database, at no extra cost.",
     "excerpt": "PostgreSQL exposes a rich extension ecosystem: PostGIS for geospatial data, pgvector for embeddings, pg_trgm for fuzzy search, and more. Native PostgreSQL databases on Appwrite support managing extensions through the API, at no extra cost. Install an extension Pass the extension name as it appears in the extension catalog. The install runs asynchronously: the request returns immediately and a worker runs inside the database, typically within a few seconds. The database must be in the state. Requesting an extension that is…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Manage",
       "Extensions"
     ]
   },
@@ -3185,8 +3177,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Run up to five read replicas with asynchronous, synchronous, or quorum replication and automatic failover for your PostgreSQL database.",
     "excerpt": "A single database instance is a single point of failure. High availability (HA) adds streaming replicas next to your primary: they replicate continuously, serve read traffic through the connection pooler, and take over automatically when the primary becomes unhealthy. High availability requires a specification that runs on dedicated compute; the smallest specifications run on shared capacity and do not support replicas. How it works Replicas receive changes from the primary through PostgreSQL streaming replication (WAL shipping). Each replica is a…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Manage",
       "High availability"
     ]
   },
@@ -3196,9 +3188,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use an Appwrite native PostgreSQL database as the backing store for Auth.js (NextAuth.js). Persist users, accounts, and sessions through a Prisma or Drizzle adapter, pooled from serverless runtimes.",
     "excerpt": "Auth.js (formerly NextAuth.js) persists users, accounts, sessions, and verification tokens through a database adapter. When you configure an adapter, those records live in your own database instead of only in a cookie, which is what makes database sessions, account linking, and email sign-in possible. An Appwrite native PostgreSQL database is a standard PostgreSQL engine, so any Auth.js adapter built on a PostgreSQL ORM works against it with no Appwrite-specific configuration. You'll need a native PostgreSQL database in a state and…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Auth.js"
     ]
   },
@@ -3208,9 +3199,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use an Appwrite native PostgreSQL database as the database for Better Auth. Point runtime traffic at the pooler, run schema generation and migrations over a direct connection, and store users and sessions in PostgreSQL.",
     "excerpt": "Better Auth is a framework-agnostic authentication library for TypeScript that keeps its state, including users, sessions, accounts, and verification tokens, in a database you own. A native PostgreSQL database gives Better Auth a standard PostgreSQL engine, so you can use the connection string from the Connections page and run the Better Auth CLI to create the schema. You'll need a native PostgreSQL database in a state and its credentials. See PostgreSQL databases to create one, then open the database and…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Better Auth"
     ]
   },
@@ -3220,9 +3210,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Run dbt transformations against an Appwrite native PostgreSQL database. Configure profiles.yml for the direct engine port, size threads to your connection budget, and test models against a branch in CI.",
     "excerpt": "An Appwrite native PostgreSQL database is a standard PostgreSQL server, so dbt works against it through the standard [](https://docs.getdbt.com/docs/local/connect-data-platform/postgres-setup) adapter with no Appwrite-specific configuration. Point a target at the connection details from the Connections page and use , , and the same way you would against any self-hosted PostgreSQL warehouse. dbt compiles your models into / statements and runs them in dependency order, materializing a transformed analytics layer inside a schema you control. You'll need a native PostgreSQL database in…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "dbt"
     ]
   },
@@ -3232,9 +3221,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Django's ORM with an Appwrite native PostgreSQL database. Configure the DATABASES setting with TLS options, run migrations on the direct PostgreSQL port, and tune persistent connections for pooling.",
     "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so Django's ORM works against it with no Appwrite-specific configuration. Point the setting at the credentials from the Connections page, then use migrations, models, and the rest of Django exactly as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and Connections to retrieve the connection details. The primary user is , and the database…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Django"
     ]
   },
@@ -3244,9 +3232,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect to an Appwrite native PostgreSQL database from Node.js with node-postgres or postgres.js. Configure pools, TLS verification, serverless connection management, and troubleshooting.",
     "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so any Node.js driver that speaks the PostgreSQL wire protocol can connect over TLS without an Appwrite-specific adapter. The Connections page shows the minimal snippet to run your first query. This page covers production pool configuration, certificate verification, serverless connection management, and common connection errors. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Node.js drivers"
     ]
   },
@@ -3256,9 +3243,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Drizzle ORM with an Appwrite native PostgreSQL database. Configure the driver, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
     "excerpt": "Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so Drizzle ORM works against it with no Appwrite-specific configuration. Point Drizzle's driver at the connection string from the Connections page and use Drizzle Kit, the query builder, and the rest of the toolchain as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and Connections to retrieve the connection string. The primary user is…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Drizzle"
     ]
   },
@@ -3268,9 +3254,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Entity Framework Core with an Appwrite native PostgreSQL database. Configure the Npgsql connection string, run migrations against the direct PostgreSQL host, and rely on the driver's built-in connection pool from an ASP.NET server.",
     "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so Entity Framework Core works against it with no Appwrite-specific configuration. Point the Npgsql EF Core provider at the connection string from the Connections page and use , migrations, and the rest of the toolchain exactly as you would against any self-hosted PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and Connections to retrieve the connection details. Appwrite…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "EF Core"
     ]
   },
@@ -3280,9 +3265,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use FastAPI and SQLAlchemy 2.x with an Appwrite native PostgreSQL database. Configure the async asyncpg engine, pass TLS through connect_args, inject a session per request, and run Alembic migrations against the direct database port.",
     "excerpt": "An Appwrite native PostgreSQL database is a standard PostgreSQL engine, so FastAPI with SQLAlchemy and an async driver works against it with no Appwrite-specific configuration. You point at the connection string from the connections page and use the SQLAlchemy ORM, the FastAPI dependency system, and Alembic exactly as you would against any self-hosted PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and connections to retrieve the connection…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "FastAPI"
     ]
   },
@@ -3292,9 +3276,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use GORM with an Appwrite native PostgreSQL database in Go. Build the DSN, open a connection, size the database/sql pool against the direct connection, and run migrations with AutoMigrate or golang-migrate.",
     "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so GORM talks to it with no Appwrite-specific configuration. You build a connection string from the credentials in the Console, hand it to the GORM PostgreSQL driver, and use models, , and the query API exactly as you would against any self-hosted PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See PostgreSQL databases to create one. To retrieve the hostname, password, database name, and connection…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "GORM"
     ]
   },
@@ -3304,9 +3287,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect Grafana to an Appwrite native PostgreSQL database as a data source and build dashboards. Create a read-only reporting role, configure the PostgreSQL data source with TLS, and provision it from YAML.",
     "excerpt": "An Appwrite native PostgreSQL database exposes a standard managed PostgreSQL 18 or 17 engine, so Grafana connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual values,…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Grafana"
     ]
   },
@@ -3316,9 +3298,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Laravel and Eloquent with an Appwrite native PostgreSQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.",
     "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so Laravel works against it with no Appwrite-specific configuration. Point the connection in at the credentials from the Connections page, then use Eloquent, the query builder, migrations, and queues as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See PostgreSQL databases to create one. To retrieve credentials, open the database in the Console, click **Credentials**, and use the **Details**, **DSN**, **.env**,…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Laravel"
     ]
   },
@@ -3328,9 +3309,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect Metabase to an Appwrite native PostgreSQL database for analytics. Use a read-only PostgreSQL role, configure SSL, and build dashboards on a session-safe connection.",
     "excerpt": "Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so Metabase can connect to it without an Appwrite-specific adapter. Add the database in Metabase, point it at the host from the Connections page, and Metabase will sync the schema so your team can build questions and dashboards. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Copy the individual values from the **Details** tab, or use the **DSN**,…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Metabase"
     ]
   },
@@ -3340,9 +3320,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect a Next.js App Router application to an Appwrite native PostgreSQL database from Route Handlers, Server Actions, and Server Components, pool from serverless, and fall back to the SQL API on the Edge runtime.",
     "excerpt": "An Appwrite native PostgreSQL database works with standard PostgreSQL drivers and ORMs, so a Next.js App Router application can query it from server-side code. Point your driver at the connection string from the Connections page and keep all database access on the server. You'll need a native PostgreSQL database in a state and its credentials. See PostgreSQL to create one and Connections to retrieve the connection string. The primary user is , and Appwrite generates the database name for each…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Next.js"
     ]
   },
@@ -3352,9 +3331,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Prisma ORM with an Appwrite native PostgreSQL database. Configure the Prisma 7 datasource, run migrations through the direct connection, and route serverless runtime traffic through the connection pooler.",
     "excerpt": "Prisma ORM works with Appwrite's native PostgreSQL database as a standard PostgreSQL target. Configure Prisma with the connection string from Appwrite, run Prisma Migrate against the direct database connection, and use Prisma Client from your application code. You'll need a native PostgreSQL database in a state and its credentials. Open the database in the Console and click **Credentials** to copy values from the **Details**, **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tabs. You can also call from the Appwrite API to…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Prisma"
     ]
   },
@@ -3364,9 +3342,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Ruby on Rails and ActiveRecord with an Appwrite native PostgreSQL database. Configure database.yml, run migrations against the direct database port, and size the ActiveRecord pool.",
     "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so Ruby on Rails works against it through ActiveRecord with no Appwrite-specific configuration. Point at the connection details from the Connections page and use ActiveRecord, migrations, and the rest of the Rails toolchain exactly as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. In the Appwrite Console, open the database and click **Credentials**. Use the **Details** tab for individual values, or…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Rails"
     ]
   },
@@ -3376,9 +3353,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect Retool to an Appwrite native PostgreSQL database to build internal and admin tools. Retrieve credentials from the Console, configure the PostgreSQL resource with TLS, and allow Retool Cloud network access when needed.",
     "excerpt": "An Appwrite native PostgreSQL database exposes a standard PostgreSQL connection, so Retool connects to it through the built-in **PostgreSQL** resource. Use the database hostname, generated database name, and credentials from Appwrite, then build queries, tables, and forms in Retool for dashboards and admin panels. You'll need a native PostgreSQL database in a state and permission to create resources in Retool. In the Appwrite Console, open the database and click **Credentials**. Use the **Details** tab for individual values, or copy a…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Retool"
     ]
   },
@@ -3388,9 +3364,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Connect a Spring Boot application to an Appwrite native PostgreSQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against PostgreSQL.",
     "excerpt": "An Appwrite native PostgreSQL database is a standard PostgreSQL engine, so a Spring Boot application connects to it through the PostgreSQL JDBC driver with no Appwrite-specific runtime configuration. Point at the JDBC URL from your database credentials, size the built-in HikariCP pool, and use Spring Data JPA, Hibernate, Flyway, or Liquibase as you would with any managed PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. In the Appwrite Console, open the database and click…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
-      "integrations",
+      "Integrations",
       "Spring Boot"
     ]
   },
@@ -3400,8 +3375,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Maintenance windows, online engine version upgrades, pause and resume, and the lifecycle states of your PostgreSQL database.",
     "excerpt": "Appwrite manages the infrastructure around your database: security patches, engine upgrades, and instance health. This page covers the controls you have over when and how that maintenance happens. Maintenance window Routine maintenance that can briefly affect the database runs inside a weekly window that you choose. Set it under **Settings** > **Maintenance** in the Console by picking a day and start hour (UTC), or through the API: accepts through , and accepts to . Engine version upgrades You can upgrade…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Manage",
       "Maintenance"
     ]
   },
@@ -3411,8 +3386,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Watch compute, connections, storage, and workload metrics live, inspect active connections, and check database health on your PostgreSQL database.",
     "excerpt": "Every native database ships with built-in observability: live metrics in the Console, an active-connections inspector, and programmatic health checks. There is nothing to install; metrics collection runs next to the database. Monitor tab Open your database and select the **Monitor** tab. The view is organized into sections: - **Overview**: key health indicators at a glance, including connection usage against your limit, storage used, cache hit ratio, uptime, and commit/rollback counts - **Compute**: CPU and memory usage over time - **Connections**:…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Manage",
       "Monitoring"
     ]
   },
@@ -3422,8 +3397,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "TLS by default, IP allowlists, and idle timeouts for your PostgreSQL database.",
     "excerpt": "Every native database is reachable through a unique public hostname, secured with TLS, and protected by network controls that you configure per database. Hostname Each database gets a stable hostname in the form: The hostname does not change for the lifetime of the database, across restarts, resizes, failovers, and version upgrades. You can copy it from the Console credentials dialog or the database response. TLS Connections on Appwrite Cloud are encrypted with TLS, terminated at Appwrite's edge and forwarded to…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Manage",
       "Network security"
     ]
   },
@@ -3433,8 +3408,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Create your first native PostgreSQL database in the Appwrite Console, run your first queries in the SQL editor, and connect with psql.",
     "excerpt": "You can create a PostgreSQL database and run your first query in a few minutes. Create a database 1. In your project, go to **Databases**. 2. Click **Create database**. 3. Give your database a name, and optionally a custom database ID. 4. Under **Choose database type**, select **PostgreSQL** from the **Native databases** group. 5. Under **Specifications**, select your preferred tier. 6. Optionally configure **Read replicas** and **Point-in-time recovery (PITR)**. You can change both later. 7. Review the database summary and…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Getting started",
       "Quick start"
     ]
   },
@@ -3444,8 +3419,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Resize the compute specification of your PostgreSQL database with zero downtime and grow storage automatically as your data grows.",
     "excerpt": "Native databases scale in two dimensions: the compute specification (CPU, memory, and connection limit) and storage. Both can change after creation, without dump-and-restore migrations. List available specifications Each database runs against a specification that defines its CPU, memory, included storage, and maximum connections. List the specifications available to your plan: Change the compute specification To resize in the Console, open your database, go to **Settings** > **Compute**, and select the new tier. From the API, pass the new specification ID:…",
     "breadcrumbs": [
-      "Databases",
       "PostgreSQL",
+      "Manage",
       "Scaling"
     ]
   },
@@ -3456,7 +3431,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Databases let you store and query structured data. Databases provide high-performance and scalable data storage for your key application, business, and user data. Databases store data, if you need to store files like images, PDFs or videos, use Appwrite Storage. You can organize data into databases, tables, and rows. You can also paginate, order, and query rows. For complex business logic, Appwrite supports relationships to help you model your data. Quick start",
     "breadcrumbs": [
       "Databases",
-      "TablesDB"
+      "Getting started",
+      "Overview"
     ]
   },
   {
@@ -3466,7 +3442,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "AI suggestions generate columns and indexes for your tables based on the table name, existing database structure, and optional context you provide. This feature analyzes your database to recommend appropriate schema designs that follow best practices. Navigate to **Databases** in the Appwrite Console, select your database, and click **Create table**. Enter a descriptive table name. AI suggestions will use this name to generate relevant columns and indexes. In the table creation dialog, enable **AI suggestions**. Optionally, provide additional context about…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Guides",
       "AI suggestions"
     ]
   },
@@ -3477,7 +3453,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full row. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. These operations work with , , and columns. Use columns when your counters or accumulators may exceed the 32-bit integer range. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Guides",
       "Atomic numeric operations"
     ]
   },
@@ -3488,7 +3464,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups on Cloud. All backups are **hot** backups, ensuring zero downtime and fast recovery. Learn how to efficiently back up your databases to ensure data security and smooth recovery. Appwrite Backups allow you to automate database backups using backup policies, supporting pre-defined, custom retention & other options. You can also create manual backups whenever necessary. Backup policies Backup policies allow you to automate your backup process. The Enterprise plan allows for more customization and…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Concepts",
       "Backups"
     ]
   },
@@ -3499,7 +3475,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Databases supports bulk operations for rows, allowing you to create, update, or delete multiple rows in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Guides",
       "Bulk operations"
     ]
   },
@@ -3510,7 +3486,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite's CSV Export feature allows you to export rows from a table to a CSV file. This is especially useful for reporting, sharing data with non-technical team members, creating custom backups, or handing off datasets to analytics tools. This feature is available in both Appwrite Cloud and the self-hosted version. Export configuration Before exporting, you can configure several options to control the output format and contents. These settings ensure you get exactly the data you need in the format your…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Guides",
       "CSV exports"
     ]
   },
@@ -3521,7 +3497,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite's CSV Import feature allows you to create multiple rows in a table by uploading a single CSV file. This is especially useful for importing existing data, seeding test environments, or migrating from other systems. This feature is available in both Appwrite Cloud and the self-hosted version. Prepare your table To get started, create a table in your database and define its columns. Your CSV file must match the structure of this table. All required columns must be present in…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Guides",
       "CSV imports"
     ]
   },
@@ -3532,7 +3508,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of tables. In future versions, different databases may be backed by a different database technology of your choosing. Create in Console The easiest way to create a database using the Appwrite Console. You can create a database by navigating to the **Databases** page and clicking **Create database**. Create using Server SDKs You can programmatically create databases using a Server SDK. Appwrite Server SDKs require an API key.",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Concepts",
       "Databases"
     ]
   },
@@ -3543,7 +3519,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Geo queries let you perform location-based operations on geographic data stored in your database. Find nearby locations, check if coordinates fall within boundaries, calculate distances between points, and more. Appwrite supports geo queries through spatial columns that store coordinates, shapes, and areas as first-class data types. In database terminology, these could also be known as **spatial queries**. Coordinates are specified as arrays. Distance measurements can be specified in meters or degrees. Use cases Use geo queries for location-based features: -…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Concepts",
       "Geo queries"
     ]
   },
@@ -3554,7 +3530,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full document. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations use dedicated methods to modify values directly on the server. The server applies the change atomically under concurrency control and returns…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Atomic numeric operations"
     ]
@@ -3566,7 +3541,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Databases supports bulk operations for documents, allowing you to create, update, or delete multiple documents in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Bulk operations"
     ]
@@ -3578,7 +3552,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite uses collections as containers of documents. Each collection contains many documents identical in structure. The terms collections and documents are used because the Appwrite JSON REST API resembles the API of a traditional NoSQL database, making it intuitive and user-friendly, even though Appwrite uses SQL under the hood. That said, Appwrite is designed to support both SQL and NoSQL database adapters like MariaDB, MySQL, or MongoDB in future versions. Create collection You can create collections using the Appwrite Console,…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Collections"
     ]
@@ -3590,7 +3563,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. In future versions, different databases may be backed by a different database technology of your choosing. Create in Console The easiest way to create a database using the Appwrite Console. You can create a database by navigating to the **Databases** page and clicking **Create database**. Create using Server SDKs You can programmatically create databases using a Server SDK. Appwrite Server SDKs require an API key.",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Databases"
     ]
@@ -3602,7 +3574,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Each piece of data or information in Appwrite Databases is a document. Documents have a structure defined by the parent collection. Create documents You must grant **create** permissions to users at the **collection level** before users can create documents. Learn more about permissions In most use cases, you will create documents programmatically. During testing, you might prefer to create documents in the Appwrite Console. To do so, navigate to the **Documents** tab of your collection and click the **Add document**…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Documents"
     ]
@@ -3614,7 +3585,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You can order results returned by Appwrite Databases by using an order query. For best performance, create an index on the column you plan to order by. Ordering one column When querying using the listDocuments endpoint, you can specify the order of the documents returned using the and query methods. Multiple columns To sort based on multiple attributes, simply provide multiple query methods. For better performance, create an index on the first attribute that you order by. In the example…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Order"
     ]
@@ -3626,7 +3596,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "As your database grows in size, you'll need to paginate results returned. Pagination improves performance by returning a subset of results that match a query at a time, called a page. By default, list operations return 25 items per page, which can be changed using the operator. There is no hard limit on the number of items you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination works by dividing documents into pages containing documents.…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Pagination"
     ]
@@ -3638,7 +3607,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Permissions define who can access documents in a collection. By default **no permissions** are granted to any users, so no user can access any documents. Permissions exist at two levels, collection level and document level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receive access when granted. A user with access granted at either collection level or document level will be able to access a document. Users **don't need access at both levels**…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Database permissions"
     ]
@@ -3650,7 +3618,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Queries"
     ]
@@ -3662,7 +3629,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Head to your Appwrite Console and create a database and name it . Optionally, add a custom database ID. Create a collection and name it . Optionally, add a custom collection ID. Navigate to **Attributes** and create attributes by clicking **Create attribute** and select **String**. Attributes define the structure of your collection's documents. Enter **Attribute key** and **Size**. For example, and . Navigate to **Settings** > **Permissions** and add a new role **Any**. Check the **CREATE** and **READ** permissions, so…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Start with Databases"
     ]
@@ -3674,7 +3640,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Relationships describe how documents in different collections are associated, so that related documents can be read, updated, or deleted together. Entities in real-life often associate with each other in an organic and logical way, like a person and their dog, an album and its songs, or friends in a social network. These types of association between entities can be modeled in Appwrite using relationships. Relationship Attributes Relationships are represented in a collection using **relationship attributes**. The relationship attribute contains the…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Relationships"
     ]
@@ -3686,7 +3651,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "The Appwrite CLI provides a simple way to generate types based on your Appwrite database schema. This feature is particularly useful for developers who want to ensure type safety in their applications by generating type definitions that match their database collections and attributes. To generate types, the CLI reads the database schema from your project's file and generates type definitions for each collection. Generating types First, ensure you have the Appwrite CLI installed and your project is initialised. Then, run…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
       "legacy",
       "Type generation"
     ]
@@ -3698,7 +3662,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Offline synchronization (or offline sync) is a mechanism that allows apps to store and update data locally when a user is offline (i.e., loses internet connectivity), and then synchronize that data with an Appwrite database once the user is back online. This capability is crucial for building resilient and responsive applications, especially in environments with unreliable or intermittent internet connectivity. Suppose you are driving from one city to another and lose internet connectivitity while passing through a rural area, locally-downloaded…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Guides",
       "Offline sync"
     ]
   },
@@ -3709,7 +3673,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Database operators let you update fields directly on the server without fetching the full row. Instead of sending new values, you describe the action you want: increment, append, replace, or adjust. This eliminates race conditions and reduces bandwidth usage when updating any values that need to be modified atomically. The operation is applied atomically at the storage layer for safe, concurrent updates. - Atomic by field: Each operation is applied safely at the storage layer to prevent lost updates under…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Concepts",
       "Operators"
     ]
   },
@@ -3720,7 +3684,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You can order results returned by Appwrite Databases by using an order query. For best performance, create an index on the column you plan to order by. Ordering one column When querying using the listRows endpoint, you can specify the order of the rows returned using the and query methods. Multiple columns To sort based on multiple columns, simply provide multiple query methods. For better performance, create an index on the first column that you order by. In the example…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Concepts",
       "Order"
     ]
   },
@@ -3731,7 +3695,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "As your database grows in size, you'll need to paginate results returned. Pagination improves performance by returning a subset of results that match a query at a time, called a page. By default, list operations return 25 items per page, which can be changed using the operator. There is no hard limit on the number of items you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination works by dividing rows into pages containing rows.…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Guides",
       "Pagination"
     ]
   },
@@ -3742,8 +3706,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Permissions define who can access rows in a table. By default **no permissions** are granted to any users, so no user can access any rows. Permissions exist at two levels, table level and row level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receive access when granted. A user with access granted at either table level or row level will be able to access a row. Users **don't need access at both levels**…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
-      "Database permissions"
+      "Concepts",
+      "Permissions"
     ]
   },
   {
@@ -3753,7 +3717,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Concepts",
       "Queries"
     ]
   },
@@ -3764,8 +3728,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Head to your Appwrite Console and create a database and name it . Optionally, add a custom database ID. Create a table and name it . Optionally, add a custom table ID. Navigate to **Columns** and create columns by clicking **Create column** and select **Text**. Columns define the structure of your table's rows. Enter **Column key** and **Size**. For example, and . Navigate to **Settings** > **Permissions** and add a new role **Any**. Check the **CREATE** and **READ** permissions, so…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
-      "Start with Databases"
+      "Getting started",
+      "Quick start"
     ]
   },
   {
@@ -3775,7 +3739,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Relationships describe how rows in different tables are associated, so that related rows can be read, updated, or deleted together. Entities in real-life often associate with each other in an organic and logical way, like a person and their dog, an album and its songs, or friends in a social network. These types of association between entities can be modeled in Appwrite using relationships. Relationship columns Relationships are represented in a table using **relationship columns**. The relationship column contains the…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Concepts",
       "Relationships"
     ]
   },
@@ -3786,7 +3750,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Each piece of data or information in Appwrite Databases is a row. Rows have a structure defined by the parent table. Create rows You must grant _create_ permissions to users at the _table level_ before users can create rows. Learn more about permissions In most use cases, you will create rows programmatically. During testing, you might prefer to create rows in the Appwrite Console. To do so, navigate to the **Rows** tab of your table and click the **Add row**…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Concepts",
       "Rows"
     ]
   },
@@ -3797,7 +3761,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite uses tables as containers of rows. Each tables contains many rows identical in structure. The terms tables and rows are used because the Appwrite JSON REST API resembles the API of a traditional NoSQL database, making it intuitive and user-friendly, even though Appwrite uses SQL under the hood. That said, Appwrite is designed to support both SQL and NoSQL database adapters like MariaDB, MySQL, or MongoDB in future versions. Create table You can create tables using the Appwrite Console,…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Concepts",
       "Tables"
     ]
   },
@@ -3808,7 +3772,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "When creating or updating rows, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These columns can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a row's timestamps by…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Guides",
       "Timestamp overrides"
     ]
   },
@@ -3819,7 +3783,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and tables. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported row, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Guides",
       "Transactions"
     ]
   },
@@ -3830,7 +3794,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "The Appwrite CLI provides a simple way to generate types based on your Appwrite database schema. This feature is particularly useful for developers who want to ensure type safety in their applications by generating type definitions that match their database tables and columns. To generate types, the CLI reads the database schema from your project's file and generates type definitions for each table. Generating types First, ensure you have the Appwrite CLI installed and your project is initialised. Then, run…",
     "breadcrumbs": [
       "Databases",
-      "TablesDB",
+      "Guides",
       "Type generation"
     ]
   },
@@ -3840,8 +3804,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Store vector embeddings and run similarity search with Appwrite VectorsDB to power semantic search, recommendations, and other AI features.",
     "excerpt": "Appwrite VectorsDB lets you store vector embeddings and run similarity search over them. A collection is created with a fixed , every document holds an vector of that length plus optional , and an HNSW index keeps similarity search fast as your data grows. Databases store data, if you need to store files like images, PDFs or videos, use Appwrite Storage. You organize data into databases, collections, and documents, the same way you do across Appwrite Databases. What sets VectorsDB…",
     "breadcrumbs": [
-      "Databases",
-      "VectorsDB"
+      "VectorsDB",
+      "Getting started",
+      "Overview"
     ]
   },
   {
@@ -3850,8 +3815,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn how to back up and restore your VectorsDB databases, ensuring data security and seamless recovery.",
     "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups. All backups are **hot** backups, ensuring zero downtime and fast recovery. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. A backup captures the database along with its collections, documents, and embeddings. Backup policies Backup policies automate your backups on a schedule. To create one, open your database's **Backups** tab and click **Create policy**, then choose a preset policy or add…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Concepts",
       "Backups"
     ]
   },
@@ -3861,8 +3826,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Perform bulk operations on documents within your collections for efficient data handling in Appwrite VectorsDB.",
     "excerpt": "Appwrite VectorsDB supports bulk operations for documents, allowing you to create, update, or delete multiple documents in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Guides",
       "Bulk operations"
     ]
   },
@@ -3872,8 +3837,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Organize embeddings with Appwrite VectorsDB collections. Learn how to create collections with a fixed dimension, manage them, and configure permissions.",
     "excerpt": "Appwrite uses collections as containers of documents. A VectorsDB collection stores embeddings, so every collection is created with a fixed ****, the length of the embedding vectors it holds. All documents in the collection must use vectors of that exact length. Unlike TablesDB, you don't define a schema for a VectorsDB collection. The schema is fixed and provisioned for you when the collection is created: | Attribute | Type | Description | |--------------|----------|-----------------------------------------------------------------------------| | | | The embedding vector. Required,…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Concepts",
       "Collections"
     ]
   },
@@ -3883,8 +3848,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Export VectorsDB documents to a CSV file. Share embeddings and metadata as a portable dataset without writing custom scripts.",
     "excerpt": "Appwrite's CSV export feature lets you export documents from a VectorsDB collection to a CSV file. This is useful for reporting, sharing a dataset with your team, creating custom backups, or handing embeddings and their metadata off to other tools. Exported columns A VectorsDB collection has a fixed schema, so every export has the same shape. Each row carries the document's system fields together with the two collection attributes: | Column | Type | Description | |--------------|--------|--------------------------------------------------------------------------| | | string…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Guides",
       "CSV exports"
     ]
   },
@@ -3894,8 +3859,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Import embeddings into Appwrite VectorsDB by uploading a CSV file. Learn how to format the embeddings and metadata columns for a bulk import.",
     "excerpt": "Appwrite's CSV Import feature allows you to create multiple documents in a collection by uploading a single CSV file. This is especially useful for loading precomputed embeddings, seeding test environments, or migrating vectors from another system. Prepare your CSV A VectorsDB collection has a fixed schema, so every CSV maps to the same two columns: | Column | Type | Description | |--------------|----------|----------------------------------------------------------------------------------| | | | The embedding vector, written as a JSON array. Required, and its length must equal…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Guides",
       "CSV imports"
     ]
   },
@@ -3905,8 +3870,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Dive deeper into Appwrite VectorsDB and database configuration. Learn how to create and manage multiple vector databases for your application.",
     "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. Shared and dedicated databases VectorsDB databases run on either shared or dedicated infrastructure. Shared databases run on infrastructure that Appwrite manages and scales for you. They are the fastest way to get started and you can create them from the Console or programmatically with a Server SDK. Dedicated databases run on infrastructure provisioned for your project alone. They can only be created from the Appwrite…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Concepts",
       "Databases"
     ]
   },
@@ -3916,8 +3881,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Create, read, update, and delete documents in Appwrite VectorsDB. Learn how to store embedding vectors and metadata in your collections.",
     "excerpt": "Each piece of data in Appwrite VectorsDB is a document. A document's data follows the fixed schema provisioned by its collection: an vector and an optional object. The array is required, and its length must equal the you set when creating the collection. The field is free-form JSON, so you can attach any data you want to keep alongside each vector. If the array is longer or shorter than the collection's , the request is rejected. The examples on this…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Concepts",
       "Documents"
     ]
   },
@@ -3927,8 +3892,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Generate text embeddings with Appwrite VectorsDB. Turn text into vector embeddings with built-in models and store them in your documents for vector search.",
     "excerpt": "An embedding is a list of numbers that represents the meaning of a piece of text. VectorsDB can generate embeddings for you with built-in models, so you can turn text into vectors and store them in a collection without running a separate embedding service. The typical flow is two steps: generate an embedding from your text, then store that embedding in a document's field. Once stored, you can run vector search over your documents. Generate embeddings Use the method to…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Concepts",
       "Embeddings"
     ]
   },
@@ -3938,8 +3903,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Order documents returned by Appwrite VectorsDB. Learn how to sort by system fields like $createdAt and $sequence, and why metadata sub-fields can't be ordered.",
     "excerpt": "You can order the documents returned by listDocuments using the and query methods. VectorsDB orders on the system fields that Appwrite maintains on every document, such as , , , and . A VectorsDB collection has a fixed schema: an vector and a object. Because is stored as a single JSON object rather than typed columns, you can't order by a value inside it. Ordering by a nested path like is rejected with . Order by the system fields below…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Concepts",
       "Order"
     ]
   },
@@ -3949,8 +3914,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Implement pagination for large data sets in Appwrite VectorsDB. Explore techniques for splitting and displaying documents across multiple pages.",
     "excerpt": "As your collection grows in size, you'll need to paginate the documents returned. Pagination improves performance by returning a subset of documents that match a query at a time, called a page. By default, list operations return 25 documents per page, which can be changed using the query method. There is no hard limit on the number of documents you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination divides documents into pages of documents…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Guides",
       "Pagination"
     ]
   },
@@ -3960,9 +3925,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Control access to your VectorsDB data with permissions. Learn how to set collection level and document level access rules.",
     "excerpt": "Permissions define who can access documents in a collection. By default **no permissions** are granted to any users, so no user can access any documents. Permissions exist at two levels, collection level and document level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receives access when granted. A user with access granted at either collection level or document level will be able to access a document. Users **don't need access at both levels**…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
-      "Database permissions"
+      "Concepts",
+      "Permissions"
     ]
   },
   {
@@ -3971,8 +3936,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Filter VectorsDB documents by their metadata using the Query class. Discover comparison, string, logical, ordering, and pagination operators.",
     "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. In VectorsDB, every document stores an vector and an optional object. The queries on this page filter documents by the fields inside that object. To rank documents by vector similarity instead, see vector search. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Concepts",
       "Queries"
     ]
   },
@@ -3982,9 +3947,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and read them back.",
     "excerpt": "VectorsDB stores embedding vectors so you can build features like semantic search, recommendations, and retrieval for AI applications. This guide walks through creating a database, adding a collection with a fixed , storing a document with its and , and reading it back. These steps use a Server SDK, which requires an API key. Head to your Appwrite Console and click **Create database**. Name it and choose **VectorsDB** as the database type. Optionally, add a custom database ID. Select your…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
-      "Start with VectorsDB"
+      "Getting started",
+      "Quick start"
     ]
   },
   {
@@ -3993,8 +3958,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Set custom $createdAt and $updatedAt timestamps for your documents when using server SDKs.",
     "excerpt": "When creating or updating documents, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These attributes can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a document's timestamps by…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Guides",
       "Timestamp overrides"
     ]
   },
@@ -4004,8 +3969,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Stage multiple VectorsDB operations and commit them atomically. Group changes across databases and collections with ordering, isolation, and conflict detection.",
     "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and collections. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported document, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Guides",
       "Transactions"
     ]
   },
@@ -4015,8 +3980,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Run similarity search over your documents with Appwrite VectorsDB. Create an HNSW index on the embeddings field and rank documents by cosine, dot product, or Euclidean distance.",
     "excerpt": "Vector search finds the documents whose are closest to a query vector. Instead of matching exact values, it ranks documents by similarity, so you can build features like semantic search, recommendations, and retrieval for AI applications. There are two steps: create an index on the field so searches are fast, then pass a vector query to to get documents ranked by similarity. Create an index Before you search, create an HNSW index on the field with . HNSW (Hierarchical Navigable…",
     "breadcrumbs": [
-      "Databases",
       "VectorsDB",
+      "Guides",
       "Vector search"
     ]
   },
@@ -4197,6 +4162,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/firewall/attack-mode",
+    "title": "Attack mode",
+    "description": "Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.",
+    "excerpt": "**Attack mode** is a one-click challenge for a site you are viewing in Firewall. Use it when you need to put a proof-of-work challenge in front of all visitors quickly, for example during a traffic spike or abuse incident. Attack mode is available only for **Sites**. It does not apply to the project API or to Functions. Select a site in the Firewall resource picker to see the **Attack mode** button. Turn it on 1. Open **Firewall** in your project.…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Attack mode"
+    ]
+  },
+  {
     "slug": "products/firewall/conditions",
     "title": "Conditions",
     "description": "Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.",
@@ -4222,7 +4198,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/firewall/delete",
     "title": "Delete a rule",
     "description": "Remove an Appwrite Firewall rule from a project and understand the impact on traffic.",
-    "excerpt": "Deleting a Firewall rule removes it from the project permanently. Matching traffic is no longer affected by that rule. This action cannot be undone. Before you delete - Confirm no other process depends on the rule (for example an allowlist bypass that protects a broad deny). - Prefer **disable** from Update a rule if you only need to pause the policy temporarily. Disabled rules still count toward plan limits. - Note the rule's priority and conditions if you might recreate…",
+    "excerpt": "Deleting a Firewall rule removes it from the project permanently. Matching traffic is no longer affected by that rule. This action cannot be undone. Before you delete - Confirm no other process depends on the rule (for example an allowlist bypass that protects a broad deny). - Prefer **disable** from Update a rule if you only need to pause the policy temporarily. Disabled rules still count toward plan limits. - For the **Attack mode** rule on a site, turn Attack…",
     "breadcrumbs": [
       "Firewall",
       "Guides",
@@ -4543,14 +4519,15 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Resend lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Resend as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Email**. Give your provider a name > choose **Resend** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the…",
     "breadcrumbs": [
       "Messaging",
-      "Resend"
+      "Providers",
+      "Email with Resend"
     ]
   },
   {
     "slug": "products/messaging/send-email-messages",
     "title": "Send email messages",
     "description": "Send email messages to your users using Appwrite Messaging.",
-    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun, Resend, and Sendgrid as SMTP providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more details about configuring…",
+    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun, Resend, Sendgrid, Amazon SES, and SMTP as email providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more…",
     "breadcrumbs": [
       "Messaging",
       "Guides",
@@ -4588,6 +4565,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Messaging",
       "Providers",
       "Email with SendGrid"
+    ]
+  },
+  {
+    "slug": "products/messaging/ses",
+    "title": "Amazon SES",
+    "description": "Send emails to your Appwrite users using Amazon SES and Appwrite Messaging.",
+    "excerpt": "Amazon SES lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Amazon SES as a provider, navigate to **Messaging** > **Providers** > **Add provider**, then choose **Amazon SES** under Email. Give your provider a name and complete the configuration, then click **Create provider**. In the configuration step, you will need credentials from the AWS console…",
+    "breadcrumbs": [
+      "Messaging",
+      "Amazon SES"
     ]
   },
   {
@@ -5169,6 +5156,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Storage lets you organize the files inside a bucket using virtual folders. Folders work like key prefixes in S3-compatible storage services: they are derived from the paths of your files, so you never create or delete folders explicitly. How folders work A bucket doesn't store folders as records. Instead, every file has a attribute, a path like , and folders are derived from these paths: a folder exists whenever at least one file's path places the file inside it.…",
     "breadcrumbs": [
       "Storage",
+      "Concepts",
       "Folders"
     ]
   },
@@ -5212,6 +5200,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Storage exposes an S3-compatible API, so you can point the AWS CLI, the AWS SDKs, and third-party tools like rclone or s3cmd at your buckets and files. The API uses AWS Signature Version 4 and maps standard S3 operations onto Appwrite Storage, so most existing S3 code works after you change three settings: the endpoint, the credentials, and the region. The S3 API is available on Appwrite Cloud. It needs a project ID and an API key with the…",
     "breadcrumbs": [
       "Storage",
+      "Guides",
       "S3 API"
     ]
   },
@@ -5276,7 +5265,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Improve the docs, add this guide. We still don't have this guide in place, but we do have some great news. The Appwrite docs, just like Appwrite, is completely open sourced. This means, anyone can help improve them and add new guides and tutorials. If you see this page, **we're actively looking for contributions to this page**. Follow our contribution guidelines, open a PR to our Website repo, and collaborate with our core team to improve this page.",
     "breadcrumbs": [
       "Quick start",
-      "Start with Astro"
+      "Web app",
+      "Astro"
     ]
   },
   {
@@ -5562,12 +5552,12 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "tooling/ai",
-    "title": "AI",
-    "description": "Discover Appwrite's AI tooling ecosystem. Build with AI-powered development tools, integrate AI capabilities into your apps, and leverage documentation designed for AI consumption.",
-    "excerpt": "Appwrite provides a comprehensive set of tools and resources to help you build with AI, from AI-powered development tools that accelerate your workflow to infrastructure for building AI-powered applications. IDEs AI-powered IDEs and code editors provide intelligent code completion and context-aware assistance as you write code. These tools support our MCP servers, giving AI agents direct access to your Appwrite project. Vibe coding Vibe coding platforms let you build applications through natural language. Describe what you want to build and…",
+    "slug": "tooling",
+    "title": "Tooling",
+    "description": "CLI, Terraform, Command Center, MCP, agent skills, IDEs, and vibe coding platforms for building with Appwrite.",
+    "excerpt": "Appwrite tooling covers everything you use to build, automate, and operate projects. The CLI, Terraform, Command Center, MCP server, and agent skills sit alongside the IDEs and vibe coding platforms that connect to Appwrite. Tools First-party tools for the terminal, Console, infrastructure, and AI agents. Use them together; they are all part of the same Appwrite toolchain. Give AI tools direct access to your Appwrite project and docs. Create projects, manage resources, and deploy Functions and Sites from your terminal.…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Getting started",
       "Overview"
     ]
@@ -5578,18 +5568,18 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Generate an AGENTS.md file to give AI agents project-specific context about Appwrite SDKs, APIs, and services.",
     "excerpt": "files are instruction files that developers place in their repositories to provide context and guidelines to AI agents. These files help AI tools understand your project structure, coding conventions, and preferences, resulting in more accurate and consistent code suggestions. Most IDEs and agents support this file. When an AI agent encounters an file, it uses the instructions to tailor its responses to your specific project requirements. This includes details about your tech stack, file organization, naming conventions, and architectural patterns.…",
     "breadcrumbs": [
-      "AI",
       "Tooling",
+      "Tools",
       "AGENTS.md"
     ]
   },
   {
     "slug": "tooling/ai/agents/antigravity",
     "title": "Google Antigravity",
-    "description": "Learn how you can add the Appwrite MCP servers to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Antigravity for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. To add the Appwrite MCP server, open Antigravity and go to the drop-down (...) menu in the Agent window .…",
+    "description": "Learn how you can add the Appwrite MCP server to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Antigravity for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. To add the Appwrite MCP server, open Antigravity and go to the drop-down (...) menu in the Agent window . From there, navigate to Manage MCP Servers in the MCP Store, and then click…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "Google Antigravity"
     ]
@@ -5597,10 +5587,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
-    "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs and sets up MCP servers for both the Appwrite API and documentation, giving Claude Code everything it needs to work with your Appwrite projects. To install the plugin, run the following command in your terminal: Once installed, run Claude Code and configure the plugin: - Run in…",
+    "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
+    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs, giving Claude Code the context it needs to work with your Appwrite projects. To install the plugin, run the following command in your terminal: Once installed, run Claude Code and configure the plugin: - Run in Claude Code. - Go to the **Installed** tab. - Select the…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "Claude Code"
     ]
@@ -5608,10 +5598,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/codex",
     "title": "Codex",
-    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Codex is to install the **Appwrite plugin** from the Appwrite marketplace. The plugin includes agent skills for the Appwrite CLI and all major SDKs and registers the Appwrite Docs MCP server, giving Codex access to the Appwrite documentation so that it follows the latest and suggested code patterns. Add the Appwrite marketplace to Codex by running the following command in your terminal: Then run and open the plugins menu to install…",
+    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
+    "excerpt": "The fastest way to get started with Appwrite in Codex is to install the **Appwrite plugin** from the Appwrite marketplace. The plugin includes agent skills for the Appwrite CLI and all major SDKs, giving Codex the context it needs to follow the latest Appwrite code patterns. Add the Appwrite marketplace to Codex by running the following command in your terminal: Then run and open the plugins menu to install the Appwrite plugin: - Run in Codex. - Select the **Appwrite**…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "Codex"
     ]
@@ -5619,21 +5609,32 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/cursor",
     "title": "Cursor",
-    "description": "Learn how to use Cursor with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Cursor is to install the **Appwrite plugin** from the Cursor Marketplace. The plugin includes agent skills, MCP servers, and commands, giving Cursor's AI agents everything they need to work with your Appwrite projects. To install the plugin: 1. Visit the Appwrite plugin page on the Cursor Marketplace. 2. Sign in with your Cursor account. 3. Click **Add to Cursor**. 4. The plugin will be added to your editor automatically. Once installed,…",
+    "description": "Learn how to use Cursor with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
+    "excerpt": "The fastest way to get started with Appwrite in Cursor is to install the **Appwrite plugin** from the Cursor Marketplace. The plugin includes agent skills and commands, giving Cursor's AI agents the context they need to work with your Appwrite projects. To install the plugin: 1. Visit the Appwrite plugin page on the Cursor Marketplace. 2. Sign in with your Cursor account. 3. Click **Add to Cursor**. 4. The plugin will be added to your editor automatically. Once installed, add…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "Cursor"
     ]
   },
   {
+    "slug": "tooling/ai/agents/grok-build",
+    "title": "Grok Build",
+    "description": "Learn how you can add the Appwrite MCP server to Grok Build to interact with both the Appwrite API and documentation.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Grok Build for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. Run the following command in your terminal to add the MCP server: The server uses OAuth for authentication. When Grok Build first connects to the server, your browser opens so you can sign…",
+    "breadcrumbs": [
+      "Tooling",
+      "IDEs",
+      "Grok Build"
+    ]
+  },
+  {
     "slug": "tooling/ai/agents/opencode",
     "title": "OpenCode",
-    "description": "Learn how you can add the Appwrite MCP servers to OpenCode to interact with both the Appwrite API and documentation.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to OpenCode for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. Use the following configuration in your file to use the Appwrite MCP servers. **Configuration:** - Replace with your actual Appwrite…",
+    "description": "Learn how you can add the Appwrite MCP server to OpenCode to interact with both the Appwrite API and documentation.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to OpenCode for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. Use the following configuration in your file to use the Appwrite MCP server. The server uses OAuth for authentication. When OpenCode first connects to the server, complete the sign-in flow in your browser to…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "OpenCode"
     ]
@@ -5641,10 +5642,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/vscode",
     "title": "VS Code",
-    "description": "Learn how you can use Appwrite with VS Code and GitHub Copilot for AI-assisted development. Get started quickly with pre-built prompts and connect to Appwrite MCP servers for deeper integration.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to VS Code for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. In VS Code, open the **Command Palette** (press on Windows or on MacOS) and run the command. Choose which…",
+    "description": "Learn how you can use Appwrite with VS Code and GitHub Copilot for AI-assisted development. Get started quickly with pre-built prompts and connect to the Appwrite MCP server for deeper integration.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to VS Code for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. In VS Code, open the **Command Palette** (press on Windows or on MacOS) and run the command. Update the file to include the Appwrite MCP server: The server uses OAuth for authentication. When…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "VS Code"
     ]
@@ -5652,10 +5653,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/windsurf",
     "title": "Windsurf",
-    "description": "Learn how you can use Windsurf Editor with Appwrite by leveraging MCP servers and quick start prompts to build applications faster.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Windsurf for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. Open the **Windsurf Settings** page, head to the **Cascade** tab, find the **Model Context Protocol (MCP) Servers** section, and click…",
+    "description": "Learn how you can use Windsurf Editor with Appwrite by leveraging the MCP server and quick start prompts to build applications faster.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Windsurf for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. Open the **Windsurf Settings** page, head to the **Cascade** tab, find the **Model Context Protocol (MCP) Servers** section, and click on the **View raw config** button. Update the file to include the Appwrite MCP…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "agents",
       "Windsurf"
     ]
@@ -5663,10 +5664,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/agents/zed",
     "title": "Zed",
-    "description": "Learn how you can use Zed with Appwrite by adding Appwrite MCP servers and installing Appwrite skills for AI-assisted development.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Zed for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. No additional prerequisites. The docs server runs as a remote HTTP endpoint. In Zed, open the **Command Palette** (press on MacOS or on Linux), run the action, and choose…",
+    "description": "Learn how you can use Zed with Appwrite by adding the Appwrite MCP server and installing Appwrite skills for AI-assisted development.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Zed for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. In Zed, open the **Command Palette** (press on MacOS or on Linux) and run the action. In the **Remote** tab, update the JSON configuration to include the Appwrite MCP server: The server uses OAuth…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "IDEs",
       "Zed"
     ]
@@ -5677,7 +5678,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
     "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI. Appwrite Functions do not currently support streaming responses. Support for streaming is coming…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Guides",
       "AI in Functions"
     ]
@@ -5688,8 +5689,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "An open-source benchmark that evaluates how well AI models understand Appwrite's services, SDKs, and APIs.",
     "excerpt": "Appwrite Arena is an open-source benchmark that evaluates how well AI models understand Appwrite. It tests models across real-world Appwrite usage scenarios, covering services, SDKs, and APIs, to help you choose the best model for building with Appwrite. Arena ranks models by their ability to answer questions drawn from actual Appwrite platform usage, both with and without access to Appwrite skills. This makes it easy to see which models generate the most accurate Appwrite code out of the box and…",
     "breadcrumbs": [
-      "AI",
       "Tooling",
+      "Tools",
       "Appwrite Arena"
     ]
   },
@@ -5699,7 +5700,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, and take approved actions.",
     "excerpt": "The Console **Appwrite Assistant** has been replaced by **Appwrite Agent**. Appwrite Agent is the AI chat built into Appwrite Cloud. It inspects your project context, answers how-to questions, clarifies ambiguous requests, and can run approved actions through Appwrite MCP. Appwrite Agent documentation Bookmarks to this page should use Appwrite Agent. Legacy URLs redirect there.",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Appwrite Agent"
     ]
   },
@@ -5709,41 +5710,19 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Access Appwrite documentation as Markdown for AI consumption.",
     "excerpt": "Appwrite documentation is available as Markdown, making it easy to use with AI-powered development tools, code editors, and LLMs. Markdown lets AI tools process more content within their context limits and focus on the documentation itself instead of parsing HTML. This leads to more accurate responses based on official documentation. Copy as Markdown Every page in the Appwrite documentation includes a **Copy page** button that copies the entire page content as Markdown to your clipboard. This is useful when you…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Docs as Markdown"
     ]
   },
   {
     "slug": "tooling/ai/mcp-servers",
-    "title": "Model Context Protocol",
-    "description": "Enable LLMs and code-generation tools to interact with your Appwrite project",
-    "excerpt": "Appwrite offers Model Context Protocol (MCP) servers that allow LLMs to directly interact with Appwrite's API and docs. Using MCP servers, you can use applications such as Claude Code, Codex, Cursor, Claude Desktop, and others to operate on your Appwrite project as well as gain context about the latest updates to Appwrite's SDKs, APIs, and CLI. What is MCP? The Model Context Protocol (MCP) is an open standard that enables Large Language Models (LLMs) and AI code-generation tools to interact…",
+    "title": "Appwrite MCP server",
+    "description": "Enable LLMs and code-generation tools to interact with your Appwrite project and documentation",
+    "excerpt": "Appwrite offers a Model Context Protocol (MCP) server that allows LLMs to directly interact with Appwrite's API and docs. Using the MCP server, you can use applications such as Claude Code, Codex, Cursor, Claude Desktop, and others to operate on your Appwrite project as well as gain context about the latest updates to Appwrite's SDKs, APIs, and CLI. What is MCP? The Model Context Protocol (MCP) is an open standard that enables Large Language Models (LLMs) and AI code-generation tools…",
     "breadcrumbs": [
-      "AI",
       "Tooling",
-      "MCP servers"
-    ]
-  },
-  {
-    "slug": "tooling/ai/mcp-servers/api",
-    "title": "MCP server for Appwrite API",
-    "description": "Enable LLMs and code-generation tools to interact with the Appwrite API",
-    "excerpt": "The MCP server for Appwrite API allows LLMs and code-generation tools to interact with the Appwrite platform and perform various operations on your Appwrite resources, such as creating users, managing databases, and more, using natural language commands. Here are some of the key benefits of using the MCP server: - **Direct API interaction**: Enables LLMs to perform actions directly on your Appwrite project - **Real-time data access**: Allows LLMs to fetch and manipulate live data from your Appwrite instance -…",
-    "breadcrumbs": [
-      "AI",
-      "Model Context Protocol",
-      "MCP server for Appwrite API"
-    ]
-  },
-  {
-    "slug": "tooling/ai/mcp-servers/docs",
-    "title": "MCP server for Appwrite docs",
-    "description": "Enable LLMs and code-generation tools to interact with the Appwrite docs",
-    "excerpt": "The MCP server for Appwrite documentation allows LLMs and code-generation tools to interact with comprehensive Appwrite documentation, enabling intelligent code generation for Appwrite's APIs and SDKs, troubleshooting assistance, and implementation guidance using natural language commands. Here are some of the key benefits of using the MCP server: - **Complete documentation access**: Provides AI assistants with access to all Appwrite documentation - **Real-time context**: Ensures AI responses are based on the latest documentation - **Intelligent search**: Enables semantic search across documentation…",
-    "breadcrumbs": [
-      "AI",
-      "Model Context Protocol",
-      "MCP server for Appwrite docs"
+      "Tools",
+      "MCP server"
     ]
   },
   {
@@ -5752,7 +5731,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Building persistent AI agents using Appwrite Realtime.",
     "excerpt": "AI agents that maintain conversation history across sessions provide more contextual and personalized responses. By storing LLM responses in Appwrite Databases and subscribing to changes through Realtime, you can build chat applications where multiple clients receive updates instantly. Architecture 1. **Store messages**: Save user messages and LLM responses in an Appwrite table 2. **Subscribe to changes**: Use Realtime to listen for new messages 3. **Maintain context**: Load conversation history to provide context to the LLM Set up the messages table…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Guides",
       "Persistent agents with Realtime"
     ]
@@ -5763,7 +5742,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use AI assistants and code-generation tools to build Appwrite-powered applications faster using quick start prompts.",
     "excerpt": "**Quick start prompts** are pre-built instructions designed to help AI assistants integrate Appwrite into your project. These prompts guide AI tools like Claude Code, Codex, Cursor, and others through the process of setting up authentication, databases, and other Appwrite services in your application. Quick start prompts offer several advantages when building with Appwrite: - **Faster setup**: Skip the manual configuration and let AI handle the boilerplate code and SDK integration. - **Best practices**: Prompts are crafted to follow Appwrite's recommended…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Getting started",
       "Quick start prompts"
     ]
@@ -5774,7 +5753,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Android using Java.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Android (Java)"
     ]
@@ -5785,7 +5764,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Android using Kotlin.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Android (Kotlin)"
     ]
@@ -5796,7 +5775,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Angular.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Angular"
     ]
@@ -5807,7 +5786,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Apple platforms using Swift.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Apple (Swift)"
     ]
@@ -5818,7 +5797,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Dart.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Dart"
     ]
@@ -5829,7 +5808,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Deno.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Deno"
     ]
@@ -5840,7 +5819,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with .NET.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       ".NET"
     ]
@@ -5851,7 +5830,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Flutter.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Flutter"
     ]
@@ -5862,7 +5841,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Go.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Go"
     ]
@@ -5873,7 +5852,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Kotlin.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Kotlin"
     ]
@@ -5884,7 +5863,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Next.js.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Next.js"
     ]
@@ -5895,7 +5874,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Node.js.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Node.js"
     ]
@@ -5906,7 +5885,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Nuxt.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Nuxt"
     ]
@@ -5917,7 +5896,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with PHP.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "PHP"
     ]
@@ -5928,7 +5907,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Python.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Python"
     ]
@@ -5939,7 +5918,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with React.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "React"
     ]
@@ -5950,7 +5929,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with React Native.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "React Native"
     ]
@@ -5961,7 +5940,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Refine.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Refine"
     ]
@@ -5972,7 +5951,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Ruby.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Ruby"
     ]
@@ -5983,7 +5962,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Rust.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Rust"
     ]
@@ -5994,7 +5973,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Solid.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Solid"
     ]
@@ -6005,7 +5984,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with SvelteKit.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "SvelteKit"
     ]
@@ -6016,7 +5995,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Swift.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Swift"
     ]
@@ -6027,7 +6006,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with TanStack Start.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "TanStack Start"
     ]
@@ -6038,7 +6017,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Vue.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Vue"
     ]
@@ -6049,7 +6028,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Quickstart prompt for integrating Appwrite with Web.",
     "excerpt": "",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Quick start prompts",
       "Web"
     ]
@@ -6060,7 +6039,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Best practices for responsible AI usage with Appwrite. Learn how to protect user data, secure API keys, and build transparent AI-powered applications.",
     "excerpt": "Building AI-powered applications comes with responsibility toward your users and their data. Whether you're using AI development tools to build with Appwrite or integrating AI capabilities into your applications, following these best practices helps you build trustworthy and secure experiences. Protect user data When sending data to AI providers like OpenAI, Anthropic, or others, be mindful of what information leaves your application. - **Avoid sending personal data** to AI providers unless necessary for the feature. Strip personally identifiable information (PII)…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Responsible AI"
     ]
   },
@@ -6070,8 +6049,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Install Appwrite skills to give AI agents pre-built knowledge of Appwrite SDKs and services for your preferred language.",
     "excerpt": "Skills are open-source Markdown files that give AI agents deep knowledge of Appwrite SDKs and services. When installed, skills provide your AI tools with accurate, language-specific context about Appwrite APIs, so they generate correct code without needing to look up documentation. You can find all Appwrite skills on GitHub. Skills work across all major AI dev tools that support them. They are installed per-project or globally, and are available for all Appwrite client and server SDKs. Supported tools include but…",
     "breadcrumbs": [
-      "AI",
       "Tooling",
+      "Tools",
       "Agent skills"
     ]
   },
@@ -6081,7 +6060,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Using vector databases and embeddings with Appwrite.",
     "excerpt": "Vector databases store high-dimensional vectors (embeddings) that represent text, images, or other data. They enable semantic search, where results are based on meaning rather than exact keyword matches. This makes them essential for AI applications like recommendation systems, search engines, and retrieval-augmented generation (RAG). Embeddings are numerical representations of data that capture semantic meaning. Text with similar meanings will have embeddings that are close together in vector space. Appwrite integrates with vector databases through Functions, allowing you to index your…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Guides",
       "Vector DB and embeddings"
     ]
@@ -6089,10 +6068,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vibe-coding/bolt",
     "title": "Bolt",
-    "description": "Learn how to connect the Appwrite docs MCP server to Bolt for AI-assisted development with access to Appwrite documentation.",
-    "excerpt": "To connect the Appwrite docs MCP server to Bolt: 1. Go to **Settings** → **Connectors (MCP)**. 2. Click **Custom MCP server**. 3. Enter the following details: - **Name**: - **URL**: - **Transport Type**: HTTP - **Authentication**: None 4. Click **Add MCP server**. The Appwrite docs MCP server will now be available in your Bolt projects. Once connected, Bolt has access to Appwrite documentation context. You can use prompts like: **Example prompts:** - - - - -",
+    "description": "Learn how to connect the Appwrite MCP server to Bolt for AI-assisted development with access to the Appwrite API and documentation.",
+    "excerpt": "Connect the Appwrite MCP server to Bolt for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. To add the Appwrite MCP server to Bolt: 1. Go to **Settings** → **Connectors (MCP)**. 2. Click **Custom MCP server**. 3. Enter the following details: - **Name**: - **URL**: - **Transport Type**: HTTP - **Authentication**: MCP OAuth 4. Click **Add MCP server**. The server uses OAuth for authentication. When Bolt…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Vibe coding",
       "Bolt"
     ]
@@ -6100,10 +6079,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vibe-coding/claude-desktop",
     "title": "Claude Desktop",
-    "description": "Learn how to use Claude Desktop with Appwrite through quick start prompts and MCP servers for AI-assisted development.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Claude Desktop for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. In the Claude Desktop app, open the app's **Settings** page (press on Windows or on MacOS) and head to…",
+    "description": "Learn how to use Claude Desktop with Appwrite through quick start prompts and the Appwrite MCP server for AI-assisted development.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Claude Desktop for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have Node.js and npm installed on your system. Unlike other IDEs, Claude Desktop only supports local (stdio) MCP servers and not remote servers. The package acts as a proxy to connect to the remote Appwrite MCP server. In the Claude Desktop app,…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Vibe coding",
       "Claude Desktop"
     ]
@@ -6111,10 +6090,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vibe-coding/emergent",
     "title": "Emergent",
-    "description": "Learn how to connect Appwrite MCP servers to Emergent for AI-assisted development with access to the Appwrite API and documentation.",
-    "excerpt": "To connect Appwrite MCP servers to Emergent: 1. On the homepage, click **Advanced Controls**. 2. Click **Select MCP Tools**. 3. Click **New MCP Server**. 4. Enter a name for your server (e.g., or ). 5. Paste one of the following JSON configurations: **Configuration:** - Replace with your actual Appwrite project ID - Replace with your Appwrite API key - Replace with your Appwrite Cloud region (e.g., , ) Once connected, you can use natural language to interact with Appwrite. Try…",
+    "description": "Learn how to connect the Appwrite MCP server to Emergent for AI-assisted development with access to the Appwrite API and documentation.",
+    "excerpt": "To connect the Appwrite MCP server to Emergent: 1. On the homepage, click **Advanced Controls**. 2. Click **Select MCP Tools**. 3. Click **New MCP Server**. 4. Enter a name for your server (e.g., ). 5. Paste the following JSON configuration: The server uses OAuth for authentication. When Emergent first connects to the server, complete the sign-in flow in your browser to sign in to your Appwrite account and authorize access. Once connected, you can use natural language to interact with…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Vibe coding",
       "Emergent"
     ]
@@ -6122,10 +6101,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vibe-coding/lovable",
     "title": "Lovable",
-    "description": "Learn how to connect the Appwrite docs MCP server to Lovable for AI-assisted development with access to Appwrite documentation.",
-    "excerpt": "To connect the Appwrite docs MCP server to Lovable: 1. Go to **Settings** → **Connectors** → **Personal connectors**. 2. Click **New MCP server**. 3. Enter the following details: - **Server name**: - **Server URL**: - **Authentication**: Select **No authentication** 4. Click **Add server**. The Appwrite docs MCP server will now appear in your list of personal connectors. Once connected, Lovable has access to Appwrite documentation context. You can use prompts like: **Example prompts:** - - - - -",
+    "description": "Learn how to connect the Appwrite MCP server to Lovable for AI-assisted development with access to the Appwrite API and documentation.",
+    "excerpt": "Connect the Appwrite MCP server to Lovable for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. To add the Appwrite MCP server to Lovable: 1. Go to **Settings** → **Connectors** → **Personal connectors**. 2. Click **New MCP server**. 3. Enter the following details: - **Server name**: - **Server URL**: - **Authentication**: Select **OAuth** 4. Click **Add server**. The server uses OAuth for authentication. When Lovable first…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Vibe coding",
       "Lovable"
     ]
@@ -6133,10 +6112,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vibe-coding/zenflow",
     "title": "Zenflow",
-    "description": "Learn how to add the Appwrite MCP servers to agents in Zenflow to interact with both the Appwrite API and documentation.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect Appwrite MCP servers to Zenflow for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have the following **pre-requisites** installed on your system: uv must be installed on your system. Node.js and npm must be installed on your system. To add the Appwrite MCP server, open Zenflow and go to the **Settings** > **MCP servers**. From there, select your…",
+    "description": "Learn how to add the Appwrite MCP server to agents in Zenflow to interact with both the Appwrite API and documentation.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Zenflow for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install. To add the Appwrite MCP server, open Zenflow and go to the **Settings** > **MCP servers**. From there, select your agent you want to configure MCP for, and then add your custom MCP server.…",
     "breadcrumbs": [
-      "AI",
+      "Tooling",
       "Vibe coding",
       "Zenflow"
     ]
@@ -6147,8 +6126,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn about the custom Appwriter mechanical keyboard and its specifications",
     "excerpt": "The Appwriter is an exclusive mechanical keyboard custom-designed by the Appwrite team. It is optimized to improve developer productivity and is specially tuned to use with the Appwrite Console. The Appwriter uses icons from the Appwrite Console and Docs on specific keys, making memorizing keyboard shortcuts easier. For example, then is the shortcut for navigating to your project's databases, and the icon on the key matches the icon for Appwrite Databases. What's in the box - Appwriter keyboard - USB-C…",
     "breadcrumbs": [
-      "The Appwriter",
-      "tooling",
+      "Tooling",
+      "Tools",
       "The Appwriter"
     ]
   },
@@ -6158,7 +6137,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "An open-source benchmark that evaluates how well AI models understand Appwrite's services, SDKs, and APIs.",
     "excerpt": "Appwrite Arena is an open-source benchmark that evaluates how well AI models understand Appwrite. It tests models across real-world Appwrite usage scenarios, covering services, SDKs, and APIs, to help you choose the best model for building with Appwrite. Arena ranks models by their ability to answer questions drawn from actual Appwrite platform usage, both with and without access to Appwrite skills. This makes it easy to see which models generate the most accurate Appwrite code out of the box and…",
     "breadcrumbs": [
-      "tooling",
+      "Tooling",
       "Arena"
     ]
   },
@@ -6168,7 +6147,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
     "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. The Command Center is enhanced with AI capabilities and is the home of the Appwrite assistant. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows…",
     "breadcrumbs": [
-      "Command Center",
+      "Tooling",
       "Getting started",
       "Overview"
     ]
@@ -6179,7 +6158,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn to navigate the Appwrite Console efficiently and effectively with your keyboard",
     "excerpt": "The Appwrite Console was designed with a keyboard first approach. The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform actions quicker. Shortcuts The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform common actions quicker. The shortcuts use the following pattern: use the first letter from the call to action followed by the resource, product, service, or page you're targeting. For example, the shortcut keys + navigates to the project's Storage…",
     "breadcrumbs": [
-      "Command Center",
+      "Tooling",
       "Getting started",
       "Shortcuts"
     ]
@@ -6190,7 +6169,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite buckets using the Command-Line Tool (CLI).",
     "excerpt": "The Appwrite CLI allows you to configure and deploy buckets across projects. You can also configure your files using the CLI commands. Initialize bucket Create a new bucket using the following command: Pull bucket You can also pull your existing Appwrite buckets from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing buckets, your file should look similar to the following: You can also move the array…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Buckets"
     ]
@@ -6201,7 +6180,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.",
     "excerpt": "All commands are compatible with the latest version of the CLI. We recommend running the CLI on its latest version. Other than commands to create and push databases, tables, functions, messaging-topics, teams, and buckets, the Appwrite CLI can be used as a Server SDK as well. The Appwrite CLI has a command for every Server API endpoint. Commands generally follow the following syntax: Commands Below is a list of the available commands in the Appwrite CLI. You can get more…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Commands"
     ]
@@ -6212,7 +6191,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite functions using the Command-Line Tool (CLI).",
     "excerpt": "The CLI handles the creation, deployment, and execution of Appwrite Functions, as well as the configuration of the variables. You can also develop your function locally using CLI commands. Initialize function Create a new function using the following command: Pull function You can also pull your existing Appwrite Functions from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing functions, your file should look similar to the…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Functions"
     ]
@@ -6223,7 +6202,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Generate a type-safe SDK for your Appwrite project using the Command-Line Tool (CLI). Automatically create typed helpers based on your database schema.",
     "excerpt": "The command creates a type-safe SDK tailored to your Appwrite project. It reads your database schema and generates typed helpers, so you can interact with your tables using auto-completed methods, resulting in a better developer experience. Generate SDK Run the following command in your project directory: The CLI automatically detects your project's language and generates the SDK to a directory. Options * Option * Description --- * * Output directory for generated files (default: ) --- * * Target language…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Generate SDK"
     ]
@@ -6234,7 +6213,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
     "excerpt": "The Appwrite Command Line Interface (CLI) is an application that allows you to interact with Appwrite to perform server-side tasks using your terminal. This includes creating and managing projects, managing resources (rows, files, users), creating and deploying Appwrite Functions, and other operations available through Appwrite's API. Getting started The CLI is packaged both as an npm module as well as a standalone binary for your operating system, making it completely dependency free, platform independent, and language agnostic. If you plan…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Installation"
     ]
@@ -6245,7 +6224,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Deploy changes to Appwrite projects to migrate databases and tables schema, functions, teams, buckets, and more.",
     "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner, without saving configuration or sessions. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : When you set the global configuration parameters using the command, they take precedence over the local configuration parameters in your thereby switching the CLI to non-interactive mode. In this mode, the…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Guides",
       "Non interactive"
     ]
@@ -6256,7 +6235,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite Sites using the Command-Line Tool (CLI).",
     "excerpt": "The CLI handles the creation, deployment, and execution of Appwrite Sites, as well as the configuration of the variables. Initialize site Create a new site using the following command: Pull site You can also pull your existing Appwrite Sites from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing sites, your file should look similar to the following: You can also move the array into a separate…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Sites"
     ]
@@ -6267,7 +6246,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite tables using the Command-Line Tool (CLI).",
     "excerpt": "Create and manage your tables using the CLI commands. The Appwrite CLI also helps you push your project's databases and tables schema from one project to another. Initialize table Create a new table using the following command: Pull table You can also pull your existing Appwrite tables and databases from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing tables, your file should look similar to the…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Tables"
     ]
@@ -6278,7 +6257,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite teams using the Command-Line Tool (CLI).",
     "excerpt": "The Appwrite CLI can create teams to organize users. Teams can be used to configure permissions for a group of users. Initialize team Create a new team using the following command: Pull team You can also pull your existing Appwrite teams from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing teams, your file should look similar to the following: You can also move the array into…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Teams"
     ]
@@ -6289,7 +6268,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Efficiently deploy your Appwrite topics using the Command-Line Tool (CLI).",
     "excerpt": "The Appwrite CLI can create, update, delete, and get topics, as well as configure the provider and the subscribers. Initialize topic Create a new topic using the following command: Pull topics You can also pull your existing Appwrite topics from the Appwrite Console using the command in the folder containing your file. appwrite.config.json After initializing your Appwrite project and pulling your existing topics, your file should look similar to the following: You can also move the array into a separate…",
     "breadcrumbs": [
-      "CLI",
+      "Tooling",
       "Deployments",
       "Topics"
     ]
@@ -6300,7 +6279,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
     "excerpt": "The Terraform provider for Appwrite lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, and more in files, and apply those changes through HashiCorp Terraform. It is the official way to automate Appwrite project configuration alongside the rest of your stack. Resources Resource types use the prefix and match the Terraform Registry documentation. | Area | Resources…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Getting started",
       "Overview"
     ]
@@ -6311,7 +6290,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure the Appwrite Terraform provider for Cloud or Community Edition using endpoints, API keys, and optional environment variables.",
     "excerpt": "The Appwrite provider is published as on the Terraform Registry. The registry hosts **generated reference docs** for the provider and every resource and data source: latest docs. Full examples and attribute tables also live in the provider repository. Terraform block Declare the provider source in a block. You can add a constraint when you want to pin a release; see published versions on the registry provider page. Appwrite Cloud Replace with your project’s region subdomain (see Regions). Community Edition For…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Getting started",
       "Configuration"
     ]
@@ -6322,7 +6301,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite users and teams with the Terraform provider.",
     "excerpt": "The provider exposes **Auth** resources so you can align users and teams with the rest of your infrastructure-as-code workflow. For generated schemas and import syntax, see the Terraform Registry: auth_user and auth_team. The provider repository contains source and examples. Resources | Resource | Purpose | |----------|---------| | | Create and manage users | | | Create and manage teams | Use these together with your normal Auth and permission models; scope API keys appropriately when Terraform manages identity resources. Examples…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Auth"
     ]
@@ -6333,7 +6312,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure Appwrite backup policies with Terraform where your plan supports them.",
     "excerpt": "The resource configures **backup policies** for supported resources. Availability depends on your Appwrite Cloud plan or self-hosted setup. See the Terraform Registry: backup_policy. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Configure backup policies for supported resources | Policies use **** (CRON), **** (days), and **** (for example ). Omit **** to cover all databases in the project, or set **** to a specific database ID (often ) to back up…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Backups"
     ]
@@ -6344,7 +6323,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.",
     "excerpt": "The provider exposes Appwrite **TablesDB** as Terraform resources. Typical order: create a **database** (), then **tables**, then **columns** and **indexes**, and optionally **rows**. For full generated schemas, see the Terraform Registry: tablesdb, tablesdb_table, tablesdb_column, tablesdb_index, and tablesdb_row. The provider repository contains the source and examples. Resources | Resource | Purpose | |----------|---------| | | Create a database in your project | | | Create a table within a database | | | Define columns (types, constraints, defaults) | | |…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Databases"
     ]
@@ -6355,7 +6334,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite Functions, environment variables, and deployments with Terraform.",
     "excerpt": "Functions can be declared as Terraform resources, including **runtime**, **entrypoint**, **build commands**, **events**, and **per-function environment variables**. The provider also exposes an **** resource so you can ship code from a local tar archive or from a Git template alongside the rest of your configuration. See the Terraform Registry: function, function_variable, and function_deployment. The provider repository includes examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a function (runtime, entrypoint, commands, events, timeout, and related settings)…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Functions"
     ]
@@ -6366,7 +6345,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure Appwrite Messaging providers, topics, and subscribers with Terraform for email, SMS, and push delivery.",
     "excerpt": "Messaging integrates email, SMS, and push providers. The Terraform provider exposes **providers** (credentials and channel configuration), **topics** (groupings of subscribers for broadcasts), and **subscribers** (who receives messages on a topic). See the Terraform Registry for generated schemas: messaging_provider, messaging_topic, and messaging_subscriber. The provider repository lists every and optional field in source; provider-specific arguments apply only to the matching provider (for example Twilio , SMTP and , FCM ). Resources | Resource | Purpose | |----------|---------| | | Register an email,…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Messaging"
     ]
@@ -6377,7 +6356,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite Sites, environment variables, and deployments with Terraform.",
     "excerpt": "Sites supports Terraform resources for the **site** definition, **build-time environment variables**, and **deployments** that publish your site from a local artifact or a Git template. See the Terraform Registry: site, site_variable, and site_deployment. The provider repository includes examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a site (framework, build and install commands, runtimes, and related settings) | | | Set environment variables for a site (for example keys) | | | Push a new deployment…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Sites"
     ]
@@ -6388,7 +6367,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite Storage buckets and files with the Terraform provider, including file limits, extensions, compression, and security options.",
     "excerpt": "The resource manages Storage buckets in your Appwrite project: file size limits, allowed extensions, compression, image transformations, encryption, and optional antivirus. The resource uploads and manages **files** inside a bucket from a local path on the machine running Terraform. See the Terraform Registry for generated schemas: storage_bucket and storage_file. The provider repository contains source and examples. Resources | Resource | Purpose | |----------|---------| | | Create and update a storage bucket | | | Upload and manage a file in…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Storage"
     ]
@@ -6399,7 +6378,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Register Appwrite webhooks with Terraform to deliver events to your HTTP endpoints.",
     "excerpt": "The resource registers a **URL** and **event** subscriptions so Appwrite can notify your services when resources change. Configure **** for TLS verification on the webhook URL, **** and **** when your endpoint expects HTTP basic authentication, and read **** from Terraform state when you verify **incoming** webhook signatures on your server. See the Terraform Registry: webhook. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Register a webhook URL and subscribe to…",
     "breadcrumbs": [
-      "Terraform provider",
+      "Tooling",
       "Resources",
       "Webhooks"
     ]

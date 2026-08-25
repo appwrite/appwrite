@@ -60,6 +60,7 @@ import {
 import { mergeActiveDeploymentForCard } from '@/lib/sites/deployment-screenshots'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import { domainUrl } from '@/lib/domains/url'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -378,7 +379,7 @@ export function View() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={`https://${rule.domain}`}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 font-mono text-[11px] link-neutral"
@@ -578,7 +579,7 @@ export function View() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={`https://${rule.domain}`}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"

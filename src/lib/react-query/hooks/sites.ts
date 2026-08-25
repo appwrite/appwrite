@@ -17,6 +17,7 @@ import type { Models } from '@appwrite.io/console'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { SpecificationType } from '@/lib/specifications'
+import { getVariableValueError, validateVariables } from '@/lib/variables'
 import {
   MARKETING_SITE_TEMPLATES_PROJECT_ID,
   MARKETING_SITE_TEMPLATES_PAGE_SIZE,
@@ -1354,13 +1355,11 @@ export function useCreateSiteVariable(
       if (!projectId || !siteId) {
         throw new Error('Project ID and Site ID are required')
       }
-      if (!params.key.trim()) {
-        throw new Error('Variable key is required')
-      }
-      if (params.value.length > 8192) {
-        throw new Error(
-          `Variable ${params.key} is longer than 8192 allowed characters`,
-        )
+      const validationError = validateVariables([
+        { key: params.key.trim(), value: params.value },
+      ])
+      if (validationError) {
+        throw new Error(validationError)
       }
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.createVariable({
@@ -1413,10 +1412,12 @@ export function useUpdateSiteVariable(
       if (!key.trim()) {
         throw new Error('Variable key is required')
       }
-      if (value.length > 8192) {
-        throw new Error(
-          `Variable ${key} is longer than 8192 allowed characters`,
-        )
+      // The key is the stored one rather than something just typed, so its
+      // format is deliberately not checked: a variable created before the
+      // identifier rule has to stay editable.
+      const valueError = getVariableValueError(key, value)
+      if (valueError) {
+        throw new Error(valueError)
       }
 
       const projectSdk = sdk.forProject(projectId)

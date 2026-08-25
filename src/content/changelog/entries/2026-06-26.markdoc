@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: 'Announcing the Appwrite React library'
+date: 2026-06-26
+cover: /images/blog/announcing-appwrite-react-library/cover.avif
+---
+
+The **Appwrite React library** is now available. It is primarily made for authentication for now, shipping an `AppwriteProvider` and a small set of hooks (`useAuth`, `useUser`, `useSignIn`, `useSignUp`, `useSignOut`) that handle the boilerplate around session hydration, OAuth, and current user state.
+
+The Appwrite React library helps with authentication across client-side rendered frameworks and server-side rendered frameworks such as **Next.js** and **TanStack Start**.
+
+{% arrow_link href="/blog/post/announcing-appwrite-react-library" %}
+Read the announcement
+{% /arrow_link %}

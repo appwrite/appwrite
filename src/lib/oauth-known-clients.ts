@@ -127,6 +127,14 @@ const KNOWN_CLIENTS: KnownOAuthClientMatcher[] = [
     uriPatterns: [LOOPBACK],
   },
   {
+    id: 'grok-build',
+    name: 'Grok Build',
+    iconPath: '/icons/apps/grok-build.svg',
+    // Terminal agent; loopback MCP OAuth plus grok.com / x.ai client URIs.
+    namePattern: /^grok(\s+build)?(\s+cli)?$/i,
+    uriPatterns: [LOOPBACK, /^https:\/\/(www\.)?(x\.ai|grok\.com)(\/|$)/i],
+  },
+  {
     id: 'chatgpt',
     name: 'ChatGPT',
     iconPath: '/icons/apps/chatgpt.svg',

@@ -31,6 +31,7 @@ import {
   DatabaseZap,
   ShieldAlert,
   Sparkles,
+  Eye,
   Home,
   LayoutDashboard,
   BookOpen,
@@ -103,7 +104,7 @@ import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
-import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
+import { ImpersonateConsoleUserDialog } from '@/components/global/shared/ImpersonateConsoleUserDialog'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
@@ -318,6 +319,7 @@ export function ConsoleHeader({
   const navigate = useNavigate()
   const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false)
   const projectConnectDialog = useProjectConnectDialog()
   const [themeMounted, setThemeMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
@@ -1333,9 +1335,6 @@ export function ConsoleHeader({
                 </div>
               )}
 
-              {/* Operator tools (render nothing when account is not an impersonator) */}
-              <ImpersonateConsoleUserPopover />
-
               {/* Help/Agent - hidden on small containers; gated by the agent profile feature */}
               {showAgent && (
                 <Tooltip>
@@ -1731,6 +1730,18 @@ export function ConsoleHeader({
                           <span>{headerCopy.accountMenu.generator}</span>
                         </Link>
                       </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        className={ACCOUNT_MENU_ITEM_CLASS}
+                        onSelect={() => {
+                          window.setTimeout(() => {
+                            setImpersonateDialogOpen(true)
+                          }, 0)
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>{headerCopy.accountMenu.impersonate}</span>
+                      </DropdownMenuItem>
                     </>
                   )}
 
@@ -1749,6 +1760,10 @@ export function ConsoleHeader({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <ImpersonateConsoleUserDialog
+                open={impersonateDialogOpen}
+                onOpenChange={setImpersonateDialogOpen}
+              />
             </>
           )}
         </div>

@@ -86,6 +86,8 @@ export type CoverScreenshotFrameLayout = {
   paddingX: number
   paddingTop: number
   chromeHeight: number
+  /** Fully enclosed shell with bottom inset and all four outer corners rounded. */
+  closed: boolean
 }
 
 /** Glass tint/border aligned with homepage hero browser frame. */
@@ -167,6 +169,7 @@ export function buildCoverScreenshotFrameShellLayout(
     paddingX,
     paddingTop,
     chromeHeight,
+    closed,
   }
 }
 

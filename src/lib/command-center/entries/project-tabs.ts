@@ -256,7 +256,7 @@ const PROJECT_TABS: CommandEntry[] = [
     label: 'Messaging · Providers',
     description: 'Email, SMS and push providers',
     icon: Bell,
-    keywords: ['providers', 'twilio', 'sendgrid', 'fcm', 'apns', 'mailgun'],
+    keywords: ['providers', 'twilio', 'sendgrid', 'fcm', 'apns', 'mailgun', 'ses', 'amazon'],
     to: (ctx) => `/projects/${ctx.projectId}/messaging/providers`,
   },
 

@@ -28,6 +28,8 @@ import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
+import { DEFAULT_AWS_SES_REGION } from '@/lib/messaging/aws-ses-regions'
+import { AwsSesRegionSelect } from '../../_components/AwsSesRegionSelect'
 
 type ProviderType = 'email' | 'sms' | 'push'
 
@@ -37,6 +39,7 @@ type FieldType =
   | 'email'
   | 'number'
   | 'select'
+  | 'aws-ses-region'
   | 'switch'
   | 'textarea'
   | 'json'
@@ -212,6 +215,38 @@ const PROVIDERS: ProviderConfig[] = [
         apiKey: optString(v.apiKey),
         domain: optString(v.domain),
         isEuRegion: Boolean(v.isEuRegion),
+        fromName: optString(v.fromName),
+        fromEmail: optString(v.fromEmail),
+        enabled: true,
+      }),
+  },
+  {
+    id: 'ses',
+    name: 'Amazon SES',
+    type: 'email',
+    description: 'Send transactional email through Amazon SES.',
+    icon: 'amazon.svg',
+    fields: [
+      COMMON_NAME_FIELD,
+      { key: 'accessKey', label: 'Access key', type: 'text', required: true },
+      { key: 'secretKey', label: 'Secret key', type: 'password', required: true },
+      {
+        key: 'region',
+        label: 'Region',
+        type: 'aws-ses-region',
+        required: true,
+        defaultValue: DEFAULT_AWS_SES_REGION,
+        helper: 'Select the AWS region of your verified SES identity.',
+      },
+      ...COMMON_FROM_EMAIL_FIELDS,
+    ],
+    submit: (projectSdk, providerId, v) =>
+      projectSdk.messaging.createSesProvider({
+        providerId,
+        name: String(v.name).trim(),
+        accessKey: optString(v.accessKey),
+        secretKey: optString(v.secretKey),
+        region: optString(v.region),
         fromName: optString(v.fromName),
         fromEmail: optString(v.fromEmail),
         enabled: true,
@@ -701,7 +736,7 @@ function FieldRenderer({
           {field.required && <RequiredMark />}
         </Label>
         <Select value={stringValue} onValueChange={(v) => onChange(v)}>
-          <SelectTrigger id={id}>
+          <SelectTrigger id={id} className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -712,6 +747,27 @@ function FieldRenderer({
             ))}
           </SelectContent>
         </Select>
+        {field.helper && (
+          <p className="text-[12px] text-muted-foreground">{t(field.helper)}</p>
+        )}
+      </div>
+    )
+  }
+
+  if (field.type === 'aws-ses-region') {
+    const stringValue =
+      typeof value === 'string' ? value : String(field.defaultValue ?? '')
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={id}>
+          {t(field.label)}
+          {field.required && <RequiredMark />}
+        </Label>
+        <AwsSesRegionSelect
+          id={id}
+          value={stringValue}
+          onValueChange={(v) => onChange(v)}
+        />
         {field.helper && (
           <p className="text-[12px] text-muted-foreground">{t(field.helper)}</p>
         )}

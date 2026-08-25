@@ -1,0 +1,15 @@
+---
+layout: changelog
+title: 'API keys and JWTs can no longer mint further credentials'
+date: 2026-08-17
+---
+
+Appwrite Cloud now blocks an API key from creating another API key, and blocks a JWT from minting another JWT. Existing keys and JWTs keep working. The change stops leaked credentials from growing a hidden set of replacements.
+
+Create long-lived [API keys](/docs/partners/project/api-keys) in the Console. The Project API can still list, update, and delete keys, and can issue ephemeral keys for short-lived access. A leaked key can no longer mint further hidden keys, which made a compromise harder to contain and revoke.
+
+Create [JWTs](/docs/products/auth/jwt) from a Server SDK with `users.createJWT`. A leaked JWT can no longer mint further JWTs and outlive its own expiry. A session cannot duplicate itself to live forever, and neither should a JWT.
+
+{% arrow_link href="/docs/partners/project/api-keys" %}
+Learn more about API keys
+{% /arrow_link %}
