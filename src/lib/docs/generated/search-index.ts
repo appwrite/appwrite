@@ -457,7 +457,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting/configuration/databases",
     "title": "Databases",
     "description": "Configure the database backend for your self-hosted Appwrite instance. Learn about the supported database options and their configuration.",
-    "excerpt": "Appwrite supports MongoDB and MariaDB as database backends. The database is selected during installation via the setup wizard and **cannot be changed after installation**. Regardless of which database you choose, the Appwrite API remains the same. Only the underlying storage engine differs. MongoDB is the default database as of Appwrite 1.9.0. CLI installation If you prefer to skip the setup wizard, you can set the database directly using the flag: Accepted values are and . Supported databases MongoDB MongoDB is…",
+    "excerpt": "Appwrite supports PostgreSQL, MariaDB, and MongoDB as database backends. You select the database during installation via the setup wizard and **cannot change it after installation**. Regardless of which database you choose, the Appwrite API remains the same. Only the underlying storage engine differs. PostgreSQL is the default database for new installations. CLI installation If you prefer to skip the setup wizard, you can set the database directly using the flag: Accepted values are , , and . Supported databases PostgreSQL…",
     "breadcrumbs": [
       "Self-hosting",
       "Configuration",
@@ -539,6 +539,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Self-hosting",
       "Configuration",
       "TLS certificates"
+    ]
+  },
+  {
+    "slug": "advanced/self-hosting/configuration/topologies",
+    "title": "Worker topologies",
+    "description": "Choose between the combined and separate worker topologies for your self-hosted Appwrite instance. Learn which containers each topology runs and when to use each one.",
+    "excerpt": "Appwrite uses queue workers and schedulers to process background work like sending emails, running builds, issuing TLS certificates, and executing functions. A topology defines how these run: either a single container that consumes every queue, or one container per queue. Appwrite supports two topologies: - **Combined** runs all workers in one container and all schedulers in another. This is the default and the recommended choice for most installations. - **Separate** runs one container per queue and one container per scheduler,…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Topologies"
     ]
   },
   {
@@ -710,7 +721,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting/production/scaling",
     "title": "Scaling",
     "description": "Learn how to scale your self-hosted Appwrite instance horizontally and vertically to handle increased load.",
-    "excerpt": "Appwrite is built with scalability in mind. Appwrite can scale both horizontally and vertically. Each Appwrite instance is composed of many containers, each with its unique job. Appwrite's functions and worker containers are stateless. To scale them, all you need is to replicate them and set up a load balancer to distribute their load. If you decide to set up a load balancer to scale a container, make sure **all** communication are routed through the load balancer and not directly…",
+    "excerpt": "Appwrite is built with scalability in mind. Appwrite can scale both horizontally and vertically. Each Appwrite instance is composed of many containers, each with its unique job. Appwrite's functions and worker containers are stateless. To scale them, all you need is to replicate them and set up a load balancer to distribute their load. Which worker containers your instance runs depends on its worker topology. The default combined topology runs all queues in a single container that you can replicate.…",
     "breadcrumbs": [
       "Self-hosting",
       "Production",
@@ -3868,7 +3879,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/vectorsdb/databases",
     "title": "Databases",
     "description": "Dive deeper into Appwrite VectorsDB and database configuration. Learn how to create and manage multiple vector databases for your application.",
-    "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. Shared and dedicated databases VectorsDB databases run on either shared or dedicated infrastructure. Shared databases run on infrastructure that Appwrite manages and scales for you. They are the fastest way to get started and you can create them from the Console or programmatically with a Server SDK. Dedicated databases run on infrastructure provisioned for your project alone. They can only be created from the Appwrite…",
+    "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. Shared and dedicated databases A VectorsDB database runs either on a shared pool that Appwrite manages for you, or on compute provisioned for your project alone. Leave out and the database lands on the shared pool, where it is ready to use as soon as the call returns. Pass a specification instead and Appwrite provisions a dedicated database on that tier, which you can then…",
     "breadcrumbs": [
       "VectorsDB",
       "Concepts",
@@ -3890,7 +3901,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/vectorsdb/embeddings",
     "title": "Embeddings",
     "description": "Generate text embeddings with Appwrite VectorsDB. Turn text into vector embeddings with built-in models and store them in your documents for vector search.",
-    "excerpt": "An embedding is a list of numbers that represents the meaning of a piece of text. VectorsDB can generate embeddings for you with built-in models, so you can turn text into vectors and store them in a collection without running a separate embedding service. The typical flow is two steps: generate an embedding from your text, then store that embedding in a document's field. Once stored, you can run vector search over your documents. Generate embeddings Use the method to…",
+    "excerpt": "An embedding is a list of numbers that represents the meaning of a piece of text. Appwrite generates embeddings for you with built-in models, so you can turn text into vectors and store them in a collection without running a separate embedding service. The typical flow is two steps: generate an embedding from your text, then store that embedding in a document's field. Once stored, you can run vector search over your documents. Generate embeddings Embeddings come from the Embeddings…",
     "breadcrumbs": [
       "VectorsDB",
       "Concepts",
@@ -3944,8 +3955,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/databases/vectorsdb/quick-start",
     "title": "Start with VectorsDB",
-    "description": "Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and read them back.",
-    "excerpt": "VectorsDB stores embedding vectors so you can build features like semantic search, recommendations, and retrieval for AI applications. This guide walks through creating a database, adding a collection with a fixed , storing a document with its and , and reading it back. These steps use a Server SDK, which requires an API key. Head to your Appwrite Console and click **Create database**. Name it and choose **VectorsDB** as the database type. Optionally, add a custom database ID. Select your…",
+    "description": "Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and search them by similarity.",
+    "excerpt": "An embedding is a list of numbers that represents the meaning of a piece of text. Text that means similar things gets similar numbers, even when the wording is different. VectorsDB stores those numbers for you and finds the closest ones to a question you ask, so you can search by meaning instead of by keyword. In this guide you store three sentences about Appwrite as embeddings, then ask a question in plain English and get back the sentence that…",
     "breadcrumbs": [
       "VectorsDB",
       "Getting started",
@@ -3967,7 +3978,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/vectorsdb/transactions",
     "title": "Transactions",
     "description": "Stage multiple VectorsDB operations and commit them atomically. Group changes across databases and collections with ordering, isolation, and conflict detection.",
-    "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and collections. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported document, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…",
+    "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and collections. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported document and bulk methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to commit or…",
     "breadcrumbs": [
       "VectorsDB",
       "Guides",
@@ -6057,8 +6068,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/ai/vector-db-and-embeddings",
     "title": "Vector DB and embeddings",
-    "description": "Using vector databases and embeddings with Appwrite.",
-    "excerpt": "Vector databases store high-dimensional vectors (embeddings) that represent text, images, or other data. They enable semantic search, where results are based on meaning rather than exact keyword matches. This makes them essential for AI applications like recommendation systems, search engines, and retrieval-augmented generation (RAG). Embeddings are numerical representations of data that capture semantic meaning. Text with similar meanings will have embeddings that are close together in vector space. Appwrite integrates with vector databases through Functions, allowing you to index your…",
+    "description": "Build semantic search on Appwrite VectorsDB. Generate embeddings, store them alongside your content, and rank results by meaning with a TanStack Start app.",
+    "excerpt": "An embedding is a list of numbers that represents the meaning of a piece of text. Text with similar meaning produces vectors that sit close together, so you can rank content by meaning instead of by matching words. This is what powers semantic search, recommendations, and retrieval for AI applications. Appwrite VectorsDB stores those vectors and searches them. It generates embeddings with built-in models, keeps each vector next to the content it came from, and returns results ordered by distance.…",
     "breadcrumbs": [
       "Tooling",
       "Guides",
