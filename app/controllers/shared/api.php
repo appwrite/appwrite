@@ -539,7 +539,7 @@ Http::init()
 
                 foreach ($request->getParams() as $key => $value) {
                     if (! empty($value)) {
-                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
                     }
                 }
 
@@ -919,7 +919,7 @@ Http::shutdown()
 
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
                 if (! empty($value)) {
-                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
                 }
             }
 

@@ -1089,6 +1089,10 @@ return function (Container $context): void {
     $context->set('resourceToken', function ($project, $dbForProject, $request, Authorization $authorization) {
         $tokenJWT = $request->getParam('token');
 
+        if (! \is_string($tokenJWT)) {
+            return new Document([]);
+        }
+
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
             $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY); // Instantiate with key, algo, maxAge and leeway.
