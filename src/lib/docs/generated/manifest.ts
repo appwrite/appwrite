@@ -592,8 +592,8 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "partners/apps",
-    "title": "Apps",
-    "description": "Register and manage OAuth apps with the Appwrite Console Apps API. Publish integrations, manage client secrets, and connect users through OAuth 2.0.",
+    "title": "Sign in with Appwrite",
+    "description": "Build apps that access your users' Appwrite projects and organizations with consent-based, scoped OAuth2 tokens instead of pasted API keys.",
     "layout": "article",
     "readingTimeMinutes": 3
   },
@@ -1482,6 +1482,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "How to implement SSR authentication with Appwrite",
     "layout": "article",
     "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/auth/sign-in-with-appwrite",
+    "title": "Sign in with Appwrite",
+    "description": "Let users sign in to your app with their Appwrite account. Enable the Appwrite OAuth2 provider and create sessions with a consent-based flow.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/auth/team-invites",

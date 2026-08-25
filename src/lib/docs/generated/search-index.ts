@@ -927,9 +927,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   },
   {
     "slug": "partners/apps",
-    "title": "Apps",
-    "description": "Register and manage OAuth apps with the Appwrite Console Apps API. Publish integrations, manage client secrets, and connect users through OAuth 2.0.",
-    "excerpt": "The Apps API () lets partner platforms register **OAuth apps** that connect to Appwrite organizations. Use it when you publish integrations, run a marketplace, or need programmatic control over OAuth client settings. Apps pair with the OAuth2 service () to start authorization and receive tokens after user consent. Console SDK access Authenticate with an organization API key that includes apps scopes: Common operations | Operation | Use case | | --------- | -------- | | | Show OAuth apps owned…",
+    "title": "Sign in with Appwrite",
+    "description": "Build apps that access your users' Appwrite projects and organizations with consent-based, scoped OAuth2 tokens instead of pasted API keys.",
+    "excerpt": "Appwrite is an **OAuth 2.1 and OpenID Connect provider**. Your app can send any Appwrite user to a consent screen, ask for access to the projects and organizations they choose, and receive tokens that call their project APIs directly. This is **Sign in with Appwrite**: the same consent flow users know from \"Sign in with Google\", pointed at their Appwrite account and backend. Before this, a tool that worked with a user's Appwrite project asked them to create an API…",
     "breadcrumbs": [
       "Apps",
       "Getting started",
@@ -2300,6 +2300,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Auth",
       "Guides",
       "SSR login"
+    ]
+  },
+  {
+    "slug": "products/auth/sign-in-with-appwrite",
+    "title": "Sign in with Appwrite",
+    "description": "Let users sign in to your app with their Appwrite account. Enable the Appwrite OAuth2 provider and create sessions with a consent-based flow.",
+    "excerpt": "Sign in with Appwrite lets users log in to your app with their Appwrite account. It works like other OAuth2 providers such as Google or GitHub. Appwrite is the identity provider. This is a good fit when your users are developers, for example when you build developer tools, dashboards, or education platforms. The provider requests the , , and scopes. Appwrite uses them to read the user's ID, name, and email, and to create the session. This page covers login…",
+    "breadcrumbs": [
+      "Auth",
+      "Guides",
+      "Sign in with Appwrite"
     ]
   },
   {
