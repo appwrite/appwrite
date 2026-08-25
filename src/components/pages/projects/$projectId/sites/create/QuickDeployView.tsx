@@ -113,7 +113,7 @@ export function QuickDeployView({
   const [installCommand, setInstallCommand] = useState(initialInstall || '')
   const [buildCommand, setBuildCommand] = useState(initialBuild || '')
   const [outputDirectory, setOutputDirectory] = useState(initialOutput || '')
-  const [startCommand, setStartCommand] = useState(initialStart || '')
+  const startCommand = initialStart || ''
   const [variables, setVariables] = useState<WizardVariable[]>(
     envKeysList.map((key) => ({ key, value: '', secret: false })),
   )
@@ -495,11 +495,9 @@ export function QuickDeployView({
         installCommand={installCommand}
         buildCommand={buildCommand}
         outputDirectory={outputDirectory}
-        startCommand={startCommand}
         onInstallCommandChange={setInstallCommand}
         onBuildCommandChange={setBuildCommand}
         onOutputDirectoryChange={setOutputDirectory}
-        onStartCommandChange={setStartCommand}
         frameworkKey={framework}
         defaultOpen={true}
       />
