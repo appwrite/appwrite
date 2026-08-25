@@ -142,6 +142,19 @@ export function RepositoryConfigView({
     providerRepositoryId || null,
   )
 
+  // Auto-fill the branch with the repository's default branch. This must
+  // live here (not only inside BranchSelector) because BranchSelector is
+  // mounted inside a collapsed Accordion and won't run its own effect
+  // until the user expands the "Repository" section.
+  useEffect(() => {
+    if (branch) return
+    if (repositoryFetching) return
+    // Some providers (e.g. Bitbucket) return an empty string rather than
+    // omitting the field, so fall back to 'main' the same way BranchSelector
+    // does once the lookup has settled.
+    setBranch(repository?.defaultBranch || 'main')
+  }, [branch, repositoryFetching, repository?.defaultBranch])
+
   // Which installation broke, and the authorize URL that repairs it. The
   // default return URL is right here: this route carries the installation and
   // repository in its path and re-derives the rest on mount, so the deep URL
