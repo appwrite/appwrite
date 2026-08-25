@@ -58,7 +58,6 @@ $console = [
         'githubEnabled' => true,
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
         'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
-        // Distinct from _APP_VCS_*, which powers repository integration, not sign-in
         'gitlabEnabled' => true,
         'gitlabSecret' => System::getEnv('_APP_CONSOLE_GITLAB_SECRET', ''),
         'gitlabAppid' => System::getEnv('_APP_CONSOLE_GITLAB_APP_ID', ''),
