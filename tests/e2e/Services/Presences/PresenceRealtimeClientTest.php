@@ -81,7 +81,11 @@ final class PresenceRealtimeClientTest extends Scope
             ]
         );
 
-        $connected = \json_decode($client->receive(), true);
+        $connected = $this->receiveUntil(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'connected',
+            timeoutMs: \max(800, $timeout * 1000)
+        );
         $this->assertSame('connected', $connected['type'] ?? null);
 
         if (empty($channels)) {

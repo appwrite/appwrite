@@ -199,10 +199,41 @@ final class PresenceConsoleClientTest extends Scope
             ]
         );
 
-        $connected = \json_decode($client->receive(), true);
-        $this->assertSame('connected', $connected['type'] ?? null);
+        $this->receiveConnected($client);
 
         return $client;
+    }
+
+    private function receiveConnected(WebSocketClient $client, int $timeoutMs = 3000): void
+    {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+        $lastFrame = [];
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $raw = $client->receive();
+            } catch (TimeoutException) {
+                continue;
+            }
+
+            $frame = \json_decode($raw, true);
+            if (!\is_array($frame)) {
+                continue;
+            }
+
+            $lastFrame = $frame;
+            if (($frame['type'] ?? null) === 'error') {
+                $this->fail('Realtime handshake returned error: ' . \json_encode($frame));
+            }
+            if (($frame['type'] ?? null) === 'connected') {
+                return;
+            }
+        }
+
+        $this->fail(
+            'Timed out waiting for connected websocket frame on console. Last frame: '
+            . \json_encode($lastFrame)
+        );
     }
 
     private function receivePresenceFrame(
