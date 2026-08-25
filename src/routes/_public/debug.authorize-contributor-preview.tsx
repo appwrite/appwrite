@@ -67,6 +67,7 @@ function AuthorizeContributorPreviewPage() {
         installationId="demo-installation"
         repositoryId="demo-repository"
         providerPullRequestId="3183"
+        accountLabel="demo@appwrite.io"
       />
     </div>
   )

@@ -1,13 +1,26 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { ExternalLink } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  ArrowLeftRight,
+  Check,
+  ChevronDown,
+  ExternalLink,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useAnalytics } from '@/hooks/use-analytics'
 import { useT } from '@/lib/i18n/translate'
+import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
 import {
   approveExternalDeployments,
   useInstallation,
@@ -29,6 +42,7 @@ type ViewProps = {
   providerPullRequestId: string
   preview?: boolean
   previewStatus?: AuthorizeContributorPreviewStatus
+  accountLabel?: string
 }
 
 export function View({
@@ -38,11 +52,14 @@ export function View({
   providerPullRequestId,
   preview = false,
   previewStatus,
+  accountLabel: accountLabelProp,
 }: ViewProps) {
   const t = useT()
   const { track } = useAnalytics()
+  const queryClient = useQueryClient()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [approved, setApproved] = useState(false)
+  const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
   const { data: installation } = useInstallation(
     preview ? null : projectId,
     preview ? null : installationId,
@@ -104,11 +121,25 @@ export function View({
 
   const isApproving = !preview && approveMutation.isPending
   const isApproved = status === 'success'
+  const accountLabel = preview
+    ? (accountLabelProp || 'demo@appwrite.io')
+    : (accountLabelProp ?? '')
+  const accountInitial = (accountLabel.trim()[0] ?? '?').toUpperCase()
 
   const handleApprove = () => {
-    if (preview || isApproving || isApproved) return
+    if (preview || isApproving || isApproved || isSwitchingAccount) return
     setErrorMessage(null)
     approveMutation.mutate()
+  }
+
+  const handleSwitchAccount = () => {
+    if (preview || isApproving || isSwitchingAccount) return
+    setIsSwitchingAccount(true)
+    const redirect =
+      typeof window === 'undefined'
+        ? undefined
+        : `${window.location.pathname}${window.location.search}`
+    void performConsoleSignOut(queryClient, { redirect })
   }
 
   const statusBadge =
@@ -200,7 +231,7 @@ export function View({
             <Button
               type="button"
               className="w-full"
-              disabled={isApproving || isApproved}
+              disabled={isApproving || isApproved || isSwitchingAccount}
               onClick={handleApprove}
               {...analyticsAttrs('approve-git-deployment')}
             >
@@ -208,7 +239,59 @@ export function View({
             </Button>
           </div>
         </Card>
-        <div className="mt-10 md:mt-16 flex justify-center">
+        {accountLabel ? (
+          <div className="mt-6 mb-16 flex justify-center md:mt-8 md:mb-20">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                asChild
+                disabled={isApproving || isSwitchingAccount}
+              >
+                <button
+                  type="button"
+                  className="cursor-pointer text-muted-foreground hover:text-foreground border-border hover:bg-muted/50 flex max-w-full items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] transition disabled:opacity-60"
+                  aria-label={`${t('Signed in as')} ${accountLabel}`}
+                >
+                  <span className="bg-muted text-muted-foreground flex size-5 items-center justify-center rounded-md text-[10px] font-semibold">
+                    {accountInitial}
+                  </span>
+                  <span dir="ltr" className="truncate">
+                    {accountLabel}
+                  </span>
+                  <ChevronDown className="size-3.5 shrink-0" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-72">
+                <div className="flex items-center gap-2 px-2 py-1.5">
+                  <span className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold">
+                    {accountInitial}
+                  </span>
+                  <span
+                    dir="ltr"
+                    className="min-w-0 flex-1 truncate text-start text-[13px]"
+                  >
+                    {accountLabel}
+                  </span>
+                  <Check className="text-muted-foreground size-4 shrink-0" />
+                </div>
+                <DropdownMenuItem
+                  disabled={isApproving || isSwitchingAccount}
+                  onSelect={handleSwitchAccount}
+                >
+                  <MenuItemContent icon={ArrowLeftRight}>
+                    {t('Use a different account')}
+                  </MenuItemContent>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ) : null}
+        <div
+          className={
+            accountLabel
+              ? 'flex justify-center'
+              : 'mt-10 flex justify-center md:mt-16'
+          }
+        >
           <AppwriteLogo className="h-6 w-auto" />
         </div>
       </div>

@@ -675,6 +675,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Switch to the account the invitation was sent to in order to accept it.':
     '招待を承認するには、招待が送信されたアカウントに切り替えてください。',
   'Switch account': 'アカウントを切り替え',
+  'Use a different account': '別のアカウントを使用',
   'Signing out...': 'サインアウト中...',
   'Go to dashboard': 'ダッシュボードへ',
   'Invalid invitation link': '招待リンクが無効です',

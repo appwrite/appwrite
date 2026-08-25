@@ -1074,6 +1074,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Switch to the account the invitation was sent to in order to accept it.':
     'עברו לחשבון שאליו נשלחה ההזמנה כדי לאשר אותה.',
   'Switch account': 'החלפת חשבון',
+  'Use a different account': 'שימוש בחשבון אחר',
   'Signing out...': 'מתנתקים...',
   'Go to dashboard': 'מעבר ללוח הבקרה',
   'Invalid invitation link': 'קישור הזמנה לא תקין',
