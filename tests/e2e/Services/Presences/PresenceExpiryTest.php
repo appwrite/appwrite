@@ -39,8 +39,6 @@ final class PresenceExpiryTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $userId = $this->getUser()['$id'];
-        // Set a near-future expiry to satisfy validation, then wait until it is in the past.
-        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
 
         $createServer = $this->client->call(
             Client::METHOD_PUT,
@@ -60,6 +58,9 @@ final class PresenceExpiryTest extends Scope
         $this->assertEquals(200, $createServer['headers']['status-code']);
         $presenceIdServer = $createServer['body']['$id'];
 
+        // Compute expiry immediately before PATCH. The API requires a future
+        // datetime; stamping it before create can already be in the past under load.
+        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
         $expireServer = $this->client->call(
             Client::METHOD_PATCH,
             '/presences/' . $presenceIdServer,
