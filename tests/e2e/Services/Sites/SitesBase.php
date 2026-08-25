@@ -262,6 +262,12 @@ trait SitesBase
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
+
         return new CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
     }
 
