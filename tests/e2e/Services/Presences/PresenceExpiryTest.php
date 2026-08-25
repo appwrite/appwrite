@@ -39,8 +39,6 @@ final class PresenceExpiryTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $userId = $this->getUser()['$id'];
-        // Set a near-future expiry to satisfy validation, then wait until it is in the past.
-        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
 
         $createServer = $this->client->call(
             Client::METHOD_PUT,
@@ -60,6 +58,9 @@ final class PresenceExpiryTest extends Scope
         $this->assertEquals(200, $createServer['headers']['status-code']);
         $presenceIdServer = $createServer['body']['$id'];
 
+        // Compute expiry immediately before PATCH. The API requires a future
+        // datetime; stamping it before create can already be in the past under load.
+        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
         $expireServer = $this->client->call(
             Client::METHOD_PATCH,
             '/presences/' . $presenceIdServer,
@@ -80,23 +81,30 @@ final class PresenceExpiryTest extends Scope
             (new \DateTime($expireServer['body']['expiresAt']))->getTimestamp()
         );
 
-        \sleep(3);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getPresenceApiKey(),
+        ];
+
+        // Wait until expiresAt is in the past, then run maintenance and observe cleanup.
+        $this->assertEventually(function () use ($expiresAt) {
+            $this->assertGreaterThan(
+                (new \DateTime($expiresAt))->getTimestamp(),
+                (new \DateTime())->getTimestamp()
+            );
+        }, 30000, 50);
 
         $stdout = '';
         $stderr = '';
         $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        // Maintenance + delete workers are asynchronous; give extra time to observe cleanup.
-        $this->assertEventually(function () use ($presenceIdServer, $projectId) {
+        $this->assertEventually(function () use ($presenceIdServer, $headers) {
             $getServer = $this->client->call(
                 Client::METHOD_GET,
                 '/presences/' . $presenceIdServer,
-                [
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $projectId,
-                    'x-appwrite-key' => $this->getPresenceApiKey(),
-                ]
+                $headers
             );
 
             $this->assertEquals(404, $getServer['headers']['status-code']);
