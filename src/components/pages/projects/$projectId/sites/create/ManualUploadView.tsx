@@ -65,7 +65,7 @@ export function ManualUploadView() {
   const [outputDirectory, setOutputDirectory] = useState(
     formData.outputDirectory || '',
   )
-  const [startCommand, setStartCommand] = useState(formData.startCommand || '')
+  const startCommand = formData.startCommand || ''
   const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
@@ -458,12 +458,10 @@ export function ManualUploadView() {
         installCommand={installCommand}
         buildCommand={buildCommand}
         outputDirectory={outputDirectory}
-        startCommand={startCommand}
         fallbackFile={fallbackFile}
         onInstallCommandChange={setInstallCommand}
         onBuildCommandChange={setBuildCommand}
         onOutputDirectoryChange={setOutputDirectory}
-        onStartCommandChange={setStartCommand}
         onFallbackFileChange={setFallbackFile}
         frameworkKey={framework}
       />
