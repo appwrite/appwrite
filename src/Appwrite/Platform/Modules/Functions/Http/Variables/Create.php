@@ -11,11 +11,9 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -67,9 +65,7 @@ class Create extends Base
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForProject')
-            ->inject('dbForPlatform')
             ->inject('project')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -82,9 +78,7 @@ class Create extends Base
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForProject,
-        Database $dbForPlatform,
-        Document $project,
-        Authorization $authorization
+        Document $project
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -115,18 +109,6 @@ class Create extends Base
 
         $function->setAttribute('live', false);
         $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false]));
-
-        // Inform scheduler to pull the latest changes
-        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
-        $schedule
-            ->setAttribute('resourceUpdatedAt', DateTime::now())
-            ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
-            'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
-            'schedule' => $schedule->getAttribute('schedule'),
-            'active' => $schedule->getAttribute('active'),
-        ])));
 
         $queueForEvents->setParam('variableId', $variable->getId());
 

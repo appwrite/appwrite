@@ -23,6 +23,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User as DBUser;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
@@ -808,6 +809,45 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type, view: $errorView);
     }
 }
+
+Http::init()
+    ->groups(['api'])
+    ->inject('usage')
+    ->inject('request')
+    ->inject('geoRecord')
+    ->action(function (Context $usage, Request $request, GeoRecord $geoRecord) {
+        $uri = $request->getURI();
+        $parts = explode('/', trim($uri, '/'));
+        $country = $geoRecord->isEmpty() ? '' : strtolower($geoRecord->getCountryCode());
+
+        $usage
+            ->setPath($uri)
+            ->setMethod($request->getMethod())
+            ->setUserAgent($request->getUserAgent(''))
+            ->setHostname($request->getOrigin('') ?: $request->getHostname())
+            ->setCountry($country)
+            ->setIp($request->getIP())
+            ->setSdk(strtolower($request->getHeaderLine('x-sdk-name', '')))
+            ->setSdkVersion($request->getHeaderLine('x-sdk-version', ''))
+            ->setRegion(System::getEnv('_APP_REGION', 'default'))
+            ->setService($parts[1] ?? $parts[0])
+            ->setResourceType('')
+            ->setResourceId('')
+            ->setResourceInternalId('')
+            ->setResourcePath('');
+    });
+
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('usage')
+    ->inject('response')
+    ->inject('project')
+    ->action(function (Context $usage, Response $response, Document $project) {
+        $usage->setStatus($response->getStatusCode());
+        if ($usage->getResourcePath() === '' && !$project->isEmpty()) {
+            $usage->fillMissingResource('project', $project->getId(), (string) $project->getSequence());
+        }
+    });
 
 Http::init()
     ->groups(['api'])
