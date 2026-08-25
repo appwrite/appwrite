@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+exec php /usr/src/code/app/cli.php executions-backfill "$@"

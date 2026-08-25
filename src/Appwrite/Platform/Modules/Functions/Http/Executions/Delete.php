@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Appwrite\Bus\Events\ExecutionCancelled;
 use Appwrite\Event\Event;
+use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -64,6 +65,7 @@ class Delete extends Base
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
+            ->inject('executionStore')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('authorization')
@@ -77,6 +79,7 @@ class Delete extends Base
         Response $response,
         Document $project,
         Database $dbForProject,
+        Store $executionStore,
         Database $dbForPlatform,
         Event $queueForEvents,
         Authorization $authorization,
@@ -88,7 +91,9 @@ class Delete extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $execution = $dbForProject->getDocument('executions', $executionId);
+        $execution = $executionStore->readsFromClickHouse()
+            ? $executionStore->get($project->getId(), $executionId)
+            : $dbForProject->getDocument('executions', $executionId);
         if ($execution->isEmpty()) {
             // A scheduled execution can be cancelled before its document has
             // been persisted by the executions worker. Remove the schedule and
@@ -120,6 +125,7 @@ class Delete extends Base
                 '$updatedAt' => DateTime::now(),
                 '$permissions' => [],
                 'functionId' => $function->getId(),
+                'resourceInternalId' => $function->getSequence(),
                 'resourceId' => $function->getId(),
                 'resourceType' => 'functions',
                 'deploymentId' => '',
@@ -192,8 +198,11 @@ class Delete extends Base
                 execution: $execution->getArrayCopy(),
                 project: $project->getArrayCopy(),
             ));
-        } elseif (!$dbForProject->deleteDocument('executions', $execution->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
+        } else {
+            $executionStore->delete($project->getId(), $execution);
+            if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
+            }
         }
 
         $queueForEvents

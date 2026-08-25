@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Logs;
 
+use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -59,11 +60,13 @@ class XList extends Base
             ->param('queries', [], new Logs(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
+            ->inject('executionStore')
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, array $queries, bool $includeTotal, Response $response, Database $dbForProject)
+    public function action(string $siteId, array $queries, bool $includeTotal, Response $response, Document $project, Database $dbForProject, Store $executionStore)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -91,7 +94,9 @@ class XList extends Base
             }
 
             $logId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('executions', $logId);
+            $cursorDocument = $executionStore->readsFromClickHouse()
+                ? $executionStore->get($project->getId(), $logId)
+                : $dbForProject->getDocument('executions', $logId);
 
             if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('resourceType') !== 'sites') {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Log '{$logId}' for the 'cursor' value not found.");
@@ -132,8 +137,23 @@ class XList extends Base
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
-            $results = $dbForProject->find('executions', $queries);
-            $total = $includeTotal ? $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT) : 0;
+            if ($executionStore->readsFromClickHouse()) {
+                $results = $executionStore->find($project->getId(), $queries);
+                $total = $includeTotal
+                    ? $executionStore->count($project->getId(), $filterQueries, APP_LIMIT_COUNT)
+                    : 0;
+            } else {
+                $results = $dbForProject->find('executions', $queries);
+                $total = $includeTotal ? $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT) : 0;
+                $executionStore->checkListParity(
+                    $project->getId(),
+                    $queries,
+                    $filterQueries,
+                    $results,
+                    $total,
+                    $includeTotal,
+                );
+            }
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
