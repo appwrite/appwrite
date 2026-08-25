@@ -154,6 +154,51 @@ export function getProviderOwnerUrl(
   return meta ? meta.baseUrl(organization) : null
 }
 
+function encodeVcsPath(value: string): string {
+  return value
+    .split('/')
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join('/')
+}
+
+/**
+ * Build a provider web URL for a pull request (or GitLab merge request).
+ * Returns null when the provider is unknown or any path piece is missing, so
+ * callers can leave the control non-clickable instead of inventing a GitHub URL.
+ */
+export function getProviderPullRequestUrl(params: {
+  provider?: string
+  organization?: string
+  repositoryName?: string
+  pullRequestId?: string
+}): string | null {
+  const meta = getKnownVcsProvider(params.provider)
+  const organization = params.organization?.trim()
+  const repositoryName = params.repositoryName?.trim()
+  const pullRequestId = params.pullRequestId?.trim()
+  if (!meta || !organization || !repositoryName || !pullRequestId) {
+    return null
+  }
+
+  const owner = encodeVcsPath(organization)
+  const repo = encodeVcsPath(repositoryName)
+  const id = encodeURIComponent(pullRequestId)
+
+  switch (meta.id) {
+    case 'github':
+      return `https://github.com/${owner}/${repo}/pull/${id}`
+    case 'gitlab':
+      return `https://gitlab.com/${owner}/${repo}/-/merge_requests/${id}`
+    case 'bitbucket':
+      return `https://bitbucket.org/${owner}/${repo}/pull-requests/${id}`
+    case 'origin':
+      return `https://cursor.com/codebase/${owner}/${repo}/pull/${id}`
+    default:
+      return null
+  }
+}
+
 /**
  * Whether a provider is in a capability list from console variables
  * (`_APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION` /

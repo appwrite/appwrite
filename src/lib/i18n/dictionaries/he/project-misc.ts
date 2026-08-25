@@ -2729,4 +2729,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Upgrade required': 'נדרש שדרוג',
   'This feature requires an upgrade to access.':
     'נדרש שדרוג כדי לגשת לתכונה זו.',
+
+  // Git contributor authorization (GitHub PR check)
+  'Approve deployment': 'אישור פריסה',
+  'Authorize Git deployment': 'אישור פריסת Git',
+  'Git deployment authorized': 'פריסת Git אושרה',
+  'A contributor opened this pull request. Approve it to start the Git deployment.':
+    'משתתף פתח pull request זה. אשרו אותו כדי להתחיל את פריסת ה-Git.',
+  'The build will start shortly.': 'הבנייה תתחיל בקרוב.',
+  'Approved': 'אושר',
+  'Merge request': 'Merge request',
+  'Pull request': 'Pull request',
+  'Failed to approve deployment': 'אישור הפריסה נכשל',
 }

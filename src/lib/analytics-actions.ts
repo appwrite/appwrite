@@ -201,6 +201,7 @@ export const ANALYTICS_ACTIONS = {
   'create-execution': 'Create Execution Clicked',
   'create-site': 'Create Site Clicked',
   'create-deployment': 'Create Deployment Clicked',
+  'approve-git-deployment': 'Approve Git Deployment Clicked',
   'create-site-domain': 'Create Site Domain Clicked',
   'create-user': 'Create User Clicked',
   'create-team': 'Create Team Clicked',

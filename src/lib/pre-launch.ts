@@ -45,6 +45,8 @@ export function isPreLaunchAllowedPath(
   if (normalized === '/init' || normalized.startsWith('/init/')) return true
   if (normalized === '/og/init.png') return true
   if (normalized === '/access') return true
+  // Debug previews (pink menu) stay reachable while the rest of the site is locked.
+  if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
   return AUTH_ALLOWED_PATHS.has(normalized)
 }
 
@@ -145,6 +147,7 @@ export const PRE_LAUNCH_BOOT_SCRIPT = `(function(){
     if (path === '/init' || path.indexOf('/init/') === 0) return;
     if (path === '/og/init.png') return;
     if (path === '/access') return;
+    if (path === '/debug' || path.indexOf('/debug/') === 0) return;
     var auth = {
       '/sign-in': 1, '/sign-up': 1, '/sign-out': 1, '/recovery': 1, '/reset': 1,
       '/mfa': 1, '/verify-email': 1, '/auth/magic-url': 1,

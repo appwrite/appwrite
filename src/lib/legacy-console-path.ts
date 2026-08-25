@@ -49,6 +49,11 @@ export function isLegacyConsolePath(pathname: string): boolean {
 /**
  * Maps a legacy console pathname to its vibes equivalent.
  * Preserves path-only semantics; callers should re-attach `search` / hash.
+ *
+ * GitHub authorization comments used `/console/git/authorize-contributor`.
+ * Stripping `/console` maps that to `/git/authorize-contributor` with the
+ * original query string (`projectId`, `installationId`, `repositoryId`,
+ * `providerPullRequestId`) intact.
  */
 export function rewriteLegacyConsolePath(pathname: string): string {
   let path = pathname

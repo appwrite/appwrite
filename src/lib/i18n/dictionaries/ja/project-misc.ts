@@ -2708,4 +2708,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Upgrade required': 'アップグレードが必要です',
   'This feature requires an upgrade to access.':
     'この機能を利用するにはアップグレードが必要です。',
+
+  // Git contributor authorization (GitHub PR check)
+  'Approve deployment': 'デプロイを承認',
+  'Authorize Git deployment': 'Git デプロイを承認',
+  'Git deployment authorized': 'Git デプロイを承認しました',
+  'A contributor opened this pull request. Approve it to start the Git deployment.':
+    'コントリビューターがこのプルリクエストを開きました。承認すると Git デプロイが開始されます。',
+  'The build will start shortly.': 'まもなくビルドが開始されます。',
+  'Approved': '承認済み',
+  'Merge request': 'マージリクエスト',
+  'Pull request': 'プルリクエスト',
+  'Failed to approve deployment': 'デプロイの承認に失敗しました',
 }

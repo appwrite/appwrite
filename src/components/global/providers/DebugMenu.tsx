@@ -42,6 +42,7 @@ import {
   ExternalLink,
   Link2,
   Network,
+  GitBranch,
 } from 'lucide-react'
 import {
   Popover,
@@ -1450,7 +1451,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Demos',
-            description: 'Preview alerts, banners, loaders, OAuth2, and pages.',
+            description: 'Preview alerts, banners, loaders, OAuth2, Git, and pages.',
             icon: <Bug className="h-3 w-3" />,
             submenu: [
               {
@@ -1834,6 +1835,61 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       navigate({
                         to: '/debug/oauth2-preview',
                         search: { screen: 'relay-error' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <AlertTriangle className="h-3 w-3" />,
+                  },
+                ],
+              },
+              {
+                label: 'Git authorization',
+                description: 'Preview the GitHub contributor approval page.',
+                icon: <GitBranch className="h-3 w-3" />,
+                submenu: [
+                  {
+                    label: 'All screens',
+                    description: 'Open the Git authorization preview.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/authorize-contributor-preview',
+                        search: { status: 'awaiting' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <GitBranch className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Awaiting',
+                    description: 'PR deployment waiting for owner approval.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/authorize-contributor-preview',
+                        search: { status: 'awaiting' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <GitBranch className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Approved',
+                    description: 'Successful authorization outcome.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/authorize-contributor-preview',
+                        search: { status: 'success' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Check className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Failed',
+                    description: 'Authorization error from the API.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/authorize-contributor-preview',
+                        search: { status: 'error' },
                       })
                       setIsOpen(false)
                     },
