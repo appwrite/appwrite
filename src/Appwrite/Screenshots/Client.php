@@ -44,8 +44,7 @@ class Client
             'theme' => $theme,
             'headers' => $headers,
             'sleep' => $sleep,
-            // Above the router's 60s preview cold-start budget, under the browser's 120s max.
-            'timeout' => 90000,
+            'timeout' => 60000,
             'viewport' => [
                 'width' => self::VIEWPORT_WIDTH,
                 'height' => self::VIEWPORT_HEIGHT,
