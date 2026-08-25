@@ -419,7 +419,7 @@ function ProductDatabasesSectionContent({
                   icon={Icon}
                   title={`${t('No databases yet for')} ${title}`}
                   description={t(
-                    'Create this product database from the create database wizard.',
+                    'To create a database, use the creation wizard by clicking "Create database".',
                   )}
                   isEmpty
                   variant="card"

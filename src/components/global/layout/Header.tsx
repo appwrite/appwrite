@@ -354,6 +354,7 @@ export function ConsoleHeader({
     centerSearchPlaceholder ?? headerCopy.centerSearchPlaceholder
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
+  const preLaunch = overrides.preLaunch
   const { access } = useOrganizationScopes(orgId ?? project?.teamId)
   const defaultMarketingHeaderNav = getDefaultMarketingHeaderNav(
     headerCopy.marketingNav,
@@ -382,9 +383,9 @@ export function ConsoleHeader({
     }
     return item
   })
-  const showMarketingNav = marketingNavItems.length > 0
-  const showAgent = features.agent && !showMarketingNav
-  const showNotifications = features.notifications && !showMarketingNav
+  const showMarketingNav = marketingNavItems.length > 0 && !preLaunch
+  const showAgent = features.agent && !showMarketingNav && !preLaunch
+  const showNotifications = features.notifications && !showMarketingNav && !preLaunch
   const showConnectAndCreate = canShowConnectSection(access, features)
   const canCreateProjectFlag = canCreateProject(access, features)
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
@@ -459,6 +460,7 @@ export function ConsoleHeader({
   // Wait for plan fetch so we do not flash the button while price is still unknown.
   // Marketing layout defers the control to @[1720px] so the centered nav stays clear.
   const showUpgradeButton =
+    !preLaunch &&
     features.billing &&
     orgId &&
     isPlanFetched &&
@@ -470,8 +472,8 @@ export function ConsoleHeader({
   const changelogHref = getMarketingPageUrl('/changelog', features.marketing)
   const homeHref = getMarketingPageUrl('/home', features.marketing)
   const marketingNavLinksExternal = isMarketingPageExternal(features.marketing)
-  const showCenterSearch = centerSearch && !hideSearch
-  const showRightSearch = !hideSearch && !centerSearch
+  const showCenterSearch = centerSearch && !hideSearch && !preLaunch
+  const showRightSearch = !hideSearch && !centerSearch && !preLaunch
   const { modKey: searchModKey, isMac } = usePlatform()
   const agentToggleShortcutKeys = formatDisplayKeys(
     AGENT_TOGGLE_SHORTCUT_RAW,
@@ -559,7 +561,9 @@ export function ConsoleHeader({
             const linkOrgId =
               project?.teamId ||
               (headerAccount?.prefs?.organization as string | undefined)
-            const logoDestination = showMarketingNav
+            const logoDestination = preLaunch
+              ? ({ to: '/init' } as const)
+              : showMarketingNav
               ? ({ to: '/home' } as const)
               : showGuestHeader && features.init
                 ? ({ to: '/init' } as const)
@@ -692,7 +696,7 @@ export function ConsoleHeader({
           ) : null}
 
           {/* Project Selector - only show when in project context */}
-          {!isOrgOverview && (
+          {!isOrgOverview && !preLaunch && (
             <>
               {/* Project Selector */}
               <div className="hidden min-w-0 overflow-visible @[700px]:block">
@@ -1463,6 +1467,8 @@ export function ConsoleHeader({
 
                   <DropdownMenuSeparator className="my-1 bg-border" />
 
+                  {preLaunch ? null : (
+                    <>
                   <DropdownMenuItem asChild>
                     <Link to="/account" className={ACCOUNT_MENU_ITEM_CLASS}>
                       <User className="h-4 w-4" />
@@ -1499,6 +1505,8 @@ export function ConsoleHeader({
                   ) : null}
 
                   <DropdownMenuSeparator className="my-1 bg-border" />
+                    </>
+                  )}
 
                   {/* Account Details */}
                   <div className="px-3 py-2 space-y-4 text-start">
@@ -1590,10 +1598,11 @@ export function ConsoleHeader({
                     )}
                   </div>
 
+                  {preLaunch ? null : (
                   <>
                     <DropdownMenuSeparator className="my-1 bg-border" />
 
-                    {showMarketingNav ? (
+                    {showMarketingNav && !preLaunch ? (
                       <DropdownMenuItem asChild>
                         <Link
                           {...(orgId
@@ -1701,8 +1710,9 @@ export function ConsoleHeader({
                       </a>
                     </DropdownMenuItem>
                   </>
+                  )}
 
-                  {showAdminSection && (
+                  {showAdminSection && !preLaunch && (
                     <>
                       <DropdownMenuSeparator className="my-1 bg-border" />
 

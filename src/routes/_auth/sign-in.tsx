@@ -12,9 +12,13 @@ import { SignIn } from '@/components/global/auth/SignIn'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
-import { AppwriteException, OAuthProvider } from '@appwrite.io/console'
+import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
+import {
+  CONSOLE_OAUTH_PROVIDERS,
+  OAUTH_LOGIN_ERROR,
+} from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -50,18 +54,6 @@ const searchSchema = z.object({
       message: 'Redirect must be a relative URL',
     }),
 })
-
-const CONSOLE_OAUTH_PROVIDERS: Record<OAuthLoginMethod, OAuthProvider> = {
-  github: OAuthProvider.Github,
-  gitlab: OAuthProvider.Gitlab,
-  bitbucket: OAuthProvider.Bitbucket,
-}
-
-const OAUTH_LOGIN_ERROR: Record<OAuthLoginMethod, string> = {
-  github: 'Failed to initiate GitHub login',
-  gitlab: 'Failed to initiate GitLab login',
-  bitbucket: 'Failed to initiate Bitbucket login',
-}
 
 export const Route = createFileRoute('/_auth/sign-in')({
   component: SignInPage,

@@ -34,7 +34,21 @@ import {
   BitbucketIcon,
   GitHubIcon,
   GitLabIcon,
+  OriginIcon,
 } from '@/lib/vcs/providers'
+
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M21.35 11.1h-9.17v2.96h5.27c-.23 1.24-1.4 3.64-5.27 3.64-3.17 0-5.76-2.62-5.76-5.85s2.59-5.85 5.76-5.85c1.8 0 3.01.77 3.7 1.43l2.52-2.43C16.18 3.55 14.23 2.7 12.18 2.7 6.99 2.7 2.78 6.92 2.78 12.15s4.21 9.45 9.4 9.45c5.43 0 9.02-3.81 9.02-9.18 0-.62-.07-1.07-.15-1.32z" />
+    </svg>
+  )
+}
 
 const DEMO_USER_EMAIL = 'dev@appwrite.io'
 const DEMO_USER_PASSWORD = 'appwritedev'
@@ -76,9 +90,11 @@ const OAUTH_PROVIDERS: {
   id: OAuthLoginMethod
   Icon: (props: { className?: string }) => ReactNode
 }[] = [
+  { id: 'google', Icon: GoogleIcon },
   { id: 'github', Icon: GitHubIcon },
   { id: 'gitlab', Icon: GitLabIcon },
   { id: 'bitbucket', Icon: BitbucketIcon },
+  { id: 'cursor', Icon: OriginIcon },
 ]
 
 const OAUTH_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
@@ -94,9 +110,7 @@ const OAUTH_ACCORDION_STYLES = `
   overflow: visible;
   transition: flex-grow 480ms ${OAUTH_EASE};
 }
-.oauth-login-row[data-expanded="github"] > :nth-child(1),
-.oauth-login-row[data-expanded="gitlab"] > :nth-child(2),
-.oauth-login-row[data-expanded="bitbucket"] > :nth-child(3) {
+.oauth-login-row > .is-expanded {
   flex-grow: 1;
 }
 .oauth-login-label {
@@ -119,15 +133,11 @@ const OAUTH_ACCORDION_STYLES = `
   transition-timing-function: ease;
   transition-delay: 0s;
 }
-.oauth-login-row[data-expanded="github"] [data-provider="github"] .oauth-login-label,
-.oauth-login-row[data-expanded="gitlab"] [data-provider="gitlab"] .oauth-login-label,
-.oauth-login-row[data-expanded="bitbucket"] [data-provider="bitbucket"] .oauth-login-label {
+.oauth-login-row > .is-expanded .oauth-login-label {
   grid-template-columns: 1fr;
   transition: grid-template-columns 480ms ${OAUTH_EASE};
 }
-.oauth-login-row[data-expanded="github"] [data-provider="github"] .oauth-login-label-text,
-.oauth-login-row[data-expanded="gitlab"] [data-provider="gitlab"] .oauth-login-label-text,
-.oauth-login-row[data-expanded="bitbucket"] [data-provider="bitbucket"] .oauth-login-label-text {
+.oauth-login-row > .is-expanded .oauth-login-label-text {
   opacity: 1;
   transition-property: opacity;
   transition-duration: 240ms;
@@ -169,14 +179,10 @@ const OAUTH_ACCORDION_STYLES = `
   white-space: nowrap;
   opacity: 0;
 }
-.oauth-login-row[data-expanded="github"] [data-last-used="github"] .oauth-last-used-dot,
-.oauth-login-row[data-expanded="gitlab"] [data-last-used="gitlab"] .oauth-last-used-dot,
-.oauth-login-row[data-expanded="bitbucket"] [data-last-used="bitbucket"] .oauth-last-used-dot {
+.oauth-login-row > .is-expanded [data-last-used] .oauth-last-used-dot {
   opacity: 0;
 }
-.oauth-login-row[data-expanded="github"] [data-last-used="github"] .oauth-last-used-pill,
-.oauth-login-row[data-expanded="gitlab"] [data-last-used="gitlab"] .oauth-last-used-pill,
-.oauth-login-row[data-expanded="bitbucket"] [data-last-used="bitbucket"] .oauth-last-used-pill {
+.oauth-login-row > .is-expanded [data-last-used] .oauth-last-used-pill {
   opacity: 1;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -196,12 +202,16 @@ function oauthProviderLabel(
   t: Translator,
 ) {
   if (mode === 'sign-up') {
+    if (provider === 'google') return t('Sign up with Google')
     if (provider === 'gitlab') return t('Sign up with GitLab')
     if (provider === 'bitbucket') return t('Sign up with Bitbucket')
+    if (provider === 'cursor') return t('Sign up with Cursor')
     return t('Sign up with GitHub')
   }
+  if (provider === 'google') return t('Login with Google')
   if (provider === 'gitlab') return t('Login with GitLab')
   if (provider === 'bitbucket') return t('Login with Bitbucket')
+  if (provider === 'cursor') return t('Login with Cursor')
   return t('Login with GitHub')
 }
 
@@ -359,15 +369,20 @@ export function SignIn({
               {onOAuthLogin && (
                 <>
                   <style>{OAUTH_ACCORDION_STYLES}</style>
-                  <div className="oauth-login-row" data-expanded={expandedOAuth}>
+                  <div className="oauth-login-row">
                     {OAUTH_PROVIDERS.map(({ id, Icon }) => {
                       const label = oauthProviderLabel(id, mode, t)
                       const isLastUsed =
                         mode === 'sign-in' && lastLoginMethod === id
+                      const isExpanded = expandedOAuth === id
                       return (
                         <div
                           key={id}
-                          className="relative min-w-0"
+                          className={
+                            isExpanded
+                              ? 'relative min-w-0 is-expanded'
+                              : 'relative min-w-0'
+                          }
                           onMouseEnter={() => setExpandedOAuth(id)}
                         >
                           {isLastUsed && (

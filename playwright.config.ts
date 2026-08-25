@@ -185,6 +185,8 @@ const config: PlaywrightTestConfig = {
       VITE_CONSOLE_USAGE_STATS: process.env.VITE_CONSOLE_USAGE_STATS || '',
       VITE_CONSOLE_WEBSITE_ACCESS:
         process.env.VITE_CONSOLE_WEBSITE_ACCESS || '',
+      // Pre-launch locks the app to /init; e2e must keep the full console/site reachable.
+      VITE_CONSOLE_PRE_LAUNCH: process.env.VITE_CONSOLE_PRE_LAUNCH || 'false',
     },
     // Set E2E_SKIP_BUILD=1 to reuse an existing `dist/` (faster local iteration).
     command:

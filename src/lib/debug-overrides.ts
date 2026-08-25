@@ -10,6 +10,11 @@ import {
   USER_OS_VALUES,
   type UserOsOverride,
 } from '@/lib/user-os'
+import {
+  getPreLaunchDefault,
+  PRE_LAUNCH_DEBUG_STORAGE_KEY,
+  syncPreLaunchCookie,
+} from '@/lib/pre-launch'
 
 const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 
@@ -45,6 +50,8 @@ export const DEBUG_OVERRIDE_KEYS = {
   pageDirection: 'debug:pageDirection',
   /** App copy language preference used by the i18n provider. */
   language: 'debug:language',
+  /** Pre-launch lock: only /init (and sign-in) is reachable. Default on. */
+  preLaunch: PRE_LAUNCH_DEBUG_STORAGE_KEY,
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -124,6 +131,11 @@ export type DebugOverrides = {
   pageDirection: PageDirectionOverride
   /** App language preference from debug menu. */
   language: DebugLanguageOverride
+  /**
+   * When true, only `/init` is public; `/` redirects there and other pages are
+   * locked. Sign-in stays open and returns to `/init`. Default on.
+   */
+  preLaunch: boolean
 }
 
 function getStorage(): Storage | null {
@@ -216,7 +228,7 @@ function readUserOsOverrideFromStorage(): UserOsOverride {
 }
 
 export function loadDebugOverrides(): DebugOverrides {
-  return {
+  const overrides: DebugOverrides = {
     showNativeAppBar: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showNativeAppBar,
     ),
@@ -304,7 +316,17 @@ export function loadDebugOverrides(): DebugOverrides {
       ['en', 'he', 'ja'] as const,
       'en',
     ),
+    preLaunch: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.preLaunch,
+      getPreLaunchDefault(),
+    ),
   }
+  const storage = getStorage()
+  const storedPreLaunch = storage?.getItem(DEBUG_OVERRIDE_KEYS.preLaunch)
+  if (storedPreLaunch === 'true' || storedPreLaunch === 'false') {
+    syncPreLaunchCookie(storedPreLaunch === 'true')
+  }
+  return overrides
 }
 
 export function setDebugOverride<K extends keyof DebugOverrides>(
@@ -323,6 +345,9 @@ export function setDebugOverride<K extends keyof DebugOverrides>(
   const storageKey = DEBUG_OVERRIDE_KEYS[key]
   if (typeof value === 'boolean') {
     storage.setItem(storageKey, value ? 'true' : 'false')
+    if (key === 'preLaunch') {
+      syncPreLaunchCookie(value)
+    }
   } else if (typeof value === 'string') {
     storage.setItem(storageKey, value)
   } else if (value === null) {
@@ -346,11 +371,13 @@ export function resetDebugOverrides() {
   Object.values(DEBUG_OVERRIDE_KEYS).forEach((key) => {
     storage.removeItem(key)
   })
+  syncPreLaunchCookie(null)
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 
 /** Keys toggled from Debug → Settings → Feature flags (not other debug sections). */
 export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
+  'preLaunch',
   'showActivityChart',
   'showNativeAppBar',
   'showSuccessTeamCard',
@@ -375,6 +402,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   DebugOverrides,
   FeatureFlagsMenuDebugKey
 > = {
+  preLaunch: getPreLaunchDefault(),
   showActivityChart: false,
   showNativeAppBar: false,
   showSuccessTeamCard: false,
@@ -398,6 +426,7 @@ export function resetFeatureFlagsMenuDebugOverrides() {
   FEATURE_FLAGS_MENU_DEBUG_KEYS.forEach((key) => {
     storage.removeItem(DEBUG_OVERRIDE_KEYS[key])
   })
+  syncPreLaunchCookie(null)
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 
@@ -406,6 +435,9 @@ export function resetFeatureFlagsMenuDebugOverride(key: FeatureFlagsMenuDebugKey
   const storage = getStorage()
   if (!storage) return
   storage.removeItem(DEBUG_OVERRIDE_KEYS[key])
+  if (key === 'preLaunch') {
+    syncPreLaunchCookie(null)
+  }
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 
@@ -454,6 +486,7 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     previewCommunitySupportWizard: false,
     pageDirection: 'ltr',
     language: 'en',
+    preLaunch: getPreLaunchDefault(),
   }
 }
 

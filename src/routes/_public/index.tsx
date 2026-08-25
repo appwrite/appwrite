@@ -8,8 +8,12 @@ import { Loader2 } from 'lucide-react'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
-import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
+import {
+  isOAuthLoginMethod,
+  setLastLoginMethod,
+} from '@/lib/utils/auth-storage'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
 import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
@@ -33,6 +37,9 @@ export const Route = createFileRoute('/_public/')({
       const isAccountBlocked =
         !!queryError && isHttpForbiddenError(queryError)
       if (!isMfaRequired && !isAccountBlocked) {
+        if (isPreLaunchModeEnabled()) {
+          throw redirect({ to: '/init', replace: true })
+        }
         // Profiles without marketing pages (self-hosted) go straight to sign-in.
         if (!getActiveProfileFeatures().marketing) {
           throw redirect({ to: '/sign-in', replace: true })
@@ -42,22 +49,21 @@ export const Route = createFileRoute('/_public/')({
       return
     }
 
+    if (isPreLaunchModeEnabled()) {
+      throw redirect({ to: '/init', replace: true })
+    }
+
     const urlParams = searchParamsFromRouterLocation(location)
     const isOAuthCallback =
       urlParams.has('project') ||
       urlParams.has('key') ||
       location.pathname.includes('callback')
     if (isOAuthCallback) {
-      const oauthIdentity = account.identities?.find((identity) => {
-        const provider = identity.provider
-        return (
-          provider === 'github' ||
-          provider === 'gitlab' ||
-          provider === 'bitbucket'
-        )
-      })
+      const oauthIdentity = account.identities?.find((identity) =>
+        isOAuthLoginMethod(identity.provider),
+      )
       if (oauthIdentity) {
-        setLastLoginMethod(oauthIdentity.provider as OAuthLoginMethod)
+        setLastLoginMethod(oauthIdentity.provider)
       }
     }
 

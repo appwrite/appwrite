@@ -30,6 +30,11 @@ export interface RuntimeConfig {
    * '' = enabled; `false` / `0` / `disabled` turns the gate off.
    */
   websiteAccess: string
+  /**
+   * Pre-launch lock: only `/init` (and sign-in) is public; `/` redirects to `/init`.
+   * '' = enabled; `false` / `0` / `disabled` turns it off.
+   */
+  preLaunch: string
 }
 
 /**
@@ -115,6 +120,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),
     websiteAccess: read('VITE_CONSOLE_WEBSITE_ACCESS'),
+    preLaunch: read('VITE_CONSOLE_PRE_LAUNCH'),
   }
 }
 

@@ -42,6 +42,7 @@ const EMPTY_CONFIG: RuntimeConfig = {
   blogDrafts: '',
   usageStats: '',
   websiteAccess: '',
+  preLaunch: '',
 }
 
 /**

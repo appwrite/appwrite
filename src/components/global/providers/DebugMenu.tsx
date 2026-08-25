@@ -69,6 +69,7 @@ import {
   type FeatureFlagsMenuDebugKey,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
+import { getPreLaunchDefault } from '@/lib/pre-launch'
 import {
   OVERVIEW_CHART_TAB_ORDER,
   OVERVIEW_CHART_TAB_DISABLE_KEYS,
@@ -652,7 +653,10 @@ function createDebugFeatureFlagItem(
   onReset?: () => void,
   category?: string,
 ): MenuItem {
-  const defaultValue = FEATURE_FLAGS_MENU_DEBUG_DEFAULTS[key]
+  const defaultValue =
+    key === 'preLaunch'
+      ? getPreLaunchDefault()
+      : FEATURE_FLAGS_MENU_DEBUG_DEFAULTS[key]
 
   return {
     label,
@@ -2080,6 +2084,21 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   disabled: profileId !== 'cloud',
                   category: 'Organization',
                 },
+              ),
+              createDebugFeatureFlagItem(
+                'Pre-launch',
+                'Lock the site to /init. Root redirects there; other pages are blocked. Sign-in stays open and returns to /init. On by default.',
+                'preLaunch',
+                overrides.preLaunch,
+                (checked) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    preLaunch: checked,
+                  }))
+                  setDebugOverride('preLaunch', checked)
+                },
+                undefined,
+                'Site',
               ),
               createDebugFeatureFlagItem(
                 'Activity chart',

@@ -916,7 +916,7 @@ export function AllDatabasesSection({
               hasActiveFilters
                 ? t('Try adjusting or clearing filters.')
                 : t(
-                    'Create this product database from the create database wizard.',
+                    'To create a database, use the creation wizard by clicking "Create database".',
                   )
             }
             isEmpty={!hasActiveFilters}
@@ -975,7 +975,7 @@ export function AllDatabasesSection({
                     hasActiveFilters
                       ? t('Try adjusting or clearing filters.')
                       : t(
-                          'Create this product database from the create database wizard.',
+                          'To create a database, use the creation wizard by clicking "Create database".',
                         )
                   }
                   isEmpty={!hasActiveFilters}

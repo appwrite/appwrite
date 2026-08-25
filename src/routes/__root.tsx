@@ -3,6 +3,7 @@ import {
   Scripts,
   ScriptOnce,
   createRootRouteWithContext,
+  redirect,
 } from '@tanstack/react-router'
 import appCss from '../styles.css?url'
 import {
@@ -55,6 +56,12 @@ import {
   WebsiteAccessGate,
   WEBSITE_ACCESS_BOOT_SCRIPT,
 } from '@/components/global/auth/WebsiteAccessGate'
+import { PreLaunchRedirect } from '@/components/global/auth/PreLaunchRedirect'
+import {
+  isPreLaunchAllowedPath,
+  isPreLaunchModeEnabled,
+  PRE_LAUNCH_BOOT_SCRIPT,
+} from '@/lib/pre-launch'
 import { STALE_CHUNK_BOOT_SCRIPT } from '@/lib/stale-chunk-error'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
@@ -176,6 +183,12 @@ function getHeadFontPreloads() {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+  beforeLoad: ({ location }) => {
+    if (typeof window === 'undefined') return
+    if (!isPreLaunchModeEnabled()) return
+    if (isPreLaunchAllowedPath(location.pathname)) return
+    throw redirect({ to: '/init', replace: true })
+  },
   loader: async () => {
     // Client-side authentication is handled by RequireAuth component
     // Return null for currentUser - it will be fetched client-side
@@ -448,6 +461,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ScriptOnce>{getSsrClientIpScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <ScriptOnce>{WEBSITE_ACCESS_BOOT_SCRIPT}</ScriptOnce>
+        <ScriptOnce>{PRE_LAUNCH_BOOT_SCRIPT}</ScriptOnce>
         {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can
             auto-recover before the app module graph (and router listeners) load. */}
         <ScriptOnce>{STALE_CHUNK_BOOT_SCRIPT}</ScriptOnce>
@@ -471,6 +485,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           />
           <ClientThemeProvider>
             <WebsiteAccessGate>
+              <PreLaunchRedirect />
               <AnalyticsSessionPropsSync />
               <PageDirectionProvider>
                 <CookieConsentProvider>

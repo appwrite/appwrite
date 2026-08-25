@@ -4,20 +4,26 @@
 
 const LAST_LOGIN_METHOD_KEY = 'last-login-method'
 
-export type OAuthLoginMethod = 'github' | 'gitlab' | 'bitbucket'
-export type LoginMethod = OAuthLoginMethod | 'email'
-
-const LOGIN_METHODS = new Set<LoginMethod>([
+export const OAUTH_LOGIN_METHODS = [
+  'google',
   'github',
   'gitlab',
   'bitbucket',
-  'email',
-])
+  'cursor',
+] as const
+
+export type OAuthLoginMethod = (typeof OAUTH_LOGIN_METHODS)[number]
+export type LoginMethod = OAuthLoginMethod | 'email'
+
+const LOGIN_METHODS = new Set<LoginMethod>([...OAUTH_LOGIN_METHODS, 'email'])
 
 export function isOAuthLoginMethod(
-  method: LoginMethod | null,
+  method: string | null,
 ): method is OAuthLoginMethod {
-  return method === 'github' || method === 'gitlab' || method === 'bitbucket'
+  return (
+    method !== null &&
+    (OAUTH_LOGIN_METHODS as readonly string[]).includes(method)
+  )
 }
 
 /**
