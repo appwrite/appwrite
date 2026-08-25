@@ -166,10 +166,33 @@ export function isDeploymentInProgress(status: string): boolean {
 
 /**
  * Check if a deployment has completed (ready or failed).
- * Build output download is only available for completed deployments.
  */
 export function isDeploymentCompleted(
   status: string | undefined | null,
 ): boolean {
   return status === 'ready' || status === 'failed'
+}
+
+/**
+ * Build output download is only available for ready deployments.
+ * Failed and in-progress deployments do not have output (the API returns 404).
+ */
+export function canDownloadDeploymentBuildOutput(
+  status: string | undefined | null,
+): boolean {
+  return status === 'ready'
+}
+
+/**
+ * Deployment to rebuild when settings are not live.
+ * Prefer latest (includes failed builds) over the active ready deployment,
+ * since settings are often changed after a failed deploy.
+ */
+export function getRedeploySourceDeploymentId(
+  resource?: {
+    latestDeploymentId?: string | null
+    deploymentId?: string | null
+  } | null,
+): string | undefined {
+  return resource?.latestDeploymentId || resource?.deploymentId || undefined
 }

@@ -10,6 +10,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { Query } from '@appwrite.io/console'
 import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
+import { getRedeploySourceDeploymentId } from '@/lib/utils/deployment-status'
 
 const DEPLOYMENTS_SELECT = [
   Query.select([
@@ -94,6 +95,22 @@ export const Route = createFileRoute(
               projectId,
               siteId,
               site.deploymentId,
+            ),
+          ),
+        )
+      }
+
+      const redeployDeploymentId = getRedeploySourceDeploymentId(site)
+      if (
+        redeployDeploymentId &&
+        redeployDeploymentId !== site?.deploymentId
+      ) {
+        criticalPromises.push(
+          queryClient.ensureQueryData(
+            siteDeploymentQueryOptions(
+              projectId,
+              siteId,
+              redeployDeploymentId,
             ),
           ),
         )

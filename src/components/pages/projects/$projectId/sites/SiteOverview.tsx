@@ -53,7 +53,7 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
   getDeploymentStatusBadge,
-  isDeploymentCompleted,
+  canDownloadDeploymentBuildOutput,
   isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
@@ -200,6 +200,8 @@ export function SiteOverviewView() {
 
   const handleDownloadBuild = () => {
     if (!projectId || !siteId || !activeDeploymentResolved) return
+    if (!canDownloadDeploymentBuildOutput(activeDeploymentResolved.status))
+      return
     try {
       const projectSdk = sdk.forProject(projectId)
       const url = projectSdk.sites.getDeploymentDownload({
@@ -511,16 +513,16 @@ export function SiteOverviewView() {
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
                       disabled={
-                        !isDeploymentCompleted(
+                        !canDownloadDeploymentBuildOutput(
                           activeDeploymentForCard?.status,
                         )
                       }
                       title={
-                        !isDeploymentCompleted(
+                        !canDownloadDeploymentBuildOutput(
                           activeDeploymentForCard?.status,
                         )
                           ? t(
-                              'Build output is available after the deployment has completed.',
+                              'Build output is only available for ready deployments.',
                             )
                           : undefined
                       }

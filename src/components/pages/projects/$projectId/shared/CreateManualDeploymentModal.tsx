@@ -17,6 +17,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
+import { cn } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
 
 export type CreateManualDeploymentResourceType = 'function' | 'site'
@@ -53,11 +54,13 @@ export function CreateManualDeploymentModal({
   const queryClient = useQueryClient()
   const inputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
 
   const reset = () => {
     setFile(null)
+    setIsDragging(false)
     setUploadProgress(null)
     setValidationError(null)
     if (inputRef.current) {
@@ -81,8 +84,7 @@ export function CreateManualDeploymentModal({
     return null
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const chosen = e.target.files?.[0]
+  const applyFile = (chosen: File | undefined) => {
     setValidationError(null)
     if (!chosen) {
       setFile(null)
@@ -95,6 +97,10 @@ export function CreateManualDeploymentModal({
       return
     }
     setFile(chosen)
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    applyFile(e.target.files?.[0])
   }
 
   const mutation = useMutation({
@@ -155,6 +161,28 @@ export function CreateManualDeploymentModal({
     },
   })
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (mutation.isPending) return
+    e.dataTransfer.dropEffect = 'copy'
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    if (mutation.isPending) return
+    applyFile(e.dataTransfer.files?.[0])
+  }
+
   const handleSubmit = () => {
     if (!file) {
       setValidationError(t('Please select a .tar.gz file.'))
@@ -191,11 +219,23 @@ export function CreateManualDeploymentModal({
             onChange={handleFileChange}
           />
           <div
-            onClick={() => inputRef.current?.click()}
-            className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 py-8 px-4 cursor-pointer hover:bg-muted/30 transition-colors"
+            onClick={() => {
+              if (!mutation.isPending) inputRef.current?.click()
+            }}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={cn(
+              'flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-8 px-4 cursor-pointer transition-colors',
+              isDragging
+                ? 'border-primary bg-primary/5'
+                : 'border-border bg-muted/20 hover:bg-muted/30',
+              mutation.isPending && 'pointer-events-none opacity-60',
+            )}
           >
             {file ? (
-              <div className="flex items-center gap-2 text-[13px] text-foreground">
+              <div className="pointer-events-none flex items-center gap-2 text-[13px] text-foreground">
                 <FileArchive className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium truncate max-w-[240px]">
                   {file.name}
@@ -205,12 +245,12 @@ export function CreateManualDeploymentModal({
                 </span>
               </div>
             ) : (
-              <>
+              <div className="pointer-events-none flex flex-col items-center">
                 <Upload className="h-10 w-10 text-muted-foreground mb-2" />
                 <p className="text-[13px] text-muted-foreground text-center">
-                  {t('Click to select a .tar.gz file')}
+                  {t('Drop a .tar.gz file here or click to browse')}
                 </p>
-              </>
+              </div>
             )}
           </div>
           {validationError && (

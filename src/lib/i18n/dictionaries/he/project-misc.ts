@@ -1299,7 +1299,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Create manual deployment': 'יצירת פריסה ידנית',
   'Upload a .tar.gz archive of your code. Maximum file size is':
     'העלו ארכיון ‎.tar.gz של הקוד שלכם. גודל הקובץ המקסימלי הוא',
-  'Click to select a .tar.gz file': 'לחצו לבחירת קובץ ‎.tar.gz',
+  'Drop a .tar.gz file here or click to browse':
+    'גררו קובץ ‎.tar.gz לכאן או לחצו לעיון',
   'Uploading…': 'מעלה…',
   Redeploy: 'פריסה מחדש',
   Timeout: 'Timeout',

@@ -100,8 +100,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Build must be ready before activating.':
     'הבנייה חייבת להיות מוכנה לפני ההפעלה.',
   'Build output': 'פלט בנייה',
-  'Build output is available after the deployment has completed.':
-    'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
+  'Build output is only available for ready deployments.':
+    'פלט הבנייה זמין רק לפריסות מוכנות.',
   // pragma: allowlist secret
   'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.':
     'פריסות CLI נוצרות באמצעות כלי שורת הפקודה של Appwrite, שימושי לתהליכי עבודה של מפתחים ולאוטומציה בסקריפטים.', // pragma: allowlist secret

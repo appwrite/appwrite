@@ -93,8 +93,8 @@ export const heSitesDictionary: Record<string, string> = {
   Download: 'הורדה',
   'Source code': 'קוד מקור',
   'Build output': 'פלט בנייה',
-  'Build output is available after the deployment has completed.':
-    'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
+  'Build output is only available for ready deployments.':
+    'פלט הבנייה זמין רק לפריסות מוכנות.',
   Redeploy: 'פריסה מחדש',
   'Settings changes are not live yet': 'שינויי ההגדרות עדיין לא פעילים',
   "You've updated site settings, but they won't take effect until you redeploy. The current deployment is still running with the previous settings.":

@@ -362,7 +362,8 @@ export function SignIn({
                   <div className="oauth-login-row" data-expanded={expandedOAuth}>
                     {OAUTH_PROVIDERS.map(({ id, Icon }) => {
                       const label = oauthProviderLabel(id, mode, t)
-                      const isLastUsed = lastLoginMethod === id
+                      const isLastUsed =
+                        mode === 'sign-in' && lastLoginMethod === id
                       return (
                         <div
                           key={id}
@@ -501,7 +502,7 @@ export function SignIn({
               </div>
 
               <div className="relative">
-                {lastLoginMethod === 'email' && (
+                {mode === 'sign-in' && lastLoginMethod === 'email' && (
                   <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
                     {t('Last used')}
                   </span>

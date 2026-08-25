@@ -56,8 +56,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Build must be ready before activating':
     'הבנייה חייבת להיות מוכנה לפני ההפעלה',
   'Build output': 'פלט הבנייה',
-  'Build output is available after the deployment has completed.':
-    'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
+  'Build output is only available for ready deployments.':
+    'פלט הבנייה זמין רק לפריסות מוכנות.',
   Building: 'בבנייה',
   by: 'מאת',
   bytes: 'בייטים',

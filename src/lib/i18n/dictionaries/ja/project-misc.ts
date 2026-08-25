@@ -812,7 +812,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Create manual deployment': '手動デプロイの作成',
   'Upload a .tar.gz archive of your code. Maximum file size is':
     'コードの .tar.gz アーカイブをアップロードしてください。最大ファイルサイズ:',
-  'Click to select a .tar.gz file': '.tar.gz ファイルを選択するにはクリック',
+  'Drop a .tar.gz file here or click to browse':
+    '.tar.gz ファイルをここにドロップするか、クリックして参照',
   'Uploading…': 'アップロード中…',
   'Control how long inactive deployments are kept before they are automatically deleted. Active deployments are always retained.':
     '非アクティブなデプロイが自動削除されるまでの保持期間を制御します。アクティブなデプロイは常に保持されます。',

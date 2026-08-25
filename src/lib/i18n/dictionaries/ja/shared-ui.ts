@@ -780,7 +780,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Add one or more environment variables. You can add multiple variables at once.': '1つ以上の環境変数を追加します。複数の変数を一度に追加できます。',
   'Are you sure you want to delete this deployment? This action cannot be undone.': 'このデプロイを削除してもよろしいですか?この操作は元に戻せません。',
   'Are you sure you want to delete this variable? This action cannot be undone.': 'この変数を削除してもよろしいですか?この操作は元に戻せません。',
-  'Build output is available after the deployment has completed.': 'ビルド出力は、デプロイが完了した後に表示されます。',
+  'Build output is only available for ready deployments.':
+    'ビルド出力は、準備完了のデプロイでのみ利用できます。',
   'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.': 'CLI デプロイは Appwrite のコマンドラインツールを使用して作成され、開発者のワークフローやスクリプトによる自動化に役立ちます。',
   'Cannot delete the active deployment. Activate another deployment first.': '有効なデプロイは削除できません。先に別のデプロイを有効化してください。',
   'Cannot delete the active deployment. Please activate another deployment first.': '有効なデプロイは削除できません。先に別のデプロイを有効化してください。',
