@@ -43,6 +43,15 @@ const APP_LIMIT_ARRAY_SCOPES_SIZE = 200; // Default maximum of how many scope el
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
+// Subquery filters hanging off a project document, each one a find() when the
+// document is decoded.
+const APP_PROJECT_SUBQUERIES = [
+    'subQueryKeys',
+    'subQueryWebhooks',
+    'subQueryPlatforms',
+    'subQueryBlocks',
+    'subQueryDevKeys',
+];
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls

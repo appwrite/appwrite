@@ -64,9 +64,13 @@ class ScheduleMessages extends Action
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
             $now = DateTime::now();
-            $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'accessedAt' => $now
-            ]));
+            // updateDocument never uses cache, so skip the subqueries.
+            $dbForPlatform->skipFilters(
+                fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'accessedAt' => $now
+                ])),
+                APP_PROJECT_SUBQUERIES
+            );
             $project->setAttribute('accessedAt', $now);
         }
     }

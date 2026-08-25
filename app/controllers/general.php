@@ -155,10 +155,14 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $projectInternalId = (string) ($project->getSequence() ?: $project->getId());
             $lock->tryWithKey(
                 'lock:platform:'.$projectInternalId.':projects:'.$project->getId().':accessedAt',
-                fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
-                    'projects',
-                    $project->getId(),
-                    new Document(['accessedAt' => DateTime::now()])
+                // updateDocument never uses cache, so skip the subqueries.
+                fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->updateDocument(
+                        'projects',
+                        $project->getId(),
+                        new Document(['accessedAt' => DateTime::now()])
+                    ),
+                    APP_PROJECT_SUBQUERIES
                 )),
                 target: 'projects'
             );

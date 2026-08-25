@@ -39,13 +39,7 @@ class Functions extends Action
      *
      *     protected const array PROJECT_SUBQUERY_FILTERS = [...parent::PROJECT_SUBQUERY_FILTERS, 'subQueryFoo'];
      */
-    protected const array PROJECT_SUBQUERY_FILTERS = [
-        'subQueryKeys',
-        'subQueryWebhooks',
-        'subQueryPlatforms',
-        'subQueryBlocks',
-        'subQueryDevKeys',
-    ];
+    protected const array PROJECT_SUBQUERY_FILTERS = APP_PROJECT_SUBQUERIES;
 
     /** @var callable(string, int, callable): mixed */
     private $locks;
@@ -400,12 +394,7 @@ class Functions extends Action
                     'lock:platform:' . ($project->getSequence() ?: $project->getId()) . ':projects:' . $project->getId() . ':accessedAt',
                     APP_PROJECT_ACCESS,
                     function () use ($dbForPlatform, $project, $now): void {
-                        // updateDocument reads the row it merges into with
-                        // forUpdate, which never serves from cache, and decodes
-                        // it whole: writing this one timestamp otherwise costs a
-                        // find() per project subquery every time. Nothing here
-                        // reads them, and their encode returns null either way,
-                        // so the row written back is unchanged.
+                        // updateDocument never uses cache, so skip the subqueries.
                         $dbForPlatform->skipFilters(
                             fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                                 'accessedAt' => $now
