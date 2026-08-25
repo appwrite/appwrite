@@ -58,11 +58,7 @@ $console = [
         'githubEnabled' => true,
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
         'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
-        // GitLab and Bitbucket are opt-in: unlike GitHub they are not assumed
-        // to be configured on every install, so they only advertise as enabled
-        // once credentials are actually present. Note these are distinct from
-        // the _APP_VCS_* credentials, which power repository integration
-        // (installations/webhooks) rather than console sign-in.
+        // Distinct from _APP_VCS_*, which powers repository integration, not sign-in
         'gitlabEnabled' => !empty(System::getEnv('_APP_CONSOLE_GITLAB_APP_ID', '')),
         'gitlabSecret' => System::getEnv('_APP_CONSOLE_GITLAB_SECRET', ''),
         'gitlabAppid' => System::getEnv('_APP_CONSOLE_GITLAB_APP_ID', ''),
