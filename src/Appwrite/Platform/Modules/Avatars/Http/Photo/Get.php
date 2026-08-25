@@ -85,13 +85,13 @@ class Get extends Action
     ): void {
         $providers = [
             new OAuth2($dbForProject),
-            new Gravatar,
-            new Libavatar,
-            new Initials,
-            new Fallback,
+            new Gravatar(),
+            new Libavatar(),
+            new Initials(),
+            new Fallback(),
         ];
 
-        $balancer = new Balancer(new First);
+        $balancer = new Balancer(new First());
 
         foreach ($providers as $provider) {
             $balancer->addOption(new Option(['provider' => $provider]));

@@ -8,7 +8,6 @@ use Throwable;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 
@@ -179,8 +178,8 @@ class V25 extends Migration
                 case 'identities':
                     try {
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'photo');
-                    } catch (Duplicate) {
-                        Console::warning("Attribute \"photo\" already exists in collection {$id}; skipping.");
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"photo\" in collection {$id}: {$th->getMessage()}");
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);

@@ -31,7 +31,8 @@ class OAuth2 extends Photo
 
     public function __construct(
         private readonly Database $dbForProject,
-    ) {}
+    ) {
+    }
 
     public function getName(): string
     {
