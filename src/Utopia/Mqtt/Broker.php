@@ -24,8 +24,8 @@ class Broker
     private const REASON_SUCCESS = 0x00;
     private const REASON_NOT_AUTHORIZED = 0x87;
     private const AUTH_SUCCESS = 0x00;
-    private const AUTH_CONTINUE = 0x18;
-    private const AUTH_REAUTH = 0x19;
+    private const AUTH_CONTINUE = 0x18; // @phpstan-ignore classConstant.unused (reserved for multi-round continue-auth)
+    private const AUTH_REAUTH = 0x19; // @phpstan-ignore classConstant.unused (reserved for the reauth flow)
 
     private const QOS_1 = 1;
 
@@ -40,8 +40,8 @@ class Broker
     /** @var array<int, string> fd => project id (from a CONNECT User Property) */
     private array $project = [];
 
-    /** @var array<int, array<string, true>> fd => set of subscribed topic filters */
-    private array $subscriptions = [];
+    /** Bidirectional subscription index: fd <-> project-scoped topic trie. */
+    private SubscriptionStore $subscriptions;
 
     /** @var array<int, array<string, string>> fd => resolved identity (project/user ids) */
     private array $identity = [];
@@ -59,6 +59,7 @@ class Broker
         private readonly string $host = '0.0.0.0',
         private readonly int $port = 1883,
     ) {
+        $this->subscriptions = new SubscriptionStore();
     }
 
     /**
@@ -196,16 +197,20 @@ class Broker
         $offset = 0;
         $packetId = substr($body, 0, 2);
         $offset += 2;
+
+        $subId = $this->getProperties($fd, $body, $offset)['user']['subId'] ?? '';
         $offset = $this->skipProperties($fd, $body, $offset);
+
+        $projectId = $this->project[$fd] ?? '';
+        $userId = $this->identity[$fd]['userId'] ?? '';
 
         $granted = '';
         while ($offset < strlen($body)) {
             [$filter, $offset] = $this->readString($body, $offset);
             $offset += 1; // subscription options byte
-            $this->subscriptions[$fd][$filter] = true;
+            $this->subscriptions->subscribe($projectId, $userId, $subId ?: $filter, $filter, $fd, self::QOS_1);
             $granted .= chr(self::QOS_1); // granted max QoS 1
         }
-
         // SUBACK: packet id (+ property length 0 for v5) + granted codes
         $variable = $packetId . ($this->protocol[$fd] >= 5 ? $this->encodeLength(0) : '') . $granted;
         $server->send($fd, chr(self::SUBACK << 4) . $this->encodeLength(strlen($variable)) . $variable);
@@ -216,12 +221,14 @@ class Broker
         $offset = 0;
         $packetId = substr($body, 0, 2);
         $offset += 2;
+
+        $subId = $this->getProperties($fd, $body, $offset)['user']['subId'] ?? '';
         $offset = $this->skipProperties($fd, $body, $offset);
 
         $count = 0;
         while ($offset < strlen($body)) {
             [$filter, $offset] = $this->readString($body, $offset);
-            unset($this->subscriptions[$fd][$filter]);
+            $this->subscriptions->unsubscribe($subId ?: $filter, $fd);
             $count++;
         }
 
@@ -306,32 +313,29 @@ class Broker
         $offset = $this->skipProperties($fd, $body, $offset);
         $payload = substr($body, $offset);
 
-        $this->deliver($server, $topic, $payload);
+        foreach ($this->subscriptions->getSubscribers($this->project[$fd] ?? '', $topic) as $subscriberFd => $grantedQos) {
+            $this->send($server, $subscriberFd, $topic, $payload, min($qos, $grantedQos));
+        }
 
-        if ($qos === 1 && $packetId !== null) {
+        if ($qos === 1) {
             // PUBACK: packet id (reason/properties omitted -> valid for both versions)
             $server->send($fd, chr(self::PUBACK << 4) . $this->encodeLength(strlen($packetId)) . $packetId);
         }
     }
 
-    private function deliver(Server $server, string $topic, string $payload): void
+    private function send(Server $server, int $fd, string $topic, string $payload, int $qos): void
     {
-        foreach ($this->subscriptions as $fd => $filters) {
-            foreach ($filters as $filter => $_) {
-                if ($this->matches($filter, $topic)) {
-                    $packetId = $this->getNextPacketId($fd);
-                    // Variable header order: topic, packet id (QoS > 0), properties (v5), payload.
-                    $variable = $this->encodeString($topic)
-                        . chr($packetId >> 8) . chr($packetId & 0xFF)
-                        . (($this->protocol[$fd] ?? 4) >= 5 ? $this->encodeLength(0) : '')
-                        . $payload;
-                    // PUBLISH, QoS 1 (flags = QoS << 1)
-                    $header = chr((self::PUBLISH << 4) | (self::QOS_1 << 1));
-                    $server->send($fd, $header . $this->encodeLength(strlen($variable)) . $variable);
-                    break; // one copy per subscriber even if several filters match
-                }
-            }
+        // Variable header order: topic, packet id (QoS > 0), properties (v5), payload.
+        $variable = $this->encodeString($topic);
+        if ($qos > 0) {
+            $packetId = $this->getNextPacketId($fd);
+            $variable .= chr($packetId >> 8) . chr($packetId & 0xFF);
         }
+        $variable .= ((($this->protocol[$fd] ?? 4) >= 5 ? $this->encodeLength(0) : '')) . $payload;
+
+        // PUBLISH, flags = QoS << 1
+        $header = chr((self::PUBLISH << 4) | ($qos << 1));
+        $server->send($fd, $header . $this->encodeLength(strlen($variable)) . $variable);
     }
 
     /** Next per-connection outbound packet id, wrapping 1..65535 (0 is not allowed). */
@@ -345,40 +349,13 @@ class Broker
 
     private function onClose(Server $server, int $fd): void
     {
+        $this->subscriptions->close($fd);
         unset(
-            $this->subscriptions[$fd],
             $this->protocol[$fd],
             $this->project[$fd],
             $this->identity[$fd],
             $this->packetId[$fd],
         );
-    }
-
-    /**
-     * MQTT topic filter matching with '+' (single level) and '#' (multi level).
-     */
-    private function matches(string $filter, string $topic): bool
-    {
-        if ($filter === $topic) {
-            return true;
-        }
-
-        $filterParts = explode('/', $filter);
-        $topicParts = explode('/', $topic);
-
-        foreach ($filterParts as $i => $part) {
-            if ($part === '#') {
-                return true;
-            }
-            if (!isset($topicParts[$i])) {
-                return false;
-            }
-            if ($part !== '+' && $part !== $topicParts[$i]) {
-                return false;
-            }
-        }
-
-        return count($filterParts) === count($topicParts);
     }
 
     /**
