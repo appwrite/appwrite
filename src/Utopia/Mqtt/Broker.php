@@ -81,6 +81,7 @@ class Broker
     public function __construct(
         private readonly string $host = '0.0.0.0',
         private readonly int $port = 1883,
+        private readonly int $maxPacketSize = 64000,
     ) {
         $this->subscriptions = new SubscriptionStore();
         $this->withTelemetry(new NoTelemetry());
@@ -128,6 +129,7 @@ class Broker
         $server->set([
             'open_mqtt_protocol' => true,
             'worker_num' => 1,
+            'package_max_length' => $this->maxPacketSize,
         ]);
 
         $server->on('receive', $this->onReceive(...));

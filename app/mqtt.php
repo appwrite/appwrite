@@ -220,7 +220,11 @@ $authorize = function (array $identity, string $topic) use ($container, $registe
 /** @var \Utopia\Telemetry\Adapter $telemetry */
 $telemetry = $container->get('telemetry');
 
-$broker = new Broker(host: '0.0.0.0', port: 1883);
+$broker = new Broker(
+    host: '0.0.0.0',
+    port: 1883,
+    maxPacketSize: (int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', '64000'),
+);
 $broker->onConnect($authenticate);
 $broker->onSubscribe($authorize);
 $broker->withTelemetry($telemetry);
