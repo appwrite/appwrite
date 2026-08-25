@@ -59,10 +59,10 @@ $console = [
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
         'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
         // Distinct from _APP_VCS_*, which powers repository integration, not sign-in
-        'gitlabEnabled' => !empty(System::getEnv('_APP_CONSOLE_GITLAB_APP_ID', '')),
+        'gitlabEnabled' => true,
         'gitlabSecret' => System::getEnv('_APP_CONSOLE_GITLAB_SECRET', ''),
         'gitlabAppid' => System::getEnv('_APP_CONSOLE_GITLAB_APP_ID', ''),
-        'bitbucketEnabled' => !empty(System::getEnv('_APP_CONSOLE_BITBUCKET_APP_ID', '')),
+        'bitbucketEnabled' => true,
         'bitbucketSecret' => System::getEnv('_APP_CONSOLE_BITBUCKET_SECRET', ''),
         'bitbucketAppid' => System::getEnv('_APP_CONSOLE_BITBUCKET_APP_ID', ''),
     ],
