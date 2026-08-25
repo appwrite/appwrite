@@ -21,10 +21,12 @@ use Utopia\Balancer\Balancer;
 use Utopia\Balancer\Option;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\UID;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Range;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Get extends Action
@@ -50,6 +52,8 @@ class Get extends Action
                 name: 'getPhoto',
                 description: <<<'EOT'
                 Returns the best available profile photo for the currently authenticated user. The endpoint tries each source in priority order and returns the first successful result: OAuth2 identity photo, Gravatar, Libravatar, Appwrite Initials, built-in static fallback.
+
+                Pass `userId` to resolve the photo for another user instead. Alternatively, pass `email` — a SHA256 hash of a lowercase and trimmed email address — to look the photo up on Gravatar and Libravatar, and/or `name` to render initials, without referencing any user.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
@@ -67,6 +71,9 @@ class Get extends Action
             ->param('quality', 100, new Range(0, 100), 'Output image quality between 0 and 100. Defaults to 100.', true)
             ->param('output', 'png', new WhiteList(['png', 'jpg', 'webp'], true), 'Output image format. Defaults to \'png\'.', true)
             ->param('rating', 'g', new WhiteList(['g', 'pg', 'r', 'x'], true), 'Maximum image rating to fetch from Gravatar/Libravatar. Defaults to \'g\'.', true)
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Resolve the photo for this user instead of the currently authenticated user. Takes precedence over the email and name parameters.', true, ['dbForProject'])
+            ->param('email', '', new Text(64, 64, [...Text::NUMBERS, 'a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F']), 'SHA256 hash of a lowercase and trimmed email address, used to resolve the photo via Gravatar and Libravatar instead of the currently authenticated user\'s email.', true)
+            ->param('name', '', new Text(128), 'Name to render initials from when no photo is found, used instead of the currently authenticated user\'s name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
@@ -79,10 +86,29 @@ class Get extends Action
         int $quality,
         string $output,
         string $rating,
+        string $userId,
+        string $email,
+        string $name,
         Response $response,
         Document $user,
         Database $dbForProject,
     ): void {
+        // The photo subject is the authenticated user unless the caller points
+        // elsewhere: at another user by ID, or at an email hash / name directly.
+        // The ad-hoc subject carries no ID, so the OAuth2 provider skips it.
+        if (!empty($userId)) {
+            $user = $dbForProject->getDocument('users', $userId);
+
+            if ($user->isEmpty()) {
+                throw new Exception(Exception::USER_NOT_FOUND);
+            }
+        } elseif (!empty($email) || !empty($name)) {
+            $user = new Document([
+                'emailHash' => \strtolower($email),
+                'name' => $name,
+            ]);
+        }
+
         $providers = [
             new OAuth2($dbForProject),
             new Gravatar(),

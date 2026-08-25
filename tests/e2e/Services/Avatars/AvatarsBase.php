@@ -7,6 +7,17 @@ use Tests\E2E\Client;
 
 trait AvatarsBase
 {
+    /**
+     * Corner colour of the built-in static fallback avatar (#FD366E).
+     */
+    private const PHOTO_FALLBACK_COLOR = ['r' => 253, 'g' => 54, 'b' => 110];
+
+    /**
+     * Corner colour of initials rendered for the name 'W W': the 'WW'
+     * initials deterministically pick the mint theme (#85DBD8).
+     */
+    private const PHOTO_INITIALS_COLOR = ['r' => 133, 'g' => 219, 'b' => 216];
+
     public function testGetCreditCard(): array
     {
         /**
@@ -1491,5 +1502,165 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
+    }
+
+    public function testGetPhotoByEmail(): void
+    {
+        /**
+         * Test for SUCCESS
+         *
+         * The hash belongs to a random email nobody registered, so Gravatar
+         * and Libravatar answer 404 and the chain falls through to the static
+         * fallback — never to initials, which require a name and must not
+         * derive from an email.
+         */
+        $hash = \hash('sha256', \uniqid('photo-') . '@appwrite.io');
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $hash,
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertPhotoFallback($response['body']);
+
+        // Uppercase hashes are normalised and accepted.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => \strtoupper($hash),
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoFallback($response['body']);
+
+        // A name alongside the hash resolves to initials once Gravatar and
+        // Libravatar miss — even with a session, the explicit parameters win
+        // over the authenticated user.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $hash,
+            'name' => 'W W',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // A raw email address is not accepted — only its SHA256 hash.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => 'someone@appwrite.io',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Too short to be a SHA256 hash.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => \substr($hash, 0, 63),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testGetPhotoByName(): void
+    {
+        /**
+         * Test for SUCCESS — initials render from the provided name, no
+         * session required.
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'name' => 'W W',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+
+        // The explicit name also wins over the authenticated user's own name.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'W W',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // Name longer than 128 chars.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'name' => \str_repeat('w', 129),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    /**
+     * Assert the avatar is the built-in static fallback. When ImageMagick
+     * runs under a security policy that blocks the SVG module the endpoint
+     * serves the fallback as raw SVG source instead of a rasterised PNG, so
+     * both encodings are accepted.
+     */
+    private function assertPhotoFallback(string $blob): void
+    {
+        if (\str_contains(\substr($blob, 0, 256), '<svg')) {
+            $this->assertStringContainsString('#FD366E', $blob);
+
+            return;
+        }
+
+        $this->assertPhotoBackground(self::PHOTO_FALLBACK_COLOR, $blob);
+    }
+
+    /**
+     * Assert both top corners of an avatar match an expected background
+     * colour. Corners are always background — initials are drawn in the
+     * centre and the fallback silhouette never reaches the top edge — so a
+     * corner sample tells apart which provider produced the image.
+     */
+    private function assertPhotoBackground(array $rgb, string $blob): void
+    {
+        $this->assertNotEmpty($blob);
+
+        $image = new \Imagick();
+        $image->readImageBlob($blob);
+
+        foreach ([[2, 2], [$image->getImageWidth() - 3, 2]] as [$x, $y]) {
+            $color = $image->getImagePixelColor($x, $y)->getColor();
+
+            $this->assertSame(
+                $rgb,
+                ['r' => $color['r'], 'g' => $color['g'], 'b' => $color['b']],
+                "Pixel at {$x},{$y} does not match the expected avatar background."
+            );
+        }
     }
 }

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Avatars;
 
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\Helpers\ID;
 
 final class AvatarsCustomClientTest extends Scope
 {
@@ -57,6 +59,53 @@ final class AvatarsCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertOAuth2Photo($response['body']);
+    }
+
+    public function testGetPhotoByUserId(): void
+    {
+        /**
+         * Test for SUCCESS — a client session resolves another user's photo
+         * by ID: the target's name renders as initials, not the caller's own
+         * photo.
+         */
+        $userId = ID::unique();
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => $userId,
+            'email' => \uniqid('photo-') . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'W W',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $userId,
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+
+        /**
+         * Test for FAILURE — unknown user.
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_NOT_FOUND, $response['body']['type']);
     }
 
     /**

@@ -14,7 +14,7 @@ use Utopia\Database\Document;
  * Generates a coloured square with the user's initials. This is the single
  * implementation behind both the photo-resolution chain and the standalone
  * GET /v1/avatars/initials endpoint — the endpoint renders an arbitrary label
- * through render(), the chain resolves the label off the user first.
+ * through render(), the chain resolves the label from the user's name.
  */
 class Initials extends Photo
 {
@@ -45,7 +45,7 @@ class Initials extends Photo
 
     public function supports(Document $user): bool
     {
-        return !empty(\trim($this->getLabel($user)));
+        return !empty(\trim($user->getAttribute('name', '')));
     }
 
     public function get(Document $user, int $width, int $height, string $rating): ?string
@@ -54,7 +54,9 @@ class Initials extends Photo
             return null;
         }
 
-        $name = $this->getLabel($user);
+        // Initials come from the display name only — never the email address,
+        // which would leak part of it into an image other users may see.
+        $name = $user->getAttribute('name', '');
 
         // Nothing printable to draw — bail out so the static fallback can be
         // used instead. The standalone endpoint has no such fallback and keeps
@@ -157,16 +159,5 @@ class Initials extends Photo
         $rand = ($rand > \count($this->themes) - 1) ? $rand % \count($this->themes) : $rand;
 
         return $this->themes[$rand]['background'];
-    }
-
-    /**
-     * Text the initials are derived from — the display name, falling back to
-     * the email address when the user has not set one.
-     */
-    private function getLabel(Document $user): string
-    {
-        $name = $user->getAttribute('name', '');
-
-        return !empty($name) ? $name : $user->getAttribute('email', '');
     }
 }

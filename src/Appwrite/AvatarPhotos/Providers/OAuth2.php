@@ -40,13 +40,15 @@ class OAuth2 extends Photo
     }
 
     /**
-     * An OAuth2 photo is available as long as the user has at least one
-     * identity. Whether any of those identities actually carries a valid
-     * photo is determined at fetch time — we do not know without querying.
+     * Identities are queried by user ID, so the subject must be a stored
+     * user — guests and ad-hoc subjects built from an email hash or a name
+     * have no ID and are skipped. Whether any identity actually carries a
+     * valid photo is determined at fetch time — we do not know without
+     * querying.
      */
     public function supports(Document $user): bool
     {
-        return ! $user->isEmpty();
+        return ! empty($user->getId());
     }
 
     public function get(Document $user, int $width, int $height, string $rating): ?string

@@ -27,16 +27,20 @@ class Libavatar extends Photo
 
     public function supports(Document $user): bool
     {
-        return !empty($user->getAttribute('email', ''));
+        return !empty($user->getAttribute('email', '')) || !empty($user->getAttribute('emailHash', ''));
     }
 
     public function get(Document $user, int $width, int $height, string $rating): ?string
     {
-        $email = $user->getAttribute('email', '');
+        // A pre-computed SHA-256 hash (`emailHash`) stands in for the address
+        // itself — Libravatar accepts SHA-256 alongside MD5. When we hold the
+        // raw email, MD5 stays the default for widest compatibility with
+        // older instances.
+        $hash = $user->getAttribute('emailHash', '');
 
-        // Libravatar supports both SHA-256 and MD5; use MD5 for widest
-        // compatibility with older instances.
-        $hash = \md5(\strtolower(\trim($email)));
+        if (empty($hash)) {
+            $hash = \md5(\strtolower(\trim($user->getAttribute('email', ''))));
+        }
 
         $url = self::BASE_URL . $hash . '?' . \http_build_query([
             's' => \max($width, $height) > 0 ? \max($width, $height) : 256,
