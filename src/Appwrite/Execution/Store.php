@@ -23,8 +23,6 @@ class Store
 {
     private const string TABLE = 'executions';
 
-    private const string BACKFILLS_TABLE = 'execution_backfills';
-
     private const int READY_TTL_SECONDS = 15;
 
     private const int VERSION_SHIFT = 60;
@@ -171,18 +169,6 @@ class Store
                 SQL);
         }
 
-        $backfills = $this->backfillsTable();
-        $this->query(<<<SQL
-            CREATE TABLE IF NOT EXISTS {$backfills} (
-                projectId String,
-                executionId String,
-                completed UInt8,
-                version UInt64
-            )
-            ENGINE = ReplacingMergeTree(version)
-            ORDER BY projectId
-            SQL);
-
         $this->ready = true;
         $this->checkedAt = \microtime(true);
     }
@@ -196,17 +182,15 @@ class Store
 
         try {
             $rows = $this->rows($this->query(
-                'SELECT count() AS tables FROM system.tables WHERE database = {database:String} AND name IN ({table:String}, {backfills:String}) FORMAT JSON',
+                'SELECT count() AS tables FROM system.tables WHERE database = {database:String} AND name = {table:String} FORMAT JSON',
                 [
                     'database' => $this->database(),
                     'table' => self::TABLE,
-                    'backfills' => self::BACKFILLS_TABLE,
                 ]
             ));
-            $ready = (int) ($rows[0]['tables'] ?? 0) === 2;
+            $ready = (int) ($rows[0]['tables'] ?? 0) === 1;
             if ($ready) {
                 $this->query('SELECT projectId, id, resourceType, resourceInternalId, expiresAt, deleted, version FROM ' . $this->table() . ' LIMIT 0 FORMAT JSON');
-                $this->query('SELECT projectId, executionId, completed, version FROM ' . $this->backfillsTable() . ' LIMIT 0 FORMAT JSON');
             }
 
             return [
@@ -297,47 +281,6 @@ class Store
     public function deleteBefore(string $projectId, string $createdBefore): void
     {
         $this->deleteWhere($projectId, createdBefore: $createdBefore);
-    }
-
-    /** @return array{executionId: string, completed: bool} */
-    public function getBackfillCheckpoint(string $projectId): array
-    {
-        if (!$this->enabled) {
-            return ['executionId' => '', 'completed' => false];
-        }
-
-        $rows = $this->rows($this->query(<<<SQL
-            SELECT
-                argMax(executionId, version) AS executionId,
-                argMax(completed, version) AS completed
-            FROM {$this->backfillsTable()}
-            WHERE projectId = {projectId:String}
-            GROUP BY projectId
-            FORMAT JSON
-            SQL, ['projectId' => $projectId]));
-
-        return [
-            'executionId' => (string) ($rows[0]['executionId'] ?? ''),
-            'completed' => (int) ($rows[0]['completed'] ?? 0) === 1,
-        ];
-    }
-
-    public function saveBackfillCheckpoint(string $projectId, string $executionId, bool $completed): void
-    {
-        if (!$this->enabled) {
-            return;
-        }
-
-        $this->insertRows(
-            $this->backfillsTable(),
-            ['projectId', 'executionId', 'completed', 'version'],
-            [[
-                'projectId' => $projectId,
-                'executionId' => $executionId,
-                'completed' => $completed ? 1 : 0,
-                'version' => $this->nextVersion(0),
-            ]]
-        );
     }
 
     /**
@@ -992,11 +935,6 @@ class Store
     private function table(): string
     {
         return $this->identifier($this->database()) . '.' . $this->identifier(self::TABLE);
-    }
-
-    private function backfillsTable(): string
-    {
-        return $this->identifier($this->database()) . '.' . $this->identifier(self::BACKFILLS_TABLE);
     }
 
     private function identifier(string $value): string

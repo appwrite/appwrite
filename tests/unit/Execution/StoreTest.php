@@ -209,13 +209,13 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('match(requestPath', $body);
     }
 
-    public function testSetsUpExecutionAndCheckpointTables(): void
+    public function testSetsUpExecutionTable(): void
     {
         $client = new CapturingClient();
 
         $this->store($client)->setup();
 
-        $this->assertCount(5, $client->requests);
+        $this->assertCount(4, $client->requests);
         $requests = \implode("\n", \array_map(
             fn (RequestInterface $request) => (string) $request->getBody(),
             $client->requests
@@ -223,31 +223,12 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('ReplacingMergeTree(version)', $requests);
         $this->assertStringContainsString('ORDER BY (projectId, resourceType, resourceInternalId, id)', $requests);
         $this->assertStringContainsString('MODIFY TTL expiresAt DELETE', $requests);
-        $this->assertStringContainsString('execution_backfills', $requests);
     }
 
-    public function testReadsAndWritesBackfillCheckpoint(): void
+    public function testHealthChecksExecutionSchema(): void
     {
         $client = new CapturingClient([
-            $this->jsonResponse([['executionId' => 'execution', 'completed' => 1]]),
-        ]);
-        $store = $this->store($client);
-
-        $checkpoint = $store->getBackfillCheckpoint('project');
-        $store->saveBackfillCheckpoint('project', 'execution', true);
-
-        $this->assertSame(['executionId' => 'execution', 'completed' => true], $checkpoint);
-        $row = \json_decode((string) $client->requests[1]->getBody(), true, flags: JSON_THROW_ON_ERROR);
-        $this->assertSame('project', $row['projectId']);
-        $this->assertSame('execution', $row['executionId']);
-        $this->assertSame(1, $row['completed']);
-    }
-
-    public function testHealthChecksBothSchemas(): void
-    {
-        $client = new CapturingClient([
-            $this->jsonResponse([['tables' => 2]]),
-            $this->jsonResponse([]),
+            $this->jsonResponse([['tables' => 1]]),
             $this->jsonResponse([]),
         ]);
 
@@ -255,9 +236,8 @@ final class StoreTest extends TestCase
 
         $this->assertTrue($health['healthy']);
         $this->assertTrue($health['schemaReady']);
-        $this->assertCount(3, $client->requests);
+        $this->assertCount(2, $client->requests);
         $this->assertStringContainsString('resourceInternalId', (string) $client->requests[1]->getBody());
-        $this->assertStringContainsString('executionId', (string) $client->requests[2]->getBody());
     }
 
     private function store(CapturingClient $client): Store
