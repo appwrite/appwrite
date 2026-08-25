@@ -590,7 +590,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     deploymentId: $deployment->getId(),
                     body: \strlen($body) > 0 ? $body : null,
                     variables: $vars,
-                    timeout: $resource->getAttribute('timeout', 30),
+                    // The executor decrements this across cold-start + execution,
+                    // so previews need the full 60s here too, not just on requestTimeout.
+                    timeout: $isPreview ? 60 : $resource->getAttribute('timeout', 30),
                     image: $runtime['image'],
                     source: $source,
                     entrypoint: $entrypoint,
