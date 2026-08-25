@@ -48,11 +48,6 @@ class V26 extends Migration
                     } catch (Duplicate) {
                         Console::warning('Attribute "photo" already exists in collection "identities"; skipping.');
                     }
-                    try {
-                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_userId_photo_updatedAt');
-                    } catch (Duplicate) {
-                        Console::warning('Index "_key_userId_photo_updatedAt" already exists in collection "identities"; skipping.');
-                    }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
             }

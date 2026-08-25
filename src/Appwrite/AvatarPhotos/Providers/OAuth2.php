@@ -50,6 +50,9 @@ class OAuth2 extends Photo
 
     public function get(Document $user, int $width, int $height, string $rating): ?string
     {
+        // The existing `_key_userId` index carries this lookup on its own: a
+        // user holds only a handful of identities, so filtering and ordering
+        // the rest in memory costs nothing worth a dedicated composite index.
         $identities = $this->dbForProject->find('identities', [
             Query::equal('userId', [$user->getId()]),
             Query::isNotNull('photo'),

@@ -1411,13 +1411,6 @@ return [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
-            [
-                '$id' => ID::custom('_key_userId_photo_updatedAt'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['userId', 'photo', '$updatedAt'],
-                'lengths' => [Database::LENGTH_KEY, 128, 0],
-                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC, Database::ORDER_DESC],
-            ],
         ],
     ],
 
