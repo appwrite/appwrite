@@ -546,7 +546,7 @@ export function ConsoleSidebar({
           {/* Main Navigation */}
           <nav
             ref={navRef}
-            className="flex-1 space-y-6 overflow-y-auto px-3 py-4"
+            className="overlay-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4"
             onKeyDown={handleKeyDown}
             role="navigation"
             aria-label={sidebarCopy.accessibility.mainNavigation}
@@ -634,7 +634,7 @@ export function ConsoleSidebar({
 
         {/* Mobile Navigation */}
         <nav
-          className="flex-1 space-y-6 overflow-y-auto px-4 py-2"
+          className="overlay-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-2"
           role="navigation"
           aria-label={sidebarCopy.accessibility.mobileNavigation}
         >

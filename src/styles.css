@@ -2151,6 +2151,7 @@ pre.prism-code .token-line > span {
 
 .overlay-scrollbar::-webkit-scrollbar {
   width: 0;
+  height: 0;
 }
 
 .overlay-scrollbar:hover,
@@ -2162,6 +2163,7 @@ pre.prism-code .token-line > span {
 .overlay-scrollbar:hover::-webkit-scrollbar,
 .overlay-scrollbar:focus-within::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 .overlay-scrollbar:hover::-webkit-scrollbar-track,
