@@ -97,7 +97,7 @@ $container->set('jobs', function () {
 $container->set('screenshots', function () {
     $client = (new Client(new CurlAdapter()))
         ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))
-        ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 30));
+        ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 120));
 
     return new ScreenshotsClient($client);
 }, []);
