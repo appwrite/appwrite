@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\GeoRecord;
+use Appwrite\Locale\Geo;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Utopia\Config\Config;
@@ -36,16 +36,16 @@ Http::init()
     ->inject('route')
     ->inject('request')
     ->inject('project')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('user')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Document $project, GeoRecord $geoRecord, User $user, Authorization $authorization) {
+    ->action(function (Route $route, Request $request, Document $project, Geo $geo, User $user, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist) && $project->getId() === 'console') {
             // A missing or unknown geo lookup ("--") is treated as allowed and falls
             // through to the membership check below, matching the pre-geo-service behavior.
             $countries = \array_map('strtoupper', \array_map('trim', explode(',', $denylist)));
-            $country = \strtoupper($geoRecord->getCountryCode());
+            $country = \strtoupper($geo->get($request->getIP())->getCountryCode());
             if (in_array($country, $countries, true)) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }

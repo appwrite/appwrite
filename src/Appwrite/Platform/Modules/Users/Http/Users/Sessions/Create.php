@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Users\Http\Users\Sessions;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\GeoRecord;
+use Appwrite\Locale\Geo;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -64,14 +64,14 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('locale')
-            ->inject('geoRecord')
+            ->inject('geo')
             ->inject('queueForEvents')
             ->inject('store')
             ->inject('proofForToken')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Store $store, Token $proofForToken): void
+    public function action(string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken): void
     {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
@@ -93,7 +93,7 @@ class Create extends Action
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
                 'ip' => $request->getIP(),
-                'countryCode' => \strtolower($geoRecord->getCountryCode()),
+                'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
                 'expire' => $expire,
             ],
             $detector->getOS(),

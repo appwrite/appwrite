@@ -14,7 +14,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
-use Appwrite\Locale\GeoRecord;
+use Appwrite\Locale\Geo;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -101,7 +101,7 @@ class Create extends Base
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('publisherForFunctions')
-            ->inject('geoRecord')
+            ->inject('geo')
             ->inject('store')
             ->inject('proofForToken')
             ->inject('executor')
@@ -129,7 +129,7 @@ class Create extends Base
         User $user,
         Event $queueForEvents,
         FunctionPublisher $publisherForFunctions,
-        GeoRecord $geoRecord,
+        Geo $geo,
         Store $store,
         Token $proofForToken,
         Executor $executor,
@@ -251,10 +251,13 @@ class Create extends Base
         $ip = $request->getIP();
         $headers['x-appwrite-client-ip'] = $ip;
 
-        if (!empty($ip) && !$geoRecord->isEmpty()) {
-            $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
-            $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
-            $headers['x-appwrite-continent-eu'] = $geoRecord->isEu() ? 'true' : 'false';
+        if (!empty($ip)) {
+            $geoRecord = $geo->get($ip);
+            if (!$geoRecord->isEmpty()) {
+                $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
+                $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
+                $headers['x-appwrite-continent-eu'] = $geoRecord->isEu() ? 'true' : 'false';
+            }
         }
 
         $headersFiltered = [];

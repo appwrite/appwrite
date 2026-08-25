@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\GeoRecord;
+use Appwrite\Locale\Geo;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -70,7 +70,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('project')
-            ->inject('geoRecord')
+            ->inject('geo')
             ->inject('queueForEvents')
             ->inject('store')
             ->inject('proofForToken')
@@ -79,7 +79,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, GeoRecord $geoRecord, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
     {
         $protocol = $request->getProtocol();
 
@@ -151,7 +151,7 @@ class Update extends Action
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['email'],
-                'countryCode' => \strtolower($geoRecord->getCountryCode()),
+                'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
