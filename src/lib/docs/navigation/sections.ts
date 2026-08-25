@@ -549,6 +549,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
               href: "/docs/partners/apps/tokens",
             },
             {
+              label: "Installations",
+              href: "/docs/partners/apps/installations",
+            },
+            {
               label: "Device flow",
               href: "/docs/partners/apps/device-flow",
             },
@@ -966,6 +970,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Scopes",
               href: "/docs/products/auth/oauth-server/scopes",
+            },
+            {
+              label: "Installations",
+              href: "/docs/products/auth/oauth-server/installations",
             },
             {
               label: "Device flow",

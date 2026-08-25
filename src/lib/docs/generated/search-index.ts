@@ -948,6 +948,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "partners/apps/installations",
+    "title": "Installations",
+    "description": "Install your app on an organization and act with installation tokens that need no signed-in user.",
+    "excerpt": "An installation connects your app to one organization. An organization owner installs your app once. After that, your app creates its own access tokens for that organization. The tokens carry the scopes the installation granted, and they work without a signed-in user. Use an installation when your app acts as itself: a sync job that runs at night, a bot that posts build results, a backend that provisions resources. Use Sign in with Appwrite when your app acts as a…",
+    "breadcrumbs": [
+      "Apps",
+      "Concepts",
+      "Installations"
+    ]
+  },
+  {
     "slug": "partners/apps/quick-start",
     "title": "Start with Sign in with Appwrite",
     "description": "Register an app and run the full Sign in with Appwrite flow, from consent screen to your first authorized API call.",
@@ -2069,6 +2080,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "OAuth2 server",
       "Concepts",
       "Device flow"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/installations",
+    "title": "Installations",
+    "description": "Let clients install on teams in your project and act with installation tokens that need no signed-in user.",
+    "excerpt": "A client is a third-party app registered on your OAuth2 server. Your server can grant a client access in two ways. The first is **user consent**: the authorization flow sends a user to your consent screen, the user approves, and the client receives tokens that act as that user. The grant ends when the user revokes it or leaves. An **installation** is the second way. It connects a client to one team in your project. A team owner installs the…",
+    "breadcrumbs": [
+      "OAuth2 server",
+      "Concepts",
+      "Installations"
     ]
   },
   {
