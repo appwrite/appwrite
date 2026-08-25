@@ -21,9 +21,11 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
+      - --entrypoints.appwrite_mqtt.address=:8883
     ports:
       - ${_APP_HTTP_PORT:-80}:80
       - ${_APP_HTTPS_PORT:-443}:443
+      - ${_APP_MQTT_PORT:-8883}:8883
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -321,6 +323,17 @@ services:
     container_name: appwrite-mqtt
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      # TLS is terminated here (mqtts, :8883) and forwarded as plaintext MQTT to :1883,
+      # mirroring how realtime's wss is terminated at the appwrite_websecure entrypoint.
+      - traefik.tcp.routers.appwrite_mqtt.entrypoints=appwrite_mqtt
+      - traefik.tcp.routers.appwrite_mqtt.rule=HostSNI(`*`)
+      - traefik.tcp.routers.appwrite_mqtt.tls=true
+      - traefik.tcp.routers.appwrite_mqtt.service=appwrite_mqtt
+      - traefik.tcp.services.appwrite_mqtt.loadbalancer.server.port=1883
     networks:
       - appwrite
     ports:
