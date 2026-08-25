@@ -68,7 +68,7 @@ final class StoreTest extends TestCase
         $this->assertSame(1, $deleted['deleted']);
         $this->assertGreaterThan($updated['version'], $deleted['version']);
         $this->assertGreaterThan($updated['expiresAt'], $deleted['expiresAt']);
-        $this->assertStringContainsString('"logs":"done"', $updated['document']);
+        $this->assertStringContainsString('"logs":"done"', (string) $updated['document']);
     }
 
     public function testGetsLatestAuthorizedExecution(): void

@@ -61,7 +61,10 @@ final class ExecutionsTest extends TestCase
         $store = $this->createMock(Store::class);
         $store->expects($this->once())
             ->method('upsert')
-            ->with('project', $this->callback(fn (Document $execution) => $execution->getAttribute('status') === 'completed'));
+            ->willReturnCallback(function (string $projectId, Document $execution): void {
+                $this->assertSame('project', $projectId);
+                $this->assertSame('completed', $execution->getAttribute('status'));
+            });
 
         (new Executions())->action(
             $this->message((new Execution(
@@ -123,9 +126,10 @@ final class ExecutionsTest extends TestCase
         $store = $this->createMock(Store::class);
         $store->expects($this->once())
             ->method('upsertMany')
-            ->with('project', $this->callback(
-                fn (array $executions) => $executions[0]->getSequence() === '42'
-            ));
+            ->willReturnCallback(function (string $projectId, array $executions): void {
+                $this->assertSame('project', $projectId);
+                $this->assertSame('42', $executions[0]->getSequence());
+            });
 
         (new Executions())->action(
             $this->message((new ExecutionsMessage(
