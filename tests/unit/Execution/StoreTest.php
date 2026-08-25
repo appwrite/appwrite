@@ -264,7 +264,6 @@ final class StoreTest extends TestCase
     {
         return new Store(
             enabled: true,
-            readFromClickHouse: true,
             dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
             client: $client,
         );

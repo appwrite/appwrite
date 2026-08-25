@@ -71,9 +71,7 @@ class Delete extends Base
             throw new Exception(Exception::SITE_NOT_FOUND);
         }
 
-        $log = $executionStore->readsFromClickHouse()
-            ? $executionStore->get($project->getId(), $logId)
-            : $dbForProject->getDocument('executions', $logId);
+        $log = $dbForProject->getDocument('executions', $logId);
         if ($log->isEmpty()) {
             throw new Exception(Exception::LOG_NOT_FOUND);
         }

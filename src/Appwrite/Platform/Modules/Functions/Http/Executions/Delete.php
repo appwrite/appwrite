@@ -91,9 +91,7 @@ class Delete extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $execution = $executionStore->readsFromClickHouse()
-            ? $executionStore->get($project->getId(), $executionId)
-            : $dbForProject->getDocument('executions', $executionId);
+        $execution = $dbForProject->getDocument('executions', $executionId);
         if ($execution->isEmpty()) {
             // A scheduled execution can be cancelled before its document has
             // been persisted by the executions worker. Remove the schedule and

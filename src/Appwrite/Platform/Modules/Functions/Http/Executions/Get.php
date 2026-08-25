@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
-use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -11,7 +10,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -54,9 +52,7 @@ class Get extends Base
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('executionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Execution ID.', false, ['dbForProject'])
             ->inject('response')
-            ->inject('project')
             ->inject('dbForProject')
-            ->inject('executionStore')
             ->inject('authorization')
             ->inject('user')
             ->callback($this->action(...));
@@ -66,9 +62,7 @@ class Get extends Base
         string $functionId,
         string $executionId,
         Response $response,
-        Document $project,
         Database $dbForProject,
-        Store $executionStore,
         Authorization $authorization,
         User $user
     ) {
@@ -81,10 +75,7 @@ class Get extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $roles = ($isAPIKey || $isPrivilegedUser) ? null : $authorization->getRoles();
-        $execution = $executionStore->readsFromClickHouse()
-            ? $executionStore->get($project->getId(), $executionId, $roles)
-            : $dbForProject->getDocument('executions', $executionId);
+        $execution = $dbForProject->getDocument('executions', $executionId);
 
         if ($execution->getAttribute('resourceType') !== 'functions' || $execution->getAttribute('resourceInternalId') !== $function->getSequence()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
@@ -93,8 +84,6 @@ class Get extends Base
         if ($execution->isEmpty()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
-
-        $executionStore->checkGetParity($project->getId(), $execution, $roles);
 
         // Override status in response if the execution is stuck in waiting/processing beyond the function timeout.
         $status = $execution->getAttribute('status', '');

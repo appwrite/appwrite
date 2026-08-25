@@ -4,7 +4,6 @@ namespace Appwrite\Execution;
 
 use Psr\Http\Client\ClientInterface;
 use Throwable;
-use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
@@ -105,11 +104,9 @@ class Store
 
     public function __construct(
         private readonly bool $enabled,
-        private readonly bool $readFromClickHouse,
         private readonly string $dsn,
         private readonly ?ClientInterface $client,
         private readonly int $retention = 1_209_600,
-        private readonly float $paritySampleRate = 0.0,
     ) {
         $this->requestFactory = new RequestFactory();
     }
@@ -117,62 +114,6 @@ class Store
     public function isEnabled(): bool
     {
         return $this->enabled;
-    }
-
-    public function readsFromClickHouse(): bool
-    {
-        return $this->enabled && $this->readFromClickHouse;
-    }
-
-    /** @param list<string>|null $roles */
-    public function checkGetParity(string $projectId, Document $primary, ?array $roles = null): void
-    {
-        if (!$this->shouldCheckParity()) {
-            return;
-        }
-
-        try {
-            $mirror = $this->get($projectId, $primary->getId(), $roles);
-            if ($this->fingerprint($primary) !== $this->fingerprint($mirror)) {
-                Console::warning("Execution ClickHouse parity mismatch for project '{$projectId}', execution '{$primary->getId()}'");
-            }
-        } catch (Throwable $th) {
-            Console::warning('Execution ClickHouse parity read failed: ' . $th->getMessage());
-        }
-    }
-
-    /**
-     * @param array<Query> $queries
-     * @param array<Query> $filterQueries
-     * @param array<Document> $primary
-     * @param list<string>|null $roles
-     */
-    public function checkListParity(
-        string $projectId,
-        array $queries,
-        array $filterQueries,
-        array $primary,
-        int $total,
-        bool $includeTotal,
-        ?array $roles = null,
-    ): void {
-        if (!$this->shouldCheckParity()) {
-            return;
-        }
-
-        try {
-            $mirror = $this->find($projectId, $queries, $roles);
-            $mirrorTotal = $includeTotal
-                ? $this->count($projectId, $filterQueries, APP_LIMIT_COUNT, $roles)
-                : 0;
-            $primaryRows = \array_map($this->fingerprint(...), $primary);
-            $mirrorRows = \array_map($this->fingerprint(...), $mirror);
-            if ($primaryRows !== $mirrorRows || $total !== $mirrorTotal) {
-                Console::warning("Execution ClickHouse list parity mismatch for project '{$projectId}'");
-            }
-        } catch (Throwable $th) {
-            Console::warning('Execution ClickHouse parity read failed: ' . $th->getMessage());
-        }
     }
 
     public function setup(): void
@@ -942,30 +883,6 @@ class Store
 
         $data = \json_decode($json, true);
         return \is_array($data) ? new Document($data) : new Document();
-    }
-
-    /** @return array<string, mixed> */
-    private function fingerprint(Document $document): array
-    {
-        if ($document->isEmpty()) {
-            return [];
-        }
-
-        $data = $document->getArrayCopy();
-        unset($data['$collection'], $data['$tenant']);
-        \ksort($data);
-
-        return $data;
-    }
-
-    private function shouldCheckParity(): bool
-    {
-        if (!$this->enabled || $this->readFromClickHouse || $this->paritySampleRate <= 0) {
-            return false;
-        }
-
-        $rate = \min(1.0, $this->paritySampleRate);
-        return \mt_rand(1, 1_000_000) <= (int) \round($rate * 1_000_000);
     }
 
     private function executionVersion(Document $execution, bool $deleted): int
