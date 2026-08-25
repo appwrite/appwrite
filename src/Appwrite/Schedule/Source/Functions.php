@@ -40,10 +40,21 @@ final class Functions extends Database
     {
         // The functions worker reads variables fresh at execution time, so the
         // snapshot must not carry them: they would go stale in memory.
-        return $projectDB->skipFilters(
-            fn () => $projectDB->getDocument($this->collection(), $schedule['resourceId']),
-            ['subQueryVariables', 'subQueryProjectVariables']
-        );
+        try {
+            $resource = $projectDB->skipFilters(
+                fn () => $projectDB->getDocument($this->collection(), $schedule['resourceId']),
+                ['subQueryVariables', 'subQueryProjectVariables']
+            );
+        } catch (\Throwable) {
+            $resource = new Document();
+        }
+
+        // The worker re-fetches the function by id when the schedule fires.
+        // A failed make() is not retried until the next full snapshot, so a
+        // miss must not drop the cron.
+        return $resource->isEmpty()
+            ? new Document(['$id' => $schedule['resourceId']])
+            : $resource;
     }
 
     #[\Override]
