@@ -1,4 +1,141 @@
+import type { DocsNavTree } from '../types'
 import type { DocsSectionNavConfig } from './sections'
+
+const DOCS_TOOLING_SECTION_NAV: DocsNavTree = [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/tooling',
+          },
+          {
+            label: 'Quick start prompts',
+            href: '/docs/tooling/ai/quickstart-prompts',
+          },
+        ],
+      },
+      {
+        label: 'Tools',
+        items: [
+          {
+            label: 'MCP server',
+            href: '/docs/tooling/ai/mcp-servers',
+          },
+          {
+            label: 'CLI',
+            href: '/docs/tooling/command-line/installation',
+          },
+          {
+            label: 'Agent skills',
+            href: '/docs/tooling/ai/skills',
+          },
+          {
+            label: 'Terraform',
+            href: '/docs/tooling/terraform',
+          },
+          {
+            label: 'AGENTS.md',
+            href: '/docs/tooling/ai/agents-md',
+          },
+          {
+            label: 'Command Center',
+            href: '/docs/tooling/command-center',
+          },
+          {
+            label: 'Appwrite Arena',
+            href: '/docs/tooling/ai/arena',
+          },
+          {
+            label: 'Appwrite Agent',
+            href: '/docs/products/agent',
+          },
+          {
+            label: 'The Appwriter',
+            href: '/docs/tooling/appwriter',
+          },
+        ],
+      },
+      {
+        label: 'IDEs',
+        items: [
+          {
+            label: 'Claude Code',
+            href: '/docs/tooling/ai/agents/claude-code',
+          },
+          {
+            label: 'Codex',
+            href: '/docs/tooling/ai/agents/codex',
+          },
+          {
+            label: 'Cursor',
+            href: '/docs/tooling/ai/agents/cursor',
+          },
+          {
+            label: 'VS Code',
+            href: '/docs/tooling/ai/agents/vscode',
+          },
+          {
+            label: 'Zed',
+            href: '/docs/tooling/ai/agents/zed',
+          },
+          {
+            label: 'OpenCode',
+            href: '/docs/tooling/ai/agents/opencode',
+          },
+          {
+            label: 'Google Antigravity',
+            href: '/docs/tooling/ai/agents/antigravity',
+          },
+          {
+            label: 'Grok Build',
+            href: '/docs/tooling/ai/agents/grok-build',
+          },
+        ],
+      },
+      {
+        label: 'Vibe coding',
+        items: [
+          {
+            label: 'Claude Desktop',
+            href: '/docs/tooling/ai/vibe-coding/claude-desktop',
+          },
+          {
+            label: 'Lovable',
+            href: '/docs/tooling/ai/vibe-coding/lovable',
+          },
+          {
+            label: 'Emergent',
+            href: '/docs/tooling/ai/vibe-coding/emergent',
+          },
+          {
+            label: 'Bolt',
+            href: '/docs/tooling/ai/vibe-coding/bolt',
+          },
+          {
+            label: 'Zenflow',
+            href: '/docs/tooling/ai/vibe-coding/zenflow',
+          },
+        ],
+      },
+      {
+        label: 'Guides',
+        items: [
+          {
+            label: 'AI in Functions',
+            href: '/docs/tooling/ai/ai-in-functions',
+          },
+          {
+            label: 'Vector DB and embeddings',
+            href: '/docs/tooling/ai/vector-db-and-embeddings',
+          },
+          {
+            label: 'Persistent agents with Realtime',
+            href: '/docs/tooling/ai/persistent-agents-with-realtime',
+          },
+        ],
+      },
+]
 
 /**
  * Docs section navigation maintained in vibes (not imported from the website repo).
@@ -489,6 +626,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/firewall/monitor',
           },
           {
+            label: 'Attack mode',
+            href: '/docs/products/firewall/attack-mode',
+          },
+          {
             label: 'Delete a rule',
             href: '/docs/products/firewall/delete',
           },
@@ -573,125 +714,19 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
     ],
   },
   {
-    prefix: 'tooling/ai',
+    prefix: 'tooling',
     parent: {
       href: '/docs',
-      label: 'AI',
+      label: 'Tooling',
     },
-    navigation: [
-      {
-        label: 'Getting started',
-        items: [
-          {
-            label: 'Overview',
-            href: '/docs/tooling/ai',
-          },
-          {
-            label: 'Quick start prompts',
-            href: '/docs/tooling/ai/quickstart-prompts',
-          },
-        ],
-      },
-      {
-        label: 'Tooling',
-        items: [
-          {
-            label: 'Appwrite Agent',
-            href: '/docs/products/agent',
-          },
-          {
-            label: 'MCP servers',
-            href: '/docs/tooling/ai/mcp-servers',
-          },
-          {
-            label: 'Agent skills',
-            href: '/docs/tooling/ai/skills',
-          },
-          {
-            label: 'AGENTS.md',
-            href: '/docs/tooling/ai/agents-md',
-          },
-          {
-            label: 'Appwrite Arena',
-            href: '/docs/tooling/ai/arena',
-          },
-        ],
-      },
-      {
-        label: 'IDEs',
-        items: [
-          {
-            label: 'Claude Code',
-            href: '/docs/tooling/ai/agents/claude-code',
-          },
-          {
-            label: 'Codex',
-            href: '/docs/tooling/ai/agents/codex',
-          },
-          {
-            label: 'Cursor',
-            href: '/docs/tooling/ai/agents/cursor',
-          },
-          {
-            label: 'VS Code',
-            href: '/docs/tooling/ai/agents/vscode',
-          },
-          {
-            label: 'Zed',
-            href: '/docs/tooling/ai/agents/zed',
-          },
-          {
-            label: 'OpenCode',
-            href: '/docs/tooling/ai/agents/opencode',
-          },
-          {
-            label: 'Google Antigravity',
-            href: '/docs/tooling/ai/agents/antigravity',
-          },
-        ],
-      },
-      {
-        label: 'Vibe coding',
-        items: [
-          {
-            label: 'Claude Desktop',
-            href: '/docs/tooling/ai/vibe-coding/claude-desktop',
-          },
-          {
-            label: 'Lovable',
-            href: '/docs/tooling/ai/vibe-coding/lovable',
-          },
-          {
-            label: 'Emergent',
-            href: '/docs/tooling/ai/vibe-coding/emergent',
-          },
-          {
-            label: 'Bolt',
-            href: '/docs/tooling/ai/vibe-coding/bolt',
-          },
-          {
-            label: 'Zenflow',
-            href: '/docs/tooling/ai/vibe-coding/zenflow',
-          },
-        ],
-      },
-      {
-        label: 'Guides',
-        items: [
-          {
-            label: 'AI in Functions',
-            href: '/docs/tooling/ai/ai-in-functions',
-          },
-          {
-            label: 'Vector DB and embeddings',
-            href: '/docs/tooling/ai/vector-db-and-embeddings',
-          },
-          {
-            label: 'Persistent agents with Realtime',
-            href: '/docs/tooling/ai/persistent-agents-with-realtime',
-          },
-        ],
-      },
-    ],
+    navigation: DOCS_TOOLING_SECTION_NAV,
+  },
+  {
+    prefix: 'tooling/ai',
+    parent: {
+      href: '/docs/tooling',
+      label: 'Tooling',
+    },
+    navigation: DOCS_TOOLING_SECTION_NAV,
   },
 ]

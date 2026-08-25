@@ -26,6 +26,7 @@ import {
   UsageChartXAxis,
   UsageChartYAxis,
 } from '@/components/global/shared/ChartXAxis'
+import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { UsageChartIntervalToggle } from '../overview/UsageChartIntervalToggle'
@@ -97,15 +98,12 @@ function MetricChange({
 function MetricTile({ label, value, change, trend, subStats }: StatCardProps) {
   return (
     <div className="min-w-0">
-      <p className="text-[12px] text-muted-foreground">{label}</p>
-      <div className="mt-0.5 flex min-w-0 items-baseline gap-x-2">
-        <span className="text-[20px] font-semibold tabular-nums text-foreground">
-          {typeof value === 'number' ? value.toLocaleString() : value}
-        </span>
-        <MetricChange change={change} trend={trend} />
+      <div className="flex min-w-0 items-baseline justify-between gap-x-2">
+        <p className="min-w-0 truncate text-[12px] text-muted-foreground">
+          {label}
+        </p>
         {subStats && subStats.length > 0 ? (
-          <span className="inline-flex min-w-0 items-baseline gap-x-1.5 truncate text-[12px] text-muted-foreground">
-            <span aria-hidden="true">·</span>
+          <p className="shrink-0 text-end text-[11px] leading-tight text-muted-foreground">
             {subStats.map((sub, index) => {
               const formattedValue =
                 typeof sub.value === 'number'
@@ -121,7 +119,11 @@ function MetricTile({ label, value, change, trend, subStats }: StatCardProps) {
                   className="inline-flex items-baseline gap-x-1"
                   title={`${sub.title}: ${formattedValue}${changeSuffix}`}
                 >
-                  {index > 0 ? <span aria-hidden="true">·</span> : null}
+                  {index > 0 ? (
+                    <span className="ms-1.5" aria-hidden="true">
+                      ·
+                    </span>
+                  ) : null}
                   <span className="font-medium tabular-nums text-foreground">
                     {formattedValue}
                   </span>
@@ -129,8 +131,14 @@ function MetricTile({ label, value, change, trend, subStats }: StatCardProps) {
                 </span>
               )
             })}
-          </span>
+          </p>
         ) : null}
+      </div>
+      <div className="mt-0.5 flex min-w-0 items-baseline gap-x-2">
+        <span className="text-[20px] font-semibold tabular-nums text-foreground">
+          {typeof value === 'number' ? value.toLocaleString() : value}
+        </span>
+        <MetricChange change={change} trend={trend} />
       </div>
     </div>
   )
@@ -545,19 +553,34 @@ export function TrafficOverview() {
                           {point.fullDate}
                         </p>
                         <div className="space-y-1">
-                          {sortedPayload.map((entry) => (
-                            <div
-                              key={String(entry.dataKey)}
-                              className="flex items-center justify-between gap-6"
-                            >
-                              <span className="text-[11px] text-muted-foreground">
-                                {entry.name}
-                              </span>
-                              <span className="text-[13px] font-medium tabular-nums text-foreground">
-                                {seriesValue(entry).toLocaleString()}
-                              </span>
-                            </div>
-                          ))}
+                          {sortedPayload.map((entry) => {
+                            const seriesKey = String(
+                              entry.dataKey ?? '',
+                            ) as FirewallTrafficSeriesKey
+                            const seriesColor =
+                              FIREWALL_TRAFFIC_SERIES.find(
+                                (series) => series.key === seriesKey,
+                              )?.color ??
+                              (typeof entry.color === 'string'
+                                ? entry.color
+                                : undefined)
+                            return (
+                              <div
+                                key={String(entry.dataKey)}
+                                className="flex items-center justify-between gap-6"
+                              >
+                                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                  {seriesColor ? (
+                                    <ChartSeriesDot color={seriesColor} />
+                                  ) : null}
+                                  {entry.name}
+                                </span>
+                                <span className="text-[13px] font-medium tabular-nums text-foreground">
+                                  {seriesValue(entry).toLocaleString()}
+                                </span>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
                     )

@@ -152,7 +152,7 @@ function hrefToDocsSlug(href: string): string | null {
 
 function getGlobalNavRootItem(slug: string): DocsBreadcrumbItem | null {
   const href = slugToHref(slug)
-  for (const group of DOCS_GLOBAL_NAV) {
+  for (const group of getDocsGlobalNav(getDocsAudienceFromSlug(slug))) {
     if (!('items' in group)) continue
     for (const item of group.items) {
       if (item.href === href) {
@@ -168,7 +168,7 @@ function getGlobalNavRootItem(slug: string): DocsBreadcrumbItem | null {
 
 function getGlobalNavItemBySlug(slug: string): DocsBreadcrumbItem | null {
   const href = slug ? `/docs/${slug}` : '/docs'
-  for (const group of DOCS_GLOBAL_NAV) {
+  for (const group of getDocsGlobalNav(getDocsAudienceFromSlug(slug))) {
     if (!('items' in group)) continue
     for (const item of group.items) {
       if (item.href === href) {

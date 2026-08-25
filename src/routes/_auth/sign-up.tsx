@@ -14,7 +14,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { AppwriteException, ID, OAuthProvider } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { setLastLoginMethod } from '@/lib/utils/auth-storage'
+import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -52,6 +52,18 @@ const searchSchema = z.object({
     }),
 })
 
+const CONSOLE_OAUTH_PROVIDERS: Record<OAuthLoginMethod, OAuthProvider> = {
+  github: OAuthProvider.Github,
+  gitlab: OAuthProvider.Gitlab,
+  bitbucket: OAuthProvider.Bitbucket,
+}
+
+const OAUTH_LOGIN_ERROR: Record<OAuthLoginMethod, string> = {
+  github: 'Failed to initiate GitHub login',
+  gitlab: 'Failed to initiate GitLab login',
+  bitbucket: 'Failed to initiate Bitbucket login',
+}
+
 export const Route = createFileRoute('/_auth/sign-up')({
   component: SignUpPage,
   validateSearch: searchSchema,
@@ -80,38 +92,35 @@ function SignUpPage() {
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const [isGitHubLoading, setIsGitHubLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState<OAuthLoginMethod | null>(
+    null,
+  )
   const [isOpeningMfa, setIsOpeningMfa] = useState(false)
 
-  const handleGitHubLogin = async () => {
-    setIsGitHubLoading(true)
+  const handleOAuthLogin = async (provider: OAuthLoginMethod) => {
+    setOauthLoading(provider)
     try {
-      // Build success and failure URLs
       const resolvedRedirect = resolvePostAuthRedirect(search.redirect)
       const successUrl = resolvedRedirect
         ? `${window.location.origin}${resolvedRedirect}`
         : `${window.location.origin}/`
       const failureUrl = `${window.location.origin}/sign-up${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
-      // Store GitHub as last login method before redirecting
-      setLastLoginMethod('github')
+      setLastLoginMethod(provider)
 
-      // Create OAuth2 session - this may return a URL or void (if it redirects automatically)
       const url = await sdk.forConsole.account.createOAuth2Session({
-        provider: OAuthProvider.Github,
+        provider: CONSOLE_OAUTH_PROVIDERS[provider],
         success: successUrl,
         failure: failureUrl,
       })
 
-      // If URL is returned, redirect manually; otherwise SDK handles redirect automatically
       if (typeof url === 'string') {
         window.location.href = url
       }
-      // If void, the SDK has already initiated the redirect, so we don't need to do anything
     } catch (error: unknown) {
-      setIsGitHubLoading(false)
-      toast.error(getErrorMessage(error, t('Failed to initiate GitHub login')))
-      console.error('GitHub OAuth error:', error)
+      setOauthLoading(null)
+      toast.error(getErrorMessage(error, t(OAUTH_LOGIN_ERROR[provider])))
+      console.error(`${provider} OAuth error:`, error)
     }
   }
 
@@ -120,15 +129,17 @@ function SignUpPage() {
       email: string
       password: string
       name?: string
+      skipAccountCreate?: boolean
     }) => {
       try {
-        // Create account
-        await sdk.forConsole.account.create({
-          userId: ID.unique(),
-          email: data.email,
-          password: data.password,
-          name: data.name,
-        })
+        if (!data.skipAccountCreate) {
+          await sdk.forConsole.account.create({
+            userId: ID.unique(),
+            email: data.email,
+            password: data.password,
+            name: data.name,
+          })
+        }
 
         // Create session
         await sdk.forConsole.account.createEmailPasswordSession({
@@ -247,10 +258,15 @@ function SignUpPage() {
       <div className="w-full max-w-sm md:max-w-4xl">
         <SignIn
           mode="sign-up"
-          onSubmit={(data) => signUpMutation.mutate(data)}
-          onGitHubLogin={handleGitHubLogin}
+          onSubmit={(data, options) =>
+            signUpMutation.mutate({
+              ...data,
+              skipAccountCreate: options?.skipAccountCreate,
+            })
+          }
+          onOAuthLogin={handleOAuthLogin}
           isLoading={signUpMutation.isPending || isOpeningMfa}
-          isGitHubLoading={isGitHubLoading}
+          oauthLoading={oauthLoading}
           redirect={search.redirect}
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">

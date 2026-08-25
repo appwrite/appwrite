@@ -18,6 +18,7 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs'
 import { AgentModelPicker } from '@/components/global/providers/agent/AgentModelPicker'
+import { AgentProjectPicker } from '@/components/global/providers/agent/AgentProjectPicker'
 import {
   Table,
   TableBody,
@@ -37,7 +38,6 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { ConversationResourceSummary } from '@/components/global/providers/agent/ConversationResourceSummary'
-import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { CronScheduleEditor, formatCronExpression } from '@/components/pages/projects/$projectId/functions/CronScheduleEditor'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
@@ -79,6 +79,8 @@ type AgentAutomationDetailProps = {
   onAddModel?: () => void
   onDeleted?: () => void
   onSelectRun?: (conversation: AssistantConversation) => void
+  /** Org-scoped project picker (no org switching). */
+  organizationId?: string | null
   className?: string
 }
 
@@ -153,6 +155,7 @@ export function AgentAutomationDetail({
   onAddModel,
   onDeleted,
   onSelectRun,
+  organizationId,
   className,
 }: AgentAutomationDetailProps) {
   const t = useT()
@@ -357,16 +360,17 @@ export function AgentAutomationDetail({
                 {isEnabled ? t('Active') : t('Paused')}
               </span>
             </div>
-            <ProjectSelector
-              projectId={form.contextProjectId || undefined}
-              onProjectSelect={(projectId) =>
+            <AgentProjectPicker
+              organizationId={organizationId}
+              value={form.contextProjectId || ''}
+              onChange={(projectId) =>
                 setForm((current) =>
                   current
                     ? { ...current, contextProjectId: projectId || '' }
                     : current,
                 )
               }
-              compact
+              size="compact"
               disabled={disabled || isSaving || isDeleting}
             />
             {ownerLabel ? (

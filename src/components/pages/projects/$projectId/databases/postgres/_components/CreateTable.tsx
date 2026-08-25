@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, GripVertical, Plus, Settings2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -277,6 +277,7 @@ export function CreateTable({
   const [tableName, setTableName] = useState('')
   const [tableComment, setTableComment] = useState('')
   const [columns, setColumns] = useState<DraftColumn[]>(createDefaultTableColumns)
+  const [focusColumnId, setFocusColumnId] = useState<string | null>(null)
   const [draggingColumnIndex, setDraggingColumnIndex] = useState<number | null>(
     null,
   )
@@ -304,6 +305,7 @@ export function CreateTable({
     setTableName('')
     setTableComment('')
     setColumns(createDefaultTableColumns())
+    setFocusColumnId(null)
     setDraggingColumnIndex(null)
     setColumnDropIndicator(null)
     setIndexes([])
@@ -346,6 +348,23 @@ export function CreateTable({
       ),
     )
   }, [])
+
+  const handleAddColumn = () => {
+    const next = createDraftColumn()
+    setColumns((current) => [...current, next])
+    setFocusColumnId(next.id)
+  }
+
+  useLayoutEffect(() => {
+    if (!focusColumnId) return
+    const input = columnListRef.current?.querySelector<HTMLInputElement>(
+      `input[data-column-name-id="${focusColumnId}"]`,
+    )
+    if (!input) return
+    input.focus()
+    input.scrollIntoView({ block: 'nearest' })
+    setFocusColumnId(null)
+  }, [columns, focusColumnId])
 
   const clearColumnDragState = useCallback(() => {
     setDraggingColumnIndex(null)
@@ -731,6 +750,8 @@ export function CreateTable({
                           placeholder="column_name"
                           className="h-8 text-[13px]"
                           aria-label={t('Name')}
+                          data-column-name-id={column.id}
+                          autoFocus={column.id === focusColumnId}
                         />
                         <PostgresColumnTypeSelector
                           value={column.typeState}
@@ -806,9 +827,7 @@ export function CreateTable({
                 type="button"
                 variant="outline"
                 className="h-9 w-full border-dashed text-[13px] text-muted-foreground hover:text-foreground"
-                onClick={() =>
-                  setColumns((current) => [...current, createDraftColumn()])
-                }
+                onClick={handleAddColumn}
               >
                 <Plus className="me-1.5 h-3.5 w-3.5" />
                 {t('Add column')}

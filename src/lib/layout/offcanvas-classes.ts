@@ -6,17 +6,17 @@ export const OFFCANVAS_START_CLOSED =
 export const OFFCANVAS_END_CLOSED =
   'ltr:translate-x-full rtl:-translate-x-full'
 
-/** Radix Sheet / dialog closed state for a start-anchored panel. */
-export const OFFCANVAS_START_CLOSED_STATE =
-  'data-[state=closed]:ltr:-translate-x-full data-[state=closed]:rtl:translate-x-full'
+/** Radix Sheet enter/exit for a start-anchored panel (side=left). */
+export const OFFCANVAS_START_SHEET_MOTION =
+  'data-[state=open]:slide-in-from-start data-[state=closed]:slide-out-to-start'
 
-/** Radix Sheet / dialog closed state for an end-anchored panel. */
-export const OFFCANVAS_END_CLOSED_STATE =
-  'data-[state=closed]:ltr:translate-x-full data-[state=closed]:rtl:-translate-x-full'
+/** Radix Sheet enter/exit for an end-anchored panel (side=right). */
+export const OFFCANVAS_END_SHEET_MOTION =
+  'data-[state=open]:slide-in-from-end data-[state=closed]:slide-out-to-end'
 
-/** Shared open + motion classes for horizontal off-canvas panels. */
-export const OFFCANVAS_HORIZONTAL_MOTION =
-  'transition-transform duration-300 ease-in-out data-[state=open]:translate-x-0'
+/** Shared duration + easing for horizontal off-canvas sheets. */
+export const OFFCANVAS_SHEET_MOTION_TIMING =
+  'ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-300'
 
 /** Half-outside toggle sitting on the inline-end edge of a sidebar. */
 export const SIDEBAR_EDGE_TOGGLE_OVERFLOW =

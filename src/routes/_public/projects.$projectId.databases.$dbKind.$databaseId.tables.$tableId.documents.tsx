@@ -131,31 +131,37 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
-      const { search, page, limit, filterQueries } = parseListSearch(
+      const { search, page, limit, filterQueries, sort } = parseListSearch(
         routeSearch,
         {
           page: DEFAULT_PAGE,
           limit: ROWS_DEFAULT_PAGE_SIZE,
         },
       )
+      const sortBy = sort?.sortBy ?? '$createdAt'
+      const sortOrder = sort?.sortOrder ?? 'desc'
 
       await Promise.all([
         tablesPromise,
-        queryClient.ensureQueryData(
-          tableRowsQueryOptions(
-            projectId,
-            databaseId,
-            tableId,
-            dbKind as DatabaseRouteKind,
-            page - 1,
-            limit,
-            search ?? undefined,
-            'desc',
-            '$createdAt',
-            filterQueries,
-            undefined,
-          ),
-        ),
+        queryClient
+          .ensureQueryData(
+            tableRowsQueryOptions(
+              projectId,
+              databaseId,
+              tableId,
+              dbKind as DatabaseRouteKind,
+              page - 1,
+              limit,
+              search ?? undefined,
+              sortOrder,
+              sortBy,
+              filterQueries,
+              undefined,
+            ),
+          )
+          .catch(() => {
+            // Keep the error in cache for the spreadsheet; don't blank the route.
+          }),
         queryClient.ensureQueryData(
           databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind),
         ),

@@ -1,3 +1,5 @@
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
+
 export type NativeDatabaseEngine = 'postgres' | 'mysql' | 'mongo'
 
 export const NATIVE_DATABASE_ENGINE_LABELS: Record<
@@ -10,7 +12,7 @@ export const NATIVE_DATABASE_ENGINE_LABELS: Record<
 }
 
 function normalizeDatabaseEngine(engine: string | undefined): string {
-  return engine?.toLowerCase().trim() ?? ''
+  return coerceTrimmedString(engine).toLowerCase()
 }
 
 export function isPostgresEngine(engine: string | undefined): boolean {

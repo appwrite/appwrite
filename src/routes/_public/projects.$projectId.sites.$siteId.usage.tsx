@@ -1,32 +1,75 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/sites/Usage'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { View } from '@/components/pages/projects/$projectId/sites/$siteId/usage/View'
 import {
-  siteQueryOptions,
-  siteUsageQueryOptions,
+  organizationPlanQueryOptions,
   projectQueryOptions,
+  siteExecutionsForSiteQueryOptions,
+  siteGbHoursForSiteQueryOptions,
+  siteQueryOptions,
 } from '@/lib/react-query/hooks'
+import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { resolveUsageChartFiltersFromPrefs } from '@/lib/usage/usage-chart-filters'
+import type { UserPrefs } from '@/lib/user-prefs-keys'
+
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/usage',
 )({
-  loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
+  beforeLoad: ({ params }) => {
+    // The project parent resolves self-hosted backend capability on the client.
+    // SSR must not redirect before that Console variable is available.
+    if (
+      typeof window !== 'undefined' &&
+      !getActiveProfileFeatures().usageStats
+    ) {
+      throw redirect({
+        to: '/projects/$projectId/sites/$siteId',
+        params,
+        replace: true,
+      })
     }
+  },
+  loader: async ({ params, context }) => {
+    if (typeof window === 'undefined') return
 
     const { projectId, siteId } = params
     const { queryClient } = context
 
-    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
-    await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    // Fetch site - blocks navigation until ready
-    await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
+    const [project, account] = await Promise.all([
+      queryClient.ensureQueryData(projectQueryOptions(projectId)),
+      queryClient.ensureQueryData(consoleAccountQueryOptions()),
+      queryClient.ensureQueryData(siteQueryOptions(projectId, siteId)),
+    ])
+    const plan = project.teamId
+      ? await queryClient
+          .ensureQueryData(organizationPlanQueryOptions(project.teamId))
+          .catch(() => null)
+      : null
+    const { dateRange, chartInterval } = resolveUsageChartFiltersFromPrefs(
+      account.prefs as UserPrefs | undefined,
+      plan,
+    )
 
-    // Usage is non-critical: prefetch in background so a slow usage API does not
-    // block the page shell.
-    void queryClient
-      .prefetchQuery(siteUsageQueryOptions(projectId, siteId, 'ThirtyDays'))
-      .catch(() => undefined)
+    await Promise.all([
+      queryClient.ensureQueryData({
+        ...siteExecutionsForSiteQueryOptions(
+          projectId,
+          siteId,
+          dateRange,
+          chartInterval,
+        ),
+        revalidateIfStale: true,
+      }),
+      queryClient.ensureQueryData({
+        ...siteGbHoursForSiteQueryOptions(
+          projectId,
+          siteId,
+          dateRange,
+          chartInterval,
+        ),
+        revalidateIfStale: true,
+      }),
+    ])
   },
   component: SiteUsagePage,
 })

@@ -17,6 +17,7 @@ import {
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { tablesQueryOptions } from '@/lib/react-query/hooks/databases'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
+import { mysqlDatabaseHome } from '@/lib/mysql-database-routes'
 
 export type DatabaseSwitcherSelection = {
   id: string
@@ -80,18 +81,29 @@ export function resolveDatabaseSwitcherHomeLink(
       isMysqlEngine(engineHint ?? undefined) ||
       isMongoEngine(engineHint ?? undefined))
 
-  if (
-    (isNativeProduct || isNativeEngineOnly) &&
-    isPostgresEngine(engineHint ?? undefined)
-  ) {
-    const link = postgresDatabaseHome({
-      projectId,
-      databaseId: selection.id,
-      tableId: '-',
-    })
-    return {
-      to: link.to,
-      params: link.params as unknown as Record<string, string>,
+  if (isNativeProduct || isNativeEngineOnly) {
+    if (isPostgresEngine(engineHint ?? undefined)) {
+      const link = postgresDatabaseHome({
+        projectId,
+        databaseId: selection.id,
+        tableId: '-',
+      })
+      return {
+        to: link.to,
+        params: link.params as unknown as Record<string, string>,
+      }
+    }
+
+    if (isMysqlEngine(engineHint ?? undefined)) {
+      const link = mysqlDatabaseHome({
+        projectId,
+        databaseId: selection.id,
+        tableId: '-',
+      })
+      return {
+        to: link.to,
+        params: link.params as unknown as Record<string, string>,
+      }
     }
   }
 
@@ -103,8 +115,11 @@ export function resolveDatabaseSwitcherHomeLink(
   }
 }
 
-function isPostgresHomeLink(link: TanStackNavLink): boolean {
-  return String(link.to).includes('/databases/postgres/')
+function isNativeDatabaseHomeLink(link: TanStackNavLink): boolean {
+  const to = String(link.to)
+  return (
+    to.includes('/databases/postgres/') || to.includes('/databases/mysql/')
+  )
 }
 
 type NavigateFn = (opts: {
@@ -125,7 +140,7 @@ export async function navigateToDatabaseFromSwitcher(options: {
   const { projectId, selection, navigate, queryClient } = options
   const home = resolveDatabaseSwitcherHomeLink(projectId, selection)
 
-  if (isPostgresHomeLink(home)) {
+  if (isNativeDatabaseHomeLink(home)) {
     navigate(home)
     return
   }

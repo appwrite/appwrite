@@ -31,6 +31,7 @@ import {
   DatabaseZap,
   ShieldAlert,
   Sparkles,
+  Eye,
   Home,
   LayoutDashboard,
   BookOpen,
@@ -98,11 +99,12 @@ import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
 import { NotificationCenterPopover } from '@/components/global/shared/NotificationCenterPopover'
 import { useAgentChat } from '@/components/global/providers/AgentChat'
+import { isAgentPagePath } from '@/lib/assistant/agent-paths'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
-import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
+import { ImpersonateConsoleUserDialog } from '@/components/global/shared/ImpersonateConsoleUserDialog'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
@@ -111,6 +113,9 @@ import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
+import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import { ShortcutGlyphs } from '@/components/global/shared/ShortcutGlyphs'
+import { AGENT_TOGGLE_SHORTCUT_RAW } from '@/lib/assistant/agent-shortcuts'
 import { useChangelogNavBadge } from '@/hooks/use-changelog-nav-badge'
 import {
   getBlogPageUrl,
@@ -314,6 +319,7 @@ export function ConsoleHeader({
   const navigate = useNavigate()
   const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false)
   const projectConnectDialog = useProjectConnectDialog()
   const [themeMounted, setThemeMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
@@ -378,6 +384,7 @@ export function ConsoleHeader({
   })
   const showMarketingNav = marketingNavItems.length > 0
   const showAgent = features.agent && !showMarketingNav
+  const showNotifications = features.notifications && !showMarketingNav
   const showConnectAndCreate = canShowConnectSection(access, features)
   const canCreateProjectFlag = canCreateProject(access, features)
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
@@ -428,6 +435,9 @@ export function ConsoleHeader({
 
   const hasSidebar = !isOrgOverview
   const isAccountScope = location.pathname.startsWith('/account')
+  const isAgentScope = isAgentPagePath(location.pathname)
+  const showBackToOrganization =
+    (isAccountScope || isAgentScope) && Boolean(orgId)
   const isInitScope = features.init && location.pathname === '/init'
   const initHeaderNavCta = isInitScope
     ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
@@ -462,7 +472,11 @@ export function ConsoleHeader({
   const marketingNavLinksExternal = isMarketingPageExternal(features.marketing)
   const showCenterSearch = centerSearch && !hideSearch
   const showRightSearch = !hideSearch && !centerSearch
-  const { modKey: searchModKey } = usePlatform()
+  const { modKey: searchModKey, isMac } = usePlatform()
+  const agentToggleShortcutKeys = formatDisplayKeys(
+    AGENT_TOGGLE_SHORTCUT_RAW,
+    isMac,
+  )
   const logoColumnWidth = showMarketingNav ? 158 : 60
 
   return (
@@ -632,8 +646,8 @@ export function ConsoleHeader({
             )
           })()}
 
-          {/* Account scope quick return */}
-          {isAccountScope && orgId && (
+          {/* Account / agent scope quick return */}
+          {showBackToOrganization && orgId ? (
             <Button
               asChild
               variant="ghost"
@@ -645,7 +659,7 @@ export function ConsoleHeader({
                 {headerCopy.actions.backToOrganization}
               </Link>
             </Button>
-          )}
+          ) : null}
 
           {/* Init scope exit / try CTA */}
           {initHeaderNavCta ? (
@@ -1314,13 +1328,12 @@ export function ConsoleHeader({
                 <SupportPopover orgId={orgId} />
               </div>
 
-              {/* Notifications */}
-              <div className="flex shrink-0">
-                <NotificationCenterPopover />
-              </div>
-
-              {/* Operator tools (render nothing when account is not an impersonator) */}
-              <ImpersonateConsoleUserPopover />
+              {/* Notifications - gated by the notifications profile feature */}
+              {showNotifications && (
+                <div className="flex shrink-0">
+                  <NotificationCenterPopover />
+                </div>
+              )}
 
               {/* Help/Agent - hidden on small containers; gated by the agent profile feature */}
               {showAgent && (
@@ -1342,7 +1355,12 @@ export function ConsoleHeader({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{headerCopy.actions.assistant}</p>
+                    <p className="flex items-center gap-1.5">
+                      <span>{headerCopy.actions.assistant}</span>
+                      <kbd className="pointer-events-none inline-flex items-center rounded bg-background/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-background">
+                        <ShortcutGlyphs keys={agentToggleShortcutKeys} />
+                      </kbd>
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -1712,6 +1730,18 @@ export function ConsoleHeader({
                           <span>{headerCopy.accountMenu.generator}</span>
                         </Link>
                       </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        className={ACCOUNT_MENU_ITEM_CLASS}
+                        onSelect={() => {
+                          window.setTimeout(() => {
+                            setImpersonateDialogOpen(true)
+                          }, 0)
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>{headerCopy.accountMenu.impersonate}</span>
+                      </DropdownMenuItem>
                     </>
                   )}
 
@@ -1730,6 +1760,10 @@ export function ConsoleHeader({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <ImpersonateConsoleUserDialog
+                open={impersonateDialogOpen}
+                onOpenChange={setImpersonateDialogOpen}
+              />
             </>
           )}
         </div>

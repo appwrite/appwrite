@@ -6,7 +6,11 @@ import {
   useLocation,
 } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
-import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
+import {
+  organizationOverviewProjectsParamsFromUrl,
+  prefetchOrganizationOverviewData,
+} from '@/lib/organization-overview-prefetch'
+import { urlFromRouterLocation } from '@/lib/table-filters'
 import { z } from 'zod'
 
 const searchSchema = z
@@ -17,7 +21,7 @@ const searchSchema = z
 
 export const Route = createFileRoute('/_public/organizations/$orgId')({
   validateSearch: searchSchema,
-  loader: async ({ params, context }) => {
+  loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -27,10 +31,15 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     const { queryClient } = context
 
     // Same pattern as projects grid (AGENTS.md): ensureQueryData with exact query keys the View uses.
-    // Order: console team → pinned IDs → active projects list key matches OrgOverview (exclude pinned).
     if (orgId) {
       try {
-        await prefetchOrganizationOverviewData(queryClient, orgId)
+        await prefetchOrganizationOverviewData(
+          queryClient,
+          orgId,
+          organizationOverviewProjectsParamsFromUrl(
+            urlFromRouterLocation(location),
+          ),
+        )
       } catch (error) {
         console.warn('Failed to fetch organization data in loader:', error)
       }
@@ -81,18 +90,27 @@ function OrganizationLayout() {
   )
 
   const isUpgradeWizardRoute = pathname === '/upgrade'
+  // Agent has its own ConsoleLayout (console header + fixed chat chrome).
+  const isAgentRoute = matches.some(
+    (match) =>
+      match.routeId.includes('/agent') ||
+      match.routeId === '/_public/organizations/$orgId/agent' ||
+      match.routeId.startsWith('/_public/organizations/$orgId/agent'),
+  )
   const renderOutletOnly =
     isDomainDetailRoute ||
     isMarketplaceAppDetailRoute ||
     isOrgAppDetailRoute ||
     isSupportRoute ||
     isOrgDomainsWizardRoute ||
-    isUpgradeWizardRoute
+    isUpgradeWizardRoute ||
+    isAgentRoute
 
   return (
     <RequireAuth>
       {renderOutletOnly ? (
-        // Domain detail, support, upgrade, and domain wizards: outlet only (fullscreen / own chrome)
+        // Domain detail, apps, marketplace detail, support, upgrade, domain
+        // wizards, and agent: outlet only (own ConsoleLayout / fullscreen chrome)
         <Outlet />
       ) : (
         // For other routes, render OrgOverview which provides header/tabs

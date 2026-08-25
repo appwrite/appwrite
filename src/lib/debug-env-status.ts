@@ -82,6 +82,16 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Override cookie consent banner',
   },
   {
+    key: 'VITE_CONSOLE_BLOG_DRAFTS',
+    group: 'Runtime',
+    description: 'Override draft blog post visibility',
+  },
+  {
+    key: 'VITE_CONSOLE_WEBSITE_ACCESS',
+    group: 'Runtime',
+    description: 'Override demo / soft-launch website password gate',
+  },
+  {
     key: 'VITE_CONSTRUCTION',
     group: 'Other',
     description: 'Vite DEV header construction bar (false/0/off to hide; unset = on)',
@@ -215,6 +225,8 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_PLAUSIBLE_SCRIPT_SRC: isNonEmpty(config.plausibleScriptSrc),
     VITE_CONSOLE_USER_VERIFICATION: isNonEmpty(config.userVerification),
     VITE_CONSOLE_COOKIE_BANNER: isNonEmpty(config.cookieBanner),
+    VITE_CONSOLE_BLOG_DRAFTS: isNonEmpty(config.blogDrafts),
+    VITE_CONSOLE_WEBSITE_ACCESS: isNonEmpty(config.websiteAccess),
   }
 }
 

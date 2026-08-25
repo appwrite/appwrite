@@ -117,9 +117,9 @@ Scope API keys to the minimum permissions the task needs, prefer local stdio ser
 
 Appwrite provides multiple MCP servers for different workflows.
 
-The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers/api) connects AI coding agents to your Appwrite project, allowing them to work with services such as Auth, Databases, Storage, and Functions. Its compact two-tool architecture automatically supports Appwrite services while using less model context.
+The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers) connects AI coding agents to your Appwrite project, allowing them to work with services such as Auth, Databases, Storage, and Functions. Its compact two-tool architecture automatically supports Appwrite services while using less model context.
 
-The [Appwrite Docs MCP server](/docs/tooling/ai/mcp-servers/docs) gives compatible AI clients access to Appwrite documentation, helping them answer product questions and generate code using relevant Appwrite context.
+The [Appwrite Docs MCP server](/docs/tooling/ai/mcp-servers) gives compatible AI clients access to Appwrite documentation, helping them answer product questions and generate code using relevant Appwrite context.
 
 Read [how we rebuilt the API MCP server in MCP Server 2.0](/blog/post/announcing-appwrite-mcp-server-2), then follow the documentation to connect the server that fits your workflow.
 

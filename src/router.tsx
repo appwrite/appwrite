@@ -26,6 +26,11 @@ export function getRouter() {
     routeTree,
     context: { ...rqContext },
     defaultPreload: 'intent',
+    // Keep the previous page visible while loaders run. A finite pendingMs with
+    // defaultPendingComponent: () => null blanks the outlet after 1s on slow
+    // navigations (e.g. TablesDB table switches). Wizards that need a pending
+    // UI set their own pendingMs + pendingComponent.
+    defaultPendingMs: Infinity,
     defaultPendingComponent: () => null,
     defaultNotFoundComponent: NotFound,
     defaultErrorComponent: ({ error, info, reset }) => (

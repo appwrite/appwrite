@@ -85,6 +85,6 @@ export function buildCoverDotGridSvgPattern(themeId: CoverThemeId): string {
 export function getCoverDottedBackgroundStyle(themeId: CoverThemeId): {
   backgroundImage: string
   backgroundSize: string
-} {
+} | null {
   return getCoverBackgroundGridCssStyle(themeId, getCoverTheme(themeId).backgroundGrid)
 }

@@ -71,7 +71,7 @@ The first project that uses the playbook costs the agency the playbook. Every pr
 
 The other piece of leverage is agent context. Most agencies start over on every engagement: a new repo, a new prompt history, a new set of constraints the engineer has to re-explain to the agent on day one. The agent has to learn the agency's conventions five times a year.
 
-The fix is to keep the conventions outside any single project. An `AGENTS.md` or `CLAUDE.md` file in every starter repo. A shared set of [Agent Skills](/docs/tooling/ai/skills) for the backend the agency standardizes on. Editor plugins like the [Claude Code plugin](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor plugin](/docs/tooling/ai/ai-dev-tools/cursor) install the [API MCP server](/docs/tooling/ai/mcp-servers/api), the [Docs MCP server](/docs/tooling/ai/mcp-servers/docs), and the SDK skills in one command, so every developer on every project is on the same baseline.
+The fix is to keep the conventions outside any single project. An `AGENTS.md` or `CLAUDE.md` file in every starter repo. A shared set of [Agent Skills](/docs/tooling/ai/skills) for the backend the agency standardizes on. Editor plugins like the [Claude Code plugin](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor plugin](/docs/tooling/ai/ai-dev-tools/cursor) install the [API MCP server](/docs/tooling/ai/mcp-servers), the [Docs MCP server](/docs/tooling/ai/mcp-servers), and the SDK skills in one command, so every developer on every project is on the same baseline.
 
 # Estimating fixed-fee work in the vibe coding era
 
@@ -107,7 +107,7 @@ Done well, the client picks up where the agency left off, with their own agent i
 
 The simplest path for an agency starting on vibe coding is to pick one backend, one IDE agent, and one prototype builder, then encode the choices in a playbook.
 
-[Appwrite Cloud](https://cloud.appwrite.io) covers Auth, Databases, Storage, Functions, and Sites under one platform, with per-project isolation, scoped API keys, and a self-host option for clients with stricter requirements. The [API MCP server](/docs/tooling/ai/mcp-servers/api), the [Docs MCP server](/docs/tooling/ai/mcp-servers/docs), and [Agent Skills](/docs/tooling/ai/skills) install in one step through the [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugins.
+[Appwrite Cloud](https://cloud.appwrite.io) covers Auth, Databases, Storage, Functions, and Sites under one platform, with per-project isolation, scoped API keys, and a self-host option for clients with stricter requirements. The [API MCP server](/docs/tooling/ai/mcp-servers), the [Docs MCP server](/docs/tooling/ai/mcp-servers), and [Agent Skills](/docs/tooling/ai/skills) install in one step through the [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugins.
 
 For the broader agency tooling stack, [30 dev tools for agencies](/blog/post/30-dev-tools-for-agencies) covers the surface beyond the backend and the agent.
 

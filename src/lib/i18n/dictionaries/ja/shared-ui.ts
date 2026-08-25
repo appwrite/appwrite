@@ -9,6 +9,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Server Error': 'サーバーエラー',
   'Connection Error': '接続エラー',
   'Request Timeout': 'リクエストがタイムアウトしました',
+  'Database timed out. Try adjusting your queries or adding an index.':
+    'データベースがタイムアウトしました。クエリを調整するか、インデックスを追加してください。',
   'Something went wrong. Please try again.':
     '問題が発生しました。もう一度お試しください。',
   // Punctuated fragments and short segments
@@ -38,6 +40,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Active session:': 'アクティブなセッション:',
   'Add account': 'アカウントを追加',
   'Add filter': 'フィルターを追加',
+  'Add value': '値を追加',
   'Add installation': 'インストールを追加',
   'Add variable': '変数を追加',
   'All shortcuts': 'すべてのショートカット',
@@ -150,7 +153,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Get help from our support team': 'サポートチームに問い合わせる',
   'Get started by creating your first item.':
     '最初のアイテムを作成して始めましょう。',
-  'Git organization': 'Git 組織',
+  'Organization': '組織',
   'Git repository': 'Git リポジトリ',
   'GitHub Issues': 'GitHub Issues',
   'GitHub repository': 'GitHub リポジトリ',
@@ -303,23 +306,36 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Search account, sessions, security...':
     'アカウント、セッション、セキュリティを検索…',
   'Search columns...': '列を検索…',
+  'Search columns by key or ID...': 'キーまたは ID で列を検索…',
   'Search commands and documentation pages...':
     'コマンドとドキュメントページを検索…',
   'Search databases...': 'データベースを検索…',
+  'Search databases by name or ID...': '名前または ID でデータベースを検索…',
   'Search documentation...': 'ドキュメントを検索...',
   'Search domains...': 'ドメインを検索…',
+  'Search domains by name or ID...': '名前または ID でドメインを検索…',
   'Search files...': 'ファイルを検索...',
+  'Search files by name or ID...': '名前または ID でファイルを検索…',
   'Search functions...': 'Functions を検索…',
+  'Search functions by name or ID...': '名前または ID で Functions を検索…',
+  'Search indexes by key or ID...': 'キーまたは ID でインデックスを検索…',
   'Search logs...': 'ログを検索...',
   'Search operators...': '演算子を検索…',
   'Search projects, settings, members...':
     'プロジェクト、設定、メンバーを検索…',
   'Search projects...': 'プロジェクトを検索…',
   'Search providers...': 'プロバイダーを検索…',
+  'Search providers by name or ID...': '名前または ID でプロバイダーを検索…',
+  'Search rows by ID...': 'ID で行を検索…',
   'Search sites...': 'サイトを検索…',
+  'Search sites by name or ID...': '名前または ID でサイトを検索…',
+  'Search tables by name or ID...': '名前または ID でテーブルを検索…',
   'Search teams...': 'チームを検索…',
+  'Search teams by name or ID...': '名前または ID でチームを検索…',
   'Search topics...': 'トピックを検索…',
+  'Search topics by name or ID...': '名前または ID でトピックを検索…',
   'Search users...': 'ユーザーを検索…',
+  'Search buckets by name or ID...': '名前または ID でバケットを検索…',
   'Search query tabs...': 'クエリタブを検索…',
   'Search repositories...': 'リポジトリを検索...',
   'Search scopes...': 'スコープを検索…',
@@ -406,6 +422,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'No rows to display.': '表示する行がありません。',
   'No matching settings': '一致する設定がありません',
   'Select project': 'プロジェクトを選択',
+  'Select date': '日付を選択',
   'Select date & time': '日付と時刻を選択',
   'Select branch': 'ブランチを選択',
   'Clone template': 'テンプレートをクローン',
@@ -662,6 +679,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Find a project in this organization': 'この組織のプロジェクトを検索',
   // Command center: local actions and groups
   'See all keyboard shortcuts': 'すべてのキーボードショートカットを表示',
+  'Pick a console user to operate as. Your operator account stays signed in.':
+    '操作するコンソールユーザーを選択してください。オペレーターアカウントはサインインしたままです。',
   'Pick a function to execute': '実行する関数を選択',
   'Open project activity log': 'プロジェクトのアクティビティログを開く',
   'View activity log': 'アクティビティログを表示',
@@ -732,8 +751,25 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Page not found': 'ページが見つかりません',
   'Looking for product docs?': '製品ドキュメントをお探しですか?',
   'Browse documentation': 'ドキュメントを閲覧',
+  // Cover generator backgrounds
+  'Light backgrounds': 'ライト背景',
+  'Dark backgrounds': 'ダーク背景',
+  'Plain, bottom pink & purple': '無地、下部にピンクとパープル',
+  'Plain, bottom teal ambient glow': '無地、下部にティールのグロー',
+  'Plain, monochrome shade glow': '無地、モノクロのシェードグロー',
+  'Solid background with soft corner glow, no texture.':
+    'テクスチャなしの単色背景に、角からのソフトなグロー。',
+  'Plain dark background with a large teal light leak from the lower-left corner.':
+    '左下からティールの大きなライトリークが入る無地のダーク背景。',
+  'Plain dark background with soft corner washes in a darker shade of the same color.':
+    '同じ色のより暗いシェードで角をやわらかく照らした無地のダーク背景。',
   // Screenshot frames (cover generator, perspective cards)
   'Screenshot preview': 'スクリーンショットプレビュー',
+  Green: 'グリーン',
+  Amber: 'アンバー',
+  Red: 'レッド',
+  Blue: 'ブルー',
+  Slate: 'スレート',
   'The requested resource could not be found. It may have been deleted or you may not have permission to access it.': '要求されたリソースが見つかりませんでした。削除されたか、アクセス権限がない可能性があります。',
   'You do not have permission to perform this action. Please contact your administrator if you believe this is an error.': 'この操作を実行する権限がありません。エラーだと思われる場合は、管理者にお問い合わせください。',
   'You do not have permission to access this resource.': 'このリソースにアクセスする権限がありません。',
@@ -792,11 +828,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'You cannot impersonate your own operator account.': '自分のオペレーターアカウントになりすますことはできません。',
   '75% hot-swap mechanical keyboard with Gateron G Pro Yellow switches, tri-mode USB-C/2.4GHz/BT, and 84 dye-sublimated keycaps optimized for Console shortcuts.': 'Gateron G Pro Yellow スイッチ搭載の75%ホットスワップ式メカニカルキーボード。USB-C/2.4GHz/BT のトライモードに対応し、コンソールのショートカット用に最適化された84個の昇華印刷キーキャップを備えています。',
   'Executions will appear here when your function runs.': '関数が実行されると、ここに実行結果が表示されます。',
-  'Execution logs are available on Appwrite Cloud': '実行ログは Appwrite Cloud で利用できます',
-  'Self-hosted Appwrite no longer stores execution history. Your functions still run as usual, but their executions, logs, and errors can only be viewed on Appwrite Cloud.': 'セルフホスト版の Appwrite では実行履歴が保存されなくなりました。Functions は引き続き通常どおり実行されますが、実行内容、ログ、エラーは Appwrite Cloud でのみ確認できます。',
-  'Site logs are available on Appwrite Cloud': 'サイトのログは Appwrite Cloud で利用できます',
-  'Self-hosted Appwrite no longer stores site request logs. Your site still serves traffic as usual, but its logs and errors can only be viewed on Appwrite Cloud.': 'セルフホスト版の Appwrite ではサイトのリクエストログが保存されなくなりました。サイトは引き続き通常どおり配信されますが、ログとエラーは Appwrite Cloud でのみ確認できます。',
-  'Explore Appwrite Cloud': 'Appwrite Cloud を見る',
   'This scope is on the API key but was not returned in the server scope list.': 'このスコープは API キーに設定されていますが、サーバーのスコープ一覧には返されませんでした。',
   'Payment failed - update billing to avoid interrupting your projects and services.': '支払いに失敗しました。プロジェクトとサービスの中断を避けるため、請求情報を更新してください。',
   'Payment failed - this organization has restricted access until the outstanding invoice is paid. Project and service changes are limited; open Billing to update payment and restore access.': '支払いに失敗しました。未払いの請求書が支払われるまで、この組織は制限付きアクセスになります。プロジェクトとサービスの変更は制限されます。「請求」を開いて支払いを更新し、アクセスを回復してください。',
@@ -873,6 +904,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
     '購読する Realtime チャンネルを作成します。複数のリソースに一致させるにはワイルドカード (*) を使用してください。',
   'Select events that will trigger your function or webhook.':
     '関数または Webhook をトリガーするイベントを選択してください。',
+  'Select file': 'ファイルを選択',
+  'Select tool': 'ツールを選択',
   'e.g. account or databases.*.tables.*.rows.*':
     '例: account または databases.*.tables.*.rows.*',
   'e.g. databases.*.tables.*.rows.*.create':

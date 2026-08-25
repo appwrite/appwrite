@@ -12,6 +12,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
+import { useParams } from '@tanstack/react-router'
 import { Query, ID, type Models } from '@appwrite.io/console'
 import {
   BillingPlanTier,
@@ -20,6 +21,11 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
+import { fetchConsoleAccount } from '@/lib/console-account-get'
+import {
+  hasProjectSpecificRoles,
+  projectIdsFromRoles,
+} from '@/lib/console-project-roles'
 import {
   DEFAULT_ROLES,
   DEFAULT_SCOPES,
@@ -225,6 +231,8 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     supportsOrganizationRoles: false,
     supportsProjectSpecificRoles: false,
     supportsCredits: false,
+    supportsDedicatedDatabases: true,
+    databaseComputeCredit: 0,
     supportsDisposableEmailValidation: false,
     supportsCanonicalEmailValidation: false,
     supportsFreeEmailValidation: false,
@@ -319,9 +327,15 @@ export async function fetchOrganizationPlan(orgId: string) {
  * Query function to fetch current user's roles and scopes for an organization.
  * Use in organization context (orgId) or project context (project's teamId).
  * When API is unavailable or fails, returns defaultRoles and defaultScopes (full access).
+ *
+ * `projectId` resolves project-specific roles (`project-{id}-{role}`) for that
+ * one project. Omitting it is what the org-wide view wants, but the backend then
+ * downgrades every project-specific role to `analyst` — so any caller reasoning
+ * about access *within* a project must pass the id. See `console-project-roles`.
  */
 export async function fetchOrganizationScopes(
   organizationId: string,
+  projectId?: string | null,
 ): Promise<OrganizationRolesScopes> {
   if (!organizationId) {
     return { roles: [...DEFAULT_ROLES], scopes: [...DEFAULT_SCOPES] }
@@ -330,12 +344,16 @@ export async function fetchOrganizationScopes(
     const orgService = sdk.forConsole.organizations as unknown as {
       getScopes?(params: {
         organizationId: string
+        projectId?: string
       }): Promise<{ roles?: string[]; scopes?: string[] }>
     }
     if (typeof orgService.getScopes !== 'function') {
       return { roles: [...DEFAULT_ROLES], scopes: [...DEFAULT_SCOPES] }
     }
-    const response = await orgService.getScopes({ organizationId })
+    const response = await orgService.getScopes({
+      organizationId,
+      ...(projectId ? { projectId } : {}),
+    })
     return {
       roles: response.roles ?? [...DEFAULT_ROLES],
       scopes: response.scopes ?? [...DEFAULT_SCOPES],
@@ -455,7 +473,10 @@ export function organizationFailedInvoicePresenceQueryOptions(
 export function useOrganizationFailedInvoicePresence(
   organizationId: string | null | undefined,
 ) {
-  const { access } = useOrganizationScopes(organizationId)
+  // Billing is org-level, so resolve org-wide even when rendered inside a project.
+  const { access } = useOrganizationScopes(organizationId, undefined, {
+    projectId: null,
+  })
   const canFetchInvoices = canSeeOrganizationBilling(access)
   return useQuery({
     ...organizationFailedInvoicePresenceQueryOptions(organizationId),
@@ -764,15 +785,18 @@ export async function fetchEstimationCreateOrganization(
 }
 
 /**
- * Query function to get cost estimation for updating a plan
+ * Query function to estimate a plan change (upgrade or downgrade)
+ *
+ * Returns both the cost estimation and the target plan's resource limits,
+ * including per-project compliance for downgrades.
  *
  * @param organizationId - The organization ID
- * @param billingPlan - The billing plan
+ * @param billingPlan - The target billing plan
  * @param couponId - Optional coupon ID
  * @param collaborators - Array of collaborator emails
- * @returns Estimation data
+ * @returns Plan change estimation data
  */
-export async function fetchEstimationUpdatePlan(
+export async function fetchPlanEstimation(
   organizationId: string,
   billingPlan: BillingPlanTierType,
   couponId: string | null | undefined,
@@ -787,7 +811,7 @@ export async function fetchEstimationUpdatePlan(
       ? couponId.trim()
       : undefined
 
-  return await sdk.forConsole.organizations.estimationUpdatePlan({
+  return await sdk.forConsole.organizations.createPlanEstimation({
     organizationId,
     billingPlan,
     invites: collaborators,
@@ -1366,6 +1390,9 @@ export function organizationsQueryOptions() {
     queryKey: ['organizations', 'console'],
     queryFn: fetchOrganizations,
     staleTime: LONG_STALE_TIME,
+    // Default QueryClient gcTime is 0. Without this, loader prefetch is
+    // discarded before OrgOverview mounts and the list is fetched twice.
+    gcTime: LONG_STALE_TIME,
     retry: false, // Don't retry on error
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
@@ -1389,6 +1416,7 @@ export function organizationsFullQueryOptions() {
     queryKey: ['organizations', 'console', 'full'],
     queryFn: fetchOrganizationsWithBillingFields,
     staleTime: 30 * 1000,
+    gcTime: LONG_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -1443,12 +1471,76 @@ export function organizationPlanQueryOptions(orgId: string | null | undefined) {
  */
 export function organizationScopesQueryOptions(
   organizationId: string | null | undefined,
+  projectId?: string | null,
 ) {
   const features = getActiveProfileFeatures()
   const enabled = !!organizationId && !!features.orgRoles
   return queryOptions({
-    queryKey: ['organization', 'scopes', organizationId],
-    queryFn: () => fetchOrganizationScopes(organizationId!),
+    // projectId is part of the key: org-wide and project-scoped resolutions of
+    // the same membership are genuinely different answers and must not share a
+    // cache entry.
+    queryKey: ['organization', 'scopes', organizationId, projectId ?? null],
+    queryFn: () => fetchOrganizationScopes(organizationId!, projectId),
+    enabled,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Project ids the current user may reach in this organization, or `null` when
+ * they are an org-wide member and every project is visible.
+ *
+ * This cannot come from `getScopes`: called without a project id it reports a
+ * project-scoped member as a bare `analyst` and discards which projects the
+ * roles referred to. The raw membership is the only place those ids survive, so
+ * it is read directly — the same approach the previous console took.
+ *
+ * An empty array is meaningful (access to no project) and must not be confused
+ * with `null`.
+ */
+export async function fetchOrganizationProjectScope(
+  organizationId: string,
+): Promise<string[] | null> {
+  if (!organizationId || !getActiveProfileFeatures().orgRoles) return null
+  try {
+    const account = await fetchConsoleAccount()
+    if (!account?.$id) return null
+    const response = await sdk.forConsole.teams.listMemberships({
+      teamId: organizationId,
+      queries: [Query.equal('userId', account.$id)],
+    })
+    // Matched on userId rather than taking the first row: if the query filter
+    // is ever ignored the first membership is some other member, and their
+    // project scope would then be applied to everyone.
+    const memberships = (response?.memberships ?? []) as Array<{
+      userId?: string
+      roles?: string[]
+    }>
+    const mine = memberships.find((m) => m.userId === account.$id)
+    if (!mine) return null
+    const roles = mine.roles ?? []
+    if (!hasProjectSpecificRoles(roles)) return null
+    return projectIdsFromRoles(roles)
+  } catch {
+    // Never fail closed on a lookup error: fall back to the unrestricted list
+    // and let the API reject anything this member cannot open.
+    return null
+  }
+}
+
+export function organizationProjectScopeQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  const features = getActiveProfileFeatures()
+  const enabled = !!organizationId && !!features.orgRoles
+  return queryOptions({
+    queryKey: ['organization', 'project-scope', organizationId],
+    queryFn: () => fetchOrganizationProjectScope(organizationId!),
     enabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -1730,11 +1822,19 @@ export function useOrganizationPlan(
  * Use in organization context (orgId) or project context (project's teamId).
  * When profile does not support roles (orgRoles: false), returns full access without fetching.
  *
+ * Inside a project route the current `projectId` is picked up from the router
+ * and used to resolve project-specific roles. That default is deliberate: the
+ * alternative is passing the id explicitly at ~50 call sites, where a single
+ * omission silently downgrades a member to read-only rather than failing loudly.
+ * Pass `{ projectId: null }` to force the org-wide answer while inside a project
+ * route (billing and org settings want that).
+ *
  * @param initialData - Optional data from route loader to avoid layout shift on first paint
  */
 export function useOrganizationScopes(
   organizationId: string | null | undefined,
   initialData?: Awaited<ReturnType<typeof fetchOrganizationScopes>>,
+  options?: { projectId?: string | null },
 ): {
   roles: string[]
   scopes: string[]
@@ -1746,8 +1846,14 @@ export function useOrganizationScopes(
   const features = getActiveProfileFeatures()
   const shouldFetch = !!organizationId && features.orgRoles
 
+  const routeParams = useParams({ strict: false }) as { projectId?: string }
+  const projectId =
+    options && 'projectId' in options
+      ? options.projectId
+      : (routeParams?.projectId ?? null)
+
   const { data, isLoading, error, refetch } = useQuery({
-    ...organizationScopesQueryOptions(organizationId),
+    ...organizationScopesQueryOptions(organizationId, projectId),
     enabled: shouldFetch,
     initialData,
     initialDataUpdatedAt: initialData ? 1 : 0,
@@ -2018,7 +2124,10 @@ export function useOrganizationInvoices(
   limit: number = DEFAULT_PAGE_SIZE,
   queries?: string[],
 ) {
-  const { access } = useOrganizationScopes(organizationId)
+  // Billing is org-level, so resolve org-wide even when rendered inside a project.
+  const { access } = useOrganizationScopes(organizationId, undefined, {
+    projectId: null,
+  })
   const canFetchInvoices = canSeeOrganizationBilling(access)
   const { data, isLoading, isFetching, isPending, error, refetch } = useQuery({
     ...organizationInvoicesQueryOptions(organizationId, page, limit, queries),
@@ -2785,15 +2894,19 @@ export function useEstimationCreateOrganization(
 }
 
 /**
- * Hook to get cost estimation for updating a plan
+ * Hook to estimate a plan change (upgrade or downgrade)
+ *
+ * Exposes the cost estimation alongside the target plan's resource limits.
+ * For downgrades the server also returns per-project compliance and
+ * `canChangePlan`, which is the authority on whether the change is allowed.
  *
  * @param organizationId - The organization ID
- * @param billingPlan - The billing plan
+ * @param billingPlan - The target billing plan
  * @param couponId - Optional coupon ID
  * @param collaborators - Array of collaborator emails
- * @returns Estimation data with loading state
+ * @returns Plan change estimation data with loading state
  */
-export function useEstimationUpdatePlan(
+export function usePlanEstimation(
   organizationId: string | null | undefined,
   billingPlan: BillingPlanTierType | null | undefined,
   couponId: string | null | undefined,
@@ -2808,14 +2921,14 @@ export function useEstimationUpdatePlan(
 
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: [
-      'estimation-update-plan',
+      'plan-estimation',
       organizationId,
       billingPlan,
       couponId ?? null,
       collaboratorsKey,
     ],
     queryFn: () =>
-      fetchEstimationUpdatePlan(
+      fetchPlanEstimation(
         organizationId!,
         billingPlan!,
         couponId ?? undefined,
@@ -2832,6 +2945,8 @@ export function useEstimationUpdatePlan(
 
   return {
     estimation: data,
+    limits: data?.limits ?? null,
+    direction: data?.direction ?? null,
     isLoading,
     isFetching,
     error,
@@ -2849,8 +2964,17 @@ export function useUpdateOrganizationPlan() {
 
   return useMutation({
     mutationFn: updateOrganizationPlan,
-    onSuccess: (_, variables) => {
-      // Invalidate organization and plan queries
+    onSuccess: (data, variables) => {
+      // 402 / 3DS responses are not an upgraded organization yet. Invalidating
+      // here refetches the still-Free org and can overwrite the post-validate
+      // cache on the billing page.
+      if (
+        !data ||
+        typeof data !== 'object' ||
+        typeof (data as { $id?: unknown }).$id !== 'string'
+      ) {
+        return
+      }
       queryClient.invalidateQueries({
         queryKey: ['organization', variables.organizationId],
       })

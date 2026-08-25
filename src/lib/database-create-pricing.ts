@@ -73,8 +73,16 @@ export function calculateDedicatedDatabaseMonthlyCost(params: {
   }
 }
 
-export const DATABASE_COMPUTE_CREDITS_NOTE =
-  '$10 of compute credits for database usage included every month.'
+/** English source for the included compute-credit callout. Amount comes from the plan. */
+export function formatDatabaseComputeCreditsNote(amountUsd: number): string {
+  const rounded = Number.isInteger(amountUsd)
+    ? amountUsd.toFixed(0)
+    : amountUsd.toFixed(2)
+  return `$${rounded} of compute credits for database usage included every month.`
+}
+
+/** Marketing fallback when no organization plan is available. */
+export const DATABASE_COMPUTE_CREDITS_NOTE = formatDatabaseComputeCreditsNote(10)
 
 export function formatDedicatedMonthlyPrice(amountUsd: number): string {
   const rounded =

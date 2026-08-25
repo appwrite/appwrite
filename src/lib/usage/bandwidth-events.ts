@@ -195,10 +195,13 @@ export async function fetchProjectBandwidthOverview(
       sumUsageChartPoints(chartPoints),
       sumUsageChartPoints(previousChartPoints),
     ),
-    topConsumers: mergeTopEndpoints([
-      breakdownByMetric.get('network.inbound') ?? [],
-      breakdownByMetric.get('network.outbound') ?? [],
-    ]),
+    topConsumers: mergeTopEndpoints(
+      [
+        breakdownByMetric.get('network.inbound') ?? [],
+        breakdownByMetric.get('network.outbound') ?? [],
+      ],
+      OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+    ),
   }
 }
 

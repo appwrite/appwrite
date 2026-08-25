@@ -5,14 +5,28 @@ import type { ChangelogEntry, ChangelogEntryMeta } from './types'
 
 const PER_PAGE = 5
 
-const contentLoaders = import.meta.glob('/src/content/changelog/entries/*.markdoc', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
+const importedLoaders = import.meta.glob(
+  '/src/content/changelog/entries/*.markdoc',
+  {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  },
+) as Record<string, string>
+
+const localLoaders = import.meta.glob(
+  '/src/content/changelog-local/entries/*.markdoc',
+  {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  },
+) as Record<string, string>
 
 function slugFromModulePath(modulePath: string): string {
-  const match = modulePath.match(/\/src\/content\/changelog\/entries\/(.+)\.markdoc$/)
+  const match = modulePath.match(
+    /\/src\/content\/changelog(?:-local)?\/entries\/(.+)\.markdoc$/,
+  )
   return match?.[1] ?? ''
 }
 
@@ -31,9 +45,25 @@ function buildChangelogEntry(modulePath: string, raw: string): ChangelogEntry {
   }
 }
 
-const allChangelogEntries = Object.entries(contentLoaders)
-  .map(([modulePath, raw]) => buildChangelogEntry(modulePath, raw))
-  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+function collectChangelogEntries(): ChangelogEntry[] {
+  const entriesBySlug = new Map<string, ChangelogEntry>()
+
+  for (const [modulePath, raw] of Object.entries(importedLoaders)) {
+    const entry = buildChangelogEntry(modulePath, raw)
+    entriesBySlug.set(entry.slug, entry)
+  }
+
+  for (const [modulePath, raw] of Object.entries(localLoaders)) {
+    const entry = buildChangelogEntry(modulePath, raw)
+    entriesBySlug.set(entry.slug, entry)
+  }
+
+  return [...entriesBySlug.values()].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  )
+}
+
+const allChangelogEntries = collectChangelogEntries()
 
 export const changelogCount = allChangelogEntries.length
 
@@ -45,15 +75,24 @@ export function getChangelogEntry(slug: string): ChangelogEntry | null {
   return allChangelogEntries.find((entry) => entry.slug === slug) ?? null
 }
 
+function getRawForSlug(slug: string): string | null {
+  const localPath = Object.keys(localLoaders).find(
+    (path) => slugFromModulePath(path) === slug,
+  )
+  if (localPath) return localLoaders[localPath] ?? null
+
+  const importedPath = Object.keys(importedLoaders).find(
+    (path) => slugFromModulePath(path) === slug,
+  )
+  if (importedPath) return importedLoaders[importedPath] ?? null
+
+  return null
+}
+
 /** Plain-markdown source (including frontmatter) for the .md export endpoint. */
 export function getChangelogMarkdownExport(slug: string): string | null {
   if (!getChangelogEntry(slug)) return null
-
-  const modulePath = Object.keys(contentLoaders).find(
-    (path) => slugFromModulePath(path) === slug,
-  )
-  if (!modulePath) return null
-  const raw = contentLoaders[modulePath]
+  const raw = getRawForSlug(slug)
   return raw ? markdocToMarkdown(raw) : null
 }
 

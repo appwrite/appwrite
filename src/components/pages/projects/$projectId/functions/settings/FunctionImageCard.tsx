@@ -55,11 +55,12 @@ export function FunctionImageCard({
         buildFunctionUpdateParams(func, updates),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Image updated successfully'))
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
-      })
+      queryClient.setQueryData(
+        ['function', 'project', projectId, functionId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['functions', 'project', projectId],
       })

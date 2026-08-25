@@ -4,10 +4,16 @@ import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
+  agentSettingsPath,
+  preferredOrganizationId,
+} from '@/lib/assistant/agent-paths'
+import {
   ASSISTANT_MCP_OAUTH_MESSAGE_TYPE,
   parseMcpOAuthCallbackSearch,
   type McpOAuthCallbackMessage,
 } from '@/lib/assistant/mcp-oauth'
+import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
+import { fetchConsoleAccount } from '@/lib/react-query/hooks/auth'
 
 export const Route = createFileRoute('/_auth/agent/mcp/callback')({
   ssr: false,
@@ -39,7 +45,7 @@ function AgentMcpOAuthCallbackPage() {
     }
 
     // Top-level redirect fallback: keep the result available via session and
-    // bounce back to the console root so the opener path is not required.
+    // bounce back to org agent MCP settings so the opener path is not required.
     if (payload.type === ASSISTANT_MCP_OAUTH_MESSAGE_TYPE) {
       sessionStorage.setItem(
         'assistant.mcp.oauth.callback',
@@ -48,7 +54,19 @@ function AgentMcpOAuthCallbackPage() {
     }
     setPosted(true)
     window.setTimeout(() => {
-      window.location.replace('/agent/settings/mcp')
+      void (async () => {
+        try {
+          const account = await fetchConsoleAccount()
+          const fromPrefs = preferredOrganizationId(
+            account.prefs as Record<string, unknown> | undefined,
+          )
+          const orgId =
+            fromPrefs ?? (await resolvePostAuthOrganizationId(account))
+          window.location.replace(agentSettingsPath(orgId, 'mcp'))
+        } catch {
+          window.location.replace('/agent/settings/mcp')
+        }
+      })()
     }, 800)
   }, [message])
 

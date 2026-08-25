@@ -8,6 +8,7 @@ import {
   isCoverGeneratorDomPreviewTemplate,
 } from '@/components/pages/generator/_components/CoverPreviewContent'
 import { getCoverBrandThemeForSvgExport } from '@/lib/cover-generator/themes'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 type CoverTemplateCardProps = {
@@ -25,6 +26,7 @@ export function CoverTemplateCard({
   variant = 'start',
   onSelect,
 }: CoverTemplateCardProps) {
+  const t = useT()
   const previewRef = useRef<HTMLDivElement>(null)
   const [previewWidth, setPreviewWidth] = useState(
     COVER_GENERATOR_TEMPLATE_PANEL_WIDTH_PX,
@@ -93,7 +95,7 @@ export function CoverTemplateCard({
               : 'text-[14px]',
           )}
         >
-          {definition?.label ?? template}
+          {t(definition?.label ?? template)}
         </span>
       </div>
     </button>

@@ -1,6 +1,5 @@
 import { WELCOME_BLOCKED_APPWRITE_SUBCOMMANDS } from './blocked-cli-commands'
 import {
-  CLI_TERMINAL_BLUE,
   CLI_TERMINAL_CYAN,
   CLI_TERMINAL_GREEN,
   CLI_TERMINAL_MUTED,
@@ -10,23 +9,10 @@ import {
 } from './cli-terminal-api'
 import type { CliShellLine } from './types'
 
-export const CLI_DOCS_URL =
-  '/docs/tooling/command-line/commands'
+export const CLI_DOCS_URL = '/docs/tooling/command-line/commands'
 
-/** Working directory for Appwrite CLI project context inside almostnode VFS. */
+/** Working directory for Appwrite CLI project context inside the CLI VFS. */
 export const CLI_PROJECT_CWD = '/project'
-
-/** Resolved path to the Appwrite CLI binary in the almostnode VFS. */
-export const CLI_APPWRITE_BIN = '/node_modules/.bin/appwrite'
-
-/** npm dist-tag used when installing the browser Appwrite CLI. */
-export const CLI_APPWRITE_CLI_DIST_TAG = 'latest'
-
-/** npm package name for the Appwrite CLI. */
-export const CLI_APPWRITE_CLI_PACKAGE = 'appwrite-cli'
-
-/** VFS paths restored from IndexedDB to skip reinstalling the CLI. */
-export const CLI_VFS_CACHE_ROOT = '/node_modules'
 
 /** Sentinel cookie written to CLI prefs when auth uses browser cookie forwarding. */
 export const BROWSER_PROXY_SESSION_COOKIE =
@@ -49,13 +35,13 @@ export const CLI_SHELL_TRY_COMMANDS = [
   'appwrite whoami',
   'appwrite users list --json',
   'appwrite functions list',
-  'appwrite tables-db list',
+  'appwrite tablesdb list',
 ] as const
 
 export function createCliShellWelcomeLines(): CliShellLine[] {
-  const blockedList = WELCOME_BLOCKED_APPWRITE_SUBCOMMANDS
-    .map((name) => `${CLI_TERMINAL_YELLOW}${name}${CLI_TERMINAL_MUTED}`)
-    .join(', ')
+  const blockedList = WELCOME_BLOCKED_APPWRITE_SUBCOMMANDS.map(
+    (name) => `${CLI_TERMINAL_YELLOW}${name}${CLI_TERMINAL_MUTED}`,
+  ).join(', ')
 
   return [
     {

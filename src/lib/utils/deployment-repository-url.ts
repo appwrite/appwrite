@@ -11,19 +11,22 @@ type DeploymentRepositoryFields = {
 
 function getVcsProviderKind(
   deployment: DeploymentRepositoryFields,
-): 'github' | 'gitlab' | 'bitbucket' | null {
+): 'github' | 'gitlab' | 'bitbucket' | 'origin' | null {
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
     if (url.includes('github.com')) return 'github'
     if (url.includes('gitlab.com')) return 'gitlab'
     if (url.includes('bitbucket.org') || url.includes('bitbucket.com'))
       return 'bitbucket'
+    if (url.includes('cursor.com') || url.includes('origin.cursor.com'))
+      return 'origin'
   }
   if (deployment.vcsProvider) {
     const p = deployment.vcsProvider.toLowerCase()
     if (p === 'github') return 'github'
     if (p === 'gitlab') return 'gitlab'
     if (p === 'bitbucket') return 'bitbucket'
+    if (p === 'origin') return 'origin'
   }
   return null
 }
@@ -65,6 +68,9 @@ export function getDeploymentRepositoryWebUrl(
   }
   if (kind === 'gitlab') {
     return `https://gitlab.com/${owner}/${name}`
+  }
+  if (kind === 'origin') {
+    return `https://cursor.com/codebase/${owner}/${name}`
   }
   return `https://bitbucket.org/${owner}/${name}`
 }

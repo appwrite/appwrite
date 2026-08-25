@@ -1,18 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { AgentPanelContent } from '@/components/global/providers/AgentChat'
+import { redirectLegacyAgentLocation } from '@/lib/assistant/agent-paths'
 
 export const Route = createFileRoute('/_public/agent/automations/$automationId')({
-  component: AutomationsDetailPage,
+  beforeLoad: async ({ context, location }) => {
+    await redirectLegacyAgentLocation({
+      queryClient: context.queryClient,
+      pathname: location.pathname,
+    })
+  },
 })
-
-function AutomationsDetailPage() {
-  const { automationId } = Route.useParams()
-  return (
-    <AgentPanelContent
-      variant="page"
-      section="automations"
-      automationMode="detail"
-      routeAutomationId={automationId}
-    />
-  )
-}

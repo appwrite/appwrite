@@ -59,11 +59,15 @@ For **Challenge**, set:
 
 Challenge rules use the platform default challenge type. See [Challenge](/docs/products/firewall/actions#challenge).
 
+To challenge **every** visitor to a site without building this rule by hand, use [Attack mode](/docs/products/firewall/attack-mode) from the Firewall page instead of the create wizard.
+
 For **Rate limit**, set:
 
 - **Request limit** (Console default `100`)
 - **Interval (seconds)** (Console default `60`; maximum `86400`)
 - **Limit by** (`ip` or `userId`; Console default `ip`) — whether the quota is counted per client IP or per authenticated user
+- **Strategy** (`fixedWindow`, `slidingWindow`, or `tokenBucket`; Console default `fixedWindow`) — the algorithm that enforces the quota over time. This is fixed after create. See [Rate limit strategies](/docs/products/firewall/actions#rate-limit-strategies).
+- **Max bucket size** (`1` to `1000000`) — token bucket only: the largest burst allowed, defaulting to **Request limit** when left unset
 
 Quotas are counted per bucket key per rule. See [Rate limit](/docs/products/firewall/actions#rate-limit).
 

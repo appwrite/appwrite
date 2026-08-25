@@ -35,15 +35,16 @@ export function FunctionBuildTriggersCard({
         buildFunctionUpdateParams(func, updates),
       )
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (updated, variables) => {
       const summary = describeTriggerBehavior(
         variables.providerBranches,
         variables.providerPaths,
       )
       toast.success(`${t('Triggers updated.')} ${summary}`)
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, func.$id],
-      })
+      queryClient.setQueryData(
+        ['function', 'project', projectId, func.$id],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['functions', 'project', projectId],
       })

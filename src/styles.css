@@ -1467,6 +1467,149 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   }
 }
 
+@keyframes home-ai-msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-ai-chart-reveal {
+  from {
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes home-ai-status-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.home-ai-msg-in {
+  animation: home-ai-msg-in 360ms ease-out both;
+}
+
+.home-ai-chart-reveal {
+  animation: home-ai-chart-reveal 700ms ease-out both;
+}
+
+.home-ai-status-pulse {
+  animation: home-ai-status-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes home-ai-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-ai-pane-in {
+  animation: home-ai-pane-in 500ms ease-out both;
+}
+
+.home-ai-layout-pane {
+  transition:
+    height 500ms ease-out,
+    opacity 480ms ease-out,
+    transform 480ms ease-out,
+    border-color 400ms ease-out;
+}
+
+.home-ai-chat-spacer {
+  flex-grow: 1;
+  flex-basis: 0;
+  min-width: 0;
+  overflow: hidden;
+  transition: flex-grow 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home-ai-chat-spacer.shifted {
+  flex-grow: 0;
+}
+
+.home-ai-composer-grow-ready {
+  transition: height 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes home-ai-oauth-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-ai-oauth-sheet {
+  animation: home-ai-oauth-sheet 420ms ease-out both;
+}
+
+@keyframes home-ai-oauth-press {
+  0%,
+  40% {
+    transform: scale(1);
+  }
+
+  52% {
+    transform: scale(0.96);
+  }
+
+  68%,
+  100% {
+    transform: scale(1);
+  }
+}
+
+.home-ai-oauth-press {
+  animation: home-ai-oauth-press 1100ms ease-out both;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-ai-msg-in,
+  .home-ai-chart-reveal,
+  .home-ai-status-pulse,
+  .home-ai-pane-in,
+  .home-ai-oauth-sheet,
+  .home-ai-oauth-press {
+    animation: none;
+  }
+
+  .home-ai-layout-pane,
+  .home-ai-chat-spacer,
+  .home-ai-composer-grow-ready {
+    transition: none;
+  }
+}
+
 /* Home product bento tile hover */
 .product-bento-hover-light {
   z-index: 20;

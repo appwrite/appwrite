@@ -26,6 +26,12 @@ import {
 } from '@/components/ui/popover'
 import { useBackupPolicies } from '@/lib/react-query/hooks'
 import { NoBackupPoliciesWarningIcon } from './DatabaseBackupsNavLink'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import type { DatabaseTabId } from '../workspace-types'
@@ -47,6 +53,7 @@ export type DatabaseSectionSelectorProps = {
   showMonitor?: boolean
   showBackups?: boolean
   showSettings?: boolean
+  disabledSectionIds?: Partial<Record<DatabaseSectionId, string>>
   onSelect: (sectionId: DatabaseSectionId) => void
   triggerClassName?: string
 }
@@ -60,6 +67,7 @@ export function DatabaseSectionSelector({
   showMonitor = false,
   showBackups = false,
   showSettings = false,
+  disabledSectionIds,
   onSelect,
   triggerClassName,
 }: DatabaseSectionSelectorProps) {
@@ -146,17 +154,24 @@ export function DatabaseSectionSelector({
           {items.map((item) => {
             const Icon = item.icon
             const isActive = item.id === value
-            return (
+            const disabledTooltip = disabledSectionIds?.[item.id]
+            const disabled = !!disabledTooltip
+            const button = (
               <button
                 key={item.id}
                 type="button"
+                disabled={disabled}
                 onClick={() => {
+                  if (disabled) return
                   onSelect(item.id)
                   setOpen(false)
                 }}
                 className={cn(
-                  'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-start text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
-                  isActive && 'bg-accent/60',
+                  'flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-start text-[13px] outline-none transition-colors',
+                  disabled
+                    ? 'cursor-not-allowed opacity-50'
+                    : 'cursor-pointer hover:bg-accent hover:text-accent-foreground',
+                  isActive && !disabled && 'bg-accent/60',
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -166,6 +181,19 @@ export function DatabaseSectionSelector({
                   <Check className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 ) : null}
               </button>
+            )
+            if (!disabledTooltip) return button
+            return (
+              <TooltipProvider key={item.id} delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="w-full">{button}</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-[13px]">{t(disabledTooltip)}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )
           })}
         </div>

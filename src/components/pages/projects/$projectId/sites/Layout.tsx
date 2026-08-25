@@ -5,7 +5,11 @@ import {
   useNavigate,
   useLocation,
 } from '@tanstack/react-router'
-import { useQueryClient, useMutation, useIsFetching } from '@tanstack/react-query'
+import {
+  useQueryClient,
+  useMutation,
+  useIsFetching,
+} from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import type { Models } from '@appwrite.io/console'
@@ -28,10 +32,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Info } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertCircle, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { sdk } from '@/lib/appwrite/sdk'
 import {
   RefreshProvider,
   useRefresh,
@@ -76,6 +81,11 @@ function SiteLayoutContent() {
     useIsFetching({
       queryKey: ['logs', 'site', projectId, siteId],
     }) > 0
+  const siteUsageRefreshing =
+    useIsFetching({
+      queryKey: ['usage-events'],
+      predicate: (query) => query.queryKey.includes(siteId),
+    }) > 0
   const { data: site } = useProjectSite(projectId, siteId)
 
   const activeTab = useMemo(() => {
@@ -85,9 +95,14 @@ function SiteLayoutContent() {
     if (sitesIndex >= 0 && pathParts[sitesIndex + 2]) {
       const tab = pathParts[sitesIndex + 2]
       if (
-        ['deployments', 'logs', 'domains', 'variables', 'settings'].includes(
-          tab,
-        )
+        [
+          'deployments',
+          'logs',
+          'domains',
+          'usage',
+          'variables',
+          'settings',
+        ].includes(tab)
       ) {
         return tab
       }
@@ -116,10 +131,10 @@ function SiteLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSettingsTab = canShowSiteSettingsTab(access, features)
-  // Execution documents are only persisted on Appwrite Cloud; hide list toolbar controls on self-hosted
-  const executionLogsEnabled = features.executionLogs
 
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
+  const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
+
   const cancelBuildMutation = useMutation({
     mutationFn: async () => {
       if (!projectId || !siteId || !activeDeployment?.$id) {
@@ -139,6 +154,32 @@ function SiteLayoutContent() {
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to cancel build'))
+    },
+  })
+
+  const redeployMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.createDuplicateDeployment({
+        siteId,
+        deploymentId: activeDeployment.$id,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['deployments', 'site', projectId, siteId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success(t('Deployment rebuild started'))
+      setRedeployDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t('Failed to redeploy'))
     },
   })
 
@@ -250,6 +291,16 @@ function SiteLayoutContent() {
         to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
+      ...(features.usageStats
+        ? [
+            {
+              id: 'usage' as const,
+              label: t('Usage'),
+              to: '/projects/$projectId/sites/$siteId/usage',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
       ...(showSettingsTab
         ? [
             {
@@ -267,7 +318,7 @@ function SiteLayoutContent() {
           ]
         : []),
     ],
-    [projectId, siteId, showSettingsTab, t],
+    [features.usageStats, projectId, siteId, showSettingsTab, t],
   )
 
   // Redirect from settings or variables when user lacks permission
@@ -283,6 +334,79 @@ function SiteLayoutContent() {
   }, [showSettingsTab, activeTab, projectId, siteId, navigate])
 
   const isLogsTabLayout = activeTab === 'logs'
+
+  const buildingAlert = isBuilding ? (
+    <div className="border-b border-border bg-blue-500/5">
+      <div
+        className={cn(
+          'w-full px-4 py-3 sm:px-6',
+          activeTab !== 'logs' && 'mx-auto max-w-7xl',
+        )}
+      >
+        <Alert variant="default" className="border-blue-500/30 bg-transparent">
+          <Info className="h-4 w-4 text-blue-500 shrink-0" />
+          <AlertDescription className="flex flex-1 items-center justify-between gap-3 text-[12px] text-blue-600/80 dark:text-blue-400/80">
+            <span>{t('Your site is currently being deployed.')}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 border-blue-500/40 text-blue-600 hover:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/10"
+              onClick={handleCancelBuild}
+              disabled={cancelBuildMutation.isPending}
+            >
+              {t('Cancel build')}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    </div>
+  ) : undefined
+
+  // Settings changes that need a redeploy (API sets live=false)
+  const configAlert =
+    !isBuilding && site && !site.live ? (
+      <div className="border-b border-border bg-amber-500/5">
+        <div
+          className={cn(
+            'w-full px-4 py-3 sm:px-6',
+            activeTab !== 'logs' && 'mx-auto max-w-7xl',
+          )}
+        >
+          <Alert
+            variant="default"
+            className="border-amber-500/30 bg-transparent"
+          >
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <div className="flex flex-1 items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                  {t('Settings changes are not live yet')}
+                </AlertTitle>
+                <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                  <span className="inline">
+                    {t(
+                      "You've updated site settings, but they won't take effect until you redeploy. The current deployment is still running with the previous settings.",
+                    )}
+                  </span>
+                </AlertDescription>
+              </div>
+              <Button
+                size="sm"
+                className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
+                onClick={() => setRedeployDialogOpen(true)}
+                disabled={
+                  !site.deploymentId ||
+                  !activeDeployment ||
+                  redeployMutation.isPending
+                }
+              >
+                {t('Redeploy')}
+              </Button>
+            </div>
+          </Alert>
+        </div>
+      </div>
+    ) : undefined
 
   return (
     <CreateDeploymentProvider
@@ -303,105 +427,91 @@ function SiteLayoutContent() {
         >
           <ServiceHeader
             title={
-            <DetailResourceHeaderTitle
-              kind="site"
-              label={site?.name || t('Site')}
-              resourceId={site?.$id ?? ''}
-              projectId={projectId}
-              back={{
-                onClick: handleBack,
-                'aria-label': t('Back to sites'),
-              }}
-            />
-          }
-          tabs={tabs}
-          activeTab={activeTab}
-          fullWidthBorder
-          fullWidth={activeTab === 'logs'}
-          showToolbarBottomBorder={isLogsTabLayout}
-          showFilters={
-            (activeTab === 'logs' && executionLogsEnabled) ||
-            activeTab === 'domains'
-          }
-          filterTrigger={
-            (activeTab === 'logs' && executionLogsEnabled) ||
-            activeTab === 'domains' ? (
-              <FiltersPopover
-                open={filtersOpen}
-                onOpenChange={setFiltersOpen}
-                columns={siteFilterColumns}
-                filterMap={siteFilterMap}
-                onRemoveFilter={removeSiteFilter}
-                onClearAll={clearAllSiteFilters}
-                onApplyFilter={applySiteFilter}
-                resourceLabel={activeTab === 'logs' ? t('logs') : t('domains')}
-                filterScope={`sites.${activeTab}`}
-                onApplyQuery={(queryParam) => {
-                  navigate({
-                    to: location.pathname,
-                    search: (prev) => ({
-                      ...(typeof prev === 'object' && prev !== null
-                        ? prev
-                        : {}),
-                      query: queryParam ?? undefined,
-                      page: 1,
-                    }),
-                    replace: true,
-                  })
+              <DetailResourceHeaderTitle
+                kind="site"
+                label={site?.name || t('Site')}
+                resourceId={site?.$id ?? ''}
+                projectId={projectId}
+                back={{
+                  onClick: handleBack,
+                  'aria-label': t('Back to sites'),
                 }}
-                teamId={project?.teamId}
               />
-            ) : undefined
-          }
-          showRefresh={activeTab === 'logs' && hasRefreshHandler}
-          onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
-          isRefreshing={siteLogsListRefreshing}
-          createLabel={activeTab === 'domains' ? t('Add domain') : undefined}
-          createAnalyticsAction={
-            activeTab === 'domains' ? 'create-site-domain' : undefined
-          }
-          onCreate={
-            activeTab === 'domains'
-              ? () =>
-                  navigate({
-                    to: '/projects/$projectId/sites/$siteId/domains/add',
-                    params: { projectId: projectId!, siteId: siteId! },
-                  })
-              : undefined
-          }
-          beforeCreateButtons={undefined}
-          contentAfterBorder={
-            isBuilding ? (
-              <div className="border-b border-border bg-blue-500/5">
-                <div
-                  className={cn(
-                    'w-full px-4 py-3 sm:px-6',
-                    activeTab !== 'logs' && 'mx-auto max-w-7xl',
-                  )}
-                >
-                  <Alert
-                    variant="default"
-                    className="border-blue-500/30 bg-transparent"
-                  >
-                    <Info className="h-4 w-4 text-blue-500 shrink-0" />
-                    <AlertDescription className="flex flex-1 items-center justify-between gap-3 text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                      <span>{t('Your site is currently being deployed.')}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="shrink-0 border-blue-500/40 text-blue-600 hover:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/10"
-                        onClick={handleCancelBuild}
-                        disabled={cancelBuildMutation.isPending}
-                      >
-                        {t('Cancel build')}
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
+            }
+            tabs={tabs}
+            activeTab={activeTab}
+            fullWidthBorder
+            fullWidth={activeTab === 'logs'}
+            showToolbarBottomBorder={isLogsTabLayout}
+            showFilters={activeTab === 'logs' || activeTab === 'domains'}
+            filterTrigger={
+              activeTab === 'logs' || activeTab === 'domains' ? (
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={siteFilterColumns}
+                  filterMap={siteFilterMap}
+                  onRemoveFilter={removeSiteFilter}
+                  onClearAll={clearAllSiteFilters}
+                  onApplyFilter={applySiteFilter}
+                  resourceLabel={
+                    activeTab === 'logs' ? t('logs') : t('domains')
+                  }
+                  filterScope={`sites.${activeTab}`}
+                  onApplyQuery={(queryParam) => {
+                    navigate({
+                      to: location.pathname,
+                      search: (prev) => ({
+                        ...(typeof prev === 'object' && prev !== null
+                          ? prev
+                          : {}),
+                        query: queryParam ?? undefined,
+                        page: 1,
+                      }),
+                      replace: true,
+                    })
+                  }}
+                  teamId={project?.teamId}
+                />
+              ) : undefined
+            }
+            showRefresh={
+              (activeTab === 'logs' || activeTab === 'usage') &&
+              hasRefreshHandler
+            }
+            onRefresh={
+              activeTab === 'logs' || activeTab === 'usage'
+                ? triggerRefresh
+                : undefined
+            }
+            isRefreshing={
+              activeTab === 'usage'
+                ? siteUsageRefreshing
+                : siteLogsListRefreshing
+            }
+            createLabel={activeTab === 'domains' ? t('Add domain') : undefined}
+            createAnalyticsAction={
+              activeTab === 'domains' ? 'create-site-domain' : undefined
+            }
+            onCreate={
+              activeTab === 'domains'
+                ? () =>
+                    navigate({
+                      to: '/projects/$projectId/sites/$siteId/domains/add',
+                      params: { projectId: projectId!, siteId: siteId! },
+                    })
+                : undefined
+            }
+            beforeCreateButtons={undefined}
+            contentAfterBorder={
+              buildingAlert || configAlert ? (
+                <div>
+                  {buildingAlert}
+                  {configAlert}
                 </div>
-              </div>
-            ) : undefined
-          }
-        />
+              ) : undefined
+            }
+          />
         </div>
         <div
           className={cn('flex-1 min-h-0', isLogsTabLayout && 'flex flex-col')}
@@ -519,6 +629,43 @@ function SiteLayoutContent() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {activeDeployment && (
+        <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
+              <DialogTitle>{t('Redeploy deployment')}</DialogTitle>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-4">
+              <DialogDescription className="text-[13px] mb-4">
+                {t(
+                  "This will create a new build for this deployment using the current site configuration. The original deployment's code will be preserved and used for the new build.",
+                )}
+              </DialogDescription>
+              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setRedeployDialogOpen(false)}
+                disabled={redeployMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {t('Cancel')}
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => redeployMutation.mutate()}
+                disabled={redeployMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {t('Redeploy')}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </CreateDeploymentProvider>
   )
 }

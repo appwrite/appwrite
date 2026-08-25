@@ -1,5 +1,4 @@
 import path from 'node:path'
-import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
@@ -7,10 +6,7 @@ import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import devtoolsJson from 'vite-plugin-devtools-json'
-import {
-  almostnodeBuildPlugin,
-  ensureAlmostnodePatchCache,
-} from './src/lib/cli-shell/vite-almostnode-plugin'
+import { docsContentHmrPlugin } from './src/lib/docs/vite-docs-content-hmr-plugin'
 import {
   getAllMarketingPrerenderPaths,
   getSitesPrerenderBuildSummary,
@@ -19,37 +15,11 @@ import {
 import { getSitesPrerenderConcurrency } from './src/lib/marketing/sites-prerender-scope'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
-const require = createRequire(import.meta.url)
-const resolveExportsCjsEntry = require.resolve('resolve.exports')
-const almostnodeDist = path.resolve(projectRoot, 'node_modules/almostnode/dist')
-const almostnodeCacheDir = path.resolve(projectRoot, '.cache/almostnode')
-const almostnodeEntry = ensureAlmostnodePatchCache(
-  almostnodeDist,
-  almostnodeCacheDir,
-).indexEntry
-// Avoid import.meta.resolve here: Vite bundles vite.config.ts before loading it,
-// and Bun cannot resolve the injected import-meta-resolve shim in that bundle.
-const justBashBrowserEntry = path.resolve(
-  projectRoot,
-  'node_modules/just-bash/dist/bundle/browser.js',
-)
-const sprintfJsShim = path.resolve(
-  projectRoot,
-  'src/lib/cli-shell/shims/sprintf-js.ts',
-)
-const resolveExportsShim = path.resolve(
-  projectRoot,
-  'src/lib/cli-shell/shims/resolve-exports.ts',
-)
 const decimalJsLightShim = path.resolve(
   projectRoot,
   'src/lib/shims/decimal-js-light.ts',
 )
-const decimalJsShim = path.resolve(
-  projectRoot,
-  'src/lib/shims/decimal-js.ts',
-)
-const almostnodeSrc = path.resolve(projectRoot, 'node_modules/almostnode/src')
+const decimalJsShim = path.resolve(projectRoot, 'src/lib/shims/decimal-js.ts')
 
 /**
  * Fail the client build when Rolldown emits empty hashed JS/CSS assets.
@@ -62,7 +32,15 @@ function rejectEmptyBuildAssetsPlugin() {
     apply: 'build' as const,
     generateBundle(
       _options: unknown,
-      bundle: Record<string, { type: string; fileName: string; code?: string; source?: string | Uint8Array }>,
+      bundle: Record<
+        string,
+        {
+          type: string
+          fileName: string
+          code?: string
+          source?: string | Uint8Array
+        }
+      >,
     ) {
       const empty = Object.values(bundle).filter((item) => {
         if (item.type !== 'chunk' && item.type !== 'asset') return false
@@ -105,18 +83,15 @@ export default defineConfig(async () => {
   const isSitesBuild = process.env.FOR_SITES === 'true'
   // Source-map upload is a build-time concern, gated only on the auth token.
   // The runtime Sentry DSN is injected via runtime config (see runtime-config.ts).
-  const sentryPlugins =
-    process.env.SENTRY_AUTH_TOKEN
-      ? [
-          (
-            await import('@sentry/tanstackstart-react/vite')
-          ).sentryTanstackStart({
-            org: 'appwrite',
-            project: 'console-v4',
-            authToken: process.env.SENTRY_AUTH_TOKEN,
-          }),
-        ]
-      : []
+  const sentryPlugins = process.env.SENTRY_AUTH_TOKEN
+    ? [
+        (await import('@sentry/tanstackstart-react/vite')).sentryTanstackStart({
+          org: 'appwrite',
+          project: 'console-v4',
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+        }),
+      ]
+    : []
 
   return {
     plugins: [
@@ -127,11 +102,8 @@ export default defineConfig(async () => {
       tailwindcss(),
       tanstackStart(isSitesBuild ? getTanstackStartSitesOptions() : undefined),
       devtoolsJson(),
-      almostnodeBuildPlugin(almostnodeDist, almostnodeCacheDir, {
-        projectRoot,
-        justBashBrowserEntry,
-      }),
       viteReact(),
+      docsContentHmrPlugin(),
       rejectEmptyBuildAssetsPlugin(),
       ...sentryPlugins,
     ],
@@ -155,42 +127,6 @@ export default defineConfig(async () => {
           find: /^decimal\.js$/,
           replacement: decimalJsShim,
         },
-        {
-          find: /^sprintf-js$/,
-          replacement: sprintfJsShim,
-        },
-        {
-          find: /^resolve\.exports$/,
-          replacement: resolveExportsShim,
-        },
-        {
-          find: /^@cli-shell\/cjs\/resolve\.exports$/,
-          replacement: resolveExportsCjsEntry,
-        },
-        {
-          find: /^just-bash$/,
-          replacement: justBashBrowserEntry,
-        },
-        {
-          find: '@almostnode-internal/registry',
-          replacement: path.join(almostnodeSrc, 'npm/registry.ts'),
-        },
-        {
-          find: '@almostnode-internal/tarball',
-          replacement: path.join(almostnodeSrc, 'npm/tarball.ts'),
-        },
-        {
-          find: '@almostnode-internal/transform',
-          replacement: path.join(almostnodeSrc, 'transform.ts'),
-        },
-        {
-          find: '@almostnode-internal/path',
-          replacement: path.join(almostnodeSrc, 'shims/path.ts'),
-        },
-        {
-          find: /^almostnode$/,
-          replacement: almostnodeEntry,
-        },
       ],
     },
     optimizeDeps: {
@@ -199,10 +135,6 @@ export default defineConfig(async () => {
       needsInterop: [
         'decimal.js',
         'decimal.js-light',
-        'sprintf-js',
-        'sprintf-js/src/sprintf.js',
-        'resolve.exports',
-        '@cli-shell/cjs/resolve.exports',
         // Appwrite console SDK default-imports this CJS package from dist/esm/sdk.js.
         'json-bigint',
         // CJS shim entries: named ESM imports fail unless pre-bundled with interop.
@@ -218,7 +150,6 @@ export default defineConfig(async () => {
         'use-sync-external-store',
         'use-sync-external-store/shim',
         'use-sync-external-store/shim/with-selector.js',
-        'sprintf-js/src/sprintf.js',
         // Pre-bundle so json-bigint gets a default export shim and the console SDK stays in sync
         // with the installed @appwrite.io/console version. Clear node_modules/.vite after SDK bumps.
         '@appwrite.io/console',
@@ -229,7 +160,6 @@ export default defineConfig(async () => {
       exclude: [
         '@tanstack/react-store',
         '@tanstack/store',
-        'almostnode',
         'sharp',
         // Pre-bundling inlines nested @radix-ui copies and can load a second React
         // instance, breaking hooks (useState of null) in ScrollArea / Avatar.
@@ -263,16 +193,6 @@ export default defineConfig(async () => {
         : process.env.SENTRY_AUTH_TOKEN
           ? 'hidden'
           : false,
-      rolldownOptions: {
-        // almostnode uses direct eval for Node vm/module emulation in the CLI shell.
-        onwarn(warning, defaultHandler) {
-          const sourceId = warning.id?.replace(/\\/g, '/')
-          if (warning.code === 'EVAL' && sourceId?.includes('almostnode')) {
-            return
-          }
-          defaultHandler(warning)
-        },
-      },
     },
   }
 })

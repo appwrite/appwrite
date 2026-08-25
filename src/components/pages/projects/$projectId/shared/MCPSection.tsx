@@ -25,13 +25,10 @@ import { useProject } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
-import {
-  CodeBlock,
-  type CodeBlockLanguage,
-} from '@/components/global/shared/CodeBlock'
+import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { McpIcon } from '@/components/global/shared/McpIcon'
-import { cn } from '@/lib/utils'
 import { useT, type Translator } from '@/lib/i18n/translate'
 
 export interface MCPSectionProps {
@@ -80,7 +77,7 @@ function getCloudMcpTools(t: Translator): McpToolConfig[] {
     {
       id: 'codex',
       name: 'Codex',
-      iconPath: '/icons/chatgpt.svg',
+      iconPath: '/icons/codex.svg',
       language: 'bash',
       code: MCP_CODEX_INSTALL_COMMAND,
     },
@@ -135,7 +132,7 @@ function getSelfHostedMcpTools(
     {
       id: 'codex',
       name: 'Codex',
-      iconPath: '/icons/chatgpt.svg',
+      iconPath: '/icons/codex.svg',
       language: 'toml',
       code: getSelfHostedCodexConfig(projectId, endpoint),
     },
@@ -185,7 +182,6 @@ export function MCPSection({
   const { isSelfHosted } = useConsoleProfile()
   const { project } = useProject(projectId)
   const [selectedToolId, setSelectedToolId] = useState<McpToolId>('claude-code')
-  const [copied, setCopied] = useState(false)
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null)
 
   const endpoint = useMemo(
@@ -211,12 +207,21 @@ export function MCPSection({
     [tools, selectedToolId],
   )
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(selectedTool.code)
-    setCopied(true)
-    toast.success(t('Copied to clipboard'))
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const toolTabs = useMemo(
+    () =>
+      tools.map((tool) => ({
+        id: tool.id,
+        label: tool.name,
+        icon: (
+          <img
+            src={tool.iconPath}
+            alt=""
+            className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
+          />
+        ),
+      })),
+    [tools],
+  )
 
   const handleCopyPrompt = (prompt: string) => {
     navigator.clipboard.writeText(prompt)
@@ -263,76 +268,36 @@ export function MCPSection({
       <h4 className="text-[13px] font-semibold text-foreground">
         {t('1. Install')}
       </h4>
-      <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-1.5">
-          {tools.map((tool) => {
-            const isSelected = tool.id === selectedTool.id
-            return (
-              <button
-                key={tool.id}
-                type="button"
-                onClick={() => {
-                  setSelectedToolId(tool.id)
-                  setCopied(false)
-                }}
-                className={cn(
-                  'cursor-pointer inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                  isSelected
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
-                )}
-              >
-                <img
-                  src={tool.iconPath}
-                  alt=""
-                  className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                />
-                {tool.name}
-              </button>
-            )
-          })}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
-          onClick={handleCopyCode}
-        >
-          {copied ? (
-            <Check className="h-3.5 w-3.5" />
-          ) : (
-            <Copy className="h-3.5 w-3.5" />
-          )}
-          {t('Copy')}
-        </Button>
-      </div>
-
-      <CodeBlock
-        key={selectedTool.id}
+      <ConnectCodeExample
         code={selectedTool.code}
         language={selectedTool.language}
-        showCopy={false}
+        tabs={toolTabs}
+        activeTabId={selectedTool.id}
+        onTabChange={(id) => setSelectedToolId(id as McpToolId)}
+        selectorAriaLabel={t('Select tool')}
       />
 
-      {selectedTool.installUrl ? (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="h-9 text-[13px] gap-1.5"
-          onClick={() => openMcpInstallUrl(selectedTool.installUrl!)}
-        >
-          <Download className="h-4 w-4" />
-          {t('Install')}
-        </Button>
-      ) : null}
+      <div className="flex flex-wrap items-center gap-3">
+        {selectedTool.installUrl ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-9 text-[13px] gap-1.5"
+            onClick={() => openMcpInstallUrl(selectedTool.installUrl!)}
+          >
+            <Download className="h-4 w-4" />
+            {t('Install')}
+          </Button>
+        ) : null}
 
-      <DocsRouteLink
-        href={MCP_MORE_TOOLS_DOCS_HREF}
-        className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
-      >
-        {t('More tools in the docs')}
-        <ExternalLink className="h-3 w-3" />
-      </DocsRouteLink>
+        <DocsRouteLink
+          href={MCP_MORE_TOOLS_DOCS_HREF}
+          className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
+        >
+          {t('More tools in the docs')}
+          <ExternalLink className="h-3 w-3" />
+        </DocsRouteLink>
+      </div>
     </div>
   )
 

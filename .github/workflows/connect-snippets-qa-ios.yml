@@ -1,0 +1,326 @@
+name: Connect snippets QA (iOS)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CODE_SNIPPET_QA_ENDPOINT: ${{ vars.CODE_SNIPPET_QA_ENDPOINT }}
+  CODE_SNIPPET_QA_PROJECT_ID: ${{ vars.CODE_SNIPPET_QA_PROJECT_ID }}
+  APP_ID: io.appwrite.connectqa
+
+defaults:
+  run:
+    working-directory: tests/connect-qa/ios
+
+jobs:
+  qa:
+    name: ${{ matrix.id }}
+    # Stays on GitHub-hosted macOS: RunsOn (the AWS runner provider used by
+    # the other snippet QA workflows) cannot offer macOS - Apple's license
+    # forces a 24h minimum allocation on EC2 Mac dedicated hosts, which is
+    # incompatible with per-job runners (https://runs-on.com/runners/macos/).
+    # Note: this repo is private, so macOS minutes bill at 10x - if jobs die
+    # in seconds with "not started because recent account payments have
+    # failed or your spending limit needs to be increased", that is the org's
+    # GitHub billing, not this workflow.
+    runs-on: macos-15
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: apple
+            sdk: apple
+            snippets: apple
+            template: apple
+            config_file: Appwrite.xcconfig
+            copy_to: Sources
+            create: mkdir -p "$APP_DIR"
+            configure: xcodegen generate
+            install: 'true'
+            build: xcodebuild -project ConnectQA.xcodeproj -scheme ConnectQA -configuration Release -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+            app_search: build/Build/Products/Release-iphonesimulator
+
+          - id: react-native
+            sdk: react-native
+            snippets: react-native
+            template: ''
+            config_file: .env
+            create: npx -y create-expo-app@latest "$APP_DIR" --template blank-typescript --no-install
+            configure: jq --arg id "$APP_ID" '.expo.ios.bundleIdentifier = $id' app.json > app.json.tmp && mv app.json.tmp app.json
+            # react-native-appwrite hard-pins expo-file-system 18.*.*, which
+            # conflicts with the Expo SDK 54 app's 19.x and mixes two versions
+            # of the native module (crashed Android at launch; the iOS pods
+            # have the same skew). Override it to the app's own version until
+            # appwrite/sdk-for-react-native#114 ships.
+            install: >-
+              npm install && npm install react-native-appwrite &&
+              npx expo install expo-file-system &&
+              npm pkg set 'overrides.expo-file-system=$expo-file-system' &&
+              npm install
+            build: npx expo prebuild --platform ios --no-install && pod install --project-directory=ios && xcodebuild -workspace ios/*.xcworkspace -scheme "$(xcodebuild -workspace ios/*.xcworkspace -list -json | jq -r '.workspace.schemes[0]')" -configuration Release -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+            app_search: build/Build/Products/Release-iphonesimulator
+
+          - id: flutter
+            sdk: flutter
+            snippets: flutter
+            template: ''
+            config_file: env.json
+            copy_to: .
+            create: flutter create --org io.appwrite --project-name connectqa "$APP_DIR"
+            configure: 'true'
+            install: flutter pub add appwrite
+            build: flutter build ios --simulator --debug --dart-define-from-file=env.json
+            app_search: build/ios/iphonesimulator
+
+          - id: capacitor
+            sdk: web
+            framework: capacitor
+            using: vite
+            snippets: web/capacitor
+            template: ''
+            config_file: .env
+            copy_to: .
+            create: npx -y create-vite@latest "$APP_DIR" --template vanilla-ts
+            configure: 'true'
+            install: npm install && npm install appwrite @capacitor/core @capacitor/cli @capacitor/ios
+            # Capacitor 8 adds the iOS platform in SPM mode: an App.xcodeproj plus a
+            # local CapApp-SPM package, no CocoaPods workspace.
+            build: npm run build && npx cap add ios && npx cap sync ios && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+            app_search: build/Build/Products/Debug-iphonesimulator
+
+          - id: ionic
+            sdk: web
+            framework: ionic
+            using: vite
+            snippets: web/ionic
+            template: ionic
+            config_file: .env
+            copy_to: .
+            create: npx -y create-vite@latest "$APP_DIR" --template react-ts
+            configure: 'true'
+            install: npm install && npm install appwrite @ionic/react @capacitor/core @capacitor/cli @capacitor/ios
+            build: npm run build && npx cap add ios && npx cap sync ios && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+            app_search: build/Build/Products/Debug-iphonesimulator
+
+          - id: tauri
+            sdk: web
+            framework: tauri
+            using: vite
+            snippets: web/tauri
+            template: ''
+            config_file: .env
+            copy_to: .
+            create: npx -y create-tauri-app@latest "$APP_DIR" --template vanilla-ts --manager npm --yes
+            configure: 'true'
+            install: npm install && npm install appwrite
+            build: npm run tauri ios init -- --ci && npm run tauri ios build -- --debug --target aarch64-sim
+            app_search: src-tauri/gen/apple/build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Appwrite variables
+        run: |
+          if [ -z "$CODE_SNIPPET_QA_ENDPOINT" ] || [ -z "$CODE_SNIPPET_QA_PROJECT_ID" ]; then
+            echo "::error::Set the CODE_SNIPPET_QA_ENDPOINT and CODE_SNIPPET_QA_PROJECT_ID repository variables."
+            exit 1
+          fi
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+        with:
+          install: false
+
+      - name: Install tooling via mise (node, maestro, java)
+        env:
+          # mise pulls maestro and the JDK from GitHub releases; authenticated
+          # requests get much friendlier rate limits than the anonymous
+          # per-IP bucket (learned the hard way on the Android workflow).
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mise trust
+          mise install
+
+      - name: Install XcodeGen
+        if: matrix.id == 'apple'
+        run: brew install xcodegen
+
+      - name: Install Flutter
+        if: matrix.id == 'flutter'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # The default Xcode 16.4 ships Swift 6.1 and the iOS 18 SDK. Expo's
+      # expo-modules-jsi package declares Swift tools 6.2, and device_info_plus
+      # (pulled in by the Appwrite Flutter SDK) calls the iOS 26 SDK's
+      # NSProcessInfo.isiOSAppOnVision, so these two lanes need the newest
+      # Xcode already installed on the runner.
+      - name: Select the newest Xcode (Swift 6.2 + iOS 26 SDK)
+        if: matrix.id == 'flutter' || matrix.id == 'react-native'
+        run: |
+          # expo-modules-jsi does not compile under Xcode 26.3's Swift yet
+          # (expo/expo#47957 - the fix is merged but unreleased), so the
+          # react-native lane stays on the newest 26.x below 26.3.
+          if [ "${{ matrix.id }}" = "react-native" ]; then
+            XCODE="$(ls -d /Applications/Xcode_26.[012]*.app | grep -iv beta | sort -V | tail -1)"
+          else
+            XCODE="$(ls -d /Applications/Xcode_*.app | grep -iv beta | sort -V | tail -1)"
+          fi
+          echo "Selecting $XCODE"
+          sudo xcode-select -s "$XCODE/Contents/Developer"
+
+      - name: Show the toolchain in use
+        run: |
+          xcodebuild -version
+          xcrun simctl list runtimes
+
+      - name: Install Rust (Tauri only)
+        if: matrix.id == 'tauri'
+        run: rustup target add aarch64-apple-ios-sim aarch64-apple-ios
+
+      - name: Scaffold starter app
+        run: |
+          APP_DIR="app-$(date +%s)-$RANDOM"
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+          ( ${{ matrix.create }} )
+          if [ ! -d "$APP_DIR" ]; then
+            echo "::error::Scaffold did not produce $APP_DIR"
+            exit 1
+          fi
+
+      - name: Apply QA harness overlay
+        run: |
+          TEMPLATE="${{ matrix.template }}"
+          if [ -n "$TEMPLATE" ] && [ -d "templates/$TEMPLATE" ]; then
+            cp -Rv "templates/$TEMPLATE/." "$APP_DIR/"
+          fi
+
+      - name: Paste Connect snippets over the starter
+        run: |
+          SRC="$GITHUB_WORKSPACE/src/components/pages/projects/\$projectId/shared/connect-snippets/${{ matrix.snippets }}"
+          DEST="$APP_DIR/${{ matrix.copy_to || '.' }}"
+          mkdir -p "$DEST"
+          cp -Rv "$SRC/." "$DEST/"
+          # The Connect dialog substitutes {{NAME}} template variables when it
+          # renders these files (getSnippet in connect-snippets.ts); mirror the
+          # ones the mobile snippets use. Only the freshly pasted files are
+          # rewritten - scaffold assets can be binary.
+          (cd "$SRC" && find . -type f) | while read -r f; do
+            sed -i '' "s/{{PROJECT_ID}}/$CODE_SNIPPET_QA_PROJECT_ID/g" "$DEST/$f"
+          done
+
+      - name: Install dependencies + Appwrite SDK
+        run: |
+          cd "$APP_DIR"
+          ${{ matrix.install }}
+
+      - name: Write config file (derived from connect-snippets.ts)
+        run: |
+          node ../write-env.mjs "${{ matrix.sdk }}" "${{ matrix.framework || matrix.sdk }}" "${{ matrix.using || matrix.sdk }}" "$APP_DIR"
+          cat "$APP_DIR/${{ matrix.config_file }}"
+
+      - name: Configure the app for the QA harness
+        run: |
+          cd "$APP_DIR"
+          ${{ matrix.configure }}
+
+      - name: Build the simulator app
+        run: |
+          cd "$APP_DIR"
+          ${{ matrix.build }}
+          APP_PATH="$(find "${{ matrix.app_search }}" -maxdepth 2 -name '*.app' -type d | head -1)"
+          if [ -z "$APP_PATH" ]; then
+            echo "::error::Build did not produce a .app under ${{ matrix.app_search }}"
+            exit 1
+          fi
+          echo "APP_PATH=$PWD/$APP_PATH" >> "$GITHUB_ENV"
+          echo "Built $APP_PATH"
+
+      - name: Assert the endpoint is embedded in the app bundle
+        run: |
+          # Tauri embeds the frontend assets brotli-compressed inside the
+          # Rust binary, so grepping the bundle cannot see them; check the
+          # Vite build output that gets embedded instead (same fix as the
+          # Android workflow).
+          if [ "${{ matrix.id }}" = "tauri" ]; then
+            if ! grep -rqF "$CODE_SNIPPET_QA_ENDPOINT" "$APP_DIR/dist"; then
+              echo "::error::$CODE_SNIPPET_QA_ENDPOINT is not present in the Vite build output - the config never reached the build."
+              exit 1
+            fi
+            echo "Endpoint found in the Vite build output."
+            exit 0
+          fi
+          if ! grep -raqF "$CODE_SNIPPET_QA_ENDPOINT" "$APP_PATH"; then
+            echo "::error::$CODE_SNIPPET_QA_ENDPOINT is not present in $APP_PATH - the config never reached the build."
+            exit 1
+          fi
+          echo "Endpoint found in the app bundle."
+
+      - name: Boot a single iOS Simulator
+        run: |
+          xcrun simctl shutdown all || true
+          UDID="$(xcrun simctl list devices available -j \
+            | jq -r '[.devices[][] | select(.name | startswith("iPhone"))] | last | .udid')"
+          if [ -z "$UDID" ] || [ "$UDID" = "null" ]; then
+            echo "::error::No available iPhone simulator on this runner"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl list devices booted
+
+      - name: Install the app and run the Maestro auth flow
+        run: |
+          mkdir -p artifacts/maestro
+          xcrun simctl install "$SIM_UDID" "$APP_PATH"
+
+          run_flow() {
+            mise run test \
+              --debug-output="$PWD/artifacts/maestro" \
+              --flatten-debug-output \
+              --format=junit \
+              --output="$PWD/artifacts/maestro/report.xml"
+          }
+
+          status=0
+          run_flow || {
+            echo "::warning::Maestro flow failed - retrying once"
+            xcrun simctl terminate "$SIM_UDID" "$APP_ID" || true
+            run_flow || status=1
+          }
+
+          xcrun simctl spawn "$SIM_UDID" log collect --output artifacts/sim-logs.logarchive 2>/dev/null || true
+          exit $status
+
+      - name: Collect logs and app source
+        if: always()
+        run: |
+          mkdir -p artifacts
+          if [ -d "$HOME/.maestro/tests" ]; then
+            cp -R "$HOME/.maestro/tests/." artifacts/maestro-default-output/ || true
+          fi
+          if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
+            # target/ and gen/ are Tauri's Rust build output and generated
+            # Xcode project - without them the Android tauri artifact was
+            # ~2 GB and took longer to upload than the test took to run.
+            zip -qr artifacts/app-source.zip "$APP_DIR" \
+              -x "*/node_modules/*" "*/.git/*" "*/build/*" "*/Pods/*" \
+              "*/.expo/*" "*/DerivedData/*" "*.xcodeproj/*" \
+              "*/target/*" "*/gen/*" || true
+          fi
+
+      - name: Upload Maestro logs and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connect-qa-ios-${{ matrix.id }}
+          path: tests/connect-qa/ios/artifacts/
+          if-no-files-found: warn

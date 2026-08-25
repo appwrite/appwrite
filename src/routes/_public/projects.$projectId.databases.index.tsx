@@ -11,6 +11,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { projectSupportsDedicatedDatabaseCompute } from '@/lib/databases/dedicated-database-regions'
+import { planSupportsDedicatedDatabases } from '@/lib/databases/dedicated-database-plan'
 import { DatabaseType } from '@/lib/databases/database-type'
 import {
   GRID_DEFAULT_PAGE_SIZE,
@@ -59,10 +60,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
       const projectData = await queryClient.ensureQueryData(
         projectQueryOptions(projectId),
       )
+      const organizationPlan = projectData?.teamId
+        ? await queryClient
+            .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
+            .catch(() => null)
+        : null
 
       const profileFeatures = getActiveProfileFeatures()
       const supportsDedicatedDatabaseCompute =
-        projectSupportsDedicatedDatabaseCompute(projectData?.region)
+        projectSupportsDedicatedDatabaseCompute(projectData?.region) &&
+        planSupportsDedicatedDatabases(organizationPlan) === true
       const shouldPrefetchNativeDatabases =
         supportsDedicatedDatabaseCompute &&
         (profileFeatures.nativeDbsPostgres ||
@@ -70,20 +77,20 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
           profileFeatures.nativeDbsMongo)
 
       await Promise.all([
-        // TablesDB product section: when All Databases owns URL pagination, only
-        // prefetch the first page (same pattern as DocumentsDB / VectorsDB sections).
-        queryClient.ensureQueryData(
-          productDatabasesQueryOptions(
-            projectId,
-            DatabaseType.Tablesdb,
-            profileFeatures.dedicatedDbsSupport ? 0 : page - 1,
-            profileFeatures.dedicatedDbsSupport
-              ? GRID_DEFAULT_PAGE_SIZE
-              : limit,
-            search ?? undefined,
-            tablesDbFilterQueries,
-          ),
-        ),
+        // TablesDB product section (cloud only). Self-hosted All Databases
+        // already lists via TablesDB through consoleDatabasesQueryOptions.
+        profileFeatures.dedicatedDbsSupport
+          ? queryClient.ensureQueryData(
+              productDatabasesQueryOptions(
+                projectId,
+                DatabaseType.Tablesdb,
+                0,
+                GRID_DEFAULT_PAGE_SIZE,
+                search ?? undefined,
+                tablesDbFilterQueries,
+              ),
+            )
+          : Promise.resolve(),
         // Merged total across product APIs for plan limit check
         queryClient.ensureQueryData(
           databasesQueryOptions(
@@ -121,23 +128,17 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
               dedicatedDatabasesQueryOptions(projectId),
             )
           : Promise.resolve(),
-        // Unified All Databases list (console.listDatabases) - includes type filters
-        profileFeatures.dedicatedDbsSupport
-          ? queryClient.ensureQueryData(
-              consoleDatabasesQueryOptions(
-                projectId,
-                page - 1,
-                limit,
-                search ?? undefined,
-                filterQueries,
-              ),
-            )
-          : Promise.resolve(),
-        projectData?.teamId
-          ? queryClient.ensureQueryData(
-              organizationPlanQueryOptions(projectData.teamId),
-            )
-          : Promise.resolve(),
+        // Unified All Databases list (console.listDatabases on cloud,
+        // TablesDB list on self-hosted) - includes type filters
+        queryClient.ensureQueryData(
+          consoleDatabasesQueryOptions(
+            projectId,
+            page - 1,
+            limit,
+            search ?? undefined,
+            filterQueries,
+          ),
+        ),
       ])
     },
     component: DatabasesIndexPage,

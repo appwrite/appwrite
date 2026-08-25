@@ -4,6 +4,9 @@ import {
   openDialogAfterOverlayCloses,
 } from '@/lib/utils/overlay-lock'
 import {
+  SPREADSHEET_FILLER_CELL_CLASS,
+  SPREADSHEET_FILLER_HEADER_CLASS,
+  SPREADSHEET_SCROLL_LAYER_CLASS,
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
 } from '@/lib/layout/spreadsheet-sticky'
@@ -87,6 +90,8 @@ const headerCellBorderClass =
 const bodyCellBorderClass = 'border-b border-e border-border'
 
 const ROWS_TABLE_EDGE_COL_PX = 40
+const INDEXES_GRID_MIN_WIDTH_PX =
+  200 + 100 + 300 + 100 + ROWS_TABLE_EDGE_COL_PX
 const spreadsheetActionsColStyle = {
   width: ROWS_TABLE_EDGE_COL_PX,
   minWidth: ROWS_TABLE_EDGE_COL_PX,
@@ -399,6 +404,10 @@ export function IndexesSpreadsheet({
       ) : (
         <>
           <div className="flex-1 overflow-auto overscroll-contain">
+            <div
+              className={SPREADSHEET_SCROLL_LAYER_CLASS}
+              style={{ minWidth: INDEXES_GRID_MIN_WIDTH_PX }}
+            >
             <table className="w-full border-collapse">
               <thead className={stickyTheadClass}>
                 <tr>
@@ -442,6 +451,7 @@ export function IndexesSpreadsheet({
                       {t('Status')}
                     </span>
                   </th>
+                  <th aria-hidden className={SPREADSHEET_FILLER_HEADER_CLASS} />
                   <th
                     className={stickyActionsHeaderClass}
                     style={spreadsheetActionsColStyle}
@@ -524,6 +534,7 @@ export function IndexesSpreadsheet({
                           {localizeResourceStatusLabel(index.status, t)}
                         </Badge>
                       </td>
+                      <td aria-hidden className={SPREADSHEET_FILLER_CELL_CLASS} />
                       <td
                         className={cn(
                           stickyActionsCellBaseClass,
@@ -558,6 +569,7 @@ export function IndexesSpreadsheet({
                 })}
               </tbody>
             </table>
+            </div>
           </div>
 
           <div className="h-[54px] shrink-0 border-t border-border bg-background">

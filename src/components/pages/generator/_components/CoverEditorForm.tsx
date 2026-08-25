@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { format, isValid, parse } from 'date-fns'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -13,6 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { CodeEditor } from '@/components/global/shared/CodeEditor'
+import { DatePicker } from '@/components/global/shared/DatePicker'
 import {
   CoverBuiltInIconPicker,
 } from '@/components/pages/generator/_components/CoverBuiltInIconPicker'
@@ -29,6 +31,8 @@ import { mapCoverCodeSnippetLanguageToCodeEditorLanguage } from '@/lib/cover-gen
 import { getCoverCardsAngledLayoutResetFields } from '@/lib/cover-generator/cards-angled/constants'
 import { getCoverScreenshotAngledLayoutResetFields } from '@/lib/cover-generator/cover-screenshot-angled-frame'
 import { isCoverUploadedImageValue } from '@/lib/cover-generator/editor-image-fields'
+import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 
 type CoverEditorFormProps = {
   data: CoverRenderData
@@ -56,6 +60,18 @@ function formatCoverRangeValue(value: number, step: number): string {
     ? String(step).split('.')[1]?.length ?? 2
     : 2
   return value.toFixed(decimals).replace(/\.?0+$/, '')
+}
+
+const COVER_DATE_DISPLAY_FORMAT = 'MMM d, yyyy'
+
+function parseCoverDateValue(
+  value: string | boolean | number | undefined,
+): Date | null {
+  if (typeof value !== 'string' || !value.trim()) return null
+  const parsed = parse(value.trim(), COVER_DATE_DISPLAY_FORMAT, new Date())
+  if (isValid(parsed)) return parsed
+  const fallback = new Date(value)
+  return Number.isNaN(fallback.getTime()) ? null : fallback
 }
 
 function CoverRangeField({
@@ -126,6 +142,7 @@ function CoverFieldInput({
   onSelectBuiltInIcon: (path: string) => void
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const t = useT()
 
   if (field.type === 'boolean') {
     return (
@@ -168,6 +185,43 @@ function CoverFieldInput({
             ))}
           </SelectContent>
         </Select>
+      </div>
+    )
+  }
+
+  if (field.type === 'color') {
+    const selected = String(value ?? field.options?.[0]?.value ?? '')
+
+    return (
+      <div className="space-y-2">
+        <Label className="text-[13px]">{t(field.label)}</Label>
+        {field.description ? (
+          <p className="text-[12px] text-muted-foreground">{t(field.description)}</p>
+        ) : null}
+        <div className="flex items-center gap-2" role="radiogroup" aria-label={t(field.label)}>
+          {(field.options ?? []).map((option) => {
+            const isSelected = selected === option.value
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={isSelected}
+                aria-label={t(option.label)}
+                title={t(option.label)}
+                onClick={() => onValueChange(option.value)}
+                className={cn(
+                  'size-7 rounded-full border border-black/10 shadow-xs transition-[box-shadow,transform] dark:border-white/10',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                  isSelected
+                    ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background'
+                    : 'hover:scale-105',
+                  option.swatchClass ?? 'bg-muted',
+                )}
+              />
+            )
+          })}
+        </div>
       </div>
     )
   }
@@ -275,6 +329,27 @@ function CoverFieldInput({
   if (field.type === 'range') {
     return (
       <CoverRangeField field={field} value={value} onValueChange={onValueChange} />
+    )
+  }
+
+  if (field.type === 'date') {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={field.key} className="text-[13px]">
+          {field.label}
+        </Label>
+        {field.description ? (
+          <p className="text-[12px] text-muted-foreground">{field.description}</p>
+        ) : null}
+        <DatePicker
+          id={field.key}
+          value={parseCoverDateValue(value)}
+          onChange={(next) =>
+            onValueChange(next ? format(next, COVER_DATE_DISPLAY_FORMAT) : '')
+          }
+          placeholder="Select date"
+        />
+      </div>
     )
   }
 

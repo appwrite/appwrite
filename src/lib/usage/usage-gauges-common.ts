@@ -24,7 +24,10 @@ import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
 import { buildUsageResourceFilterQueries } from '@/lib/usage/usage-resource-queries'
 import { isScreenshotModeActive } from '@/lib/screenshot-mode'
 
-export type { UsageTopEndpoint, UsageChartInterval } from '@/lib/usage/usage-events-common'
+export type {
+  UsageTopEndpoint,
+  UsageChartInterval,
+} from '@/lib/usage/usage-events-common'
 
 export interface ProjectUsageGaugeOverview {
   changePercent: number
@@ -32,12 +35,30 @@ export interface ProjectUsageGaugeOverview {
   topConsumers: UsageTopEndpoint[]
 }
 
+/**
+ * How samples inside a bucket combine.
+ *
+ * `last` is the gauge default - the latest reading, which is the answer for a
+ * snapshot like storage. `max` is for a sampled *level* series, where the
+ * bucket's highest reading is what matters: realtime concurrency is sampled
+ * every few minutes, so its peak is the max of those samples.
+ */
+export type UsageGaugeAggregate = 'last' | 'max'
+
+/** Closed listGauges dimension contract used at the SDK boundary. */
+export type UsageGaugeApiDimension =
+  | 'resourceId'
+  | 'teamId'
+  | 'service'
+  | 'resourceType'
+  | 'ordinal'
+
 interface ListUsageGaugeGroupsParams {
   metrics: readonly string[]
   interval?: UsageChartInterval
   startAt: string
   endAt: string
-  dimensions?: string[]
+  dimensions?: UsageGaugeApiDimension[]
   queries?: string[]
   resourceId?: string
   resourceType?: string
@@ -49,6 +70,12 @@ interface ListUsageGaugeGroupsParams {
    * with value-desc ordering; charts omit this and use USAGE_API_MAX_LIMIT.
    */
   limit?: number
+  /**
+   * How samples in a bucket combine. `last` (default) is the latest reading,
+   * right for a snapshot such as storage. `max` is the highest, which a
+   * sampled level series needs - see UsageGaugeAggregate.
+   */
+  aggregate?: UsageGaugeAggregate
 }
 
 async function listUsageGaugeGroupsByMetric(
@@ -81,14 +108,15 @@ async function listUsageGaugeGroupsByMetric(
   })
   const request: {
     metrics: string[]
-    interval?: string
+    interval?: UsageChartInterval
     startAt: string
     endAt: string
-    dimensions?: string[]
+    dimensions?: UsageGaugeApiDimension[]
     queries?: string[]
-    orderBy?: string
-    orderDir?: string
+    orderBy?: 'time' | 'value'
+    orderDir?: 'asc' | 'desc'
     limit?: number
+    aggregate?: UsageGaugeAggregate
   } = {
     metrics: [...params.metrics],
     startAt: params.startAt,
@@ -106,6 +134,9 @@ async function listUsageGaugeGroupsByMetric(
   }
   if (queries.length > 0) {
     request.queries = queries
+  }
+  if (params.aggregate) {
+    request.aggregate = params.aggregate
   }
 
   const response = await projectSdk.usage.listGauges(request)
@@ -135,12 +166,13 @@ async function listUsageGaugeGroups(
 
 function mapGaugeBreakdownGroups(
   groups: Models.UsageDataPoint[],
-  dimensions: readonly string[],
+  dimensions: readonly UsageGaugeApiDimension[],
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): UsageTopEndpoint[] {
   const useResourceDimensions =
     dimensions.includes('resourceId') && dimensions.includes('resourceType')
-  const dimension = dimensions[0] === 'resourceType' ? 'resourceType' : 'resourceId'
+  const dimension =
+    dimensions[0] === 'resourceType' ? 'resourceType' : 'resourceId'
   const latestByKey = new Map<
     string,
     { value: number; timeMs: number; resourceType?: string }
@@ -189,7 +221,9 @@ function mapGaugeBreakdownGroups(
           resourceType: 'project',
         }
       }
-      const resourceId = useResourceDimensions ? key.split('\0')[1] ?? key : key
+      const resourceId = useResourceDimensions
+        ? (key.split('\0')[1] ?? key)
+        : key
       return {
         id: resourceId,
         method: '',
@@ -257,7 +291,7 @@ export async function fetchUsageGaugeBreakdown(
   metric: string,
   startAt: Date,
   endAt: Date,
-  dimensions: readonly string[],
+  dimensions: readonly UsageGaugeApiDimension[],
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   queries?: string[],
 ): Promise<UsageTopEndpoint[]> {
@@ -270,11 +304,7 @@ export async function fetchUsageGaugeBreakdown(
     limit: breakdownLimit,
   })
 
-  return mapGaugeBreakdownGroups(
-    groups,
-    dimensions,
-    breakdownLimit,
-  )
+  return mapGaugeBreakdownGroups(groups, dimensions, breakdownLimit)
 }
 
 async function listUsageGaugeGroupsForMetrics(
@@ -345,6 +375,27 @@ function mergeGaugeValuesByTimePerSeries(
  * `USAGE_API_MAX_LIMIT` (buckets x resources), so very large projects on a fine
  * interval can truncate the oldest end of the series.
  */
+/**
+ * A gauge is a level, not a tally. The collector writes a snapshot every
+ * interval — including an explicit zero when the level really is zero — so a
+ * window with no samples at all means the level is unknown, not that it was
+ * zero. Returning an empty series lets the card say so instead of drawing a
+ * flat zero line the backend never reported. Events are the opposite: a row
+ * exists only when something happened, so an absent bucket there is a real
+ * zero and keeps its gap filled.
+ */
+function buildGaugeChartPoints(
+  samples: Map<string, number> | undefined,
+  from: Date,
+  to: Date,
+  interval: UsageChartInterval,
+): UsageChartPoint[] {
+  if (!samples?.size) {
+    return []
+  }
+  return fillGaugeChartPointsGaps(samples, from, to, interval)
+}
+
 export async function fetchProjectUsageGaugeChartSeriesByResourceType(
   projectId: string,
   dateRange: DateRange | undefined,
@@ -412,7 +463,7 @@ export async function fetchProjectUsageGaugeChartSeriesByResourceType(
     ...(queries ?? []),
     Query.equal('resourceType', resourceTypes),
   ]
-  const dimensions = ['resourceType', 'resourceId']
+  const dimensions: UsageGaugeApiDimension[] = ['resourceType', 'resourceId']
 
   const currentGroups = await listUsageGaugeGroupsForMetrics(
     projectId,
@@ -449,8 +500,8 @@ export async function fetchProjectUsageGaugeChartSeriesByResourceType(
   const previousChartPointsBySeries = new Map<string, UsageChartPoint[]>()
 
   for (const entry of series) {
-    const chartPoints = fillGaugeChartPointsGaps(
-      currentBySeries.get(entry.key) ?? new Map(),
+    const chartPoints = buildGaugeChartPoints(
+      currentBySeries.get(entry.key),
       from,
       to,
       resolvedInterval,
@@ -460,8 +511,8 @@ export async function fetchProjectUsageGaugeChartSeriesByResourceType(
       entry.key,
       comparisonMode === 'first_half'
         ? getUsageChartFirstHalfPoints(chartPoints)
-        : fillGaugeChartPointsGaps(
-            previousBySeries.get(entry.key) ?? new Map(),
+        : buildGaugeChartPoints(
+            previousBySeries.get(entry.key),
             previousFrom,
             previousTo,
             resolvedInterval,
@@ -483,6 +534,7 @@ export async function fetchProjectUsageGaugeChartSeries(
   resourceId?: string,
   resourceType?: string,
   ordinal?: number,
+  aggregate?: UsageGaugeAggregate,
 ): Promise<{
   chartPoints: ProjectUsageChartOverview['chartPoints']
   previousChartPoints: ProjectUsageChartOverview['chartPoints']
@@ -522,15 +574,20 @@ export async function fetchProjectUsageGaugeChartSeries(
     return { chartPoints, previousChartPoints }
   }
 
-  const currentGroups = await listUsageGaugeGroupsForMetrics(projectId, metrics, {
-    interval: resolvedInterval,
-    startAt: from.toISOString(),
-    endAt: to.toISOString(),
-    queries,
-    resourceId,
-    resourceType,
-    ordinal,
-  })
+  const currentGroups = await listUsageGaugeGroupsForMetrics(
+    projectId,
+    metrics,
+    {
+      interval: resolvedInterval,
+      startAt: from.toISOString(),
+      endAt: to.toISOString(),
+      queries,
+      resourceId,
+      resourceType,
+      ordinal,
+      aggregate,
+    },
+  )
 
   // First-half comparison reuses the current series; a second fetch would
   // request the same buckets we already have.
@@ -544,10 +601,11 @@ export async function fetchProjectUsageGaugeChartSeries(
           resourceId,
           resourceType,
           ordinal,
+          aggregate,
         })
       : []
 
-  const chartPoints = fillGaugeChartPointsGaps(
+  const chartPoints = buildGaugeChartPoints(
     mergeGaugeValuesByTime(currentGroups),
     from,
     to,
@@ -556,7 +614,7 @@ export async function fetchProjectUsageGaugeChartSeries(
   const previousChartPoints =
     comparisonMode === 'first_half'
       ? getUsageChartFirstHalfPoints(chartPoints)
-      : fillGaugeChartPointsGaps(
+      : buildGaugeChartPoints(
           mergeGaugeValuesByTime(previousGroups),
           previousFrom,
           previousTo,
@@ -618,7 +676,7 @@ export async function fetchProjectUsageGaugeSnapshotOverview(
   metric: string,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   breakdown?: {
-    dimensions: readonly string[]
+    dimensions: readonly UsageGaugeApiDimension[]
     limit?: number
   },
   options?: {

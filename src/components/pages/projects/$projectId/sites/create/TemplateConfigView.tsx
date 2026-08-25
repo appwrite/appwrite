@@ -45,7 +45,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
-import { getStartCommandForSiteCreate } from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import {
@@ -56,6 +55,8 @@ import { VCSDetectionType, ID } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
+import { getSiteTemplateScreenshotUrl } from '@/lib/sites/site-template-wizard'
+import { validateVariables } from '@/lib/variables'
 
 // Fade-in image component
 function FadeImage({
@@ -222,10 +223,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteName, generateDomain])
 
-  // Get screenshot URL - templates include full URLs
   const screenshotUrl = useMemo(() => {
     if (!template) return null
-    return isDark ? template.screenshotDark : template.screenshotLight
+    return getSiteTemplateScreenshotUrl(template, isDark) ?? null
   }, [template, isDark])
 
   // Mutations
@@ -261,6 +261,15 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       }
     }
 
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured site behind. Only the rows that
+    // get written are checked -- the valueless ones are dropped below.
+    const validationError = validateVariables(variables.filter((v) => v.value))
+    if (validationError) {
+      toast.error(validationError)
+      return
+    }
+
     setIsDeploying(true)
 
     try {
@@ -274,7 +283,6 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             buildRuntime: templateFramework.buildRuntime,
             adapter: templateFramework.adapter,
             fallbackFile: templateFramework.fallbackFile,
-            startCommand: sdkDefaults.startCommand,
           }
         : sdkDefaults
 
@@ -290,10 +298,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         framework,
         installCommand: defaults.installCommand,
         buildCommand: defaults.buildCommand,
-        startCommand: getStartCommandForSiteCreate(
-          frameworkInfo,
-          defaults.adapter === 'ssr' ? defaults.startCommand ?? '' : '',
-        ),
+        startCommand: undefined,
         outputDirectory: defaults.outputDirectory,
         buildRuntime: defaults.buildRuntime ?? 'node-22',
         adapter: defaults.adapter ?? '',
@@ -707,7 +712,10 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             {t(
               'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.', // pragma: allowlist secret
             )}{' '}
-            <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
+            <DocsRouteLink
+              className="link-neutral font-medium"
+              href="/docs/products/sites/domains"
+            >
               {t('Learn more →')}
             </DocsRouteLink>
           </p>

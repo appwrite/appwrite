@@ -32,6 +32,8 @@ import {
   useProjectGbHoursOverview,
   useProjectSiteExecutionsOverview,
   useProjectSiteGbHoursOverview,
+  useSiteExecutionsForSite,
+  useSiteGbHoursForSite,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useDebugOverrides } from '@/lib/debug-overrides'
@@ -47,6 +49,9 @@ type ComputeUsageSectionProps = {
   dateRange: DateRange | undefined
   chartInterval: UsageChartInterval
   scope?: ComputeUsageScope
+  /** Scope site charts to one site resource. */
+  siteId?: string
+  onDateRangeChange?: (dateRange: DateRange | undefined) => void
 }
 
 export function ComputeUsageSection({
@@ -54,11 +59,13 @@ export function ComputeUsageSection({
   dateRange,
   chartInterval,
   scope = 'combined',
+  siteId,
+  onDateRangeChange,
 }: ComputeUsageSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
   const { disableUsageBreakdownQueries } = useDebugOverrides()
-  const showBreakdown = !disableUsageBreakdownQueries
+  const showBreakdown = !disableUsageBreakdownQueries && !siteId
 
   const combinedExecutionsQuery = useProjectExecutionsOverview(
     projectId,
@@ -78,10 +85,16 @@ export function ComputeUsageSection({
     scope === 'functions',
     chartInterval,
   )
-  const siteExecutionsQuery = useProjectSiteExecutionsOverview(
+  const allSitesExecutionsQuery = useProjectSiteExecutionsOverview(
     projectId,
     dateRange,
-    scope === 'sites',
+    scope === 'sites' && !siteId,
+    chartInterval,
+  )
+  const siteExecutionsQuery = useSiteExecutionsForSite(
+    projectId,
+    scope === 'sites' ? siteId : undefined,
+    dateRange,
     chartInterval,
   )
   const functionGbHoursQuery = useProjectFunctionGbHoursOverview(
@@ -90,10 +103,16 @@ export function ComputeUsageSection({
     scope === 'functions',
     chartInterval,
   )
-  const siteGbHoursQuery = useProjectSiteGbHoursOverview(
+  const allSitesGbHoursQuery = useProjectSiteGbHoursOverview(
     projectId,
     dateRange,
-    scope === 'sites',
+    scope === 'sites' && !siteId,
+    chartInterval,
+  )
+  const siteGbHoursQuery = useSiteGbHoursForSite(
+    projectId,
+    scope === 'sites' ? siteId : undefined,
+    dateRange,
     chartInterval,
   )
 
@@ -101,13 +120,17 @@ export function ComputeUsageSection({
     scope === 'functions'
       ? functionExecutionsQuery
       : scope === 'sites'
-        ? siteExecutionsQuery
+        ? siteId
+          ? siteExecutionsQuery
+          : allSitesExecutionsQuery
         : combinedExecutionsQuery
   const gbHoursQuery =
     scope === 'functions'
       ? functionGbHoursQuery
       : scope === 'sites'
-        ? siteGbHoursQuery
+        ? siteId
+          ? siteGbHoursQuery
+          : allSitesGbHoursQuery
         : combinedGbHoursQuery
 
   const breakdownItems = useMemo(() => {
@@ -143,12 +166,7 @@ export function ComputeUsageSection({
       'Usage data',
     )
     return () => unregisterRefreshHandler()
-  }, [
-    queryClient,
-    projectId,
-    registerRefreshHandler,
-    unregisterRefreshHandler,
-  ])
+  }, [queryClient, projectId, registerRefreshHandler, unregisterRefreshHandler])
 
   const handleRetryAll = () => {
     void refetchProjectComputeUsageQueries(queryClient, projectId)
@@ -223,6 +241,9 @@ export function ComputeUsageSection({
         breakdownLookup={computeLookup}
         onRetry={handleRetryAll}
         docsHref={docsHref}
+        dateRange={dateRange}
+        chartInterval={chartInterval}
+        onDateRangeChange={onDateRangeChange}
       />
 
       <ComputeMetricBentoCard
@@ -248,12 +269,17 @@ export function ComputeUsageSection({
         breakdownItems={
           gbHoursQuery.isError
             ? []
-            : topConsumersToBreakdownItems(gbHoursQuery.data?.topConsumers ?? [])
+            : topConsumersToBreakdownItems(
+                gbHoursQuery.data?.topConsumers ?? [],
+              )
         }
         breakdownLookup={computeLookup}
         breakdownTitleAddon={<GbHoursUnitInfo />}
         onRetry={handleRetryAll}
         docsHref={docsHref}
+        dateRange={dateRange}
+        chartInterval={chartInterval}
+        onDateRangeChange={onDateRangeChange}
       />
     </div>
   )

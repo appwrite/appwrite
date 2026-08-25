@@ -4,6 +4,7 @@ import {
   engineFromDatabaseTypeValue,
   isNativeDatabaseTypeValue,
 } from '@/lib/databases/database-type'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import {
   formatDedicatedSpecCpu,
   formatDedicatedSpecMemory,
@@ -52,9 +53,9 @@ export function readDatabaseLifecycleStatus(status: unknown): string | null {
 
 /** Spec slug from a product or dedicated payload. */
 export function readDatabaseSpecification(
-  value: string | null | undefined,
+  value: unknown,
 ): string | null {
-  const trimmed = value?.trim()
+  const trimmed = coerceTrimmedString(value)
   return trimmed ? trimmed : null
 }
 
@@ -77,9 +78,11 @@ export function productDedicatedEngineHints(
 /**
  * True when the database has dedicated compute.
  *
- * Product DBs created with a dedicated tier may only expose backing via
- * `status` / `replicas` on `Models.Database` (not always present in the
- * native engine list used by `useProjectDedicatedDatabases`).
+ * Product DBs created with a dedicated tier expose backing via `specification`
+ * and/or `replicas` on `Models.Database` (not always present in the native
+ * engine list used by `useProjectDedicatedDatabases`). Lifecycle `status`
+ * alone is not an indication: serverless and self-hosted TablesDB also return
+ * values like `ready`.
  */
 export function hasDedicatedDatabaseCompute(
   db: DatabaseComputeHints,
@@ -91,7 +94,6 @@ export function hasDedicatedDatabaseCompute(
   if (spec && !isServerlessDatabaseSpecId(spec)) return true
 
   if (typeof db.replicas === 'number') return true
-  if (readDatabaseLifecycleStatus(db.status)) return true
 
   // Native engine types and always-dedicated product APIs.
   if (isNativeDatabaseTypeValue(db.databaseType)) return true
@@ -229,7 +231,7 @@ export function buildProductDedicatedCardSource(
 
   const type = coerceDatabaseType(db.databaseType)
   const api =
-    dedicated?.api?.trim() ||
+    coerceTrimmedString(dedicated?.api) ||
     (type === DatabaseType.Documentsdb
       ? 'documentsdb'
       : type === DatabaseType.Vectorsdb
@@ -240,7 +242,7 @@ export function buildProductDedicatedCardSource(
 
   const engineHint =
     productDedicatedEngineHints(db.databaseType)[0] ?? 'postgresql'
-  const engine = dedicated?.engine?.trim() || engineHint
+  const engine = coerceTrimmedString(dedicated?.engine) || engineHint
 
   const status =
     readDatabaseLifecycleStatus(dedicated?.status) ||
@@ -275,6 +277,12 @@ export function buildProductDedicatedCardSource(
 export type ResolveDatabaseComputeLabelOptions = {
   specs?: SpecOption[]
   rawSpecifications?: Models.DedicatedDatabaseSpecification[] | null
+  /**
+   * Label when the database is not dedicated and has no spec. Defaults to
+   * "Serverless". Pass `''` when compute tiers are not a product concept
+   * (e.g. self-hosted TablesDB).
+   */
+  unspecifiedLabel?: string
 }
 
 /**
@@ -322,7 +330,12 @@ export function resolveDatabaseComputeLabel(
       return `${formatDedicatedSpecCpu(dedicated.cpu)} · ${formatDedicatedSpecMemory(dedicated.memory)}`
     }
 
-    return t('Dedicated')
+    // No spec or resources to display. Do not guess "Dedicated".
+    return ''
+  }
+
+  if (typeof options?.unspecifiedLabel === 'string') {
+    return options.unspecifiedLabel
   }
 
   return t('Serverless')

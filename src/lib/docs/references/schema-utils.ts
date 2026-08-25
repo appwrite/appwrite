@@ -1,3 +1,4 @@
+import { getOpenApiEnumInfo, getPolymorphicModelRefs } from '@/lib/api-explorer/openapi-schema'
 import type { OpenApiSchema, OpenApiSpec } from '@/lib/api-explorer/types'
 import type { ApiReferenceResponseModel } from '@/lib/docs/references/types'
 
@@ -30,10 +31,11 @@ export function formatSchemaType(
     return itemType ? `${itemType}[]` : 'array'
   }
 
-  if (resolved.enum?.length) {
-    const enumName = resolved['x-enum-name']
-    if (enumName) return enumName
-    return resolved.enum.map(String).join(' | ')
+  const enumInfo = getOpenApiEnumInfo(resolved)
+  if (enumInfo) {
+    if (enumInfo.name) return enumInfo.name
+    if (enumInfo.open) return resolved.type || 'string'
+    return enumInfo.values.join(' | ')
   }
 
   if (resolved.type) return resolved.type
@@ -55,10 +57,11 @@ export function resolveResponseModels(
 ): Pick<ApiReferenceResponseModel, 'id' | 'name'>[] {
   if (!schema) return []
 
-  if (schema.oneOf?.length) {
-    return schema.oneOf
-      .filter((item): item is OpenApiSchema & { $ref: string } => Boolean(item.$ref))
-      .map((item) => getResponseModelFromRef(item.$ref, spec))
+  const polymorphicIds = getPolymorphicModelRefs(schema)
+  if (polymorphicIds.length > 0) {
+    return polymorphicIds.map((id) =>
+      getResponseModelFromRef(`#/components/schemas/${id}`, spec),
+    )
   }
 
   if (schema.$ref) {

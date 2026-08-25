@@ -19,7 +19,7 @@ import {
   parseListSearch,
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
-import { throwRedirectCollectionsDbFromTablesChild, throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
+import { throwRedirectCollectionsDbFromTablesChild, throwRedirectPostgresDbKind, throwRedirectMysqlDbKind } from '@/lib/database-route-redirects'
 
 const TABLES_PER_PAGE = 100
 const DEFAULT_PAGE = 1
@@ -59,7 +59,8 @@ export const Route = createFileRoute(
 
     if (!projectId || !databaseId) return
 
-    throwRedirectPostgresDbKind(dbKind, { projectId, databaseId, tableId })
+        throwRedirectPostgresDbKind(dbKind, { projectId, databaseId, tableId })
+    throwRedirectMysqlDbKind(dbKind, { projectId, databaseId, tableId })
 
     throwRedirectCollectionsDbFromTablesChild(dbKind, 'dataGrid', {
       projectId,
@@ -145,13 +146,17 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
-      const { search, page, limit, filterQueries } = parseListSearch(
+      const { search, page, limit, filterQueries, sort } = parseListSearch(
         routeSearch,
         {
           page: DEFAULT_PAGE,
           limit: ROWS_DEFAULT_PAGE_SIZE,
         },
       )
+      // Must match Workspace / RowsSpreadsheet URL sort defaults so the loader
+      // and View share one query key (avoids a duplicate listRows).
+      const sortBy = sort?.sortBy ?? '$createdAt'
+      const sortOrder = sort?.sortOrder ?? 'desc'
 
       const acct = getConsoleAccountFromCache(queryClient)
       const listSelectAttrKeys =
@@ -166,21 +171,26 @@ export const Route = createFileRoute(
       await Promise.all([
         tablesPromise,
 
-        queryClient.ensureQueryData(
-          tableRowsQueryOptions(
-            projectId,
-            databaseId,
-            tableId,
-            dbKind as DatabaseRouteKind,
-            page - 1,
-            limit,
-            search ?? undefined,
-            'desc',
-            '$createdAt',
-            filterQueries,
-            listSelectAttrKeys,
-          ),
-        ),
+        queryClient
+          .ensureQueryData(
+            tableRowsQueryOptions(
+              projectId,
+              databaseId,
+              tableId,
+              dbKind as DatabaseRouteKind,
+              page - 1,
+              limit,
+              search ?? undefined,
+              sortOrder,
+              sortBy,
+              filterQueries,
+              listSelectAttrKeys,
+            ),
+          )
+          .catch(() => {
+            // Keep the error in the React Query cache so Spreadsheet can render
+            // it (e.g. HTTP 408). Do not fail the route loader / blank the UI.
+          }),
 
         // Database details - blocks navigation until ready
         queryClient.ensureQueryData(

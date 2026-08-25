@@ -19,12 +19,14 @@ You can update Firewall rules from the rules list without recreating them. Chang
 | Name and description | Labels only; no traffic impact |
 | Resource type and resource ID | Move the rule between API, Functions, and Sites (pick a function or site when required) |
 | Conditions | Rebuilt with the same condition builder as create; at least one complete condition required |
-| Rate limit settings | Limit and interval when the rule action is rate limit |
+| Rate limit settings | Request limit, interval, and limit by when the rule action is rate limit. Token-bucket rules can also change **Max bucket size**. |
 | Redirect settings | Location and status code (`300`–`399`) when the rule action is redirect |
 | Priority | `-100000` to `100000`; lower numbers evaluated first |
 | Enabled | Disable to pause without deleting |
 
 The **action type** (deny, bypass, challenge, rate limit, redirect) is set at create time and cannot be changed on update. To switch actions, [create a new rule](/docs/products/firewall/create) and [delete](/docs/products/firewall/delete) the old one.
+
+A rate limit rule's **[strategy](/docs/products/firewall/actions#rate-limit-strategies)** (`fixedWindow`, `slidingWindow`, or `tokenBucket`) is likewise fixed at create time and cannot be changed on update — the Console shows it as read-only. To move a rule to a different strategy, recreate it. **Max bucket size** remains editable on token-bucket rules.
 
 # Safe updates {% #safe-updates %}
 
@@ -33,6 +35,8 @@ When tightening a deny or rate limit:
 1. Review the impact preview if shown while editing conditions.
 2. Consider lowering match breadth (narrower path, exact IP, or tighter CIDR range) before increasing severity.
 3. Prefer **disable** temporarily if you need to stop a rule during an incident, then fix conditions and re-enable.
+
+For a site-wide challenge you turned on with [Attack mode](/docs/products/firewall/attack-mode), use the **Attack mode** button or banner **Turn off** instead of deleting the rule. That disables the same rule so you can turn Attack mode back on without creating a new one.
 
 When adding an allowlist:
 

@@ -204,13 +204,19 @@ async function parseQuickStartsNav(): Promise<SectionConfig | null> {
   return {
     prefix: 'quick-starts',
     parent: { href: '/docs', label: 'Quick start' },
-    navigation: categories.map((category) => ({
-      label: category.title,
-      items: category.quickStarts.map((item) => ({
-        label: item.title,
-        href: `/docs/quick-starts/${item.href}`,
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [{ label: 'Overview', href: '/docs/quick-starts' }],
+      },
+      ...categories.map((category) => ({
+        label: category.title,
+        items: category.quickStarts.map((item) => ({
+          label: item.title,
+          href: `/docs/quick-starts/${item.href}`,
+        })),
       })),
-    })),
+    ],
   }
 }
 

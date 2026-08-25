@@ -26,16 +26,13 @@ import { ID } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useCreateSite, useCreateSiteDomain } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
-import {
-  getFrameworkAdapterDefaults,
-  getStartCommandForSiteCreate,
-} from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { validateVariables } from '@/lib/variables'
 
 export function ManualUploadView() {
   const t = useT()
@@ -47,7 +44,6 @@ export function ManualUploadView() {
     formData,
     updateFormData,
     frameworks,
-    getFramework,
     getFrameworkDefaults,
     generateDomain,
     setCurrentPath,
@@ -69,9 +65,7 @@ export function ManualUploadView() {
   const [outputDirectory, setOutputDirectory] = useState(
     formData.outputDirectory || '',
   )
-  const [startCommand, setStartCommand] = useState(
-    formData.startCommand || '',
-  )
+  const [startCommand, setStartCommand] = useState(formData.startCommand || '')
   const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
@@ -86,14 +80,9 @@ export function ManualUploadView() {
   useEffect(() => {
     if (framework) {
       const defaults = getFrameworkDefaults(framework)
-      const ssrDefaults = getFrameworkAdapterDefaults(
-        getFramework(framework),
-        'ssr',
-      )
       if (!installCommand) setInstallCommand(defaults.installCommand)
       if (!buildCommand) setBuildCommand(defaults.buildCommand)
       if (!outputDirectory) setOutputDirectory(defaults.outputDirectory)
-      if (!startCommand) setStartCommand(ssrDefaults.startCommand)
       if (!fallbackFile) setFallbackFile(defaults.fallbackFile)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,6 +151,14 @@ export function ManualUploadView() {
       return
     }
 
+    // Reject an unusable key before the resource is created, so a rejected
+    // variable cannot leave a half-configured site behind.
+    const validationError = validateVariables(variables)
+    if (validationError) {
+      toast.error(validationError)
+      return
+    }
+
     setIsDeploying(true)
 
     try {
@@ -174,16 +171,11 @@ export function ManualUploadView() {
         buildRuntime: defaults.buildRuntime,
         installCommand: installCommand || undefined,
         buildCommand: buildCommand || undefined,
-        startCommand: getStartCommandForSiteCreate(
-          getFramework(framework),
-          startCommand,
-        ),
+        startCommand: startCommand || undefined,
         outputDirectory: outputDirectory || undefined,
         adapter: defaults.adapter || undefined,
         fallbackFile:
-          defaults.adapter === 'static'
-            ? fallbackFile || undefined
-            : undefined,
+          defaults.adapter === 'static' ? fallbackFile || undefined : undefined,
       })
 
       // 2. Create domain rule
@@ -437,14 +429,9 @@ export function ManualUploadView() {
               onValueChange={(value) => {
                 setFramework(value)
                 const defaults = getFrameworkDefaults(value)
-                const ssrDefaults = getFrameworkAdapterDefaults(
-                  getFramework(value),
-                  'ssr',
-                )
                 setInstallCommand(defaults.installCommand)
                 setBuildCommand(defaults.buildCommand)
                 setOutputDirectory(defaults.outputDirectory)
-                setStartCommand(ssrDefaults.startCommand)
                 setFallbackFile(defaults.fallbackFile)
               }}
             >
@@ -511,7 +498,10 @@ export function ManualUploadView() {
             {t(
               'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.', // pragma: allowlist secret
             )}{' '}
-            <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
+            <DocsRouteLink
+              className="link-neutral font-medium"
+              href="/docs/products/sites/domains"
+            >
               {t('Learn more →')}
             </DocsRouteLink>
           </p>

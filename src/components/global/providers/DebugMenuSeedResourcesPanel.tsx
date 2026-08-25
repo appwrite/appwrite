@@ -6,12 +6,15 @@ import {
   Brain,
   Cpu,
   Database,
+  FileText,
   FolderKanban,
   Globe,
   HardDrive,
   Loader2,
   Table2,
+  User,
   Users,
+  UsersRound,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ID } from '@appwrite.io/console'
@@ -23,7 +26,12 @@ import {
   createProjectDatabase,
   createProjectTable,
 } from '@/lib/react-query/hooks/databases'
+import {
+  createProjectTeam,
+  createProjectUser,
+} from '@/lib/react-query/hooks/users'
 import { Dependencies } from '@/lib/react-query/hooks/dependencies'
+import { isStoragePlaceholderBucketId } from '@/lib/storage-routes'
 import {
   isDatabaseRouteKind,
   usesCollectionsPath,
@@ -38,9 +46,12 @@ import { Progress } from '@/components/ui/progress'
 type ResourceKind =
   | 'projects'
   | 'memberships'
+  | 'users'
+  | 'teams'
   | 'databases'
   | 'tables'
   | 'buckets'
+  | 'files'
   | 'domains'
   | 'models'
   | 'memories'
@@ -63,7 +74,28 @@ type SeedCard = {
 
 const DEFAULT_AMOUNT = 5
 const MAX_AMOUNT = 100
+const SEED_USER_PASSWORD = 'Password1!'
 const MEMORY_CATEGORIES = ['preference', 'instruction', 'fact'] as const
+const SEED_FILE_KINDS = [
+  {
+    ext: 'txt',
+    type: 'text/plain',
+    body: (seed: string, index: number) =>
+      `Debug seed file ${index}\nCreated by the console debug menu (${seed}).\n`,
+  },
+  {
+    ext: 'json',
+    type: 'application/json',
+    body: (seed: string, index: number) =>
+      `${JSON.stringify({ seed, index, source: 'debug-menu' }, null, 2)}\n`,
+  },
+  {
+    ext: 'csv',
+    type: 'text/csv',
+    body: (seed: string, index: number) =>
+      `id,name\n${index},${seed} file ${index}\n`,
+  },
+] as const
 const MOCK_MODEL_PROVIDERS = [
   { provider: 'openai', model: 'gpt-4o' },
   { provider: 'anthropic', model: 'claude-sonnet-4-5' },
@@ -77,9 +109,12 @@ const RESOURCE_LABELS: Record<
 > = {
   projects: { singular: 'project', plural: 'projects' },
   memberships: { singular: 'membership', plural: 'memberships' },
+  users: { singular: 'user', plural: 'users' },
+  teams: { singular: 'team', plural: 'teams' },
   databases: { singular: 'database', plural: 'databases' },
   tables: { singular: 'table', plural: 'tables' },
   buckets: { singular: 'bucket', plural: 'buckets' },
+  files: { singular: 'file', plural: 'files' },
   domains: { singular: 'domain', plural: 'domains' },
   models: { singular: 'model', plural: 'models' },
   memories: { singular: 'memory', plural: 'memories' },
@@ -91,6 +126,13 @@ function buildSeedLabel(prefix: string) {
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, '-')
   return normalized.replace(/-+/g, '-').replace(/^-|-$/g, '') || 'debug'
+}
+
+function buildSeedFile(index: number, seed: string) {
+  const kind = SEED_FILE_KINDS[(index - 1) % SEED_FILE_KINDS.length]!
+  return new File([kind.body(seed, index)], `${seed}-file-${index}.${kind.ext}`, {
+    type: kind.type,
+  })
 }
 
 function getFailureMessage(results: PromiseSettledResult<unknown>[]) {
@@ -109,6 +151,7 @@ export function DebugMenuSeedResourcesPanel() {
     projectId?: string
     databaseId?: string
     dbKind?: string
+    bucketId?: string
   }
 
   const routeOrgId = typeof params.orgId === 'string' ? params.orgId : undefined
@@ -116,6 +159,11 @@ export function DebugMenuSeedResourcesPanel() {
     typeof params.projectId === 'string' ? params.projectId : undefined
   const databaseId =
     typeof params.databaseId === 'string' ? params.databaseId : undefined
+  const routeBucketId =
+    typeof params.bucketId === 'string' ? params.bucketId : undefined
+  const bucketId = isStoragePlaceholderBucketId(routeBucketId)
+    ? undefined
+    : routeBucketId
   const dbKind: DatabaseRouteKind =
     typeof params.dbKind === 'string' && isDatabaseRouteKind(params.dbKind)
       ? params.dbKind
@@ -141,9 +189,10 @@ export function DebugMenuSeedResourcesPanel() {
     if (projectId) parts.push(`Project ${projectId}`)
     if (organizationId) parts.push(`organization ${organizationId}`)
     if (databaseId) parts.push(`database ${databaseId}`)
+    if (bucketId) parts.push(`bucket ${bucketId}`)
     if (parts.length > 0) return parts.join(', ')
     return 'Agent models and memories work anywhere. Open a project or organization route for the rest.'
-  }, [databaseId, organizationId, projectId])
+  }, [bucketId, databaseId, organizationId, projectId])
 
   const runSeed = async (
     kind: ResourceKind,
@@ -212,6 +261,40 @@ export function DebugMenuSeedResourcesPanel() {
       async () => {
         await queryClient.invalidateQueries({
           queryKey: ['memberships', 'organization', organizationId],
+        })
+      },
+    )
+  }
+
+  const seedUsers = () => {
+    if (!projectId) return
+    void runSeed(
+      'users',
+      (index, seed) =>
+        createProjectUser(projectId, {
+          email: `${seed}+user-${index}@appwrite.io`,
+          name: `${seed} user ${index}`,
+          password: SEED_USER_PASSWORD,
+        }),
+      async () => {
+        await queryClient.invalidateQueries({
+          queryKey: ['users', 'project', projectId],
+        })
+      },
+    )
+  }
+
+  const seedTeams = () => {
+    if (!projectId) return
+    void runSeed(
+      'teams',
+      (index, seed) =>
+        createProjectTeam(projectId, {
+          name: `${seed} team ${index}`,
+        }),
+      async () => {
+        await queryClient.invalidateQueries({
+          queryKey: ['teams', 'project', projectId],
         })
       },
     )
@@ -291,6 +374,25 @@ export function DebugMenuSeedResourcesPanel() {
         }),
       async () => {
         await queryClient.invalidateQueries({ queryKey: Dependencies.BUCKETS })
+      },
+    )
+  }
+
+  const seedFiles = () => {
+    if (!projectId || !bucketId) return
+    void runSeed(
+      'files',
+      (index, seed) =>
+        sdk.forProject(projectId).storage.createFile({
+          bucketId,
+          fileId: ID.unique(),
+          file: buildSeedFile(index, seed),
+        }),
+      async () => {
+        await queryClient.invalidateQueries({ queryKey: Dependencies.FILES })
+        await queryClient.refetchQueries({
+          queryKey: ['files', 'project', projectId, 'bucket', bucketId],
+        })
       },
     )
   }
@@ -392,6 +494,22 @@ export function DebugMenuSeedResourcesPanel() {
       disabledReason: 'Open an organization or project route first.',
     },
     {
+      kind: 'users',
+      title: 'Users',
+      description: `Create Auth users with password ${SEED_USER_PASSWORD} in the current project.`,
+      icon: <User className="h-3.5 w-3.5" />,
+      disabled: !projectId,
+      disabledReason: 'Open a project route first.',
+    },
+    {
+      kind: 'teams',
+      title: 'Teams',
+      description: 'Create empty Auth teams in the current project.',
+      icon: <UsersRound className="h-3.5 w-3.5" />,
+      disabled: !projectId,
+      disabledReason: 'Open a project route first.',
+    },
+    {
       kind: 'databases',
       title: 'Empty DBs',
       description: 'Create empty TablesDB databases in the current project.',
@@ -418,6 +536,15 @@ export function DebugMenuSeedResourcesPanel() {
       disabledReason: 'Open a project route first.',
     },
     {
+      kind: 'files',
+      title: 'Files',
+      description:
+        'Upload mock text, JSON, and CSV files into the current bucket.',
+      icon: <FileText className="h-3.5 w-3.5" />,
+      disabled: !projectId || !bucketId,
+      disabledReason: 'Open a bucket route first.',
+    },
+    {
       kind: 'domains',
       title: 'Mock domains',
       description: 'Create unverified example.com domains on the organization.',
@@ -430,9 +557,12 @@ export function DebugMenuSeedResourcesPanel() {
   const actions: Record<ResourceKind, () => void> = {
     projects: seedProjects,
     memberships: seedMemberships,
+    users: seedUsers,
+    teams: seedTeams,
     databases: seedDatabases,
     tables: seedTables,
     buckets: seedBuckets,
+    files: seedFiles,
     domains: seedDomains,
     models: seedModels,
     memories: seedMemories,

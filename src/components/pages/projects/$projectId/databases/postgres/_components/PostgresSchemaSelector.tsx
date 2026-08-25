@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/popover'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import { useT } from '@/lib/i18n/translate'
 
 type PostgresSchemaSelectorProps = {
@@ -83,7 +84,7 @@ export function PostgresSchemaSelector({
     return () => observer.disconnect()
   }, [hasNextPage, isFetchingNextPage, onLoadMore, open])
 
-  const displayValue = value?.trim() || 'Select schema'
+  const displayValue = coerceTrimmedString(value) || 'Select schema'
   const showInitialLoading = isLoading && schemas.length === 0
 
   const selector = (
@@ -134,7 +135,7 @@ export function PostgresSchemaSelector({
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
               </div>
-              <CommandList ref={listScrollRef} className="max-h-[240px]">
+              <CommandList ref={listScrollRef} className="min-h-[180px] max-h-[240px]">
                 {showInitialLoading ? (
                   <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">
                     {t('Loading schemas…')}

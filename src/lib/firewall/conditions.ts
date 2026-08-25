@@ -33,6 +33,29 @@ export function parseFirewallResourceIdSearch(
   return trimmed.length > 0 ? trimmed : undefined
 }
 
+export type FirewallResourceSelection = {
+  resourceType: FirewallResourceType
+  resourceId?: string
+}
+
+/**
+ * Parse an explicit firewall resource from URL search.
+ * Returns undefined when the URL does not name a complete resource (so callers
+ * can restore a remembered selection instead of silently defaulting to API).
+ */
+export function parseFirewallListSearch(search: {
+  resourceType?: unknown
+  resourceId?: unknown
+}): FirewallResourceSelection | undefined {
+  const resourceType = parseFirewallResourceTypeSearch(search.resourceType)
+  const resourceId = parseFirewallResourceIdSearch(search.resourceId)
+
+  if (!resourceType) return undefined
+  if (resourceType === 'api') return { resourceType: 'api' }
+  if (!resourceId) return undefined
+  return { resourceType, resourceId }
+}
+
 /**
  * Normalize firewall list scope from URL search.
  * Functions/sites require a resourceId; otherwise fall back to API.
@@ -40,23 +63,22 @@ export function parseFirewallResourceIdSearch(
 export function resolveFirewallListSearch(search: {
   resourceType?: unknown
   resourceId?: unknown
-}): {
+}): FirewallResourceSelection {
+  return parseFirewallListSearch(search) ?? { resourceType: 'api' }
+}
+
+/** Search object for firewall list / create routes from a resource selection. */
+export function firewallListSearch(selection: FirewallResourceSelection): {
   resourceType: FirewallResourceType
   resourceId?: string
 } {
-  const resourceType =
-    parseFirewallResourceTypeSearch(search.resourceType) ?? 'api'
-  const resourceId = parseFirewallResourceIdSearch(search.resourceId)
-
-  if (resourceType === 'api') {
+  if (selection.resourceType === 'api' || !selection.resourceId?.trim()) {
     return { resourceType: 'api' }
   }
-
-  if (!resourceId) {
-    return { resourceType: 'api' }
+  return {
+    resourceType: selection.resourceType,
+    resourceId: selection.resourceId.trim(),
   }
-
-  return { resourceType, resourceId }
 }
 
 /** Condition attributes shown in the rule builder, grouped for the picker. */

@@ -10,7 +10,11 @@ import { useVerifyDomain, useDeleteDomain } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
-import { VerifyDomainContent } from './VerifyDomainContent'
+import {
+  VerifyDomainContent,
+  dnsPendingVerificationError,
+  type DomainVerificationError,
+} from './VerifyDomainContent'
 
 interface VerifyDomainDialogProps {
   open: boolean
@@ -36,9 +40,8 @@ export function VerifyDomainDialog({
   const t = useT()
   const verifyDomainMutation = useVerifyDomain(projectId, region)
   const deleteDomainMutation = useDeleteDomain(projectId, region)
-  const [verificationError, setVerificationError] = useState<string | null>(
-    null,
-  )
+  const [verificationError, setVerificationError] =
+    useState<DomainVerificationError | null>(null)
 
   useEffect(() => {
     if (open) setVerificationError(null)
@@ -61,10 +64,11 @@ export function VerifyDomainDialog({
         ruleId: rule.$id,
         organizationDomainId,
       })
-      if (updatedRule.status === 'created') {
-        setVerificationError(
-          t('Domain verification failed. Please check your domain settings or try again later.'),
-        )
+      if (
+        updatedRule.status === 'created' ||
+        updatedRule.status === 'unverified'
+      ) {
+        setVerificationError(dnsPendingVerificationError(t))
       } else if (updatedRule.status === 'verified') {
         toast.success(t('Domain added successfully'))
         onVerifySuccess()
@@ -72,11 +76,8 @@ export function VerifyDomainDialog({
         toast.success(t('Verification in progress'))
         onVerifySuccess()
       }
-    } catch (error: unknown) {
-      setVerificationError(
-        (error instanceof Error ? error.message : null) ||
-          t('Failed to verify domain'),
-      )
+    } catch {
+      setVerificationError(dnsPendingVerificationError(t))
     }
   }
 
@@ -84,7 +85,9 @@ export function VerifyDomainDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl p-0">
         <DialogHeader className="px-6 pt-6 pb-4">
-          <DialogTitle>{t('Verify')} {rule.domain}</DialogTitle>
+          <DialogTitle>
+            {t('Verify')} {rule.domain}
+          </DialogTitle>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="px-6 py-4 max-h-[70dvh] overflow-y-auto">

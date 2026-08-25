@@ -58,11 +58,12 @@ export function View() {
         buildFunctionUpdateParams(func, updates),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Function updated successfully'))
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
-      })
+      queryClient.setQueryData(
+        ['function', 'project', projectId, functionId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['functions', 'project', projectId],
       })
@@ -83,15 +84,16 @@ export function View() {
         buildFunctionUpdateParams(func, { enabled: nextEnabled }),
       )
     },
-    onSuccess: (_, nextEnabled) => {
+    onSuccess: (updated, nextEnabled) => {
       toast.success(
         nextEnabled
           ? t('Function has been enabled')
           : t('Function has been disabled'),
       )
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
-      })
+      queryClient.setQueryData(
+        ['function', 'project', projectId, functionId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['functions', 'project', projectId],
       })

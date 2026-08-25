@@ -9,7 +9,10 @@ const envSchema = z
     E2E_TEST_SESSION_SECRET: z.string().min(1).optional(),
     E2E_TEST_EMAIL: z.string().email().optional(),
     E2E_TEST_PASSWORD: z.string().min(1).optional(),
-    /** Optional override when the account has multiple orgs. */
+    /**
+     * Organization with a Pro (or higher) plan. Required for MySQL e2e suites
+     * that create dedicated databases; also used as a smoke-test override.
+     */
     E2E_ORG_ID: z.string().min(1).optional(),
     /** Optional override when the account has multiple projects. */
     E2E_PROJECT_ID: z.string().min(1).optional(),

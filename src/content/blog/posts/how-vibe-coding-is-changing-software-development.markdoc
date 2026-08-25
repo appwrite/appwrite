@@ -18,7 +18,7 @@ faqs:
   - question: "How is vibe coding different from autocomplete?"
     answer: "Autocomplete suggests the next token. Vibe coding plans multiple steps. An agent in Cursor or Claude Code can read your repo, edit several files at once, run tests, call your backend through MCP, and iterate on a failure. The interface is closer to delegating to a junior engineer than to using a smarter editor."
   - question: "What does vibe coding mean for backend choice?"
-    answer: "It raises the bar on platforms that are easy for agents to reason about. Backends with clearly named primitives, typed APIs, scoped keys, and MCP servers produce fewer hallucinations and less rework. [Appwrite](https://cloud.appwrite.io) covers Auth, Databases, Storage, Functions, and Sites under one model, ships an [API MCP server](/docs/tooling/ai/mcp-servers/api) and a [Docs MCP server](/docs/tooling/ai/mcp-servers/docs), and provides [Agent Skills](/docs/tooling/ai/skills) so agents do not have to guess SDK shapes."
+    answer: "It raises the bar on platforms that are easy for agents to reason about. Backends with clearly named primitives, typed APIs, scoped keys, and MCP servers produce fewer hallucinations and less rework. [Appwrite](https://cloud.appwrite.io) covers Auth, Databases, Storage, Functions, and Sites under one model, ships an [API MCP server](/docs/tooling/ai/mcp-servers) and a [Docs MCP server](/docs/tooling/ai/mcp-servers), and provides [Agent Skills](/docs/tooling/ai/skills) so agents do not have to guess SDK shapes."
 ---
 
 Most of the debate about vibe coding gets stuck on whether AI can write good code. That is the wrong frame. The interesting shift is what gets to be the developer's job once the typing is mostly done.
@@ -57,7 +57,7 @@ A backend designed for human developers expects long onboarding, hand-tuned conf
 
 This is why platforms have started racing on agent-native surface area, and it is why the [rise of agent-native backend platforms](/blog/post/agent-native-backend-platforms) is a category story, not a feature checklist.
 
-[Appwrite](https://cloud.appwrite.io) is shaped for this workflow. [Auth](/docs/products/auth) covers identity, OAuth, MFA, and Teams. [Databases](/docs/products/databases) cover tables, typed columns, rows, relationships, and queries. [Storage](/docs/products/storage) covers files with per-bucket permissions, antivirus, and encryption. [Functions](/docs/products/functions) cover server-side logic with execution logs and scoped runtimes. [Sites](/docs/products/sites) cover hosting with custom domains, env vars, and rollbacks. The [API MCP server](/docs/tooling/ai/mcp-servers/api) and [Docs MCP server](/docs/tooling/ai/mcp-servers/docs) let agents act on the project and read current docs, and [Agent Skills](/docs/tooling/ai/skills) give them language-specific SDK context.
+[Appwrite](https://cloud.appwrite.io) is shaped for this workflow. [Auth](/docs/products/auth) covers identity, OAuth, MFA, and Teams. [Databases](/docs/products/databases) cover tables, typed columns, rows, relationships, and queries. [Storage](/docs/products/storage) covers files with per-bucket permissions, antivirus, and encryption. [Functions](/docs/products/functions) cover server-side logic with execution logs and scoped runtimes. [Sites](/docs/products/sites) cover hosting with custom domains, env vars, and rollbacks. The [API MCP server](/docs/tooling/ai/mcp-servers) and [Docs MCP server](/docs/tooling/ai/mcp-servers) let agents act on the project and read current docs, and [Agent Skills](/docs/tooling/ai/skills) give them language-specific SDK context.
 
 # The roles around the developer are changing
 
@@ -82,6 +82,6 @@ Vibe coding is the largest shift in how software gets written since the move fro
 Start the next vibe-coded project on a backend built for agents. [Appwrite Cloud](https://cloud.appwrite.io) gives you the primitives, [Appwrite Sites](/docs/products/sites) hosts the frontend, and the [AI tooling hub](/docs/tooling/ai) covers MCP, Skills, and editor plugins for Claude Code, Cursor, Windsurf, and more.
 
 - [Appwrite AI tooling](/docs/tooling/ai)
-- [Appwrite API MCP server](/docs/tooling/ai/mcp-servers/api)
+- [Appwrite API MCP server](/docs/tooling/ai/mcp-servers)
 - [Appwrite Agent Skills](/docs/tooling/ai/skills)
 - [Sign up for Appwrite Cloud](https://cloud.appwrite.io)

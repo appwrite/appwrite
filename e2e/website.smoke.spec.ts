@@ -1,4 +1,4 @@
-import { test } from '@playwright/test'
+import { test } from './fixtures'
 import { expectPageRenders } from './helpers/smoke'
 
 /**

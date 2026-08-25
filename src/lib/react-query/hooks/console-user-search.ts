@@ -1,27 +1,13 @@
 import { queryOptions } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import {
   USERS_DEFAULT_SORT_BY,
   USERS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks/users'
 
 const CONSOLE_USERS_SEARCH_LIMIT = 25
-
-/** Max length for prefix passed to startsWith (API query size limits). */
-const MAX_PREFIX_LENGTH = 128
-
-function buildConsoleUserPrefixQueries(trimmed: string): string[] {
-  const prefix = trimmed.slice(0, MAX_PREFIX_LENGTH)
-  return [
-    Query.or([
-      Query.startsWith('name', prefix),
-      Query.startsWith('email', prefix),
-      Query.startsWith('phone', prefix),
-      Query.startsWith('$id', prefix),
-    ]),
-  ]
-}
 
 /**
  * Console SDK user list (project = console) for operator impersonation picker.
@@ -35,15 +21,15 @@ export async function fetchConsoleUsersSearch(search: string) {
       ? Query.orderAsc(USERS_DEFAULT_SORT_BY)
       : Query.orderDesc(USERS_DEFAULT_SORT_BY)
 
-  const queries: string[] = []
-  if (trimmed.length > 0) {
-    queries.push(...buildConsoleUserPrefixQueries(trimmed))
-  }
-  queries.push(
+  const queries: string[] = [
+    ...buildAttributePrefixSearchQueries(
+      ['name', 'email', 'phone', '$id'],
+      trimmed,
+    ),
     orderQuery,
     Query.limit(CONSOLE_USERS_SEARCH_LIMIT),
     Query.offset(0),
-  )
+  ]
 
   return sdk.forConsole.users.list({
     queries,

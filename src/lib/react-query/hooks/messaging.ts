@@ -13,6 +13,7 @@ import {
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 import { fetchUser } from './users'
@@ -115,15 +116,13 @@ export async function fetchProjectTopics(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...buildAttributePrefixSearchQueries(['name', '$id'], search),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.messaging.listTopics({
-    queries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.messaging.listTopics({ queries })
 
   return {
     topics: response.topics || [],
@@ -195,15 +194,13 @@ export async function fetchProjectProviders(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...buildAttributePrefixSearchQueries(['name', '$id'], search),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.messaging.listProviders({
-    queries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.messaging.listProviders({ queries })
 
   return {
     providers: response.providers || [],

@@ -1,6 +1,7 @@
 import { AlertCircle, Loader2 } from 'lucide-react'
 import { HeaderAlertBar } from '@/components/global/shared/HeaderAlertBar'
 import {
+  coerceTrimmedString,
   dedicatedDatabaseHeaderAlertVariant,
   dedicatedDatabaseStatusAlertDescriptionKey,
   dedicatedDatabaseStatusAlertTitleKey,
@@ -18,14 +19,15 @@ export function DedicatedDatabaseStatusHeaderAlert({
 }: DedicatedDatabaseStatusHeaderAlertProps) {
   const t = useT()
 
-  if (!status?.trim() || isDedicatedDatabaseReady(status)) {
+  const normalized = coerceTrimmedString(status)
+  if (!normalized || isDedicatedDatabaseReady(normalized)) {
     return null
   }
 
-  const normalizedStatus = status.trim().toLowerCase()
-  const variant = dedicatedDatabaseHeaderAlertVariant(status)
-  const titleKey = dedicatedDatabaseStatusAlertTitleKey(status)
-  const descriptionKey = dedicatedDatabaseStatusAlertDescriptionKey(status)
+  const normalizedStatus = normalized.toLowerCase()
+  const variant = dedicatedDatabaseHeaderAlertVariant(normalized)
+  const titleKey = dedicatedDatabaseStatusAlertTitleKey(normalized)
+  const descriptionKey = dedicatedDatabaseStatusAlertDescriptionKey(normalized)
   const showSpinner = !['failed', 'deleted', 'paused', 'inactive'].includes(
     normalizedStatus,
   )

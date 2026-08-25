@@ -23,11 +23,7 @@ import {
   Square,
   Trash2,
 } from 'lucide-react'
-import {
-  fetchDomain,
-  useDeleteOrganizationDomain,
-  useRetryDomainVerification,
-} from '@/lib/react-query/hooks'
+import { fetchDomain, useDeleteOrganizationDomain } from '@/lib/react-query/hooks'
 import {
   buildConsoleUrl,
   copyResourceAsJson,
@@ -42,6 +38,7 @@ import {
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
+import { RetryVerification } from '../RetryVerification'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
@@ -60,6 +57,7 @@ export function DomainContextMenu({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [retryDialogOpen, setRetryDialogOpen] = useState(false)
 
   const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
   const domainHref = buildConsoleUrl(
@@ -67,7 +65,6 @@ export function DomainContextMenu({
   )
 
   const deleteDomain = useDeleteOrganizationDomain(orgId)
-  const retryVerification = useRetryDomainVerification(orgId)
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -93,21 +90,16 @@ export function DomainContextMenu({
     deleteMutation.mutate()
   }
 
-  const handleRetryVerification = () => {
-    retryVerification.mutate(domain.$id, {
-      onSuccess: (updatedDomain) => {
-        const verified = updatedDomain.nameservers?.toLowerCase() === 'appwrite'
-        if (verified) {
-          toast.success(t('Domain verification successful'))
-        } else {
-          toast.success(
-            t('Nameservers updated. Please wait for DNS propagation.'),
-          )
-        }
-      },
-      onError: (error) => {
-        toast.error(getErrorMessage(error))
-      },
+  const handleRetryVerificationClick = () => {
+    openDialogAfterOverlayCloses(() => setRetryDialogOpen(true))
+  }
+
+  const handleDomainVerified = () => {
+    queryClient.invalidateQueries({
+      queryKey: ['domains', 'organization', orgId],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['domain', domain.$id],
     })
   }
 
@@ -126,14 +118,12 @@ export function DomainContextMenu({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent
-          className="w-56"
->
+        <ContextMenuContent className="w-56">
           <ContextMenuItem
             onSelect={() =>
               navigateToTab('/organizations/$orgId/domains/$domainId')
             }
->
+          >
             <ContextMenuIcon icon={Globe} />
             {t('DNS Records')}
           </ContextMenuItem>
@@ -141,14 +131,12 @@ export function DomainContextMenu({
             onSelect={() =>
               navigateToTab('/organizations/$orgId/domains/$domainId/settings')
             }
->
+          >
             <ContextMenuIcon icon={Settings} />
             {t('Settings')}
           </ContextMenuItem>
           {!isVerified && (
-            <ContextMenuItem
-              onSelect={handleRetryVerification}
->
+            <ContextMenuItem onSelect={handleRetryVerificationClick}>
               <ContextMenuIcon icon={RefreshCw} />
               {t('Retry verification')}
             </ContextMenuItem>
@@ -162,19 +150,19 @@ export function DomainContextMenu({
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', domain.$id)}
->
+              >
                 <ContextMenuIcon icon={Copy} />
                 {t('Copy ID')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Domain', domain.domain)}
->
+              >
                 <ContextMenuIcon icon={Copy} />
                 {t('Copy domain')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', domainHref)}
->
+              >
                 <ContextMenuIcon icon={Link2} />
                 {t('Copy link')}
               </ContextMenuItem>
@@ -182,29 +170,23 @@ export function DomainContextMenu({
                 onSelect={() =>
                   void copyResourceAsJson(() => fetchDomain(domain.$id))
                 }
->
+              >
                 <ContextMenuIcon icon={FileJson} />
                 {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={() => openInNewTab(domainHref)}
->
+          <ContextMenuItem onSelect={() => openInNewTab(domainHref)}>
             <ContextMenuIcon icon={ExternalLink} />
             {t('Open in new tab')}
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => openInNewWindow(domainHref)}
->
+          <ContextMenuItem onSelect={() => openInNewWindow(domainHref)}>
             <ContextMenuIcon icon={Square} />
             {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={handleDeleteClick}
->
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             {t('Delete')}
           </ContextMenuItem>
@@ -225,6 +207,14 @@ export function DomainContextMenu({
         confirmPlaceholder="Enter domain name"
         onConfirm={handleDelete}
         isConfirming={deleteMutation.isPending}
+      />
+
+      <RetryVerification
+        open={retryDialogOpen}
+        onOpenChange={setRetryDialogOpen}
+        domain={domain}
+        orgId={orgId}
+        onVerified={handleDomainVerified}
       />
     </>
   )

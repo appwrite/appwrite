@@ -540,8 +540,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Select the runtime specification for your function':
     'בחרו את מפרט סביבת הריצה של הפונקציה שלכם',
   selected: 'נבחרו',
-  'Set the environment variables or secret keys that will be passed to this function.':
-    'הגדירו את משתני הסביבה או המפתחות הסודיים שיועברו לפונקציה הזו.',
+  'Configure environment variables for your function. Function-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this function.':
+    'הגדירו משתני סביבה לפונקציה שלכם. משתנים ייעודיים לפונקציה גוברים על משתני פרויקט גלובליים. הגדירו את משתני הסביבה או מפתחות הסוד שיועברו לפונקציה הזו.',
   'Set the events that will trigger your function. Maximum 100 events allowed.':
     'הגדירו את האירועים שיפעילו את הפונקציה שלכם. מותרים עד 100 אירועים.',
   Settings: 'הגדרות',

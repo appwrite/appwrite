@@ -37,6 +37,8 @@ The Firewall page groups rules by resource scope tabs (**API**, **Functions**, *
 
 Empty states differ by tab: API rules protect project API traffic; function and site rules target a selected resource's public traffic. See [Resource scopes](/docs/products/firewall/scopes).
 
+When a **site** is selected, the rules toolbar includes **Attack mode**. Turning it on creates (or re-enables) a catch-all [Challenge](/docs/products/firewall/actions#challenge) rule named **Attack mode**. See [Attack mode](/docs/products/firewall/attack-mode).
+
 # Plan limits {% #plan-limits %}
 
 Firewall rule limits are **per project** and depend on your organization plan:

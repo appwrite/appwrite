@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { ChevronRight, Pencil } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import {
+  GENERATOR_COVER_INDEX_ROUTE,
+  GENERATOR_DIAGRAM_INDEX_ROUTE,
+} from '@/lib/generator/document-routes'
 import { cn } from '@/lib/utils'
 
 type GeneratorEditorTitleProps = {
@@ -8,6 +13,8 @@ type GeneratorEditorTitleProps = {
   maxLength: number
   isSaving?: boolean
   onChange: (name: string) => void | Promise<void>
+  homeTo: typeof GENERATOR_COVER_INDEX_ROUTE | typeof GENERATOR_DIAGRAM_INDEX_ROUTE
+  onHomeClick?: () => void
 }
 
 export function GeneratorEditorTitle({
@@ -15,6 +22,8 @@ export function GeneratorEditorTitle({
   maxLength,
   isSaving = false,
   onChange,
+  homeTo,
+  onHomeClick,
 }: GeneratorEditorTitleProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState(name)
@@ -57,7 +66,28 @@ export function GeneratorEditorTitle({
 
   return (
     <div className="group flex min-w-0 items-center gap-1.5">
-      <span className="shrink-0 font-normal text-muted-foreground">Generator</span>
+      <Link
+        to={homeTo}
+        activeOptions={{ exact: true }}
+        className="shrink-0 font-normal text-muted-foreground transition-colors hover:text-foreground"
+        onClick={(event) => {
+          if (
+            !onHomeClick ||
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.shiftKey
+          ) {
+            return
+          }
+          event.preventDefault()
+          onHomeClick()
+        }}
+      >
+        Generator
+      </Link>
       <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
       {isEditing ? (
         <Input

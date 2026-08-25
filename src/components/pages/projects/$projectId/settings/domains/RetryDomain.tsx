@@ -11,7 +11,11 @@ import { useVerifyDomain } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
-import { VerifyDomainContent } from './VerifyDomainContent'
+import {
+  VerifyDomainContent,
+  dnsPendingVerificationError,
+  type DomainVerificationError,
+} from './VerifyDomainContent'
 
 interface RetryDomainDialogProps {
   open: boolean
@@ -34,9 +38,8 @@ export function RetryDomainDialog({
 }: RetryDomainDialogProps) {
   const t = useT()
   const verifyDomainMutation = useVerifyDomain(projectId, region)
-  const [verificationError, setVerificationError] = useState<string | null>(
-    null,
-  )
+  const [verificationError, setVerificationError] =
+    useState<DomainVerificationError | null>(null)
 
   useEffect(() => {
     if (open) setVerificationError(null)
@@ -49,10 +52,11 @@ export function RetryDomainDialog({
         ruleId: rule.$id,
         organizationDomainId,
       })
-      if (updatedRule.status === 'created') {
-        setVerificationError(
-          t('Domain verification failed. Please check your domain settings or try again later.'),
-        )
+      if (
+        updatedRule.status === 'created' ||
+        updatedRule.status === 'unverified'
+      ) {
+        setVerificationError(dnsPendingVerificationError(t))
       } else if (updatedRule.status === 'verified') {
         toast.success(`${rule.domain} ${t('has been verified')}`)
         onRetrySuccess()
@@ -60,19 +64,14 @@ export function RetryDomainDialog({
         toast.success(t('Verification in progress'))
         onRetrySuccess()
       }
-    } catch (error: unknown) {
-      setVerificationError(
-        (error instanceof Error ? error.message : null) ||
-          t('Failed to retry verification'),
-      )
+    } catch {
+      setVerificationError(dnsPendingVerificationError(t))
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-4xl p-0"
->
+      <DialogContent className="sm:max-w-4xl p-0">
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Retry verification')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -96,14 +95,14 @@ export function RetryDomainDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={verifyDomainMutation.isPending}
->
+          >
             {t('Cancel')}
           </Button>
           <Button
             type="button"
             onClick={handleRetry}
             disabled={verifyDomainMutation.isPending}
->
+          >
             {t('Retry')}
           </Button>
         </div>

@@ -123,9 +123,14 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
     label: 'Tooling',
     items: [
       {
-        label: 'AI',
-        href: '/docs/tooling/ai',
-        icon: 'sparkles',
+        label: 'Overview',
+        href: '/docs/tooling',
+        icon: 'layout-grid',
+      },
+      {
+        label: 'MCP server',
+        href: '/docs/tooling/ai/mcp-servers',
+        icon: 'mcp',
         isParent: true,
       },
       {

@@ -26,7 +26,7 @@ import {
   resolveCoverGenerationPersistName,
   type SavedCoverGeneration,
 } from '@/lib/cover-generator/cover-generation-prefs'
-import { DEFAULT_COVER_THEME_ID } from '@/lib/cover-generator/themes'
+import { pickRandomCoverEditorThemeId } from '@/lib/cover-generator/themes'
 import { createDefaultCoverData } from '@/lib/cover-generator/parse-params'
 import { useCoverGeneratorState } from '@/lib/cover-generator/use-cover-generator-state'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
@@ -300,7 +300,10 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
 
   const handleSelectTemplate = useCallback(
     (templateId: CoverTemplateId) => {
-      const coverData = createDefaultCoverData(templateId, DEFAULT_COVER_THEME_ID)
+      const coverData = createDefaultCoverData(
+        templateId,
+        pickRandomCoverEditorThemeId(),
+      )
       openEditor(crypto.randomUUID(), coverData)
     },
     [openEditor],
@@ -424,7 +427,14 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
 
   const handleOpenImage = async () => {
     try {
-      const blob = await fetchCoverImage(exportData)
+      const blob = shouldCaptureCoverDomPreviewClientSide(exportData)
+        ? await captureCoverDomPreviewBlob(exportData, {
+            renderWidth: exportData.width,
+            renderHeight: exportData.height,
+            format: exportData.format,
+            pixelRatio: 1,
+          })
+        : await fetchCoverImage(exportData)
       const objectUrl = URL.createObjectURL(blob)
       window.open(objectUrl, '_blank', 'noopener,noreferrer')
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)

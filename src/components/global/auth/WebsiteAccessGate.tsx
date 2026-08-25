@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useT } from '@/lib/i18n/translate'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 import {
   hasWebsiteAccessCookie,
+  isWebsiteAccessEnabled,
   setWebsiteAccessCookie,
   shouldShowWebsiteAccessGate,
   WEBSITE_ACCESS_COOKIE_NAME,
@@ -20,6 +22,9 @@ const BOOT_COVER_ID = 'website-access-boot-cover'
  */
 export const WEBSITE_ACCESS_BOOT_SCRIPT = `(function(){
   try {
+    var cfg = window.__APP_CONFIG__ || {};
+    var flag = String(cfg.websiteAccess || '').toLowerCase().trim();
+    if (flag === 'false' || flag === '0' || flag === 'disabled') return;
     var path = (location.pathname || '/').replace(/\\/+$/, '') || '/';
     if (path === '/i' || path.indexOf('/i/') === 0) return;
     var re = new RegExp('(?:^|;\\\\s*)${WEBSITE_ACCESS_COOKIE_NAME}=([^;]*)');
@@ -131,6 +136,7 @@ export function WebsiteAccessGate({ children }: { children: ReactNode }) {
 
   useLayoutEffect(() => {
     if (
+      !isWebsiteAccessEnabled(getRuntimeConfig().websiteAccess) ||
       !shouldShowWebsiteAccessGate(window.location.pathname) ||
       hasWebsiteAccessCookie()
     ) {

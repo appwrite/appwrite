@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -6,11 +6,7 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { getFrameworkAdapterDefaults } from '@/lib/frameworks'
-import {
-  buildSiteUpdateParams,
-  useSiteFrameworks,
-} from '@/lib/react-query/hooks'
+import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
 import { StartCommandLabel } from '../_components/StartCommandLabel'
 import { useT } from '@/lib/i18n/translate'
 
@@ -27,20 +23,6 @@ export function SiteRuntimeStartCommandCard({
 }: SiteRuntimeStartCommandCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const { data: frameworksData } = useSiteFrameworks(projectId)
-
-  const frameworks = useMemo(
-    () => frameworksData?.frameworks || [],
-    [frameworksData],
-  )
-  const currentFramework = useMemo(
-    () => frameworks.find((f) => f.key === site?.framework),
-    [frameworks, site?.framework],
-  )
-  const ssrDefaults = useMemo(
-    () => getFrameworkAdapterDefaults(currentFramework, 'ssr'),
-    [currentFramework],
-  )
 
   const [startCommand, setStartCommand] = useState('')
 
@@ -57,11 +39,9 @@ export function SiteRuntimeStartCommandCard({
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Start command updated successfully'))
-      queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
+      queryClient.setQueryData(['site', 'project', projectId, siteId], updated)
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })
@@ -103,7 +83,7 @@ export function SiteRuntimeStartCommandCard({
             id="site-start-command"
             value={startCommand}
             onChange={(e) => setStartCommand(e.target.value)}
-            placeholder={ssrDefaults.startCommand || t('Enter start command')}
+            placeholder={t('Enter start command')}
             className="h-9 max-w-md font-mono text-[13px]"
           />
         </div>

@@ -7,6 +7,7 @@
 import { useQuery, queryOptions } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
+import { setBackendUsageStatsAvailability } from '@/lib/console-profiles'
 
 /**
  * Fetch console variables. For cloud, use region-specific endpoint when provided.
@@ -15,7 +16,9 @@ export async function fetchConsoleVariables(
   region?: string,
 ): Promise<Models.ConsoleVariables> {
   const consoleSdk = region ? sdk.forConsoleIn(region) : sdk.forConsole
-  return await consoleSdk.console.variables()
+  const variables = await consoleSdk.console.variables()
+  setBackendUsageStatsAvailability(variables._APP_USAGE_STATS)
+  return variables
 }
 
 export function consoleVariablesQueryOptions(region?: string) {
@@ -49,5 +52,11 @@ export function useConsoleVariables(region?: string) {
       : ([] as string[]),
     sitesDomain: vars?._APP_DOMAIN_SITES,
     functionsDomain: vars?._APP_DOMAIN_FUNCTIONS,
+    // Undefined until loaded (or on older servers): callers treat undefined
+    // as "no capability info", not as "no provider supports it".
+    vcsProvidersWithRepositoryCreation:
+      vars?._APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION,
+    vcsProvidersWithPublicRepositories:
+      vars?._APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES,
   }
 }

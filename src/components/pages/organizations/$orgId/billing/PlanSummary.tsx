@@ -34,7 +34,10 @@ import {
   organizationBillingAggregationQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_BILLING_PROJECTS_LIMIT } from '@/lib/react-query/hooks/constants'
-import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
+import {
+  getPlanNameFromTier,
+  resolveOrganizationPlanDisplayLabel,
+} from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
@@ -183,10 +186,15 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // Get plan name from plan object
   const planName = useMemo(() => {
     if (!organization) return 'Free'
+    const planMatchesOrg =
+      !plan?.$id ||
+      plan.$id === organization.billingPlan ||
+      getPlanNameFromTier(plan.$id) ===
+        getPlanNameFromTier(organization.billingPlan)
     return resolveOrganizationPlanDisplayLabel({
       billingPlan: organization.billingPlan,
-      planName: plan?.name ?? null,
-      planId: plan?.$id,
+      planName: planMatchesOrg ? (plan?.name ?? null) : null,
+      planId: planMatchesOrg ? plan?.$id : organization.billingPlan,
     })
   }, [plan, organization])
 

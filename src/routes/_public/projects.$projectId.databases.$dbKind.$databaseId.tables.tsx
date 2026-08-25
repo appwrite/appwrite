@@ -10,7 +10,7 @@ import {
   type DatabaseRouteKind,
   usesCollectionsPath,
 } from '@/lib/database-routes'
-import { throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
+import { throwRedirectPostgresDbKind, throwRedirectMysqlDbKind } from '@/lib/database-route-redirects'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables',
@@ -27,7 +27,8 @@ export const Route = createFileRoute(
 
     if (!projectId || !databaseId) return
 
-    throwRedirectPostgresDbKind(dbKind, { projectId, databaseId, tableId: '-' })
+        throwRedirectPostgresDbKind(dbKind, { projectId, databaseId, tableId: '-' })
+    throwRedirectMysqlDbKind(dbKind, { projectId, databaseId, tableId: '-' })
 
     if (usesCollectionsPath(dbKind as DatabaseRouteKind)) {
       throw redirect({

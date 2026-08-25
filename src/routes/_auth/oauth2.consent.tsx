@@ -12,6 +12,7 @@ import {
   type OAuth2Outcome,
 } from '@/components/global/auth/OAuth2ConsentCard'
 import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
+import { getOAuth2App } from '@/lib/oauth2/cimd'
 import { isWebRedirect } from '@/lib/oauth2/redirect'
 import { OAuth2ErrorMessage, OAuth2ErrorType } from '@/lib/oauth2/errors'
 import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
@@ -170,7 +171,7 @@ function OAuth2ConsentPage() {
         grantId,
       })
       const [loadedApp, loadedAccount] = await Promise.all([
-        sdk.forConsole.apps.get({ appId: loadedGrant.appId }),
+        getOAuth2App(loadedGrant.appId),
         knownAccount !== undefined
           ? Promise.resolve(knownAccount)
           : getAccount(),
@@ -198,9 +199,7 @@ function OAuth2ConsentPage() {
           setCompletedRedirectUrl(result.redirectUrl)
           setAccount(loggedInAccount)
           const loadedApp = clientId
-            ? await sdk.forConsole.apps
-                .get({ appId: clientId })
-                .catch(() => null)
+            ? await getOAuth2App(clientId).catch(() => null)
             : null
           if (cancelled) return
           setApp(loadedApp)

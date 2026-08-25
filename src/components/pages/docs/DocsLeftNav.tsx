@@ -1,5 +1,5 @@
 import { useLocation } from '@tanstack/react-router'
-import { getDocsSlugFromPath } from '@/lib/docs/content'
+import { getDocsSlugFromPath } from '@/lib/docs/docs-slug'
 import { getDocsSectionNav } from '@/lib/docs/navigation'
 import { ApiReferenceSectionSubnavPanel } from '@/components/pages/docs/references/ApiReferenceSectionSubnav'
 import { DocsGlobalSidebar } from './DocsGlobalSidebar'

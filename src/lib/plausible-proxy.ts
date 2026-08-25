@@ -6,6 +6,10 @@
  * block them. See https://plausible.io/docs/proxy/introduction
  */
 
+import { getClientIpFromRequest } from './client-ip'
+
+export { getClientIpFromRequest }
+
 /** First-party script URL served by the app (proxies upstream Plausible JS). */
 export const PLAUSIBLE_PROXY_SCRIPT_PATH = '/r/v.js'
 
@@ -20,23 +24,6 @@ export function resolvePlausibleEventUrl(scriptSrc: string): string {
   } catch {
     return `${PLAUSIBLE_ORIGIN_FALLBACK}/api/event`
   }
-}
-
-/** Prefer CDN/client headers so Plausible receives the visitor IP, not the server's. */
-export function getClientIpFromRequest(request: Request): string | null {
-  const cfConnectingIp = request.headers.get('cf-connecting-ip')?.trim()
-  if (cfConnectingIp) return cfConnectingIp
-
-  const realIp = request.headers.get('x-real-ip')?.trim()
-  if (realIp) return realIp
-
-  const forwardedFor = request.headers.get('x-forwarded-for')
-  if (forwardedFor) {
-    const first = forwardedFor.split(',')[0]?.trim()
-    if (first) return first
-  }
-
-  return null
 }
 
 export async function proxyPlausibleScript(
@@ -82,6 +69,12 @@ export async function proxyPlausibleEvent(
   }
 
   const clientIp = getClientIpFromRequest(request)
+  // Never forward to Plausible without a visitor IP: the upstream request would
+  // otherwise appear to come from this app server and pollute geo stats.
+  if (!clientIp) {
+    return new Response(null, { status: 204 })
+  }
+
   const headers = new Headers()
   headers.set(
     'Content-Type',
@@ -91,9 +84,7 @@ export async function proxyPlausibleEvent(
     'User-Agent',
     request.headers.get('user-agent') || 'Unknown',
   )
-  if (clientIp) {
-    headers.set('X-Forwarded-For', clientIp)
-  }
+  headers.set('X-Forwarded-For', clientIp)
 
   try {
     const upstream = await fetch(eventUrl, {

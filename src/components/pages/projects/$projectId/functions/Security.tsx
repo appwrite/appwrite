@@ -46,10 +46,14 @@ export function View() {
         buildFunctionUpdateParams(func, updates),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Function updated successfully'))
+      queryClient.setQueryData(
+        ['function', 'project', projectId, functionId],
+        updated,
+      )
       queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
+        queryKey: ['functions', 'project', projectId],
       })
     },
     onError: (error: unknown) => {

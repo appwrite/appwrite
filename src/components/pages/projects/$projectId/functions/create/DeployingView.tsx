@@ -33,6 +33,7 @@ import { useFunctionWizard } from './WizardContext'
 import { ExternalLink, Play, GitBranch } from 'lucide-react'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import { domainUrl } from '@/lib/domains/url'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -169,7 +170,7 @@ export function DeployingView({
 
   const primaryDomain = domains?.[0]?.domain
   const functionUrl = primaryDomain
-    ? `https://${primaryDomain}`
+    ? domainUrl(primaryDomain)
     : func?.name
       ? `https://${func.name.toLowerCase().replace(/[^a-z0-9-]/g, '-')}.appwrite.network`
       : null

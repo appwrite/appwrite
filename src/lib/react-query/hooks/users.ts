@@ -14,6 +14,7 @@ import {
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
 import type { User } from '@/lib/utils/mock-data'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 
@@ -26,14 +27,16 @@ export const USERS_DEFAULT_SORT_BY = '$createdAt'
 export const USERS_DEFAULT_SORT_ORDER = 'desc' as const
 
 /**
- * Query function to fetch paginated users for a project
+ * Query function to fetch paginated users for a project.
  *
- * This is extracted so it can be reused in both hooks and route loaders.
+ * Extracted for reuse in hooks and route loaders. Search uses list `queries`
+ * (`startsWith` on name, email, phone, and `$id`) so ID paste works without a
+ * separate `users.get`.
  *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
- * @param search - Optional search query
+ * @param search - Optional search query (name, email, phone, or user ID)
  * @param filterQueries - Optional filter query strings
  * @param sortBy - Sort attribute (e.g. $createdAt, name, email)
  * @param sortOrder - asc or desc
@@ -57,15 +60,16 @@ export async function fetchProjectUsers(
     sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
+    ...buildAttributePrefixSearchQueries(
+      ['name', 'email', 'phone', '$id'],
+      search,
+    ),
     orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.users.list({
-    queries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.users.list({ queries })
 
   return {
     users: response.users || [],
@@ -99,15 +103,13 @@ export async function fetchProjectTeams(
   const projectSdk = sdk.forProject(projectId)
   const queries = [
     ...(filterQueries ?? []),
+    ...buildAttributePrefixSearchQueries(['name', '$id'], search),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.teams.list({
-    queries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.teams.list({ queries })
 
   return {
     teams: response.teams || [],

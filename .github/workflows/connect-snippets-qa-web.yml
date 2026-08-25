@@ -1,0 +1,282 @@
+name: Connect snippets QA (web)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CODE_SNIPPET_QA_ENDPOINT: ${{ vars.CODE_SNIPPET_QA_ENDPOINT }}
+  CODE_SNIPPET_QA_PROJECT_ID: ${{ vars.CODE_SNIPPET_QA_PROJECT_ID }}
+
+defaults:
+  run:
+    working-directory: tests/connect-qa
+
+jobs:
+  qa:
+    name: ${{ matrix.id }}
+    # AWS runner via RunsOn; profile defined in .github/runs-on.yml.
+    runs-on: runs-on=${{ github.run_id }}/runner=snippets-qa
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: next-app-router
+            framework: next
+            using: app
+            snippets: next/app
+            create: npx -y create-next-app@latest "$APP_DIR" --ts --app --eslint --no-tailwind --no-src-dir --import-alias "@/*" --use-npm --yes
+            port: 3000
+            dev: npm run dev -- --port 3000
+
+          - id: next-pages-router
+            framework: next
+            using: pages
+            snippets: next/pages
+            create: npx -y create-next-app@latest "$APP_DIR" --ts --no-app --eslint --no-tailwind --no-src-dir --import-alias "@/*" --use-npm --yes
+            port: 3000
+            dev: npm run dev -- --port 3000
+
+          - id: tanstack-start
+            framework: tanstack
+            using: vite
+            snippets: tanstack
+            create: npx -y @tanstack/cli@latest create "$APP_DIR" -y --package-manager npm
+            port: 3000
+            dev: npm run dev -- --port 3000
+
+          - id: react-vite
+            framework: react
+            using: vite
+            snippets: react/vite
+            create: npx -y create-vite@latest "$APP_DIR" --template react-ts
+            port: 5173
+            dev: npm run dev -- --port 5173 --strictPort
+
+          - id: react-cra
+            framework: react
+            using: cra
+            snippets: react/cra
+            create: npx -y create-react-app@latest "$APP_DIR"
+            port: 3000
+            dev: env BROWSER=none PORT=3000 npm start
+
+          - id: sveltekit
+            framework: sveltekit
+            using: vite
+            snippets: sveltekit
+            create: npx -y sv@latest create --template minimal --types ts --no-add-ons --no-install "$APP_DIR"
+            port: 5173
+            dev: npm run dev -- --port 5173 --strictPort
+
+          - id: svelte-vite
+            framework: svelte
+            using: vite
+            snippets: svelte
+            create: npx -y create-vite@latest "$APP_DIR" --template svelte-ts
+            port: 5173
+            dev: npm run dev -- --port 5173 --strictPort
+
+          - id: nuxt
+            framework: nuxt
+            using: vite
+            snippets: nuxt
+            create: npx -y create-nuxt@latest "$APP_DIR" -t v4 --packageManager npm --gitInit false --no-modules
+            # Nuxt 4 keeps app code under app/; drop the scaffold's welcome
+            # app.vue so the copied pages/ take over routing.
+            copy_to: app
+            post: rm -f app/app.vue
+            port: 3000
+            dev: npm run dev -- --port 3000
+
+          - id: vue-vite
+            framework: vue
+            using: vite
+            snippets: vue
+            create: npx -y create-vite@latest "$APP_DIR" --template vue-ts
+            port: 5173
+            dev: npm run dev -- --port 5173 --strictPort
+
+          - id: analog
+            framework: analog
+            using: vite
+            snippets: analog
+            create: npx -y create-analog@latest "$APP_DIR" --template latest --skipTailwind
+            port: 5173
+            dev: npm run dev -- --port 5173 --strictPort
+
+          - id: angular
+            framework: angular
+            using: cli
+            snippets: angular
+            create: npx -y @angular/cli@latest new "$APP_DIR" --defaults --package-manager npm --style css --ssr false
+            # Modern ng new scaffolds app.ts + app.html (placeholder page above
+            # its router-outlet); reduce it to the outlet and drop our now
+            # redundant app.component.ts. Older scaffolds (app.component.html)
+            # are already fully overridden by the copied snippet.
+            post: if [ -f src/app/app.html ]; then printf '<router-outlet />\n' > src/app/app.html; rm -f src/app/app.component.ts; fi
+            port: 4200
+            dev: npm start -- --port 4200
+
+          - id: solidstart
+            framework: solidstart
+            using: vite
+            snippets: solidstart
+            create: npx -y create-solid@latest "$APP_DIR" -s --v2 --ts -t basic
+            port: 3000
+            dev: npm run dev -- --port 3000
+
+          - id: solid-vite
+            framework: solid
+            using: vite
+            snippets: solid
+            create: npx -y create-vite@latest "$APP_DIR" --template solid-ts
+            port: 5173
+            dev: npm run dev -- --port 5173 --strictPort
+
+          # Astro's dev server defaults to 4321, not Vite's 5173.
+          - id: astro
+            framework: astro
+            using: vite
+            snippets: astro
+            create: npm create astro@latest "$APP_DIR" -- --template minimal --no-install --no-git --skip-houston --yes
+            port: 4321
+            dev: npm run dev -- --port 4321
+
+          - id: vanilla-vite
+            framework: vanilla
+            using: vite
+            snippets: vanilla
+            create: npx -y create-vite@latest "$APP_DIR" --template vanilla
+            port: 5173
+            dev: npm run dev -- --port 5173 --strictPort
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor,
+      # which makes Chrome's sandbox crash on launch ("session not created:
+      # Chrome instance exited" from Maestro's ChromeDriver). GitHub-hosted
+      # images ship with the restriction disabled; the RunsOn AMI keeps the
+      # Ubuntu default, so lift it here.
+      - name: Allow unprivileged user namespaces (Chrome sandbox)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Check Appwrite variables
+        run: |
+          if [ -z "$CODE_SNIPPET_QA_ENDPOINT" ] || [ -z "$CODE_SNIPPET_QA_PROJECT_ID" ]; then
+            echo "::error::Set the CODE_SNIPPET_QA_ENDPOINT and CODE_SNIPPET_QA_PROJECT_ID repository variables."
+            exit 1
+          fi
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+        with:
+          install: false
+
+      - name: Install tooling via mise (node, maestro, java)
+        run: |
+          mise trust
+          mise install
+
+      - name: Scaffold starter app
+        run: |
+          APP_DIR="app-$(date +%s)-$RANDOM"
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+          ${{ matrix.create }}
+          # Some create CLIs exit 0 without scaffolding (e.g. create-solid on
+          # an invalid template). Without a project here, npm would silently
+          # walk up and run the vibes repo's own scripts.
+          if [ ! -f "$APP_DIR/package.json" ]; then
+            echo "::error::Scaffold did not produce $APP_DIR/package.json"
+            exit 1
+          fi
+
+      - name: Paste Connect snippets over the starter
+        run: |
+          SRC="$GITHUB_WORKSPACE/src/components/pages/projects/\$projectId/shared/connect-snippets/web/${{ matrix.snippets }}"
+          DEST="$APP_DIR/${{ matrix.copy_to || '.' }}"
+          mkdir -p "$DEST"
+          cp -Rv "$SRC/." "$DEST/"
+          cd "$APP_DIR"
+          ${{ matrix.post }}
+
+      - name: Install dependencies + Appwrite Web SDK
+        run: |
+          cd "$APP_DIR"
+          npm install
+          npm install appwrite
+
+      - name: Write env file (derived from connect-snippets.ts)
+        run: node write-env.mjs web "${{ matrix.framework }}" "${{ matrix.using }}" "$APP_DIR"
+
+      - name: Start dev server on :${{ matrix.port }}
+        run: |
+          cd "$APP_DIR"
+          nohup ${{ matrix.dev }} > "$RUNNER_TEMP/devserver.log" 2>&1 &
+          echo "Waiting for http://localhost:${{ matrix.port }} ..."
+          for i in $(seq 1 120); do
+            if curl -fsS -o /dev/null "http://localhost:${{ matrix.port }}"; then
+              echo "Dev server is up."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Dev server never became ready on :${{ matrix.port }}"
+          tail -n 100 "$RUNNER_TEMP/devserver.log"
+          exit 1
+
+      # --debug-output + --flatten-debug-output puts maestro.log, failure
+      # screenshots, screen hierarchies, commands.json and the flow's named
+      # takeScreenshot images into artifacts/maestro/ deterministically (no
+      # ~/.maestro/tests/<timestamp>/ nesting). Verified on maestro 2.8.0;
+      # its --test-output-dir flag is ignored for debug output, so it is not
+      # used here.
+      - name: Run Maestro auth flow
+        run: |
+          mkdir -p artifacts/maestro
+          run_flow() {
+            mise run test ${{ matrix.port }} --headless \
+              --debug-output="$PWD/artifacts/maestro" \
+              --flatten-debug-output \
+              --format=junit \
+              --output="$PWD/artifacts/maestro/report.xml"
+          }
+          # maestro-web's CDP driver can drop a message mid-flow (seen as
+          # "No message with id N received"); one retry absorbs that flake
+          # without hiding real failures.
+          run_flow || {
+            echo "::warning::Maestro flow failed - retrying once"
+            run_flow
+          }
+
+      - name: Collect logs and app source
+        if: always()
+        run: |
+          mkdir -p artifacts
+          cp "$RUNNER_TEMP/devserver.log" artifacts/devserver.log 2>/dev/null || true
+          # Safety net: if a future maestro version ignores --debug-output,
+          # grab whatever landed in the default location instead.
+          if [ -d "$HOME/.maestro/tests" ]; then
+            cp -R "$HOME/.maestro/tests/." artifacts/maestro-default-output/ || true
+          fi
+          # The exact app that was tested (snippets pasted, env file written),
+          # ready for a local `npm install && npm run dev` - dependency trees
+          # and framework caches excluded.
+          if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
+            zip -qr artifacts/app-source.zip "$APP_DIR" \
+              -x "*/node_modules/*" "*/.git/*" "*/.next/*" "*/.nuxt/*" \
+              "*/.output/*" "*/.svelte-kit/*" "*/.angular/*" "*/.vinxi/*" \
+              "*/.tanstack/*" "*/dist/*" "*/.vite/*" "*/.cache/*" || true
+          fi
+
+      - name: Upload Maestro logs and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connect-qa-web-${{ matrix.id }}
+          path: tests/connect-qa/artifacts/
+          if-no-files-found: warn

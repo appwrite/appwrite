@@ -32,6 +32,7 @@ import {
   COLUMN_RESIZE_RAILS_LAYER_CLASS,
 } from '@/lib/layout/horizontal-resize'
 import {
+  SPREADSHEET_SCROLL_LAYER_CLASS,
   SPREADSHEET_STICKY_START_EDGE_SHADOW,
   SPREADSHEET_STICKY_START_HEADER_SHADOW,
 } from '@/lib/layout/spreadsheet-sticky'
@@ -200,12 +201,10 @@ export function PostgresRowsSpreadsheet({
         ) : (
           <div
             ref={tableLayerRef}
-            className="relative isolate inline-block min-w-full align-top overflow-x-clip"
+            className={SPREADSHEET_SCROLL_LAYER_CLASS}
+            style={{ minWidth: tableMinWidthPx }}
           >
-            <table
-              className="relative z-0 w-full table-fixed border-collapse"
-              style={{ minWidth: tableMinWidthPx }}
-            >
+            <table className="relative z-0 w-full table-fixed border-collapse">
               <colgroup>
                 <col
                   style={{
