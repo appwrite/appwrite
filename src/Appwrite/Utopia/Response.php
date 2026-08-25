@@ -619,6 +619,47 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Chunk
+     *
+     * Parent does not measure what it writes, so a chunked response reports a size of
+     * zero and is billed as zero outbound bytes. Accounting mirrors send().
+     *
+     * @param string $body
+     * @param bool $end
+     *
+     * @return void
+     */
+    public function chunk(string $body = '', bool $end = false): void
+    {
+        if ($this->sent) {
+            return;
+        }
+
+        // Read before the write: parent appends headers and disables the payload as it goes.
+        $countHeaders = !$this->headersSent;
+        $countBody = !$this->disablePayload;
+
+        parent::chunk($body, $end);
+
+        if ($countHeaders) {
+            $headersSize = 0;
+            foreach ($this->headers as $name => $values) {
+                foreach ($values as $value) {
+                    $headersSize += \strlen($name . ': ' . $value);
+                }
+                $headersSize += (\count($values) - 1) * 2; // linebreaks
+            }
+            $headersSize += (\count($this->headers) - 1) * 2; // linebreaks
+
+            $this->size += $headersSize;
+        }
+
+        if ($countBody) {
+            $this->size += \strlen($body);
+        }
+    }
+
+    /**
      * Output response
      *
      * Generate HTTP response output including the response header (+cookies) and body and prints them.
