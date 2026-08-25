@@ -12,6 +12,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Platform\Enum;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Query\Query;
 use Utopia\System\System;
 use Utopia\Usage\Tenant;
@@ -49,16 +50,16 @@ class XList extends Action
     protected const VALID_FILTER_ATTRIBUTES = ['service', 'resourceType', 'resourceId', 'ordinal'];
 
     /**
-     * Query::TYPE_* values supported on the filter surface. Gauges only
+     * Query methods supported on the filter surface. Gauges only
      * carry short low-cardinality string dimensions, so equality + null
      * presence is what makes sense; we skip contains/startsWith here since
      * they're rarely useful on values like 'bucket' / 'function'.
      */
     protected const VALID_FILTER_METHODS = [
-        Query::TYPE_EQUAL,
-        Query::TYPE_NOT_EQUAL,
-        Query::TYPE_IS_NULL,
-        Query::TYPE_IS_NOT_NULL,
+        QueryMethod::Equal,
+        QueryMethod::NotEqual,
+        QueryMethod::IsNull,
+        QueryMethod::IsNotNull,
     ];
 
     public static function getName(): string
