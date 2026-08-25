@@ -12,28 +12,27 @@ use Utopia\Schedule\Source\Row;
 use Utopia\Schedule\Trigger;
 use Utopia\System\System;
 
-abstract class Database implements Source, Changes
+abstract class Database implements Changes, Source
 {
     /** @var array<string, Document> */
     private array $projects = [];
 
     /**
-     * @param callable(Document): \Utopia\Database\Database $getProjectDB
-     * @param callable(Document, string, string): bool $isResourceBlocked
+     * @param  callable(Document): \Utopia\Database\Database  $getProjectDB
+     * @param  callable(Document, string, string): bool  $isResourceBlocked
      */
     public function __construct(
         protected readonly \Utopia\Database\Database $dbForPlatform,
         protected readonly mixed $getProjectDB,
         protected readonly mixed $isResourceBlocked,
-    ) {
-    }
+    ) {}
 
     abstract protected function type(): string;
 
     abstract protected function collection(): string;
 
     /**
-     * @param array<string, mixed> $schedule
+     * @param  array<string, mixed>  $schedule
      */
     abstract protected function trigger(array $schedule): Trigger;
 
@@ -53,7 +52,7 @@ abstract class Database implements Source, Changes
     public function make(Row $row): Entry
     {
         $document = $row->data;
-        if (!$document instanceof Document) {
+        if (! $document instanceof Document) {
             throw new \InvalidArgumentException('Schedule row carries no document');
         }
 
@@ -92,7 +91,7 @@ abstract class Database implements Source, Changes
     }
 
     /**
-     * @param array<string, mixed> $schedule
+     * @param  array<string, mixed>  $schedule
      */
     protected function resource(\Utopia\Database\Database $projectDB, array $schedule): Document
     {
@@ -106,7 +105,7 @@ abstract class Database implements Source, Changes
     {
         // Temporarly accepting both 'fra' and 'default'
         $regions = [System::getEnv('_APP_REGION', 'default')];
-        if (!\in_array('default', $regions)) {
+        if (! \in_array('default', $regions)) {
             $regions[] = 'default';
         }
 
