@@ -1,9 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import {
-  useParams,
-  useSearch,
-  useNavigate,
-  useLocation} from '@tanstack/react-router'
+import { useParams, useSearch, useNavigate } from '@tanstack/react-router'
 import {
   Loader2,
   FileText,
@@ -46,12 +42,12 @@ import { queryParamToMap } from '@/lib/table-filters'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
+import { domainUrl } from '@/lib/domains/url'
 
 export function View() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
-  const location = useLocation()
   const search = useSearch({ strict: false }) as {
     search?: string
     query?: string
@@ -213,7 +209,7 @@ export function View() {
                       <TableRow>
                         <TableCell className="px-4 py-3">
                           <a
-                            href={`https://${rule.domain}`}
+                            href={domainUrl(rule.domain)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"

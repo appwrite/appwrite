@@ -9,6 +9,7 @@ import {
   RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
 } from '@/lib/layout/horizontal-resize'
 import {
+  SPREADSHEET_SCROLL_LAYER_CLASS,
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
   SPREADSHEET_STICKY_START_EDGE_SHADOW,
@@ -141,7 +142,7 @@ export const STORAGE_SPREADSHEET_BODY_CELL_BORDER =
 export const STORAGE_SPREADSHEET_BODY_STICKY_EDGE_BG_CLASS = 'bg-background'
 
 export const STORAGE_SPREADSHEET_TABLE_LAYER_CLASS =
-  'relative inline-block min-w-full align-top'
+  SPREADSHEET_SCROLL_LAYER_CLASS
 
 /** Sticky checkbox `th` - single shadow utility (do not stack multiple `shadow-[...]`). */
 export const STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SHADOW =

@@ -270,7 +270,7 @@ let document = try await vectorsDB.createDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
@@ -301,7 +301,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-document \
+appwrite vectorsdb create-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id 'unique()' \
@@ -496,7 +496,7 @@ let document = try await vectorsDB.getDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -520,7 +520,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db get-document \
+appwrite vectorsdb get-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id <DOCUMENT_ID>
@@ -531,6 +531,8 @@ appwrite vectors-db get-document \
 Use the `listDocuments` method to read documents from a collection. Pass [queries](/docs/products/databases/vectorsdb/queries) to filter, order, and paginate the results.
 
 To rank documents by similarity to a query vector, use a vector search query instead. See [Vector search](/docs/products/databases/vectorsdb/vector-search).
+
+`listDocuments` sends queries in the URL. When your queries are too long for that, `createQuery` takes the same arguments in the request body and returns the same document list. See [Send queries in the request body](/docs/products/databases/vectorsdb/vector-search#create-query).
 
 {% multicode %}
 ```server-nodejs
@@ -739,7 +741,7 @@ let documentList = try await vectorsDB.listDocuments(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
@@ -765,7 +767,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"limit","values":[10]}'
@@ -999,7 +1001,7 @@ let document = try await vectorsDB.updateDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use serde_json::json;
 
 #[tokio::main]
@@ -1028,7 +1030,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db update-document \
+appwrite vectorsdb update-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id <DOCUMENT_ID> \
@@ -1263,7 +1265,7 @@ let document = try await vectorsDB.upsertDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use serde_json::json;
 
 #[tokio::main]
@@ -1292,7 +1294,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db upsert-document \
+appwrite vectorsdb upsert-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id <DOCUMENT_ID> \
@@ -1485,7 +1487,7 @@ try await vectorsDB.deleteDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -1507,7 +1509,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db delete-document \
+appwrite vectorsdb delete-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id <DOCUMENT_ID>

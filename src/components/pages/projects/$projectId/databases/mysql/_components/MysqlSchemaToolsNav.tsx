@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ListOrdered, Network, Play } from 'lucide-react'
+import { Network, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
@@ -53,14 +53,6 @@ export function MysqlSchemaToolsNav({
       icon: Network,
       iconClassName: 'h-3.5 w-3.5 shrink-0',
       label: t('Visualizer'),
-    },
-    {
-      key: 'enums',
-      link: nav.enums(),
-      active: activeTab === 'enums',
-      icon: ListOrdered,
-      iconClassName: 'h-3.5 w-3.5 shrink-0',
-      label: t('Enums'),
     },
   ] as const
 

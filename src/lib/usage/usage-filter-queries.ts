@@ -8,6 +8,7 @@ import {
   isUsageGaugeFilterAttribute,
   isUsageGaugeFilterOperator,
   USAGE_FILTER_EXCLUDED_ATTRIBUTES,
+  type UsageFilterAvailability,
 } from '@/lib/usage/usage-filter-configs'
 import type { FetchUsageOverviewOptions } from '@/lib/usage/usage-events-common'
 import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
@@ -38,14 +39,18 @@ function isFilterKeyAllowedForCategory(
   attribute: string,
   operator: string,
   categoryId: string,
+  availability: UsageFilterAvailability,
 ): boolean {
   if (USAGE_FILTER_EXCLUDED_ATTRIBUTES.has(attribute)) return false
-  if (!getUsageFilterColumnIdsForCategory(categoryId).has(attribute)) {
+  if (
+    !getUsageFilterColumnIdsForCategory(categoryId, availability).has(attribute)
+  ) {
     return false
   }
-  const column = getUsageFilterColumnsForCategory(categoryId).find(
-    (entry) => entry.id === attribute,
-  )
+  const column = getUsageFilterColumnsForCategory(
+    categoryId,
+    availability,
+  ).find((entry) => entry.id === attribute)
   if (column?.allowedOperators?.length) {
     return column.allowedOperators.includes(operator)
   }
@@ -55,13 +60,14 @@ function isFilterKeyAllowedForCategory(
 export function sanitizeUsageFilterMap(
   filterMap: FilterMap,
   categoryId: string,
+  availability: UsageFilterAvailability = {},
 ): FilterMap {
   if (filterMap.size === 0) return filterMap
   const sanitized = new Map(filterMap)
   for (const key of sanitized.keys()) {
     const attribute = String(key.c)
     if (
-      !isFilterKeyAllowedForCategory(attribute, key.o, categoryId)
+      !isFilterKeyAllowedForCategory(attribute, key.o, categoryId, availability)
     ) {
       sanitized.delete(key)
     }
@@ -73,8 +79,9 @@ export function getUsageFilterQueriesForSurface(
   filterMap: FilterMap,
   categoryId: string,
   surface: UsageFilterQuerySurface,
+  availability: UsageFilterAvailability = {},
 ): UsageFilterQueries {
-  const sanitized = sanitizeUsageFilterMap(filterMap, categoryId)
+  const sanitized = sanitizeUsageFilterMap(filterMap, categoryId, availability)
   if (sanitized.size === 0) return undefined
 
   const queries: string[] = []
@@ -91,8 +98,14 @@ export function getUsageFilterQueriesFromMap(
   filterMap: FilterMap,
   categoryId: string,
   surface: UsageFilterQuerySurface = 'events',
+  availability: UsageFilterAvailability = {},
 ): UsageFilterQueries {
-  return getUsageFilterQueriesForSurface(filterMap, categoryId, surface)
+  return getUsageFilterQueriesForSurface(
+    filterMap,
+    categoryId,
+    surface,
+    availability,
+  )
 }
 
 export function appendUsageFiltersToQueryKey(

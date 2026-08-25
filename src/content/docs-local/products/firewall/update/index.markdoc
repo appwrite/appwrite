@@ -36,6 +36,8 @@ When tightening a deny or rate limit:
 2. Consider lowering match breadth (narrower path, exact IP, or tighter CIDR range) before increasing severity.
 3. Prefer **disable** temporarily if you need to stop a rule during an incident, then fix conditions and re-enable.
 
+For a site-wide challenge you turned on with [Attack mode](/docs/products/firewall/attack-mode), use the **Attack mode** button or banner **Turn off** instead of deleting the rule. That disables the same rule so you can turn Attack mode back on without creating a new one.
+
 When adding an allowlist:
 
 1. Create or update a **bypass** rule with the trusted IP or path.

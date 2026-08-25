@@ -31,7 +31,7 @@ This article looks at Appwrite as a Supabase alternative for AI apps, focused on
 
 Both Appwrite and Supabase are open-source backend platforms with managed cloud offerings and supported self-hosting. Both give an AI coding agent a single surface for identity, persistent data, files, server-side code, live updates, and (in Appwrite's case) deployment. The shape of each platform is what differs.
 
-Appwrite presents a unified suite: [Auth](/docs/products/auth), [databases with tables, rows, and columns](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Realtime](/docs/apis/realtime), and [Sites](/docs/products/sites) for hosting full-stack frameworks. All of it is reachable through a consistent set of SDKs and through [Appwrite's MCP servers for the API and docs](/docs/tooling/ai/mcp-servers/api). The platform enforces permissions at the row level so AI-generated client code does not have to guess.
+Appwrite presents a unified suite: [Auth](/docs/products/auth), [databases with tables, rows, and columns](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Realtime](/docs/apis/realtime), and [Sites](/docs/products/sites) for hosting full-stack frameworks. All of it is reachable through a consistent set of SDKs and through [Appwrite's MCP servers for the API and docs](/docs/tooling/ai/mcp-servers). The platform enforces permissions at the row level so AI-generated client code does not have to guess.
 
 Supabase wraps Postgres with generated REST and GraphQL APIs, Auth, Storage, Realtime, and Edge Functions. It leans into direct SQL access, Row Level Security policies, and pgvector for embeddings. Supabase also ships an official MCP server so AI tools can query and manipulate a project on your behalf. The shape favors developers who want Postgres as the source of truth and are comfortable with SQL and policy code, including when that code comes from an agent.
 
@@ -100,7 +100,7 @@ Supabase does not offer frontend hosting. Teams typically pair it with Vercel, N
 
 # MCP and direct agent access
 
-Appwrite ships [official MCP servers](/docs/tooling/ai/mcp-servers/api), one for the API and one for the docs. The API server uses a compact two-tool workflow with automatic service discovery so an agent can operate on your Appwrite project through natural language. The docs server keeps an agent grounded in current Appwrite documentation rather than training-data memories.
+Appwrite ships [official MCP servers](/docs/tooling/ai/mcp-servers), one for the API and one for the docs. The API server uses a compact two-tool workflow with automatic service discovery so an agent can operate on your Appwrite project through natural language. The docs server keeps an agent grounded in current Appwrite documentation rather than training-data memories.
 
 Supabase also ships an official MCP server for projects, with read-only mode, project scoping, and feature-group toggles. For both platforms, the upshot is the same: an AI coding tool can read and change your backend without hand-written glue code. The difference is surface area. Appwrite's MCP touches a wider set of primitives, including Sites and Functions deployments; Supabase's MCP is focused on the database and project operations.
 
@@ -143,4 +143,4 @@ Neither Appwrite nor Supabase does model inference for you; both plug into OpenA
 - [Appwrite Realtime](/docs/apis/realtime)
 - [Appwrite Sites](/docs/products/sites)
 - [AI tooling on Appwrite](/docs/tooling/ai)
-- [MCP server for the Appwrite API](/docs/tooling/ai/mcp-servers/api)
+- [MCP server for the Appwrite API](/docs/tooling/ai/mcp-servers)

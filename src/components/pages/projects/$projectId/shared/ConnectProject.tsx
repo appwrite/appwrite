@@ -124,8 +124,8 @@ const FRAMEWORK_OPTIONS: Record<
   { id: string; label: string; icon?: string }[]
 > = {
   web: [
-    { id: 'next', label: 'Next.js' },
     { id: 'tanstack', label: 'TanStack Start' },
+    { id: 'next', label: 'Next.js' },
     { id: 'react', label: 'React' },
     { id: 'sveltekit', label: 'SvelteKit' },
     { id: 'svelte', label: 'Svelte' },

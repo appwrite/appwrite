@@ -44,7 +44,6 @@ import {
   buildMysqlTableAutocompleteColumnsSql,
   buildMysqlTableColumnsForRowsSql,
   buildMysqlTableColumnsSql,
-  buildMysqlSchemaEnumsSql,
   buildMysqlTableIndexesSql,
   buildMysqlTableInfoSql,
   MYSQL_SIDEBAR_LIST_PAGE_SIZE,
@@ -52,17 +51,14 @@ import {
   type MysqlListSchemasOptions,
   type MysqlListTablesOptions,
   type MysqlTableColumnRow,
-  type MysqlSchemaEnumRow,
   type MysqlTableIndexRow,
   type MysqlTableInfoRow,
   type MysqlTableRow,
   sortMysqlTableColumns,
-  sortMysqlSchemaEnums,
   sortMysqlTableIndexes,
   mysqlRelationSupportsRowCtid,
 } from '@/lib/mysql-sql'
 import { parseMysqlTableId, mysqlTableId, quoteMysqlIdentifier } from '@/lib/mysql-database-routes'
-import { parseMysqlEnumValues } from '@/lib/mysql-enum-metadata'
 import {
   buildMysqlTablePoliciesSql,
   buildMysqlTableRlsStatusSql,
@@ -443,31 +439,6 @@ export async function fetchMysqlTableIndexes(
   return {
     indexes,
     total: indexes.length,
-  }
-}
-
-export async function fetchMysqlSchemaEnums(
-  projectId: string,
-  databaseId: string,
-  schema: string,
-) {
-  const execution = await executeMysqlDatabaseSql(
-    projectId,
-    databaseId,
-    buildMysqlSchemaEnumsSql(schema),
-  )
-  const rows = executionResultRows<MysqlSchemaEnumRow>(execution)
-  const enums = sortMysqlSchemaEnums(
-    rows
-      .filter((row) => row.enum_name)
-      .map((row) => ({
-        ...row,
-        values: parseMysqlEnumValues(row.enum_values),
-      })),
-  )
-  return {
-    enums,
-    total: enums.length,
   }
 }
 
@@ -1227,31 +1198,6 @@ export function mysqlTableIndexesQueryOptions(
   })
 }
 
-export function mysqlSchemaEnumsQueryOptions(
-  projectId: string | null | undefined,
-  databaseId: string | null | undefined,
-  schema: string | null | undefined,
-) {
-  return queryOptions({
-    queryKey: [
-      'mysql-schema-enums',
-      'project',
-      projectId,
-      databaseId,
-      schema,
-    ],
-    queryFn: () =>
-      fetchMysqlSchemaEnums(projectId!, databaseId!, schema!),
-    enabled: !!projectId && !!databaseId && !!schema,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    gcTime: projectId && databaseId && schema ? 5 * 60 * 1000 : 0,
-  })
-}
-
 export function mysqlTableInfoQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -1951,24 +1897,6 @@ export function useMysqlTableIndexes(
   }
 }
 
-export function useMysqlSchemaEnums(
-  projectId: string | null | undefined,
-  databaseId: string | null | undefined,
-  schema: string | null | undefined,
-) {
-  const { data, isLoading, isFetching, error, refetch } = useQuery(
-    mysqlSchemaEnumsQueryOptions(projectId, databaseId, schema),
-  )
-  return {
-    enums: data?.enums ?? [],
-    total: data?.total ?? 0,
-    isLoading,
-    isFetching,
-    error,
-    refetch,
-  }
-}
-
 export function useMysqlRoles(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -2342,7 +2270,6 @@ async function refreshMysqlDatabaseCaches(
     ['mysql-table-columns', 'project', projectId, databaseId],
     ['mysql-table-row-columns', 'project', projectId, databaseId],
     ['mysql-table-indexes', 'project', projectId, databaseId],
-    ['mysql-schema-enums', 'project', projectId, databaseId],
     ['mysql-table-info', 'project', projectId, databaseId],
     ['mysql-table-rls', 'project', projectId, databaseId],
     ['mysql-table-policies', 'project', projectId, databaseId],

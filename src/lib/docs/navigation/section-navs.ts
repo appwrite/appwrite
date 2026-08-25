@@ -56,7 +56,7 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
     configs = configs
       .filter((config) => config.prefix !== 'products/agent')
       .map((config) =>
-        config.prefix === 'tooling/ai'
+        config.prefix === 'tooling/ai' || config.prefix === 'tooling'
           ? {
               ...config,
               navigation: withoutHref(config.navigation, isAgentDocsHref),
@@ -65,5 +65,14 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
       )
   }
 
-  return configs.sort((a, b) => a.prefix.localeCompare(b.prefix))
+  return configs
+    .map((config) =>
+      config.prefix.startsWith('tooling/')
+        ? {
+            ...config,
+            parent: { href: '/docs/tooling', label: 'Tooling' },
+          }
+        : config,
+    )
+    .sort((a, b) => a.prefix.localeCompare(b.prefix))
 }

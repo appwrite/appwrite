@@ -368,51 +368,6 @@ export type MysqlTableInfoRow = {
   estimated_rows: number | string | null
 }
 
-export type MysqlSchemaEnumRow = {
-  enum_name: string
-  enum_schema: string
-  enum_values: unknown
-  enum_comment: string | null
-  used_in_schema: boolean | string
-  values: string[]
-}
-
-export function sortMysqlSchemaEnums<T extends Pick<MysqlSchemaEnumRow, 'enum_name'>>(
-  enums: T[],
-): T[] {
-  return [...enums].sort((a, b) => a.enum_name.localeCompare(b.enum_name))
-}
-
-export function isMysqlEnumUsedInSchema(
-  row: Pick<MysqlSchemaEnumRow, 'used_in_schema'>,
-): boolean {
-  const value = row.used_in_schema
-  return value === true || value === 'true' || value === 't' || value === 1 || value === '1'
-}
-
-/**
- * List ENUM columns as pseudo-enums (MySQL has no CREATE TYPE).
- * enum_values is the COLUMN_TYPE string (e.g. enum('a','b')), parsed client-side.
- */
-export function buildMysqlSchemaEnumsSql(schema: string): string {
-  const schemaLit = quoteMysqlStringLiteral(schema)
-  return prefixMysqlSqlComment(
-    `
-SELECT
-  CONCAT(c.TABLE_NAME, '.', c.COLUMN_NAME) AS enum_name,
-  c.TABLE_SCHEMA AS enum_schema,
-  c.COLUMN_TYPE AS enum_values,
-  NULL AS enum_comment,
-  TRUE AS used_in_schema
-FROM information_schema.COLUMNS c
-WHERE c.TABLE_SCHEMA = ${schemaLit}
-  AND c.DATA_TYPE = 'enum'
-ORDER BY c.TABLE_NAME, c.COLUMN_NAME
-`.trim(),
-    'Load schema enums',
-  )
-}
-
 export function buildMysqlTableColumnsSql(schema: string, table: string): string {
   const schemaLit = quoteMysqlStringLiteral(schema)
   const tableLit = quoteMysqlStringLiteral(table)

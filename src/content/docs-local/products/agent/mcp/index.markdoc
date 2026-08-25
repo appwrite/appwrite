@@ -1,7 +1,7 @@
 ---
 layout: article
 title: MCP connections
-description: Learn how the Appwrite Agent uses MCP servers to call tools and take actions in your projects.
+description: Learn how the Appwrite Agent uses MCP to call tools and take actions in your projects.
 ---
 
 **MCP connections** tell the Agent which [Model Context Protocol](https://modelcontextprotocol.io) servers it can use for tools. For Appwrite Agent, the primary connection is **Appwrite MCP**, the hosted server that lets the Agent take actions in your Appwrite projects with your account.
@@ -38,7 +38,7 @@ Each connection can be enabled or disabled without deleting it. Disabled connect
 
 # Other MCP connections {% #other-mcp-connections %}
 
-The Agent settings list shows Appwrite MCP and any other MCP connections already stored on your account. Connection status, enable/disable, and disconnect apply to those rows. For building with MCP outside Appwrite Agent, see the [MCP servers](/docs/tooling/ai/mcp-servers) tooling docs.
+The Agent settings list shows Appwrite MCP and any other MCP connections already stored on your account. Connection status, enable/disable, and disconnect apply to those rows. For building with MCP outside Appwrite Agent, see the [MCP server](/docs/tooling/ai/mcp-servers) tooling docs.
 
 # How tools show up in chat {% #how-tools-show-up-in-chat %}
 

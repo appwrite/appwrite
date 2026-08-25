@@ -2,7 +2,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { expect, test } from './fixtures'
 import { env } from './config/env'
-import { acceptCookieBannerIfPresent } from './helpers/cookie-banner'
+import {
+  acceptCookieBannerIfPresent,
+  skipCommunitySupportWizardIfPresent,
+} from './helpers/cookie-banner'
+import { cleanupE2eProjects } from './helpers/e2e-project-cleanup'
 import { withWebsiteAccessCookie } from './helpers/website-access'
 
 type StorageState = {
@@ -22,10 +26,24 @@ function parseSessionSecret(secret: string): StorageState {
 const authDir = path.join('e2e', '.auth')
 const authPath = path.join(authDir, 'auth.json')
 
+async function sweepStaleE2eProjects(): Promise<void> {
+  if (!env.E2E_ORG_ID) return
+  try {
+    await cleanupE2eProjects({ includeStaleLeftovers: true })
+  } catch (error) {
+    console.error('[e2e] Stale project cleanup failed:', error)
+  }
+}
+
 test('authenticate once and persist storage state', async ({
   page,
   context,
 }) => {
+  if (env.E2E_ORG_ID) {
+    // Leftover sweep can delete hundreds of crashed-run projects.
+    test.setTimeout(20 * 60_000)
+  }
+
   fs.mkdirSync(authDir, { recursive: true })
 
   // Prefer email/password when available so storage state is captured against
@@ -41,12 +59,13 @@ test('authenticate once and persist storage state', async ({
         parseSessionSecret(env.E2E_TEST_SESSION_SECRET),
       )
       fs.writeFileSync(authPath, JSON.stringify(storageState, null, 2), 'utf-8')
-      return
     } catch (error) {
       throw new Error(
         `Failed to parse E2E_TEST_SESSION_SECRET: ${(error as Error).message}`,
       )
     }
+    await sweepStaleE2eProjects()
+    return
   }
 
   if (!email || !password) {
@@ -92,6 +111,10 @@ test('authenticate once and persist storage state', async ({
       },
       { timeout: 30_000 },
     )
+
+    // Same idea as the cookie banner: dismiss this overlay at session start
+    // so later tests are not blocked. Prefs load after login, so wait briefly.
+    await skipCommunitySupportWizardIfPresent(page, { waitMs: 8_000 })
   })
 
   // Cookie fallback (localStorage) is what the SDK uses cross-origin; storageState
@@ -110,4 +133,6 @@ test('authenticate once and persist storage state', async ({
     hasCookies || hasOrigins,
     'Expected session cookies or localStorage after login',
   ).toBeTruthy()
+
+  await sweepStaleE2eProjects()
 })

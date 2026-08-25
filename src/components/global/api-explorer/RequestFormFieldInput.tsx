@@ -426,6 +426,41 @@ function renderValueControl(
       )
 
     case 'enum':
+      if (field.enumOpen) {
+        const datalistId = `${inputId}-suggestions`
+        return (
+          <>
+            <ExplorerParamInput
+              fieldKey={inputId}
+              id={inputId}
+              list={datalistId}
+              placeholder={getFormFieldPlaceholder('string')}
+              value={String(value ?? '')}
+              onChange={(event) => onChange(event.target.value)}
+              className={REQUEST_BUILDER_INPUT}
+              spellCheck={false}
+              autoComplete="off"
+            />
+            <datalist id={datalistId}>
+              {(field.enumMembers ?? field.enumValues?.map((option) => ({
+                key: option,
+                value: option,
+              })) ?? []).map((member) => (
+                <option
+                  key={member.value}
+                  value={member.value}
+                  label={
+                    member.key !== member.value
+                      ? `${member.key} (${member.value})`
+                      : member.value
+                  }
+                />
+              ))}
+            </datalist>
+          </>
+        )
+      }
+
       return (
         <Select
           value={String(value ?? '')}
@@ -435,9 +470,25 @@ function renderValueControl(
             <SelectValue placeholder="// choose value" />
           </SelectTrigger>
           <SelectContent>
-            {field.enumValues?.map((option) => (
-              <SelectItem key={option} value={option} className="font-mono text-[13px]">
-                {option}
+            {(field.enumMembers?.length
+              ? field.enumMembers.map((member) => ({
+                  value: member.value,
+                  label:
+                    member.key !== member.value
+                      ? `${member.key} (${member.value})`
+                      : member.value,
+                }))
+              : (field.enumValues ?? []).map((option) => ({
+                  value: option,
+                  label: option,
+                }))
+            ).map((option) => (
+              <SelectItem
+                key={option.value}
+                value={option.value}
+                className="font-mono text-[13px]"
+              >
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -460,7 +511,9 @@ function renderValueControl(
         <div className="px-4 py-3">
           <ArrayEnumInput
             options={field.enumValues ?? []}
+            members={field.enumMembers}
             selected={Array.isArray(value) ? value : []}
+            allowCustom={field.enumOpen === true}
             onChange={onChange}
           />
         </div>
@@ -901,13 +954,28 @@ function ArrayStringHelper({
 
 function ArrayEnumInput({
   options,
+  members,
   selected,
+  allowCustom,
   onChange,
 }: {
   options: string[]
+  members?: Array<{ key: string; value: string }>
   selected: string[]
+  allowCustom?: boolean
   onChange: (value: FormValue) => void
 }) {
+  const t = useT()
+  const [customValue, setCustomValue] = useState('')
+  const labelFor = (option: string) => {
+    const member = members?.find((entry) => entry.value === option)
+    if (!member || member.key === member.value) return option
+    return `${member.key} (${member.value})`
+  }
+
+  const extraSelected = selected.filter((value) => !options.includes(value))
+  const visibleOptions = [...options, ...extraSelected]
+
   const toggle = (option: string, checked: boolean) => {
     if (checked) {
       onChange([...selected, option])
@@ -916,9 +984,19 @@ function ArrayEnumInput({
     onChange(selected.filter((value) => value !== option))
   }
 
+  const addCustom = () => {
+    const next = customValue.trim()
+    if (!next || selected.includes(next)) {
+      setCustomValue('')
+      return
+    }
+    onChange([...selected, next])
+    setCustomValue('')
+  }
+
   return (
     <div className="grid gap-1.5 sm:grid-cols-2">
-      {options.map((option) => {
+      {visibleOptions.map((option) => {
         const checked = selected.includes(option)
         const checkboxId = `enum-${option}`
         return (
@@ -932,10 +1010,30 @@ function ArrayEnumInput({
               checked={checked}
               onCheckedChange={(next) => toggle(option, next === true)}
             />
-            <span className="font-mono text-[13px] text-foreground/85">{option}</span>
+            <span className="font-mono text-[13px] text-foreground/85">
+              {labelFor(option)}
+            </span>
           </label>
         )
       })}
+      {allowCustom ? (
+        <div className="flex items-center gap-2 sm:col-span-2">
+          <Input
+            value={customValue}
+            onChange={(event) => setCustomValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                addCustom()
+              }
+            }}
+            placeholder={t('Add value')}
+            className="h-8 font-mono text-[13px]"
+            spellCheck={false}
+            autoComplete="off"
+          />
+        </div>
+      ) : null}
     </div>
   )
 }

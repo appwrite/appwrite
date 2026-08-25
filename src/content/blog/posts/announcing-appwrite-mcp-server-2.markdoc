@@ -20,7 +20,7 @@ faqs:
   - question: "What is the Model Context Protocol?"
     answer: "MCP is an open protocol developed by Anthropic that defines how AI clients (editors, agents) talk to context and tool servers. An MCP server advertises a set of tools and resources, and any MCP-compatible client can use them. The Appwrite MCP server speaks MCP, so it works with any MCP-aware AI tool."
   - question: "Can I use the MCP server with self-hosted Appwrite?"
-    answer: "Yes. The MCP server accepts the same connection settings as the Appwrite SDKs (endpoint, project ID, API key), so you can point it at a self-hosted Appwrite instance. The [MCP server documentation](/docs/tooling/ai/mcp-servers/api) walks through configuration for both Cloud and self-hosted setups."
+    answer: "Yes. The MCP server accepts the same connection settings as the Appwrite SDKs (endpoint, project ID, API key), so you can point it at a self-hosted Appwrite instance. The [MCP server documentation](/docs/tooling/ai/mcp-servers) walks through configuration for both Cloud and self-hosted setups."
 ---
 
 When we launched the Appwrite MCP server, connecting your Appwrite project to AI coding agents was already straightforward. But as the number of enabled services grew, so did the number of tool definitions loaded into the model's context, leaving less room for your actual prompts and code.
@@ -74,7 +74,7 @@ A special thanks to [Abid Abdulgafoor](https://www.linkedin.com/in/abidabdulgafo
 
 # Resources
 
-- [MCP server documentation](/docs/tooling/ai/mcp-servers/api)
+- [MCP server documentation](/docs/tooling/ai/mcp-servers)
 - [MCP server on GitHub](https://github.com/appwrite/mcp-for-api)
 - [MCP server on PyPI](https://pypi.org/project/mcp-server-appwrite/)
 - [Discord community](https://appwrite.io/discord)

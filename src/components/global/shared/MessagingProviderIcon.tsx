@@ -36,6 +36,7 @@ const providerIconMap: Record<string, string> = {
   mailgun: 'mailgun.svg',
   sendgrid: 'sendgrid.svg',
   resend: 'resend.svg',
+  ses: 'amazon.svg',
   // Push
   fcm: 'firebase.svg',
   apns: 'apple.svg',

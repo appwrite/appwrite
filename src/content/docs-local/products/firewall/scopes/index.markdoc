@@ -52,6 +52,8 @@ Use **Sites** for a single deployed web app's public traffic:
 
 Select the site in the create wizard. The rule appears under the **Sites** tab.
 
+[Attack mode](/docs/products/firewall/attack-mode) is available only in this scope. Select a site on the Firewall page to challenge every visitor with one click during an incident.
+
 # Tabs in the Console {% #tabs-in-the-console %}
 
 The Firewall page filters the list by scope tab. Creating a rule from a tab preselects that resource type. You can change the type in the create wizard or later when [updating](/docs/products/firewall/update) the rule.

@@ -6,9 +6,9 @@ import { XIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import {
-  OFFCANVAS_END_CLOSED_STATE,
-  OFFCANVAS_HORIZONTAL_MOTION,
-  OFFCANVAS_START_CLOSED_STATE,
+  OFFCANVAS_END_SHEET_MOTION,
+  OFFCANVAS_SHEET_MOTION_TIMING,
+  OFFCANVAS_START_SHEET_MOTION,
 } from '@/lib/layout/offcanvas-classes'
 import { usePageDirection } from '@/lib/layout/page-direction'
 
@@ -69,18 +69,17 @@ function SheetContent({
         data-slot="sheet-content"
         dir={pageDirection}
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-[120] flex flex-col gap-4 shadow-lg data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:duration-300 data-[state=open]:duration-500',
+          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-[120] flex flex-col gap-4 shadow-lg data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+          OFFCANVAS_SHEET_MOTION_TIMING,
           side === 'right' &&
             cn(
               'inset-y-0 end-0 h-full w-3/4 border-s sm:max-w-sm',
-              OFFCANVAS_HORIZONTAL_MOTION,
-              OFFCANVAS_END_CLOSED_STATE,
+              OFFCANVAS_END_SHEET_MOTION,
             ),
           side === 'left' &&
             cn(
               'inset-y-0 start-0 h-full w-3/4 border-e sm:max-w-sm',
-              OFFCANVAS_HORIZONTAL_MOTION,
-              OFFCANVAS_START_CLOSED_STATE,
+              OFFCANVAS_START_SHEET_MOTION,
             ),
           side === 'top' &&
             'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b',

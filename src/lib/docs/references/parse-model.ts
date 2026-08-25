@@ -1,5 +1,6 @@
 import type { OpenApiSchema, OpenApiSpec } from '@/lib/api-explorer/types'
 import type { ReferenceVersion } from '@/lib/docs/references/constants'
+import { getPolymorphicModelRefs } from '@/lib/api-explorer/openapi-schema'
 import {
   formatSchemaType,
   getSchemaIdFromRef,
@@ -38,35 +39,15 @@ function collectRelatedModelIds(
       return [getSchemaIdFromRef(rawItems.$ref)]
     }
     const items = resolveSchemaRef(rawItems, spec) ?? rawItems
-    if (items.oneOf?.length) {
-      return items.oneOf
-        .filter((item) => item.$ref)
-        .map((item) => getSchemaIdFromRef(item.$ref!))
-    }
-    if (items.anyOf?.length) {
-      return items.anyOf
-        .filter((item) => item.$ref)
-        .map((item) => getSchemaIdFromRef(item.$ref!))
-    }
+    const itemModelIds = getPolymorphicModelRefs(items)
+    if (itemModelIds.length > 0) return itemModelIds
   }
 
   if (resolved.$ref) {
     return [getSchemaIdFromRef(resolved.$ref)]
   }
 
-  if (resolved.oneOf?.length) {
-    return resolved.oneOf
-      .filter((item) => item.$ref)
-      .map((item) => getSchemaIdFromRef(item.$ref!))
-  }
-
-  if (resolved.anyOf?.length) {
-    return resolved.anyOf
-      .filter((item) => item.$ref)
-      .map((item) => getSchemaIdFromRef(item.$ref!))
-  }
-
-  return []
+  return getPolymorphicModelRefs(resolved)
 }
 
 function resolvePropertyTypeMeta(

@@ -17,6 +17,7 @@ import type { Models } from '@appwrite.io/console'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { SpecificationType } from '@/lib/specifications'
+import { getVariableValueError, validateVariables } from '@/lib/variables'
 import {
   MARKETING_SITE_TEMPLATES_PROJECT_ID,
   MARKETING_SITE_TEMPLATES_PAGE_SIZE,
@@ -327,33 +328,6 @@ export async function fetchSiteSpecifications(
 }
 
 /**
- * Query function to fetch sites usage (all sites in project).
- *
- * `sites.listUsage` was removed from the console SDK. Project usage now comes
- * from the usage events / gauges APIs. Kept as a no-op so existing routes and
- * hooks continue to compile until the Sites usage screens are wired up.
- */
-export async function fetchSitesUsage(
-  _projectId: string,
-  _range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
-) {
-  return undefined
-}
-
-/**
- * Query function to fetch site usage (single site).
- *
- * `sites.getUsage` was removed from the console SDK. See `fetchSitesUsage`.
- */
-export async function fetchSiteUsage(
-  _projectId: string,
-  _siteId: string,
-  _range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
-) {
-  return undefined
-}
-
-/**
  * Query function to fetch site domains (proxy rules)
  */
 export async function fetchSiteDomains(
@@ -654,53 +628,6 @@ export function siteLogsQueryOptions(
 }
 
 /**
- * Query options for fetching site usage
- */
-export function siteUsageQueryOptions(
-  projectId: string | null | undefined,
-  siteId: string | null | undefined,
-  range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
-) {
-  return queryOptions({
-    queryKey: ['site-usage', 'project', projectId, siteId, range],
-    queryFn: () => fetchSiteUsage(projectId!, siteId!, range),
-    enabled: !!projectId && !!siteId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
-    meta: {
-      skipInitialLoader: true,
-    },
-  })
-}
-
-/**
- * Query options for fetching sites usage (all sites in project)
- */
-export function sitesUsageQueryOptions(
-  projectId: string | null | undefined,
-  range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
-) {
-  return queryOptions({
-    queryKey: ['sites-usage', 'project', projectId, range],
-    queryFn: () => fetchSitesUsage(projectId!, range),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    gcTime: projectId ? 5 * 60 * 1000 : 0,
-    meta: {
-      skipInitialLoader: true,
-    },
-  })
-}
-
-/**
  * Query options for fetching site variables
  */
 export function siteVariablesQueryOptions(
@@ -965,27 +892,6 @@ export function useSiteSpecifications(
   type: SpecificationType = SpecificationType.Runtimes,
 ) {
   return useQuery(siteSpecificationsQueryOptions(projectId, type))
-}
-
-/**
- * Hook to fetch sites usage (all sites)
- */
-export function useSitesUsage(
-  projectId: string | null | undefined,
-  range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
-) {
-  return useQuery(sitesUsageQueryOptions(projectId, range))
-}
-
-/**
- * Hook to fetch site usage (single site)
- */
-export function useSiteUsage(
-  projectId: string | null | undefined,
-  siteId: string | null | undefined,
-  range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
-) {
-  return useQuery(siteUsageQueryOptions(projectId, siteId, range))
 }
 
 /**
@@ -1449,13 +1355,11 @@ export function useCreateSiteVariable(
       if (!projectId || !siteId) {
         throw new Error('Project ID and Site ID are required')
       }
-      if (!params.key.trim()) {
-        throw new Error('Variable key is required')
-      }
-      if (params.value.length > 8192) {
-        throw new Error(
-          `Variable ${params.key} is longer than 8192 allowed characters`,
-        )
+      const validationError = validateVariables([
+        { key: params.key.trim(), value: params.value },
+      ])
+      if (validationError) {
+        throw new Error(validationError)
       }
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.createVariable({
@@ -1508,10 +1412,12 @@ export function useUpdateSiteVariable(
       if (!key.trim()) {
         throw new Error('Variable key is required')
       }
-      if (value.length > 8192) {
-        throw new Error(
-          `Variable ${key} is longer than 8192 allowed characters`,
-        )
+      // The key is the stored one rather than something just typed, so its
+      // format is deliberately not checked: a variable created before the
+      // identifier rule has to stay editable.
+      const valueError = getVariableValueError(key, value)
+      if (valueError) {
+        throw new Error(valueError)
       }
 
       const projectSdk = sdk.forProject(projectId)
@@ -1718,8 +1624,9 @@ export function useCreateSiteDomainRule(projectId: string | null | undefined) {
         if (!redirectUrl?.trim() || !statusCode) {
           throw new Error('Redirect URL and status code are required')
         }
-        const { ProxyResourceType, StatusCode } =
-          await import('@appwrite.io/console')
+        const { ProxyResourceType, StatusCode } = await import(
+          '@appwrite.io/console'
+        )
         const codeMap: Record<
           string,
           (typeof StatusCode)[keyof typeof StatusCode]

@@ -1,9 +1,10 @@
 import type {
   CoverImageFormat,
   CoverTemplateId,
-  CoverThemeId,
 } from '@/lib/cover-generator/constants'
+import type { CoverBadgeColor, CoverThemeId } from '@/lib/cover-generator/themes'
 import type { CoverCodeSnippetLanguage } from '@/lib/cover-generator/code-snippet/constants'
+import { isCoverExtraTemplateId } from '@/lib/cover-generator/extra-templates/ids'
 
 export type CoverScreenshotFields = {
   title?: string
@@ -175,7 +176,6 @@ export type CoverMilestoneBaseData = {
   title: string
   subtitle?: string
   eyebrow?: string
-  gradientStat: boolean
 }
 
 export type CoverMilestoneSplitData = CoverMilestoneBaseData & {
@@ -199,6 +199,186 @@ export type CoverVersionTitleData = {
   eyebrow?: string
 }
 
+export type CoverAnnouncementData = {
+  template: 'announcement'
+  badge?: string
+  title: string
+  subtitle?: string
+}
+
+export type CoverBigTypeData = {
+  template: 'big-type'
+  title: string
+  gradientTitle: boolean
+}
+
+export type CoverChecklistData = {
+  template: 'checklist'
+  title?: string
+  subtitle?: string
+  itemCount: number
+} & Partial<Record<`item${number}`, string>>
+
+export type CoverNumberedStepsData = {
+  template: 'numbered-steps'
+  eyebrow?: string
+  title: string
+  stepCount: number
+} & Partial<Record<`stepTitle${number}` | `stepDescription${number}`, string>>
+
+export type CoverApiEndpointMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+
+export type CoverApiEndpointData = {
+  template: 'api-endpoint'
+  title?: string
+  subtitle?: string
+  method: CoverApiEndpointMethod
+  path: string
+  status?: string
+  frameWidthPercent: number
+}
+
+export type CoverCodeDiffData = {
+  template: 'code-diff'
+  title?: string
+  fileName: string
+  code: string
+  frameWidthPercent: number
+}
+
+export type CoverStatusPillData = {
+  template: 'status-pill'
+  eyebrow?: string
+  status: string
+  title: string
+}
+
+export type CoverCountdownData = {
+  template: 'countdown'
+  eyebrow?: string
+  title: string
+  days: number
+  hours: number
+  minutes: number
+  seconds: number
+  dateLabel?: string
+}
+
+export type CoverLogoMarqueeData = {
+  template: 'logo-marquee'
+  title?: string
+  subtitle?: string
+} & Partial<Record<`icon${number}`, string>>
+
+export type CoverStatsGridData = {
+  template: 'stats-grid'
+  title?: string
+  statCount: number
+} & Partial<Record<`statValue${number}` | `statLabel${number}`, string>>
+
+export type CoverMetricDeltaTone = 'up' | 'down'
+
+export type CoverMetricDeltaData = {
+  template: 'metric-delta'
+  label?: string
+  value: string
+  delta?: string
+  deltaTone: CoverMetricDeltaTone
+} & Partial<Record<`trend${number}`, number>>
+
+export type CoverDonutChartData = {
+  template: 'donut-chart'
+  title?: string
+  subtitle?: string
+  percent: number
+  centerLabel?: string
+  color: CoverBadgeColor
+}
+
+export type CoverProgressBarData = {
+  template: 'progress-bar'
+  title?: string
+  percent: number
+  label?: string
+  color: CoverBadgeColor
+}
+
+export type CoverQuoteData = {
+  template: 'quote'
+  quote: string
+  authorName?: string
+  authorRole?: string
+  avatar?: string
+}
+
+export type CoverBlogPostData = {
+  template: 'blog-post'
+  category?: string
+  title: string
+  authorName?: string
+  avatar?: string
+  date?: string
+  readTime?: string
+}
+
+export type CoverPodcastEpisodeData = {
+  template: 'podcast-episode'
+  episode?: string
+  title: string
+  duration?: string
+  host?: string
+}
+
+export type CoverEventData = {
+  template: 'event'
+  month: string
+  day: string
+  title: string
+  location?: string
+  cta?: string
+}
+
+export type CoverProfileCardData = {
+  template: 'profile-card'
+  avatar?: string
+  name: string
+  role?: string
+  handle?: string
+}
+
+export type CoverSocialPostData = {
+  template: 'social-post'
+  avatar?: string
+  name: string
+  handle?: string
+  time?: string
+  text: string
+  likes?: string
+  comments?: string
+}
+
+/** Union of the second batch of cover templates (see `extra-templates/ids.ts`). */
+export type CoverExtraTemplateData =
+  | CoverAnnouncementData
+  | CoverBigTypeData
+  | CoverChecklistData
+  | CoverNumberedStepsData
+  | CoverApiEndpointData
+  | CoverCodeDiffData
+  | CoverStatusPillData
+  | CoverCountdownData
+  | CoverLogoMarqueeData
+  | CoverStatsGridData
+  | CoverMetricDeltaData
+  | CoverDonutChartData
+  | CoverProgressBarData
+  | CoverQuoteData
+  | CoverBlogPostData
+  | CoverPodcastEpisodeData
+  | CoverEventData
+  | CoverProfileCardData
+  | CoverSocialPostData
+
 export type CoverTemplateData =
   | CoverSimpleTitleData
   | CoverIntegrationData
@@ -218,6 +398,7 @@ export type CoverTemplateData =
   | CoverMilestoneCenteredData
   | CoverVersionNumberData
   | CoverVersionTitleData
+  | CoverExtraTemplateData
 
 export type CoverRenderData = {
   theme: CoverThemeId
@@ -225,6 +406,13 @@ export type CoverRenderData = {
   width: number
   height: number
 } & CoverTemplateData
+
+/** Narrows render data to one of the extra (second-batch) templates. */
+export function isCoverExtraTemplateData(
+  data: CoverRenderData,
+): data is CoverRenderData & CoverExtraTemplateData {
+  return isCoverExtraTemplateId(data.template)
+}
 
 export type CoverFieldType =
   | 'text'
@@ -235,6 +423,8 @@ export type CoverFieldType =
   | 'number'
   | 'range'
   | 'select'
+  | 'color'
+  | 'date'
 
 export type CoverFieldDefinition = {
   key: string
@@ -245,7 +435,7 @@ export type CoverFieldDefinition = {
   max?: number
   step?: number
   unit?: string
-  options?: Array<{ value: string; label: string }>
+  options?: Array<{ value: string; label: string; swatchClass?: string }>
   description?: string
   /** When set on image fields, shows the built-in icon picker above custom URL/upload. */
   imagePicker?: 'builtin-icons'

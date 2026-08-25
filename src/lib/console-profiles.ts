@@ -139,6 +139,10 @@ export type ConsoleProfile = {
   features: ConsoleProfileFeatures
 }
 
+type StoredConsoleProfile = Omit<ConsoleProfile, 'features'> & {
+  features: Partial<ConsoleProfileFeatures>
+}
+
 export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
   cloud: {
     id: 'cloud',
@@ -322,7 +326,9 @@ function migrateStoredProfileFeatures(
   return next
 }
 
-function parseStoredProfileRaw(stored: string | null | undefined): ConsoleProfile | null {
+function parseStoredProfileRaw(
+  stored: string | null | undefined,
+): StoredConsoleProfile | null {
   if (!stored?.trim()) return null
   try {
     const parsed = JSON.parse(stored) as unknown
@@ -334,7 +340,7 @@ function parseStoredProfileRaw(stored: string | null | undefined): ConsoleProfil
       'features' in parsed &&
       typeof (parsed as ConsoleProfile).features === 'object'
     ) {
-      const profile = parsed as ConsoleProfile
+      const profile = parsed as StoredConsoleProfile
       return {
         ...profile,
         features: migrateStoredProfileFeatures(
@@ -353,7 +359,7 @@ function parseStoredProfileRaw(stored: string | null | undefined): ConsoleProfil
   return null
 }
 
-function syncDebugProfileCookie(profile: ConsoleProfile | null) {
+function syncDebugProfileCookie(profile: StoredConsoleProfile | null) {
   if (typeof document === 'undefined') return
   const secure = window.location.protocol === 'https:' ? '; Secure' : ''
   if (!profile) {
@@ -367,7 +373,7 @@ function syncDebugProfileCookie(profile: ConsoleProfile | null) {
   document.cookie = `${DEBUG_PROFILE_COOKIE}=${encodeURIComponent(payload)}; path=/; max-age=${DEBUG_PROFILE_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax${secure}`
 }
 
-function persistDebugProfile(profile: ConsoleProfile | null) {
+function persistDebugProfile(profile: StoredConsoleProfile | null) {
   if (typeof window === 'undefined') return
   if (profile) {
     localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(profile))
@@ -379,7 +385,7 @@ function persistDebugProfile(profile: ConsoleProfile | null) {
 
 let didSyncDebugProfileCookieFromStorage = false
 
-function getStoredProfile(): ConsoleProfile | null {
+function getStoredProfile(): StoredConsoleProfile | null {
   // localStorage is browser-only. SSR uses canonical/env profile; partners docs
   // route guards defer blocking on the server when the flag is off.
   if (typeof window === 'undefined') return null
@@ -412,6 +418,33 @@ export function getActiveProfileId(): ConsoleProfileId {
  * Stored profile features are merged with the canonical profile for that id so new
  * feature keys added later get correct defaults (e.g. after localStorage was set).
  */
+let backendUsageStatsAvailability: boolean | null = null
+
+/**
+ * Resolve the backend's public `_APP_USAGE_STATS` value. Unknown or omitted
+ * values leave the profile default unchanged.
+ */
+export function resolveBackendUsageStatsAvailability(
+  value: string | null | undefined,
+): boolean | null {
+  return parseEnvFeatureOverride(value ?? '')
+}
+
+/**
+ * Synchronize the self-hosted usage feature with Console variables. The
+ * explicit runtime override remains authoritative when configured.
+ */
+export function setBackendUsageStatsAvailability(
+  value: string | null | undefined,
+) {
+  const next = resolveBackendUsageStatsAvailability(value)
+  if (backendUsageStatsAvailability === next) return
+  backendUsageStatsAvailability = next
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
+  }
+}
+
 function applyCloudOnlyFeatureGates(
   profileId: ConsoleProfileId,
   features: ConsoleProfileFeatures,
@@ -446,6 +479,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
+  profileId: ConsoleProfileId,
   features: ConsoleProfileFeatures,
 ): ConsoleProfileFeatures {
   const config = getRuntimeConfig()
@@ -462,6 +496,15 @@ function applyEnvFeatureOverrides(
   if (blogDrafts !== null) {
     next = { ...next, blogDrafts }
   }
+  const usageStatsOverride = parseEnvFeatureOverride(config.usageStats)
+  if (usageStatsOverride !== null) {
+    next = { ...next, usageStats: usageStatsOverride }
+  } else if (
+    profileId === 'self-hosted' &&
+    backendUsageStatsAvailability !== null
+  ) {
+    next = { ...next, usageStats: backendUsageStatsAvailability }
+  }
   return next
 }
 
@@ -473,12 +516,13 @@ export function getActiveProfile(): ConsoleProfile {
     return {
       ...canonical,
       features: applyEnvFeatureOverrides(
+        profileId,
         applyCloudOnlyFeatureGates(profileId, canonical.features),
       ),
     }
   }
   const mergedFeatures = applyCloudOnlyFeatureGates(profileId, {
-    ...applyEnvFeatureOverrides(canonical.features),
+    ...applyEnvFeatureOverrides(profileId, canonical.features),
     ...stored.features,
   } as ConsoleProfileFeatures)
   return { ...stored, features: mergedFeatures }
@@ -496,6 +540,7 @@ export function getCanonicalProfileFeatures(
   profileId: ConsoleProfileId,
 ): ConsoleProfileFeatures {
   return applyEnvFeatureOverrides(
+    profileId,
     applyCloudOnlyFeatureGates(profileId, CONSOLE_PROFILES[profileId].features),
   )
 }

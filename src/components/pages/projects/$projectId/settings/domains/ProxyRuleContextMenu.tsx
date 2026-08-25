@@ -32,6 +32,7 @@ import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
+import { domainUrl } from '@/lib/domains/url'
 
 interface ProxyRuleContextMenuProps {
   projectId: string
@@ -56,7 +57,7 @@ export function ProxyRuleContextMenu({
 }: ProxyRuleContextMenuProps) {
   const t = useT()
   const navigate = useNavigate()
-  const domainUrl = `https://${rule.domain}`
+  const ruleUrl = domainUrl(rule.domain)
   const apex = getApexDomain(rule.domain)
   const orgDomainId = apex
     ? apexToOrgDomainId.get(apex.toLowerCase())
@@ -118,9 +119,7 @@ export function ProxyRuleContextMenu({
               <ContextMenuIcon icon={Copy} />
               {t('Copy domain')}
             </ContextMenuItem>
-            <ContextMenuItem
-              onSelect={() => copyToClipboard('Link', domainUrl)}
-            >
+            <ContextMenuItem onSelect={() => copyToClipboard('Link', ruleUrl)}>
               <ContextMenuIcon icon={Link2} />
               {t('Copy link')}
             </ContextMenuItem>
@@ -137,11 +136,11 @@ export function ProxyRuleContextMenu({
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
-        <ContextMenuItem onSelect={() => openInNewTab(domainUrl)}>
+        <ContextMenuItem onSelect={() => openInNewTab(ruleUrl)}>
           <ContextMenuIcon icon={ExternalLink} />
           {t('Open in new tab')}
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => openInNewWindow(domainUrl)}>
+        <ContextMenuItem onSelect={() => openInNewWindow(ruleUrl)}>
           <ContextMenuIcon icon={Square} />
           {t('Open in new window')}
         </ContextMenuItem>

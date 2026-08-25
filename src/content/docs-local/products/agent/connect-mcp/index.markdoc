@@ -41,7 +41,7 @@ Empty-state suggestions switch toward actions you can take in the current projec
 
 Review tool activity in the conversation timeline. When the Agent asks a clarifying question before a write, answer it in the same turn. Successful mutations may refresh open Console lists so you see the change without reloading the page.
 
-For using the same MCP servers from IDEs and other clients, see [MCP servers](/docs/tooling/ai/mcp-servers). Authorizing Appwrite Agent does not configure those external clients; each client has its own OAuth setup.
+For using the same MCP server from IDEs and other clients, see the [MCP server](/docs/tooling/ai/mcp-servers) docs. Authorizing Appwrite Agent does not configure those external clients; each client has its own OAuth setup.
 
 {% arrow_link href="/docs/products/agent/mcp" %}
 MCP connections

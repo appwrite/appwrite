@@ -1,14 +1,13 @@
-import { getTitleFill } from '@/lib/cover-generator/brand-background'
 import { getCoverBrandThemeForSvgExport } from '@/lib/cover-generator/brand-theme'
 import { COVER_HEIGHT, COVER_WIDTH } from '@/lib/cover-generator/constants'
-import type { CoverTitleGradientBounds } from '@/lib/cover-generator/cover-title-gradient'
 import { coverSvgTextBaseline } from '@/lib/cover-generator/cover-svg-text'
 import {
+  COVER_EYEBROW_LETTER_SPACING,
+  clampNumber,
   escapeXml,
   formatCoverEyebrow,
   stripCoverTitleSuffix,
   wrapTextLines,
-  clampNumber,
 } from '@/lib/cover-generator/text-utils'
 import type {
   CoverVersionNumberFields,
@@ -22,11 +21,6 @@ const COVER_EYEBROW_VERSION_GAP = 20
 const COVER_VERSION_TITLE_GAP = 36
 const COVER_TITLE_MAX_WIDTH = COVER_WIDTH - COVER_CONTENT_X * 2
 const COVER_BOTTOM_PADDING = 8
-
-export type VersionTemplateSvgResult = {
-  content: string
-  titleGradientBounds?: CoverTitleGradientBounds
-}
 
 /** Hero version sizing for the number-only layout. */
 export function getVersionHeroFontSize(version: string): number {
@@ -55,36 +49,17 @@ function getVersionTitleFontSize(title: string): number {
   return clampNumber(computed, 28, 46)
 }
 
-function buildVersionGradientBounds(
-  centerX: number,
-  y: number,
-  version: string,
-  fontSize: number,
-): CoverTitleGradientBounds {
-  const width = Math.min(
-    COVER_WIDTH - COVER_CONTENT_X * 2,
-    Math.max(version.length * fontSize * 0.62, 120),
-  )
-  return {
-    x: centerX - width / 2,
-    y,
-    width,
-    height: fontSize,
-  }
-}
-
 function buildVersionStack(params: {
   data: CoverVersionNumberFields & { title?: string }
   theme: CoverTheme
   includeTitle: boolean
-}): VersionTemplateSvgResult {
+}): string {
   const brand = getCoverBrandThemeForSvgExport(params.theme)
   const centerX = COVER_WIDTH / 2
   const version = params.data.version.trim() || '0.0.0'
   const versionFontSize = params.includeTitle
     ? getVersionTitleHeroFontSize(version)
     : getVersionHeroFontSize(version)
-  const versionFill = getTitleFill(brand, true)
   const eyebrowText = formatCoverEyebrow(params.data.eyebrow)
 
   const titleLine = params.includeTitle
@@ -113,14 +88,14 @@ function buildVersionStack(params: {
 
   if (eyebrowText) {
     parts.push(
-      `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="0.25em" x="${centerX}" y="${coverSvgTextBaseline(cursorY, COVER_EYEBROW_FONT_SIZE)}" text-anchor="middle">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`,
+      `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="${COVER_EYEBROW_LETTER_SPACING}" x="${centerX}" y="${coverSvgTextBaseline(cursorY, COVER_EYEBROW_FONT_SIZE)}" text-anchor="middle">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`,
     )
     cursorY += eyebrowBlockHeight
   }
 
   const versionLayoutY = cursorY
   parts.push(
-    `<text class="cover-title" fill="${versionFill}" font-size="${versionFontSize}" x="${centerX}" y="${coverSvgTextBaseline(versionLayoutY, versionFontSize)}" text-anchor="middle">${escapeXml(version)}</text>`,
+    `<text class="cover-title" fill="${brand.foreground}" font-size="${versionFontSize}" x="${centerX}" y="${coverSvgTextBaseline(versionLayoutY, versionFontSize)}" text-anchor="middle">${escapeXml(version)}</text>`,
   )
   cursorY += versionBlockHeight + titleGap
 
@@ -130,27 +105,19 @@ function buildVersionStack(params: {
     )
   }
 
-  return {
-    content: parts.join('\n'),
-    titleGradientBounds: buildVersionGradientBounds(
-      centerX,
-      versionLayoutY,
-      version,
-      versionFontSize,
-    ),
-  }
+  return parts.join('\n')
 }
 
 export function renderVersionNumberTemplateSvg(
   data: CoverVersionNumberFields,
   theme: CoverTheme,
-): VersionTemplateSvgResult {
+): string {
   return buildVersionStack({ data, theme, includeTitle: false })
 }
 
 export function renderVersionTitleTemplateSvg(
   data: CoverVersionTitleFields,
   theme: CoverTheme,
-): VersionTemplateSvgResult {
+): string {
   return buildVersionStack({ data, theme, includeTitle: true })
 }

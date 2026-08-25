@@ -28,7 +28,9 @@ export type CreatedNativeDatabase = {
 }
 
 /** Dedicated native provisioning against production can take several minutes. */
-export const NATIVE_PROVISION_TIMEOUT_MS = 10 * 60_000
+export const NATIVE_PROVISION_TIMEOUT_MS = 15 * 60_000
+/** After the fixture has already waited for ready, later navigations use a short cap. */
+export const NATIVE_READY_NAV_TIMEOUT_MS = 90_000
 
 type NativeEngineConfig = {
   wizardType: WizardDatabaseType
@@ -224,7 +226,7 @@ export async function expectNativeTabRenders(
 ): Promise<void> {
   const timeout = options?.timeout ?? 30_000
   const path = nativeDatabasePath(engine, projectId, databaseId, tabPath)
-  const deadline = Date.now() + Math.max(timeout, 90_000)
+  const deadline = Date.now() + Math.max(timeout, NATIVE_READY_NAV_TIMEOUT_MS)
 
   const go = async () => {
     await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 45_000 })
@@ -244,7 +246,7 @@ export async function expectNativeTabRenders(
     )
     await waitForDedicatedDatabaseReady(
       page,
-      Math.min(NATIVE_PROVISION_TIMEOUT_MS, Math.max(5_000, deadline - Date.now())),
+      Math.min(NATIVE_READY_NAV_TIMEOUT_MS, Math.max(5_000, deadline - Date.now())),
     )
     await expect(page.getByText(/Database not found/i)).toHaveCount(0)
     await expect(page.getByText(/trim is not a function/i)).toHaveCount(0)
@@ -539,7 +541,9 @@ export async function runNativeSql(
   const runButton = page.getByRole('button', { name: /^Run/ }).first()
   await expect(runButton).toBeEnabled({ timeout: 15_000 })
   await waitForFullscreenLoaderHidden(page, 30_000)
-  await waitForDedicatedDatabaseReady(page, NATIVE_PROVISION_TIMEOUT_MS)
+  await waitForDedicatedDatabaseReady(page, NATIVE_READY_NAV_TIMEOUT_MS, {
+    reload: false,
+  })
 
   const isExecutionResponse = (response: {
     url: () => string
@@ -561,7 +565,7 @@ export async function runNativeSql(
     }
   }
 
-  const deadline = Date.now() + NATIVE_PROVISION_TIMEOUT_MS
+  const deadline = Date.now() + NATIVE_READY_NAV_TIMEOUT_MS
   let lastStatus = 0
   let lastBody = ''
 
@@ -702,7 +706,12 @@ export async function selectNativeColumnType(
 export async function addNativeColumnViaUi(
   page: Page,
   engine: NativeEngine,
-  options: { name: string; typeSearch: string; unique?: boolean },
+  options: {
+    name: string
+    typeSearch: string
+    unique?: boolean
+    enumValues?: string[]
+  },
 ): Promise<void> {
   const addButton = page.getByRole('button', { name: 'Add column' }).first()
   await expect(addButton).toBeVisible({ timeout: 30_000 })
@@ -716,6 +725,16 @@ export async function addNativeColumnViaUi(
 
   if (options.unique) {
     await page.locator('#column-unique').click()
+  }
+
+  if (options.enumValues?.length) {
+    const firstValue = page.getByPlaceholder('Value').first()
+    await expect(firstValue).toBeVisible({ timeout: 10_000 })
+    await firstValue.fill(options.enumValues[0]!)
+    for (const extra of options.enumValues.slice(1)) {
+      await page.getByRole('button', { name: 'Add value' }).click()
+      await page.getByPlaceholder('Value').last().fill(extra)
+    }
   }
 
   await submitNativeDdlForm(
@@ -835,7 +854,9 @@ export async function renameNativeDatabase(
   })
   await expect(updateButton).toBeEnabled({ timeout: 15_000 })
   await waitForFullscreenLoaderHidden(page, 60_000)
-  await waitForDedicatedDatabaseReady(page, NATIVE_PROVISION_TIMEOUT_MS)
+  await waitForDedicatedDatabaseReady(page, NATIVE_READY_NAV_TIMEOUT_MS, {
+    reload: false,
+  })
 
   const isRenameResponse = (response: {
     url: () => string
@@ -855,7 +876,7 @@ export async function renameNativeDatabase(
     }
   }
 
-  const deadline = Date.now() + NATIVE_PROVISION_TIMEOUT_MS
+  const deadline = Date.now() + NATIVE_READY_NAV_TIMEOUT_MS
   let lastError = 'Rename did not reach the API'
   while (Date.now() < deadline) {
     const patchPromise = page.waitForResponse(isRenameResponse, {
@@ -881,7 +902,8 @@ export async function renameNativeDatabase(
     await page.waitForTimeout(3_000)
     await waitForDedicatedDatabaseReady(
       page,
-      Math.min(NATIVE_PROVISION_TIMEOUT_MS, Math.max(5_000, deadline - Date.now())),
+      Math.min(NATIVE_READY_NAV_TIMEOUT_MS, Math.max(5_000, deadline - Date.now())),
+      { reload: false },
     )
     await expect(updateButton).toBeEnabled({ timeout: 15_000 })
   }

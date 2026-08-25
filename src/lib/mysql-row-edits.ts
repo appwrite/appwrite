@@ -25,6 +25,7 @@ export type MysqlColumnEditMeta = {
   length?: number
   numericPrecision?: number
   numericScale?: number
+  enumValues?: string[]
 }
 
 export type PendingMysqlRowCellEdit = {
@@ -60,6 +61,8 @@ export function getMysqlColumnEditMeta(
     length: typeState.length,
     numericPrecision: typeState.numericPrecision,
     numericScale: typeState.numericScale,
+    enumValues:
+      typeState.typeId === 'enum' ? typeState.enumValues : undefined,
   }
 }
 
@@ -68,6 +71,7 @@ export function getMysqlInlineFieldType(
   value?: RowCellValue,
 ): string {
   if (meta.typeId === 'boolean') return 'boolean'
+  if (meta.typeId === 'enum') return 'enum'
   if (isMysqlDatetimeType(meta.typeId)) return 'datetime'
   if (
     meta.typeId === 'smallint' ||
@@ -304,6 +308,12 @@ export function parseAndValidateMysqlCellInput(
   const fieldType = getMysqlInlineFieldType(meta)
 
   if (fieldType === 'boolean') return parseBooleanInput(raw)
+  if (fieldType === 'enum') {
+    if (meta.enumValues?.length && !meta.enumValues.includes(trimmed)) {
+      return { ok: false, error: 'Value is not allowed for this enum.' }
+    }
+    return { ok: true, value: trimmed }
+  }
   if (fieldType === 'json') return parseJsonInput(raw)
   if (isDateTimeInlineFieldType(fieldType)) {
     const date = new Date(trimmed)

@@ -221,7 +221,7 @@ let documentList = try await vectorsDB.listDocuments(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
@@ -247,7 +247,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"orderDesc","values":["$createdAt"]}'
@@ -476,7 +476,7 @@ let documentList = try await vectorsDB.listDocuments(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
@@ -505,7 +505,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"orderDesc","values":["$createdAt"]}' '{"method":"orderAsc","values":["$id"]}'
@@ -722,7 +722,7 @@ let documentList = try await vectorsDB.listDocuments(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
@@ -748,7 +748,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"orderAsc","values":["$sequence"]}'
@@ -970,7 +970,7 @@ let documentList = try await vectorsDB.listDocuments(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
@@ -996,7 +996,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"orderRandom","values":[]}'

@@ -15,7 +15,7 @@
  * moved from a JavaScript bundle to a native binary at CLI 26, which would have
  * broken this terminal in production with no change on our side.
  */
-export const CLI_WASM_VERSION = '26.0.0-rc.3'
+export const CLI_WASM_VERSION = '27.1.0'
 
 /**
  * HOME for the CLI process.

@@ -277,6 +277,27 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Search rules...': 'חיפוש כללים...',
   'Search logs...': 'חיפוש בלוגים...',
   'Create rule': 'יצירת כלל',
+  'Attack mode': 'מצב התקפה',
+  'Turn on attack mode': 'הפעלת מצב התקפה',
+  'Turn off attack mode': 'השבתת מצב התקפה',
+  'Turn on': 'הפעלה',
+  'Turn off': 'השבתה',
+  'Attack mode is on': 'מצב התקפה פעיל',
+  'Attack mode is off': 'מצב התקפה כבוי',
+  'Failed to turn on attack mode': 'הפעלת מצב התקפה נכשלה',
+  'Failed to turn off attack mode': 'השבתת מצב התקפה נכשלה',
+  'Challenge every visitor until you turn it off.':
+    'אתגרו כל מבקר עד שתשבתו את המצב.',
+  'Visitors must pass a challenge before they can continue.':
+    'מבקרים חייבים לעבור אתגר לפני שיוכלו להמשיך.',
+  'Bypass rules with a lower priority number still apply.':
+    'כללי עקיפה עם מספר עדיפות נמוך יותר עדיין חלים.',
+  'New requests will no longer be challenged by attack mode.':
+    'בקשות חדשות לא יאותגרו יותר על ידי מצב התקפה.',
+  'Your other firewall rules stay in place.':
+    'שאר כללי חומת האש נשארים במקומם.',
+  'Attack mode is on. Every visitor is challenged.':
+    'מצב התקפה פעיל. כל מבקר מאותגר.',
   'Apply as firewall rule': 'החלה ככלל חומת אש',
   "You don't have permission to create firewall rules.":
     'אין לכם הרשאה ליצור כללי חומת אש.',
@@ -369,6 +390,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Challenge matching requests before allowing them through.':
     'אתגרו בקשות תואמות לפני שתאפשרו להן לעבור.',
   'Lower numbers are evaluated first.': 'מספרים נמוכים יותר מוערכים קודם.',
+  'A rule with priority 10 is stronger than one with priority 100.':
+    'כלל עם עדיפות 10 חזק יותר מכלל עם עדיפות 100.',
   'Resource ID': 'מזהה משאב',
   'Function ID': 'מזהה פונקציה',
   'Site ID': 'מזהה אתר',
@@ -2371,6 +2394,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הפעילו את מצב HTML אם ההודעה שלכם מכילה תגיות HTML.',
   'Enable when your Mailgun account is hosted in the EU.':
     'הפעילו כאשר חשבון ה-Mailgun שלכם מאוחסן באיחוד האירופי.',
+  'Select the AWS region of your verified SES identity.':
+    'בחרו את אזור ה-AWS שבו זהות ה-SES המאומתת שלכם נמצאת.',
   'Enter the SMS body for this message. Delivery uses topics, users, and targets you add on this page.':
     'הזינו את גוף ה-SMS עבור ההודעה הזו. השליחה משתמשת בנושאים, במשתמשים וביעדים שתוסיפו בעמוד זה.',
   'Failed to add subscribers': 'הוספת המנויים נכשלה',
@@ -2506,6 +2531,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת התראות Push דרך APNS (iOS).',
   'Send push notifications via FCM (Android, iOS, web).':
     'שליחת התראות Push דרך FCM (Android, iOS, ווב).',
+  'Send transactional email through Amazon SES.':
+    'שליחת אימייל טרנזקציוני דרך Amazon SES.',
   'Send transactional email through Mailgun.':
     'שליחת אימייל טרנזקציוני דרך Mailgun.',
   'Send transactional email through Resend.':

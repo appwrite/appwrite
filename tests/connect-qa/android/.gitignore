@@ -1,2 +1,4 @@
 app-*/
 artifacts/
+templates/android/.gradle/
+templates/android-java/.gradle/

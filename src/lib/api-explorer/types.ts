@@ -76,25 +76,40 @@ export type OpenApiParameter = {
   schema?: OpenApiSchema
 }
 
+export type OpenApiDiscriminator = {
+  propertyName?: string
+  mapping?: Record<string, string>
+  /** Compound type+format mapping; property names are the condition keys. */
+  'x-mapping'?: Record<string, Record<string, string>>
+  /** @deprecated Removed from specs; derive names from x-mapping keys. */
+  'x-propertyNames'?: string[]
+}
+
 export type OpenApiSchema = {
   type?: string
+  title?: string
   description?: string
   example?: unknown
   'x-example'?: unknown
   default?: unknown
+  const?: unknown
   enum?: unknown[]
   properties?: Record<string, OpenApiSchema>
   required?: string[]
   items?: OpenApiSchema
   $ref?: string
   'x-nullable'?: boolean
+  /** @deprecated Replaced by schema title. */
   'x-enum-name'?: string
+  /** @deprecated Replaced by titled singleton-enum oneOf/anyOf branches. */
   'x-enum-keys'?: string[]
-  'x-upload-id'?: string
+  /** @deprecated Inferred from multipart binary + `{name}Id`. */
+  'x-upload-id'?: boolean | string
   format?: string
   oneOf?: OpenApiSchema[]
   allOf?: OpenApiSchema[]
   anyOf?: OpenApiSchema[]
+  discriminator?: OpenApiDiscriminator
 }
 
 export type OpenApiRequestBody = {

@@ -4,6 +4,13 @@ export {
   DEFAULT_COVER_THEME_ID,
   getCoverBrandTheme,
   getCoverBrandThemeForSvgExport,
+  COVER_BADGE_COLORS,
+  COVER_BADGE_COLOR_IDS,
+  DEFAULT_COVER_BADGE_COLOR,
+  getCoverBadgeColor,
+  getCoverSuccessColor,
+  isCoverBadgeColor,
+  parseCoverBadgeColor,
   getCoverTheme,
   isCoverThemeId,
   listCoverThemes,
@@ -14,6 +21,7 @@ export { getCoverTitleGradientStyle } from '@/lib/cover-generator/cover-title-gr
 
 export type {
   CoverBackgroundGridStyle,
+  CoverBadgeColor,
   CoverBrandTheme,
   CoverSoftLightOpacity,
   CoverSoftLightVariant,

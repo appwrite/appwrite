@@ -152,5 +152,5 @@ The goal is not to replace Lovable's speed. It is to give the generated app a ba
 - [Appwrite Storage](/docs/products/storage)
 - [Appwrite Functions](/docs/products/functions)
 - [Appwrite Sites](/docs/products/sites)
-- [Appwrite API MCP server](/docs/tooling/ai/mcp-servers/api)
-- [Appwrite Docs MCP server](/docs/tooling/ai/mcp-servers/docs)
+- [Appwrite API MCP server](/docs/tooling/ai/mcp-servers)
+- [Appwrite Docs MCP server](/docs/tooling/ai/mcp-servers)

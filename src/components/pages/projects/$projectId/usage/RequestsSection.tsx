@@ -22,7 +22,6 @@ import {
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
-import { REQUESTS_BREAKDOWN_SECTIONS } from '@/lib/usage/requests-breakdowns'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
   useProjectRequestsBreakdowns,
@@ -41,10 +40,14 @@ import {
   USAGE_CHART_MARGIN,
   USAGE_CHART_RESPONSIVE_CONTAINER_PROPS,
 } from '@/lib/usage/chart-layout'
-import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import {
+  UsageChartXAxis,
+  UsageChartYAxis,
+} from '@/components/global/shared/ChartXAxis'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
@@ -60,7 +63,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 const API_REQUESTS_DESCRIPTION =
   'Total API requests during the selected period. Each call to your project endpoint counts as one request.'
 
-const usageRequestsMetricHeaderClass = 'mt-2 min-h-[52px] flex flex-wrap items-baseline gap-x-2 gap-y-1'
+const usageRequestsMetricHeaderClass =
+  'mt-2 min-h-[52px] flex flex-wrap items-baseline gap-x-2 gap-y-1'
 
 type RequestsSectionProps = {
   projectId: string
@@ -78,13 +82,17 @@ function ChartMetricHeaderSkeleton() {
   )
 }
 
-function ChartSkeleton() {
+function ChartSkeleton({ label }: { label: string }) {
   return (
-    <Skeleton
-      className="w-full shrink-0 rounded-md"
+    <div
+      role="status"
+      aria-label={label}
+      className="relative w-full shrink-0"
       style={{ height: OVERVIEW_CHART_HEIGHT }}
-      aria-hidden
-    />
+    >
+      <Skeleton className="absolute inset-0 rounded-md" />
+      <span className="sr-only">{label}</span>
+    </div>
   )
 }
 
@@ -201,7 +209,8 @@ function RequestsChartCard({
                   <span
                     className={cn(
                       'text-[12px] font-medium tabular-nums',
-                      changePercent > 0 && 'text-emerald-600 dark:text-emerald-400',
+                      changePercent > 0 &&
+                        'text-emerald-600 dark:text-emerald-400',
                       changePercent < 0 && 'text-amber-600 dark:text-amber-400',
                       changePercent === 0 && 'text-muted-foreground',
                     )}
@@ -226,7 +235,7 @@ function RequestsChartCard({
         {isError ? (
           <UsageRequestsChartError error={chartError} onRetry={onRetry} />
         ) : isLoading ? (
-          <ChartSkeleton />
+          <ChartSkeleton label={t('Loading usage data')} />
         ) : chartData.length === 0 ? (
           <UsageRequestsChartArea>
             <div className="absolute inset-0 flex items-center justify-center text-[13px] text-muted-foreground">
@@ -283,7 +292,8 @@ function RequestsChartCard({
                   <Tooltip
                     cursor={!isSelecting}
                     content={({ active, payload }) => {
-                      if (isSelecting || !active || !payload?.length) return null
+                      if (isSelecting || !active || !payload?.length)
+                        return null
                       const data = payload[0].payload as {
                         fullDate: string
                         value: number
@@ -343,6 +353,7 @@ export function RequestsSection({
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
   const { disableUsageBreakdownQueries } = useDebugOverrides()
+  const { isSelfHosted } = useConsoleProfile()
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<RequestsBreakdownDrawerState | null>(null)
   const showBreakdown = !disableUsageBreakdownQueries
@@ -355,17 +366,13 @@ export function RequestsSection({
     isError: isChartError,
     error: chartError,
     refetch: refetchChart,
-  } = useProjectRequestsChartOnly(
-    projectId,
-    dateRange,
-    true,
-    chartInterval,
-  )
+  } = useProjectRequestsChartOnly(projectId, dateRange, true, chartInterval)
 
   const breakdowns = useProjectRequestsBreakdowns(
     projectId,
     dateRange,
     showBreakdown,
+    !isSelfHosted,
   )
 
   const { standardEntries, resourceEntry, resourceTypeEntry } = useMemo(
@@ -391,12 +398,7 @@ export function RequestsSection({
       'Usage data',
     )
     return () => unregisterRefreshHandler()
-  }, [
-    queryClient,
-    projectId,
-    registerRefreshHandler,
-    unregisterRefreshHandler,
-  ])
+  }, [queryClient, projectId, registerRefreshHandler, unregisterRefreshHandler])
 
   const chartPoints = isChartError ? [] : (chartOverview?.chartPoints ?? [])
   const showChartLoading = shouldShowUsageChartSkeleton(
@@ -426,36 +428,38 @@ export function RequestsSection({
 
       {showBreakdown ? (
         <div className="grid items-stretch gap-6 lg:grid-cols-2">
-          {standardEntries.map(({ section, items, isLoading, isError, error }) => (
-            <div
-              key={section.dimension}
-              className="flex h-full min-h-0 flex-col"
-            >
-              <UsageBreakdownCard
-                title={section.title}
-                description={section.description}
-                dimension={section.dimension}
-                items={items}
-                labelVariant={section.labelVariant}
-                countryLookups={countryLookups}
-                isLoading={isLoading}
-                isError={isError}
-                error={error}
-                errorTitle={OVERVIEW_REQUESTS_ERROR.title}
-                errorMessage={OVERVIEW_REQUESTS_ERROR.message}
-                formatValue={formatRequestsValue}
-                onRetry={handleRetryAll}
-                onShowMore={() =>
-                  setBreakdownDrawer({
-                    title: section.title,
-                    description: section.description,
-                    dimension: section.dimension,
-                    labelVariant: section.labelVariant,
-                  })
-                }
-              />
-            </div>
-          ))}
+          {standardEntries.map(
+            ({ section, items, isLoading, isError, error }) => (
+              <div
+                key={section.dimension}
+                className="flex h-full min-h-0 flex-col"
+              >
+                <UsageBreakdownCard
+                  title={section.title}
+                  description={section.description}
+                  dimension={section.dimension}
+                  items={items}
+                  labelVariant={section.labelVariant}
+                  countryLookups={countryLookups}
+                  isLoading={isLoading}
+                  isError={isError}
+                  error={error}
+                  errorTitle={OVERVIEW_REQUESTS_ERROR.title}
+                  errorMessage={OVERVIEW_REQUESTS_ERROR.message}
+                  formatValue={formatRequestsValue}
+                  onRetry={handleRetryAll}
+                  onShowMore={() =>
+                    setBreakdownDrawer({
+                      title: section.title,
+                      description: section.description,
+                      dimension: section.dimension,
+                      labelVariant: section.labelVariant,
+                    })
+                  }
+                />
+              </div>
+            ),
+          )}
 
           {resourceEntry ? (
             <div className="flex h-full min-h-0 flex-col">

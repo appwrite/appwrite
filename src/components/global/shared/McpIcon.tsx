@@ -2,16 +2,26 @@ import { cn } from '@/lib/utils'
 
 type McpIconProps = {
   className?: string
+  /**
+   * `default` is the existing mark for buttons and settings.
+   * `nav` tones the stroke down to match Lucide icons in the docs side nav.
+   */
+  variant?: 'default' | 'nav'
 }
 
 /** Official Model Context Protocol mark. */
-export function McpIcon({ className }: McpIconProps) {
+export function McpIcon({ className, variant = 'default' }: McpIconProps) {
   return (
     <svg
       viewBox="0 0 180 180"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={cn('shrink-0', className)}
+      className={cn(
+        'shrink-0',
+        variant === 'nav' &&
+          'opacity-[0.55] dark:opacity-[0.72] group-hover:opacity-100 group-focus-visible:opacity-100',
+        className,
+      )}
       aria-hidden
     >
       <path

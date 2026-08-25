@@ -34,6 +34,24 @@ export function GitLabIcon({ className }: { className?: string }) {
   )
 }
 
+export function OriginIcon({ className }: { className?: string }) {
+  // The Cursor cube mark, taken from cursor.com's own vector assets.
+  return (
+    <svg
+      viewBox="63 63 386 386"
+      fill="currentColor"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="m410.344 159.545-146.38-84.5111c-4.7-2.7145-10.5-2.7145-15.2 0l-146.373 84.5111c-3.9515 2.282-6.391 6.501-6.391 11.071v170.418c0 4.569 2.4395 8.789 6.391 11.07l146.379 84.512c4.701 2.714 10.501 2.714 15.201 0l146.38-84.512c3.951-2.281 6.391-6.501 6.391-11.07v-170.418c0-4.57-2.44-8.789-6.391-11.071zm-9.195 17.902-141.308 244.751c-.955 1.65-3.477.976-3.477-.934v-160.261c0-3.203-1.711-6.164-4.487-7.772l-138.786-80.127c-1.65-.956-.976-3.478.934-3.478h282.616c4.013 0 6.522 4.35 4.515 7.828h-.007z"
+      />
+    </svg>
+  )
+}
+
 export function BitbucketIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -47,7 +65,7 @@ export function BitbucketIcon({ className }: { className?: string }) {
   )
 }
 
-export type VcsProviderId = 'github' | 'gitlab' | 'bitbucket'
+export type VcsProviderId = 'github' | 'gitlab' | 'bitbucket' | 'origin'
 
 export interface VcsProviderMeta {
   id: VcsProviderId
@@ -57,12 +75,21 @@ export interface VcsProviderMeta {
   baseUrl: (organization: string) => string
 }
 
+// Key order is display order: every provider list in the UI renders GitHub
+// first, Origin second, then the rest.
 export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
   github: {
     id: 'github',
     label: 'GitHub',
     Icon: GitHubIcon,
     baseUrl: (organization) => `https://github.com/${organization}`,
+  },
+  origin: {
+    id: 'origin',
+    label: 'Origin',
+    Icon: OriginIcon,
+    // Origin repositories are browsed in the Codebase section of cursor.com
+    baseUrl: (organization) => `https://cursor.com/codebase/${organization}`,
   },
   gitlab: {
     id: 'gitlab',
@@ -125,6 +152,22 @@ export function getProviderOwnerUrl(
 ): string | null {
   const meta = getKnownVcsProvider(provider)
   return meta ? meta.baseUrl(organization) : null
+}
+
+/**
+ * Whether a provider is in a capability list from console variables
+ * (`_APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION` /
+ * `_APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES`). An undefined list means the
+ * server did not report capabilities (still loading, or an older server), so
+ * nothing is hidden; an empty list means no provider has the capability.
+ */
+export function vcsProviderHasCapability(
+  provider: string | undefined,
+  capableProviders: string[] | undefined,
+): boolean {
+  if (!capableProviders) return true
+  const id = provider?.toLowerCase()
+  return !!id && capableProviders.some((p) => p.toLowerCase() === id)
 }
 
 /**

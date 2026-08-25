@@ -299,7 +299,7 @@ let collection = try await vectorsDB.createCollection(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
@@ -333,7 +333,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-collection \
+appwrite vectorsdb create-collection \
     --database-id "<DATABASE_ID>" \
     --collection-id "<COLLECTION_ID>" \
     --name "documents" \
@@ -585,7 +585,7 @@ let collection = try await vectorsDB.updateCollection(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
 
@@ -616,7 +616,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db update-collection \
+appwrite vectorsdb update-collection \
     --database-id "<DATABASE_ID>" \
     --collection-id "<COLLECTION_ID>" \
     --name "documents" \
@@ -925,7 +925,7 @@ let document = try await vectorsDB.createDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::id::ID;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
@@ -960,7 +960,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create-document \
+appwrite vectorsdb create-document \
     --database-id "<DATABASE_ID>" \
     --collection-id "<COLLECTION_ID>" \
     --document-id 'unique()' \
@@ -1197,7 +1197,7 @@ let document = try await vectorsDB.updateDocument(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::permission::Permission;
 use appwrite::role::Role;
 
@@ -1226,7 +1226,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db update-document \
+appwrite vectorsdb update-document \
     --database-id "<DATABASE_ID>" \
     --collection-id "<COLLECTION_ID>" \
     --document-id "<DOCUMENT_ID>" \

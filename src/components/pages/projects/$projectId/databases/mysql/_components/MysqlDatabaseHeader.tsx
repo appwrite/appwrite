@@ -51,7 +51,6 @@ export function MysqlDatabaseHeader({
       fullWidth={
         databaseTab === 'sql' ||
         databaseTab === 'visualizer' ||
-        databaseTab === 'enums' ||
         databaseTab === 'monitor' ||
         databaseTab === 'connections' ||
         databaseTab === 'roles'
@@ -68,7 +67,7 @@ export function MysqlDatabaseHeader({
       isRefreshing={isRefreshing}
       filterTrigger={filterTrigger}
       showToolbarBottomBorder={
-        databaseTab === 'roles' || databaseTab === 'enums'
+        databaseTab === 'roles'
       }
     />
   )

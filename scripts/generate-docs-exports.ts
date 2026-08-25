@@ -37,7 +37,10 @@ const BLOG_POSTS_DIRS = [
   join(VIBES_ROOT, 'src', 'content', 'blog', 'posts'),
   join(VIBES_ROOT, 'src', 'content', 'blog-local', 'posts'),
 ]
-const CHANGELOG_DIR = join(VIBES_ROOT, 'src', 'content', 'changelog', 'entries')
+const CHANGELOG_DIRS = [
+  join(VIBES_ROOT, 'src', 'content', 'changelog', 'entries'),
+  join(VIBES_ROOT, 'src', 'content', 'changelog-local', 'entries'),
+]
 const INTEGRATIONS_DIR = join(VIBES_ROOT, 'src', 'content', 'integrations')
 const DOCS_PARTIALS_DIR = join(VIBES_ROOT, 'src', 'content', 'docs-partials')
 
@@ -112,19 +115,23 @@ async function collectBlogMeta(): Promise<(LlmsContentMeta & { date: string })[]
   )
 }
 
-/** Changelog entries, newest first (slugs are dates). */
+/** Changelog entries, newest first (slugs are dates). Local entries override imported ones. */
 async function collectChangelogMeta(): Promise<LlmsContentMeta[]> {
-  const entries = (await readMarkdocFiles(CHANGELOG_DIR)).map(({ slug, raw }) => {
-    const { frontmatter } = parseChangelogFrontmatter(raw)
-    return {
-      slug,
-      title: asString(frontmatter.title) ?? slug,
-      description: asString(frontmatter.description),
-      date: asString(frontmatter.date) ?? slug,
-    }
-  })
+  const entriesBySlug = new Map<string, LlmsContentMeta & { date: string }>()
 
-  return entries.sort(
+  for (const directory of CHANGELOG_DIRS) {
+    for (const { slug, raw } of await readMarkdocFiles(directory)) {
+      const { frontmatter } = parseChangelogFrontmatter(raw)
+      entriesBySlug.set(slug, {
+        slug,
+        title: asString(frontmatter.title) ?? slug,
+        description: asString(frontmatter.description),
+        date: asString(frontmatter.date) ?? slug,
+      })
+    }
+  }
+
+  return [...entriesBySlug.values()].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   )
 }

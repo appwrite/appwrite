@@ -1,12 +1,12 @@
 ---
 layout: article
 title: Claude Code
-description: Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.
+description: Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.
 ---
 
 {% section #install-plugin step=1 title="Install the Appwrite plugin" %}
 
-The fastest way to get started with Appwrite in Claude Code is to install the [**Appwrite plugin**](https://claude.com/plugins/appwrite) from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs and sets up MCP servers for both the Appwrite API and documentation, giving Claude Code everything it needs to work with your Appwrite projects.
+The fastest way to get started with Appwrite in Claude Code is to install the [**Appwrite plugin**](https://claude.com/plugins/appwrite) from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs, giving Claude Code the context it needs to work with your Appwrite projects.
 
 To install the plugin, run the following command in your terminal:
 
@@ -24,11 +24,11 @@ Once installed, run Claude Code and configure the plugin:
 
 ![Configure the Appwrite plugin in Claude Code](/images/docs/mcp/claude-code/configure-plugin.avif)
 
-After saving the configuration, run `/reload-plugins` to apply the changes to your current session. The `appwrite-api` MCP server will be ready alongside the agent skills, and Claude Code can now interact with your Appwrite project.
+After saving the configuration, run `/reload-plugins` to apply the changes to your current session. The plugin options configure agent skills. Add the remote Appwrite MCP server in [Step 3](#step-3) so Claude Code can call Appwrite APIs and search the documentation through OAuth.
 
-{% info title="Prefer manual setup?" %}
+{% info title="Prefer to skip the plugin?" %}
 
-If you'd rather configure MCP servers individually, skip to [Step 3](#step-3).
+If you'd rather configure the MCP server on its own, skip to [Step 3](#step-3).
 
 {% /info %}
 
@@ -39,9 +39,9 @@ If you'd rather configure MCP servers individually, skip to [Step 3](#step-3).
 Get started quickly with these pre-built prompts for common Appwrite integrations:
 
 {% cards %}
-{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
-{% /cards_item %}
 {% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
 {% /cards_item %}
 {% /cards %}
 
@@ -51,49 +51,25 @@ Browse all quick start prompts
 
 {% /section %}
 
-{% section #step-3 step=3 title="Add MCP servers manually" %}
+{% section #step-3 step=3 title="Add the MCP server" %}
 
-If you installed the Appwrite plugin in [Step 1](#install-plugin), MCP servers are already configured and you can skip to [Step 4](#step-4).
+Connect the Appwrite MCP server to Claude Code for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install.
 
-Connect Appwrite MCP servers to Claude Code for deeper integration with the Appwrite API and documentation.
-
-Before you begin, ensure you have the following **pre-requisites** installed on your system:
-
-{% tabs %}
-{% tabsitem #api-server-prerequisites title="API server" %}
-
-[uv](https://docs.astral.sh/uv/getting-started/installation/) must be installed on your system.
-
-{% /tabsitem %}
-
-{% tabsitem #docs-server-prerequisites title="Docs server" %}
-
-[Node.js](https://nodejs.org/en/download) and npm must be installed on your system.
-
-{% /tabsitem %}
-{% /tabs %}
-
-Run the following commands in your terminal to add the MCP servers:
-
-{% tabs %}
-{% tabsitem #api-only title="API server" %}
+Run the following command in your terminal to add the MCP server:
 
 ```bash
-claude mcp add-json appwrite-api '{"command":"uvx","args":["mcp-server-appwrite"],"env":{"APPWRITE_PROJECT_ID": "your-project-id", "APPWRITE_API_KEY": "your-api-key", "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"}}'
-
+claude mcp add --transport http appwrite https://mcp.appwrite.io/
 ```
 
-{% /tabsitem %}
+The server uses OAuth for authentication. Run `/mcp` in Claude Code, select **appwrite**, and choose **Authenticate**. Your browser opens so you can sign in to your Appwrite account and authorize access.
 
-{% tabsitem #docs-only title="Docs server" %}
+If you run Claude Code on a remote host, log in from the shell with `--no-browser`:
 
 ```bash
-claude mcp add appwrite-docs <https://mcp-for-docs.appwrite.io> -t http
-
+claude mcp login appwrite --no-browser
 ```
 
-{% /tabsitem %}
-{% /tabs %}
+Open the printed authorization URL in a browser on your local machine, sign in, and authorize access. After you approve, copy the full `http://localhost:.../callback` URL from the address bar and paste it into the Claude Code prompt. Use an interactive SSH session (`ssh -t`) so the prompt can accept the paste. This is the same localhost-callback pattern described in [Authenticate from a remote machine](/docs/tooling/ai/mcp-servers#remote).
 
 {% /section %}
 
@@ -103,10 +79,9 @@ Run the following command in your terminal (where Claude Code is running).
 
 ```bash
 /mcp
-
 ```
 
-You should see the added MCP servers listed there.
+You should see the added MCP server listed there.
 
 ![Verify MCP tools](/images/docs/mcp/claude-code/verify-mcp-tools.avif)
 
@@ -114,34 +89,16 @@ You should see the added MCP servers listed there.
 
 {% section #step-5 step=5 title="Test the integration" %}
 
-Try out the following example prompts based on the MCP server you have configured:
-
-{% tabs %}
-{% tabsitem #test-api title="API server" %}
+Try out the following example prompts:
 
 **Example prompts:**
 
 - `Create a new user in my Appwrite project`
 - `List all databases in my project`
 - `Show me the tables in my database`
-- `Create a new row in my table`
-- `Delete a specific user by ID`
-
-{% /tabsitem %}
-
-{% tabsitem #test-docs title="Docs server" %}
-
-**Example prompts:**
-
 - `How do I set up real-time subscriptions in Appwrite?`
 - `Show me how to authenticate users with OAuth`
-- `What are the best practices for database queries?`
 - `How do I implement file uploads with Appwrite Storage?`
-- `Show me an example of using Appwrite Functions`
-
-{% /tabsitem %}
-
-{% /tabs %}
 
 ![Implement file uploads](/images/docs/mcp/claude-code/implement-file-uploads.avif)
 
