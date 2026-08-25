@@ -330,6 +330,78 @@ trait VideoCustom
     }
 
     /**
+     * Polls a video until its source download leaves `waiting`/`started` and
+     * settles on `ready` or `error`.
+     */
+    public function waitForVideoReady(string $videoId, int $timeout = 120): array
+    {
+        $pending = ['waiting', 'started'];
+        $deadline = \time() + $timeout;
+        $body = [];
+
+        while (\time() < $deadline) {
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $body = $response['body'];
+
+            if (!\in_array($body['status'] ?? '', $pending, true)) {
+                return $body;
+            }
+
+            \usleep(500000);
+        }
+
+        return $body;
+    }
+
+    public function tmpSourcePath(string $videoId): string
+    {
+        $root = \defined('APP_STORAGE_VIDEOS_TMP') ? APP_STORAGE_VIDEOS_TMP : '/storage/videos-tmp';
+
+        return \rtrim($root, '/') . '/app-' . $this->getProject()['$id'] . '/' . $videoId . '/source';
+    }
+
+    public function waitUntilTmpSourceExists(string $videoId, int $timeout = 60): string
+    {
+        $path = $this->tmpSourcePath($videoId);
+        $deadline = \time() + $timeout;
+
+        while (\time() < $deadline) {
+            \clearstatcache(true, $path);
+            if (\is_file($path)) {
+                return $path;
+            }
+            \usleep(100000);
+        }
+
+        $this->fail(
+            'Tmp source never appeared at ' . $path
+            . '. Is appwrite-videos-tmp mounted on the appwrite container?'
+        );
+
+        return $path;
+    }
+
+    public function waitUntilTmpSourceGone(string $videoId, int $timeout = 60): void
+    {
+        $path = $this->tmpSourcePath($videoId);
+        $deadline = \time() + $timeout;
+
+        while (\time() < $deadline) {
+            \clearstatcache(true, $path);
+            if (!\is_file($path)) {
+                return;
+            }
+            \usleep(100000);
+        }
+
+        $this->fail('Tmp source was still present at ' . $path . ' after ' . $timeout . 's');
+    }
+
+    /**
      * Polls a rendition until it leaves the queue-side states (`waiting`,
      * `started`, `ended`, `uploading`) and settles on `ready` or `error`.
      *

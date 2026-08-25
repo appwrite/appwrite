@@ -115,9 +115,16 @@ class Create extends Base
             'progress' => '0',
         ])));
 
+        // Insert-then-read: if download already flipped the video to ready, start
+        // encoding now; otherwise the download job's ready-then-scan will pick
+        // this waiting row up.
+        $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $video->getId()));
+
         $publisherForVideos->enqueue(new VideoMessage(
             project: $project,
-            action: VideoAction::Encode,
+            action: $video->getAttribute('status') === self::STATUS_READY
+                ? VideoAction::Encode
+                : VideoAction::Download,
             video: $video,
             profile: $profile,
             rendition: $rendition,

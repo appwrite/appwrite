@@ -106,6 +106,9 @@ class Update extends Base
             ->setAttribute('fileId', $file->getId())
             ->setAttribute('fileInternalId', $file->getSequence())
             ->setAttribute('size', $file->getAttribute('sizeOriginal', 0))
+            ->setAttribute('status', self::STATUS_WAITING)
+            ->setAttribute('chunksTotal', self::chunkCount((int) $file->getAttribute('sizeOriginal', 0)))
+            ->setAttribute('chunksUploaded', 0)
             ->setAttribute('search', \implode(' ', [$file->getId(), $file->getAttribute('name', '')]))
             ->setAttribute('previewId', null)
             ->setAttribute('previewInternalId', null)
@@ -129,7 +132,7 @@ class Update extends Base
 
         $publisherForVideos->enqueue(new VideoMessage(
             project: $project,
-            action: VideoAction::Timeline,
+            action: VideoAction::Download,
             video: $video,
         ));
 

@@ -8,6 +8,9 @@ namespace Appwrite\Event\Message;
  */
 enum VideoAction: string
 {
+    /** Fetch the source file onto videos-tmp and probe it. */
+    case Download = 'download';
+
     /** Extract sprite sheets and build the WebVTT scrubbing timeline. */
     case Timeline = 'timeline';
 

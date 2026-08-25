@@ -157,13 +157,93 @@ class VideosCustomServerTest extends Scope
         $this->assertEquals($this->getVideoBucket()['$id'], $response['body']['bucketId']);
         $this->assertEquals($this->getVideoFile()['$id'], $response['body']['fileId']);
         $this->assertEquals($this->getVideoFile()['sizeOriginal'], $response['body']['size']);
-
-        // Probed metadata is filled in asynchronously by the videos worker.
-        $this->assertIsInt($response['body']['duration']);
-        $this->assertIsInt($response['body']['width']);
-        $this->assertIsString($response['body']['audioSampleRate']);
+        $this->assertContains($response['body']['status'], ['waiting', 'started']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['chunksTotal']);
 
         return $response['body']['$id'];
+    }
+
+    #[Depends('testCreateVideo')]
+    public function testVideoReachesReady(string $videoId): string
+    {
+        $body = $this->waitForVideoReady($videoId);
+
+        $this->assertEquals('ready', $body['status'], 'Video source did not become ready');
+        $this->assertEquals($body['chunksTotal'], $body['chunksUploaded']);
+        $this->assertGreaterThan(0, $body['duration']);
+        $this->assertGreaterThan(0, $body['width']);
+
+        return $videoId;
+    }
+
+    /**
+     * large-file.mp4 is bigger than one 5 MB upload chunk, so the worker should
+     * publish intermediate chunksUploaded values before flipping to ready.
+     */
+    public function testDownloadReportsChunkProgress(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+        $this->assertGreaterThanOrEqual(2, $create['body']['chunksTotal']);
+
+        $uploaded = [];
+        $deadline = \time() + 120;
+        $body = [];
+
+        while (\time() < $deadline) {
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+            $body = $response['body'];
+            $uploaded[] = (int) ($body['chunksUploaded'] ?? 0);
+
+            if (!\in_array($body['status'] ?? '', ['waiting', 'started'], true)) {
+                break;
+            }
+
+            \usleep(50000);
+        }
+
+        $this->assertEquals('ready', $body['status'] ?? '');
+        $this->assertSame($body['chunksTotal'], $body['chunksUploaded']);
+
+        for ($i = 1, $n = \count($uploaded); $i < $n; $i++) {
+            $this->assertGreaterThanOrEqual($uploaded[$i - 1], $uploaded[$i]);
+        }
+
+        $mid = \array_filter(
+            $uploaded,
+            fn (int $value): bool => $value > 0 && $value < (int) $body['chunksTotal']
+        );
+        $this->assertNotEmpty($mid, 'Never observed a mid-download chunksUploaded value');
+    }
+
+    /**
+     * After sprites are up and no encode is in-flight, tryRelease must unlink
+     * the tmp source. The HTTP container shares appwrite-videos-tmp so we can
+     * stat the file.
+     */
+    public function testTmpSourceReleasedAfterIdle(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+
+        $this->waitUntilTmpSourceExists($videoId);
+        $ready = $this->waitForVideoReady($videoId);
+        $this->assertEquals('ready', $ready['status']);
+        $this->assertFileExists($this->tmpSourcePath($videoId));
+
+        $timeline = $this->waitForTimeline($videoId);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+
+        $this->waitUntilTmpSourceGone($videoId);
+        $this->assertFileDoesNotExist($this->tmpSourcePath($videoId));
     }
 
     #[Depends('testCreateVideo')]
@@ -224,7 +304,7 @@ class VideosCustomServerTest extends Scope
      * Re-pointing a video at another file clears the metadata probed from the
      * previous source.
      */
-    #[Depends('testCreateVideo')]
+    #[Depends('testVideoReachesReady')]
     public function testUpdateVideo(string $videoId): string
     {
         $response = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), [
@@ -235,6 +315,11 @@ class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($videoId, $response['body']['$id']);
         $this->assertEquals($this->getVideoFile()['$id'], $response['body']['fileId']);
+        $this->assertContains($response['body']['status'], ['waiting', 'started']);
+
+        $body = $this->waitForVideoReady($videoId);
+        $this->assertEquals('ready', $body['status']);
+        $this->assertGreaterThan(0, $body['duration']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
@@ -250,7 +335,7 @@ class VideosCustomServerTest extends Scope
      * The sprite timeline is produced asynchronously by the videos worker after
      * createVideo enqueues a Timeline job.
      */
-    #[Depends('testCreateVideo')]
+    #[Depends('testVideoReachesReady')]
     public function testTimelineAvailable(string $videoId): void
     {
         $response = $this->waitForTimeline($videoId);
@@ -403,6 +488,84 @@ class VideosCustomServerTest extends Scope
         );
 
         return ['videoId' => $videoId, 'renditionId' => $response['body']['$id']];
+    }
+
+    /**
+     * Creating a rendition while the source is still downloading (`waiting` /
+     * `started`) must leave the row `waiting` and still reach `ready`. This
+     * hangs forever if ready-then-scan / insert-then-read is inverted.
+     */
+    public function testCreateRenditionWhileSourceDownloading(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $this->assertContains($create['body']['status'], ['waiting', 'started']);
+        $videoId = $create['body']['$id'];
+
+        $video = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(200, $video['headers']['status-code']);
+        $this->assertContains($video['body']['status'], ['waiting', 'started']);
+        $this->assertNotEquals('ready', $video['body']['status']);
+
+        $profile = $this->seededProfile('360p');
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $this->assertEquals('waiting', $rendition['body']['status']);
+
+        $body = $this->waitForRenditionTerminalState($videoId, $rendition['body']['$id']);
+        $this->assertEquals('ready', $body['status'], 'Rendition queued while source was still downloading did not finish');
+    }
+
+    /**
+     * After timeline (and any first encode) finish, tryRelease drops the tmp
+     * source. A later rendition still sees video.status = ready, so HTTP
+     * enqueues Encode; assertSource re-queues Download. The row must not hang.
+     */
+    public function testCreateRenditionWhenSourceMissing(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+
+        $ready = $this->waitForVideoReady($videoId);
+        $this->assertEquals('ready', $ready['status']);
+
+        $timeline = $this->waitForTimeline($videoId);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+
+        $profile = $this->seededProfile('360p');
+
+        // First encode finishes and tryRelease deletes the tmp source because
+        // nothing else is in-flight.
+        $first = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $first['headers']['status-code']);
+        $firstBody = $this->waitForRenditionTerminalState($videoId, $first['body']['$id']);
+        $this->assertEquals('ready', $firstBody['status']);
+
+        $video = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals('ready', $video['body']['status']);
+
+        $second = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'dash',
+        ]);
+        $this->assertEquals(202, $second['headers']['status-code']);
+        $this->assertEquals('waiting', $second['body']['status']);
+
+        $body = $this->waitForRenditionTerminalState($videoId, $second['body']['$id']);
+        $this->assertEquals('ready', $body['status'], 'Rendition queued after tmp source was released did not finish');
     }
 
     #[Depends('testCreateVideo')]
@@ -930,5 +1093,20 @@ class VideosCustomServerTest extends Scope
         }
 
         $this->assertSame(0, $renditions, 'Deletes worker did not cascade the video renditions');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function seededProfile(string $name): array
+    {
+        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        foreach ($profiles['body']['profiles'] ?? [] as $candidate) {
+            if (($candidate['name'] ?? '') === $name) {
+                return $candidate;
+            }
+        }
+
+        $this->fail('Seeded ' . $name . ' profile missing');
     }
 }

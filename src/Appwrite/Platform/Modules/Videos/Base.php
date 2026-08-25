@@ -43,6 +43,34 @@ abstract class Base extends UtopiaAction
     public const STATUS_ERROR = 'error';
 
     /**
+     * Storage-style chunk count for a payload of `$bytes`, using the same 5 MB
+     * window as file uploads.
+     */
+    public static function chunkCount(int $bytes): int
+    {
+        return \max(1, (int) \ceil($bytes / APP_LIMIT_UPLOAD_CHUNK_SIZE));
+    }
+
+    /**
+     * True when the tmp source exists and its size matches the origin.
+     */
+    public static function sourceMatches(string $path, int $expected): bool
+    {
+        return $expected > 0 && \is_file($path) && \filesize($path) === $expected;
+    }
+
+    /**
+     * True when nothing still needs the tmp source: the download is not
+     * running, no rendition is in-flight, and no job directory remains.
+     */
+    public static function canReleaseSource(string $videoStatus, bool $hasInFlightRendition, bool $jobsRemain): bool
+    {
+        return $videoStatus !== self::STATUS_STARTED
+            && !$hasInFlightRendition
+            && !$jobsRemain;
+    }
+
+    /**
      * Bounds for video profile parameters, in kilobits per second and pixels.
      *
      * One set shared by create and update: the pre-merge controller validated

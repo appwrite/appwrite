@@ -104,13 +104,15 @@ class Create extends Base
             'fileId' => $file->getId(),
             'fileInternalId' => $file->getSequence(),
             'size' => $file->getAttribute('sizeOriginal', 0),
+            'status' => self::STATUS_WAITING,
+            'chunksTotal' => self::chunkCount((int) $file->getAttribute('sizeOriginal', 0)),
+            'chunksUploaded' => 0,
             'search' => \implode(' ', [$file->getId(), $file->getAttribute('name', '')]),
         ])));
 
-        // Probes the source for metadata and builds the sprite timeline.
         $publisherForVideos->enqueue(new VideoMessage(
             project: $project,
-            action: VideoAction::Timeline,
+            action: VideoAction::Download,
             video: $video,
         ));
 

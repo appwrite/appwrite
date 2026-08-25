@@ -9,19 +9,13 @@ WORKDIR /usr/local/src/
 COPY composer.lock /usr/local/src/
 COPY composer.json /usr/local/src/
 
-# shimonewman/streaming is a private repo, so it installs from git over SSH
-# (composer.json preferred-install); its zipball 404s without a GitHub token.
-# Forward the host agent: docker compose build --ssh default
-RUN --mount=type=ssh \
-    mkdir -p -m 0700 /root/.ssh \
-    && ssh-keyscan github.com >> /root/.ssh/known_hosts \
-    && composer install --ignore-platform-reqs --optimize-autoloader \
+RUN composer install --ignore-platform-reqs --optimize-autoloader \
         --no-plugins --no-scripts \
         `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
 FROM appwrite/base:2.0.0 AS ffmpeg
 
-# Same pin as shimonewman/streaming (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
+# Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
 # Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
 ARG FFMPEG_VERSION=8.1.2
 

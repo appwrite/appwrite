@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "71eb5f4ea21b4b082758bb66e68ec28e",
+    "content-hash": "245d12d9b960072cced22d6cfc9bfbe6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2200,96 +2200,6 @@
                 "source": "https://github.com/ramsey/uuid/tree/4.9.3"
             },
             "time": "2026-06-18T03:57:49+00:00"
-        },
-        {
-            "name": "shimonewman/streaming",
-            "version": "0.0.2",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:shimonewman/streaming.git",
-                "reference": "577ae1df8a191dd3c773351c046619df46401498"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/shimonewman/streaming/zipball/577ae1df8a191dd3c773351c046619df46401498",
-                "reference": "577ae1df8a191dd3c773351c046619df46401498",
-                "shasum": ""
-            },
-            "require": {
-                "ext-dom": "*",
-                "ext-json": "*",
-                "php": ">=8.2",
-                "utopia-php/console": "0.1.* || ^0.2"
-            },
-            "require-dev": {
-                "laravel/pint": "1.*",
-                "phpstan/phpstan": "^2.0",
-                "phpunit/phpunit": "9.*",
-                "swoole/ide-helper": "6.2.2"
-            },
-            "suggest": {
-                "ext-swoole": "Needed to run the library inside Swoole coroutines."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Video\\": "src/Video"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Video"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "test:unit": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml --testsuite unit"
-                ],
-                "test:e2e": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml --testsuite e2e"
-                ],
-                "samples": [
-                    "@php -r \"require 'vendor/autoload.php'; Utopia\\\\Tests\\\\Samples::build();\""
-                ],
-                "samples:rebuild": [
-                    "@php -r \"require 'vendor/autoload.php'; Utopia\\\\Tests\\\\Samples::build(true);\""
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --memory-limit=512M"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Shimon Newman",
-                    "email": "shimon@appwrite.io"
-                }
-            ],
-            "description": "A simple library to probe, encode and package video for adaptive streaming",
-            "keywords": [
-                "cmaf",
-                "dash",
-                "ffmpeg",
-                "framework",
-                "hls",
-                "php",
-                "streaming",
-                "upf",
-                "utopia",
-                "video"
-            ],
-            "time": "2026-08-23T15:54:12+00:00"
         },
         {
             "name": "spomky-labs/otphp",
@@ -5378,6 +5288,96 @@
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
             "time": "2026-08-21T11:42:51+00:00"
+        },
+        {
+            "name": "utopia-php/video",
+            "version": "0.0.1",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:utopia-php/video.git",
+                "reference": "b65c0395c95a5541741b11da121fb682b9e24d81"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/video/zipball/b65c0395c95a5541741b11da121fb682b9e24d81",
+                "reference": "b65c0395c95a5541741b11da121fb682b9e24d81",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-json": "*",
+                "php": ">=8.2",
+                "utopia-php/console": "0.1.* || ^0.2"
+            },
+            "require-dev": {
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "9.*",
+                "swoole/ide-helper": "6.2.2"
+            },
+            "suggest": {
+                "ext-swoole": "Needed to run the library inside Swoole coroutines."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Video\\": "src/Video"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Video"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "test:unit": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml --testsuite unit"
+                ],
+                "test:e2e": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml --testsuite e2e"
+                ],
+                "samples": [
+                    "@php -r \"require 'vendor/autoload.php'; Utopia\\\\Tests\\\\Samples::build();\""
+                ],
+                "samples:rebuild": [
+                    "@php -r \"require 'vendor/autoload.php'; Utopia\\\\Tests\\\\Samples::build(true);\""
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --memory-limit=512M"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Shimon Newman",
+                    "email": "shimon@appwrite.io"
+                }
+            ],
+            "description": "A simple library to probe, encode and package video for adaptive streaming",
+            "keywords": [
+                "cmaf",
+                "dash",
+                "ffmpeg",
+                "framework",
+                "hls",
+                "php",
+                "streaming",
+                "upf",
+                "utopia",
+                "video"
+            ],
+            "time": "2026-08-25T15:00:54+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -8706,5 +8706,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.2.0"
 }

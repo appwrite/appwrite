@@ -52,6 +52,24 @@ class Video extends Model
                 'default' => 0,
                 'example' => 23647142,
             ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Source download status: one of `waiting`, `started`, `ready` or `error`.',
+                'default' => '',
+                'example' => 'ready',
+            ])
+            ->addRule('chunksTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of chunks in the source download.',
+                'default' => 0,
+                'example' => 8,
+            ])
+            ->addRule('chunksUploaded', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of source chunks downloaded so far.',
+                'default' => 0,
+                'example' => 3,
+            ])
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Container format.',

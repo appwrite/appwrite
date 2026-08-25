@@ -8,6 +8,7 @@ class Videos extends Base
         'bucketId',
         'fileId',
         'size',
+        'status',
         'format',
         'duration',
         'width',
