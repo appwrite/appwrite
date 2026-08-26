@@ -1,0 +1,47 @@
+version: 2
+
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: "weekly"
+    # Scheduled version updates follow the current release line. Dependabot
+    # security updates continue to target the default branch.
+    target-branch: "1.9.x"
+
+updates:
+  - package-ecosystem: "composer"
+    directory: "/"
+    patterns:
+      - "*"
+    multi-ecosystem-group: "dependencies"
+
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+      - "/tests/resources/functions/ephemeral-api-key"
+      - "/tests/resources/sites/astro"
+      - "/tests/resources/sites/astro-custom-start-command"
+      - "/tests/resources/sites/astro-static"
+    patterns:
+      - "*"
+    multi-ecosystem-group: "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    patterns:
+      - "*"
+    multi-ecosystem-group: "dependencies"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    patterns:
+      - "*"
+    multi-ecosystem-group: "dependencies"
+
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "/"
+      - "/tests/resources/docker"
+    patterns:
+      - "*"
+    multi-ecosystem-group: "dependencies"

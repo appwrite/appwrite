@@ -1,0 +1,177 @@
+name: Dependabot auto-merge
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    steps:
+      - name: Verify checks and enable auto-merge
+        env:
+          # Existing Dependabot PRs predate this automation and remain manual.
+          AUTOMERGE_AFTER: '2026-08-26T03:16:09Z'
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -Eeuo pipefail
+
+          api() {
+            gh api \
+              --hostname github.com \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2026-03-10' \
+              "$@"
+          }
+
+          run=$(api "repos/${REPOSITORY}/actions/runs/${RUN_ID}")
+          jq -e \
+            --arg repository "${REPOSITORY}" \
+            '.name == "CI"
+              and .event == "pull_request"
+              and .status == "completed"
+              and .conclusion == "success"
+              and .head_repository.full_name == $repository
+              and (.head_branch | startswith("dependabot/"))
+              and (.head_sha | test("^[0-9a-f]{40}$"))' \
+            <<<"${run}" >/dev/null
+
+          head=$(jq -r '.head_sha' <<<"${run}")
+          branch=$(jq -r '.head_branch' <<<"${run}")
+          owner=${REPOSITORY%%/*}
+          pulls=$(api --method GET "repos/${REPOSITORY}/pulls" \
+            -f state='open' \
+            -f head="${owner}:${branch}" \
+            -F per_page=10)
+          test "$(jq 'length' <<<"${pulls}")" -eq 1
+          number=$(jq -r '.[0].number' <<<"${pulls}")
+          test "${number}" -gt 0
+
+          pull=$(api "repos/${REPOSITORY}/pulls/${number}")
+          jq -e \
+            --arg repository "${REPOSITORY}" \
+            --arg branch "${branch}" \
+            --arg head "${head}" \
+            --arg after "${AUTOMERGE_AFTER}" \
+            '.user.login == "dependabot[bot]"
+              and .state == "open"
+              and (.draft | not)
+              and .created_at >= $after
+              and .head.repo.full_name == $repository
+              and .head.ref == $branch
+              and .head.sha == $head
+              and (.head.ref | startswith("dependabot/"))
+              and (.base.repo.full_name == $repository)
+              and (.base.ref == "main" or .base.ref == "1.9.x")' \
+            <<<"${pull}" >/dev/null
+
+          jobs=$(api --paginate --slurp "repos/${REPOSITORY}/actions/runs/${RUN_ID}/jobs?per_page=100" | jq '[.[].jobs[]]')
+          test "$(jq 'length' <<<"${jobs}")" -gt 0
+          pattern='^(Benchmark|Build|Checks|Checks / Dependencies / osv-scan|Checks / Image|Checks / Locale|Tests / Matrix|Tests / Unit|Tests / E2E / General|Tests / E2E / (Abuse|Antivirus|Screenshots) \((dedicated|shared)\)|Tests / E2E / (MariaDB|MongoDB|PostgreSQL) \((dedicated|shared)\) / (Account|Advisor|Avatars|Console|Databases|Functions|FunctionsSchedule|GraphQL|Health|Locale|Messaging|Migrations|Notifications|Presences|Project|ProjectWebhooks|Projects|Proxy|Realtime|Sites|Storage|TablesDB|Teams|Tokens|Usage|Users|VCS|VCSGitea|VCSGitHub|Webhooks))$'
+          jq -e --arg pattern "${pattern}" \
+            'all(.[]; (.name | test($pattern)) and .status == "completed" and .conclusion == "success")' \
+            <<<"${jobs}" >/dev/null
+
+          required=(
+            'Benchmark'
+            'Build'
+            'Checks'
+            'Checks / Dependencies / osv-scan'
+            'Checks / Image'
+            'Checks / Locale'
+            'Tests / Matrix'
+            'Tests / Unit'
+            'Tests / E2E / General'
+          )
+          for name in "${required[@]}"; do
+            jq -e --arg name "${name}" \
+              '[.[] | select(.name == $name and .status == "completed" and .conclusion == "success")] | length == 1' \
+              <<<"${jobs}" >/dev/null
+          done
+
+          checks_required='[
+            {"name":"Trivy","app":"github-advanced-security"},
+            {"name":"osv-scanner","app":"github-advanced-security"}
+          ]'
+          deadline=$((SECONDS + 7200))
+          while true; do
+            checks=$(api --paginate --slurp "repos/${REPOSITORY}/commits/${head}/check-runs?filter=latest&per_page=100" | jq '[.[].check_runs[]]')
+            waiting=0
+            while IFS=$'\t' read -r name app; do
+              matches=$(jq \
+                --arg name "${name}" \
+                --arg app "${app}" \
+                '[.[] | select(.name == $name and .app.slug == $app)]' \
+                <<<"${checks}")
+              count=$(jq 'length' <<<"${matches}")
+              if test "${count}" -eq 0; then
+                waiting=1
+                continue
+              fi
+              test "${count}" -eq 1
+              status=$(jq -r '.[0].status' <<<"${matches}")
+              conclusion=$(jq -r '.[0].conclusion // ""' <<<"${matches}")
+              if test "${status}" != 'completed'; then
+                waiting=1
+                continue
+              fi
+              test "${conclusion}" = 'success'
+            done < <(jq -r '.[] | [.name, .app] | @tsv' <<<"${checks_required}")
+
+            if test "${waiting}" -eq 0; then
+              break
+            fi
+            if test "${SECONDS}" -ge "${deadline}"; then
+              echo 'Timed out waiting for the exact-head security checks' >&2
+              exit 1
+            fi
+            sleep 30
+          done
+
+          current=$(api "repos/${REPOSITORY}/pulls/${number}")
+          jq -e --arg head "${head}" \
+            '.state == "open" and .user.login == "dependabot[bot]" and .head.sha == $head' \
+            <<<"${current}" >/dev/null
+
+          reviews=$(api --paginate --slurp "repos/${REPOSITORY}/pulls/${number}/reviews?per_page=100" | jq '[.[][]]')
+          approved=$(jq \
+            --arg head "${head}" \
+            '[.[] | select(.user.login == "github-actions[bot]" and .state == "APPROVED" and .commit_id == $head)] | length' \
+            <<<"${reviews}")
+          if test "${approved}" -eq 0; then
+            api --method POST "repos/${REPOSITORY}/pulls/${number}/reviews" \
+              -f event='APPROVE' \
+              -f commit_id="${head}" \
+              -f body='All allowlisted checks succeeded for this exact Dependabot head.' >/dev/null
+          else
+            test "${approved}" -eq 1
+          fi
+
+          current=$(api "repos/${REPOSITORY}/pulls/${number}")
+          jq -e --arg head "${head}" \
+            '.state == "open" and .user.login == "dependabot[bot]" and .head.sha == $head' \
+            <<<"${current}" >/dev/null
+          if jq -e '.auto_merge != null' <<<"${current}" >/dev/null; then
+            exit 0
+          fi
+
+          id=$(jq -r '.node_id' <<<"${current}")
+          # GraphQL variables are expanded by GitHub.
+          # shellcheck disable=SC2016
+          api graphql \
+            -f query='mutation($pullRequestId: ID!, $head: GitObjectID!) { enablePullRequestAutoMerge(input: {pullRequestId: $pullRequestId, mergeMethod: MERGE, expectedHeadOid: $head}) { pullRequest { autoMergeRequest { enabledAt } } } }' \
+            -f pullRequestId="${id}" \
+            -f head="${head}" >/dev/null
