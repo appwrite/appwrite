@@ -593,7 +593,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     deploymentId: $deployment->getId(),
                     body: \strlen($body) > 0 ? $body : null,
                     variables: $vars,
-                    timeout: $resource->getAttribute('timeout', 30),
+                    // The executor decrements this across cold-start + execution,
+                    // so previews need the full 60s here too, not just on requestTimeout.
+                    timeout: $isPreview ? 60 : $resource->getAttribute('timeout', 30),
                     image: $runtime['image'],
                     source: $source,
                     entrypoint: $entrypoint,
@@ -605,7 +607,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
                     memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
                     logging: $resource->getAttribute('logging', true),
-                    requestTimeout: 30,
+                    // Temporary mitigation for slow cold starts: 60s for all
+                    // synchronous executions until cold starts are addressed.
+                    requestTimeout: 60,
                     responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
                 );
             } catch (ExecutorTimeout $th) {
