@@ -2717,6 +2717,41 @@ trait DatabasesBase
             $missingId['body']['type']
         );
 
+        /**
+         * Test for FAILURE
+         * Omitted `data` (and no documents/rows) or JSON `data: null` must 400,
+         * not TypeError 500. DocumentsDB allows empty documents.
+         */
+        $missingDataCases = [
+            [
+                $this->getRecordIdParam() => ID::unique(),
+            ],
+            [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => null,
+            ],
+        ];
+        $missingDataType = $this->getRecordIdParam() === 'documentId'
+            ? Exception::DOCUMENT_MISSING_DATA
+            : Exception::ROW_MISSING_DATA;
+
+        foreach ($missingDataCases as $payload) {
+            $missingData = $this->client->call(
+                Client::METHOD_POST,
+                $this->getRecordUrl($databaseId, $data['moviesId']),
+                $headers,
+                $payload
+            );
+
+            $this->assertNotEquals(500, $missingData['headers']['status-code']);
+            if ($this->getDatabaseType() === 'documentsdb') {
+                $this->assertEquals(201, $missingData['headers']['status-code']);
+            } else {
+                $this->assertEquals(400, $missingData['headers']['status-code']);
+                $this->assertEquals($missingDataType, $missingData['body']['type']);
+            }
+        }
+
         $documentId = ID::unique();
         $invalid = $this->client->call(
             Client::METHOD_POST,
@@ -2803,6 +2838,30 @@ trait DatabasesBase
         );
 
         $this->assertEquals(404, $bulkNotCreated['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         * Bulk create with only documents/rows (no `data` key) must still work.
+         */
+        $bulkDocumentId = ID::unique();
+        $bulkCreated = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordResource() => [
+                    [
+                        '$id' => $bulkDocumentId,
+                        'title' => 'Bulk without data key',
+                        'releaseYear' => 2001,
+                    ],
+                ],
+            ]
+        );
+
+        $this->assertEquals(201, $bulkCreated['headers']['status-code']);
+        $this->assertEquals(1, $bulkCreated['body']['total']);
+        $this->assertEquals('Bulk without data key', $bulkCreated['body'][$this->getRecordResource()][0]['title']);
     }
 
     public function testUpsertDocument(): void
