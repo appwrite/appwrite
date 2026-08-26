@@ -82,9 +82,9 @@ class Maintenance extends Action
                 },
                 [
                     Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                    Query::limit(100),
                     Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
-                    Query::orderAsc('teamInternalId'),
+                    Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
+                    Query::limit(1000),
                 ]
             );
 

@@ -81,8 +81,7 @@ final class PresenceRealtimeClientTest extends Scope
             ]
         );
 
-        $connected = \json_decode($client->receive(), true);
-        $this->assertSame('connected', $connected['type'] ?? null);
+        $this->receiveConnected($client, \max(800, $timeout * 1000));
 
         if (empty($channels)) {
             return $client;
@@ -102,6 +101,32 @@ final class PresenceRealtimeClientTest extends Scope
         $this->assertNotEmpty($subscribeResponse['data']['subscriptions'] ?? []);
 
         return $client;
+    }
+
+    private function receiveConnected(WebSocketClient $client, int $timeoutMs = 800): void
+    {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $message = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                continue;
+            }
+
+            if (!\is_array($message)) {
+                continue;
+            }
+
+            $this->assertSame(
+                'connected',
+                $message['type'] ?? null,
+                'First realtime frame must be the handshake, got: ' . \json_encode($message)
+            );
+            return;
+        }
+
+        $this->fail('Timed out waiting for connected websocket handshake.');
     }
 
     private function receiveUntil(

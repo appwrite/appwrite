@@ -265,6 +265,7 @@ return [
             Index::key(key: '_key_status', attributes: ['status'], lengths: [16], orders: [Order::Asc]),
             Index::key(key: '_key_resourceId_resourceType', attributes: ['resourceId', 'resourceType']),
             Index::key(key: '_key_resource_internal_id', attributes: ['resourceInternalId']),
+            Index::key(key: '_key_commitHash_branch', attributes: ['providerCommitHash', 'providerBranch', '$sequence']),
         ],
     ],
 

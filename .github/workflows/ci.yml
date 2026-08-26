@@ -211,6 +211,7 @@ jobs:
               { name: 'Storage',           runner: runner4, functional: true,  processes: null },
               { name: 'Tokens',            runner: runner4, functional: true,  processes: null },
               { name: 'Teams',             runner: runner4, functional: true,  processes: null },
+              { name: 'Usage',             runner: runner4, functional: true,  processes: null },
               { name: 'Users',             runner: runner4, functional: true,  processes: null },
               { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null },
               { name: 'Webhooks',          runner: runner4, functional: true,  processes: null },

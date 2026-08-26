@@ -39,6 +39,10 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_FUNCTION = 'usageFunction';
     public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
+    public const MODEL_USAGE_DATA_POINT = 'usageDataPoint';
+    public const MODEL_USAGE_METRIC = 'usageMetric';
+    public const MODEL_USAGE_EVENT_LIST = 'usageEventList';
+    public const MODEL_USAGE_GAUGE_LIST = 'usageGaugeList';
 
     // Database
     public const MODEL_DATABASE = 'database';
