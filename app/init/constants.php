@@ -76,6 +76,16 @@ const APP_FUNCTIONS_SUBQUERIES = [
     'subQueryProjectVariables',
 ];
 
+const APP_DATABASES_SUBQUERIES = [
+    'subQueryPolicies',
+    'subQueryArchives',
+];
+
+const APP_COLLECTIONS_SUBQUERIES = [
+    'subQueryAttributes',
+    'subQueryIndexes',
+];
+
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
