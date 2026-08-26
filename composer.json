@@ -23,7 +23,6 @@
         "test": "phpunit --configuration phpunit.xml"
     },
     "require": {
-        "ext-protobuf": "*",
         "php": ">=8.0",
         "nyholm/psr7": "1.*",
         "open-telemetry/exporter-otlp": "1.*",
@@ -34,6 +33,7 @@
         "swoole/ide-helper": "6.*"
     },
     "suggest": {
+        "ext-protobuf": "For better performance, when dealing with the protobuf format",
         "ext-swoole": "Required for the Swoole transport implementation",
         "ext-sockets": "Required for the Swoole transport implementation"
     },
