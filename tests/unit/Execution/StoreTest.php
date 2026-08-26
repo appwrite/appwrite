@@ -241,7 +241,33 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('resourceInternalId', (string) $client->requests[1]->getBody());
     }
 
-    private function store(CapturingClient $client): Store
+    public function testMirrorWriteFailuresAreBestEffort(): void
+    {
+        $store = $this->store(new FailingClient());
+        $execution = new Document([
+            '$id' => 'execution',
+            '$createdAt' => '2026-08-25T10:00:00.000+00:00',
+            'resourceType' => 'functions',
+            'status' => 'completed',
+        ]);
+
+        $store->create('project', $execution);
+        $store->update('project', $execution);
+        $store->delete('project', $execution);
+        $store->deleteProject('project');
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testSetupFailuresRemainVisible(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('ClickHouse execution query failed');
+
+        $this->store(new FailingClient())->setup();
+    }
+
+    private function store(ClientInterface $client): Store
     {
         return new Store(
             enabled: true,
@@ -271,5 +297,13 @@ final class CapturingClient implements ClientInterface
     {
         $this->requests[] = $request;
         return \array_shift($this->responses) ?? new Response(200);
+    }
+}
+
+final class FailingClient implements ClientInterface
+{
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
+        throw new \RuntimeException('ClickHouse unavailable');
     }
 }

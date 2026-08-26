@@ -4,6 +4,7 @@ namespace Appwrite\Execution;
 
 use Psr\Http\Client\ClientInterface;
 use Throwable;
+use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
@@ -250,12 +251,14 @@ class Store
             return;
         }
 
-        $rows = [];
-        foreach ($executions as $execution) {
-            $rows[] = $this->snapshot($projectId, $execution, false);
-        }
+        $this->mirror('upsert', function () use ($projectId, $executions): void {
+            $rows = [];
+            foreach ($executions as $execution) {
+                $rows[] = $this->snapshot($projectId, $execution, false);
+            }
 
-        $this->insert($rows);
+            $this->insert($rows);
+        });
     }
 
     public function delete(string $projectId, Document $execution): void
@@ -264,7 +267,7 @@ class Store
             return;
         }
 
-        $this->insert([$this->snapshot($projectId, $execution, true)]);
+        $this->mirror('delete', fn () => $this->insert([$this->snapshot($projectId, $execution, true)]));
     }
 
     public function deleteProject(string $projectId): void
@@ -486,34 +489,36 @@ class Store
             return;
         }
 
-        $params = ['projectId' => $projectId];
-        $conditions = ['source.projectId = {projectId:String}'];
-        if ($resourceInternalId !== null) {
-            $params['resourceInternalId'] = $resourceInternalId;
-            $conditions[] = 'source.resourceInternalId = {resourceInternalId:String}';
-        }
-        if ($resourceType !== null) {
-            $params['resourceType'] = $resourceType;
-            $conditions[] = 'source.resourceType = {resourceType:String}';
-        }
-        if ($createdBefore !== null) {
-            $params['createdBefore'] = $this->date($createdBefore);
-            $conditions[] = 'source.createdAt < {createdBefore:String}';
-        }
+        $this->mirror('delete', function () use ($projectId, $resourceInternalId, $resourceType, $createdBefore): void {
+            $params = ['projectId' => $projectId];
+            $conditions = ['source.projectId = {projectId:String}'];
+            if ($resourceInternalId !== null) {
+                $params['resourceInternalId'] = $resourceInternalId;
+                $conditions[] = 'source.resourceInternalId = {resourceInternalId:String}';
+            }
+            if ($resourceType !== null) {
+                $params['resourceType'] = $resourceType;
+                $conditions[] = 'source.resourceType = {resourceType:String}';
+            }
+            if ($createdBefore !== null) {
+                $params['createdBefore'] = $this->date($createdBefore);
+                $conditions[] = 'source.createdAt < {createdBefore:String}';
+            }
 
-        $latest = $this->latestSql(\implode(' AND ', $conditions));
-        $columns = \implode(', ', \array_filter(
-            self::COLUMNS,
-            fn (string $column) => !\in_array($column, ['expiresAt', 'deleted', 'version'], true)
-        ));
-        $deleteVersionBase = $this->versionBase(self::VERSION_DELETE_RANK);
-        $retention = \max(0, $this->retention);
-        $this->query(<<<SQL
-            INSERT INTO {$this->table()} ({$columns}, expiresAt, deleted, version)
-            SELECT {$columns}, now64(6) + INTERVAL {$retention} SECOND, 1, toUInt64({$deleteVersionBase}) + toUInt64(toUnixTimestamp64Micro(now64(6)))
-            FROM ({$latest})
-            WHERE deleted = 0
-            SQL, $params);
+            $latest = $this->latestSql(\implode(' AND ', $conditions));
+            $columns = \implode(', ', \array_filter(
+                self::COLUMNS,
+                fn (string $column) => !\in_array($column, ['expiresAt', 'deleted', 'version'], true)
+            ));
+            $deleteVersionBase = $this->versionBase(self::VERSION_DELETE_RANK);
+            $retention = \max(0, $this->retention);
+            $this->query(<<<SQL
+                INSERT INTO {$this->table()} ({$columns}, expiresAt, deleted, version)
+                SELECT {$columns}, now64(6) + INTERVAL {$retention} SECOND, 1, toUInt64({$deleteVersionBase}) + toUInt64(toUnixTimestamp64Micro(now64(6)))
+                FROM ({$latest})
+                WHERE deleted = 0
+                SQL, $params);
+        });
     }
 
     private function latestSql(string $where): string
@@ -871,6 +876,15 @@ class Store
     private function builder(): ClickHouseBuilder
     {
         return (new ClickHouseBuilder())->useNamedBindings();
+    }
+
+    private function mirror(string $operation, callable $callback): void
+    {
+        try {
+            $callback();
+        } catch (Throwable $th) {
+            Console::warning("ClickHouse execution mirror {$operation} failed: {$th->getMessage()}");
+        }
     }
 
     /** @param array<string, mixed> $params */
