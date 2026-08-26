@@ -21,6 +21,10 @@ import { InitHeroBackground } from './InitHeroBackground'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
 import { InitWordmark } from './InitWordmark'
 import { useInitHref } from '@/lib/init/use-init-href'
+import { useMediaMinWidth } from '@/hooks/use-media-min-width'
+
+/** Tailwind `sm` - skip sticky-header Jool on phones for performance. */
+const STICKY_JOOL_MIN_WIDTH_PX = 640
 
 interface EventHeroProps {
   event: InitDisplayEvent
@@ -57,6 +61,7 @@ function CollapsedHeroBar({
 }) {
   const barRef = useRef<HTMLDivElement>(null)
   const showDayNav = dayNumbers.length > 0
+  const showStickyJool = useMediaMinWidth(STICKY_JOOL_MIN_WIDTH_PX)
   const { setTransientActivity } = useInitPresenceActivity()
   const resolvedLiveHref = useInitHref(liveBanner?.href)
   const handleJoolInteractionStart = useCallback(() => {
@@ -83,7 +88,7 @@ function CollapsedHeroBar({
         height: INIT_COLLAPSED_HEADER_HEIGHT_PX,
       }}
     >
-      {visible ? (
+      {visible && showStickyJool ? (
         <InitHeroBackground
           containerRef={barRef}
           compact
