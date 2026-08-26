@@ -71,7 +71,6 @@ const APP_TOPICS_SUBQUERIES = [
     'subQueryTopicTargets',
 ];
 
-// Shared by the functions and sites collections.
 const APP_FUNCTIONS_SUBQUERIES = [
     'subQueryVariables',
     'subQueryProjectVariables',
