@@ -96,9 +96,12 @@ $container->set('jobs', function () {
 }, []);
 
 $container->set('screenshots', function () {
+    // Must stay above the browser's own navigation budget plus the per-framework
+    // settle, render and encode that follow it, or the client aborts a capture
+    // the browser would have completed and reports no reason for it.
     $client = (new Client(new CurlAdapter()))
         ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))
-        ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 30));
+        ->withTimeout((int) System::getEnv('_APP_BROWSER_TIMEOUT', 90));
 
     return new ScreenshotsClient($client);
 }, []);

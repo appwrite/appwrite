@@ -1064,6 +1064,16 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_BROWSER_TIMEOUT',
+                'description' => 'The maximum number of seconds Appwrite waits for the browser service to return a screenshot. Must exceed the browser\'s own navigation budget plus the time it spends settling, rendering and encoding the page, or captures are aborted before the browser can report why.',
+                'introduction' => '1.9.0',
+                'default' => '90',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
                 'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead.',
                 'introduction' => '0.13.0',
