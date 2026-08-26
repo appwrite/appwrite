@@ -253,6 +253,7 @@ final class MigrationVersionsTest extends TestCase
             ->setNamespace('migration_identities_' . $projectId . '_' . \uniqid());
         $database->create();
         $database->createCollection('identities');
+        $database->createCollection('databases');
 
         $migration = new V25();
         $migration->setProject(
