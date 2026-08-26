@@ -491,6 +491,64 @@ trait StorageBase
         $this->assertNotEmpty($webpView['body']);
     }
 
+    public function testFileViewContentType(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'View Content Types',
+            'compression' => 'gzip',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $cases = [
+            ['source' => 'logo.svg', 'mimeType' => 'image/svg+xml', 'contentType' => 'image/svg+xml'],
+            ['source' => 'logo.png', 'mimeType' => 'image/png', 'contentType' => 'image/png'],
+            ['source' => 'document.pdf', 'mimeType' => 'application/pdf', 'contentType' => 'application/pdf'],
+            // HTML is not in the storage-mimes allowlist on purpose: rendering
+            // user uploads as HTML on the API origin would allow stored XSS.
+            ['source' => 'page.html', 'mimeType' => 'text/html', 'contentType' => 'text/plain'],
+        ];
+
+        foreach ($cases as $case) {
+            $source = realpath(__DIR__ . '/../../../resources/' . $case['source']);
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile($source, $case['mimeType'], $case['source']),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+
+            $this->assertEquals(201, $file['headers']['status-code'], $case['source']);
+            $this->assertEquals($case['mimeType'], $file['body']['mimeType'], $case['source']);
+
+            $view = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/view', array_merge([
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $view['headers']['status-code'], $case['source']);
+            $this->assertEquals($case['contentType'], $view['headers']['content-type'], $case['source']);
+            $this->assertEquals('script-src none;', $view['headers']['content-security-policy'], $case['source']);
+            $this->assertEquals('nosniff', $view['headers']['x-content-type-options'], $case['source']);
+            $this->assertEquals(\file_get_contents($source), $view['body'], $case['source']);
+        }
+    }
+
     public function testCreateBucketFileWithFolder(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [

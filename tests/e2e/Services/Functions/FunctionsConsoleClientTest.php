@@ -244,6 +244,20 @@ final class FunctionsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $variable['headers']['status-code']);
 
+        // Test for a key that is not a valid env var name
+        foreach (['9KEY', 'MY KEY', 'MY-KEY', "TRAILING_TAB\t", "A\x00C\x00M\x00E"] as $invalidKey) {
+            $variable = $this->createVariable(
+                $functionId,
+                [
+                    'variableId' => ID::unique(),
+                    'key' => $invalidKey,
+                    'value' => 'TESTINGVALUE'
+                ]
+            );
+
+            $this->assertEquals(400, $variable['headers']['status-code'], 'Key ' . json_encode($invalidKey) . ' should be refused');
+        }
+
         // Test for invalid value
         $variable = $this->createVariable(
             $functionId,
