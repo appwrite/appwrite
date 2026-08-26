@@ -191,6 +191,26 @@ trait TokensBase
         $this->assertEquals('No permissions provided for action \'read\'', $failedDownload['body']['message']);
     }
 
+    public function testPreviewFileWithInvalidTokenType(): void
+    {
+        $data = $this->setupBucketAndFile();
+        $fileId = $data['fileId'];
+        $bucketId = $data['bucketId'];
+        $guestHeaders = $data['guestHeaders'];
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
+            $guestHeaders,
+            [
+                'token' => ['invalid']
+            ]
+        );
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+    }
+
     public function testPreviewFileWithToken(): void
     {
         $data = $this->setupBucketAndFile();

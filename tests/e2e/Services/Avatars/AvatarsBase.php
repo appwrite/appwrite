@@ -600,6 +600,7 @@ trait AvatarsBase
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
+            'userAgent' => str_repeat('a', 512),
             'headers' => [
                 'User-Agent' => 'Mozilla/5.0 (compatible; AppwriteBot/1.0)',
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
@@ -1339,6 +1340,155 @@ trait AvatarsBase
         $referenceScreenshot = $referencePath . '/screenshot-example-com.png';
         $this->assertFileExists($referenceScreenshot, 'Reference example.com screenshot not found');
         $this->assertSamePixels($referenceScreenshot, $response['body']);
+
+        return [];
+    }
+
+
+
+    public function testGetPhoto(): array
+    {
+        /**
+         * Test for SUCCESS — authenticated user (client side)
+         *
+         * The endpoint always returns an image: even when no Gravatar/Libravatar
+         * avatar exists it falls back to initials or the static placeholder, so
+         * we always expect HTTP 200.
+         */
+
+        // Default call — uses session user; falls through priority chain and
+        // returns some image (initials or static fallback at minimum).
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        // Width + height
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width'  => 128,
+            'height' => 128,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        // Quality param
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width'   => 200,
+            'height'  => 200,
+            'quality' => 50,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+
+        // Output format: webp
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'output' => 'webp',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/webp', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        // Output format: jpg
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'output' => 'jpg',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        // Rating param
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rating' => 'pg',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+
+        /**
+         * Test for SUCCESS — Gravatar flow (Priority 2)
+         *
+         * Priority 1, the OAuth2 identity photo, needs an OAuth2 session and is
+         * covered in AvatarsCustomClientTest::testGetPhotoOAuth2.
+         *
+         * When no OAuth2 identity photo is available the chain falls through to
+         * Gravatar. Wrapped in assertEventually to tolerate transient network
+         * hiccups.
+         */
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'width'  => 256,
+                'height' => 256,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+            $this->assertNotEmpty($response['body']);
+            $this->assertEquals('private, no-store', $response['headers']['cache-control']);
+        }, 30_000, 2_000);
+
+        /**
+         * Test for FAILURE — invalid params
+         */
+
+        // Width out of range
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 2001,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Height out of range
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'height' => 2001,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Quality out of range
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'quality' => 101,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Invalid output format
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'output' => 'bmp',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Invalid rating
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rating' => 'xx',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
     }

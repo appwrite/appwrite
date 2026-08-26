@@ -2,9 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Proxy;
 
+use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -24,24 +27,31 @@ class Action extends PlatformAction
     {
     }
 
-    protected function createRule(Document $rule, Database $dbForPlatform, Authorization $authorization): Document
+    protected function createRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus): Document
     {
         try {
-            return $authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule));
+            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
         } catch (Duplicate) {
-            if (!$this->deleteOrphanedRule($rule, $dbForPlatform, $authorization)) {
+            if (!$this->deleteOrphanedRule($rule, $dbForPlatform, $authorization, $bus)) {
                 throw new Exception(Exception::RULE_ALREADY_EXISTS);
             }
         }
 
         try {
-            return $authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule));
+            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
         } catch (Duplicate) {
             throw new Exception(Exception::RULE_ALREADY_EXISTS);
         }
     }
 
-    private function deleteOrphanedRule(Document $rule, Database $dbForPlatform, Authorization $authorization): bool
+    private function created(Document $rule, Bus $bus): Document
+    {
+        $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
+
+        return $rule;
+    }
+
+    private function deleteOrphanedRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus): bool
     {
         $existingRule = $authorization->skip(function () use ($rule, $dbForPlatform) {
             $existingRule = $dbForPlatform->findOne('rules', [
@@ -73,6 +83,8 @@ class Action extends PlatformAction
         }
 
         $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $existingRule->getId()));
+        $bus->dispatch(new RuleDeleted($existingRule->getArrayCopy()));
+
         return true;
     }
 

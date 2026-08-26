@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -17,6 +18,7 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
 use Throwable;
+use Utopia\Bus\Bus;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -62,6 +64,7 @@ class Certificates extends Action
             ->inject('certificates')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -95,6 +98,7 @@ class Certificates extends Action
         CertificatesAdapter $certificates,
         array $plan,
         ValidatorAuthorization $authorization,
+        Bus $bus,
     ): void {
         $payload = $message->getPayload();
 
@@ -114,11 +118,11 @@ class Certificates extends Action
 
         switch ($action) {
             case \Appwrite\Event\Certificate::ACTION_DOMAIN_VERIFICATION:
-                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $publisherForCertificates, $log, $authorization, $validationDomain);
+                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $publisherForCertificates, $log, $authorization, $bus, $validationDomain);
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $log, $certificates, $authorization, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $log, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
                 break;
 
             default:
@@ -152,6 +156,7 @@ class Certificates extends Action
         Certificate $publisherForCertificates,
         Log $log,
         ValidatorAuthorization $authorization,
+        Bus $bus,
         ?string $validationDomain = null
     ): void {
         // Get rule
@@ -186,7 +191,7 @@ class Certificates extends Action
             $rule->setAttribute('logs', $logs);
         } finally {
             // Update rule and emit events
-            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime);
+            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
         }
 
         // Issue a TLS certificate when domain is verified
@@ -243,6 +248,7 @@ class Certificates extends Action
         Log $log,
         CertificatesAdapter $certificates,
         ValidatorAuthorization $authorization,
+        Bus $bus,
         bool $skipRenewCheck = false,
         array $plan = [],
         ?string $validationDomain = null
@@ -371,7 +377,7 @@ class Certificates extends Action
             // Update rule and emit events
             $rule->setAttribute('certificateId', $certificate->getId());
             $rule->setAttribute('logs', $logs);
-            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime);
+            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
         }
     }
 
@@ -428,13 +434,16 @@ class Certificates extends Action
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
-        Realtime $queueForRealtime
+        Realtime $queueForRealtime,
+        Bus $bus
     ): void {
         $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
             'status' => $rule->getAttribute('status'),
             'certificateId' => $rule->getAttribute('certificateId'),
             'logs' => $rule->getAttribute('logs'),
         ]));
+        $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+
         $projectId = $rule->getAttribute('projectId');
 
         // Skip events for console project (triggered by auto-ssl generation for 1 click setups)

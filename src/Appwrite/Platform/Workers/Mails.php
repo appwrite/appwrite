@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Template\Template;
 use Exception;
-use Swoole\Runtime;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
@@ -64,7 +63,6 @@ class Mails extends Action
      */
     public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
     {
-        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload();
 
         if (empty($payload)) {

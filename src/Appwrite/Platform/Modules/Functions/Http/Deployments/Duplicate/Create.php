@@ -157,12 +157,14 @@ class Create extends Action
             $github = $vcsFactory->fromInstallation($installation);
 
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            $deployment = $deployments->createFromUrl(
+            $deployment = $deployments->createFromVcs(
                 $function,
                 $deployment,
-                $github->getRepositoryPresignedUrl($owner, $repository, $ref),
+                $github,
+                $owner,
+                $repository,
+                $ref,
                 $deployment->getAttribute('providerRootDirectory', ''),
-                $github->getRepositoryPresignedUrlHeaders(),
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,

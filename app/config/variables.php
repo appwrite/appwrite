@@ -1026,9 +1026,9 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_HOST',
-                'description' => 'The host used by Appwrite to communicate with the open-runtimes jobs-service that builds manual-upload function deployments.',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes orchestrator that builds manual-upload function deployments.',
                 'introduction' => '1.9.0',
-                'default' => 'http://orchestrator-jobs:8080',
+                'default' => 'http://orchestrator:8080',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
@@ -1393,6 +1393,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VCS_ORIGIN_CLIENT_ID',
+                'description' => 'Origin app client ID. You can find it in your Origin app details on Cursor.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ORIGIN_PRIVATE_KEY',
+                'description' => 'Origin app private key. You can generate private keys from your Origin app settings on Cursor.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_VCS_WEBHOOK_URL',
                 'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
                 'introduction' => '2.0.0',
@@ -1493,6 +1511,84 @@ return [
                 'description' => 'Schedules deletion interval ( in seconds ) ',
                 'introduction' => 'TBD',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
+        ],
+    ],
+    [
+        'category' => 'Usage',
+        'description' => 'Usage events and resource gauges stored in ClickHouse.',
+        'variables' => [
+            [
+                'name' => '_APP_USAGE_STATS',
+                'description' => 'Enable or disable usage statistics collection and APIs.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DB_USAGE',
+                'description' => 'ClickHouse HTTP DSN used for usage storage. Set this to an external private ClickHouse DSN to replace the bundled service.',
+                'introduction' => '',
+                'default' => 'http://appwrite:appwrite@clickhouse:8123/appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_USAGE_PASS',
+                'description' => 'Password used only when creating the bundled ClickHouse appwrite user. On an existing volume, rotate the ClickHouse user with ALTER USER before updating this value and _APP_CONNECTIONS_DB_USAGE.',
+                'introduction' => '',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_POOL_SIZE_USAGE',
+                'description' => 'Maximum number of pooled ClickHouse HTTP clients per process.',
+                'introduction' => '',
+                'default' => '2',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_USAGE_TTL',
+                'description' => 'Retention in days for raw and daily usage events. Gauges have no TTL. Set to 0 to disable event TTLs.',
+                'introduction' => '',
+                'default' => '180',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATS_USAGE_QUEUE_NAME',
+                'description' => 'Queue name for usage event ingestion.',
+                'introduction' => '',
+                'default' => 'v1-stats-usage',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATS_RESOURCES_QUEUE_NAME',
+                'description' => 'Queue name for usage resource gauge ingestion.',
+                'introduction' => '',
+                'default' => 'v1-stats-resources',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATS_RESOURCES_INTERVAL',
+                'description' => 'Interval in seconds between full resource-count snapshots.',
+                'introduction' => '',
+                'default' => '3600',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
