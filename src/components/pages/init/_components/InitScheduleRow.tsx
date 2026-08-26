@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useInitHref } from '@/lib/init/use-init-href'
+import { INIT_YOUTUBE_CHANNEL_HREF } from '@/lib/init/links'
 import { useInitScheduleTime } from '@/lib/init/use-init-schedule-time'
 import { InitScheduleCalendarButton } from './InitScheduleCalendarButton'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -21,8 +22,6 @@ export const INIT_SCHEDULE_PLATFORM_META: Record<
   discord: { label: 'Discord', icon: '/icons/discord-simple.svg' },
   reddit: { label: 'Reddit', icon: '/icons/reddit.svg' },
 }
-
-const INIT_YOUTUBE_FALLBACK_HREF = 'https://www.youtube.com/@Appwrite'
 
 export function InitScheduleRow({
   event,
@@ -42,12 +41,12 @@ export function InitScheduleRow({
   const actionHref =
     item.href ??
     (item.platform === 'youtube'
-      ? event.liveBanner?.href ?? INIT_YOUTUBE_FALLBACK_HREF
+      ? event.liveBanner?.href ?? INIT_YOUTUBE_CHANNEL_HREF
       : undefined)
   const resolvedAction =
     useInitHref(actionHref) ??
     (item.platform === 'youtube'
-      ? { href: INIT_YOUTUBE_FALLBACK_HREF, external: true }
+      ? { href: INIT_YOUTUBE_CHANNEL_HREF, external: true }
       : null)
   const actionLabel = item.platform === 'youtube' ? 'Watch' : 'Join event'
   const actionExternal = resolvedAction?.external ?? false
