@@ -13,29 +13,20 @@ final class GravatarTest extends TestCase
 {
     public static function provideSupports(): \Iterator
     {
-        yield 'email' => [['email' => 'walter@appwrite.io'], true];
+        yield 'email hash' => [['emailHash' => \hash('sha256', 'walter@appwrite.io')], true];
+        yield 'raw email' => [['email' => 'walter@appwrite.io'], false];
         yield 'name only' => [['name' => 'Walter White'], false];
-        yield 'empty user' => [[], false];
+        yield 'empty profile' => [[], false];
     }
 
     /**
-     * Without a pre-computed hash, photo lookup keys off the user's email.
+     * Lookup keys off the profile's pre-computed SHA-256 email hash; a raw
+     * email address is never read — the endpoint hashes it before building
+     * the profile.
      */
     #[DataProvider('provideSupports')]
     public function testSupports(array $attributes, bool $expected): void
     {
         $this->assertSame($expected, (new Gravatar())->supports(new Document($attributes)));
-    }
-
-    /**
-     * A hash passed to the constructor stands in for the address, so a user
-     * without an email of their own is still supported.
-     */
-    public function testSupportsHash(): void
-    {
-        $provider = new Gravatar(\hash('sha256', 'walter@appwrite.io'));
-
-        $this->assertTrue($provider->supports(new Document([])));
-        $this->assertTrue($provider->supports(new Document(['name' => 'Walter White'])));
     }
 }

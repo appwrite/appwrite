@@ -109,7 +109,13 @@ class Get extends Action
         // has 'emailHash', 'name'
         $profile = new Document();
 
-        if (!$photoUser->isEmpty()) {
+        // Explicit parameters replace the user's photo sources entirely — a
+        // hash or name may describe anyone, so the user's identity photos,
+        // email, and name must never shadow the avatar being asked for. The
+        // user fills the profile only when nothing explicit was requested.
+        $overridden = !empty($emailHash) || !empty($name);
+
+        if (!$overridden && !$photoUser->isEmpty()) {
             $userEmail = $photoUser->getAttribute('email', '');
             $userName = $photoUser->getAttribute('name', '');
 
@@ -120,7 +126,7 @@ class Get extends Action
             }
 
             if (!empty($userEmail)) {
-                $profile = $profile->setAttribute('emailHash', \strtolower(hash('sha256', $userEmail)));
+                $profile = $profile->setAttribute('emailHash', \hash('sha256', \strtolower(\trim($userEmail))));
             }
         }
 
