@@ -14,9 +14,6 @@ export const INIT_TICKET_OG_LAYOUT = {
   detailGap: initTicketOgScalePx(10),
   detailPaddingTop: initTicketOgScalePx(16),
   titleSize: initTicketOgScalePx(16),
-  githubSize: initTicketOgScalePx(12),
-  githubIconSize: initTicketOgScalePx(14),
-  githubGap: initTicketOgScalePx(6),
   passSize: initTicketOgScalePx(9),
   ticketSize: initTicketOgScalePx(10),
   stubWordmarkHeight: initTicketOgScalePx(14),
@@ -36,7 +33,6 @@ export function getInitTicketOgPalette(usesDarkChrome: boolean) {
     date: usesDarkChrome ? 'rgba(255,255,255,0.60)' : '#737373',
     muted: usesDarkChrome ? 'rgba(255,255,255,0.55)' : '#737373',
     label: usesDarkChrome ? 'rgba(255,255,255,0.70)' : '#525252',
-    github: usesDarkChrome ? 'rgba(255,255,255,0.75)' : '#525252',
     separator: usesDarkChrome ? 'rgba(255,255,255,0.20)' : 'rgba(17,24,39,0.15)',
   }
 }

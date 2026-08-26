@@ -1,20 +1,15 @@
+'use client'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-import {
-  AiFeatureCard,
-  AiFeatureCtaButton,
-  AiMcpMockVisual,
-  AiSkillsMockVisual,
-} from '@/components/pages/shared/AiMockPanels'
-import {
-  getMcpIntegrations,
-  getOfficialPlugins,
-  type HomePluginConfig,
-  type IDEConfig,
-} from '@/lib/config/ide'
-import { AiTileSoftLight } from '@/components/pages/home/HomeSoftLights'
+import { AiAgentWorkspace } from '@/components/pages/home/AiCodingChatVisual'
+import { ProductAvatarsList } from '@/components/global/shared/ProductAvatarsList'
+import { getHomeMcpStackAvatarItems, getOfficialPlugins, type HomePluginConfig } from '@/lib/config/ide'
+import { AiChatSoftLight, AiTileSoftLight } from '@/components/pages/home/HomeSoftLights'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 import {
   Table,
   TableBody,
@@ -23,8 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+
 const OFFICIAL_PLUGINS = getOfficialPlugins()
-const MCP_INTEGRATIONS = getMcpIntegrations()
 
 type BenchmarkRow = {
   model: string
@@ -78,7 +73,7 @@ const BENCHMARK_ROWS: BenchmarkRow[] = [
   },
   {
     model: 'Grok Build 0.1',
-    icon: '/icons/x.svg',
+    icon: '/icons/grok-build.svg',
     cost: '$1.00',
     overall: 96.7,
     auth: 92,
@@ -92,46 +87,6 @@ const BENCHMARK_ROWS: BenchmarkRow[] = [
 
 function formatScore(value: number) {
   return `${value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)}%`
-}
-
-function McpFeaturePanel() {
-  const t = useT()
-  return (
-    <AiFeatureCard
-      title="MCP"
-      description={t(
-        'Connect AI agents to your Appwrite backend. No custom integrations required.', // pragma: allowlist secret
-      )}
-      shade="mcp"
-      className="border-b border-border lg:border-b-0 lg:border-e"
-      cta={
-        <AiFeatureCtaButton href="/docs/tooling/mcp" label={t('Learn more')} />
-      }
-    >
-      <AiMcpMockVisual />
-    </AiFeatureCard>
-  )
-}
-
-function SkillsFeaturePanel() {
-  const t = useT()
-  return (
-    <AiFeatureCard
-      title={t('Skills')}
-      description={t(
-        'Teach AI agents your backend, so they always make the right call.',
-      )}
-      shade="skills"
-      cta={
-        <AiFeatureCtaButton
-          href="/docs/tooling/ai/skills"
-          label={t('Learn more')}
-        />
-      }
-    >
-      <AiSkillsMockVisual />
-    </AiFeatureCard>
-  )
 }
 
 type PluginTileBadge = {
@@ -149,13 +104,18 @@ function PluginTile({
   badges: PluginTileBadge[]
 }) {
   const t = useT()
-  const className =
-    'group flex items-center gap-3 rounded-lg border border-border bg-background/60 px-3 py-2.5 transition-colors hover:bg-accent/15'
 
   return (
-    <MarketingSiteLink href={href} className={className}>
+    <MarketingSiteLink
+      href={href}
+      className="group flex items-center gap-3 rounded-lg border border-border bg-background/60 px-3 py-2.5 transition-colors hover:bg-accent/15"
+    >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
-        <img src={plugin.iconPath} alt="" className="size-4 object-contain" />
+        <img
+          src={plugin.iconPath}
+          alt=""
+          className={cn('size-4 object-contain', PUBLIC_ICON_MUTED_CLASSES)}
+        />
       </span>
       <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
         {plugin.name}
@@ -175,21 +135,29 @@ function PluginTile({
   )
 }
 
+function MoreIntegrationsIcons() {
+  const t = useT()
+
+  return (
+    <ProductAvatarsList
+      items={getHomeMcpStackAvatarItems()}
+      ariaLabel={t('Integrations')}
+    />
+  )
+}
+
 function AiPluginsSection() {
   const t = useT()
   return (
-    <div className="mt-10 grid overflow-visible pb-4 lg:mt-12 lg:grid-cols-2 lg:divide-x lg:divide-border">
-      <div className="relative py-6 lg:py-0 lg:pe-10">
-        <AiTileSoftLight tone="plugins" />
-        <div className="relative space-y-1.5">
+    <div className="relative mt-10 overflow-visible pb-4 lg:mt-12">
+      <div className="relative mx-auto max-w-4xl py-8">
+        <AiTileSoftLight tone="plugins" align="center" />
+        <div className="relative space-y-1.5 text-center">
           <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
-            {t('Official plugins')}
+            {t('Works great with your favorite agents')}
           </h3>
-          <p className="text-[13px] leading-5 text-muted-foreground">
-            {t('One-click marketplace plugins for Cursor, Claude Code, and Codex.')}
-          </p>
         </div>
-        <div className="relative mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="relative mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
           {OFFICIAL_PLUGINS.map((plugin) => (
             <PluginTile
               key={plugin.id}
@@ -199,35 +167,43 @@ function AiPluginsSection() {
             />
           ))}
         </div>
+        <div className="relative mt-4 flex justify-center">
+          <MoreIntegrationsIcons />
+        </div>
       </div>
+    </div>
+  )
+}
 
-      <div className="relative border-t border-border py-6 lg:border-t-0 lg:py-0 lg:ps-10">
-        <AiTileSoftLight tone="integrations" />
-        <div className="relative space-y-1.5">
-          <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
-            {t('Integrations')}
+function ArenaBlock() {
+  const t = useT()
+  return (
+    <div className="pt-8 sm:pt-10">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-4 lg:gap-5">
+          <h3 className="font-aeonik-pro shrink-0 text-[16px] font-normal text-foreground sm:text-[17px]">
+            {t('AI Arena')}
           </h3>
-          <p className="text-[13px] leading-5 text-muted-foreground">
-            {t('Connect Appwrite in other agents and IDEs.')} {/* pragma: allowlist secret */}
+          <p className="min-w-0 max-w-2xl text-[14px] leading-6 text-muted-foreground sm:text-[15px]">
+            {t(
+              'We constantly benchmark platform performance against every leading model so you can see which one works best with Appwrite.', // pragma: allowlist secret
+            )}
           </p>
         </div>
-        <div className="relative mt-4 grid grid-cols-2 gap-2">
-          {MCP_INTEGRATIONS.map((integration: IDEConfig) => (
-            <PluginTile
-              key={integration.id}
-              plugin={integration}
-              href={integration.mcpDocsUrl!}
-              badges={[{ label: 'Skills', variant: 'inactive' }]}
-            />
-          ))}
-        </div>
-        <div className="relative mt-4">
-          <Button variant="outline" className="h-9 text-[13px]" asChild>
-            <MarketingSiteLink href="/docs/tooling/mcp">
-              {t('Learn more')}
-            </MarketingSiteLink>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button variant="outline" className="h-10 text-[13px]" asChild>
+            <a
+              href="https://arena.appwrite.io/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('View full benchmark')}
+            </a>
           </Button>
         </div>
+      </div>
+      <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card/45">
+        <BenchmarkTable />
       </div>
     </div>
   )
@@ -275,7 +251,9 @@ function BenchmarkTable() {
               <TableCell className="px-4 py-3">
                 <span className="flex items-center gap-2.5">
                   <img src={row.icon} alt="" className="size-4 object-contain" />
-                  <span className="text-[13px] font-medium text-foreground">{row.model}</span>
+                  <span className="text-[13px] font-medium text-foreground">
+                    {row.model}
+                  </span>
                 </span>
               </TableCell>
               <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
@@ -312,57 +290,34 @@ function BenchmarkTable() {
 
 export function AiSection() {
   const t = useT()
+
   return (
     <section className="relative isolate overflow-hidden border-t border-border bg-background py-16 sm:py-20">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] opacity-70"
         aria-hidden
       />
+      <AiChatSoftLight />
 
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <h2 className="font-aeonik-pro max-w-3xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
-          {t('Designed for the AI agents in your workflow')}
-          <span className="text-[var(--brand-cta)]">_</span>
-        </h2>
+        <div className="mx-auto max-w-3xl space-y-3 text-center">
+          <h2 className="font-aeonik-pro text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
+            {t('Designed for the AI agents in your workflow')}
+            <span className="text-[var(--brand-cta)]">_</span>
+          </h2>
+          <p className="mx-auto max-w-2xl text-[15px] leading-6 text-muted-foreground">
+            {t(
+              'Query Postgres, chart traffic, and ship a campaign. Your agent does it on a live Appwrite project.', // pragma: allowlist secret
+            )}
+          </p>
+        </div>
 
-        <div className="mt-10 overflow-hidden rounded-xl border border-border bg-card/50 lg:mt-12">
-          <div className="grid lg:grid-cols-2">
-            <McpFeaturePanel />
-            <SkillsFeaturePanel />
-          </div>
+        <div className="mt-10 lg:mt-12">
+          <AiAgentWorkspace />
         </div>
 
         <AiPluginsSection />
-
-        <div className="pt-8 sm:pt-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-4 lg:gap-5">
-              <h3 className="font-aeonik-pro shrink-0 text-[16px] font-normal text-foreground sm:text-[17px]">
-                {t('Benchmark')}
-              </h3>
-              <p className="min-w-0 max-w-xl text-[14px] leading-6 text-muted-foreground sm:text-[15px]">
-                {t(
-                  'Works with every major LLM. Find out how well your model integrates with Appwrite.', // pragma: allowlist secret
-                )}
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-wrap gap-2">
-              <Button variant="outline" className="h-10 text-[13px]" asChild>
-                <a
-                  href="https://arena.appwrite.io/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t('View full benchmark')}
-                </a>
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card/45">
-            <BenchmarkTable />
-          </div>
-        </div>
+        <ArenaBlock />
       </div>
     </section>
   )

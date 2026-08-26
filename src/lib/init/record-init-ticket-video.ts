@@ -1,54 +1,31 @@
+import { captureInitTicketStillCanvas } from '@/lib/init/ticket-video-still'
+import { createInitTicketVideoCompositor } from '@/lib/init/ticket-video-compositor'
 import {
-  canRecordInitTicketViaElementCapture,
-  recordInitTicketVideoViaElementCapture,
-} from '@/lib/init/record-init-ticket-video-element-capture'
+  canUseInitTicketVideoMediaRecorder,
+  canUseInitTicketVideoWebCodecs,
+  encodeInitTicketVideoFromCanvas,
+  type InitTicketVideoRecording,
+} from '@/lib/init/ticket-video-encode'
 import {
-  canRecordInitTicketViaCanvas,
-  recordInitTicketVideoViaCanvas,
-} from '@/lib/init/record-init-ticket-video-canvas'
-import {
-  sleep,
-  withInitTicketCaptureWakeLock,
-} from '@/lib/init/ticket-video-wall-clock-loop'
-import { INIT_TICKET_VIDEO_MOTION_LOOP_CYCLES } from '@/lib/init/ticket-video-capture'
-import { preloadInitTicketCaptureFonts } from '@/lib/init/ticket-font-embed'
+  INIT_TICKET_VIDEO_EXPORT_HEIGHT,
+  INIT_TICKET_VIDEO_EXPORT_WIDTH,
+  INIT_TICKET_VIDEO_STILL_PROGRESS_WEIGHT,
+  getInitTicketTiltForProgress,
+} from '@/lib/init/ticket-video-capture'
+import { resolveCssColor } from '@/lib/init/parse-css-accent'
+import { sleep, withInitTicketCaptureWakeLock } from '@/lib/init/ticket-video-wall-clock-loop'
 
-const CAPTURE_TILT_MAX_X = 22
-const CAPTURE_TILT_MAX_Y = 16
-const EXPORT_WIDTH_PX = 820
+export type {
+  InitTicketVideoFileExtension,
+  InitTicketVideoRecording,
+} from '@/lib/init/ticket-video-encode'
 
-export type InitTicketVideoFileExtension = 'mp4' | 'webm'
-
-const VIDEO_FORMAT_CANDIDATES: Array<{
-  mimeType: string
-  fileExtension: InitTicketVideoFileExtension
-}> = [
-  { mimeType: 'video/mp4;codecs=avc1', fileExtension: 'mp4' },
-  { mimeType: 'video/mp4;codecs="avc1.42E01E,mp4a.40.2"', fileExtension: 'mp4' },
-  { mimeType: 'video/mp4', fileExtension: 'mp4' },
-  { mimeType: 'video/webm;codecs=vp9', fileExtension: 'webm' },
-  { mimeType: 'video/webm;codecs=vp8', fileExtension: 'webm' },
-  { mimeType: 'video/webm', fileExtension: 'webm' },
-]
-
-function getPreferredVideoFormat():
-  | { mimeType: string; fileExtension: InitTicketVideoFileExtension }
-  | undefined {
-  if (typeof MediaRecorder === 'undefined') return undefined
-  return VIDEO_FORMAT_CANDIDATES.find((format) =>
-    MediaRecorder.isTypeSupported(format.mimeType),
-  )
-}
-
-/** True when Chrome/Edge tab element capture is available (~60fps). */
-export function supportsInitTicket60FpsVideoCapture(): boolean {
-  return canRecordInitTicketViaElementCapture()
-}
+export { getInitTicketTiltForProgress }
 
 export function isInitTicketVideoExportSupported(): boolean {
   if (typeof window === 'undefined') return false
-  if (!getPreferredVideoFormat()) return false
-  return canRecordInitTicketViaElementCapture() || canRecordInitTicketViaCanvas()
+  if (typeof HTMLCanvasElement === 'undefined') return false
+  return canUseInitTicketVideoWebCodecs() || canUseInitTicketVideoMediaRecorder()
 }
 
 export function waitForNextPaint() {
@@ -63,14 +40,6 @@ export function waitForNextPaint() {
   })
 }
 
-export function getInitTicketTiltForProgress(t: number) {
-  const angle = t * Math.PI * 2 * INIT_TICKET_VIDEO_MOTION_LOOP_CYCLES
-  return {
-    x: Math.sin(angle) * CAPTURE_TILT_MAX_X * 0.92,
-    y: Math.sin(angle * 0.92 + 0.45) * CAPTURE_TILT_MAX_Y,
-  }
-}
-
 export function downloadInitTicketVideo(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
@@ -82,65 +51,103 @@ export function downloadInitTicketVideo(blob: Blob, filename: string) {
 }
 
 export type RecordInitTicketVideoOptions = {
-  captureElement: HTMLElement
+  ticketElement: HTMLElement
+  ticketBackElement?: HTMLElement | null
   setTilt: (x: number, y: number) => void
   resetTilt: () => void
   backgroundColor?: string
+  borderColor?: string
+  usesDarkChrome?: boolean
   onProgress?: (progress: number) => void
-  /** Canvas fallback: fired when live capture ends, before off-screen encode. */
+  /** Fired after the still is captured, before frame encoding. */
   onVisibleCaptureComplete?: () => void
 }
 
-export type InitTicketVideoRecording = {
-  blob: Blob
-  fileExtension: InitTicketVideoFileExtension
+function readCssColor(
+  element: HTMLElement,
+  customProperty: string,
+  fallback: string,
+) {
+  const resolved = resolveCssColor(`var(${customProperty})`, element)
+  return resolved || fallback
 }
 
 export async function recordInitTicketVideo({
-  captureElement,
+  ticketElement,
+  ticketBackElement,
   setTilt,
   resetTilt,
   backgroundColor,
+  borderColor,
+  usesDarkChrome,
   onProgress,
   onVisibleCaptureComplete,
 }: RecordInitTicketVideoOptions): Promise<InitTicketVideoRecording> {
-  const format = getPreferredVideoFormat()
-  if (!format) {
+  if (!isInitTicketVideoExportSupported()) {
     throw new Error('Video recording is not supported in this browser')
   }
-
-  const tiltHandlers = {
-    setTilt,
-    resetTilt,
-    getTiltForProgress: getInitTicketTiltForProgress,
-    onProgress,
-  }
-
-  await preloadInitTicketCaptureFonts()
 
   return withInitTicketCaptureWakeLock(async () => {
-    if (canRecordInitTicketViaElementCapture()) {
-      return recordInitTicketVideoViaElementCapture({
-        captureElement,
-        mimeType: format.mimeType,
-        fileExtension: format.fileExtension,
-        ...tiltHandlers,
-        onVisibleCaptureComplete,
-      })
+    setTilt(0, 0)
+    await waitForNextPaint()
+    onProgress?.(0)
+
+    const ticketStill = await captureInitTicketStillCanvas(ticketElement)
+    const layoutWidth = Math.round(ticketStill.width / 2)
+    const layoutHeight = Math.round(ticketStill.height / 2)
+    const stillMidpoint =
+      INIT_TICKET_VIDEO_STILL_PROGRESS_WEIGHT *
+      (ticketBackElement ? 0.5 : 1)
+    onProgress?.(stillMidpoint)
+
+    if (ticketBackElement) {
+      await waitForNextPaint()
     }
 
-    if (canRecordInitTicketViaCanvas()) {
-      return recordInitTicketVideoViaCanvas({
-        captureElement,
-        mimeType: format.mimeType,
-        fileExtension: format.fileExtension,
-        exportWidthPx: EXPORT_WIDTH_PX,
-        backgroundColor,
-        ...tiltHandlers,
-        onVisibleCaptureComplete,
-      })
-    }
+    const ticketBackStill = ticketBackElement
+      ? await captureInitTicketStillCanvas(ticketBackElement, {
+          face: 'back',
+          layoutSize: { width: layoutWidth, height: layoutHeight },
+        })
+      : undefined
 
-    throw new Error('Video recording is not supported in this browser')
+    if (ticketBackStill && (ticketBackStill.width < 2 || ticketBackStill.height < 2)) {
+      throw new Error('Ticket back still capture failed')
+    }
+    onProgress?.(INIT_TICKET_VIDEO_STILL_PROGRESS_WEIGHT)
+    onVisibleCaptureComplete?.()
+    resetTilt()
+
+    const root = document.documentElement
+    const compositor = createInitTicketVideoCompositor({
+      ticketImage: ticketStill,
+      ticketBackImage: ticketBackStill,
+      ticketWidth: ticketStill.width,
+      ticketHeight: ticketStill.height,
+      width: INIT_TICKET_VIDEO_EXPORT_WIDTH,
+      height: INIT_TICKET_VIDEO_EXPORT_HEIGHT,
+      backgroundColor:
+        backgroundColor ??
+        readCssColor(root, '--background', '#09090b'),
+      borderColor: borderColor ?? readCssColor(root, '--border', '#27272a'),
+      usesDarkChrome,
+    })
+
+    try {
+      const recording = await encodeInitTicketVideoFromCanvas({
+        canvas: compositor.canvas,
+        drawFrame: compositor.drawFrame,
+        onProgress: (encodeProgress) => {
+          onProgress?.(
+            INIT_TICKET_VIDEO_STILL_PROGRESS_WEIGHT +
+              encodeProgress * (1 - INIT_TICKET_VIDEO_STILL_PROGRESS_WEIGHT),
+          )
+        },
+      })
+      onProgress?.(1)
+      return recording
+    } finally {
+      compositor.dispose()
+    }
   })
 }

@@ -29,7 +29,12 @@ function getChangelogEntryOgImage(
   entry: ChangelogEntry,
   siteOrigin?: string,
 ): string {
-  if (entry.cover) return entry.cover
+  if (entry.cover) {
+    if (entry.cover.startsWith('/')) {
+      return `${getSeoSiteOrigin(siteOrigin)}${entry.cover}`
+    }
+    return entry.cover
+  }
 
   return buildOgImageUrl(
     {

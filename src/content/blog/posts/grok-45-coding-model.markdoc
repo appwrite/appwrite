@@ -21,7 +21,7 @@ faqs:
     - question: "How does Grok 4.5 perform on coding benchmarks?"
       answer: "SpaceXAI reports 83.3% on Terminal Bench 2.1 and 64.7% on SWE Bench Pro. It also reports 62.0% on DeepSWE 1.0 and 53% on DeepSWE 1.1."
     - question: "How can I connect AI coding agents to Appwrite?"
-      answer: "Use Appwrite's MCP servers. The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers/api) lets agents act on your project, while the [Appwrite Docs MCP server](/docs/tooling/ai/mcp-servers/docs) gives them current Appwrite documentation."
+      answer: "Use Appwrite's MCP servers. The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers) lets agents act on your project, while the [Appwrite Docs MCP server](/docs/tooling/ai/mcp-servers) gives them current Appwrite documentation."
 ---
 
 Coding agents fail most often when the task stops being a prompt and starts being engineering work. A useful model has to read the surrounding codebase, make small decisions over a long run, call tools, recover from test failures, and avoid spending half the session writing around the problem.
@@ -127,8 +127,8 @@ Appwrite's AI tooling is designed for this exact shift from chat-based code gene
 
 For coding agents, start with the MCP layer:
 
-- [MCP server for Appwrite API](/docs/tooling/ai/mcp-servers/api): lets an agent interact with your Appwrite project using natural language commands, including creating users and managing databases.
-- [MCP server for Appwrite docs](/docs/tooling/ai/mcp-servers/docs): gives an agent current Appwrite documentation so it can use the latest API, SDK, and CLI patterns.
+- [MCP server for Appwrite API](/docs/tooling/ai/mcp-servers): lets an agent interact with your Appwrite project using natural language commands, including creating users and managing databases.
+- [MCP server for Appwrite docs](/docs/tooling/ai/mcp-servers): gives an agent current Appwrite documentation so it can use the latest API, SDK, and CLI patterns.
 - [Codex with Appwrite](/docs/tooling/ai/agents/codex): shows how to install the Appwrite plugin, add the Appwrite API MCP server, and test the integration.
 - [Cursor with Appwrite](/docs/tooling/ai/agents/cursor): shows how to use Appwrite's Cursor plugin or configure MCP servers manually.
 

@@ -14,7 +14,7 @@ import { InitScheduleRow } from './InitScheduleRow'
 import { ArrowUpRight, BookOpen, FileText, Play } from 'lucide-react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
-import { isExternalInitHref } from '@/lib/init/links'
+import { useInitHref } from '@/lib/init/use-init-href'
 import { parseBlogPagePath, parseDocsPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 
@@ -30,6 +30,7 @@ function VideoThumbnail({
   href?: string
   className?: string
 }) {
+  const resolved = useInitHref(href)
   const inner = (
     <>
       <div
@@ -49,12 +50,11 @@ function VideoThumbnail({
     </>
   )
 
-  if (href) {
-    const external = isExternalInitHref(href)
+  if (resolved) {
     return (
       <a
-        href={href}
-        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        href={resolved.href}
+        {...(resolved.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         className="group block transition-opacity hover:opacity-90"
       >
         {inner}
@@ -124,6 +124,7 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
   const ResourceIcon = type === 'docs' ? BookOpen : FileText
   const isBlogLink = Boolean(parseBlogPagePath(resource.href))
   const isDocsLink = Boolean(parseDocsPagePath(resource.href))
+  const resolved = useInitHref(resource.href)
   const rowClassName =
     'group flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-accent/30'
   const rowContent = (
@@ -147,6 +148,14 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
     </>
   )
 
+  if (!resolved) {
+    return (
+      <li>
+        <div className={rowClassName}>{rowContent}</div>
+      </li>
+    )
+  }
+
   return (
     <li>
       {isBlogLink ? (
@@ -159,8 +168,8 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
         </DocsRouteLink>
       ) : (
         <a
-          href={resource.href}
-          {...(isExternalInitHref(resource.href)
+          href={resolved.href}
+          {...(resolved.external
             ? { target: '_blank', rel: 'noopener noreferrer' }
             : {})}
           className={rowClassName}

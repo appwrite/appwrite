@@ -18,11 +18,9 @@ import {
 import { RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
-  frameworkHasSsrAdapter,
   frameworkHasStaticAdapter,
   getFrameworkAdapterDefaults,
 } from '@/lib/frameworks'
-import { StartCommandLabel } from '../_components/StartCommandLabel'
 import { useWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
 
@@ -30,12 +28,10 @@ interface BuildSettingsProps {
   installCommand: string
   buildCommand: string
   outputDirectory: string
-  startCommand?: string
   fallbackFile?: string
   onInstallCommandChange: (value: string) => void
   onBuildCommandChange: (value: string) => void
   onOutputDirectoryChange: (value: string) => void
-  onStartCommandChange?: (value: string) => void
   onFallbackFileChange?: (value: string) => void
   frameworkKey?: string
   disabled?: boolean
@@ -47,12 +43,10 @@ export function BuildSettings({
   installCommand,
   buildCommand,
   outputDirectory,
-  startCommand = '',
   fallbackFile = '',
   onInstallCommandChange,
   onBuildCommandChange,
   onOutputDirectoryChange,
-  onStartCommandChange,
   onFallbackFileChange,
   frameworkKey,
   disabled = false,
@@ -62,7 +56,6 @@ export function BuildSettings({
   const t = useT()
   const { getFramework, getFrameworkDefaults } = useWizard()
   const framework = frameworkKey ? getFramework(frameworkKey) : undefined
-  const showStartCommand = frameworkHasSsrAdapter(framework)
   const isSsrOnlyFramework =
     !!framework && !frameworkHasStaticAdapter(framework)
   const showFallbackFile = !!onFallbackFileChange && !isSsrOnlyFramework
@@ -190,20 +183,6 @@ export function BuildSettings({
                 className="h-9 font-mono text-[13px]"
               />
             </div>
-
-            {showStartCommand && onStartCommandChange && (
-              <div className="space-y-2">
-                <StartCommandLabel htmlFor="start-command" />
-                <Input
-                  id="start-command"
-                  value={startCommand}
-                  onChange={(e) => onStartCommandChange(e.target.value)}
-                  placeholder={t('Enter start command')}
-                  disabled={disabled}
-                  className="h-9 font-mono text-[13px]"
-                />
-              </div>
-            )}
 
             {/* Output Directory */}
             <div className="space-y-2">

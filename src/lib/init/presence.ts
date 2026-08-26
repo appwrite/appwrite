@@ -1,6 +1,7 @@
 import { Permission, Query, Role } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { parseAvatarEmailHash } from '@/lib/avatar-email-hash'
 import { sanitizeInitPresenceActivity } from '@/lib/init/init-presence-activity-allowlist'
 import { parseInitPresenceTheme, type InitPresenceTheme } from '@/lib/init/init-presence-theme'
 import type { LaunchEventOnlineUser, InitCommunityCountry } from '@/lib/init/types'
@@ -33,6 +34,8 @@ export type InitPresenceMetadata = {
   theme?: InitPresenceTheme
   /** ISO 3166-1 alpha-2 country code from locale API. */
   countryCode?: string
+  /** SHA-256 hex of lowercase trimmed email for `avatars.getPhoto`. */
+  emailHash?: string
 }
 
 /** Presence row ID is the signed-in console user ID (one log per user). */
@@ -87,6 +90,7 @@ export function parseInitPresenceMetadata(
   const name = typeof record.name === 'string' ? record.name.trim() : ''
   const countryCode =
     typeof record.countryCode === 'string' ? record.countryCode.trim().toUpperCase() : ''
+  const emailHash = parseAvatarEmailHash(record.emailHash)
   return {
     eventId,
     name,
@@ -94,6 +98,7 @@ export function parseInitPresenceMetadata(
     isLive: record.isLive === true,
     theme: parseInitPresenceTheme(record.theme),
     countryCode: countryCode || undefined,
+    emailHash,
   }
 }
 
@@ -407,6 +412,7 @@ export function presenceToOnlineUser(
     isLive: metadata?.isLive,
     theme: metadata?.theme,
     countryCode: metadata?.countryCode,
+    emailHash: metadata?.emailHash,
   }
 }
 

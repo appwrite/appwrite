@@ -11,7 +11,7 @@ export const messagingProductContent: ProductPageContent = {
     stats: [
       { value: '3', label: 'Channels in one API' },
       { value: 'Topics', label: 'Broadcast messaging' },
-      { value: '11', label: 'Delivery providers' },
+      { value: '12', label: 'Delivery providers' },
       { value: 'Targets', label: 'Auth user delivery' },
       { value: 'Schedule', label: 'Compose and delivery logs' },
     ],
@@ -38,7 +38,7 @@ export const messagingProductContent: ProductPageContent = {
     {
       question: 'Which delivery providers are supported?',
       answer:
-        'Email: Resend, SendGrid, Mailgun, and SMTP. SMS: Twilio, Vonage, MSG91, Telesign, and Textmagic. Push: APNS and FCM. Configure multiple providers per channel and choose which one to use when sending. Discord and Slack chat integrations are coming soon.',
+        'Email: Resend, SendGrid, Mailgun, Amazon SES, and SMTP. SMS: Twilio, Vonage, MSG91, Telesign, and Textmagic. Push: APNS and FCM. Configure multiple providers per channel and choose which one to use when sending. Discord and Slack chat integrations are coming soon.',
       links: [{ label: 'Providers', href: '/docs/products/messaging/providers' }],
     },
     {

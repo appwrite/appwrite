@@ -53,13 +53,14 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
   getDeploymentStatusBadge,
-  isDeploymentCompleted,
+  canDownloadDeploymentBuildOutput,
   isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
 import { mergeActiveDeploymentForCard } from '@/lib/sites/deployment-screenshots'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import { domainUrl } from '@/lib/domains/url'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -199,6 +200,8 @@ export function SiteOverviewView() {
 
   const handleDownloadBuild = () => {
     if (!projectId || !siteId || !activeDeploymentResolved) return
+    if (!canDownloadDeploymentBuildOutput(activeDeploymentResolved.status))
+      return
     try {
       const projectSdk = sdk.forProject(projectId)
       const url = projectSdk.sites.getDeploymentDownload({
@@ -378,7 +381,7 @@ export function SiteOverviewView() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={`https://${rule.domain}`}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 font-mono text-[11px] link-neutral"
@@ -510,16 +513,16 @@ export function SiteOverviewView() {
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
                       disabled={
-                        !isDeploymentCompleted(
+                        !canDownloadDeploymentBuildOutput(
                           activeDeploymentForCard?.status,
                         )
                       }
                       title={
-                        !isDeploymentCompleted(
+                        !canDownloadDeploymentBuildOutput(
                           activeDeploymentForCard?.status,
                         )
                           ? t(
-                              'Build output is available after the deployment has completed.',
+                              'Build output is only available for ready deployments.',
                             )
                           : undefined
                       }
@@ -578,7 +581,7 @@ export function SiteOverviewView() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={`https://${rule.domain}`}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"

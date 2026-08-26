@@ -587,6 +587,7 @@ function NativeDbSelectionCard({
   label: string
   Icon: IconComponent
 }) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -606,6 +607,9 @@ function NativeDbSelectionCard({
       >
         {label}
       </span>
+      <Badge variant="info" className="text-[9px] shrink-0 sm:text-[10px]">
+        {t('Beta')}
+      </Badge>
     </div>
   )
 }

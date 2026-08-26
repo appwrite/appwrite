@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ConditionsBuilder } from '../_components/ConditionsBuilder'
+import { PriorityHint } from '../_components/PriorityHint'
 import { RuleImpactPreview } from '../_components/RuleImpactPreview'
 import { useCreateFirewallRule } from '@/lib/react-query/hooks'
 import {
@@ -42,8 +43,11 @@ import {
   FIREWALL_RESOURCE_TYPES,
   areFirewallConditionsComplete,
   createEmptyConditionDraft,
+  firewallListSearch,
+  parseFirewallListSearch,
   serializeFirewallConditions,
   type FirewallConditionDraft,
+  type FirewallResourceSelection,
   type FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import { draftsFromUsageFilterMap } from '@/lib/firewall/usage'
@@ -107,18 +111,23 @@ export function View() {
   const navigate = useNavigate()
   const { projectId } = useParams({ strict: false })
   const {
-    resourceType: initialResourceType = 'api',
+    resourceType: initialResourceType,
     resourceId: initialResourceId,
     query: initialQuery,
   } = Route.useSearch()
+  const initialSelection: FirewallResourceSelection =
+    parseFirewallListSearch({
+      resourceType: initialResourceType,
+      resourceId: initialResourceId,
+    }) ?? { resourceType: 'api' }
   const createMutation = useCreateFirewallRule(projectId)
   const [ruleId, setRuleId] = useState<string | undefined>()
   const [form, setForm] = useState({
     ...DEFAULT_FORM,
-    resourceType: initialResourceType,
+    resourceType: initialSelection.resourceType,
     resourceId:
-      initialResourceType !== 'api' && initialResourceId
-        ? initialResourceId
+      initialSelection.resourceType !== 'api' && initialSelection.resourceId
+        ? initialSelection.resourceId
         : '',
   })
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>(() =>
@@ -151,15 +160,20 @@ export function View() {
     navigate({
       to: '/projects/$projectId/firewall',
       params: { projectId: projectId! },
-      search:
-        resourceType === 'api' || !resourceId?.trim()
-          ? { resourceType: 'api' }
-          : { resourceType, resourceId: resourceId.trim() },
+      search: firewallListSearch({
+        resourceType,
+        resourceId,
+      }),
     })
   }
 
   const handleClose = () => {
-    navigateToRules(initialResourceType, initialResourceId)
+    navigateToRules(
+      initialSelection.resourceType,
+      initialSelection.resourceType === 'api'
+        ? undefined
+        : initialSelection.resourceId,
+    )
   }
 
   const handleSubmit = async () => {
@@ -463,13 +477,13 @@ export function View() {
                 <button
                   key={resource.value}
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     setForm({
                       ...form,
                       resourceType: resource.value,
                       resourceId: '',
                     })
-                  }
+                  }}
                   className={cn(
                     'flex w-full cursor-pointer items-start gap-3 rounded-xl border border-border bg-card/50 p-3.5 text-start transition-all hover:border-border/80 hover:bg-card/60',
                     selected &&
@@ -528,7 +542,10 @@ export function View() {
         />
 
         <div className="space-y-2">
-          <Label>{t('Priority')}</Label>
+          <Label className="inline-flex items-center gap-1.5">
+            {t('Priority')}
+            <PriorityHint />
+          </Label>
           <Input
             type="number"
             min={0}
@@ -540,9 +557,6 @@ export function View() {
               })
             }
           />
-          <p className="text-[12px] text-muted-foreground">
-            {t('Lower numbers are evaluated first.')}
-          </p>
         </div>
 
         <div className="space-y-2">

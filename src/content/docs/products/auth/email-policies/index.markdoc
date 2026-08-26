@@ -29,9 +29,10 @@ To configure email policies manually:
 
 1. Open your project in the Appwrite Console.
 2. Navigate to **Auth** in the sidebar.
-3. Open the **Security** tab.
-4. In the **Email policies** card, toggle the policies you want to enable.
-5. Click **Update** to apply the changes.
+3. Open the **Policies** tab.
+4. Select **Emails**.
+5. Toggle the policies you want to enable.
+6. Click **Update** to apply the changes.
 
 # Manage from the SDK {% #manage-sdk %}
 

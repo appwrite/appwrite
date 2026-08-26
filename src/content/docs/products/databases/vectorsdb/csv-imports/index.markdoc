@@ -103,12 +103,12 @@ JSON keys and string values use double quotes, and a double quote inside a quote
 
 # Run the import {% #run-import %}
 
-CSV imports run as a background migration. First upload your CSV to a [storage bucket](/docs/products/storage/buckets), then start the import against the target collection. The import is triggered through the migrations endpoint at `POST /v1/migrations/csv/imports` with an [API key](/docs/advanced/platform/api-keys) that has the `migrations.write` scope. The request takes the storage `bucketId` and `fileId` that hold your CSV, and the target collection as a composite `resourceId` in the form `databaseId:collectionId`.
+CSV imports run as a background migration. First upload your CSV to a [storage bucket](/docs/products/storage/buckets), then start the import against the target collection with `POST /v1/migrations/csv/imports` and an [API key](/docs/advanced/platform/api-keys) that has the `migrations.write` scope. The request takes the `bucketId` and `fileId` that hold your CSV, plus the `databaseId` and `collectionId` of the collection you are importing into.
 
 The `onDuplicate` option controls what happens when a document with an existing `$id` is encountered: `fail` (the default) aborts on the first conflict, `skip` ignores it, and `overwrite` replaces the existing document.
 
-{% info title="Console import" %}
-The VectorsDB collection view in the Appwrite Console offers JSON import and export. To import a CSV into a VectorsDB collection, use the migrations endpoint described above.
+{% info title="Track imports in the Console" %}
+Open the database and select the **Export / Import** tab to watch a job run and see how many documents it wrote. Finished exports offer a **Download** action on the same tab.
 {% /info %}
 
 # Additional resources {% #additional-resources %}

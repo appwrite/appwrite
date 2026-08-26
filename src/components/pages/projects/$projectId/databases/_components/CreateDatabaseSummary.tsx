@@ -3,7 +3,8 @@ import {
   Layers,
   Table as TableIcon,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { DatabaseTypeBetaBadge } from './DatabaseTypeBetaBadge'
+import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
 import { isServerlessDatabaseSpecId, type SpecOption } from '@/lib/database-specs'
@@ -249,12 +250,9 @@ export function CreateDatabaseSummary({
                 <DbTypeIcon icon={selectedDbType!.icon} />
               </span>
               {selectedDbType!.label}
-              {(selectedDbType!.id === 'DocumentsDB' ||
-                selectedDbType!.id === 'VectorsDB') && (
-                <Badge variant="info" className="text-[10px] shrink-0">
-                  {t('Beta')}
-                </Badge>
-              )}
+              {isBetaDatabaseType(selectedDbType!.id) ? (
+                <DatabaseTypeBetaBadge />
+              ) : null}
             </span>
           ) : (
             <span className="text-muted-foreground">{t('Not selected')}</span>

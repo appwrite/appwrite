@@ -121,7 +121,7 @@ The useful question is not "does this platform sell an Agents SDK?" It is "does 
 
 Cloudflare answers that with an Agents SDK on top of Durable Objects and Workers, then leaves the rest of the backend to you. Appwrite answers it with a broader open-source backend where Auth, TablesDB, Storage, Functions, Realtime, Sites, and MCP line up with what stateful AI agents need, without making you adopt a per-instance edge runtime before your product shape is clear.
 
-If you want to explore Appwrite as the backend for your stateful AI agents, start with [Appwrite Cloud](https://cloud.appwrite.io), read the [AI tooling hub](/docs/tooling/ai), and check the [API MCP server](/docs/tooling/ai/mcp-servers/api), [Agent Skills](/docs/tooling/ai/skills), and the editor plugins for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor).
+If you want to explore Appwrite as the backend for your stateful AI agents, start with [Appwrite Cloud](https://cloud.appwrite.io), read the [AI tooling hub](/docs/tooling/ai), and check the [API MCP server](/docs/tooling/ai/mcp-servers), [Agent Skills](/docs/tooling/ai/skills), and the editor plugins for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor).
 
 - [Appwrite Databases](/docs/products/databases)
 - [Appwrite Functions](/docs/products/functions)

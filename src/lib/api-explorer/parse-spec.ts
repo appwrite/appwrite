@@ -1,3 +1,4 @@
+import { getOpenApiEnumValues } from './openapi-schema'
 import {
   compareServices,
   getServiceLabel,
@@ -479,7 +480,8 @@ export function getDefaultParamValue(param: OpenApiParameter): string {
     if (isOpenApiPlaceholderExample(exampleString)) return ''
     return exampleString
   }
-  if (schema.enum?.length) return String(schema.enum[0])
+  const enumValues = getOpenApiEnumValues(schema)
+  if (enumValues.length) return enumValues[0]!
   if (schema.type === 'boolean') return 'false'
   if (schema.type === 'integer' || schema.type === 'number') return '0'
   return ''
@@ -511,7 +513,8 @@ export function buildSampleValue(schema: OpenApiSchema): unknown {
     if (!isOpenApiPlaceholderExample(schema['x-example'])) return schema['x-example']
   }
   if (schema.default !== undefined) return schema.default
-  if (schema.enum?.length) return schema.enum[0]
+  const enumValues = getOpenApiEnumValues(schema)
+  if (enumValues.length) return enumValues[0]
 
   switch (schema.type) {
     case 'object': {

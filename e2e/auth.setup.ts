@@ -7,7 +7,6 @@ import {
   skipCommunitySupportWizardIfPresent,
 } from './helpers/cookie-banner'
 import { cleanupE2eProjects } from './helpers/e2e-project-cleanup'
-import { withWebsiteAccessCookie } from './helpers/website-access'
 
 type StorageState = {
   cookies?: unknown[]
@@ -55,9 +54,7 @@ test('authenticate once and persist storage state', async ({
 
   if (env.E2E_TEST_SESSION_SECRET && !canPasswordLogin) {
     try {
-      const storageState = withWebsiteAccessCookie(
-        parseSessionSecret(env.E2E_TEST_SESSION_SECRET),
-      )
+      const storageState = parseSessionSecret(env.E2E_TEST_SESSION_SECRET)
       fs.writeFileSync(authPath, JSON.stringify(storageState, null, 2), 'utf-8')
     } catch (error) {
       throw new Error(
@@ -118,14 +115,10 @@ test('authenticate once and persist storage state', async ({
   })
 
   // Cookie fallback (localStorage) is what the SDK uses cross-origin; storageState
-  // captures both cookies and origin localStorage. Keep the soft-launch access
-  // cookie so console tests are not redirected to /access.
+  // captures both cookies and origin localStorage.
   await context.storageState({ path: authPath })
 
-  const state = withWebsiteAccessCookie(
-    JSON.parse(fs.readFileSync(authPath, 'utf-8')) as StorageState,
-  )
-  fs.writeFileSync(authPath, JSON.stringify(state, null, 2), 'utf-8')
+  const state = JSON.parse(fs.readFileSync(authPath, 'utf-8')) as StorageState
 
   const hasCookies = (state.cookies?.length ?? 0) > 0
   const hasOrigins = (state.origins?.length ?? 0) > 0

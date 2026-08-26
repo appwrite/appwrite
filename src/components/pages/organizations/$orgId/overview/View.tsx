@@ -155,7 +155,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { toast } from 'sonner'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
 import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
@@ -2273,7 +2273,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         (displayMembers.length - index)}}
                                     title={member.userName}
                                   >
-                                    <InitialsAvatar
+                                    <PhotoAvatar
+                                      userId={member.userId}
                                       name={member.userName}
                                       size="md"
                                     />
@@ -3599,7 +3600,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             <TableRow className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                                             <TableCell className="px-4 py-3">
                                               <div className="flex items-center gap-3 min-w-0">
-                                                <InitialsAvatar
+                                                <PhotoAvatar
+                                                  userId={member.userId}
                                                   name={
                                                     member.userName ||
                                                     member.userEmail
@@ -4130,7 +4132,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                             member.userName
                                                           }
                                                         >
-                                                          <InitialsAvatar
+                                                          <PhotoAvatar
+                                                            userId={
+                                                              member.userId
+                                                            }
                                                             name={
                                                               member.userName
                                                             }

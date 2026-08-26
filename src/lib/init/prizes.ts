@@ -14,7 +14,6 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
       scheduleItemId: 'sched-reddit-ama',
       sessionTitle: 'Appwrite 2.0 AMA',
       platform: 'reddit',
-      timeLabel: '2:00 PM',
       href: 'https://reddit.com/r/appwrite',
       prizeDescription: 'Appwrite hoodie and cap',
       visual: {
@@ -29,7 +28,6 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
       scheduleItemId: 'sched-reddit-databases-ama',
       sessionTitle: 'PostgreSQL AMA',
       platform: 'reddit',
-      timeLabel: '3:00 PM',
       href: 'https://reddit.com/r/appwrite',
       prizeDescription: 'Light Appwriter keyboard',
       visual: {
@@ -44,7 +42,6 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
       scheduleItemId: 'sched-reddit-servers-ama',
       sessionTitle: 'VectorsDB, DocumentsDB & MySQL AMA',
       platform: 'reddit',
-      timeLabel: '6:00 PM',
       href: 'https://reddit.com/r/appwrite',
       prizeDescription: 'Dark Appwriter keyboard',
       visual: {
@@ -59,7 +56,6 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
       scheduleItemId: 'sched-reddit-s3-ama',
       sessionTitle: 'S3 for Storage AMA',
       platform: 'reddit',
-      timeLabel: '2:00 PM',
       href: 'https://reddit.com/r/appwrite',
       prizeDescription: 'RUNTIME bottle and Appwrite tee',
       visual: {
@@ -72,11 +68,10 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
   grandPrize: {
     day: 5,
     dateLabel: 'SEPTEMBER 4',
-    scheduleItemId: 'sched-discord-closing',
-    sessionTitle: 'Init closing party',
-    platform: 'discord',
-    timeLabel: '5:00 PM',
-    href: '/discord',
+    scheduleItemId: 'sched-reddit-recap-ama',
+    sessionTitle: 'Init week AMA',
+    platform: 'reddit',
+    href: 'https://reddit.com/r/appwrite',
     title: 'Claude Max 20x · 12 months free',
     description: 'Expanded Claude Code access for one winner.',
     eligibility: 'Share Init on social during the week to enter.',

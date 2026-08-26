@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: Announcing Appwrite 1.9.5 for self-hosted deployments
+date: 2026-06-30
+cover: /images/blog/appwrite-1-9-5-self-hosted-release/cover.avif
+---
+
+After multiple updates and fixes, Appwrite 1.9.5 is now available for self-hosting.
+
+Most notably, this release includes:
+
+- Presences API for online, typing, and activity states
+- BigInt columns for Databases
+- Rust runtime for Functions
+- X (formerly Twitter) OAuth support for Auth
+- Bun and Deno build runtimes for Sites
+- Git deployment triggers for Functions and Sites
+- Parallel chunk uploads for faster Storage uploads
+- Broader migration coverage for project settings, keys, and integrations
+
+Head over to our [migration guide](https://appwrite.io/docs/advanced/self-hosting/production/updates) to learn how you can upgrade your Appwrite instance. Please run the [migrate command](https://appwrite.io/docs/advanced/self-hosting/production/updates#running-the-migration) even if you are upgrading from 1.9.0.
+
+For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/1.9.5) on GitHub.
+
+{% arrow_link href="/docs/advanced/self-hosting/production/updates" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}

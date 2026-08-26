@@ -1546,8 +1546,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Loading schema': 'טוען סכימה',
   'Loading schema...': 'טוען סכימה...',
   'No databases yet for': 'אין עדיין מסדי נתונים עבור',
-  'Create this product database from the create database wizard.':
-    'צרו מסד נתונים מוצר זה מאשף יצירת מסד הנתונים.',
+  'To create a database, use the creation wizard by clicking "Create database".':
+    'כדי ליצור מסד נתונים, השתמשו באשף היצירה בלחיצה על "יצירת מסד נתונים".',
   'Available': 'זמין',
   'Deleting': 'נמחק',
   'Stuck': 'תקוע',

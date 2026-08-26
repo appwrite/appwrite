@@ -297,37 +297,6 @@ export function InitTicketOgTicketLayer({ data, prepared }: InitTicketOgSharedPr
               >
                 {truncateInitTicketOgText(holderTitle, 40)}
               </div>
-              {data.githubUsername ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: layout.githubGap,
-                  }}
-                >
-                  {prepared.githubIconSrc ? (
-                    <img
-                      src={prepared.githubIconSrc}
-                      alt=""
-                      width={layout.githubIconSize}
-                      height={layout.githubIconSize}
-                      style={{
-                        width: layout.githubIconSize,
-                        height: layout.githubIconSize,
-                        objectFit: 'contain',
-                        opacity: usesDarkChrome ? 0.75 : 1,
-                      }}
-                    />
-                  ) : null}
-                  <div
-                    style={initTicketOgTextStyle(layout.githubSize, palette.github, {
-                      fontWeight: 500,
-                    })}
-                  >
-                    {`@${truncateInitTicketOgText(data.githubUsername, 24)}`}
-                  </div>
-                </div>
-              ) : null}
               <div
                 style={initTicketOgTextStyle(layout.passSize, palette.muted, {
                   fontWeight: 600,

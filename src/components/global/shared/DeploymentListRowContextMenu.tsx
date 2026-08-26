@@ -57,7 +57,7 @@ import {
   Dependencies,
 } from '@/lib/react-query/hooks'
 import {
-  isDeploymentCompleted,
+  canDownloadDeploymentBuildOutput,
   isDeploymentInProgress,
 } from '@/lib/utils/deployment-status'
 import { useT } from '@/lib/i18n/translate'
@@ -122,7 +122,7 @@ export function DeploymentListRowContextMenu({
   }
 
   const inProgress = isDeploymentInProgress(deployment.status)
-  const canDownloadBuild = isDeploymentCompleted(deployment.status)
+  const canDownloadBuild = canDownloadDeploymentBuildOutput(deployment.status)
   const canActivate = !isActive && deployment.status === 'ready'
   const canDeleteFromMenu = !isActive && !inProgress
 
@@ -242,7 +242,7 @@ export function DeploymentListRowContextMenu({
                 title={
                   !canDownloadBuild
                     ? t(
-                        'Build output is available after the deployment has completed.',
+                        'Build output is only available for ready deployments.',
                       )
                     : undefined
                 }

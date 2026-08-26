@@ -266,6 +266,8 @@ export const currentOrganization = organizations[0]
 // Organization Members
 export interface TeamMember {
   $id: string
+  /** Console / Auth user ID (`membership.userId`). Empty for some pending invites. */
+  userId?: string
   userName: string
   userEmail: string
   avatar?: string

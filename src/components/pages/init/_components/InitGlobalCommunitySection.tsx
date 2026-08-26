@@ -46,14 +46,20 @@ function InitGlobePresenceStats({
         </span>
       ) : null}
       <p className="text-[12px] tabular-nums text-foreground">
-        <span className="font-semibold">{countryCount.toLocaleString()}</span>
-        <span className="text-muted-foreground">
-          {' '}
-          {countryCount === 1 ? 'country' : 'countries'}
-        </span>
+        {countryCount > 0 ? (
+          <>
+            <span className="font-semibold">{countryCount.toLocaleString()}</span>
+            <span className="text-muted-foreground">
+              {' '}
+              {countryCount === 1 ? 'country' : 'countries'}
+            </span>
+          </>
+        ) : null}
+        {countryCount > 0 && developers > 0 ? (
+          <span className="text-muted-foreground"> · </span>
+        ) : null}
         {developers > 0 ? (
           <>
-            <span className="text-muted-foreground"> · </span>
             <span className="font-semibold">{developers.toLocaleString()}</span>
             <span className="text-muted-foreground"> online</span>
           </>

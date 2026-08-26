@@ -55,6 +55,7 @@ function InitPageContent({
 }) {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
+  const { preLaunch } = useDebugOverrides()
   const presence = useInitPresence()
   const raffle = useInitGiveawayRaffleContext()
   const communityGlobe = useInitCommunityGlobeData(baseEvent, {
@@ -74,8 +75,20 @@ function InitPageContent({
     }
   }, [baseEvent, presence])
 
-  useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true), OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS)
-  useKeyboardShortcut('control+k', () => setCommandCenterOpen(true), OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS)
+  useKeyboardShortcut(
+    'meta+k',
+    () => {
+      if (!preLaunch) setCommandCenterOpen(true)
+    },
+    OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS,
+  )
+  useKeyboardShortcut(
+    'control+k',
+    () => {
+      if (!preLaunch) setCommandCenterOpen(true)
+    },
+    OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS,
+  )
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => scrollToInitDayFromHash())
@@ -95,7 +108,9 @@ function InitPageContent({
       ) : null}
       <ConsoleLayout
         header={{
-          onCommandCenterOpen: () => setCommandCenterOpen(true),
+          onCommandCenterOpen: preLaunch
+            ? undefined
+            : () => setCommandCenterOpen(true),
         }}
         leftSidebar={
           showOnlineNav
@@ -218,11 +233,13 @@ function InitPageContent({
         </>
       ) : null}
 
-      <CommandCenter
-        open={commandCenterOpen}
-        onOpenChange={setCommandCenterOpen}
-        context="account"
-      />
+      {preLaunch ? null : (
+        <CommandCenter
+          open={commandCenterOpen}
+          onOpenChange={setCommandCenterOpen}
+          context="account"
+        />
+      )}
     </>
   )
 }
@@ -268,11 +285,16 @@ export function View() {
 
 function InitEmptyState() {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+  const { preLaunch } = useDebugOverrides()
 
   return (
     <>
       <ConsoleLayout
-        header={{ onCommandCenterOpen: () => setCommandCenterOpen(true) }}
+        header={{
+          onCommandCenterOpen: preLaunch
+            ? undefined
+            : () => setCommandCenterOpen(true),
+        }}
         showFooter
       >
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center px-4 py-24 sm:px-6">
@@ -285,11 +307,13 @@ function InitEmptyState() {
         </div>
       </ConsoleLayout>
 
-      <CommandCenter
-        open={commandCenterOpen}
-        onOpenChange={setCommandCenterOpen}
-        context="account"
-      />
+      {preLaunch ? null : (
+        <CommandCenter
+          open={commandCenterOpen}
+          onOpenChange={setCommandCenterOpen}
+          context="account"
+        />
+      )}
     </>
   )
 }

@@ -17,6 +17,10 @@ import {
   type Tab,
 } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { Button } from '@/components/ui/button'
+import {
+  GENERATOR_COVER_INDEX_ROUTE,
+  GENERATOR_DIAGRAM_INDEX_ROUTE,
+} from '@/lib/generator/document-routes'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { cn } from '@/lib/utils'
 
@@ -62,6 +66,12 @@ function GeneratorLayoutContent() {
                 maxLength={editorTitle.maxLength}
                 isSaving={editorTitle.isSaving}
                 onChange={editorTitle.onChange}
+                homeTo={
+                  activeTab === 'diagrams'
+                    ? GENERATOR_DIAGRAM_INDEX_ROUTE
+                    : GENERATOR_COVER_INDEX_ROUTE
+                }
+                onHomeClick={documentChrome?.onBrowseDocuments}
               />
             ) : (
               'Generator'

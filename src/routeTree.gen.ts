@@ -19,7 +19,6 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DiscordRouteImport } from './routes/discord'
 import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
-import { Route as AccessRouteImport } from './routes/access'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as MarketingRouteImport } from './routes/_marketing'
@@ -81,11 +80,13 @@ import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog
 import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicGitAuthorizeContributorRouteImport } from './routes/_public/git.authorize-contributor'
 import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
 import { Route as PublicDebugOauth2PreviewRouteImport } from './routes/_public/debug.oauth2-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
 import { Route as PublicDebugCodeEditorPreviewRouteImport } from './routes/_public/debug.code-editor-preview'
+import { Route as PublicDebugAuthorizeContributorPreviewRouteImport } from './routes/_public/debug.authorize-contributor-preview'
 import { Route as PublicAgentSettingsRouteImport } from './routes/_public/agent.settings'
 import { Route as PublicAgentAutomationsRouteImport } from './routes/_public/agent.automations'
 import { Route as PublicAgentAgentIdRouteImport } from './routes/_public/agent.$agentId'
@@ -468,11 +469,6 @@ const BlogDotmdRoute = BlogDotmdRouteImport.update({
   path: '/blog.md',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AccessRoute = AccessRouteImport.update({
-  id: '/access',
-  path: '/access',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
   getParentRoute: () => rootRouteImport,
@@ -778,6 +774,12 @@ const PublicOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicGitAuthorizeContributorRoute =
+  PublicGitAuthorizeContributorRouteImport.update({
+    id: '/git/authorize-contributor',
+    path: '/git/authorize-contributor',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicDebugVerifyEmailPreviewRoute =
   PublicDebugVerifyEmailPreviewRouteImport.update({
     id: '/debug/verify-email-preview',
@@ -805,6 +807,12 @@ const PublicDebugCodeEditorPreviewRoute =
   PublicDebugCodeEditorPreviewRouteImport.update({
     id: '/debug/code-editor-preview',
     path: '/debug/code-editor-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugAuthorizeContributorPreviewRoute =
+  PublicDebugAuthorizeContributorPreviewRouteImport.update({
+    id: '/debug/authorize-contributor-preview',
+    path: '/debug/authorize-contributor-preview',
     getParentRoute: () => PublicRoute,
   } as any)
 const PublicAgentSettingsRoute = PublicAgentSettingsRouteImport.update({
@@ -2995,7 +3003,6 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
   )
 
 export interface FileRoutesByFullPath {
-  '/access': typeof AccessRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -3079,11 +3086,13 @@ export interface FileRoutesByFullPath {
   '/agent/$agentId': typeof PublicAgentAgentIdRoute
   '/agent/automations': typeof PublicAgentAutomationsRouteWithChildren
   '/agent/settings': typeof PublicAgentSettingsRouteWithChildren
+  '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
+  '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3401,7 +3410,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/access': typeof AccessRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -3479,11 +3487,13 @@ export interface FileRoutesByTo {
   '/account/security': typeof PublicAccountSecurityRoute
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/agent/$agentId': typeof PublicAgentAgentIdRoute
+  '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
+  '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/blog': typeof MarketingBlogIndexRoute
   '/changelog': typeof MarketingChangelogIndexRoute
@@ -3762,7 +3772,6 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
-  '/access': typeof AccessRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -3846,11 +3855,13 @@ export interface FileRoutesById {
   '/_public/agent/$agentId': typeof PublicAgentAgentIdRoute
   '/_public/agent/automations': typeof PublicAgentAutomationsRouteWithChildren
   '/_public/agent/settings': typeof PublicAgentSettingsRouteWithChildren
+  '/_public/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/_public/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/_public/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
+  '/_public/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -4170,7 +4181,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/access'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -4254,11 +4264,13 @@ export interface FileRouteTypes {
     | '/agent/$agentId'
     | '/agent/automations'
     | '/agent/settings'
+    | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
     | '/debug/error-preview'
     | '/debug/oauth2-preview'
     | '/debug/org-setup-preview'
     | '/debug/verify-email-preview'
+    | '/git/authorize-contributor'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -4576,7 +4588,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/access'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -4654,11 +4665,13 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/account/sessions'
     | '/agent/$agentId'
+    | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
     | '/debug/error-preview'
     | '/debug/oauth2-preview'
     | '/debug/org-setup-preview'
     | '/debug/verify-email-preview'
+    | '/git/authorize-contributor'
     | '/generator/diagrams/$generationId'
     | '/blog'
     | '/changelog'
@@ -4936,7 +4949,6 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/_protected'
     | '/_public'
-    | '/access'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5020,11 +5032,13 @@ export interface FileRouteTypes {
     | '/_public/agent/$agentId'
     | '/_public/agent/automations'
     | '/_public/agent/settings'
+    | '/_public/debug/authorize-contributor-preview'
     | '/_public/debug/code-editor-preview'
     | '/_public/debug/error-preview'
     | '/_public/debug/oauth2-preview'
     | '/_public/debug/org-setup-preview'
     | '/_public/debug/verify-email-preview'
+    | '/_public/git/authorize-contributor'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -5347,7 +5361,6 @@ export interface RootRouteChildren {
   MarketingRoute: typeof MarketingRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
-  AccessRoute: typeof AccessRoute
   BlogDotmdRoute: typeof BlogDotmdRoute
   ChangelogDotmdRoute: typeof ChangelogDotmdRoute
   DiscordRoute: typeof DiscordRoute
@@ -5449,13 +5462,6 @@ declare module '@tanstack/react-router' {
       path: '/blog.md'
       fullPath: '/blog.md'
       preLoaderRoute: typeof BlogDotmdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/access': {
-      id: '/access'
-      path: '/access'
-      fullPath: '/access'
-      preLoaderRoute: typeof AccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public': {
@@ -5885,6 +5891,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/git/authorize-contributor': {
+      id: '/_public/git/authorize-contributor'
+      path: '/git/authorize-contributor'
+      fullPath: '/git/authorize-contributor'
+      preLoaderRoute: typeof PublicGitAuthorizeContributorRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/verify-email-preview': {
       id: '/_public/debug/verify-email-preview'
       path: '/debug/verify-email-preview'
@@ -5918,6 +5931,13 @@ declare module '@tanstack/react-router' {
       path: '/debug/code-editor-preview'
       fullPath: '/debug/code-editor-preview'
       preLoaderRoute: typeof PublicDebugCodeEditorPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/authorize-contributor-preview': {
+      id: '/_public/debug/authorize-contributor-preview'
+      path: '/debug/authorize-contributor-preview'
+      fullPath: '/debug/authorize-contributor-preview'
+      preLoaderRoute: typeof PublicDebugAuthorizeContributorPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/agent/settings': {
@@ -9965,11 +9985,13 @@ interface PublicRouteChildren {
   PublicResetRoute: typeof PublicResetRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
   PublicIndexRoute: typeof PublicIndexRoute
+  PublicDebugAuthorizeContributorPreviewRoute: typeof PublicDebugAuthorizeContributorPreviewRoute
   PublicDebugCodeEditorPreviewRoute: typeof PublicDebugCodeEditorPreviewRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
   PublicDebugOauth2PreviewRoute: typeof PublicDebugOauth2PreviewRoute
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
   PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
+  PublicGitAuthorizeContributorRoute: typeof PublicGitAuthorizeContributorRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
 }
@@ -9985,11 +10007,14 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicResetRoute: PublicResetRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
   PublicIndexRoute: PublicIndexRoute,
+  PublicDebugAuthorizeContributorPreviewRoute:
+    PublicDebugAuthorizeContributorPreviewRoute,
   PublicDebugCodeEditorPreviewRoute: PublicDebugCodeEditorPreviewRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
   PublicDebugOauth2PreviewRoute: PublicDebugOauth2PreviewRoute,
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
   PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
+  PublicGitAuthorizeContributorRoute: PublicGitAuthorizeContributorRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
 }
@@ -10054,7 +10079,6 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingRoute: MarketingRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
-  AccessRoute: AccessRoute,
   BlogDotmdRoute: BlogDotmdRoute,
   ChangelogDotmdRoute: ChangelogDotmdRoute,
   DiscordRoute: DiscordRoute,

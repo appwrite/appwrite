@@ -5,6 +5,9 @@ export const STALE_CHUNK_CACHE_BUST_PARAM = '_sc'
 /** Default delay before clearing the one-reload guard after a successful boot. */
 export const STALE_CHUNK_GUARD_CLEAR_DELAY_MS = 5_000
 
+/** Give the HTML revalidation request this long before falling back to reload. */
+export const STALE_CHUNK_REVALIDATE_TIMEOUT_MS = 2_000
+
 /**
  * Build-emitted client assets live under /assets/ with content hashes in the
  * filename. A failed load of one of these after a deploy is almost always a
@@ -60,10 +63,18 @@ export function isStaleChunkLoadError(
   if (context?.fromVitePreload) return true
 
   const target = context?.event?.target
-  if (target instanceof HTMLScriptElement && isHashedBuildAssetUrl(target.src)) {
+  if (
+    typeof HTMLScriptElement !== 'undefined' &&
+    target instanceof HTMLScriptElement &&
+    isHashedBuildAssetUrl(target.src)
+  ) {
     return true
   }
-  if (target instanceof HTMLLinkElement && isHashedBuildAssetUrl(target.href)) {
+  if (
+    typeof HTMLLinkElement !== 'undefined' &&
+    target instanceof HTMLLinkElement &&
+    isHashedBuildAssetUrl(target.href)
+  ) {
     return true
   }
 
@@ -75,10 +86,47 @@ export function isStaleChunkLoadError(
 }
 
 /**
+ * Inline JS shared by the boot script. Revalidates the current HTML document
+ * from the network (Cache-Control: no-cache), then reloads. A query-param-only
+ * location.replace() is not enough: CDNs often ignore `?_sc=` and some browsers
+ * no-op replace() after history.replaceState, which made the Reload CTA appear
+ * to do nothing until the user hard-reloaded.
+ */
+const STALE_CHUNK_HARD_RELOAD_JS = `function documentUrl(){
+    try{
+      var u=new URL(window.location.href);
+      u.searchParams.delete(${JSON.stringify(STALE_CHUNK_CACHE_BUST_PARAM)});
+      return u.pathname+u.search;
+    }catch(e){ return window.location.pathname||"/"; }
+  }
+  function reloadNow(){
+    try{ window.location.reload(); }
+    catch(e2){ window.location.href=documentUrl(); }
+  }
+  function hardReload(){
+    var finished=false;
+    var finish=function(){
+      if(finished) return;
+      finished=true;
+      reloadNow();
+    };
+    try{
+      var req=fetch(documentUrl(),{
+        cache:"reload",
+        credentials:"same-origin",
+        headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}
+      });
+      if(req&&typeof req.finally==="function") req.finally(finish);
+      else finish();
+    }catch(e3){ finish(); }
+    setTimeout(finish,${String(STALE_CHUNK_REVALIDATE_TIMEOUT_MS)});
+  }`
+
+/**
  * Inline boot script (runs via ScriptOnce before the app module graph).
  * Recovers when the entry/main chunk 404s after a deploy - before router.tsx
- * listeners exist - and uses a cache-busting navigation so soft reload cannot
- * reuse stale HTML that still points at deleted hashed assets.
+ * listeners exist - and revalidates the HTML shell so cached documents that
+ * still point at deleted hashed assets are not reused.
  *
  * Prefer structural signals (vite:preloadError, /assets/ URLs) over message text.
  */
@@ -112,19 +160,14 @@ export const STALE_CHUNK_BOOT_SCRIPT = `(function(){
     for(var i=0;i<HINTS.length;i++){ if(lower.indexOf(HINTS[i])!==-1) return true; }
     return false;
   }
+  ${STALE_CHUNK_HARD_RELOAD_JS}
   function tryReload(error, event, fromVite){
     if(!isStale(error, event, fromVite)) return false;
     try{
       if(sessionStorage.getItem(KEY)) return false;
       sessionStorage.setItem(KEY,String(Date.now()));
     }catch(e){}
-    try{
-      var url=new URL(window.location.href);
-      url.searchParams.set(PARAM,String(Date.now()));
-      window.location.replace(url.href);
-    }catch(e2){
-      window.location.reload();
-    }
+    hardReload();
     return true;
   }
   window.addEventListener("unhandledrejection",function(event){
@@ -152,15 +195,23 @@ export function clearStaleChunkReloadGuard(): void {
   sessionStorage.removeItem(STALE_CHUNK_RELOAD_KEY)
 }
 
+function getWindow(): Window | undefined {
+  if (typeof globalThis !== 'object') return undefined
+  const candidate = (globalThis as { window?: Window }).window
+  if (candidate && typeof candidate.location !== 'undefined') return candidate
+  return undefined
+}
+
 /** Removes the temporary cache-bust query param after a successful recovery boot. */
 export function stripStaleChunkCacheBustParam(): void {
-  if (typeof window === 'undefined') return
+  const win = getWindow()
+  if (!win) return
   try {
-    const url = new URL(window.location.href)
+    const url = new URL(win.location.href)
     if (!url.searchParams.has(STALE_CHUNK_CACHE_BUST_PARAM)) return
     url.searchParams.delete(STALE_CHUNK_CACHE_BUST_PARAM)
     const next = `${url.pathname}${url.search}${url.hash}`
-    window.history.replaceState(window.history.state, '', next)
+    win.history.replaceState(win.history.state, '', next)
   } catch {
     // ignore
   }
@@ -175,28 +226,82 @@ export function stripStaleChunkCacheBustParam(): void {
 export function scheduleClearStaleChunkReloadGuard(
   delayMs: number = STALE_CHUNK_GUARD_CLEAR_DELAY_MS,
 ): void {
-  if (typeof window === 'undefined') return
+  const win = getWindow()
+  if (!win) return
   // Drop the cache-bust param as soon as the new document is running so the
   // address bar stays clean even if the user copies the URL mid-boot.
   stripStaleChunkCacheBustParam()
-  window.setTimeout(() => {
+  win.setTimeout(() => {
     clearStaleChunkReloadGuard()
   }, delayMs)
 }
 
 /**
- * Force a full document navigation that bypasses cached HTML pointing at
- * deleted hashed assets. Soft `location.reload()` can re-serve stale HTML.
+ * Current document URL with any leftover cache-bust param removed, so we
+ * revalidate the real HTML shell instead of a unique `?_sc=` cache key that
+ * CDNs may ignore or treat as a different entry.
+ */
+export function staleChunkDocumentUrl(
+  href: string = getWindow()?.location.href ?? '',
+): string {
+  if (!href) return '/'
+  try {
+    const url = new URL(href, 'http://local.invalid')
+    url.searchParams.delete(STALE_CHUNK_CACHE_BUST_PARAM)
+    return `${url.pathname}${url.search}` || '/'
+  } catch {
+    return '/'
+  }
+}
+
+function reloadCurrentDocument(): void {
+  const win = getWindow()
+  if (!win) return
+  try {
+    win.location.reload()
+  } catch {
+    win.location.href = staleChunkDocumentUrl()
+  }
+}
+
+/**
+ * Force a full document reload that bypasses cached HTML pointing at deleted
+ * hashed assets.
+ *
+ * Soft `location.reload()` and query-param `location.replace(?_sc=)` are not
+ * equivalent to a user hard reload: they can reuse cached HTML (CDN ignore
+ * query string) or no-op after `history.replaceState`. Revalidate the document
+ * with `cache: 'reload'` + Cache-Control: no-cache first (the same signal a
+ * hard reload sends), then reload so the new shell's hashed assets load.
  */
 export function forceReloadForStaleChunk(): void {
-  if (typeof window === 'undefined') return
-  try {
-    const url = new URL(window.location.href)
-    url.searchParams.set(STALE_CHUNK_CACHE_BUST_PARAM, String(Date.now()))
-    window.location.replace(url.href)
-  } catch {
-    window.location.reload()
+  const win = getWindow()
+  if (!win) return
+
+  const documentUrl = staleChunkDocumentUrl()
+  let finished = false
+  const reloadNow = () => {
+    if (finished) return
+    finished = true
+    reloadCurrentDocument()
   }
+
+  try {
+    const revalidate = fetch(documentUrl, {
+      cache: 'reload',
+      credentials: 'same-origin',
+      headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
+    })
+    void revalidate.finally(reloadNow)
+  } catch {
+    reloadNow()
+    return
+  }
+
+  win.setTimeout(reloadNow, STALE_CHUNK_REVALIDATE_TIMEOUT_MS)
 }
 
 /**
@@ -207,7 +312,7 @@ export function tryReloadForStaleChunk(
   error: unknown,
   context?: { event?: Event; fromVitePreload?: boolean },
 ): boolean {
-  if (typeof window === 'undefined') return false
+  if (!getWindow()) return false
   if (!isStaleChunkLoadError(error, context)) return false
   if (typeof sessionStorage !== 'undefined') {
     if (sessionStorage.getItem(STALE_CHUNK_RELOAD_KEY)) return false

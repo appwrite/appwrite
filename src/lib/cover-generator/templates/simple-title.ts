@@ -1,7 +1,7 @@
 import { getCoverBrandThemeForSvgExport } from '@/lib/cover-generator/brand-theme'
 import { COVER_HEIGHT } from '@/lib/cover-generator/constants'
 import { coverSvgTextBaseline } from '@/lib/cover-generator/cover-svg-text'
-import { escapeXml, formatCoverEyebrow, stripCoverTitleSuffix, wrapTextLines } from '@/lib/cover-generator/text-utils'
+import { COVER_EYEBROW_LETTER_SPACING, escapeXml, formatCoverEyebrow, stripCoverTitleSuffix, wrapTextLines } from '@/lib/cover-generator/text-utils'
 import type { CoverSimpleTitleData } from '@/lib/cover-generator/types'
 import type { CoverTheme } from '@/lib/cover-generator/constants'
 
@@ -17,7 +17,10 @@ const COVER_SUBTITLE_MAX_LINES = 3
 const COVER_BOTTOM_PADDING = 80
 const COVER_CTA_FONT_SIZE = 22
 const COVER_CTA_PILL_HEIGHT = 48
-const COVER_CTA_PILL_PADDING_X = 28
+/** Horizontal inset so the pill hugs the label (Inter Semibold). */
+const COVER_CTA_PILL_PADDING_X = 20
+/** Average Inter Semibold advance at CTA size (tighter than generic pill estimate). */
+const COVER_CTA_CHAR_ADVANCE = 0.5
 const COVER_CTA_RESERVED_HEIGHT = 72
 
 function renderTitleTspans(
@@ -74,24 +77,24 @@ function getSimpleTitleMaxSubtitleLines(
 }
 
 function estimateCtaPillWidth(label: string): number {
+  const textWidth = Math.ceil(label.length * COVER_CTA_FONT_SIZE * COVER_CTA_CHAR_ADVANCE)
   return Math.max(
-    200,
-    Math.round(label.length * COVER_CTA_FONT_SIZE * 0.56 + COVER_CTA_PILL_PADDING_X * 2),
+    COVER_CTA_PILL_HEIGHT,
+    textWidth + COVER_CTA_PILL_PADDING_X * 2,
   )
 }
 
 function renderCtaPill(label: string, brandCta: string): string {
   const pillWidth = estimateCtaPillWidth(label)
   const pillTop = COVER_HEIGHT - COVER_BOTTOM_PADDING - COVER_CTA_PILL_HEIGHT
-  const textX = COVER_CONTENT_X + COVER_CTA_PILL_PADDING_X
   const textBaseline = coverSvgTextBaseline(
-    pillTop + COVER_CTA_PILL_HEIGHT / 2,
+    pillTop + (COVER_CTA_PILL_HEIGHT - COVER_CTA_FONT_SIZE) / 2,
     COVER_CTA_FONT_SIZE,
   )
 
   return `
     <rect x="${COVER_CONTENT_X}" y="${pillTop}" width="${pillWidth}" height="${COVER_CTA_PILL_HEIGHT}" rx="${COVER_CTA_PILL_HEIGHT / 2}" fill="${brandCta}" />
-    <text class="cover-cta" fill="#ffffff" font-size="${COVER_CTA_FONT_SIZE}" font-weight="600" x="${textX}" y="${textBaseline}">${escapeXml(label)}</text>
+    <text class="cover-cta" fill="#ffffff" font-size="${COVER_CTA_FONT_SIZE}" font-weight="600" x="${COVER_CONTENT_X + pillWidth / 2}" y="${textBaseline}" text-anchor="middle">${escapeXml(label)}</text>
   `
 }
 
@@ -132,7 +135,7 @@ export function renderSimpleTitleTemplateSvg(
   return `
     ${
       eyebrowText
-        ? `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="0.25em" x="${COVER_CONTENT_X}" y="${coverSvgTextBaseline(eyebrowLayoutY, COVER_EYEBROW_FONT_SIZE)}">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`
+        ? `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="${COVER_EYEBROW_LETTER_SPACING}" x="${COVER_CONTENT_X}" y="${coverSvgTextBaseline(eyebrowLayoutY, COVER_EYEBROW_FONT_SIZE)}">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`
         : ''
     }
     ${titleSvg}

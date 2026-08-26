@@ -335,7 +335,7 @@ let page2 = try await vectorsDB.listDocuments(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
@@ -377,7 +377,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"limit","values":[25]}' '{"method":"offset","values":[25]}'
@@ -721,7 +721,7 @@ let page2 = try await vectorsDB.listDocuments(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
@@ -762,7 +762,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"limit","values":[25]}' '{"method":"cursorAfter","values":["<LAST_DOCUMENT_ID>"]}'
@@ -1004,7 +1004,7 @@ let page = try await vectorsDB.listDocuments(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 
 #[tokio::main]
@@ -1030,7 +1030,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"limit","values":[25]}' \

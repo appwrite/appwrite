@@ -1,0 +1,17 @@
+---
+layout: changelog
+title: "Pausing the creation of new dev keys"
+date: 2026-07-22
+---
+
+Starting today, we are pausing the creation of new dev keys. Existing dev keys will keep working until **September 1, 2026**, when dev keys will be deprecated, as previously announced in the deprecation notice in the [dev keys documentation](/docs/advanced/security/dev-keys).
+
+Dev keys were introduced to help you bypass rate limits during local development. Back then, one of the biggest sources of friction, and the problem the community raised that led to the introduction of dev keys, was the login rate limit: you could send a maximum of 10 login requests per hour, regardless of whether those logins succeeded or failed. Signing in repeatedly while testing your app locally quickly exhausted this limit, and dev keys were the workaround.
+
+Since then, we have fixed this behavior: a successful login now resets the rate limit, so you can test your authentication flows locally without getting blocked. Ever since this fix, we have not seen any further issues or requests around login rate limits, and we have not seen an increase in the adoption of dev keys either, which tells us they are no longer needed.
+
+If your app uses a dev key, remove the `setDevKey()` call from your Appwrite client initialization before September 1, 2026.
+
+{% arrow_link href="/docs/advanced/security/dev-keys" %}
+Learn more about dev keys
+{% /arrow_link %}

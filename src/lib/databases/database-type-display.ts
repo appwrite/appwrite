@@ -134,6 +134,30 @@ export function getDatabaseTypeDisplayLabel(
   return resolveDatabaseTypeDisplay({ apiType, engine, product }).label
 }
 
+/**
+ * True for database types that are still in beta (everything except TablesDB).
+ * Accepts wizard option ids, SDK type values, or display hints.
+ */
+export function isBetaDatabaseType(
+  hintsOrId: DatabaseTypeDisplayHints | string | null | undefined,
+): boolean {
+  if (hintsOrId == null) return false
+  if (typeof hintsOrId === 'string') {
+    const key = normalizeKey(hintsOrId)
+    if (!key || key === 'tablesdb' || key === 'legacy' || key === 'databases') {
+      return false
+    }
+    return (
+      key === 'documentsdb' ||
+      key === 'vectorsdb' ||
+      key === 'postgres' ||
+      isNativeDatabaseTypeValue(key)
+    )
+  }
+  const resolved = resolveDatabaseTypeDisplay(hintsOrId)
+  return isBetaDatabaseType(resolved.key)
+}
+
 /** Lucide icon for Appwrite product types when not using a native engine icon. */
 export function getDatabaseTypeDisplayLucideIcon(
   hints: DatabaseTypeDisplayHints,

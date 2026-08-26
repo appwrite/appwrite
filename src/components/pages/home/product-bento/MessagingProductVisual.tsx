@@ -1,13 +1,21 @@
 import { Bell, CheckCircle2, Mail, Phone, Users } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import type { CSSProperties, LucideIcon } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
+/** Brand supporting palette (orange, mint, purple) plus primary CTA pink. */
+const BRAND = {
+  orange: '#FE9567',
+  mint: '#85DBD8',
+  purple: '#7C67FE',
+  pink: 'var(--brand-cta)',
+} as const
+
 const CHANNELS = [
-  { id: 'email', label: 'Email', icon: Mail },
-  { id: 'sms', label: 'SMS', icon: Phone },
-  { id: 'push', label: 'Push', icon: Bell },
+  { id: 'email', label: 'Email', icon: Mail, color: BRAND.orange },
+  { id: 'sms', label: 'SMS', icon: Phone, color: BRAND.mint },
+  { id: 'push', label: 'Push', icon: Bell, color: BRAND.purple },
 ] as const
 
 const PROVIDERS = [
@@ -16,13 +24,19 @@ const PROVIDERS = [
   { label: 'Firebase', icon: '/icons/firebase.svg' },
 ] as const
 
+function channelColorStyle(color: string, extra?: CSSProperties): CSSProperties {
+  return { '--channel-color': color, ...extra } as CSSProperties
+}
+
 function ChannelPill({
   label,
   icon: Icon,
+  color,
   index,
 }: {
   label: string
   icon: LucideIcon
+  color: string
   index: number
 }) {
   const t = useT()
@@ -30,11 +44,14 @@ function ChannelPill({
     <div
       className={cn(
         'flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition-[border-color,background-color,color] duration-300 sm:text-[12px]',
-        'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_28%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_10%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background motion-reduce:group-hover:text-muted-foreground',
+        'group-hover:border-[color-mix(in_srgb,var(--channel-color)_48%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--channel-color)_16%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background motion-reduce:group-hover:text-muted-foreground',
       )}
-      style={{ transitionDelay: `${index * 60}ms` }}
+      style={channelColorStyle(color, { transitionDelay: `${index * 60}ms` })}
     >
-      <Icon className="size-3.5 shrink-0" aria-hidden />
+      <Icon
+        className="size-3.5 shrink-0 transition-colors duration-300 group-hover:text-[var(--channel-color)] motion-reduce:group-hover:text-muted-foreground"
+        aria-hidden
+      />
       <span>{t(label)}</span>
     </div>
   )
@@ -42,9 +59,11 @@ function ChannelPill({
 
 function DeliveryChip({
   label,
+  color,
   delayMs,
 }: {
   label: string
+  color: string
   delayMs: number
 }) {
   const t = useT()
@@ -53,13 +72,13 @@ function DeliveryChip({
       className={cn(
         'flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border/80 px-2 py-1.5 text-muted-foreground transition-[border-color,background-color,color] duration-300',
         productBentoContainer.panelMd,
-        'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_22%,var(--border))] group-hover:bg-background group-hover:text-foreground motion-reduce:group-hover:border-border/80 motion-reduce:group-hover:bg-card/70 motion-reduce:group-hover:text-muted-foreground',
+        'group-hover:border-[color-mix(in_srgb,var(--channel-color)_42%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--channel-color)_10%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:border-border/80 motion-reduce:group-hover:bg-card/70 motion-reduce:group-hover:text-muted-foreground',
       )}
-      style={{ transitionDelay: `${delayMs}ms` }}
+      style={channelColorStyle(color, { transitionDelay: `${delayMs}ms` })}
     >
       <CheckCircle2
         className={cn(
-          'hidden size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400',
+          'hidden size-3.5 shrink-0 text-[var(--channel-color)]',
           'group-hover:inline-block motion-reduce:inline-block',
         )}
         aria-hidden
@@ -91,6 +110,7 @@ export function MessagingProductVisual() {
                   key={channel.id}
                   label={channel.label}
                   icon={channel.icon}
+                  color={channel.color}
                   index={index}
                 />
               ))}
@@ -100,8 +120,9 @@ export function MessagingProductVisual() {
               className={cn(
                 'mt-2.5 px-3 py-2.5 transition-[border-color,background-color] duration-300',
                 productBentoContainer.panelMd,
-                'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_24%,var(--border))] group-hover:bg-background',
+                'group-hover:border-[color-mix(in_srgb,var(--channel-color)_28%,var(--border))] group-hover:bg-background',
               )}
+              style={channelColorStyle(BRAND.pink)}
             >
               <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
                 {t('Welcome to Acme')}
@@ -126,10 +147,21 @@ export function MessagingProductVisual() {
                 </p>
                 <p className="text-[10px] text-muted-foreground sm:text-[11px]">{t('Topic')}</p>
               </div>
-              <p className="shrink-0 text-[10px] tabular-nums text-muted-foreground sm:text-[11px]">
-                <span className={cn('font-medium', productBentoIdle.text)}>1,248</span>{' '}
-                {t('targets')}
-              </p>
+              <div className="flex shrink-0 items-center gap-2">
+                <div className="flex items-center gap-1" aria-hidden>
+                  {CHANNELS.map((channel) => (
+                    <span
+                      key={channel.id}
+                      className="size-1.5 rounded-full bg-muted-foreground/30 transition-colors duration-300 group-hover:bg-[var(--channel-color)] motion-reduce:group-hover:bg-muted-foreground/30"
+                      style={channelColorStyle(channel.color)}
+                    />
+                  ))}
+                </div>
+                <p className="text-[10px] tabular-nums text-muted-foreground sm:text-[11px]">
+                  <span className={cn('font-medium', productBentoIdle.text)}>1,248</span>{' '}
+                  {t('targets')}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -140,6 +172,7 @@ export function MessagingProductVisual() {
                   <DeliveryChip
                     key={channel.id}
                     label={channel.label}
+                    color={channel.color}
                     delayMs={220 + index * 120}
                   />
                 ))}

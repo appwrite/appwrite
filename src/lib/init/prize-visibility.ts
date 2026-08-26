@@ -16,7 +16,7 @@ export function getInitMaskedSessionTitle(
     case 'reddit':
       return `Day ${day} AMA`
     case 'discord':
-      return 'Closing party'
+      return 'Community recap'
   }
 }
 

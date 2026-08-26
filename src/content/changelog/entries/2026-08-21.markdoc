@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: 'Bun 1.4 is now available for Functions and Sites'
+date: 2026-08-21
+cover: /images/blog/announcing-bun-1-4-runtime/cover.avif
+---
+
+Bun 1.4 is now available on Appwrite Cloud as a runtime for [Appwrite Functions](/docs/products/functions) and [Appwrite Sites](/docs/products/sites). Pick `bun-1.4` when creating a function, or select Bun 1.4 as the build runtime for any Node-based Sites framework.
+
+Bun 1.4 is the first release of Bun written in Rust instead of Zig. It reports Node.js 26 compatibility, starts faster, uses less memory, and installs dependencies quicker than Bun 1.3.
+
+In our deployments of a Next.js app with 640 packages, builds on Bun 1.4 were 22% faster than Bun 1.3 and 29% faster than Node 26 with npm.
+
+{% arrow_link href="/blog/post/announcing-bun-1-4-runtime" %}
+Read the announcement
+{% /arrow_link %}

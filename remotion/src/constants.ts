@@ -51,7 +51,7 @@ export const THESIS_TITLE = 'Docs, API, and dashboard. One flow.'
 
 export const CONSOLE_TITLE = 'Rebuilt to reduce friction'
 
-export const SLOGAN = 'Build like a team of hundreds'
+export const SLOGAN = 'The open-source cloud for agents and developers'
 
 export const AREA_VIDEO_SRC = 'videos/area.mp4'
 export const CONSOLE_SCREENSHOT_VIDEO_SRC = 'videos/console-main.mp4'

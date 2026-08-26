@@ -876,6 +876,7 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Sessions': 'セッション',
   'Sessions limit': 'セッション上限',
   'Sessions limit has been updated': 'セッション上限を更新しました',
+  'Set an authorization URL below, then click Update.': '下の認可 URL を設定してから「更新」をクリックしてください。',
   'Set authorization, token, and user info URLs manually only when your provider does not expose a well-known metadata URL.': 'プロバイダーが well-known メタデータ URL を公開していない場合にのみ、認可、トークン、ユーザー情報 URL を手動で設定してください。',
   'Set minimum length and character requirements for user passwords. Rules apply when users sign up, reset their password, or change their password through your app. Existing passwords stay valid until the user sets a new one. Password updates from the Appwrite console also validate against this policy.': 'ユーザーパスワードの最小長と文字要件を設定します。ルールは、ユーザーのサインアップ、パスワードリセット、アプリ経由のパスワード変更時に適用されます。既存パスワードは、ユーザーが新しいものを設定するまで有効です。Appwrite コンソールからのパスワード更新もこのポリシーで検証されます。', // pragma: allowlist secret
   'Set the locale using': '次を使用してロケールを設定:',
@@ -1081,6 +1082,7 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   "You don't have permission to perform this action.": 'この操作を実行する権限がありません。',
   "You don't have permission to remove team presets.": 'チームプリセットを削除する権限がありません。',
   "You don't have permission to save team presets.": 'チームプリセットを保存する権限がありません。',
+  "You don't have permission to update OAuth2 server settings.": 'OAuth2 サーバー設定を更新する権限がありません。',
   'You have not saved any presets yet. Use': 'まだプリセットを保存していません。次を使用:',
   'Your API is the OAuth client; mobile or SPA apps get a session without holding secrets.': 'あなたの API が OAuth クライアントです。モバイルや SPA アプリはシークレットを保持せずにセッションを取得します。',
   'Your consent screen URL. Users are redirected here during authorization.': '同意画面の URL です。認可中にユーザーはここへリダイレクトされます。',

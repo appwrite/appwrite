@@ -12,10 +12,14 @@ import {
 import { isDocsNavGroup } from '@/lib/docs/navigation'
 import type { DocsNavLink, DocsNavParent, DocsNavTree } from '@/lib/docs/types'
 import {
+  DOCS_NAV_CATEGORY_LABEL_CLASS,
+  DOCS_NAV_ITEM_LIST_CLASS,
   DOCS_NAV_SCROLL_CLASS,
+  DOCS_NAV_TREE_GAP_CLASS,
   DOCS_SECTION_HEADER_CLASS,
   docsSidebarNavLinkClassName,
 } from '@/lib/docs/nav-styles'
+import { SECONDARY_SIDEBAR_WIDTH_CLASS } from '@/lib/layout/secondary-sidebar-nav'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from './DocsRouteLink'
 
@@ -30,15 +34,13 @@ function SectionNavLinks({
   items,
   pathname,
   onNavigate,
-  nested = false,
 }: {
   items: DocsNavLink[]
   pathname: string
   onNavigate?: () => void
-  nested?: boolean
 }) {
-  const list = (
-    <ul className="space-y-0.5">
+  return (
+    <ul className={DOCS_NAV_ITEM_LIST_CLASS}>
       {items.map((item) => (
         <li key={item.href}>
           <DocsRouteLink
@@ -54,10 +56,6 @@ function SectionNavLinks({
       ))}
     </ul>
   )
-
-  if (!nested) return list
-
-  return <div className="ms-3 mt-0.5 ps-2">{list}</div>
 }
 
 function SectionNavCategory({
@@ -72,15 +70,12 @@ function SectionNavCategory({
   onNavigate?: () => void
 }) {
   return (
-    <nav aria-label={label}>
-      <p className="mb-1.5 px-2 text-start text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </p>
+    <nav aria-label={label} className={DOCS_NAV_ITEM_LIST_CLASS}>
+      <p className={DOCS_NAV_CATEGORY_LABEL_CLASS}>{label}</p>
       <SectionNavLinks
         items={items}
         pathname={pathname}
         onNavigate={onNavigate}
-        nested
       />
     </nav>
   )
@@ -97,7 +92,7 @@ function SectionParentLink({
     <DocsRouteLink
       href={parent.href}
       onClick={onNavigate}
-      className="flex items-center gap-1.5 px-2 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-foreground/80"
+      className="flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-foreground/80"
     >
       <ChevronLeft className="size-3.5" strokeWidth={DOCS_MENU_ICON_STROKE} />
       {parent.label}
@@ -117,7 +112,7 @@ function SectionNavContent({
   onNavigate?: () => void
 }) {
   return (
-    <div className="space-y-4">
+    <div className={DOCS_NAV_TREE_GAP_CLASS}>
       {parent ? <SectionParentLink parent={parent} onNavigate={onNavigate} /> : null}
 
       {navigation.map((entry, index) =>
@@ -165,7 +160,10 @@ export function DocsSectionSubnavPanel({
 
   return (
     <aside
-      className="relative z-10 hidden h-full w-[220px] shrink-0 flex-col overflow-hidden border-e border-border bg-background @[1024px]:flex"
+      className={cn(
+        'relative z-10 hidden h-full shrink-0 flex-col overflow-hidden border-e border-border bg-background @[1024px]:flex',
+        SECONDARY_SIDEBAR_WIDTH_CLASS,
+      )}
       aria-label={parent?.label ? `${parent.label} section navigation` : 'Section navigation'}
     >
       {parent ? (

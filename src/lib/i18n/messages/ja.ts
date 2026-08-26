@@ -86,6 +86,7 @@ export const jaCatalog: EnCatalog = {
         cache: 'Cache',
         blocks: 'Blocks',
         generator: 'Generator',
+        impersonate: 'なりすまし',
       },
       search: {
         ...enCatalog.app.header.search,
@@ -279,13 +280,15 @@ export const jaCatalog: EnCatalog = {
     home: {
       ...enCatalog.website.home,
       seoDescription:
-        'Appwrite は、認証、データベース、ストレージ、Functions、メッセージング、サイトを備えたオープンソースの開発者向けプラットフォームです。数百人規模のチームのように構築できます。', // pragma: allowlist secret
+        'Appwrite は、認証、データベース、ストレージ、Functions、メッセージング、サイトを備えたオープンソースの開発者向けプラットフォームです。エージェントと開発者のためのオープンソースクラウド。', // pragma: allowlist secret
       announcementNew: 'Breaking',
       announcementText: 'Appwrite 2.0 の発表を嬉しく思います',
-      heroTitleLineOne: 'より速く構築し、',
-      heroTitleLineTwo: 'これまで以上にスケール',
-      heroDescription:
-        'Appwrite は、認証、データベース、ストレージ、Functions、メッセージング、Realtime、Web ホスティングを備えたオープンソースプラットフォームです。すべてが一つの場所に。', // pragma: allowlist secret
+      heroTitleLineOne: 'エージェント＆開発者のための',
+      heroTitleLineTwo: 'オープンソースクラウド',
+      heroDescriptionLineOne:
+        'Appwrite は、思考の速さでアプリを構築しスケールするための MCP＆エージェントファーストの OSS プラットフォームです。', // pragma: allowlist secret
+      heroDescriptionLineTwo:
+        'エージェントに Auth、DB、ストレージ、Functions、メッセージング、Realtime、ホスティングを提供し、すべてが一つの場所に。',
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
       heroPreviewOrganization: 'Acme Corp',
       heroPreviewProject: '最初の Appwrite プロジェクト', // pragma: allowlist secret
@@ -294,7 +297,6 @@ export const jaCatalog: EnCatalog = {
       startProject: 'プロジェクトを開始',
       requestDemo: 'デモを依頼',
       toolsHeading: 'お気に入りのフレームワーク、言語、エージェント向けに最適化',
-      aiDocsNavLabel: 'AI と MCP ドキュメント',
       productsHeadingLineOne: '必要なサービスをすべて',
       productsHeadingLineTwo: '一つのプラットフォームに',
       productsDescription:
@@ -302,12 +304,6 @@ export const jaCatalog: EnCatalog = {
       securityHeading: 'アーキテクチャのすべてのレイヤーに組み込まれたセキュリティ',
       securityDescription:
         'セキュリティファーストのアプローチにより、Appwrite はプロダクトとユーザーをデフォルトで安全に保ち、厳格なポリシーへの準拠を容易にします。', // pragma: allowlist secret
-      aiDocLinks: {
-        ...enCatalog.website.home.aiDocLinks,
-        mcpServers: 'MCP サーバー',
-        skills: 'Appwrite Skills', // pragma: allowlist secret
-        aiArena: 'AI Arena',
-      },
       securityItems: {
         ...enCatalog.website.home.securityItems,
         ddosTitle: 'DDoS 保護',

@@ -33,17 +33,14 @@ import {
   siteQueryOptions,
   sitesQueryOptions,
 } from '@/lib/react-query/hooks'
-import type { FirewallResourceType } from '@/lib/firewall/conditions'
+import type { FirewallResourceSelection } from '@/lib/firewall/conditions'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const LIST_LIMIT = 25
 const API_VALUE = 'api'
 
-export type FirewallResourceSelection = {
-  resourceType: FirewallResourceType
-  resourceId?: string
-}
+export type { FirewallResourceSelection }
 
 export interface FirewallResourceSelectorProps {
   projectId: string

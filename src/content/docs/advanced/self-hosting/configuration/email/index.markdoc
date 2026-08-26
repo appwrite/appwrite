@@ -50,11 +50,20 @@ If you are unable to send emails, there are several common issues to check. Foll
 
 ## Check email worker logs {% #check-logs %}
 
-The first place to look for errors is the **Appwrite Emails Worker** logs:
+The first place to look for errors is the emails worker logs. The container name depends on your [worker topology](/docs/advanced/self-hosting/configuration/topologies).
 
+{% tabs %}
+{% tabsitem #logs-combined title="Combined (default)" %}
+```sh
+docker compose logs -f appwrite-worker
+```
+{% /tabsitem %}
+{% tabsitem #logs-separate title="Separate" %}
 ```sh
 docker compose logs -f appwrite-worker-mails
 ```
+{% /tabsitem %}
+{% /tabs %}
 
 Look for error messages that might indicate authentication failures, network issues, or configuration problems.
 
@@ -76,9 +85,18 @@ Make sure the email recipient is added to your provider's authorized recipients 
 
 Check if environment variables are properly set in the container:
 
+{% tabs %}
+{% tabsitem #vars-combined title="Combined (default)" %}
+```sh
+docker compose exec appwrite-worker vars
+```
+{% /tabsitem %}
+{% tabsitem #vars-separate title="Separate" %}
 ```sh
 docker compose exec appwrite-worker-mails vars
 ```
+{% /tabsitem %}
+{% /tabs %}
 
 If environment variables aren't loaded, rebuild your Appwrite stack:
 

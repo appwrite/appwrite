@@ -10,17 +10,21 @@ import {
 } from '@/lib/init/use-init-scroll-spy-day'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitPlayingWithJoolActivity } from '@/lib/init/init-presence-activity'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
 import { EventCtaButton } from '../shared/EventCtas'
-import { isExternalInitHref } from '@/lib/init/links'
 import { InitCollapsedDayNav } from './InitCollapsedDayNav'
 import { InitHeroBackground } from './InitHeroBackground'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
 import { InitWordmark } from './InitWordmark'
+import { useInitHref } from '@/lib/init/use-init-href'
+import { useMediaMinWidth } from '@/hooks/use-media-min-width'
+
+/** Tailwind `sm` - skip sticky-header Jool on phones for performance. */
+const STICKY_JOOL_MIN_WIDTH_PX = 640
 
 interface EventHeroProps {
   event: InitDisplayEvent
@@ -57,7 +61,9 @@ function CollapsedHeroBar({
 }) {
   const barRef = useRef<HTMLDivElement>(null)
   const showDayNav = dayNumbers.length > 0
+  const showStickyJool = useMediaMinWidth(STICKY_JOOL_MIN_WIDTH_PX)
   const { setTransientActivity } = useInitPresenceActivity()
+  const resolvedLiveHref = useInitHref(liveBanner?.href)
   const handleJoolInteractionStart = useCallback(() => {
     setTransientActivity(buildInitPlayingWithJoolActivity())
   }, [setTransientActivity])
@@ -82,7 +88,7 @@ function CollapsedHeroBar({
         height: INIT_COLLAPSED_HEADER_HEIGHT_PX,
       }}
     >
-      {visible ? (
+      {visible && showStickyJool ? (
         <InitHeroBackground
           containerRef={barRef}
           compact
@@ -129,7 +135,7 @@ function CollapsedHeroBar({
                   <Badge variant="error" className="text-[10px] shrink-0">
                     Live
                   </Badge>
-                  {liveBanner.href ? (
+                  {resolvedLiveHref ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -137,8 +143,8 @@ function CollapsedHeroBar({
                       asChild
                     >
                       <a
-                        href={liveBanner.href}
-                        {...(isExternalInitHref(liveBanner.href)
+                        href={resolvedLiveHref.href}
+                        {...(resolvedLiveHref.external
                           ? { target: '_blank', rel: 'noopener noreferrer' }
                           : {})}
                       >
@@ -168,11 +174,11 @@ function CollapsedHeroBar({
                     {liveBanner.title}
                   </span>
                 </div>
-                {liveBanner.href ? (
+                {resolvedLiveHref ? (
                   <Button variant="outline" size="sm" className="h-7 shrink-0 text-[12px]" asChild>
                     <a
-                      href={liveBanner.href}
-                      {...(isExternalInitHref(liveBanner.href)
+                      href={resolvedLiveHref.href}
+                      {...(resolvedLiveHref.external
                         ? { target: '_blank', rel: 'noopener noreferrer' }
                         : {})}
                     >
@@ -335,9 +341,9 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
                 <>
                   <div className="flex -space-x-2">
                     {event.onlineUsers.slice(0, 4).map((user) => (
-                      <InitialsAvatar
+                      <PhotoAvatar
                         key={user.id}
-                        name={user.name}
+                        userId={user.id}
                         size="sm"
                         className="ring-2 ring-background"
                       />

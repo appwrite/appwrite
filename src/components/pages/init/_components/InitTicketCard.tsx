@@ -49,7 +49,6 @@ const FLIP_DRAG_THRESHOLD_PX = 10
 interface InitTicketCardProps {
   dateRangeLabel: string
   holderName: string
-  githubUsername?: string
   ticketNumber: string
   prefs: InitTicketPrefs
   ticketAppearance: ResolvedInitTicketAppearance
@@ -65,12 +64,13 @@ export type InitTicketCardHandle = {
   prepareForVideoCapture: () => void
   setCaptureTilt: (x: number, y: number) => void
   resetCaptureTilt: () => void
+  getStillCaptureElement: () => HTMLElement | null
+  getStillCaptureBackElement: () => HTMLElement | null
 }
 
 interface TicketFaceSharedProps {
   dateRangeLabel: string
   holderName: string
-  githubUsername?: string
   ticketNumber: string
   prefs: InitTicketPrefs
   passLabel: string
@@ -79,36 +79,7 @@ interface TicketFaceSharedProps {
   usesDarkImage: boolean
   ticketBgSrc: string
   inset: ReturnType<typeof initTicketInsetStyle>
-}
-
-function TicketGitHubBadge({
-  username,
-  usesDarkImage,
-}: {
-  username: string
-  usesDarkImage: boolean
-}) {
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-1.5',
-        usesDarkImage ? 'text-white/75' : 'text-neutral-600',
-      )}
-    >
-      <img
-        src="/icons/github.svg"
-        alt=""
-        aria-hidden
-        className={cn(
-          'size-3.5 shrink-0 object-contain',
-          usesDarkImage ? 'brightness-0 invert' : 'brightness-0',
-        )}
-      />
-      <span className="truncate text-[clamp(10px,1.8vw,12px)] font-medium">
-        @{username}
-      </span>
-    </div>
-  )
+  stillCapture?: boolean
 }
 
 function getInitTicketStackIconSrc(
@@ -193,16 +164,20 @@ function TicketStubContent({
   const { left, right, bottom } = INIT_TICKET_STUB_LABEL_INSET
 
   return (
-    <div className="relative h-full min-w-0" aria-hidden>
+    <div className="relative h-full min-w-0 overflow-visible" aria-hidden>
       <div
-        className="absolute flex items-end justify-start"
+        data-init-ticket-stub-anchor
+        className="absolute flex items-end justify-start overflow-visible"
         style={{
           left: `${left}%`,
           right: `${right}%`,
           bottom: `${bottom}%`,
         }}
       >
-        <div className="flex origin-bottom-start -rotate-90 flex-col items-start gap-1 whitespace-nowrap text-start">
+        <div
+          data-init-ticket-stub-label
+          className="flex origin-bottom-start -rotate-90 flex-col items-start gap-1 whitespace-nowrap text-start"
+        >
           <InitWordmark
             accentColor={accentColor}
             className={cn(
@@ -260,12 +235,15 @@ function TicketFaceShell({
   inset,
   usesDarkImage,
   isBack,
+  stillCapture,
   children,
 }: {
   ticketBgSrc: string
   inset: ReturnType<typeof initTicketInsetStyle>
   usesDarkImage: boolean
   isBack?: boolean
+  /** Flatten 3D CSS so html-to-image can snapshot this face. */
+  stillCapture?: boolean
   children: ReactNode
 }) {
   const [loadedBackgroundSrc, setLoadedBackgroundSrc] = useState<string | null>(
@@ -275,9 +253,14 @@ function TicketFaceShell({
 
   return (
     <div
+      {...(stillCapture && !isBack ? { 'data-init-ticket-still': '' } : {})}
+      {...(stillCapture && isBack ? { 'data-init-ticket-still-back': '' } : {})}
       className={cn(
-        'absolute inset-0 w-full [backface-visibility:hidden] [transform-style:preserve-3d]',
-        isBack && '[transform:rotateY(180deg)]',
+        'absolute inset-0 w-full',
+        stillCapture
+          ? '[transform-style:flat] [backface-visibility:visible] [transform:none]'
+          : '[backface-visibility:hidden] [transform-style:preserve-3d]',
+        isBack && !stillCapture && '[transform:rotateY(180deg)]',
       )}
     >
       <img
@@ -310,7 +293,6 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
   const {
     dateRangeLabel,
     holderName,
-    githubUsername,
     ticketNumber,
     prefs,
     passLabel,
@@ -371,12 +353,6 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
               >
                 {holderTitle}
               </p>
-              {githubUsername ? (
-                <TicketGitHubBadge
-                  username={githubUsername}
-                  usesDarkImage={usesDarkImage}
-                />
-              ) : null}
               <p
                 className={cn(
                   'text-[9px] font-semibold uppercase tracking-[0.2em]',
@@ -395,7 +371,7 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
           </div>
         </div>
 
-        <div className="min-w-0">
+        <div className="min-w-0 overflow-visible" data-init-ticket-stub-col>
           <TicketStubContent
             ticketNumber={ticketNumber}
             holderName={holderName}
@@ -412,125 +388,84 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
 }
 
 function TicketBackFace(props: TicketFaceSharedProps) {
-  const {
-    dateRangeLabel,
-    holderName,
-    githubUsername,
-    ticketNumber,
-    prefs,
-    passLabel,
-    holderTitle,
-    accentColor,
-    usesDarkImage,
-  } = props
+  const { dateRangeLabel, ticketNumber, prefs, accentColor, usesDarkImage } =
+    props
   const mutedClass = usesDarkImage ? 'text-white/55' : 'text-neutral-500'
-
-  const contentGrid = initTicketContentGridStyle()
 
   return (
     <TicketFaceShell {...props} isBack>
-      <div className="grid h-full min-h-0 overflow-visible" style={contentGrid}>
-        <div className="flex min-w-0 flex-col justify-between pe-[8%]">
-          <div className="space-y-2">
+      <div
+        data-init-ticket-back-content
+        className="flex h-full min-h-0 flex-col justify-between overflow-visible pb-[9%] pe-[4%]"
+      >
+        <div className="space-y-2.5">
+          <p
+            className={cn(
+              'text-[9px] font-semibold uppercase tracking-[0.24em]',
+              mutedClass,
+            )}
+          >
+            Official pass
+          </p>
+          <InitWordmark
+            accentColor={accentColor}
+            className={cn(
+              'text-[clamp(22px,4.5vw,34px)]',
+              usesDarkImage ? 'text-white' : 'text-neutral-900',
+            )}
+          />
+          <p
+            className="font-mono text-[11px] font-semibold tabular-nums sm:text-[12px]"
+            style={{ color: accentColor }}
+          >
+            {ticketNumber}
+          </p>
+        </div>
+
+        <div className="mt-8 space-y-4 sm:mt-10">
+          <div
+            className="flex h-10 items-end justify-start gap-0.5 overflow-hidden"
+            aria-hidden
+          >
+            {Array.from({ length: 24 }).map((_, index) => (
+              <span
+                key={index}
+                className={cn(
+                  'w-0.5 rounded-full',
+                  usesDarkImage ? 'bg-white/30' : 'bg-neutral-900/25',
+                )}
+                style={{ height: `${28 + ((index * 17) % 40)}%` }}
+              />
+            ))}
+          </div>
+          <div
+            className={cn(
+              'space-y-2 border-t border-dashed pt-4',
+              usesDarkImage ? 'border-white/20' : 'border-neutral-900/15',
+            )}
+          >
             <p
               className={cn(
-                'text-[9px] font-semibold uppercase tracking-[0.24em]',
+                'text-[9px] font-semibold uppercase tracking-[0.2em]',
                 mutedClass,
               )}
             >
-              Official pass
+              Valid for Init week
             </p>
-            <InitWordmark
-              accentColor={accentColor}
-              className={cn(
-                'text-[clamp(22px,4.5vw,34px)]',
-                usesDarkImage ? 'text-white' : 'text-neutral-900',
-              )}
-            />
             <p
-              className="font-mono text-[11px] font-semibold tabular-nums sm:text-[12px]"
-              style={{ color: accentColor }}
-            >
-              {ticketNumber}
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <div
-              className="flex h-10 items-end justify-start gap-0.5 overflow-hidden"
-              aria-hidden
-            >
-              {Array.from({ length: 24 }).map((_, index) => (
-                <span
-                  key={index}
-                  className={cn(
-                    'w-0.5 rounded-full',
-                    usesDarkImage ? 'bg-white/30' : 'bg-neutral-900/25',
-                  )}
-                  style={{ height: `${28 + ((index * 17) % 40)}%` }}
-                />
-              ))}
-            </div>
-            <div
               className={cn(
-                'space-y-1 border-t border-dashed pt-3',
-                usesDarkImage ? 'border-white/20' : 'border-neutral-900/15',
+                'text-[12px] font-medium',
+                usesDarkImage ? 'text-white/90' : 'text-neutral-800',
               )}
             >
-              <p
-                className={cn(
-                  'text-[9px] font-semibold uppercase tracking-[0.2em]',
-                  mutedClass,
-                )}
-              >
-                Valid for Init week
-              </p>
-              <p
-                className={cn(
-                  'text-[12px] font-medium',
-                  usesDarkImage ? 'text-white/90' : 'text-neutral-800',
-                )}
-              >
-                {dateRangeLabel}
-              </p>
-              <p
-                className={cn(
-                  'truncate text-[clamp(11px,1.9vw,15px)] font-normal leading-tight',
-                  usesDarkImage ? 'text-white/90' : 'text-neutral-800',
-                )}
-              >
-                {holderName}
-              </p>
-              <p
-                className={cn(
-                  'truncate text-[11px] font-medium',
-                  usesDarkImage ? 'text-white/65' : 'text-neutral-500',
-                )}
-              >
-                {holderTitle}
-              </p>
-              <p
-                className={cn(
-                  'text-[9px] font-semibold uppercase tracking-[0.2em]',
-                  mutedClass,
-                )}
-              >
-                {passLabel}
-              </p>
-              {githubUsername ? (
-                <TicketGitHubBadge
-                  username={githubUsername}
-                  usesDarkImage={usesDarkImage}
-                />
-              ) : null}
-              <TicketStackIcons
-                stack={prefs.stack}
-                usesDarkImage={usesDarkImage}
-              />
-            </div>
+              {dateRangeLabel}
+            </p>
+            <TicketStackIcons
+              stack={prefs.stack}
+              usesDarkImage={usesDarkImage}
+            />
           </div>
         </div>
-        <div aria-hidden />
       </div>
     </TicketFaceShell>
   )
@@ -543,7 +478,6 @@ export const InitTicketCard = forwardRef<
   {
     dateRangeLabel,
     holderName,
-    githubUsername,
     ticketNumber,
     prefs,
     ticketAppearance,
@@ -573,10 +507,6 @@ export const InitTicketCard = forwardRef<
     () => (blurred ? scrambleSensitiveText(holderName) : holderName),
     [blurred, holderName],
   )
-  const displayGithubUsername = useMemo(() => {
-    if (!githubUsername) return undefined
-    return blurred ? scrambleSensitiveText(githubUsername) : githubUsername
-  }, [blurred, githubUsername])
   const displayTicketNumber = useMemo(
     () => (blurred ? scrambleSensitiveText(ticketNumber) : ticketNumber),
     [blurred, ticketNumber],
@@ -607,11 +537,9 @@ export const InitTicketCard = forwardRef<
   }, [shadowOffsetY])
 
   const inset = initTicketInsetStyle()
-
   const faceProps: TicketFaceSharedProps = {
     dateRangeLabel,
     holderName: displayHolderName,
-    githubUsername: displayGithubUsername,
     ticketNumber: displayTicketNumber,
     prefs,
     passLabel,
@@ -620,6 +548,7 @@ export const InitTicketCard = forwardRef<
     usesDarkImage,
     ticketBgSrc,
     inset,
+    stillCapture: captureMode,
   }
 
   useEffect(() => {
@@ -1011,6 +940,20 @@ export const InitTicketCard = forwardRef<
         tiltRef.current = { x: 0, y: 0 }
         applyTransform(0)
       },
+      getStillCaptureElement() {
+        return (
+          captureRootRef.current?.querySelector<HTMLElement>(
+            '[data-init-ticket-still]',
+          ) ?? captureRootRef.current
+        )
+      },
+      getStillCaptureBackElement() {
+        return (
+          captureRootRef.current?.querySelector<HTMLElement>(
+            '[data-init-ticket-still-back]',
+          ) ?? null
+        )
+      },
     }),
     [applyTransform],
   )
@@ -1038,7 +981,9 @@ export const InitTicketCard = forwardRef<
           ref={shadowRef}
           data-init-ticket-capture-exclude
           className={cn(
-            'absolute inset-x-10 bottom-0 h-6 -translate-y-0.5 rounded-full blur-3xl',
+            // Radial falloff instead of filter:blur — Safari hard-clips large
+            // blurs to the element box and leaves a harsh oval edge.
+            'pointer-events-none absolute inset-x-6 bottom-0 h-12 -translate-y-1',
             shadowClassName,
           )}
           aria-hidden
@@ -1047,8 +992,8 @@ export const InitTicketCard = forwardRef<
         <div
           ref={sceneRef}
           className={cn(
-            'absolute inset-x-0 top-0 w-full [perspective:1000px]',
-            captureMode && 'overflow-visible',
+            'absolute inset-x-0 top-0 w-full',
+            captureMode ? '[perspective:none] overflow-visible' : '[perspective:1000px]',
             interactive && !reducedMotion && 'cursor-pointer touch-none',
           )}
           style={{
@@ -1096,12 +1041,19 @@ export const InitTicketCard = forwardRef<
           <div
             ref={flipperRef}
             className={cn(
-              'absolute inset-0 [transform-style:preserve-3d]',
-              captureMode && 'overflow-visible',
+              'absolute inset-0',
+              captureMode
+                ? 'overflow-visible [transform-style:flat] [transform:none]'
+                : '[transform-style:preserve-3d]',
             )}
           >
             <TicketFrontFace {...faceProps} />
             {!captureMode ? <TicketBackFace {...faceProps} /> : null}
+            {captureMode ? (
+              <div className="pointer-events-none absolute inset-0 invisible" aria-hidden>
+                <TicketBackFace {...faceProps} />
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

@@ -1,7 +1,6 @@
 import {
   COVER_HEIGHT,
   COVER_IMAGE_FORMATS,
-  COVER_TEMPLATE_IDS,
   COVER_WIDTH,
   isCoverTemplateId,
   type CoverImageFormat,
@@ -10,7 +9,6 @@ import {
 } from '@/lib/cover-generator/constants'
 import {
   DEFAULT_COVER_THEME_ID,
-  isCoverThemeId,
   resolveCoverThemeId,
 } from '@/lib/cover-generator/themes'
 import {
@@ -68,6 +66,13 @@ import {
 } from '@/lib/cover-generator/code-snippet/constants'
 import { COVER_MILESTONE_DEFAULTS } from '@/lib/cover-generator/milestone/constants'
 import { COVER_VERSION_DEFAULTS } from '@/lib/cover-generator/version/constants'
+import { isCoverExtraTemplateId } from '@/lib/cover-generator/extra-templates/ids'
+import {
+  appendCoverExtraTemplateSearchParams,
+  buildCoverExtraTemplateDefaultParams,
+  parseCoverExtraTemplateData,
+} from '@/lib/cover-generator/extra-templates/parse'
+import { isCoverExtraTemplateData } from '@/lib/cover-generator/types'
 
 function parseCoverTitle(
   value: string | null | undefined,
@@ -91,10 +96,6 @@ function parseCoverMilestoneFields(searchParams: URLSearchParams) {
     title: parseCoverTitle(searchParams.get('title'), COVER_MILESTONE_DEFAULTS.title),
     subtitle: searchParams.get('subtitle')?.trim() || undefined,
     eyebrow: formatCoverEyebrow(searchParams.get('eyebrow') ?? undefined),
-    gradientStat: parseBooleanParam(
-      searchParams.get('gradientStat'),
-      COVER_MILESTONE_DEFAULTS.gradientStat,
-    ),
   }
 }
 
@@ -106,7 +107,6 @@ function appendCoverMilestoneSearchParams(
     title: string
     subtitle?: string
     eyebrow?: string
-    gradientStat: boolean
   },
 ) {
   params.set('stat', data.stat)
@@ -118,7 +118,6 @@ function appendCoverMilestoneSearchParams(
   setOptional('statLabel', data.statLabel)
   setOptional('subtitle', data.subtitle)
   setOptional('eyebrow', formatCoverEyebrow(data.eyebrow))
-  setOptional('gradientStat', data.gradientStat)
 }
 
 function parseCoverVersionNumberFields(searchParams: URLSearchParams) {
@@ -208,9 +207,7 @@ function parseTemplate(value: string | null): CoverTemplateId {
 }
 
 function parseTheme(value: string | null): CoverThemeId {
-  const normalized = value?.trim().toLowerCase()
-  if (normalized && isCoverThemeId(normalized)) return normalized
-  return DEFAULT_COVER_THEME_ID
+  return resolveCoverThemeId(value?.trim().toLowerCase())
 }
 
 function parseCoverScreenshotFields(
@@ -411,6 +408,10 @@ export function parseCoverRenderData(
     format,
     width,
     height,
+  }
+
+  if (isCoverExtraTemplateId(template)) {
+    return { ...shared, ...parseCoverExtraTemplateData(template, searchParams) }
   }
 
   switch (template) {
@@ -747,6 +748,11 @@ export function coverRenderDataToSearchParams(data: CoverRenderData): URLSearchP
     params.set(key, String(value))
   }
 
+  if (isCoverExtraTemplateData(data)) {
+    appendCoverExtraTemplateSearchParams(params, data)
+    return params
+  }
+
   switch (data.template) {
     case 'simple-title':
       params.set('title', stripCoverTitleSuffix(data.title))
@@ -1010,7 +1016,6 @@ export function createDefaultCoverData(
           title: COVER_MILESTONE_DEFAULTS.title,
           subtitle: COVER_MILESTONE_DEFAULTS.subtitle,
           eyebrow: COVER_MILESTONE_DEFAULTS.eyebrow,
-          gradientStat: String(COVER_MILESTONE_DEFAULTS.gradientStat),
         }
       : {}
 
@@ -1035,6 +1040,10 @@ export function createDefaultCoverData(
           icon: DEFAULT_COVER_VALUES.titleIconIcon,
         }
       : {}
+
+  const extraTemplateParams = isCoverExtraTemplateId(template)
+    ? buildCoverExtraTemplateDefaultParams(template)
+    : {}
 
   const defaults = parseCoverRenderData(
     new URLSearchParams({
@@ -1073,6 +1082,7 @@ export function createDefaultCoverData(
       ...codeSnippetParams,
       ...milestoneParams,
       ...versionParams,
+      ...extraTemplateParams,
       ...(angled3dDefaults
         ? {
             rotateX: String(angled3dDefaults.rotateX),

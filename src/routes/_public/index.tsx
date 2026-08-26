@@ -8,12 +8,13 @@ import { Loader2 } from 'lucide-react'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
-import { setLastLoginMethod } from '@/lib/utils/auth-storage'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
-  resolvePostAuthOrganizationId,
-} from '@/lib/ensure-personal-org'
-import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
+  isOAuthLoginMethod,
+  setLastLoginMethod,
+} from '@/lib/utils/auth-storage'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
+import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
@@ -36,6 +37,9 @@ export const Route = createFileRoute('/_public/')({
       const isAccountBlocked =
         !!queryError && isHttpForbiddenError(queryError)
       if (!isMfaRequired && !isAccountBlocked) {
+        if (isPreLaunchModeEnabled()) {
+          throw redirect({ to: '/init', replace: true })
+        }
         // Profiles without marketing pages (self-hosted) go straight to sign-in.
         if (!getActiveProfileFeatures().marketing) {
           throw redirect({ to: '/sign-in', replace: true })
@@ -45,17 +49,21 @@ export const Route = createFileRoute('/_public/')({
       return
     }
 
+    if (isPreLaunchModeEnabled()) {
+      throw redirect({ to: '/init', replace: true })
+    }
+
     const urlParams = searchParamsFromRouterLocation(location)
     const isOAuthCallback =
       urlParams.has('project') ||
       urlParams.has('key') ||
       location.pathname.includes('callback')
     if (isOAuthCallback) {
-      const hasGitHubIdentity = account.identities?.some(
-        (identity) => identity.provider === 'github',
+      const oauthIdentity = account.identities?.find((identity) =>
+        isOAuthLoginMethod(identity.provider),
       )
-      if (hasGitHubIdentity) {
-        setLastLoginMethod('github')
+      if (oauthIdentity) {
+        setLastLoginMethod(oauthIdentity.provider)
       }
     }
 
@@ -64,11 +72,10 @@ export const Route = createFileRoute('/_public/')({
     }
 
     try {
-      const orgId = await resolvePostAuthOrganizationId(
-        account,
+      const orgId = await resolveAndPrefetchDefaultOrganization(
         context.queryClient,
+        account,
       )
-      await prefetchOrganizationOverviewData(context.queryClient, orgId)
       throw redirect({
         to: '/organizations/$orgId',
         params: { orgId },

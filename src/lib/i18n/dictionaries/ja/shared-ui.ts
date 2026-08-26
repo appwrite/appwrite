@@ -40,6 +40,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Active session:': 'アクティブなセッション:',
   'Add account': 'アカウントを追加',
   'Add filter': 'フィルターを追加',
+  'Add value': '値を追加',
   'Add installation': 'インストールを追加',
   'Add variable': '変数を追加',
   'All shortcuts': 'すべてのショートカット',
@@ -421,6 +422,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'No rows to display.': '表示する行がありません。',
   'No matching settings': '一致する設定がありません',
   'Select project': 'プロジェクトを選択',
+  'Select date': '日付を選択',
   'Select date & time': '日付と時刻を選択',
   'Select branch': 'ブランチを選択',
   'Clone template': 'テンプレートをクローン',
@@ -677,6 +679,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Find a project in this organization': 'この組織のプロジェクトを検索',
   // Command center: local actions and groups
   'See all keyboard shortcuts': 'すべてのキーボードショートカットを表示',
+  'Pick a console user to operate as. Your operator account stays signed in.':
+    '操作するコンソールユーザーを選択してください。オペレーターアカウントはサインインしたままです。',
   'Pick a function to execute': '実行する関数を選択',
   'Open project activity log': 'プロジェクトのアクティビティログを開く',
   'View activity log': 'アクティビティログを表示',
@@ -747,8 +751,25 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Page not found': 'ページが見つかりません',
   'Looking for product docs?': '製品ドキュメントをお探しですか?',
   'Browse documentation': 'ドキュメントを閲覧',
+  // Cover generator backgrounds
+  'Light backgrounds': 'ライト背景',
+  'Dark backgrounds': 'ダーク背景',
+  'Plain, bottom pink & purple': '無地、下部にピンクとパープル',
+  'Plain, bottom teal ambient glow': '無地、下部にティールのグロー',
+  'Plain, monochrome shade glow': '無地、モノクロのシェードグロー',
+  'Solid background with soft corner glow, no texture.':
+    'テクスチャなしの単色背景に、角からのソフトなグロー。',
+  'Plain dark background with a large teal light leak from the lower-left corner.':
+    '左下からティールの大きなライトリークが入る無地のダーク背景。',
+  'Plain dark background with soft corner washes in a darker shade of the same color.':
+    '同じ色のより暗いシェードで角をやわらかく照らした無地のダーク背景。',
   // Screenshot frames (cover generator, perspective cards)
   'Screenshot preview': 'スクリーンショットプレビュー',
+  Green: 'グリーン',
+  Amber: 'アンバー',
+  Red: 'レッド',
+  Blue: 'ブルー',
+  Slate: 'スレート',
   'The requested resource could not be found. It may have been deleted or you may not have permission to access it.': '要求されたリソースが見つかりませんでした。削除されたか、アクセス権限がない可能性があります。',
   'You do not have permission to perform this action. Please contact your administrator if you believe this is an error.': 'この操作を実行する権限がありません。エラーだと思われる場合は、管理者にお問い合わせください。',
   'You do not have permission to access this resource.': 'このリソースにアクセスする権限がありません。',
@@ -759,7 +780,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Add one or more environment variables. You can add multiple variables at once.': '1つ以上の環境変数を追加します。複数の変数を一度に追加できます。',
   'Are you sure you want to delete this deployment? This action cannot be undone.': 'このデプロイを削除してもよろしいですか?この操作は元に戻せません。',
   'Are you sure you want to delete this variable? This action cannot be undone.': 'この変数を削除してもよろしいですか?この操作は元に戻せません。',
-  'Build output is available after the deployment has completed.': 'ビルド出力は、デプロイが完了した後に表示されます。',
+  'Build output is only available for ready deployments.':
+    'ビルド出力は、準備完了のデプロイでのみ利用できます。',
   'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.': 'CLI デプロイは Appwrite のコマンドラインツールを使用して作成され、開発者のワークフローやスクリプトによる自動化に役立ちます。',
   'Cannot delete the active deployment. Activate another deployment first.': '有効なデプロイは削除できません。先に別のデプロイを有効化してください。',
   'Cannot delete the active deployment. Please activate another deployment first.': '有効なデプロイは削除できません。先に別のデプロイを有効化してください。',

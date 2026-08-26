@@ -1,6 +1,6 @@
 import type { LaunchEventGrandPrize, LaunchEventOnlineUser } from '@/lib/init/types'
 import { useInitThemeImageSrc } from '@/lib/init/use-init-theme-image'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Sparkles, Trophy, X } from 'lucide-react'
@@ -123,7 +123,7 @@ export function InitGrandPrizeRevealBack({
                 <div className="flex min-w-0 items-center gap-1.5 pt-1 text-[11px] text-muted-foreground">
                   <img src={platformMeta.icon} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
                   <span className="truncate">
-                    {platformMeta.label} · {grandPrize.sessionTitle} · {grandPrize.timeLabel}
+                    {platformMeta.label} · {grandPrize.sessionTitle}
                   </span>
                 </div>
               ) : null}
@@ -155,7 +155,11 @@ export function InitGrandPrizeRevealBack({
         >
           {winner ? (
             <div className="flex items-center gap-3">
-              <InitialsAvatar name={winner.name} size="md" className="rounded-full" />
+              <PhotoAvatar
+                userId={winner.id}
+                size="md"
+                className="rounded-full"
+              />
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-cta)]">
                   <Trophy className="size-3.5" aria-hidden />

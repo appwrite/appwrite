@@ -471,7 +471,9 @@ export function IdentitiesSection({
       google: 'google.svg',
       apple: 'apple.svg',
       facebook: 'facebook.svg',
-      // Add more as needed
+      cursor: 'cursor-ai.svg',
+      gitlab: 'gitlab.svg',
+      bitbucket: 'bitbucket.svg',
     }
     return providerMap[provider.toLowerCase()] || 'empty.svg'
   }
@@ -482,6 +484,9 @@ export function IdentitiesSection({
       google: 'Google',
       apple: 'Apple',
       facebook: 'Facebook',
+      cursor: 'Cursor',
+      gitlab: 'GitLab',
+      bitbucket: 'Bitbucket',
     }
     return nameMap[provider.toLowerCase()] || provider
   }

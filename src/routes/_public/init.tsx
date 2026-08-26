@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/init/View'
 import { getInitPageMetaTags } from '@/lib/init/init-seo'
 import { ensureConsoleAccountQueryData } from '@/lib/react-query/hooks/auth'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 
 export const Route = createFileRoute('/_public/init')({
   ssr: true,
@@ -10,7 +10,7 @@ export const Route = createFileRoute('/_public/init')({
   head: () => ({ meta: getInitPageMetaTags() }),
   loader: async ({ context }) => {
     if (typeof window === 'undefined') return
-    if (!getActiveProfileFeatures().init) {
+    if (!isInitSurfaceEnabled()) {
       throw redirect({ to: '/', replace: true })
     }
 

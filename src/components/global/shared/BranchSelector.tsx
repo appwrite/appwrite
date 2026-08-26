@@ -156,7 +156,9 @@ export function BranchSelector({
     if (value) return
     if (hasRepository && repositoryPending) return
 
-    onChange(defaultBranch ?? 'main')
+    // Some providers (e.g. Bitbucket) return an empty string rather than
+    // omitting the field, so `??` alone would leave the branch blank.
+    onChange(defaultBranch || 'main')
   }, [defaultBranch, hasRepository, repositoryPending, value, onChange])
 
   const labelContent = (

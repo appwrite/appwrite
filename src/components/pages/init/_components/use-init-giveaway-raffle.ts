@@ -1,5 +1,6 @@
 import { fetchInitRaffleParticipants } from '@/lib/init/fetch-init-raffle-participants'
 import { isInitDailyPrizeRevealed } from '@/lib/init/prize-visibility'
+import { scrollToInitPrizesSection } from '@/lib/init/scroll-to-day-card'
 import type { InitDisplayEvent, LaunchEventDailyPrize, LaunchEventGrandPrize } from '@/lib/init/types'
 import { shouldSuppressGlobalShortcuts } from '@/lib/global-shortcut-suppress'
 import { useCallback, useEffect, useState } from 'react'
@@ -7,15 +8,24 @@ import { useCallback, useEffect, useState } from 'react'
 const GIVEAWAY_RAFFLE_DAYS = [1, 2, 3, 4] as const
 const GRAND_PRIZE_REVEAL_DAY = 5
 
-/** Host shortcut: Ctrl+Shift+1…4 opens daily raffles; Ctrl+Shift+5 opens grand prize reveal. */
+/**
+ * Host shortcut: Ctrl/Cmd+Shift+1…4 opens daily raffles; Ctrl/Cmd+Shift+5 opens
+ * the grand prize reveal. Cmd+Shift+3/4/5 may be claimed by macOS screenshots.
+ */
 function parseGiveawayHostShortcut(event: KeyboardEvent): number | null {
-  if (!event.shiftKey || !event.ctrlKey) return null
-  if (event.altKey || event.metaKey) return null
+  if (!event.shiftKey || event.altKey) return null
+  if (!event.ctrlKey && !event.metaKey) return null
 
-  const dayMatch = event.code.match(/^Digit([1-5])$/)
+  const dayMatch = event.code.match(/^(?:Digit|Numpad)([1-5])$/)
   if (!dayMatch) return null
 
   return Number(dayMatch[1])
+}
+
+/** Before launch week, host shortcuts are for rehearsal and skip the reveal gate. */
+function canHostOpenGiveaway(currentDay: number, prizeDay: number): boolean {
+  if (currentDay <= 0) return true
+  return isInitDailyPrizeRevealed(currentDay, prizeDay)
 }
 
 export function useInitGiveawayRaffle(
@@ -58,7 +68,7 @@ export function useInitGiveawayRaffle(
 
   const openForDay = useCallback(
     async (day: number) => {
-      if (!isInitDailyPrizeRevealed(event.currentDay, day)) return
+      if (!canHostOpenGiveaway(event.currentDay, day)) return
 
       const giveaway = dailyGiveaways.find((entry) => entry.day === day)
       if (!giveaway) return
@@ -70,6 +80,7 @@ export function useInitGiveawayRaffle(
 
       setIsGrandPrizeRevealOpen(false)
       setActiveDay(day)
+      scrollToInitPrizesSection()
       await loadParticipants()
     },
     [activeDay, close, dailyGiveaways, event.currentDay, isGrandPrizeRevealOpen, loadParticipants],
@@ -77,7 +88,7 @@ export function useInitGiveawayRaffle(
 
   const openGrandPrizeReveal = useCallback(async () => {
     if (!grandPrize) return
-    if (!isInitDailyPrizeRevealed(event.currentDay, grandPrize.day)) return
+    if (!canHostOpenGiveaway(event.currentDay, grandPrize.day)) return
 
     if (isGrandPrizeRevealOpen) {
       close()
@@ -86,6 +97,7 @@ export function useInitGiveawayRaffle(
 
     setActiveDay(null)
     setIsGrandPrizeRevealOpen(true)
+    scrollToInitPrizesSection()
     await loadParticipants()
   }, [close, event.currentDay, grandPrize, isGrandPrizeRevealOpen, loadParticipants])
 

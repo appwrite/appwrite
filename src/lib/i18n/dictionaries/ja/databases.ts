@@ -1534,7 +1534,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Create a PostgreSQL database from the create database wizard.': 'データベース作成ウィザードから PostgreSQL データベースを作成します。',
   'Create a MySQL database from the create database wizard.': 'データベース作成ウィザードから MySQL データベースを作成します。',
   'Create a MongoDB database from the create database wizard.': 'データベース作成ウィザードから MongoDB データベースを作成します。',
-  'Create this product database from the create database wizard.': 'データベース作成ウィザードからこのプロダクトデータベースを作成します。',
+  'To create a database, use the creation wizard by clicking "Create database".':
+    'データベースを作成するには、「データベースの作成」をクリックして作成ウィザードを使ってください。',
   Loading: '読み込み中',
   Mediumtext: 'Mediumtext',
   Longtext: 'Longtext',

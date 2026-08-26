@@ -2428,6 +2428,7 @@ function IdentitiesTab({
       auth0: 'auth0.svg',
       authentik: 'authentik.svg',
       oidc: 'oidc.svg',
+      cursor: 'cursor-ai.svg',
     }
     return providerMap[provider.toLowerCase()] || 'empty.svg'
   }

@@ -81,3 +81,6 @@ scripts/oauth2-shots.mjs
 # Playwright MCP scratch output
 .playwright-mcp/
 *.png
+
+# Bundled site template screenshots (served at /images/sites/templates)
+!public/images/sites/templates/*.png

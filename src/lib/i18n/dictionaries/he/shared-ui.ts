@@ -68,6 +68,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Active session:': 'סשן פעיל:',
   'Add account': 'הוספת חשבון',
   'Add filter': 'הוספת סינון',
+  'Add value': 'הוספת ערך',
   'Add installation': 'הוספת התקנה',
   'Add one or more environment variables. You can add multiple variables at once.':
     'הוסיפו משתנה סביבה אחד או יותר. אפשר להוסיף כמה משתנים בבת אחת.',
@@ -99,8 +100,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Build must be ready before activating.':
     'הבנייה חייבת להיות מוכנה לפני ההפעלה.',
   'Build output': 'פלט בנייה',
-  'Build output is available after the deployment has completed.':
-    'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
+  'Build output is only available for ready deployments.':
+    'פלט הבנייה זמין רק לפריסות מוכנות.',
   // pragma: allowlist secret
   'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.':
     'פריסות CLI נוצרות באמצעות כלי שורת הפקודה של Appwrite, שימושי לתהליכי עבודה של מפתחים ולאוטומציה בסקריפטים.', // pragma: allowlist secret
@@ -706,6 +707,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No rows to display.': 'אין שורות להצגה.',
   'No matching settings': 'אין הגדרות תואמות',
   'Select project': 'בחירת פרויקט',
+  'Select date': 'בחירת תאריך',
   'Select date & time': 'בחירת תאריך ושעה',
   'Select branch': 'בחירת Branch',
   'Clone template': 'שכפול תבנית',
@@ -1085,6 +1087,8 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   // Command center: local actions and groups
   'See all keyboard shortcuts': 'הצגת כל קיצורי המקלדת',
+  'Pick a console user to operate as. Your operator account stays signed in.':
+    'בחרו משתמש קונסול לפעול בשמו. חשבון האופרטור שלכם נשאר מחובר.',
   'Pick a function to execute': 'בחירת פונקציה להרצה',
   'Open project activity log': 'פתיחת יומן הפעילות של הפרויקט',
   'View activity log': 'צפייה ביומן הפעילות',
@@ -1213,6 +1217,24 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Looking for product docs?': 'מחפשים את דוקומנטציית המוצר?',
   'Browse documentation': 'עיון בדוקומנטציה',
 
+  // Cover generator backgrounds
+  'Light backgrounds': 'רקעים בהירים',
+  'Dark backgrounds': 'רקעים כהים',
+  'Plain, bottom pink & purple': 'חלק, ורוד וסגול מלמטה',
+  'Plain, bottom teal ambient glow': 'חלק, זוהר טורקיז מלמטה',
+  'Plain, monochrome shade glow': 'חלק, זוהר מונוכרום',
+  'Solid background with soft corner glow, no texture.':
+    'רקע אחיד עם זוהר רך בפינות, בלי טקסטורה.',
+  'Plain dark background with a large teal light leak from the lower-left corner.':
+    'רקע כהה אחיד עם דליפת אור טורקיז גדולה מהפינה השמאלית התחתונה.',
+  'Plain dark background with soft corner washes in a darker shade of the same color.':
+    'רקע כהה אחיד עם שטיפות רכות בפינות בגוון כהה יותר של אותו צבע.',
+
   // Screenshot frames (cover generator, perspective cards)
   'Screenshot preview': 'תצוגה מקדימה של צילום מסך',
+  Green: 'ירוק',
+  Amber: 'ענבר',
+  Red: 'אדום',
+  Blue: 'כחול',
+  Slate: 'אפור',
 }
