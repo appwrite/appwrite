@@ -54,6 +54,8 @@ class Get extends Action
                 Returns the best available profile photo for a user. The endpoint tries each source in priority order and returns the first successful result: OAuth2 identity photo, Gravatar, Libravatar, Appwrite Initials, built-in static fallback.
 
                 The photo resolves for the currently authenticated user unless `userId` points at another user. An explicit `emailHash` or `name` parameter takes priority over the user's own attributes: the hash is looked up on Gravatar and Libravatar, and the name is rendered as initials. Emails are only ever accepted pre-hashed, so no address ends up in a URL.
+
+                Passing `emailHash` also drops the OAuth2 identity photo from the priority order, since the hash may name anyone and that photo would otherwise shadow the avatar being asked for.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
@@ -109,10 +111,15 @@ class Get extends Action
 
         // The hash reaches the avatar services verbatim, and they expect it
         // lowercase.
+        $emailHash = \strtolower($emailHash);
+
         $providers = [
-            new OAuth2($dbForProject),
-            new Gravatar(\strtolower($emailHash)),
-            new Libavatar(\strtolower($emailHash)),
+            // A hash names an address that may belong to anyone, so the stored
+            // user's OAuth2 identity photos no longer describe the subject —
+            // leaving them in would shadow the avatar actually asked for.
+            ...(empty($emailHash) ? [new OAuth2($dbForProject)] : []),
+            new Gravatar($emailHash),
+            new Libavatar($emailHash),
             new Initials(),
             new Fallback(),
         ];
@@ -123,8 +130,8 @@ class Get extends Action
             $balancer->addOption(new Option(['provider' => $provider]));
         }
 
-        // Skip providers that lack the data they need — no email means no
-        // Gravatar lookup — so we never pay for a doomed network round-trip.
+        // Skip providers that lack the data they need — no email and no hash
+        // means no Gravatar lookup — so we never pay for a doomed round-trip.
         $balancer->addFilter(function (Option $option) use ($user) {
             /** @var Photo $provider */
             $provider = $option->getState('provider');
