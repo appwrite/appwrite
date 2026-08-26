@@ -174,6 +174,16 @@ class V25 extends Migration
                         $this->dbForProject->purgeCachedCollection($id);
                     }
                     break;
+
+                case 'identities':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'photo');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"photo\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
             }
         }
     }
