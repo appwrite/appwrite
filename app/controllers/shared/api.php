@@ -419,17 +419,25 @@ Http::init()
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
-                    $dbForProject->updateDocument('users', $user->getId(), new Document([
-                        'accessedAt' => $user->getAttribute('accessedAt')
-                    ]));
+                    // updateDocument never uses cache, so skip the subqueries.
+                    $dbForProject->skipFilters(
+                        fn () => $dbForProject->updateDocument('users', $user->getId(), new Document([
+                            'accessedAt' => $user->getAttribute('accessedAt')
+                        ])),
+                        APP_USER_SUBQUERIES
+                    );
                 } else {
                     $userInternalId = (string) ($user->getSequence() ?: $user->getId());
                     $lock->tryWithKey(
                         'lock:platform:'.$userInternalId.':users:'.$user->getId().':accessedAt',
-                        fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
-                            'users',
-                            $user->getId(),
-                            new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                        // updateDocument never uses cache, so skip the subqueries.
+                        fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                            fn () => $dbForPlatform->updateDocument(
+                                'users',
+                                $user->getId(),
+                                new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                            ),
+                            APP_USER_SUBQUERIES
                         )),
                         target: 'users'
                     );
