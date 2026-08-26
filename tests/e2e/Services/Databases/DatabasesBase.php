@@ -2842,18 +2842,19 @@ trait DatabasesBase
         /**
          * Test for SUCCESS
          * Bulk create with only documents/rows (no `data` key) must still work.
+         * Use books: movies has a relationship, and bulk create is not supported then.
          */
         $bulkDocumentId = ID::unique();
         $bulkCreated = $this->client->call(
             Client::METHOD_POST,
-            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $this->getRecordUrl($databaseId, $data['booksId']),
             $headers,
             [
                 $this->getRecordResource() => [
                     [
                         '$id' => $bulkDocumentId,
                         'title' => 'Bulk without data key',
-                        'releaseYear' => 2001,
+                        'description' => 'Created without a data key',
                     ],
                 ],
             ]
