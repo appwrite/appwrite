@@ -84,7 +84,6 @@ class Resend extends OAuth2
                     'grant_type' => 'authorization_code',
                     'code' => $code,
                     'redirect_uri' => $this->callback,
-                    'client_id' => $this->appID,
                     'code_verifier' => $this->getPKCEVerifier(),
                 ])
             ), true);
@@ -110,7 +109,6 @@ class Resend extends OAuth2
             \http_build_query([
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
-                'client_id' => $this->appID,
             ])
         ), true);
 
@@ -229,7 +227,6 @@ class Resend extends OAuth2
                 'grant_type' => 'authorization_code',
                 'code' => 'intentionally-invalid-code',
                 'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
-                'client_id' => $this->appID,
                 'code_verifier' => 'intentionally-invalid-verifier-intentionally-invalid',
             ]
         );
