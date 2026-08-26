@@ -24,6 +24,7 @@ use Utopia\Platform\Action;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Query\Schema\IndexType;
+use Utopia\Query\Schema\Order;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 
@@ -467,7 +468,14 @@ class Databases extends Action
         $type = $index->getAttribute('type', '');
         $attributes = $index->getAttribute('attributes', []);
         $lengths = $index->getAttribute('lengths', []);
-        $orders = $index->getAttribute('orders', []);
+        // Stored as the 'ASC'/'DESC' strings the endpoint validates, while the
+        // index model takes Order cases and rejects anything else outright --
+        // and an InvalidArgumentException is not a DatabaseException, so the
+        // failure would be recorded with no message at all.
+        $orders = \array_map(
+            static fn (mixed $order): ?Order => Order::tryFrom(\is_string($order) ? \strtoupper($order) : ''),
+            $index->getAttribute('orders', []),
+        );
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
