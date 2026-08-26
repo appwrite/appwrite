@@ -16,6 +16,16 @@ class Gravatar extends Photo
 {
     private const BASE_URL = 'https://www.gravatar.com/avatar/';
 
+    /**
+     * @param string $hash SHA-256 hash of an email address, used instead of
+     *                     the user's own email when set. Callers that must not
+     *                     handle raw addresses pass the hash straight through.
+     */
+    public function __construct(
+        private readonly string $hash = '',
+    ) {
+    }
+
     public function getName(): string
     {
         return 'gravatar';
@@ -23,13 +33,14 @@ class Gravatar extends Photo
 
     public function supports(Document $user): bool
     {
-        return !empty($user->getAttribute('email', ''));
+        return !empty($this->hash) || !empty($user->getAttribute('email', ''));
     }
 
     public function get(Document $user, int $width, int $height, string $rating): ?string
     {
-        $email = $user->getAttribute('email', '');
-        $hash = \hash('sha256', \strtolower(\trim($email)));
+        $hash = !empty($this->hash)
+            ? $this->hash
+            : \hash('sha256', \strtolower(\trim($user->getAttribute('email', ''))));
 
         // Use 'd=404' so Gravatar returns HTTP 404 instead of a generic image
         // when the user has no custom avatar — letting us fall through to the

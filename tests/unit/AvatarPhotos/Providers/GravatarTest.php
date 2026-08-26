@@ -19,11 +19,23 @@ final class GravatarTest extends TestCase
     }
 
     /**
-     * Photo lookup keys off the email address alone.
+     * Without a pre-computed hash, photo lookup keys off the user's email.
      */
     #[DataProvider('provideSupports')]
     public function testSupports(array $attributes, bool $expected): void
     {
         $this->assertSame($expected, (new Gravatar())->supports(new Document($attributes)));
+    }
+
+    /**
+     * A hash passed to the constructor stands in for the address, so a user
+     * without an email of their own is still supported.
+     */
+    public function testSupportsHash(): void
+    {
+        $provider = new Gravatar(\hash('sha256', 'walter@appwrite.io'));
+
+        $this->assertTrue($provider->supports(new Document([])));
+        $this->assertTrue($provider->supports(new Document(['name' => 'Walter White'])));
     }
 }

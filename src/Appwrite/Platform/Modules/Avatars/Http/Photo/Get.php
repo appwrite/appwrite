@@ -22,7 +22,6 @@ use Utopia\Balancer\Option;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
-use Utopia\Emails\Validator\Email;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
@@ -54,7 +53,7 @@ class Get extends Action
                 description: <<<'EOT'
                 Returns the best available profile photo for a user. The endpoint tries each source in priority order and returns the first successful result: OAuth2 identity photo, Gravatar, Libravatar, Appwrite Initials, built-in static fallback.
 
-                The photo resolves for the currently authenticated user unless `userId` points at another user. An explicit `email` or `name` parameter takes priority over the user's own attributes: the email is looked up on Gravatar and Libravatar, and the name is rendered as initials.
+                The photo resolves for the currently authenticated user unless `userId` points at another user. An explicit `emailHash` or `name` parameter takes priority over the user's own attributes: the hash is looked up on Gravatar and Libravatar, and the name is rendered as initials. Emails are only ever accepted pre-hashed, so no address ends up in a URL.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
@@ -73,7 +72,7 @@ class Get extends Action
             ->param('output', 'png', new WhiteList(['png', 'jpg', 'webp'], true), 'Output image format. Defaults to \'png\'.', true)
             ->param('rating', 'g', new WhiteList(['g', 'pg', 'r', 'x'], true), 'Maximum image rating to fetch from Gravatar/Libravatar. Defaults to \'g\'.', true)
             ->param('userId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID to resolve the photo for. Defaults to \'current\' for the currently authenticated user.', true, ['dbForProject'])
-            ->param('email', '', new Email(allowEmpty: true), 'Email address to look up on Gravatar and Libravatar. Takes priority over the user\'s email.', true)
+            ->param('emailHash', '', new Text(64, 64, [...Text::NUMBERS, ...\range('a', 'f'), ...\range('A', 'F')]), 'SHA256 hash of the lowercase, trimmed email address to look up on Gravatar and Libravatar. Takes priority over the user\'s email. Pass the hash, never the address itself.', true)
             ->param('name', '', new Text(128, 0), 'Name to render initials from when no photo is found. Takes priority over the user\'s name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('user')
@@ -88,7 +87,7 @@ class Get extends Action
         string $output,
         string $rating,
         string $userId,
-        string $email,
+        string $emailHash,
         string $name,
         Response $response,
         Document $user,
@@ -102,24 +101,18 @@ class Get extends Action
             }
         }
 
-        // Explicit parameters take priority over the user's own attributes.
-        // Work on a copy — the injected user document is shared with hooks.
-        if (!empty($email) || !empty($name)) {
-            $user = clone $user;
-
-            if (!empty($email)) {
-                $user->setAttribute('email', $email);
-            }
-
-            if (!empty($name)) {
-                $user->setAttribute('name', $name);
-            }
+        // An explicit name takes priority over the user's own. Work on a copy —
+        // the injected user document is shared with the request's other hooks.
+        if (!empty($name)) {
+            $user = (clone $user)->setAttribute('name', $name);
         }
 
+        // The hash reaches the avatar services verbatim, and they expect it
+        // lowercase.
         $providers = [
             new OAuth2($dbForProject),
-            new Gravatar(),
-            new Libavatar(),
+            new Gravatar(\strtolower($emailHash)),
+            new Libavatar(\strtolower($emailHash)),
             new Initials(),
             new Fallback(),
         ];

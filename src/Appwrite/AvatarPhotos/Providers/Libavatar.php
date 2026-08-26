@@ -20,6 +20,16 @@ class Libavatar extends Photo
 {
     private const BASE_URL = 'https://seccdn.libravatar.org/avatar/';
 
+    /**
+     * @param string $hash SHA-256 hash of an email address, used instead of
+     *                     the user's own email when set. Callers that must not
+     *                     handle raw addresses pass the hash straight through.
+     */
+    public function __construct(
+        private readonly string $hash = '',
+    ) {
+    }
+
     public function getName(): string
     {
         return 'libavatar';
@@ -27,15 +37,15 @@ class Libavatar extends Photo
 
     public function supports(Document $user): bool
     {
-        return !empty($user->getAttribute('email', ''));
+        return !empty($this->hash) || !empty($user->getAttribute('email', ''));
     }
 
     public function get(Document $user, int $width, int $height, string $rating): ?string
     {
-        $email = $user->getAttribute('email', '');
-
         // Libravatar accepts both SHA-256 and MD5; use SHA-256 to match Gravatar.
-        $hash = \hash('sha256', \strtolower(\trim($email)));
+        $hash = !empty($this->hash)
+            ? $this->hash
+            : \hash('sha256', \strtolower(\trim($user->getAttribute('email', ''))));
 
         $url = self::BASE_URL . $hash . '?' . \http_build_query([
             's' => \max($width, $height) > 0 ? \max($width, $height) : 256,

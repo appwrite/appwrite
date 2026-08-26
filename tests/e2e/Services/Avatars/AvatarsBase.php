@@ -1510,22 +1510,22 @@ trait AvatarsBase
         return [];
     }
 
-    public function testGetPhotoByEmail(): void
+    public function testGetPhotoByEmailHash(): void
     {
         /**
          * Test for SUCCESS
          *
-         * The random email is registered nowhere, so Gravatar and Libravatar
+         * The hashed email is registered nowhere, so Gravatar and Libravatar
          * answer 404 and the chain falls through to the static fallback —
          * never to initials, which require a name and must not derive from an
          * email.
          */
-        $email = \uniqid('photo-') . '@appwrite.io';
+        $hash = \hash('sha256', \uniqid('photo-') . '@appwrite.io');
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'email' => $email,
+            'emailHash' => $hash,
             'width' => 100,
             'height' => 100,
         ]);
@@ -1534,13 +1534,25 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertPhotoFallback($response['body']);
 
-        // A name alongside the email resolves to initials once Gravatar and
+        // Uppercase hex is normalised rather than rejected.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'emailHash' => \strtoupper($hash),
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoFallback($response['body']);
+
+        // A name alongside the hash resolves to initials once Gravatar and
         // Libravatar miss — the explicit parameters take priority over the
         // authenticated user's own attributes.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'email' => $email,
+            'emailHash' => $hash,
             'name' => 'W W',
             'width' => 100,
             'height' => 100,
@@ -1554,20 +1566,39 @@ trait AvatarsBase
          * Test for FAILURE
          */
 
-        // Not an email address.
+        // A raw email address must never be accepted — it would leak into
+        // access logs, proxies and browser history.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'email' => 'not-an-email',
+            'emailHash' => 'someone@appwrite.io',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // Hashes are not accepted — pass the raw email address.
+        // Too short to be a SHA256 hash.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'email' => \hash('sha256', 'photo@appwrite.io'),
+            'emailHash' => \substr($hash, 0, 63),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Right length, but not hex.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'emailHash' => \str_repeat('z', 64),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // An MD5 hash is not a SHA256 hash.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'emailHash' => \md5('photo@appwrite.io'),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
