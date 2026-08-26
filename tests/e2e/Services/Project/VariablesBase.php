@@ -122,6 +122,52 @@ trait VariablesBase
         $this->assertSame(400, $variable['headers']['status-code']);
     }
 
+    public function testCreateVariableInvalidKey(): void
+    {
+        // Keys become container env var names; anything that is not a
+        // C_IDENTIFIER is refused at the endpoint.
+        $keys = [
+            '9KEY',
+            'MY KEY',
+            'MY-KEY',
+            'my.key',
+            'FOO=BAR',
+            "TRAILING_TAB\t",
+            'GRAVAÇÃO',
+            "V\x00I\x00T\x00E_GEMINI_API_KEY",
+        ];
+
+        foreach ($keys as $key) {
+            $response = $this->createVariable(ID::unique(), $key, 'value');
+
+            $this->assertSame(400, $response['headers']['status-code'], 'Key ' . \json_encode($key) . ' should be refused');
+        }
+    }
+
+    public function testUpdateVariableInvalidKeyLeavesVariableUnchanged(): void
+    {
+        $variable = $this->createVariable(
+            ID::unique(),
+            'VALID_KEY',
+            'valid-value',
+            false
+        );
+
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        $updated = $this->updateVariable($variableId, "BAD KEY\t", 'new-value');
+        $this->assertSame(400, $updated['headers']['status-code']);
+
+        $get = $this->getVariable($variableId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('VALID_KEY', $get['body']['key']);
+        $this->assertSame('valid-value', $get['body']['value']);
+
+        // Cleanup
+        $this->deleteVariable($variableId);
+    }
+
     public function testCreateVariableMissingKey(): void
     {
         $response = $this->createVariable(

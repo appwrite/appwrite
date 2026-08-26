@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Deployments;
+use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -125,5 +126,60 @@ final class DeploymentsTest extends TestCase
         ]);
 
         $this->assertSame(['users.read'], Deployments::scopes($site));
+    }
+
+    private function buildPayload(array $vars): array
+    {
+        // Presigned-URL and ephemeral-key signing both run before the
+        // variables are assembled, and refuse an empty key.
+        \putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
+
+        $runtimeKey = \array_key_first(Config::getParam('runtimes-v2'));
+
+        return ExposedDeployments::submitPayload(
+            new Document(['$id' => 'project1', 'region' => 'default']),
+            new Document([
+                '$id' => 'function1',
+                '$collection' => 'functions',
+                'runtime' => $runtimeKey,
+                'vars' => \array_map(
+                    fn (string $key, string $value) => new Document(['key' => $key, 'value' => $value]),
+                    \array_keys($vars),
+                    \array_values($vars),
+                ),
+            ]),
+            new Document(['$id' => 'deployment1', 'buildCommands' => 'npm install']),
+            ['apiHostname' => 'localhost'],
+        );
+    }
+
+    public function testPayloadRefusesVariableKeyTheClusterWouldRefuse(): void
+    {
+        try {
+            $this->buildPayload(["V\x00I\x00T\x00E_KEY" => 'secret']);
+            $this->fail('Expected the invalid variable key to be refused before job submission');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::VARIABLE_INVALID_KEY, $error->getType());
+            $this->assertStringContainsString(\json_encode("V\x00I\x00T\x00E_KEY"), $error->getMessage());
+            $this->assertStringNotContainsString('secret', $error->getMessage());
+        }
+    }
+
+    public function testPayloadKeepsLegacyKeysTheClusterAccepts(): void
+    {
+        // MY-VAR predates the strict endpoint rule but deploys fine; the
+        // build-layer guard must not take working deployments down with it.
+        $payload = $this->buildPayload(['MY-VAR' => 'v1', 'MY_VAR' => 'v2']);
+
+        $this->assertSame('v1', $payload['environment']['MY-VAR']);
+        $this->assertSame('v2', $payload['environment']['MY_VAR']);
+    }
+}
+
+final readonly class ExposedDeployments extends Deployments
+{
+    public static function submitPayload(Document $project, Document $resource, Document $deployment, array $platform): array
+    {
+        return static::payload($project, $resource, $deployment, $platform);
     }
 }
