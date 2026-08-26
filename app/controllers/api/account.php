@@ -20,8 +20,8 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Geo\Geo;
 use Appwrite\Hooks\Hooks;
-use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -82,7 +82,7 @@ $legacyConsolePaths = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'r
 $oauthDefaultSuccess = $legacyConsolePaths ? '/console/auth/oauth2/success' : '/auth/oauth2/success';
 $oauthDefaultFailure = $legacyConsolePaths ? '/console/auth/oauth2/failure' : '/auth/oauth2/failure';
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
     // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
     $oauthProvider = null;
@@ -161,6 +161,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         }
     }
 
+    $geoRecord = $geo->get($request->getIP());
     $session = new Document(array_merge(
         [
             '$id' => ID::unique(),
@@ -964,7 +965,7 @@ Http::post('/v1/account/sessions/email')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('hooks')
@@ -974,7 +975,7 @@ Http::post('/v1/account/sessions/email')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -999,6 +1000,7 @@ Http::post('/v1/account/sessions/email')
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
+        $geoRecord = $geo->get($request->getIP());
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -1125,7 +1127,7 @@ Http::post('/v1/account/sessions/anonymous')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForPassword')
@@ -1133,7 +1135,7 @@ Http::post('/v1/account/sessions/anonymous')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (Request $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, GeoRecord $geoRecord, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, Geo $geo, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
@@ -1185,6 +1187,7 @@ Http::post('/v1/account/sessions/anonymous')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
 
+        $geoRecord = $geo->get($request->getIP());
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -1292,7 +1295,7 @@ Http::post('/v1/account/sessions/token')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')
@@ -1493,7 +1496,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('devKey')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('dbForPlatform')
     ->inject('queueForEvents')
     ->inject('store')
@@ -1503,7 +1506,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, GeoRecord $geoRecord, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -2107,6 +2110,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $secret = $proofForToken->generate();
 
+            $geoRecord = $geo->get($request->getIP());
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
@@ -3015,7 +3019,7 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')
@@ -3023,10 +3027,10 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geoRecord, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geoRecord, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
     });
 
 Http::put('/v1/account/sessions/phone')
@@ -3066,7 +3070,7 @@ Http::put('/v1/account/sessions/phone')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')

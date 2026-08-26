@@ -872,6 +872,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_BROWSER_HOST
+      - _APP_SITES_TIMEOUT
       - _APP_WORKER_SCREENSHOTS_ROUTER
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_ENV

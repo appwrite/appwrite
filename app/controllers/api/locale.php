@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Locale\GeoRecord;
+use Appwrite\Geo\Geo;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -31,8 +31,9 @@ Http::get('/v1/locale')
     ->inject('request')
     ->inject('response')
     ->inject('locale')
-    ->inject('geoRecord')
-    ->action(function (Request $request, Response $response, Locale $locale, GeoRecord $geoRecord) {
+    ->inject('geo')
+    ->action(function (Request $request, Response $response, Locale $locale, Geo $geo) {
+        $geoRecord = $geo->get($request->getIP());
         $response->dynamic(new Document([
             'ip' => $geoRecord->getIp(),
             'countryCode' => $geoRecord->getCountryCode(),
