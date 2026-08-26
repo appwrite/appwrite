@@ -21,7 +21,13 @@ class Identity
     public static function withPhoto(Database $dbForProject, array $attributes, string $photo): array
     {
         foreach ($dbForProject->getCollection('identities')->getAttribute('attributes', []) as $attribute) {
-            if ($attribute instanceof Document && $attribute->getId() === 'photo') {
+            $attributeId = match (true) {
+                $attribute instanceof Document => $attribute->getId(),
+                \is_array($attribute) => $attribute['$id'] ?? '',
+                default => '',
+            };
+
+            if ($attributeId === 'photo') {
                 $attributes['photo'] = $photo;
                 break;
             }
