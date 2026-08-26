@@ -110,10 +110,10 @@ class Get extends Action
         $profile = new Document();
 
         if (!$photoUser->isEmpty()) {
-            $userEmail = $user->getAttribute('email', '');
-            $userName = $user->getAttribute('name', '');
+            $userEmail = $photoUser->getAttribute('email', '');
+            $userName = $photoUser->getAttribute('name', '');
 
-            $profile = $profile->setAttribute('$id', $user->getId());
+            $profile = $profile->setAttribute('$id', $photoUser->getId());
 
             if (!empty($userName)) {
                 $profile = $profile->setAttribute('name', $userName);
@@ -128,7 +128,7 @@ class Get extends Action
             $profile = $profile->setAttribute('name', $name);
         }
 
-        if (empty($emailHash)) {
+        if (!empty($emailHash)) {
             $profile = $profile->setAttribute('emailHash', $emailHash);
         }
 
