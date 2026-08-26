@@ -7,6 +7,7 @@ namespace Tests\Unit\Migration;
 use Appwrite\Migration\Migration;
 use Appwrite\Migration\Version\V24;
 use Appwrite\Migration\Version\V25;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
@@ -228,5 +229,53 @@ final class MigrationVersionsTest extends TestCase
             $this->assertContains('providerBranches', $attributes);
             $this->assertContains('providerPaths', $attributes);
         }
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string, 1: string}>
+     */
+    public static function v25IdentityProjects(): \Iterator
+    {
+        yield 'project' => ['project', '1'];
+        yield 'console' => ['console', 'console'];
+    }
+
+    #[DataProvider('v25IdentityProjects')]
+    public function testV25CreatesPhotoAttributeOnIdentities(string $projectId, string $sequence): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25Identities')
+            ->setNamespace('migration_identities_' . $projectId . '_' . \uniqid());
+        $database->create();
+        $database->createCollection('identities');
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => $projectId, '$sequence' => $sequence]),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
+        \ob_start();
+        try {
+            $migrateCollections->invoke($migration);
+            $migrateCollections->invoke($migration);
+        } finally {
+            \ob_end_clean();
+        }
+
+        $attributes = [];
+        foreach ($database->getCollection('identities')->getAttribute('attributes', []) as $attribute) {
+            $attributes[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+        }
+
+        $this->assertContains('photo', $attributes);
     }
 }

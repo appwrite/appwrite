@@ -1,6 +1,7 @@
 <?php
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Identity;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\EmailWhitelist;
@@ -1994,6 +1995,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             Query::equal('provider', [$provider]),
             Query::equal('providerUid', [$oauth2ID]),
         ]);
+
+        // Tokens always persist. Photo is optional and omitted until V25 has
+        // created that attribute, so OAuth login still succeeds mid-migration.
+        $identityTokens = Identity::withPhoto($dbForProject, [
+            'providerAccessToken' => $accessToken,
+            'providerRefreshToken' => $refreshToken,
+            'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
+        ], $oauth2->getUserPhoto($accessToken));
+
         if ($identity->isEmpty()) {
             // Before creating the identity, check if the email is already associated with another user
             $userId = $user->getId();
@@ -2010,7 +2020,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             try {
-                $dbForProject->createDocument('identities', new Document([
+                $dbForProject->createDocument('identities', new Document(\array_merge([
                     '$id' => ID::unique(),
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -2022,11 +2032,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'provider' => $provider,
                     'providerUid' => $oauth2ID,
                     'providerEmail' => $providerEmail,
-                    'providerAccessToken' => $accessToken,
-                    'providerRefreshToken' => $refreshToken,
-                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-                    'photo' => $oauth2->getUserPhoto($accessToken),
-                ]));
+                ], $identityTokens)));
             } catch (Duplicate) {
                 // The (provider, providerUid) unique index guards the same identity being connected to two users.
                 // A request that lost the race must not leave behind the user it just created.
@@ -2041,13 +2047,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         } else {
-            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
-                'providerAccessToken' => $accessToken,
-                'providerRefreshToken' => $refreshToken,
-                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-                // Refresh the photo URL on every login so expired CDN links self-heal.
-                'photo' => $oauth2->getUserPhoto($accessToken),
-            ]));
+            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document($identityTokens));
         }
 
         if (empty($user->getAttribute('name'))) {
