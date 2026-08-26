@@ -1276,17 +1276,6 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('photo'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 2048,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('providerAccessToken'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

@@ -175,14 +175,16 @@ class V25 extends Migration
                     }
                     break;
 
-                case 'identities':
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'photo');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"photo\" in collection {$id}: {$th->getMessage()}");
-                    }
+                case 'deployments':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_commitHash_branch');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_commitHash_branch\" from {$id}: {$th->getMessage()}");
+                        }
 
-                    $this->dbForProject->purgeCachedCollection($id);
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
                     break;
             }
         }

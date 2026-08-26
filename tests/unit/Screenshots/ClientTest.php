@@ -58,6 +58,7 @@ final class ClientTest extends TestCase
             'theme' => 'dark',
             'headers' => ['x-appwrite-hostname' => 'example.com'],
             'sleep' => 500,
+            'timeout' => 60000,
             'viewport' => ['width' => 1280, 'height' => 720],
             'deviceScaleFactor' => 1.5,
         ], \json_decode((string)$this->request->getBody(), true));
