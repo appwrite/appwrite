@@ -32,15 +32,6 @@ use Utopia\System\System;
 
 class Functions extends Action
 {
-    /**
-     * Subquery filters hanging off a project document, suppressed while touching
-     * accessedAt. Read through static:: so an edition that adds its own project
-     * subqueries can extend the list:
-     *
-     *     protected const array PROJECT_SUBQUERY_FILTERS = [...parent::PROJECT_SUBQUERY_FILTERS, 'subQueryFoo'];
-     */
-    protected const array PROJECT_SUBQUERY_FILTERS = APP_PROJECT_SUBQUERIES;
-
     /** @var callable(string, int, callable): mixed */
     private $locks;
 
@@ -399,7 +390,7 @@ class Functions extends Action
                             fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                                 'accessedAt' => $now
                             ])),
-                            static::PROJECT_SUBQUERY_FILTERS
+                            APP_PROJECTS_SUBQUERIES
                         );
                     }
                 );

@@ -69,7 +69,7 @@ class ScheduleMessages extends Action
                 fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                     'accessedAt' => $now
                 ])),
-                APP_PROJECT_SUBQUERIES
+                APP_PROJECTS_SUBQUERIES
             );
             $project->setAttribute('accessedAt', $now);
         }

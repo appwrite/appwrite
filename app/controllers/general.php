@@ -162,7 +162,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                         $project->getId(),
                         new Document(['accessedAt' => DateTime::now()])
                     ),
-                    APP_PROJECT_SUBQUERIES
+                    APP_PROJECTS_SUBQUERIES
                 )),
                 target: 'projects'
             );

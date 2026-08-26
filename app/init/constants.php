@@ -44,7 +44,7 @@ const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element 
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
 
-const APP_PROJECT_SUBQUERIES = [
+const APP_PROJECTS_SUBQUERIES = [
     'subQueryKeys',
     'subQueryWebhooks',
     'subQueryPlatforms',
@@ -52,7 +52,7 @@ const APP_PROJECT_SUBQUERIES = [
     'subQueryDevKeys',
 ];
 
-const APP_USER_SUBQUERIES = [
+const APP_USERS_SUBQUERIES = [
     'subQueryAuthenticators',
     'subQuerySessions',
     'subQueryTokens',
@@ -63,9 +63,20 @@ const APP_USER_SUBQUERIES = [
     'subQueryPaymentMethods',
 ];
 
-const APP_TEAM_SUBQUERIES = [
+const APP_TEAMS_SUBQUERIES = [
     'subQueryOrganizationKeys',
 ];
+
+const APP_TOPICS_SUBQUERIES = [
+    'subQueryTopicTargets',
+];
+
+// Shared by the functions and sites collections.
+const APP_FUNCTIONS_SUBQUERIES = [
+    'subQueryVariables',
+    'subQueryProjectVariables',
+];
+
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls

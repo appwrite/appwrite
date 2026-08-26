@@ -404,7 +404,7 @@ Http::init()
                             $project->getId(),
                             new Document(['accessedAt' => DateTime::now()])
                         ),
-                        APP_PROJECT_SUBQUERIES
+                        APP_PROJECTS_SUBQUERIES
                     )),
                     target: 'projects'
                 );
@@ -426,7 +426,7 @@ Http::init()
                             fn () => $dbForProject->updateDocument('users', $user->getId(), new Document([
                                 'accessedAt' => $user->getAttribute('accessedAt')
                             ])),
-                            APP_USER_SUBQUERIES
+                            APP_USERS_SUBQUERIES
                         ),
                         target: 'users'
                     );
@@ -440,7 +440,7 @@ Http::init()
                                 $user->getId(),
                                 new Document(['accessedAt' => $user->getAttribute('accessedAt')])
                             ),
-                            APP_USER_SUBQUERIES
+                            APP_USERS_SUBQUERIES
                         )),
                         target: 'users'
                     );
@@ -1238,7 +1238,7 @@ Http::shutdown()
                     fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                         'onboarding' => $byMethod,
                     ])),
-                    APP_PROJECT_SUBQUERIES
+                    APP_PROJECTS_SUBQUERIES
                 )),
                 target: 'projects',
             );
