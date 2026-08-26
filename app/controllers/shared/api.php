@@ -394,9 +394,8 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $projectInternalId = (string) ($project->getSequence() ?: $project->getId());
                 $lock->tryWithKey(
-                    'lock:platform:'.$projectInternalId.':projects:'.$project->getId().':accessedAt',
+                    'lock:platform:'.$project->getSequence().':projects:'.$project->getId().':accessedAt',
                     // updateDocument never uses cache, so skip the subqueries.
                     fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
                         fn () => $dbForPlatform->updateDocument(
@@ -432,7 +431,7 @@ Http::init()
                     );
                 } else {
                     $lock->tryWithKey(
-                        'lock:platform:'.$user->getSequence().':accessedAt',
+                        'lock:platform:'.$user->getSequence().':users:'.$user->getId().':accessedAt',
                         // updateDocument never uses cache, so skip the subqueries.
                         fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
                             fn () => $dbForPlatform->updateDocument(

@@ -75,7 +75,7 @@ class ScheduleMessages extends Action
             // every one of them reads the same stale accessedAt and would write
             // it. The lock keeps that to one write, as the request path does.
             ($this->locks)(
-                'lock:platform:' . ($project->getSequence() ?: $project->getId()) . ':projects:' . $project->getId() . ':accessedAt',
+                'lock:platform:'.$project->getSequence().':projects:'.$project->getId().':accessedAt',
                 APP_PROJECT_ACCESS,
                 function () use ($dbForPlatform, $project, $now): void {
                     // updateDocument never uses cache, so skip the subqueries.

@@ -382,7 +382,7 @@ class Functions extends Action
                 // write it. The lock keeps that to one write, as the request
                 // path does; contention throws and the caller treats it as done.
                 ($this->locks)(
-                    'lock:platform:' . ($project->getSequence() ?: $project->getId()) . ':projects:' . $project->getId() . ':accessedAt',
+                    'lock:platform:'.$project->getSequence().':projects:'.$project->getId().':accessedAt',
                     APP_PROJECT_ACCESS,
                     function () use ($dbForPlatform, $project, $now): void {
                         // updateDocument never uses cache, so skip the subqueries.
