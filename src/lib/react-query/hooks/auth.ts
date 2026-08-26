@@ -913,6 +913,40 @@ export function useUpdateMembershipsPrivacy(
   })
 }
 
+/**
+ * Hook to update which factors can complete an MFA challenge.
+ *
+ * @param projectId - The project ID
+ */
+export function useUpdateMfaFactorsPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (factors: {
+      totp: boolean
+      email: boolean
+      phone: boolean
+      custom: boolean
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.updateMFAFactorsPolicy({
+        totp: factors.totp,
+        email: factors.email,
+        phone: factors.phone,
+        custom: factors.custom,
+      })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
 type ProjectEmailPolicyService = {
   updateDenyFreeEmailPolicy: (params: {
     enabled: boolean

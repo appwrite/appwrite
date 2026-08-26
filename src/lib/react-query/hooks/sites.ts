@@ -163,6 +163,7 @@ export function buildSiteUpdateParams(
     buildSpecification: site.buildSpecification,
     runtimeSpecification: site.runtimeSpecification,
     deploymentRetention: site.deploymentRetention,
+    scopes: site.scopes,
     ...updates,
   } as unknown as SiteUpdateParams
 }
