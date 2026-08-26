@@ -93,13 +93,42 @@ class Nats implements Publisher, Consumer
      * publisher side).
      *
      * @param NatsConnection|(\Closure(): NatsConnection) $source
+     * @param list<float>|null $backoff Redelivery delays in seconds, one per attempt (the
+     *        last entry repeats). JetStream couples this to the other knobs: the first
+     *        entry must equal $ackWait and $maxDeliver must exceed the entry count —
+     *        both are validated here so a bad combination fails at construction, not
+     *        as a server error inside ensure() on first use.
+     * @param StorageType $storage Backing store for the work and dead streams. Memory
+     *        trades durability for latency: messages are lost on server restart (a
+     *        replicated memory stream survives single-node loss, not quorum loss).
+     * @param float|null $deadMaxAge Dead-letter TTL in seconds: how long a
+     *        dead-lettered message stays inspectable/retryable before JetStream
+     *        discards it. Null keeps dead messages forever.
      */
     public function __construct(
         private readonly NatsConnection|\Closure $source,
         private readonly float $ackWait = 30.0,
         private readonly int $maxDeliver = 5,
         private readonly int $replicas = 1,
-    ) {}
+        private readonly ?array $backoff = null,
+        private readonly StorageType $storage = StorageType::File,
+        private readonly ?float $deadMaxAge = null,
+    ) {
+        if ($this->backoff !== null) {
+            if ($this->backoff === [] || min($this->backoff) <= 0) {
+                throw new \InvalidArgumentException('backoff must be a non-empty list of positive delays (seconds)');
+            }
+            if ($this->backoff[0] !== $this->ackWait) {
+                throw new \InvalidArgumentException(\sprintf('JetStream requires the first backoff entry to equal ackWait: got backoff[0]=%s, ackWait=%s', $this->backoff[0], $this->ackWait));
+            }
+            if ($this->maxDeliver <= \count($this->backoff)) {
+                throw new \InvalidArgumentException(\sprintf('JetStream requires maxDeliver (%d) to exceed the number of backoff entries (%d)', $this->maxDeliver, \count($this->backoff)));
+            }
+        }
+        if ($this->deadMaxAge !== null && $this->deadMaxAge <= 0) {
+            throw new \InvalidArgumentException('deadMaxAge must be a positive number of seconds, or null to keep dead messages forever');
+        }
+    }
 
     private function connection(): NatsConnection
     {
@@ -343,7 +372,7 @@ class Nats implements Publisher, Consumer
             description: $key,
             retention: RetentionPolicy::WorkQueue,
             maxAge: $maxAge,
-            storage: StorageType::File,
+            storage: $this->storage,
             replicas: $this->replicas,
             metadata: [self::METADATA_IDENTITY => $key],
         ));
@@ -353,7 +382,8 @@ class Nats implements Publisher, Consumer
             subjects: [$this->deadSubject($queue)],
             description: $key,
             retention: RetentionPolicy::WorkQueue,
-            storage: StorageType::File,
+            maxAge: $this->deadMaxAge,
+            storage: $this->storage,
             replicas: $this->replicas,
             metadata: [self::METADATA_IDENTITY => $key],
         ));
@@ -365,6 +395,7 @@ class Nats implements Publisher, Consumer
                 ackWait: $this->ackWait,
                 maxDeliver: $this->maxDeliver,
                 filterSubject: $this->workSubject($queue),
+                backoff: $this->backoff,
             )),
             'priority' => $this->js()->createConsumer($this->workStream($queue), new ConsumerConfig(
                 durableName: self::CONSUMER_PRIORITY,
@@ -372,6 +403,7 @@ class Nats implements Publisher, Consumer
                 ackWait: $this->ackWait,
                 maxDeliver: $this->maxDeliver,
                 filterSubject: $this->prioritySubject($queue),
+                backoff: $this->backoff,
             )),
         ];
 

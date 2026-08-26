@@ -6,6 +6,7 @@ namespace Tests\E2E\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
+use Utopia\NATS\JetStream\StorageType;
 use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
@@ -366,5 +367,74 @@ final class NatsBrokerTest extends TestCase
 
         $this->assertNotInstanceOf(\Throwable::class, $error, 'getQueueSize collided with the consume connection: ' . ($error?->getMessage() ?? ''));
         $this->assertCount(3, $sizes, 'depth gauge ran to completion without crashing the worker');
+    }
+
+    public function testBackoffStretchesRedeliveries(): void
+    {
+        // backoff [1s, 3s]: the first uncommitted timeout redelivers after ~1s, the
+        // second after ~3s. Without backoff both would come back on the flat 1s ackWait.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 5, backoff: [1.0, 3.0]);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $broker->enqueue($queue, ['task' => 'slowpoke']);
+
+        $first = $broker->receive($queue, 2);
+        $this->assertInstanceOf(Message::class, $first);
+
+        // First redelivery: due after backoff[0] = 1s.
+        $second = $broker->receive($queue, 3);
+        $this->assertInstanceOf(Message::class, $second);
+        $this->assertSame(1, $second->getAttempts());
+
+        // Second redelivery: due after backoff[1] = 3s, so a 1s window is too early…
+        $tooEarly = $broker->receive($queue, 1);
+        $this->assertNotInstanceOf(\Utopia\Queue\Message::class, $tooEarly, 'redelivery arrived before the 3s backoff elapsed');
+
+        // …and a window past the full delay sees it.
+        $third = $broker->receive($queue, 4);
+        $this->assertInstanceOf(Message::class, $third);
+        $this->assertSame(2, $third->getAttempts());
+
+        $broker->commit($queue, $third);
+        $broker->close();
+    }
+
+    public function testDeadMaxAgeExpiresDeadLetters(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(Connection::connect($url), ackWait: 2.0, maxDeliver: 2, deadMaxAge: 2.0);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $broker->enqueue($queue, ['task' => 'doomed']);
+        for ($i = 0; $i < 2; $i++) {
+            $message = $broker->receive($queue, 3);
+            $this->assertInstanceOf(Message::class, $message);
+            $broker->reject($queue, $message);
+        }
+        $this->assertSame(1, $broker->getQueueSize($queue, true), 'message should be dead-lettered');
+
+        sleep(4); // deadMaxAge is 2s; JetStream expiry runs on its own timer, allow slack
+
+        $this->assertSame(0, $broker->getQueueSize($queue, true), 'dead letter should have expired via deadMaxAge');
+        $broker->close();
+    }
+
+    public function testMemoryStorageRoundTrip(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(Connection::connect($url), ackWait: 2.0, maxDeliver: 3, storage: StorageType::Memory);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $broker->enqueue($queue, ['task' => 'ephemeral']);
+        $this->assertSame(1, $broker->getQueueSize($queue));
+
+        $message = $broker->receive($queue, 2);
+        $this->assertInstanceOf(Message::class, $message);
+        $this->assertSame('ephemeral', $message->getPayload()['task']);
+
+        $broker->commit($queue, $message);
+        $this->assertSame(0, $broker->getQueueSize($queue));
+        $broker->close();
     }
 }
