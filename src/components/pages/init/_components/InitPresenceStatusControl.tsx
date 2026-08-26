@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import {
   Popover,
   PopoverContent,
@@ -17,6 +17,7 @@ import {
   useInitPresence,
   type InitParticipantStatus,
 } from '@/lib/init/init-presence-context'
+import { useAvatarEmailHash } from '@/lib/init/avatar-email-hash'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
 import { motion, useReducedMotion } from 'motion/react'
@@ -91,11 +92,13 @@ function PresenceStatusToggle({
 
 function PresenceStatusPanel({
   name,
+  emailHash,
   participantStatus,
   isUpdating,
   onStatusChange,
 }: {
   name: string
+  emailHash?: string
   participantStatus: InitParticipantStatus
   isUpdating: boolean
   onStatusChange: (status: InitParticipantStatus) => void
@@ -105,7 +108,12 @@ function PresenceStatusPanel({
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-2.5">
-        <InitialsAvatar name={name} size="sm" className="mt-0.5 shrink-0 rounded-full" />
+        <PhotoAvatar
+          name={name}
+          emailHash={emailHash}
+          size="sm"
+          className="mt-0.5 shrink-0 rounded-full"
+        />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium text-foreground">{name}</p>
           <div className="mt-0.5 flex items-start gap-1.5">
@@ -187,6 +195,7 @@ export function InitPresenceStatusControl({
     setParticipantStatus,
   } = useInitPresence()
   const reduceMotion = useReducedMotion()
+  const emailHash = useAvatarEmailHash(account?.email)
 
   const name =
     account?.name?.trim() || account?.email?.split('@')[0]?.trim() || 'You'
@@ -217,7 +226,12 @@ export function InitPresenceStatusControl({
                 aria-label={`Your status: ${isOnline ? 'Online' : 'Offline'}. Open status settings`}
               >
                 <span className="relative">
-                  <InitialsAvatar name={name} size="sm" className="rounded-full" />
+                  <PhotoAvatar
+                    name={name}
+                    emailHash={emailHash}
+                    size="sm"
+                    className="rounded-full"
+                  />
                   <motion.span
                     key={isOnline ? 'online' : 'offline'}
                     className={cn(
@@ -252,6 +266,7 @@ export function InitPresenceStatusControl({
         >
           <PresenceStatusPanel
             name={name}
+            emailHash={emailHash}
             participantStatus={participantStatus}
             isUpdating={isParticipantStatusUpdating}
             onStatusChange={handleStatusChange}
@@ -268,6 +283,7 @@ export function InitPresenceStatusControl({
       </p>
       <PresenceStatusPanel
         name={name}
+        emailHash={emailHash}
         participantStatus={participantStatus}
         isUpdating={isParticipantStatusUpdating}
         onStatusChange={handleStatusChange}

@@ -101,6 +101,8 @@ export interface LaunchEventOnlineUser {
   theme?: 'light' | 'dark'
   /** ISO 3166-1 alpha-2 country code from locale API. */
   countryCode?: string
+  /** SHA-256 hex of lowercase trimmed email for `avatars.getPhoto`. */
+  emailHash?: string
 }
 
 export interface InitCommunityCountry {

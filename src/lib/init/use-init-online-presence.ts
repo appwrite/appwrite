@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { fetchLocale } from '@/lib/react-query/hooks/locale'
 import { LONG_STALE_TIME } from '@/lib/react-query/hooks/constants'
+import { hashEmailForAvatar } from '@/lib/init/avatar-email-hash'
 import { retainInitPresencesRealtimeListener } from '@/lib/init/init-presences-realtime'
 import { buildInitPresenceActivityAllowlist } from '@/lib/init/init-presence-activity-allowlist'
 import {
@@ -155,6 +156,11 @@ export function useInitOnlinePresence(
   const countryCodeRef = useRef<string | undefined>(undefined)
   countryCodeRef.current = localeData?.countryCode?.trim().toUpperCase() || undefined
 
+  const accountEmailRef = useRef<string | undefined>(undefined)
+  accountEmailRef.current = account?.email?.trim() || undefined
+
+  const emailHashRef = useRef<string | undefined>(undefined)
+
   const [presenceMaps, setPresenceMaps] = useState<PresenceMaps>(() => ({
     online: new Map(),
     away: new Map(),
@@ -203,7 +209,7 @@ export function useInitOnlinePresence(
   accountUserIdRef.current = accountUserId
 
   const buildMetadata = useCallback(
-    (away: boolean): InitPresenceMetadata | null => {
+    (away: boolean, emailHash?: string): InitPresenceMetadata | null => {
       if (!eventId || !accountName) return null
       return {
         eventId,
@@ -213,6 +219,7 @@ export function useInitOnlinePresence(
           publishThemeRef.current ??
           resolveInitPresenceTheme(resolvedThemeRef.current),
         countryCode: countryCodeRef.current,
+        emailHash: emailHash || emailHashRef.current,
       }
     },
     [accountName, eventId, resolveActivity],
@@ -322,7 +329,19 @@ export function useInitOnlinePresence(
   const publishPresence = useCallback(
     async (away: boolean, options?: { refresh?: boolean }) => {
       if (!enabled || !eventId || !accountUserId) return false
-      const metadata = buildMetadata(away)
+
+      // Always derive emailHash from account.email before upsert so getPhoto
+      // callers never receive presence rows without a hash.
+      const accountEmail = accountEmailRef.current
+      let emailHash: string | undefined
+      if (accountEmail) {
+        emailHash = await hashEmailForAvatar(accountEmail)
+        emailHashRef.current = emailHash
+      } else {
+        emailHashRef.current = undefined
+      }
+
+      const metadata = buildMetadata(away, emailHash)
       if (!metadata) return false
 
       const status = away ? buildInitAwayStatus(eventId) : buildInitOnlineStatus(eventId)
