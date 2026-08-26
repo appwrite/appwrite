@@ -49,12 +49,13 @@ function ScaledTicketShell({
     >
       <div
         className={cn(
-          'absolute top-0 left-1/2 origin-top will-change-transform',
+          'absolute top-0 left-1/2 will-change-transform',
           pointerEventsNone && 'pointer-events-none',
         )}
         style={{
           width: INIT_TICKET_MAX_WIDTH_PX,
           transform: `translateX(-50%) scale(${scale})`,
+          transformOrigin: 'top center',
         }}
       >
         {children}

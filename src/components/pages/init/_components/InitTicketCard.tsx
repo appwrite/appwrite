@@ -392,85 +392,80 @@ function TicketBackFace(props: TicketFaceSharedProps) {
     props
   const mutedClass = usesDarkImage ? 'text-white/55' : 'text-neutral-500'
 
-  const contentGrid = initTicketContentGridStyle()
-
   return (
     <TicketFaceShell {...props} isBack>
       <div
-        className="grid h-full min-h-0 overflow-visible pb-[9%]"
-        style={contentGrid}
+        data-init-ticket-back-content
+        className="flex h-full min-h-0 flex-col justify-between overflow-visible pb-[9%] pe-[4%]"
       >
-        <div className="flex min-w-0 flex-col justify-between gap-10 pe-[8%]">
-          <div className="space-y-2.5">
+        <div className="space-y-2.5">
+          <p
+            className={cn(
+              'text-[9px] font-semibold uppercase tracking-[0.24em]',
+              mutedClass,
+            )}
+          >
+            Official pass
+          </p>
+          <InitWordmark
+            accentColor={accentColor}
+            className={cn(
+              'text-[clamp(22px,4.5vw,34px)]',
+              usesDarkImage ? 'text-white' : 'text-neutral-900',
+            )}
+          />
+          <p
+            className="font-mono text-[11px] font-semibold tabular-nums sm:text-[12px]"
+            style={{ color: accentColor }}
+          >
+            {ticketNumber}
+          </p>
+        </div>
+
+        <div className="mt-8 space-y-4 sm:mt-10">
+          <div
+            className="flex h-10 items-end justify-start gap-0.5 overflow-hidden"
+            aria-hidden
+          >
+            {Array.from({ length: 24 }).map((_, index) => (
+              <span
+                key={index}
+                className={cn(
+                  'w-0.5 rounded-full',
+                  usesDarkImage ? 'bg-white/30' : 'bg-neutral-900/25',
+                )}
+                style={{ height: `${28 + ((index * 17) % 40)}%` }}
+              />
+            ))}
+          </div>
+          <div
+            className={cn(
+              'space-y-2 border-t border-dashed pt-4',
+              usesDarkImage ? 'border-white/20' : 'border-neutral-900/15',
+            )}
+          >
             <p
               className={cn(
-                'text-[9px] font-semibold uppercase tracking-[0.24em]',
+                'text-[9px] font-semibold uppercase tracking-[0.2em]',
                 mutedClass,
               )}
             >
-              Official pass
+              Valid for Init week
             </p>
-            <InitWordmark
-              accentColor={accentColor}
-              className={cn(
-                'text-[clamp(22px,4.5vw,34px)]',
-                usesDarkImage ? 'text-white' : 'text-neutral-900',
-              )}
-            />
             <p
-              className="font-mono text-[11px] font-semibold tabular-nums sm:text-[12px]"
-              style={{ color: accentColor }}
-            >
-              {ticketNumber}
-            </p>
-          </div>
-
-          <div className="space-y-4 pt-1">
-            <div
-              className="flex h-10 items-end justify-start gap-0.5 overflow-hidden"
-              aria-hidden
-            >
-              {Array.from({ length: 24 }).map((_, index) => (
-                <span
-                  key={index}
-                  className={cn(
-                    'w-0.5 rounded-full',
-                    usesDarkImage ? 'bg-white/30' : 'bg-neutral-900/25',
-                  )}
-                  style={{ height: `${28 + ((index * 17) % 40)}%` }}
-                />
-              ))}
-            </div>
-            <div
               className={cn(
-                'space-y-2 border-t border-dashed pt-4',
-                usesDarkImage ? 'border-white/20' : 'border-neutral-900/15',
+                'text-[12px] font-medium',
+                usesDarkImage ? 'text-white/90' : 'text-neutral-800',
               )}
             >
-              <p
-                className={cn(
-                  'text-[9px] font-semibold uppercase tracking-[0.2em]',
-                  mutedClass,
-                )}
-              >
-                Valid for Init week
-              </p>
-              <p
-                className={cn(
-                  'text-[12px] font-medium',
-                  usesDarkImage ? 'text-white/90' : 'text-neutral-800',
-                )}
-              >
-                {dateRangeLabel}
-              </p>
-              <TicketStackIcons
-                stack={prefs.stack}
-                usesDarkImage={usesDarkImage}
-              />
-            </div>
+              {dateRangeLabel}
+            </p>
+            <TicketStackIcons
+              stack={prefs.stack}
+              usesDarkImage={usesDarkImage}
+            />
           </div>
         </div>
-        <div aria-hidden />
       </div>
     </TicketFaceShell>
   )

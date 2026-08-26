@@ -437,12 +437,25 @@ export function copyInitTicketStillLayout(
   }
 }
 
-/** Back face layout tweaks (padding); bg art keeps the same orientation as the live flip. */
+/** Back face uses a single flex column (no stub). */
 export function copyInitTicketBackStillLayout(
   source: HTMLElement,
   clone: HTMLElement,
+  layoutSize?: { width: number; height: number },
 ) {
-  copyInitTicketStillLayout(source, clone)
+  copyComputedTypography(source, clone)
+
+  const width =
+    source.offsetWidth > 1
+      ? source.offsetWidth
+      : (layoutSize?.width ?? source.offsetWidth)
+  const height =
+    source.offsetHeight > 1
+      ? source.offsetHeight
+      : (layoutSize?.height ?? source.offsetHeight)
+  clone.style.boxSizing = 'border-box'
+  clone.style.width = `${width}px`
+  clone.style.height = `${height}px`
 
   const sourceOverlay = [...source.children].find(
     (node): node is HTMLElement =>
@@ -452,13 +465,49 @@ export function copyInitTicketBackStillLayout(
     (node): node is HTMLElement =>
       node instanceof HTMLElement && node.tagName !== 'IMG',
   )
-  if (sourceOverlay?.firstElementChild instanceof HTMLElement) {
-    const sourceGrid = sourceOverlay.firstElementChild
-    const cloneGrid = cloneOverlay?.firstElementChild
-    if (cloneGrid instanceof HTMLElement) {
-      const computed = getComputedStyle(sourceGrid)
-      cloneGrid.style.paddingBottom = computed.paddingBottom
-    }
+  if (!sourceOverlay || !cloneOverlay) return
+
+  const top = (INIT_TICKET_CONTENT_INSET.top / 100) * height
+  const right = (INIT_TICKET_CONTENT_INSET.right / 100) * width
+  const bottom = (INIT_TICKET_CONTENT_INSET.bottom / 100) * height
+  const left = (INIT_TICKET_CONTENT_INSET.left / 100) * width
+  const contentW = width - left - right
+  const contentH = height - top - bottom
+
+  cloneOverlay.style.position = 'absolute'
+  cloneOverlay.style.top = `${top}px`
+  cloneOverlay.style.left = `${left}px`
+  cloneOverlay.style.right = 'auto'
+  cloneOverlay.style.bottom = 'auto'
+  cloneOverlay.style.width = `${contentW}px`
+  cloneOverlay.style.height = `${contentH}px`
+
+  const sourceContent = sourceOverlay.firstElementChild
+  const cloneContent = cloneOverlay.firstElementChild
+  if (
+    !(sourceContent instanceof HTMLElement) ||
+    !(cloneContent instanceof HTMLElement)
+  ) {
+    return
+  }
+
+  const computed = getComputedStyle(sourceContent)
+  cloneContent.style.display = 'flex'
+  cloneContent.style.flexDirection = 'column'
+  cloneContent.style.justifyContent = 'space-between'
+  cloneContent.style.width = `${contentW}px`
+  cloneContent.style.height = `${contentH}px`
+  cloneContent.style.minHeight = `${contentH}px`
+  cloneContent.style.boxSizing = 'border-box'
+  cloneContent.style.paddingBottom = computed.paddingBottom
+  cloneContent.style.paddingRight = computed.paddingRight
+  cloneContent.style.overflow = 'visible'
+
+  const sourceBottom = sourceContent.children[1]
+  const cloneBottom = cloneContent.children[1]
+  if (sourceBottom instanceof HTMLElement && cloneBottom instanceof HTMLElement) {
+    const bottomComputed = getComputedStyle(sourceBottom)
+    cloneBottom.style.marginTop = bottomComputed.marginTop
   }
 }
 
@@ -558,7 +607,7 @@ async function captureInitTicketFaceStillCanvas(
   clone.removeAttribute('data-init-ticket-still')
   clone.removeAttribute('data-init-ticket-still-back')
   if (face === 'back') {
-    copyInitTicketBackStillLayout(element, clone)
+    copyInitTicketBackStillLayout(element, clone, { width, height })
   } else {
     copyInitTicketStillLayout(element, clone)
   }

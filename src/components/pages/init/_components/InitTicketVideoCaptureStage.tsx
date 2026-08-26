@@ -1,5 +1,4 @@
 import { forwardRef, useImperativeHandle, useRef, type ReactNode } from 'react'
-import { INIT_TICKET_MAX_WIDTH_PX } from '@/lib/init/ticket-layout'
 import { cn } from '@/lib/utils'
 
 type InitTicketVideoCaptureStageProps = {
@@ -28,10 +27,7 @@ export const InitTicketVideoCaptureStage = forwardRef<
           className="absolute inset-0 overflow-hidden rounded-2xl"
         >
           <div className="relative z-10 flex h-full w-full items-center justify-center px-4 py-0.5 sm:px-6 sm:py-1">
-            <div
-              className="mx-auto w-full origin-center scale-[0.94] sm:scale-[0.98]"
-              style={{ maxWidth: INIT_TICKET_MAX_WIDTH_PX }}
-            >
+            <div className="mx-auto w-full min-w-0 origin-center scale-[0.94] sm:scale-[0.98]">
               {children}
             </div>
           </div>
