@@ -1547,8 +1547,8 @@ trait AvatarsBase
         $this->assertPhotoFallback($response['body']);
 
         // A name alongside the hash resolves to initials once Gravatar and
-        // Libravatar miss — the explicit parameters take priority over the
-        // authenticated user's own attributes.
+        // Libravatar miss — the explicit parameters replace the authenticated
+        // user's own photo sources.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1622,8 +1622,8 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
 
-        // The explicit name takes priority over the authenticated user's own
-        // name.
+        // The explicit name replaces the authenticated user's photo sources —
+        // the identity-photo case is covered in AvatarsCustomClientTest.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [

@@ -53,9 +53,7 @@ class Get extends Action
                 description: <<<'EOT'
                 Returns the best available profile photo for a user. The endpoint tries each source in priority order and returns the first successful result: OAuth2 identity photo, Gravatar, Libravatar, Appwrite Initials, built-in static fallback.
 
-                The photo resolves for the currently authenticated user unless `userId` points at another user. An explicit `emailHash` or `name` parameter takes priority over the user's own attributes: the hash is looked up on Gravatar and Libravatar, and the name is rendered as initials. Emails are only ever accepted pre-hashed, so no address ends up in a URL.
-
-                Passing `emailHash` also drops the OAuth2 identity photo from the priority order, since the hash may name anyone and that photo would otherwise shadow the avatar being asked for.
+                The photo resolves for the currently authenticated user unless `userId` points at another user. Passing `emailHash` and/or `name` resolves the avatar from those values alone: the hash is looked up on Gravatar and Libravatar, the name is rendered as initials, and the user's own identity photos, email, and name leave the chain so they never shadow the avatar being asked for. Emails are only ever accepted pre-hashed, so no address ends up in a URL.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
@@ -74,8 +72,8 @@ class Get extends Action
             ->param('output', 'png', new WhiteList(['png', 'jpg', 'webp'], true), 'Output image format. Defaults to \'png\'.', true)
             ->param('rating', 'g', new WhiteList(['g', 'pg', 'r', 'x'], true), 'Maximum image rating to fetch from Gravatar/Libravatar. Defaults to \'g\'.', true)
             ->param('userId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID to resolve the photo for. Defaults to \'current\' for the currently authenticated user.', true, ['dbForProject'])
-            ->param('emailHash', '', new Text(64, 64, [...Text::NUMBERS, ...\range('a', 'f'), ...\range('A', 'F')]), 'SHA256 hash of the lowercase, trimmed email address to look up on Gravatar and Libravatar. Takes priority over the user\'s email. Pass the hash, never the address itself.', true)
-            ->param('name', '', new Text(128, 0), 'Name to render initials from when no photo is found. Takes priority over the user\'s name. Max length: 128 chars.', true)
+            ->param('emailHash', '', new Text(64, 64, [...Text::NUMBERS, ...\range('a', 'f'), ...\range('A', 'F')]), 'SHA256 hash of the lowercase, trimmed email address to look up on Gravatar and Libravatar instead of the user\'s own photo sources. Pass the hash, never the address itself.', true)
+            ->param('name', '', new Text(128, 0), 'Name to render initials from instead of the user\'s own photo sources. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
@@ -113,16 +111,25 @@ class Get extends Action
         // lowercase.
         $emailHash = \strtolower($emailHash);
 
-        $providers = [
-            // A hash names an address that may belong to anyone, so the stored
-            // user's OAuth2 identity photos no longer describe the subject —
-            // leaving them in would shadow the avatar actually asked for.
-            ...(empty($emailHash) ? [new OAuth2($dbForProject)] : []),
-            new Gravatar($emailHash),
-            new Libavatar($emailHash),
-            new Initials(),
-            new Fallback(),
-        ];
+        // Explicit parameters replace the stored user's photo sources rather
+        // than re-labelling them: a hash or name may describe anyone, so an
+        // identity photo or the user's own email and name must never shadow
+        // the avatar that was actually asked for.
+        if (!empty($emailHash) || !empty($name)) {
+            $providers = [
+                ...(!empty($emailHash) ? [new Gravatar($emailHash), new Libavatar($emailHash)] : []),
+                ...(!empty($name) ? [new Initials()] : []),
+                new Fallback(),
+            ];
+        } else {
+            $providers = [
+                new OAuth2($dbForProject),
+                new Gravatar(),
+                new Libavatar(),
+                new Initials(),
+                new Fallback(),
+            ];
+        }
 
         $balancer = new Balancer(new First());
 

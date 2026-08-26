@@ -24,13 +24,6 @@ final class AvatarsCustomClientTest extends Scope
      */
     private const OAUTH2_PHOTO_COLOR = ['r' => 0, 'g' => 255, 'b' => 0];
 
-    /**
-     * Corner colour of initials rendered for the mock OAuth2 account's own
-     * name ('User Name' → 'UN'), which deterministically picks the blue
-     * theme (#68A3FE).
-     */
-    private const PHOTO_INITIALS_ACCOUNT_COLOR = ['r' => 104, 'g' => 163, 'b' => 254];
-
     public function testGetPhotoOAuth2(): void
     {
         /**
@@ -68,20 +61,50 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertOAuth2Photo($response['body']);
     }
 
-    public function testGetPhotoEmailHashDropsOAuth2(): void
+    public function testGetPhotoOverridesIdentityPhoto(): void
     {
         /**
-         * Test for SUCCESS — an explicit emailHash outranks the identity photo
+         * Test for SUCCESS — explicit parameters replace the identity photo
          *
-         * The signed-in account has an OAuth2 identity photo, which normally
-         * wins the chain (see testGetPhotoOAuth2). A hash may name anyone, so
-         * it must drop that photo from the priority order rather than be
-         * shadowed by it. Gravatar and Libravatar miss on the random hash, so
-         * the chain falls through to initials of the account's own name.
+         * The signed-in account has an OAuth2 identity photo, which wins the
+         * chain when nothing else is asked for. An explicit emailHash or name
+         * may describe anyone, so it must replace the account's own photo
+         * sources rather than be shadowed by them.
          */
         $session = $this->createOAuth2Session();
         $hash = \hash('sha256', \uniqid('photo-') . '@appwrite.io');
 
+        // Premise: without overrides the identity photo wins.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertOAuth2Photo($response['body']);
+
+        // name only: initials render from the requested name even though the
+        // account holds a real photo.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'name' => 'W W',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+
+        // emailHash only: Gravatar and Libravatar miss on the random hash and
+        // the chain ends at the static fallback — never the identity photo,
+        // and never initials of the account's own name.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
             'origin' => 'http://localhost',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -93,9 +116,10 @@ final class AvatarsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_ACCOUNT_COLOR, $response['body']);
+        $this->assertPhotoFallback($response['body']);
 
-        // An explicit name decides the initials once the identity photo is out.
+        // emailHash + name: a photo when the hash resolves to one, otherwise
+        // initials of the requested name.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
             'origin' => 'http://localhost',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -109,21 +133,6 @@ final class AvatarsCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
-
-        // Without a hash the identity photo still wins, even alongside a name:
-        // a real photo beats generated initials.
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
-            'origin' => 'http://localhost',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ], [
-            'name' => 'W W',
-            'width' => 100,
-            'height' => 100,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertOAuth2Photo($response['body']);
     }
 
     public function testGetPhotoByUserId(): void
