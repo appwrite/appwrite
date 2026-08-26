@@ -93,43 +93,62 @@ class Get extends Action
         Document $user,
         Database $dbForProject,
     ): void {
-        if ($userId !== 'current') {
-            $user = $dbForProject->getDocument('users', $userId);
+        $emailHash = \strtolower($emailHash);
 
-            if ($user->isEmpty()) {
+        $photoUser = new Document();
+
+        if ($userId === 'current') {
+            $photoUser = clone $user;
+        } elseif (!empty($userId)) {
+            $photoUser = $dbForProject->getDocument('users', $userId);
+            if ($photoUser->isEmpty()) {
                 throw new Exception(Exception::USER_NOT_FOUND);
             }
         }
 
-        // An explicit name takes priority over the user's own. Work on a copy —
-        // the injected user document is shared with the request's other hooks.
+        // has 'emailHash', 'name'
+        $profile = new Document();
+
+        if (!$photoUser->isEmpty()) {
+            $userEmail = $user->getAttribute('email', '');
+            $userName = $user->getAttribute('name', '');
+
+            $profile = $profile->setAttribute('$id', $user->getId());
+
+            if (!empty($userName)) {
+                $profile = $profile->setAttribute('name', $userName);
+            }
+
+            if (!empty($userEmail)) {
+                $profile = $profile->setAttribute('emailHash', \strtolower(hash('sha256', $userEmail)));
+            }
+        }
+
         if (!empty($name)) {
-            $user = (clone $user)->setAttribute('name', $name);
+            $profile = $profile->setAttribute('name', $name);
         }
 
-        // The hash reaches the avatar services verbatim, and they expect it
-        // lowercase.
-        $emailHash = \strtolower($emailHash);
-
-        // Explicit parameters replace the stored user's photo sources rather
-        // than re-labelling them: a hash or name may describe anyone, so an
-        // identity photo or the user's own email and name must never shadow
-        // the avatar that was actually asked for.
-        if (!empty($emailHash) || !empty($name)) {
-            $providers = [
-                ...(!empty($emailHash) ? [new Gravatar($emailHash), new Libavatar($emailHash)] : []),
-                ...(!empty($name) ? [new Initials()] : []),
-                new Fallback(),
-            ];
-        } else {
-            $providers = [
-                new OAuth2($dbForProject),
-                new Gravatar(),
-                new Libavatar(),
-                new Initials(),
-                new Fallback(),
-            ];
+        if (empty($emailHash)) {
+            $profile = $profile->setAttribute('emailHash', $emailHash);
         }
+
+        $providers = [];
+
+        if (!empty($profile->getId())) {
+            $providers[] = new OAuth2($dbForProject);
+        }
+
+        if (!empty($profile->getAttribute('emailHash', ''))) {
+            $providers[] = new Gravatar();
+            $providers[] = new Libavatar();
+        }
+
+        if (!empty($profile->getAttribute('name', ''))) {
+            $providers[] = new Initials();
+        }
+
+        $providers[] = new Fallback();
+
 
         $balancer = new Balancer(new First());
 
@@ -137,17 +156,12 @@ class Get extends Action
             $balancer->addOption(new Option(['provider' => $provider]));
         }
 
-        // Skip providers that lack the data they need — no email and no hash
-        // means no Gravatar lookup — so we never pay for a doomed round-trip.
-        $balancer->addFilter(function (Option $option) use ($user) {
+        $balancer->addFilter(function (Option $option) use ($profile) {
             /** @var Photo $provider */
             $provider = $option->getState('provider');
-
-            return $provider->supports($user);
+            return $provider->supports($profile);
         });
 
-        // A provider that came up empty is out of the running; without this the
-        // First algorithm would hand back the same option forever.
         $balancer->addFilter(fn (Option $option) => ! $option->getState('attempted', false));
 
         $data = null;
@@ -158,7 +172,7 @@ class Get extends Action
             /** @var Photo $provider */
             $provider = $option->getState('provider');
 
-            $data = $provider->get($user, $width, $height, $rating);
+            $data = $provider->get($profile, $width, $height, $rating);
 
             if ($data !== null) {
                 break;
