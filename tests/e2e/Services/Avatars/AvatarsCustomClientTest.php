@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Avatars;
 
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\Helpers\ID;
 
 final class AvatarsCustomClientTest extends Scope
 {
@@ -57,6 +59,142 @@ final class AvatarsCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertOAuth2Photo($response['body']);
+    }
+
+    public function testGetPhotoOverridesIdentityPhoto(): void
+    {
+        /**
+         * Test for SUCCESS — explicit parameters replace the identity photo
+         *
+         * The signed-in account has an OAuth2 identity photo, which wins the
+         * chain when nothing else is asked for. An explicit emailHash or name
+         * may describe anyone, so it must replace the account's own photo
+         * sources rather than be shadowed by them.
+         */
+        $session = $this->createOAuth2Session();
+        $hash = \hash('sha256', \uniqid('photo-') . '@appwrite.io');
+
+        // Premise: without overrides the identity photo wins.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertOAuth2Photo($response['body']);
+
+        // name only: initials render from the requested name even though the
+        // account holds a real photo.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'name' => 'W W',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+
+        // name '0' is falsy in PHP but is a real override: it must render as
+        // initials instead of returning the identity photo.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'name' => '0',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_ZERO_COLOR, $response['body']);
+
+        // emailHash only: Gravatar and Libravatar miss on the random hash and
+        // the chain ends at the static fallback — never the identity photo,
+        // and never initials of the account's own name.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'emailHash' => $hash,
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoFallback($response['body']);
+
+        // emailHash + name: a photo when the hash resolves to one, otherwise
+        // initials of the requested name.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'emailHash' => $hash,
+            'name' => 'W W',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+    }
+
+    public function testGetPhotoByUserId(): void
+    {
+        /**
+         * Test for SUCCESS — a client session resolves another user's photo
+         * by ID: the target's name renders as initials, not the caller's own
+         * photo.
+         */
+        $userId = ID::unique();
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => $userId,
+            'email' => \uniqid('photo-') . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'W W',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $userId,
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+
+        /**
+         * Test for FAILURE — unknown user.
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_NOT_FOUND, $response['body']['type']);
     }
 
     /**

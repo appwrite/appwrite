@@ -9,24 +9,10 @@ use Utopia\Database\Query;
 
 /**
  * OAuth2 identity photo provider.
- *
- * Resolves a profile photo from the authenticated user's stored OAuth2
- * identities. At login time each OAuth2 adapter (GitHub, Google, …) stores
- * the provider's photo URL in the `photo` field of the identity document.
- * This provider reads those stored URLs, most-recently-updated first, and
- * proxies the first one that returns a valid image.
- *
- * The provider is intentionally agnostic about which OAuth2 service the URL
- * came from — that complexity belongs in the individual OAuth2 adapters.
+ * Resolves a profile photo from the authenticated user's stored OAuth2 identities
  */
 class OAuth2 extends Photo
 {
-    /**
-     * Maximum number of identity photo URLs to try before giving up.
-     *
-     * Keeps the worst-case latency bounded when a user has many OAuth2
-     * connections with broken CDN links.
-     */
     private const MAX_ATTEMPTS = 10;
 
     public function __construct(
@@ -40,19 +26,17 @@ class OAuth2 extends Photo
     }
 
     /**
-     * An OAuth2 photo is available as long as the user has at least one
-     * identity. Whether any of those identities actually carries a valid
-     * photo is determined at fetch time — we do not know without querying.
+     * Identities are queried by user ID
      */
-    public function supports(Document $user): bool
+    public function supports(Document $profile): bool
     {
-        return ! $user->isEmpty();
+        return $profile->getId() !== '';
     }
 
-    public function get(Document $user, int $width, int $height, string $rating): ?string
+    public function get(Document $profile, int $width, int $height, string $rating): ?string
     {
         $identities = $this->dbForProject->find('identities', [
-            Query::equal('userId', [$user->getId()]),
+            Query::equal('userId', [$profile->getId()]),
             Query::isNotNull('photo'),
             Query::orderDesc('$updatedAt'),
             Query::limit(self::MAX_ATTEMPTS),
@@ -61,7 +45,7 @@ class OAuth2 extends Photo
         foreach ($identities as $identity) {
             $url = $identity->getAttribute('photo', '');
 
-            if (empty($url)) {
+            if ($url === '') {
                 continue;
             }
 
