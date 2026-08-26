@@ -106,7 +106,7 @@ class Get extends Action
             }
         }
 
-        // has 'emailHash', 'name'
+        // has 'emailHash', 'name', '$id'
         $profile = new Document();
 
         // Explicit parameters replace the user's photo sources entirely — a
