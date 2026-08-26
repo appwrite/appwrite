@@ -7,6 +7,7 @@ use Appwrite\AvatarPhotos\Providers\Fallback;
 use Appwrite\AvatarPhotos\Providers\Gravatar;
 use Appwrite\AvatarPhotos\Providers\Initials;
 use Appwrite\AvatarPhotos\Providers\Libavatar;
+use Appwrite\AvatarPhotos\Providers\OAuth2;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
@@ -18,6 +19,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Balancer\Algorithm\First;
 use Utopia\Balancer\Balancer;
 use Utopia\Balancer\Option;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
@@ -46,8 +48,8 @@ class Get extends Action
                 namespace: 'avatars',
                 group: null,
                 name: 'getPhoto',
-                description: <<<EOT
-                Returns the best available profile photo for the currently authenticated user. The endpoint tries each source in priority order and returns the first successful result: Gravatar, Libavatar, Appwrite Initials, built-in static fallback file.
+                description: <<<'EOT'
+                Returns the best available profile photo for the currently authenticated user. The endpoint tries each source in priority order and returns the first successful result: OAuth2 identity photo, Gravatar, Libravatar, Appwrite Initials, built-in static fallback.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
@@ -56,7 +58,7 @@ class Get extends Action
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_NONE,
-                    )
+                    ),
                 ],
                 contentType: ContentType::IMAGE
             ))
@@ -67,6 +69,7 @@ class Get extends Action
             ->param('rating', 'g', new WhiteList(['g', 'pg', 'r', 'x'], true), 'Maximum image rating to fetch from Gravatar/Libravatar. Defaults to \'g\'.', true)
             ->inject('response')
             ->inject('user')
+            ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
@@ -78,15 +81,10 @@ class Get extends Action
         string $rating,
         Response $response,
         Document $user,
+        Database $dbForProject,
     ): void {
-        // -------------------------------------------------------------------
-        // Priority 1: OAuth2 session photo
-        // TODO: Resolve profile photo from the user's active OAuth2 token.
-        //       Each OAuth2 provider (Google, GitHub, …) exposes a profile-
-        //       picture URL. Add it as a provider at the front of the list.
-        //       Track in: https://github.com/appwrite/appwrite/issues/TODO
-        // -------------------------------------------------------------------
         $providers = [
+            new OAuth2($dbForProject),
             new Gravatar(),
             new Libavatar(),
             new Initials(),
@@ -110,7 +108,7 @@ class Get extends Action
 
         // A provider that came up empty is out of the running; without this the
         // First algorithm would hand back the same option forever.
-        $balancer->addFilter(fn (Option $option) => !$option->getState('attempted', false));
+        $balancer->addFilter(fn (Option $option) => ! $option->getState('attempted', false));
 
         $data = null;
 
@@ -132,7 +130,7 @@ class Get extends Action
         }
 
         $contentType = match ($output) {
-            'jpg'  => 'image/jpeg',
+            'jpg' => 'image/jpeg',
             'webp' => 'image/webp',
             default => 'image/png',
         };
@@ -148,7 +146,7 @@ class Get extends Action
      */
     private function process(string $raw, int $width, int $height, int $quality, string $output): string
     {
-        if (!\extension_loaded('imagick') || empty($raw)) {
+        if (! \extension_loaded('imagick') || empty($raw)) {
             return $raw;
         }
 
