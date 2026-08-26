@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "daba9a50aab325e19854cb3260bcee86",
+    "content-hash": "d632621ec0ec79ab07f5d6d854521c68",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3778,12 +3778,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "4888066ceddcd86e2d59eba3ed108a0dff8c9508"
+                "reference": "4e0ab3cc6dc3e51a07b79646b6a44b58f3732cae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/4888066ceddcd86e2d59eba3ed108a0dff8c9508",
-                "reference": "4888066ceddcd86e2d59eba3ed108a0dff8c9508",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4e0ab3cc6dc3e51a07b79646b6a44b58f3732cae",
+                "reference": "4e0ab3cc6dc3e51a07b79646b6a44b58f3732cae",
                 "shasum": ""
             },
             "require": {
@@ -3869,7 +3869,7 @@
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-08-26T09:02:58+00:00"
+            "time": "2026-08-26T09:57:21+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8853,8 +8853,8 @@
         {
             "package": "utopia-php/audit",
             "version": "dev-feat-query-lib",
-            "alias": "3.0.0",
-            "alias_normalized": "3.0.0.0"
+            "alias": "4.0.0",
+            "alias_normalized": "4.0.0.0"
         },
         {
             "package": "utopia-php/database",
