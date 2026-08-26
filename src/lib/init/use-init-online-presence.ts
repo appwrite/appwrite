@@ -675,10 +675,9 @@ export function useInitOnlinePresence(
       presenceMaps.online.values(),
       activityAllowlist,
     )
-    const communityDeveloperCount = communityCountries.reduce(
-      (total, country) => total + country.count,
-      0,
-    )
+    // Match sidebar onlineCount. Country aggregation skips users without a
+    // locale countryCode, so summing country counts under-reports "X online".
+    const communityDeveloperCount = onlineCount
 
     return {
       onlineUsers,
