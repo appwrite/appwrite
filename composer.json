@@ -92,7 +92,7 @@
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "2.0.*",
         "utopia-php/agents": "2.*",
-        "utopia-php/audit": "^4.0",
+        "utopia-php/audit": "^3.0",
         "utopia-php/auth": "^0.10",
         "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^5.0.0",
