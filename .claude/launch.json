@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vibes",
+      "runtimeExecutable": "bunx",
+      "runtimeArgs": ["vite", "dev", "--force"],
+      "port": 3100,
+      "autoPort": true
+    }
+  ]
+}

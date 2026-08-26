@@ -40,6 +40,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.Github]: (p, b) => p.updateOAuth2GitHub(b),
   [ProjectOAuthProviderId.Gitlab]: (p, b) => p.updateOAuth2Gitlab(b),
   [ProjectOAuthProviderId.Google]: (p, b) => p.updateOAuth2Google(b),
+  [ProjectOAuthProviderId.Huggingface]: (p, b) => p.updateOAuth2HuggingFace(b),
   [ProjectOAuthProviderId.Keycloak]: (p, b) => p.updateOAuth2Keycloak(b),
   [ProjectOAuthProviderId.Kick]: (p, b) => p.updateOAuth2Kick(b),
   [ProjectOAuthProviderId.Linkedin]: (p, b) => p.updateOAuth2Linkedin(b),
