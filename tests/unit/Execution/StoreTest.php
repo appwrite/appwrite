@@ -11,6 +11,8 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 
@@ -267,12 +269,32 @@ final class StoreTest extends TestCase
         $this->store(new FailingClient())->setup();
     }
 
-    private function store(ClientInterface $client): Store
+    public function testMirrorFailuresAreReportedToConfiguredLogger(): void
+    {
+        $logger = $this->createMock(Logger::class);
+        $logger->expects($this->once())
+            ->method('addLog')
+            ->with($this->callback(function (Log $log): bool {
+                $this->assertSame(Log::TYPE_ERROR, $log->getType());
+                $this->assertSame('executions.mirror.upsert', $log->getAction());
+                $this->assertStringContainsString('ClickHouse unavailable', $log->getMessage());
+                return true;
+            }));
+
+        $this->store(new FailingClient(), $logger)->create('project', new Document([
+            '$id' => 'execution',
+            '$createdAt' => '2026-08-25T10:00:00.000+00:00',
+            'status' => 'completed',
+        ]));
+    }
+
+    private function store(ClientInterface $client, ?Logger $logger = null): Store
     {
         return new Store(
             enabled: true,
             dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
             client: $client,
+            logger: $logger,
         );
     }
 

@@ -10,11 +10,14 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Query\Builder\ClickHouse as ClickHouseBuilder;
 use Utopia\Query\Builder\ClickHouse\Format;
 use Utopia\Query\Builder\Statement;
+use Utopia\System\System;
 
 /**
  * ClickHouse persistence for function and site executions.
@@ -28,6 +31,8 @@ class Store
     private const string TABLE = 'executions';
 
     private const int READY_TTL_SECONDS = 15;
+
+    private const int REPORT_TTL_SECONDS = 60;
 
     private const int VERSION_SHIFT = 60;
 
@@ -104,11 +109,15 @@ class Store
     /** @var array<int, int> */
     private array $lastVersions = [];
 
+    /** @var array<string, int> */
+    private static array $lastReports = [];
+
     public function __construct(
         private readonly bool $enabled,
         private readonly string $dsn,
         private readonly ?ClientInterface $client,
         private readonly int $retention = 1_209_600,
+        private readonly ?Logger $logger = null,
     ) {
         $this->requestFactory = new RequestFactory();
     }
@@ -884,6 +893,42 @@ class Store
             $callback();
         } catch (Throwable $th) {
             Console::warning("ClickHouse execution mirror {$operation} failed: {$th->getMessage()}");
+            $this->report($operation, $th);
+        }
+    }
+
+    private function report(string $operation, Throwable $th): void
+    {
+        if ($this->logger === null) {
+            return;
+        }
+
+        $now = \time();
+        if ((self::$lastReports[$operation] ?? 0) + self::REPORT_TTL_SECONDS > $now) {
+            return;
+        }
+        self::$lastReports[$operation] = $now;
+
+        $log = new Log();
+        $log->setNamespace('executions');
+        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+        $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
+        $log->setType(Log::TYPE_ERROR);
+        $log->setMessage("ClickHouse execution mirror {$operation} failed: {$th->getMessage()}");
+        $log->setAction("executions.mirror.{$operation}");
+        $log->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
+            ? Log::ENVIRONMENT_PRODUCTION
+            : Log::ENVIRONMENT_STAGING);
+        $log->addTag('operation', $operation);
+        $log->addTag('exception', $th::class);
+        $log->addTag('code', $th->getCode());
+        $log->addExtra('file', $th->getFile());
+        $log->addExtra('line', $th->getLine());
+        $log->addExtra('trace', $th->getTraceAsString());
+
+        try {
+            $this->logger->addLog($log);
+        } catch (Throwable) {
         }
     }
 

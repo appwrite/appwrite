@@ -43,6 +43,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Logger\Logger;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool as Connections;
@@ -195,7 +196,7 @@ $container->set('usageConnection', function () {
     );
 }, []);
 
-$container->set('executionStore', function () {
+$container->set('executionStore', function (?Logger $logger) {
     $client = new HttpClientPool(new Connections(
         new SwoolePoolAdapter(),
         'executions',
@@ -221,8 +222,9 @@ $container->set('executionStore', function () {
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
+        logger: $logger,
     );
-}, []);
+}, ['logger']);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,
