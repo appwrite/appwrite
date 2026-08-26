@@ -64,6 +64,8 @@ export type InitTicketCardHandle = {
   prepareForVideoCapture: () => void
   setCaptureTilt: (x: number, y: number) => void
   resetCaptureTilt: () => void
+  getStillCaptureElement: () => HTMLElement | null
+  getStillCaptureBackElement: () => HTMLElement | null
 }
 
 interface TicketFaceSharedProps {
@@ -77,6 +79,7 @@ interface TicketFaceSharedProps {
   usesDarkImage: boolean
   ticketBgSrc: string
   inset: ReturnType<typeof initTicketInsetStyle>
+  stillCapture?: boolean
 }
 
 function getInitTicketStackIconSrc(
@@ -161,16 +164,20 @@ function TicketStubContent({
   const { left, right, bottom } = INIT_TICKET_STUB_LABEL_INSET
 
   return (
-    <div className="relative h-full min-w-0" aria-hidden>
+    <div className="relative h-full min-w-0 overflow-visible" aria-hidden>
       <div
-        className="absolute flex items-end justify-start"
+        data-init-ticket-stub-anchor
+        className="absolute flex items-end justify-start overflow-visible"
         style={{
           left: `${left}%`,
           right: `${right}%`,
           bottom: `${bottom}%`,
         }}
       >
-        <div className="flex origin-bottom-start -rotate-90 flex-col items-start gap-1 whitespace-nowrap text-start">
+        <div
+          data-init-ticket-stub-label
+          className="flex origin-bottom-start -rotate-90 flex-col items-start gap-1 whitespace-nowrap text-start"
+        >
           <InitWordmark
             accentColor={accentColor}
             className={cn(
@@ -228,12 +235,15 @@ function TicketFaceShell({
   inset,
   usesDarkImage,
   isBack,
+  stillCapture,
   children,
 }: {
   ticketBgSrc: string
   inset: ReturnType<typeof initTicketInsetStyle>
   usesDarkImage: boolean
   isBack?: boolean
+  /** Flatten 3D CSS so html-to-image can snapshot this face. */
+  stillCapture?: boolean
   children: ReactNode
 }) {
   const [loadedBackgroundSrc, setLoadedBackgroundSrc] = useState<string | null>(
@@ -243,9 +253,14 @@ function TicketFaceShell({
 
   return (
     <div
+      {...(stillCapture && !isBack ? { 'data-init-ticket-still': '' } : {})}
+      {...(stillCapture && isBack ? { 'data-init-ticket-still-back': '' } : {})}
       className={cn(
-        'absolute inset-0 w-full [backface-visibility:hidden] [transform-style:preserve-3d]',
-        isBack && '[transform:rotateY(180deg)]',
+        'absolute inset-0 w-full',
+        stillCapture
+          ? '[transform-style:flat] [backface-visibility:visible] [transform:none]'
+          : '[backface-visibility:hidden] [transform-style:preserve-3d]',
+        isBack && !stillCapture && '[transform:rotateY(180deg)]',
       )}
     >
       <img
@@ -356,7 +371,7 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
           </div>
         </div>
 
-        <div className="min-w-0">
+        <div className="min-w-0 overflow-visible" data-init-ticket-stub-col>
           <TicketStubContent
             ticketNumber={ticketNumber}
             holderName={holderName}
@@ -385,7 +400,7 @@ function TicketBackFace(props: TicketFaceSharedProps) {
         className="grid h-full min-h-0 overflow-visible pb-[9%]"
         style={contentGrid}
       >
-        <div className="flex min-w-0 flex-col justify-between pe-[8%]">
+        <div className="flex min-w-0 flex-col justify-between gap-10 pe-[8%]">
           <div className="space-y-2.5">
             <p
               className={cn(
@@ -410,7 +425,7 @@ function TicketBackFace(props: TicketFaceSharedProps) {
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 pt-1">
             <div
               className="flex h-10 items-end justify-start gap-0.5 overflow-hidden"
               aria-hidden
@@ -538,6 +553,7 @@ export const InitTicketCard = forwardRef<
     usesDarkImage,
     ticketBgSrc,
     inset,
+    stillCapture: captureMode,
   }
 
   useEffect(() => {
@@ -929,6 +945,20 @@ export const InitTicketCard = forwardRef<
         tiltRef.current = { x: 0, y: 0 }
         applyTransform(0)
       },
+      getStillCaptureElement() {
+        return (
+          captureRootRef.current?.querySelector<HTMLElement>(
+            '[data-init-ticket-still]',
+          ) ?? captureRootRef.current
+        )
+      },
+      getStillCaptureBackElement() {
+        return (
+          captureRootRef.current?.querySelector<HTMLElement>(
+            '[data-init-ticket-still-back]',
+          ) ?? null
+        )
+      },
     }),
     [applyTransform],
   )
@@ -965,8 +995,8 @@ export const InitTicketCard = forwardRef<
         <div
           ref={sceneRef}
           className={cn(
-            'absolute inset-x-0 top-0 w-full [perspective:1000px]',
-            captureMode && 'overflow-visible',
+            'absolute inset-x-0 top-0 w-full',
+            captureMode ? '[perspective:none] overflow-visible' : '[perspective:1000px]',
             interactive && !reducedMotion && 'cursor-pointer touch-none',
           )}
           style={{
@@ -1014,12 +1044,19 @@ export const InitTicketCard = forwardRef<
           <div
             ref={flipperRef}
             className={cn(
-              'absolute inset-0 [transform-style:preserve-3d]',
-              captureMode && 'overflow-visible',
+              'absolute inset-0',
+              captureMode
+                ? 'overflow-visible [transform-style:flat] [transform:none]'
+                : '[transform-style:preserve-3d]',
             )}
           >
             <TicketFrontFace {...faceProps} />
             {!captureMode ? <TicketBackFace {...faceProps} /> : null}
+            {captureMode ? (
+              <div className="pointer-events-none absolute inset-0 invisible" aria-hidden>
+                <TicketBackFace {...faceProps} />
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

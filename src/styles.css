@@ -1410,6 +1410,11 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   animation-play-state: running !important;
 }
 
+html[data-init-ticket-video-capturing] [data-init-ticket-export-control],
+html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
+  animation-play-state: running !important;
+}
+
 /* Home AI feature card mock UI */
 @keyframes ai-mock-fade-in {
   from {

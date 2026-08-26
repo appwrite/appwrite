@@ -123,6 +123,7 @@
     "js-yaml": "^4.2.0",
     "lucide-react": "^0.544.0",
     "maplibre-gl": "^4.7.1",
+    "mediabunny": "^1.55.3",
     "monaco-editor": "^0.55.1",
     "motion": "^12.23.22",
     "next-themes": "^0.4.6",

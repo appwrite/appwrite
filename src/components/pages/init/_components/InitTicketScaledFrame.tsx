@@ -41,7 +41,7 @@ function ScaledTicketShell({
   return (
     <div
       className={cn(
-        'relative shrink-0 touch-none',
+        'relative mx-auto shrink-0 touch-none',
         overflowVisible ? 'overflow-visible' : 'overflow-hidden',
         className,
       )}
@@ -49,12 +49,12 @@ function ScaledTicketShell({
     >
       <div
         className={cn(
-          'absolute start-0 top-0 origin-top-start will-change-transform',
+          'absolute top-0 left-1/2 origin-top will-change-transform',
           pointerEventsNone && 'pointer-events-none',
         )}
         style={{
           width: INIT_TICKET_MAX_WIDTH_PX,
-          transform: `scale(${scale})`,
+          transform: `translateX(-50%) scale(${scale})`,
         }}
       >
         {children}
@@ -105,12 +105,14 @@ export function InitTicketScaledFrame({
 
   if (measureContainer) {
     return (
-      <div ref={measureRef} className={cn('w-full max-w-[820px]', className)}>
+      <div
+        ref={measureRef}
+        className={cn('mx-auto w-full max-w-[820px]', className)}
+      >
         <ScaledTicketShell
           widthPx={widthPx}
           pointerEventsNone={pointerEventsNone}
           overflowVisible={overflowVisible}
-          className="mx-auto"
         >
           {children}
         </ScaledTicketShell>

@@ -153,7 +153,7 @@ export function buildInitCustomizingTicketActivity(): string {
 }
 
 export function buildInitRecordingTicketActivity(): string {
-  return 'Recording ticket video'
+  return 'Generating ticket video'
 }
 
 export function buildInitCheckingScheduleActivity(day?: number): string {

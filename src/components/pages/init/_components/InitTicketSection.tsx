@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { analyticsAttrs } from '@/lib/analytics-actions'
-import type { InitDisplayEvent } from '@/lib/init/types'
+import type { InitDisplayEvent, LaunchEventRecapTicketCopy } from '@/lib/init/types'
 import { buildInitTicketShareMessage } from '@/lib/init/ticket-prefs'
 import { buildInitTicketShareUrl } from '@/lib/init/init-ticket-share'
 import { getDefaultSiteOrigin } from '@/lib/marketing/site-origin'
@@ -21,10 +21,10 @@ import {
   downloadInitTicketVideo,
   isInitTicketVideoExportSupported,
   recordInitTicketVideo,
-  supportsInitTicket60FpsVideoCapture,
   waitForNextPaint,
 } from '@/lib/init/record-init-ticket-video'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
+import { INIT_TICKET_VIDEO_CLIP_DURATION_SEC } from '@/lib/init/ticket-video-capture'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import {
   buildInitCustomizingTicketActivity,
@@ -32,7 +32,6 @@ import {
   buildInitViewingTicketActivity,
 } from '@/lib/init/init-presence-activity'
 import { INIT_TICKET_SECTION_ID } from '@/lib/init/init-section-ids'
-import { INIT_TICKET_VIDEO_HERO_WARMUP_MS } from '@/lib/init/ticket-video-capture'
 import { InitTicketScaledFrame } from '@/components/pages/init/_components/InitTicketScaledFrame'
 import { InitTicketVideoCaptureStage } from '@/components/pages/init/_components/InitTicketVideoCaptureStage'
 import { InitTicketCustomizeDrawer } from '@/components/pages/init/_components/InitTicketCustomizeDrawer'
@@ -70,6 +69,22 @@ function buildFallbackShareUrl(): string {
   return `${window.location.origin}/init`
 }
 
+function getInitTicketSectionTitle(
+  event: InitDisplayEvent,
+  isAuthenticated: boolean,
+  ticketCopy?: LaunchEventRecapTicketCopy,
+) {
+  if (isAuthenticated) {
+    if (ticketCopy?.titleAuthenticated) return ticketCopy.titleAuthenticated
+    const grandPrizeTitle = event.prizes?.grandPrize.title
+    if (grandPrizeTitle) {
+      return `Share to win ${grandPrizeTitle}`
+    }
+    return 'Share to enter the giveaway'
+  }
+  return ticketCopy?.titleGuest ?? 'Claim your Init ticket'
+}
+
 function buildTicketShareUrl(ticketId?: string): string {
   if (!ticketId) return buildFallbackShareUrl()
   if (typeof window === 'undefined') {
@@ -98,7 +113,14 @@ interface ShareActionsProps {
   twitterShareHref: string
   linkedInShareHref: string
   onShareMenuClose: () => void
+  canExportTicketVideo: boolean
+  isExportingVideo: boolean
+  videoExportProgress: number | null
+  videoExportDisabledTooltip?: string
+  onDownloadVideo: () => void
 }
+
+const TICKET_VIDEO_DOWNLOAD_LABEL = 'Download ticket video'
 
 function ShareActions({
   compact = false,
@@ -117,6 +139,11 @@ function ShareActions({
   twitterShareHref,
   linkedInShareHref,
   onShareMenuClose,
+  canExportTicketVideo,
+  isExportingVideo,
+  videoExportProgress,
+  videoExportDisabledTooltip,
+  onDownloadVideo,
 }: ShareActionsProps) {
   const buttonSizeClass = compact ? 'h-8 text-[12px]' : 'h-10 text-[13px]'
   const primaryButtonClass = cn(
@@ -180,7 +207,7 @@ function ShareActions({
         </PopoverTrigger>
         <PopoverContent
           align={compact ? 'start' : 'center'}
-          className="w-52 p-1"
+          className={cn('p-1', isAuthenticated ? 'w-56' : 'w-52')}
         >
           {canNativeShare ? (
             <button
@@ -213,11 +240,37 @@ function ShareActions({
             <LinkedInBrandIcon className="size-4 shrink-0 text-muted-foreground" />
             LinkedIn
           </a>
+          {isAuthenticated ? (
+            <button
+              type="button"
+              data-init-ticket-export-control
+              className={cn(
+                shareMenuItemClass,
+                'mt-1 border-t border-border pt-2',
+              )}
+              disabled={!canExportTicketVideo || isExportingVideo}
+              title={videoExportDisabledTooltip}
+              aria-busy={isExportingVideo}
+              onClick={() => void onDownloadVideo()}
+            >
+              {isExportingVideo ? (
+                <>
+                  <Loader2 className="size-4 shrink-0 animate-spin-smooth text-muted-foreground" />
+                  Generating {Math.round((videoExportProgress ?? 0) * 100)}%
+                </>
+              ) : (
+                <>
+                  <Video className="size-4 shrink-0 text-muted-foreground" />
+                  {TICKET_VIDEO_DOWNLOAD_LABEL}
+                </>
+              )}
+            </button>
+          ) : null}
           <button
             type="button"
             className={cn(
               shareMenuItemClass,
-              'mt-1 border-t border-border pt-2',
+              isAuthenticated ? undefined : 'mt-1 border-t border-border pt-2',
             )}
             onClick={() => void onCopyShareMessage()}
           >
@@ -263,7 +316,7 @@ export function InitTicketSection({
   const [videoExportProgress, setVideoExportProgress] = useState<number | null>(
     null,
   )
-  const isVideoBusy = isCapturingVideo || isExportingVideo
+  const isVideoBusy = isExportingVideo
   const { setIsCapturing: setPageVideoCapturing } =
     useInitTicketVideoRecording()
   const { setPriorityActivity, setTransientActivity } =
@@ -287,9 +340,7 @@ export function InitTicketSection({
     }
     setPriorityActivity(null)
   }, [customizeOpen, isAuthenticated, isVideoBusy, setPriorityActivity])
-  const videoCaptureStageRef = useRef<HTMLDivElement>(null)
   const canExportTicketVideo = isInitTicketVideoExportSupported()
-  const canExport60FpsVideo = supportsInitTicket60FpsVideoCapture()
 
   const ticketRenderData = useMemo(
     () =>
@@ -312,7 +363,7 @@ export function InitTicketSection({
       themeUsesDarkImage,
     ],
   )
-  const { holderName, ticketAppearance } = ticketRenderData
+  const { ticketAppearance } = ticketRenderData
 
   useSyncInitTicketImage({
     eventSlug: event.slug,
@@ -343,6 +394,11 @@ export function InitTicketSection({
   const linkedInShareHref = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`
   const canNativeShare =
     typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+  const videoExportDisabledTooltip = !canExportTicketVideo
+    ? 'Video export is not supported in this browser'
+    : isExportingVideo
+      ? undefined
+      : `Generates a ~${INIT_TICKET_VIDEO_CLIP_DURATION_SEC}s clip in the browser`
 
   const handleNativeShare = async () => {
     if (!hasShareLink) return
@@ -376,25 +432,27 @@ export function InitTicketSection({
     if (!isAuthenticated) return
 
     const handle = ticketCardRef.current
-    const captureElement = videoCaptureStageRef.current
-    if (!handle || !captureElement) return
+    if (!handle) return
 
-    setIsCapturingVideo(true)
     setIsExportingVideo(true)
     setVideoExportProgress(0)
     try {
+      setIsCapturingVideo(true)
       await waitForNextPaint()
-      await waitForNextPaint()
-      await new Promise<void>((resolve) => {
-        window.setTimeout(resolve, INIT_TICKET_VIDEO_HERO_WARMUP_MS)
-      })
       handle.prepareForVideoCapture()
       await waitForNextPaint()
+      const ticketElement = handle.getStillCaptureElement()
+      if (!ticketElement) {
+        throw new Error('Ticket is not ready to export')
+      }
+      const ticketBackElement = handle.getStillCaptureBackElement()
 
       const { blob, fileExtension } = await recordInitTicketVideo({
-        captureElement,
+        ticketElement,
+        ticketBackElement,
         setTilt: handle.setCaptureTilt,
         resetTilt: handle.resetCaptureTilt,
+        usesDarkChrome: ticketAppearance.usesDarkChrome,
         onProgress: setVideoExportProgress,
         onVisibleCaptureComplete: () => {
           setIsCapturingVideo(false)
@@ -408,15 +466,10 @@ export function InitTicketSection({
         .replace(/^-+|-+$/g, '')
       downloadInitTicketVideo(blob, `${slug || 'init'}-ticket.${fileExtension}`)
       toast.success('Ticket video downloaded')
+      setShareOpen(false)
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message === 'Tab capture was cancelled'
-      ) {
-        toast.error('Video capture was cancelled')
-      } else {
-        toast.error('Could not generate ticket video')
-      }
+      console.error('Init ticket video export failed', error)
+      toast.error('Could not generate ticket video')
     } finally {
       setIsCapturingVideo(false)
       setIsExportingVideo(false)
@@ -443,13 +496,20 @@ export function InitTicketSection({
     twitterShareHref,
     linkedInShareHref,
     onShareMenuClose: () => setShareOpen(false),
+    canExportTicketVideo,
+    isExportingVideo,
+    videoExportProgress,
+    videoExportDisabledTooltip,
+    onDownloadVideo: () => void handleDownloadTicketVideo(),
   }
 
   const ticketCardProps = ticketRenderData
 
-  const sectionTitle = isAuthenticated
-    ? (ticketCopy?.titleAuthenticated ?? 'Share to enter the giveaway')
-    : (ticketCopy?.titleGuest ?? 'Claim your Init ticket')
+  const sectionTitle = getInitTicketSectionTitle(
+    event,
+    isAuthenticated,
+    ticketCopy,
+  )
   const sectionDescriptionExpanded = isAuthenticated
     ? (ticketCopy?.descriptionAuthenticated ??
       'Post your ticket on socials during Init week. One ticket holder wins the exclusive giveaway on day 5. Sharing is how you enter.')
@@ -486,13 +546,7 @@ export function InitTicketSection({
   } else {
     sectionBody = (
       <div className="mx-auto flex w-full max-w-[820px] flex-col items-center pt-8">
-        <InitTicketVideoCaptureStage
-          ref={videoCaptureStageRef}
-          showRecordingChrome={isCapturingVideo}
-          showHeroAnimation={isCapturingVideo}
-          ticketAccentColor={ticketAppearance.accentColor}
-          ticketUsesDarkChrome={ticketAppearance.usesDarkChrome}
-        >
+        <InitTicketVideoCaptureStage>
           <InitTicketScaledFrame
             measureContainer
             className="w-full"
@@ -537,32 +591,24 @@ export function InitTicketSection({
           type="button"
           variant="outline"
           size="sm"
+          data-init-ticket-export-control
           className="absolute start-0 top-0 z-20 shrink-0 text-[13px]"
-          disabled={!canExportTicketVideo || isVideoBusy}
+          disabled={!canExportTicketVideo || isExportingVideo}
           title={
-            !canExportTicketVideo
-              ? 'Video export is not supported in this browser'
-              : isVideoBusy
-                ? undefined
-                : canExport60FpsVideo
-                  ? 'Records a ~10s 60fps clip via tab share (Chrome or Edge)'
-                  : 'Records a ~10s clip (use Chrome or Edge for 60fps)'
+            isExportingVideo ? undefined : videoExportDisabledTooltip
           }
-          aria-busy={isVideoBusy}
+          aria-busy={isExportingVideo}
           onClick={() => void handleDownloadTicketVideo()}
         >
-          {isVideoBusy ? (
+          {isExportingVideo ? (
             <>
-              <Loader2 className="me-1.5 size-4 animate-spin" />
-              {isCapturingVideo ? 'Recording' : 'Processing'}{' '}
-              {Math.round((videoExportProgress ?? 0) * 100)}%
+              <Loader2 className="me-1.5 size-4 animate-spin-smooth" />
+              Generating {Math.round((videoExportProgress ?? 0) * 100)}%
             </>
           ) : (
             <>
               <Video className="me-1.5 size-4" />
-              {canExport60FpsVideo
-                ? 'Download 60fps video'
-                : 'Download ticket video'}
+              {TICKET_VIDEO_DOWNLOAD_LABEL}
             </>
           )}
         </Button>

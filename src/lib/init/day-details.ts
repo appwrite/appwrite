@@ -18,7 +18,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     icon: Megaphone,
     visual: {
       mockVisualId: 'appwrite-2',
-      imageAlt: 'Appwrite 2.0 mock with Appwrite icon mark and 2.0 wordmark',
+      imageAlt: 'Appwrite logo and 2.0',
     },
     isLive: true,
     sessionCount: 2,
