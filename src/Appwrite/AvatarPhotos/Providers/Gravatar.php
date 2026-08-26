@@ -23,18 +23,13 @@ class Gravatar extends Photo
 
     public function supports(Document $user): bool
     {
-        return !empty($user->getAttribute('email', '')) || !empty($user->getAttribute('emailHash', ''));
+        return !empty($user->getAttribute('email', ''));
     }
 
     public function get(Document $user, int $width, int $height, string $rating): ?string
     {
-        // A pre-computed SHA-256 hash (`emailHash`) stands in for the address
-        // itself, so callers that never learn the email can still resolve.
-        $hash = $user->getAttribute('emailHash', '');
-
-        if (empty($hash)) {
-            $hash = \hash('sha256', \strtolower(\trim($user->getAttribute('email', ''))));
-        }
+        $email = $user->getAttribute('email', '');
+        $hash = \hash('sha256', \strtolower(\trim($email)));
 
         // Use 'd=404' so Gravatar returns HTTP 404 instead of a generic image
         // when the user has no custom avatar — letting us fall through to the

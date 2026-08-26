@@ -18,6 +18,12 @@ trait AvatarsBase
      */
     private const PHOTO_INITIALS_COLOR = ['r' => 133, 'g' => 219, 'b' => 216];
 
+    /**
+     * Corner colour of initials rendered for the name 'B B': the 'BB'
+     * initials deterministically pick the purple theme (#7C67FE).
+     */
+    private const PHOTO_INITIALS_ALT_COLOR = ['r' => 124, 'g' => 103, 'b' => 254];
+
     public function testGetCreditCard(): array
     {
         /**
@@ -1509,17 +1515,17 @@ trait AvatarsBase
         /**
          * Test for SUCCESS
          *
-         * The hash belongs to a random email nobody registered, so Gravatar
-         * and Libravatar answer 404 and the chain falls through to the static
-         * fallback — never to initials, which require a name and must not
-         * derive from an email.
+         * The random email is registered nowhere, so Gravatar and Libravatar
+         * answer 404 and the chain falls through to the static fallback —
+         * never to initials, which require a name and must not derive from an
+         * email.
          */
-        $hash = \hash('sha256', \uniqid('photo-') . '@appwrite.io');
+        $email = \uniqid('photo-') . '@appwrite.io';
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'email' => $hash,
+            'email' => $email,
             'width' => 100,
             'height' => 100,
         ]);
@@ -1528,25 +1534,13 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertPhotoFallback($response['body']);
 
-        // Uppercase hashes are normalised and accepted.
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'email' => \strtoupper($hash),
-            'width' => 100,
-            'height' => 100,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertPhotoFallback($response['body']);
-
-        // A name alongside the hash resolves to initials once Gravatar and
-        // Libravatar miss — even with a session, the explicit parameters win
-        // over the authenticated user.
+        // A name alongside the email resolves to initials once Gravatar and
+        // Libravatar miss — the explicit parameters take priority over the
+        // authenticated user's own attributes.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'email' => $hash,
+            'email' => $email,
             'name' => 'W W',
             'width' => 100,
             'height' => 100,
@@ -1560,20 +1554,20 @@ trait AvatarsBase
          * Test for FAILURE
          */
 
-        // A raw email address is not accepted — only its SHA256 hash.
+        // Not an email address.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'email' => 'someone@appwrite.io',
+            'email' => 'not-an-email',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // Too short to be a SHA256 hash.
+        // Hashes are not accepted — pass the raw email address.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'email' => \substr($hash, 0, 63),
+            'email' => \hash('sha256', 'photo@appwrite.io'),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -1597,7 +1591,8 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
 
-        // The explicit name also wins over the authenticated user's own name.
+        // The explicit name takes priority over the authenticated user's own
+        // name.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1608,6 +1603,18 @@ trait AvatarsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+
+        // An empty name is allowed and behaves as if it was not passed.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'name' => '',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoFallback($response['body']);
 
         /**
          * Test for FAILURE

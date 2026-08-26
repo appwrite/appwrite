@@ -14,15 +14,12 @@ final class GravatarTest extends TestCase
     public static function provideSupports(): \Iterator
     {
         yield 'email' => [['email' => 'walter@appwrite.io'], true];
-        yield 'email hash' => [['emailHash' => \hash('sha256', 'walter@appwrite.io')], true];
-        yield 'email and hash' => [['email' => 'walter@appwrite.io', 'emailHash' => \hash('sha256', 'walter@appwrite.io')], true];
         yield 'name only' => [['name' => 'Walter White'], false];
         yield 'empty user' => [[], false];
     }
 
     /**
-     * A pre-computed SHA-256 hash (`emailHash`) stands in for the raw email
-     * address.
+     * Photo lookup keys off the email address alone.
      */
     #[DataProvider('provideSupports')]
     public function testSupports(array $attributes, bool $expected): void

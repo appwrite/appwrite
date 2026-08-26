@@ -50,6 +50,34 @@ final class AvatarsCustomServerTest extends Scope
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
 
+        // An explicit name takes priority over the target user's stored name:
+        // 'B B' picks the purple theme instead of 'W W'-mint.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $userId,
+            'name' => 'B B',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_ALT_COLOR, $response['body']);
+
+        // The default 'current' sentinel resolves the authenticated user — an
+        // API key carries none, so the explicit name decides the result.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'current',
+            'name' => 'W W',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+
         /**
          * Test for SUCCESS — regression: a user with an email but no name
          * gets the static fallback. Initials must never derive from the

@@ -41,10 +41,9 @@ class OAuth2 extends Photo
 
     /**
      * Identities are queried by user ID, so the subject must be a stored
-     * user — guests and ad-hoc subjects built from an email hash or a name
-     * have no ID and are skipped. Whether any identity actually carries a
-     * valid photo is determined at fetch time — we do not know without
-     * querying.
+     * user — guests have no ID and are skipped. Whether any identity
+     * actually carries a valid photo is determined at fetch time — we do
+     * not know without querying.
      */
     public function supports(Document $user): bool
     {
