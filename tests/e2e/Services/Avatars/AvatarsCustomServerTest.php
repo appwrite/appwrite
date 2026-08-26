@@ -70,12 +70,12 @@ final class AvatarsCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertPhotoBackground(self::PHOTO_INITIALS_ALT_COLOR, $response['body']);
 
-        // The default 'current' sentinel resolves the authenticated user — an
+        // The default 'current()' sentinel resolves the authenticated user — an
         // API key carries none, so the explicit name decides the result.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => 'current',
+            'userId' => 'current()',
             'name' => 'W W',
             'width' => 100,
             'height' => 100,
@@ -122,6 +122,17 @@ final class AvatarsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'userId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_NOT_FOUND, $response['body']['type']);
+
+        // A bare 'current' is an ordinary ID, not the sentinel — nothing
+        // stores it, so it misses like any other unknown user.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'current',
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);

@@ -15,13 +15,13 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\KeywordId;
 use Appwrite\Utopia\Response;
 use Utopia\Balancer\Algorithm\First;
 use Utopia\Balancer\Balancer;
 use Utopia\Balancer\Option;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\UID;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
@@ -71,7 +71,7 @@ class Get extends Action
             ->param('quality', 100, new Range(0, 100), 'Output image quality between 0 and 100. Defaults to 100.', true)
             ->param('output', 'png', new WhiteList(['png', 'jpg', 'webp'], true), 'Output image format. Defaults to \'png\'.', true)
             ->param('rating', 'g', new WhiteList(['g', 'pg', 'r', 'x'], true), 'Maximum image rating to fetch from Gravatar/Libravatar. Defaults to \'g\'.', true)
-            ->param('userId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID to resolve the photo for. Defaults to \'current\' for the currently authenticated user.', true, ['dbForProject'])
+            ->param('userId', 'current()', fn (Database $dbForProject) => new KeywordId('current()', $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID to resolve the photo for. Defaults to \'current()\' for the currently authenticated user.', true, ['dbForProject'])
             ->param('emailHash', '', new Text(64, 64, [...Text::NUMBERS, ...\range('a', 'f'), ...\range('A', 'F')]), 'SHA256 hash of the lowercase, trimmed email address to look up on Gravatar and Libravatar instead of the user\'s own photo sources. Pass the hash, never the address itself.', true)
             ->param('name', '', new Text(128, 0), 'Name to render initials from instead of the user\'s own photo sources. Max length: 128 chars.', true)
             ->inject('response')
@@ -97,7 +97,7 @@ class Get extends Action
 
         $photoUser = new Document();
 
-        if ($userId === 'current') {
+        if ($userId === 'current()') {
             $photoUser = clone $user;
         } else {
             $photoUser = $dbForProject->getDocument('users', $userId);
