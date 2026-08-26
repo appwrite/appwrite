@@ -101,7 +101,7 @@ abstract class Action extends PlatformAction
     protected function parseFilterQueries(array $queries, array $allowedAttributes, array $allowedMethods): array
     {
         $parsed = $this->parseQueries($queries);
-        $methodNames = \array_map(fn (QueryMethod $method) => $method->value, $allowedMethods);
+        $allowedMethodNames = \array_map(static fn (QueryMethod $method): string => $method->value, $allowedMethods);
 
         foreach ($parsed as $query) {
             $attribute = $query->getAttribute();
@@ -110,7 +110,7 @@ abstract class Action extends PlatformAction
             if ($attribute === '') {
                 throw new Exception(
                     Exception::GENERAL_QUERY_INVALID,
-                    "Structural queries (limit, offset, order, select, …) are not allowed in queries[]. Allowed methods: " . \implode(', ', $methodNames)
+                    "Structural queries (limit, offset, order, select, …) are not allowed in queries[]. Allowed methods: " . \implode(', ', $allowedMethodNames)
                 );
             }
 
@@ -124,7 +124,7 @@ abstract class Action extends PlatformAction
             if (!\in_array($method, $allowedMethods, true)) {
                 throw new Exception(
                     Exception::GENERAL_QUERY_INVALID,
-                    "Query method '{$method->value}' is not supported. Allowed: " . \implode(', ', $methodNames)
+                    "Query method '{$method->value}' is not supported. Allowed: " . \implode(', ', $allowedMethodNames)
                 );
             }
         }
