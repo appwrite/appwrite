@@ -17,6 +17,12 @@ final class AvatarsCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
+    /**
+     * Corner colour of initials rendered for the name 'B B': the 'BB'
+     * initials deterministically pick the purple theme (#7C67FE).
+     */
+    private const PHOTO_INITIALS_ALT_COLOR = ['r' => 124, 'g' => 103, 'b' => 254];
+
     public function testGetPhotoByUserId(): void
     {
         /**

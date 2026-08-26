@@ -19,12 +19,6 @@ trait AvatarsBase
     private const PHOTO_INITIALS_COLOR = ['r' => 133, 'g' => 219, 'b' => 216];
 
     /**
-     * Corner colour of initials rendered for the name 'B B': the 'BB'
-     * initials deterministically pick the purple theme (#7C67FE).
-     */
-    private const PHOTO_INITIALS_ALT_COLOR = ['r' => 124, 'g' => 103, 'b' => 254];
-
-    /**
      * Corner colour of initials rendered for the name '0', which
      * deterministically picks the blue theme (#68A3FE). '0' is falsy in
      * PHP, so it guards every gate against empty() semantics.
