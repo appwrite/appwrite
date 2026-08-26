@@ -2842,19 +2842,45 @@ trait DatabasesBase
         /**
          * Test for SUCCESS
          * Bulk create with only documents/rows (no `data` key) must still work.
-         * Use books: movies has a relationship, and bulk create is not supported then.
+         * Use a dedicated collection: movies has a relationship (bulk create is
+         * rejected), and books is shared with fulltext search fixtures.
          */
+        $bulkCollection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Bulk without data key',
+            $this->getSecurityParam() => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bulkCollection['headers']['status-code']);
+        $bulkCollectionId = $bulkCollection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $title = $this->createAttribute($databaseId, $bulkCollectionId, 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $title['headers']['status-code']);
+            $this->waitForAllAttributes($databaseId, $bulkCollectionId);
+        }
+
         $bulkDocumentId = ID::unique();
         $bulkCreated = $this->client->call(
             Client::METHOD_POST,
-            $this->getRecordUrl($databaseId, $data['booksId']),
+            $this->getRecordUrl($databaseId, $bulkCollectionId),
             $headers,
             [
                 $this->getRecordResource() => [
                     [
                         '$id' => $bulkDocumentId,
                         'title' => 'Bulk without data key',
-                        'description' => 'Created without a data key',
                     ],
                 ],
             ]
