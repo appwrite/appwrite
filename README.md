@@ -16,7 +16,7 @@ English | [简体中文](README-CN.md)
 
 Appwrite is an open-source development platform for building web, mobile, and AI applications. It brings together backend infrastructure and web hosting in one place, so teams can build, ship, and scale without stitching together a fragmented stack. Appwrite is available as a managed cloud platform and can also be self-hosted on infrastructure you control.
 
-With Appwrite, you can add authentication, databases, storage, functions, messaging, realtime capabilities, and integrated web app hosting through Sites. It is designed to reduce the repetitive backend work required to launch modern products while giving developers secure primitives and flexible APIs to build production-ready applications faster.
+With Appwrite, you can add authentication, databases, storage, functions, messaging, real-time capabilities, and integrated web app hosting through Sites. It is designed to reduce the repetitive backend work required to launch modern products while giving developers secure primitives and flexible APIs to build production-ready applications faster.
 
 Find out more at [https://appwrite.io](https://appwrite.io).
 
@@ -137,19 +137,19 @@ Choose from one of the providers below:
   <tr>
     <td align="center" width="100" height="100">
       <a href="https://marketplace.digitalocean.com/apps/appwrite">
-        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
+        <img width="50" height="39" src=" public/images/integrations/digitalocean-logo.svg" alt=" DigitalOcean Logo" />
           <br /><sub><b>DigitalOcean</b></sub></a>
         </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
-        <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
+        <img width="50" height="39" src=" public/images/integrations/akamai-logo.svg" alt=" Akamai Logo" />
           <br /><sub><b>Akamai Compute</b></sub></a>
       </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
-        <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
+        <img width="50" height="39" src=" public/images/integrations/aws-logo.svg" alt=" AWS Logo" />
           <br /><sub><b>AWS Marketplace</b></sub></a>
       </a>
     </td>
@@ -237,7 +237,7 @@ flowchart TB
   Executor --> openRuntimes[Open Runtimes]
 ```
 
-Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
+Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL, to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
 
 The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in [AGENTS.md](AGENTS.md).
 
