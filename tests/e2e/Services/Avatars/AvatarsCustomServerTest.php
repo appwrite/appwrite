@@ -127,6 +127,17 @@ final class AvatarsCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals(Exception::USER_NOT_FOUND, $response['body']['type']);
 
+        // '0' is falsy in PHP but a legal user ID: it must be looked up like
+        // any other, not skipped into an anonymous fallback.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => '0',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_NOT_FOUND, $response['body']['type']);
+
         // A bare 'current' is an ordinary ID, not the sentinel — nothing
         // stores it, so it misses like any other unknown user.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([

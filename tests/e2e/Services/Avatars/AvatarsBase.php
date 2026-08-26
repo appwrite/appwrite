@@ -1702,6 +1702,16 @@ trait AvatarsBase
     {
         $this->assertNotEmpty($blob);
 
+        // The static fallback is SVG, which ImageMagick may refuse to open at
+        // all under its security policy. Name it here rather than letting
+        // readImageBlob() raise an opaque ImagickException — reaching the
+        // fallback when initials were expected is the failure worth reporting.
+        $this->assertStringNotContainsString(
+            '<svg',
+            \substr($blob, 0, 256),
+            'Expected a rendered avatar but got the static SVG fallback — the provider chain fell through.'
+        );
+
         $image = new \Imagick();
         $image->readImageBlob($blob);
 
