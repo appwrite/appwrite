@@ -8,6 +8,8 @@ on:
       - completed
 
 permissions:
+  actions: read
+  checks: read
   contents: write
   pull-requests: write
 
@@ -103,6 +105,7 @@ jobs:
           done
 
           checks_required='[
+            {"name":"Greptile Review","app":"greptile-apps"},
             {"name":"Trivy","app":"github-advanced-security"},
             {"name":"osv-scanner","app":"github-advanced-security"}
           ]'
