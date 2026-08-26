@@ -11,6 +11,9 @@ use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
+use Utopia\Query\Builder\ClickHouse as ClickHouseBuilder;
+use Utopia\Query\Builder\ClickHouse\Format;
+use Utopia\Query\Builder\Statement;
 
 /**
  * ClickHouse persistence for function and site executions.
@@ -298,13 +301,12 @@ class Store
         ];
         $permission = $this->permissionSql($roles, $params);
         $latest = $this->latestSql('source.projectId = {projectId:String} AND source.id = {executionId:String}');
-        $rows = $this->rows($this->query(<<<SQL
-            SELECT document
-            FROM ({$latest})
-            WHERE deleted = 0{$permission}
-            LIMIT 1
-            FORMAT JSON
-            SQL, $params));
+        $builder = $this->builder()
+            ->from('__latest__')
+            ->select(['document'])
+            ->whereRaw("deleted = 0{$permission}")
+            ->limit(1);
+        $rows = $this->rows($this->select($builder->build(), $latest, $params));
 
         return $this->document($rows[0]['document'] ?? null);
     }
@@ -338,15 +340,16 @@ class Store
         $before = $cursor?->getMethod() === Query::TYPE_CURSOR_BEFORE;
         $orderSql = $this->orderSql($order, $before);
         $latest = $this->latestSql($this->latestWhere($queries, $params));
-        $response = $this->query(<<<SQL
-            SELECT document
-            FROM ({$latest})
-            {$where}
-            {$orderSql}
-            LIMIT {$limit}
-            OFFSET {$offset}
-            FORMAT JSON
-            SQL, $params);
+        $builder = $this->builder()
+            ->from('__latest__')
+            ->select(['document']);
+        if ($where !== '') {
+            $builder->whereRaw(\substr($where, 7));
+        }
+        $builder->orderByRaw(\substr($orderSql, 9))
+            ->limit($limit)
+            ->offset($offset);
+        $response = $this->select($builder->build(), $latest, $params);
 
         $documents = [];
         foreach ($this->rows($response) as $row) {
@@ -382,12 +385,13 @@ class Store
 
         $where = $filters === [] ? '' : ' WHERE ' . \implode(' AND ', $filters);
         $latest = $this->latestSql($this->latestWhere($queries, $params));
-        $rows = $this->rows($this->query(<<<SQL
-            SELECT least(count(), {max:UInt64}) AS total
-            FROM ({$latest})
-            {$where}
-            FORMAT JSON
-            SQL, $params));
+        $builder = $this->builder()
+            ->from('__latest__')
+            ->selectRaw('least(count(), {max:UInt64}) AS total');
+        if ($where !== '') {
+            $builder->whereRaw(\substr($where, 7));
+        }
+        $rows = $this->rows($this->select($builder->build(), $latest, $params));
 
         return (int) ($rows[0]['total'] ?? 0);
     }
@@ -445,7 +449,7 @@ class Store
     /** @param array<array<string, mixed>> $rows */
     private function insert(array $rows): void
     {
-        $this->insertRows($this->table(), self::COLUMNS, $rows);
+        $this->insertRows($this->database() . '.' . self::TABLE, self::COLUMNS, $rows);
     }
 
     /**
@@ -454,14 +458,11 @@ class Store
      */
     private function insertRows(string $table, array $columns, array $rows): void
     {
-        $this->connect();
-        $url = $this->url() . '?' . \http_build_query([
-            'query' => 'INSERT INTO ' . $table . ' (' . \implode(', ', $columns) . ') FORMAT JSONEachRow',
-        ]);
-        $body = \implode("\n", \array_map(
-            fn (array $row) => \json_encode($row, JSON_THROW_ON_ERROR),
-            $rows
-        ));
+        $statement = (new ClickHouseBuilder())
+            ->from($table)
+            ->bulkInsert(Format::JSONEachRow, $rows, $columns);
+        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query]);
+        $body = $statement->body;
         $request = $this->requestFactory->body(Method::POST, $url, $body, 'application/x-ndjson', $this->headers());
 
         try {
@@ -865,6 +866,19 @@ class Store
     private function versionBase(int $rank): int
     {
         return $rank << self::VERSION_SHIFT;
+    }
+
+    private function builder(): ClickHouseBuilder
+    {
+        return (new ClickHouseBuilder())->useNamedBindings();
+    }
+
+    /** @param array<string, mixed> $params */
+    private function select(Statement $statement, string $source, array $params): string
+    {
+        $sql = \str_replace('FROM `__latest__`', "FROM ({$source})", $statement->query) . ' FORMAT JSON';
+
+        return $this->query($sql, \array_merge($params, $statement->namedBindings ?? []));
     }
 
     /** @param array<string, mixed> $params */

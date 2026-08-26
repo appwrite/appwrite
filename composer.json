@@ -92,7 +92,7 @@
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "2.0.*",
         "utopia-php/agents": "2.*",
-        "utopia-php/audit": "3.0.*",
+        "utopia-php/audit": "^4.0",
         "utopia-php/auth": "^0.10",
         "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^5.0.0",
@@ -138,7 +138,8 @@
         "utopia-php/client": "^0.3.0",
         "open-runtimes/sdk-for-php": "0.11.*",
         "utopia-php/schedule": "^0.2.0",
-        "utopia-php/usage": "^0.14.0"
+        "utopia-php/usage": "^0.15",
+        "utopia-php/query": "0.6.*"
     },
     "require-dev": {
         "ext-fileinfo": "*",

@@ -123,7 +123,8 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('resourceType IN', $find);
         $this->assertStringContainsString('status IN', $find);
         $this->assertStringContainsString('ORDER BY createdAt DESC, sequence DESC', $find);
-        $this->assertStringContainsString('LIMIT 10', $find);
+        $this->assertStringContainsString('LIMIT {param0:Int64}', $find);
+        $this->assertStringContainsString('name="param_param0"', $find);
         $this->assertStringContainsString('least(count()', (string) $client->requests[1]->getBody());
     }
 
