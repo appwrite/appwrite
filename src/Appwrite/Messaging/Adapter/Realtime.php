@@ -39,7 +39,8 @@ class Realtime extends MessagingAdapter
         'account',
         'teams',
         'memberships',
-        'presences'
+        'presences',
+        'videos',
     ];
 
     /**

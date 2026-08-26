@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Videos\Http\Videos;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Video as VideoMessage;
 use Appwrite\Event\Message\VideoAction;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
@@ -19,6 +20,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 
 class Update extends Base
 {
@@ -63,8 +65,10 @@ class Update extends Base
             ->inject('project')
             ->inject('user')
             ->inject('authorization')
+            ->inject('deviceForVideos')
             ->inject('queueForEvents')
             ->inject('publisherForVideos')
+            ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
@@ -77,8 +81,10 @@ class Update extends Base
         Document $project,
         User $user,
         Authorization $authorization,
+        Device $deviceForVideos,
         Event $queueForEvents,
-        VideoPublisher $publisherForVideos
+        VideoPublisher $publisherForVideos,
+        DeletePublisher $publisherForDeletes
     ): void {
         $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
         $file = $this->assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
@@ -96,6 +102,15 @@ class Update extends Base
         if (!$isSupported) {
             throw new Exception(Exception::VIDEO_NOT_VALID);
         }
+
+        $this->wipeDerivedResources(
+            $dbForProject,
+            $authorization,
+            $publisherForDeletes,
+            $deviceForVideos,
+            $project,
+            $video
+        );
 
         // Everything derived from the previous source is now stale, so clear it and
         // let the worker re-probe. These columns all exist on the schema — the

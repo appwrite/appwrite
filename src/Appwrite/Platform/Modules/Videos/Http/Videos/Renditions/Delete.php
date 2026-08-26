@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Videos\Http\Videos\Renditions;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
@@ -12,12 +13,11 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Query;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Storage\Device;
 
 class Delete extends Base
 {
@@ -61,8 +61,9 @@ class Delete extends Base
             ->inject('dbForProject')
             ->inject('user')
             ->inject('authorization')
-            ->inject('deviceForVideos')
+            ->inject('project')
             ->inject('queueForEvents')
+            ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
@@ -73,8 +74,9 @@ class Delete extends Base
         Database $dbForProject,
         User $user,
         Authorization $authorization,
-        Device $deviceForVideos,
-        Event $queueForEvents
+        Document $project,
+        Event $queueForEvents,
+        DeletePublisher $publisherForDeletes
     ): void {
         $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
 
@@ -84,33 +86,13 @@ class Delete extends Base
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        // Segments first — the pre-merge endpoint deleted the rendition (twice, in
-        // fact) and left its segment rows behind with nothing pointing at them.
-        $segments = $authorization->skip(fn () => $dbForProject->find('videos_renditions_segments', [
-            Query::equal('renditionInternalId', [$rendition->getSequence()]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
-
-        foreach ($segments as $segment) {
-            $authorization->skip(fn () => $dbForProject->deleteDocument('videos_renditions_segments', $segment->getId()));
-        }
-
-        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
-
-        if (!$deleted) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video rendition from DB');
-        }
-
-        $path = $rendition->getAttribute('path', '');
-
-        if (!empty($path)) {
-            try {
-                $deviceForVideos->deletePath($path);
-            } catch (\Throwable) {
-                // The row is already gone; a stale output tree is cleaned up when the
-                // video itself is deleted.
-            }
-        }
+        $this->deleteRendition(
+            $dbForProject,
+            $authorization,
+            $publisherForDeletes,
+            $project,
+            $rendition
+        );
 
         $queueForEvents
             ->setParam('videoId', $video->getId())

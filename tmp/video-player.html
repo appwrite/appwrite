@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-store" />
   <title>Appwrite Videos player</title>
   <style>
     :root { color-scheme: dark; }
@@ -70,6 +71,12 @@
     .mono { font-family: ui-monospace, monospace; }
     .muted { opacity: 0.55; font-size: 0.8rem; }
     progress { width: min(28rem, 100%); accent-color: #fd366e; }
+    #downloadBar {
+      display: grid;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+    }
+    #downloadBar[hidden] { display: none; }
     .rows { display: grid; gap: 0.4rem; }
     .row {
       display: grid;
@@ -174,8 +181,8 @@
 </head>
 <body>
   <main>
-    <h1>Appwrite Videos player</h1>
-    <p class="muted">Authenticate with the Web SDK, enter a video ID, and the page polls the Videos API for rendition/sprite status. Encode and play HLS, DASH, or CMAF (shared fMP4 with both masters).</p>
+    <h1>Appwrite Videos player <span class="muted" style="font-size:0.75rem;font-weight:400">hls-ladder-2</span></h1>
+    <p class="muted">Authenticate with the Web SDK, then upload or enter a video ID. The worker downloads the source once (chunk progress on the video), then encodes renditions. Poll for HLS, DASH, or CMAF playback.</p>
 
     <section class="panel">
       <h2>Connection &amp; auth <span class="muted">(Appwrite Web SDK)</span></h2>
@@ -268,6 +275,10 @@
         <button type="button" class="danger" id="deleteVideoBtn" disabled>Delete video</button>
         <span class="mono muted" id="pollInfo">idle</span>
       </div>
+      <div id="downloadBar" hidden>
+        <span class="mono muted" id="downloadLabel">source download</span>
+        <progress id="downloadProgress" value="0" max="100"></progress>
+      </div>
       <div class="manifests muted" id="manifestLinks">Set a video ID to see manifest URLs.</div>
       <div class="rows" id="statusRows">
         <div class="muted">Waiting for auth + video ID…</div>
@@ -327,6 +338,8 @@
 
     let account = null;
     let storage = null;
+    let appwrite = null;
+    let unsubscribeDownload = null;
     let currentUserId = '';
     let jwt = '';
     let jwtMintedAt = 0;
@@ -336,6 +349,7 @@
     let dashjsLib = null;
     let playingKey = null;
     let selectedLevel = -1; // -1 = Auto (HLS / CMAF-HLS)
+    let lastHlsReadySeen = 0; // ready HLS renditions at last master fetch
     let cues = [];
     let spriteReady = false;
     let lastStatus = null; // last poll payload, so we can re-render after manifest loads
@@ -383,6 +397,11 @@
         default:
           return `/videos/${videoId}/outputs/hls/master.m3u8`;
       }
+    }
+
+    function streamPlaylistPath(videoId, mode, renditionId, streamId = 0) {
+      const output = (mode === 'cmaf-hls' || mode === 'cmaf-dash') ? 'cmaf' : 'hls';
+      return `/videos/${videoId}/outputs/${output}/renditions/${renditionId}/streams/${streamId}/playlist.m3u8`;
     }
 
     function encodeOutputs() {
@@ -485,16 +504,20 @@
 
     function sdk() {
       const cfg = config();
-      const client = new Client().setEndpoint(cfg.endpoint).setProject(cfg.projectId);
+      appwrite = new Client().setEndpoint(cfg.endpoint).setProject(cfg.projectId);
       return {
-        account: new Account(client),
-        storage: new Storage(client),
+        account: new Account(appwrite),
+        storage: new Storage(appwrite),
       };
     }
 
     async function mintJwt() {
       const { jwt: token } = await account.createJWT();
       jwt = token;
+      // Keep JWT off the SDK client — Account/Storage/Realtime use the cookie
+      // session. Mixing setJWT + cookies 401s with "JWT and cookie used in the
+      // same request". Raw fetch() still sends X-Appwrite-JWT.
+      appwrite?.setJWT('');
       jwtMintedAt = Date.now();
     }
 
@@ -519,12 +542,26 @@
       persistConfig();
     }
 
+    async function clearSession() {
+      appwrite?.setJWT('');
+      if (!account) return;
+      try {
+        await account.deleteSessions();
+      } catch {
+        try {
+          await account.deleteSession('current');
+        } catch { /* none, or already gone */ }
+      }
+    }
+
     loginBtn.addEventListener('click', async () => {
       const email = $('email').value.trim();
       const password = $('password').value;
       loginBtn.disabled = true;
       try {
+        await clearSession();
         ({ account, storage } = sdk());
+        await clearSession();
         if (email) {
           await account.createEmailPasswordSession(email, password);
         } else {
@@ -548,9 +585,17 @@
       }
       signupBtn.disabled = true;
       try {
+        // Page load often resumes a cookie session. account.create() also starts
+        // a session, so Appwrite 401s unless the old one is gone first.
+        await clearSession();
         ({ account, storage } = sdk());
+        await clearSession();
         await account.create(ID.unique(), email, password);
-        await account.createEmailPasswordSession(email, password);
+        try {
+          await account.createEmailPasswordSession(email, password);
+        } catch (err) {
+          if (!/session is active/i.test(String(err?.message || err))) throw err;
+        }
         await setAuthenticated();
       } catch (err) {
         authInfo.textContent = `signup failed: ${err.message}`;
@@ -563,6 +608,7 @@
       stopPolling();
       destroyPlayer();
       try {
+        appwrite?.setJWT('');
         await account?.deleteSession('current');
       } catch { /* session may already be gone */ }
       account = null;
@@ -767,6 +813,8 @@
         if (!newVideoId) {
           throw new Error('create video returned no $id');
         }
+        const sourceStatus = videoDoc.status || 'waiting';
+        const chunksTotal = Number(videoDoc.chunksTotal) || 0;
 
         // Prefer the first encode output the user ticked, so Load/watch matches
         // what we just queued (avoids sitting on HLS while only CMAF was encoded).
@@ -810,8 +858,8 @@
         );
 
         uploadInfo.textContent = missing.length
-          ? `created ${newVideoId}; missing profiles: ${missing.join(', ')}`
-          : `created ${newVideoId}; queued ${queued} renditions (${outputs.join(', ')})`;
+          ? `created ${newVideoId} (${sourceStatus}, ${chunksTotal} chunks); missing profiles: ${missing.join(', ')}`
+          : `created ${newVideoId} · source ${sourceStatus} · queued ${queued} renditions (${outputs.join(', ')})`;
         // Pass the id explicitly so polling cannot race on a stale input value.
         startPolling(newVideoId);
       } catch (err) {
@@ -835,12 +883,18 @@
       return m ? Number(m[1]) : 0;
     }
 
+    function resolutionFromRenditionName(name) {
+      const m = String(name || '').match(/(\d+)X(\d+)@/i);
+      return m ? `${m[1]}x${m[2]}` : '';
+    }
+
     /** Map an Appwrite rendition row to an hls.js level index. */
     function levelForRendition(rendition) {
       if (!hls?.levels?.length) return -1;
       const id = typeof rendition === 'string' ? rendition : rendition.$id;
       const name = typeof rendition === 'string' ? '' : String(rendition.name || '');
       const height = heightFromRenditionName(name);
+      const resolution = resolutionFromRenditionName(name);
 
       const urlsOf = (level) => []
         .concat(level.url ?? [], level.uri ?? [])
@@ -852,8 +906,29 @@
       );
       if (idx >= 0) return idx;
 
-      if (name) {
-        idx = hls.levels.findIndex((level) => String(level.name || '') === name);
+      const wantName = name.toUpperCase();
+      if (wantName) {
+        idx = hls.levels.findIndex((level) => {
+          const n = String(level.attrs?.NAME || level.name || '').toUpperCase();
+          return n && n === wantName;
+        });
+        if (idx >= 0) return idx;
+      }
+
+      if (resolution) {
+        idx = hls.levels.findIndex((level) => {
+          const r = String(level.attrs?.RESOLUTION || '').toLowerCase();
+          return r === resolution;
+        });
+        if (idx >= 0) return idx;
+      }
+
+      const width = typeof rendition === 'object' ? Number(rendition.width) || 0 : 0;
+      const renditionHeight = typeof rendition === 'object' ? Number(rendition.height) || 0 : 0;
+      if (width > 0 && renditionHeight > 0) {
+        idx = hls.levels.findIndex((level) =>
+          Number(level.width) === width && Number(level.height) === renditionHeight
+        );
         if (idx >= 0) return idx;
       }
 
@@ -898,19 +973,26 @@
         return;
       }
 
-      // Same output: lock quality inside the current player.
-      if (isHlsMode() && hls) {
-        let level = levelForRendition(rendition);
-        if (level < 0) {
+      // Same output: lock quality inside the current player. Master may have been
+      // fetched when only one rendition was ready — reload if this id is missing.
+      if (isHlsMode()) {
+        if (hls) {
+          let level = levelForRendition(rendition);
           const ready = readyRenditionsForPlayback(renditions, rendition.output);
-          const order = ready.findIndex((r) => r.$id === renditionId);
-          if (order >= 0 && order < hls.levels.length) level = order;
+          // Don't map by list order unless the loaded master has every ready
+          // variant — otherwise index 0 is whatever encoded first, not 720p.
+          if (level < 0 && ready.length === hls.levels.length) {
+            const order = ready.findIndex((r) => r.$id === renditionId);
+            if (order >= 0) level = order;
+          }
+          if (level >= 0 && ready.length <= hls.levels.length) {
+            selectLevel(level);
+            return;
+          }
         }
-        if (level < 0) {
-          statusEl.textContent = `Could not map ${rendition.name || renditionId} to an HLS level (${hls.levels.length} levels)`;
-          return;
-        }
-        selectLevel(level);
+        playRendition(rendition).catch((err) => {
+          statusEl.textContent = `Play failed: ${err.message}`;
+        });
         return;
       }
 
@@ -927,22 +1009,14 @@
 
       const ready = readyRenditionsForPlayback(lastStatus?.renditions || [], rendition.output);
       selectedLevel = Math.max(0, ready.findIndex((r) => r.$id === rendition.$id));
+      playingKey = `${cfg.projectId}:${cfg.videoId}:${mode}`;
+      lastHlsReadySeen = ready.length;
 
       if (isHlsMode(mode)) {
-        await startHlsPlayback(cfg, mode);
-        // After master parse, lock to this rendition if possible.
-        const lock = () => {
-          const level = levelForRendition(rendition);
-          if (level >= 0) selectLevel(level);
-        };
-        if (hls) {
-          hls.once(Hls.Events.MANIFEST_PARSED, lock);
-        }
+        await startHlsPlayback(cfg, mode, rendition);
       } else {
         await startDashPlayback(cfg, mode, rendition.$id);
       }
-
-      playingKey = `${cfg.projectId}:${cfg.videoId}:${mode}`;
       if (lastStatus) renderStatus(lastStatus);
     }
 
@@ -964,14 +1038,95 @@
       if (lastStatus) renderStatus(lastStatus);
     }
 
+    function sourceProgress(videoDoc) {
+      const total = Number(videoDoc?.chunksTotal) || 0;
+      const uploaded = Number(videoDoc?.chunksUploaded) || 0;
+      const pct = total > 0 ? Math.round((uploaded / total) * 100) : 0;
+      return { total, uploaded, pct };
+    }
+
+    function applyDownloadProgress(videoDoc) {
+      const bar = $('downloadBar');
+      const meter = $('downloadProgress');
+      const label = $('downloadLabel');
+      if (!bar || !meter || !label) return;
+
+      const status = videoDoc?.status || '';
+      const { total, uploaded, pct } = sourceProgress(videoDoc);
+
+      if (!status || status === 'missing') {
+        bar.hidden = true;
+        return;
+      }
+
+      meter.max = 100;
+      meter.value = status === 'ready' ? 100 : pct;
+      if (status === 'ready') {
+        label.textContent = 'source ready';
+        bar.hidden = true;
+      } else if (status === 'error') {
+        label.textContent = 'source download failed';
+        bar.hidden = false;
+      } else {
+        bar.hidden = false;
+        label.textContent = `source ${status} · ${uploaded}/${total || '?'} chunks (${pct}%)`;
+      }
+    }
+
+    function unsubscribeDownloadEvents() {
+      if (typeof unsubscribeDownload === 'function') {
+        try { unsubscribeDownload(); } catch { /* already closed */ }
+        unsubscribeDownload = null;
+      }
+    }
+
+    function subscribeDownloadEvents(videoId) {
+      unsubscribeDownloadEvents();
+      if (!appwrite || !videoId) return;
+      const channels = [
+        `videos.${videoId}`,
+        `videos.${videoId}.update`,
+      ];
+      unsubscribeDownload = appwrite.subscribe(channels, (event) => {
+        const payload = event?.payload || {};
+        if (payload.$id && payload.$id !== videoId) return;
+        applyDownloadProgress(payload);
+        statusEl.textContent = $('downloadLabel')?.textContent || statusEl.textContent;
+        if (lastStatus) {
+          lastStatus.videoDoc = { ...lastStatus.videoDoc, ...payload };
+          renderStatus(lastStatus);
+        }
+        if (payload.status === 'ready') {
+          pollOnce().catch(() => {});
+        }
+        if (payload.status === 'error') {
+          stopPolling();
+        }
+      });
+    }
+
     function renderStatus({ videoDoc, renditions, sprite }) {
-      applyVideoAspect(videoDoc?.width, videoDoc?.height);
+      const width = Number(videoDoc?.width) || 0;
+      const height = Number(videoDoc?.height) || 0;
+      if (width > 0 && height > 0) {
+        applyVideoAspect(width, height);
+      }
       const rows = [];
+      const vStatus = videoDoc?.status || 'missing';
+      const { total, uploaded, pct } = sourceProgress(videoDoc);
+      const sourceHint = vStatus === 'ready'
+        ? (width && height ? `${width}×${height}` : '')
+        : (vStatus === 'error'
+          ? 'download failed'
+          : (total ? `${uploaded}/${total} chunks · ${pct}%` : 'queued'));
+      const durationHint = vStatus === 'ready' && videoDoc?.duration
+        ? `${Math.round((videoDoc.duration || 0) / 1000)}s`
+        : '';
       rows.push(`
         <div class="row">
-          <span>video ${videoDoc?.$id || '—'}</span>
-          <span>${videoDoc ? `${videoDoc.width}×${videoDoc.height}` : ''}</span>
-          <span>${videoDoc ? `${Math.round((videoDoc.duration || 0) / 1000)}s` : ''}</span>
+          <span>source ${videoDoc?.$id || '—'}</span>
+          <span>${sourceHint}${durationHint ? ` · ${durationHint}` : ''}</span>
+          ${badge(vStatus)}
         </div>
       `);
 
@@ -1145,6 +1300,9 @@
     }
 
     async function checkSprite(videoDoc) {
+      if (videoDoc?.status && videoDoc.status !== 'ready') {
+        return { status: videoDoc.status === 'error' ? 'error' : 'waiting', previewId: '' };
+      }
       if (videoDoc?.previewId) {
         return { status: 'ready', previewId: videoDoc.previewId };
       }
@@ -1168,6 +1326,23 @@
 
       renderStatus({ videoDoc, renditions, sprite });
       lastStatus = { videoDoc, renditions, sprite };
+      applyDownloadProgress(videoDoc);
+
+      const { total, uploaded, pct } = sourceProgress(videoDoc);
+      const sourceStatus = videoDoc.status || 'missing';
+
+      if (sourceStatus === 'error') {
+        statusEl.textContent = 'Source download failed';
+        pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · source error`;
+        stopPolling();
+        return;
+      }
+
+      if (sourceStatus !== 'ready') {
+        statusEl.textContent = `Downloading source · ${uploaded}/${total || '?'} chunks (${pct}%)`;
+        pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · source ${sourceStatus} · ${uploaded}/${total} chunks`;
+        return;
+      }
 
       const mode = playbackMode();
       const activeOutput = outputForMode(mode);
@@ -1183,6 +1358,14 @@
       const key = `${cfg.projectId}:${cfg.videoId}:${mode}`;
       if (readyForPlayback.length && playingKey !== key) {
         await startPlayback(cfg);
+        lastHlsReadySeen = readyForPlayback.length;
+      } else if (hls && isHlsMode(mode) && readyForPlayback.length > lastHlsReadySeen) {
+        // More HLS renditions became ready after we started on the first one.
+        const locked = selectedLevel >= 0
+          ? renditions.find((r) => r.status === 'ready' && r.output === activeOutput && levelForRendition(r) === selectedLevel)
+          : null;
+        await startHlsPlayback(cfg, mode, locked || null);
+        lastHlsReadySeen = readyForPlayback.length;
       } else if (!readyForPlayback.length && Object.keys(readyByOutput).length) {
         // Encoded something else than the selected playback stream — don't look "stuck".
         const hint = Object.keys(readyByOutput)
@@ -1222,10 +1405,33 @@
       playingKey = `${cfg.projectId}:${cfg.videoId}:${mode}`;
     }
 
-    async function startHlsPlayback(cfg, mode) {
+    function waitForHlsManifest(instance) {
+      return new Promise((resolve, reject) => {
+        const t = setTimeout(() => reject(new Error('HLS manifest parse timeout')), 15000);
+        const onParsed = (_, data) => {
+          clearTimeout(t);
+          instance.off(Hls.Events.MANIFEST_PARSED, onParsed);
+          resolve(data);
+        };
+        instance.on(Hls.Events.MANIFEST_PARSED, onParsed);
+      });
+    }
+
+    function loadHlsBlob(text) {
+      const blobUrl = URL.createObjectURL(new Blob([text], { type: 'application/vnd.apple.mpegurl' }));
+      hls.loadSource(blobUrl);
+      hls.on(Hls.Events.DESTROYING, () => URL.revokeObjectURL(blobUrl));
+    }
+
+    async function startHlsPlayback(cfg, mode, lockRendition = null) {
       if (!Hls.isSupported()) {
         statusEl.textContent = 'This browser cannot play HLS via hls.js';
         return;
+      }
+
+      if (hls) {
+        hls.destroy();
+        hls = null;
       }
 
       hls = new Hls({
@@ -1235,16 +1441,6 @@
           xhr.setRequestHeader('X-Appwrite-Project', cfg.projectId);
           xhr.setRequestHeader('X-Appwrite-JWT', jwt);
         },
-      });
-
-      hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
-        selectedLevel = -1;
-        hls.currentLevel = -1;
-        statusEl.textContent = `Playing ${mode} · Auto · ${data.levels?.length ?? 0} qualities`;
-        if (lastStatus) renderStatus(lastStatus);
-        video.play().catch(() => {
-          statusEl.textContent = `${mode} loaded — press play`;
-        });
       });
 
       hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
@@ -1261,13 +1457,52 @@
       hls.attachMedia(video);
       window.hlsDebug = hls;
 
-      const text = normalizeMaster(
-        await api(masterPath(cfg.videoId, mode), { accept: 'application/x-mpegurl' }),
-        new URL(cfg.endpoint).origin
+      const origin = new URL(cfg.endpoint).origin;
+      const masterText = normalizeMaster(
+        await api(`${masterPath(cfg.videoId, mode)}?_=${Date.now()}`, { accept: 'application/x-mpegurl' }),
+        origin
       );
-      const blobUrl = URL.createObjectURL(new Blob([text], { type: 'application/vnd.apple.mpegurl' }));
-      hls.loadSource(blobUrl);
-      hls.on(Hls.Events.DESTROYING, () => URL.revokeObjectURL(blobUrl));
+      const inMaster = !lockRendition || masterText.includes(`/renditions/${lockRendition.$id}/`);
+      const sourceText = (lockRendition && !inMaster)
+        ? normalizeMaster(
+            await api(streamPlaylistPath(cfg.videoId, mode, lockRendition.$id), { accept: 'application/x-mpegurl' }),
+            origin
+          )
+        : masterText;
+
+      const parsed = waitForHlsManifest(hls);
+      loadHlsBlob(sourceText);
+      const data = await parsed;
+
+      let level = -1;
+      if (lockRendition && !inMaster) {
+        level = 0;
+      } else if (lockRendition) {
+        level = levelForRendition(lockRendition);
+        if (level < 0) {
+          // Master listed the variant but hls.js dropped it (often 1 leftover
+          // level from an earlier encode). Play that rendition's playlist directly.
+          const media = normalizeMaster(
+            await api(streamPlaylistPath(cfg.videoId, mode, lockRendition.$id), { accept: 'application/x-mpegurl' }),
+            origin
+          );
+          const parsedMedia = waitForHlsManifest(hls);
+          loadHlsBlob(media);
+          await parsedMedia;
+          level = 0;
+        }
+      }
+
+      selectedLevel = level;
+      hls.currentLevel = level;
+      const n = hls.levels?.length ?? data.levels?.length ?? 0;
+      statusEl.textContent = level < 0
+        ? `Playing ${mode} · Auto · ${n} qualities`
+        : `Playing ${mode} · ${lockRendition.name || lockRendition.$id} · ${n} qualities`;
+      if (lastStatus) renderStatus(lastStatus);
+      video.play().catch(() => {
+        statusEl.textContent = `${mode} loaded — press play`;
+      });
     }
 
     async function startDashPlayback(cfg, mode, renditionId) {
@@ -1408,8 +1643,6 @@
         } catch { /* already torn down */ }
         dashPlayer = null;
       }
-      playingKey = null;
-      selectedLevel = -1;
       video.removeAttribute('src');
       video.load();
       resetVideoAspect();
@@ -1557,6 +1790,7 @@
     });
 
     function stopPolling() {
+      unsubscribeDownloadEvents();
       if (pollTimer) {
         clearInterval(pollTimer);
         pollTimer = null;
@@ -1582,10 +1816,15 @@
       timeline.classList.add('disabled');
       thumb.classList.remove('visible');
       playingKey = null;
+      lastHlsReadySeen = 0;
+      selectedLevel = -1;
 
       stopBtn.disabled = false;
       statusEl.textContent = `Polling ${config().videoId || '…'}…`;
       persistConfig();
+      ensureJwt()
+        .then(() => subscribeDownloadEvents(config().videoId))
+        .catch((err) => console.warn('realtime subscribe skipped', err));
 
       const tick = async () => {
         try {

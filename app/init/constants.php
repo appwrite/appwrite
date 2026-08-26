@@ -237,9 +237,11 @@ const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
-// Must equal the `videos` collection id: the DELETE_TYPE_DOCUMENT branch of the
+// Must equal the collection id: the DELETE_TYPE_DOCUMENT branch of the
 // deletes worker dispatches on $document->getCollection().
 const DELETE_TYPE_VIDEOS = 'videos';
+const DELETE_TYPE_VIDEOS_RENDITIONS = 'videos_renditions';
+const DELETE_TYPE_VIDEOS_SUBTITLES = 'videos_subtitles';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
 const DELETE_TYPE_SESSIONS = 'sessions';

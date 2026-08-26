@@ -175,6 +175,26 @@ $video = call($client, Client::METHOD_POST, '/videos', $apiHeaders, [
     'fileId' => $fileId,
 ]);
 $videoId = $video['body']['$id'];
+echo "videoId={$videoId} status=" . ($video['body']['status'] ?? 'waiting')
+    . " chunksTotal=" . ($video['body']['chunksTotal'] ?? 0) . "\n";
+
+echo "==> Waiting for source download\n";
+$downloaded = wait(function () use ($client, $apiHeaders, $videoId) {
+    $response = $client->call(Client::METHOD_GET, '/videos/' . $videoId, $apiHeaders);
+    $status = $response['body']['status'] ?? '';
+    $uploaded = $response['body']['chunksUploaded'] ?? 0;
+    $total = $response['body']['chunksTotal'] ?? 0;
+    echo "  status={$status} chunks={$uploaded}/{$total}\n";
+    if (in_array($status, ['ready', 'error'], true)) {
+        return $response['body'];
+    }
+    return null;
+});
+
+if (($downloaded['status'] ?? '') !== 'ready') {
+    fwrite(STDERR, "Source download failed\n");
+    exit(1);
+}
 
 echo "==> Waiting for timeline\n";
 wait(function () use ($client, $apiHeaders, $videoId) {

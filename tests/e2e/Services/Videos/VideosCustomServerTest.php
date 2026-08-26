@@ -440,10 +440,15 @@ class VideosCustomServerTest extends Scope
     #[Depends('testUpdateSubtitle')]
     public function testDeleteSubtitle(array $subtitle): void
     {
-        $response = $this->client->call(Client::METHOD_DELETE, '/videos/' . $subtitle['videoId'] . '/subtitles/' . $subtitle['subtitleId'], $this->headers());
+        $videoId = $subtitle['videoId'];
+        $subtitleId = $subtitle['subtitleId'];
+        $vttPath = $this->subtitleStoragePath($videoId, $subtitleId);
+        $this->waitUntilPathExists($vttPath);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/subtitles/' . $subtitleId, $this->headers());
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $subtitle['videoId'] . '/subtitles/' . $subtitle['subtitleId'], $this->headers(), [
+        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/subtitles/' . $subtitleId, $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getSubtitleFile()['$id'],
             'name' => 'Gone',
@@ -451,6 +456,11 @@ class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('video_subtitle_not_found', $response['body']['type']);
+
+        $this->waitUntilPathGone($vttPath);
+
+        $source = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files/' . $this->getSubtitleFile()['$id'], $this->headers());
+        $this->assertEquals(200, $source['headers']['status-code']);
     }
 
     // -------------------------------------------------------------- renditions
@@ -644,6 +654,71 @@ class VideosCustomServerTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('video_rendition_not_found', $response['body']['type']);
+    }
+
+    /**
+     * Deleting a rendition drops its row immediately and the deletes worker
+     * removes its packaged files. A sibling rendition keeps playing.
+     */
+    public function testDeleteRendition(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+        $this->waitForVideoReady($videoId);
+
+        $firstProfile = $this->seededProfile('360p');
+        $secondProfile = $this->seededProfile('480p');
+
+        $first = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $firstProfile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $first['headers']['status-code']);
+        $firstId = $first['body']['$id'];
+
+        $second = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $secondProfile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $second['headers']['status-code']);
+        $secondId = $second['body']['$id'];
+
+        $firstReady = $this->waitForRenditionTerminalState($videoId, $firstId);
+        $secondReady = $this->waitForRenditionTerminalState($videoId, $secondId);
+        $this->assertEquals('ready', $firstReady['status']);
+        $this->assertEquals('ready', $secondReady['status']);
+
+        $firstDir = $this->renditionStoragePath($videoId, $firstReady['name'], $firstId);
+        $secondDir = $this->renditionStoragePath($videoId, $secondReady['name'], $secondId);
+        $this->waitUntilPathExists($firstDir);
+        $this->waitUntilPathExists($secondDir);
+        $this->assertDirectoryHasFiles($firstDir);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        $missing = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
+        $this->assertEquals(404, $missing['headers']['status-code']);
+        $this->assertEquals('video_rendition_not_found', $missing['body']['type']);
+
+        $playlist = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $firstId . '/streams/0/playlist.m3u8',
+            $this->headers()
+        );
+        $this->assertEquals(404, $playlist['headers']['status-code']);
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $this->assertStringNotContainsString($firstId, $master['body']);
+        $this->assertStringContainsString($secondId, $master['body']);
+
+        $this->waitUntilPathGone($firstDir);
+        $this->assertDirectoryExists($secondDir);
     }
 
     // ---------------------------------------------------------------- playback
@@ -1032,24 +1107,77 @@ class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('/subtitles/' . $uploadId . '/manifest', $master['body']);
         $this->assertStringNotContainsString('/subtitles/' . $embeddedId . '/manifest', $master['body']);
 
-        // Re-pointing the source re-runs timeline extract; the upload must still win.
-        $update = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), [
+        return $extracted;
+    }
+
+    /**
+     * PUT wipes every derived artifact and restarts the pipeline. Lists are empty
+     * immediately; packaged files disappear once the deletes worker runs.
+     */
+    public function testUpdateSourceResetsVideo(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFileWithSubtitles()['$id'],
         ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+        $this->waitForVideoReady($videoId);
+
+        $timeline = $this->waitForTimeline($videoId);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+        $previousPreviewIds = $this->timelinePreviewIds((string) $timeline['body']);
+        $this->assertNotEmpty($previousPreviewIds);
+
+        $embedded = $this->waitForEmbeddedSubtitle($videoId);
+        $this->assertNotNull($embedded);
+        $subtitleId = $embedded['$id'];
+        $vttPath = $this->subtitleStoragePath($videoId, $subtitleId);
+        $this->waitUntilPathExists($vttPath);
+
+        $profile = $this->seededProfile('360p');
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $renditionId = $rendition['body']['$id'];
+        $ready = $this->waitForRenditionTerminalState($videoId, $renditionId);
+        $this->assertEquals('ready', $ready['status']);
+        $renditionDir = $this->renditionStoragePath($videoId, $ready['name'], $renditionId);
+        $this->waitUntilPathExists($renditionDir);
+        $this->assertDirectoryHasFiles($renditionDir);
+
+        $beforeRenditions = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
+        $this->assertGreaterThanOrEqual(1, $beforeRenditions['body']['total']);
+        $beforeSubtitles = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $this->assertGreaterThanOrEqual(1, $beforeSubtitles['body']['total']);
+
+        $update = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
         $this->assertEquals(200, $update['headers']['status-code']);
-        $this->waitForTimeline($videoId);
+        $this->assertEquals($this->getVideoFile()['$id'], $update['body']['fileId']);
 
-        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
-        $eng = \array_values(\array_filter(
-            $list['body']['subtitles'] ?? [],
-            fn (array $subtitle): bool => ($subtitle['code'] ?? '') === 'eng'
-        ));
-        $this->assertCount(1, $eng);
-        $this->assertEquals($uploadId, $eng[0]['$id']);
-        $this->assertEquals($this->getOverrideSubtitleFile()['$id'], $eng[0]['fileId']);
+        $renditions = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
+        $this->assertEquals(200, $renditions['headers']['status-code']);
+        $this->assertEquals(0, $renditions['body']['total']);
 
-        return $extracted;
+        $subtitles = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $this->assertEquals(200, $subtitles['headers']['status-code']);
+        $this->assertEquals(0, $subtitles['body']['total']);
+
+        $goneRendition = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, $this->headers());
+        $this->assertEquals(404, $goneRendition['headers']['status-code']);
+
+        $this->waitUntilPathGone($renditionDir);
+        $this->waitUntilPathGone($vttPath);
+
+        $this->waitForVideoReady($videoId);
+        $regenerated = $this->waitForTimelineRegenerated($videoId, $previousPreviewIds);
+        $this->assertEquals(200, $regenerated['headers']['status-code']);
+        $this->assertStringContainsString('WEBVTT', (string) $regenerated['body']);
     }
 
     // ------------------------------------------------------------------ delete
@@ -1108,5 +1236,12 @@ class VideosCustomServerTest extends Scope
         }
 
         $this->fail('Seeded ' . $name . ' profile missing');
+    }
+
+    private function assertDirectoryHasFiles(string $path): void
+    {
+        $this->assertDirectoryExists($path);
+        $entries = \array_values(\array_diff(\scandir($path) ?: [], ['.', '..']));
+        $this->assertNotEmpty($entries, 'Expected packaged files in ' . $path);
     }
 }

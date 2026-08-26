@@ -285,6 +285,12 @@ class Deletes extends Action
                     case DELETE_TYPE_VIDEOS:
                         $this->deleteVideo($getProjectDB, $deviceForVideos, $document, $project);
                         break;
+                    case DELETE_TYPE_VIDEOS_RENDITIONS:
+                        $this->deleteVideoRendition($getProjectDB, $deviceForVideos, $document, $project);
+                        break;
+                    case DELETE_TYPE_VIDEOS_SUBTITLES:
+                        $this->deleteVideoSubtitle($getProjectDB, $deviceForVideos, $document, $project);
+                        break;
                     case DELETE_TYPE_INSTALLATIONS:
                         $this->deleteInstallation($dbForPlatform, $getProjectDB, $document, $project);
                         break;
@@ -1907,13 +1913,13 @@ class Deletes extends Action
             Query::equal('videoInternalId', [$videoInternalId]),
         ], $dbForProject);
 
-        // Segments have to go before their parent so a failure mid-way cannot orphan them.
+        // Child documents still exist here (the HTTP action only deleted the
+        // video row), so reuse the per-child cleaners for segments and files
+        // before dropping the parent rows.
         $this->listByGroup('videos_renditions', [
             Query::equal('videoInternalId', [$videoInternalId]),
-        ], $dbForProject, function (Document $rendition) use ($dbForProject) {
-            $this->deleteByGroup('videos_renditions_segments', [
-                Query::equal('renditionInternalId', [$rendition->getSequence()]),
-            ], $dbForProject);
+        ], $dbForProject, function (Document $rendition) use ($getProjectDB, $deviceForVideos, $project) {
+            $this->deleteVideoRendition($getProjectDB, $deviceForVideos, $rendition, $project);
         });
 
         $this->deleteByGroup('videos_renditions', [
@@ -1922,10 +1928,8 @@ class Deletes extends Action
 
         $this->listByGroup('videos_subtitles', [
             Query::equal('videoInternalId', [$videoInternalId]),
-        ], $dbForProject, function (Document $subtitle) use ($dbForProject) {
-            $this->deleteByGroup('videos_subtitles_segments', [
-                Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
-            ], $dbForProject);
+        ], $dbForProject, function (Document $subtitle) use ($getProjectDB, $deviceForVideos, $project) {
+            $this->deleteVideoSubtitle($getProjectDB, $deviceForVideos, $subtitle, $project);
         });
 
         $this->deleteByGroup('videos_subtitles', [
@@ -1943,6 +1947,73 @@ class Deletes extends Action
             $deviceForVideosTmp->deletePath($document->getId());
         } catch (Throwable $th) {
             Console::error('Failed to delete video temp storage directory: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Removes a rendition's segment rows and packaged output directory.
+     *
+     * Safe to run after the rendition row itself is already gone: the
+     * document snapshot in the delete message still carries `$sequence` and
+     * `path`. Safe to run twice — `deleteByGroup` is a no-op on an empty
+     * match and missing storage is ignored.
+     *
+     * @param callable $getProjectDB
+     * @param Device $deviceForVideos
+     * @param Document $document
+     * @param Document $project
+     * @return void
+     */
+    private function deleteVideoRendition(callable $getProjectDB, Device $deviceForVideos, Document $document, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('videos_renditions_segments', [
+            Query::equal('renditionInternalId', [$document->getSequence()]),
+        ], $dbForProject);
+
+        $path = $document->getAttribute('path', '');
+
+        if ($path === '') {
+            return;
+        }
+
+        try {
+            // `path` is an absolute getPath() value. deletePath() prefixes the
+            // device root, so an absolute argument would miss the directory.
+            $deviceForVideos->delete($path, true);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete rendition storage directory: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Removes a subtitle's segment rows and packaged VTT file.
+     *
+     * @param callable $getProjectDB
+     * @param Device $deviceForVideos
+     * @param Document $document
+     * @param Document $project
+     * @return void
+     */
+    private function deleteVideoSubtitle(callable $getProjectDB, Device $deviceForVideos, Document $document, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('videos_subtitles_segments', [
+            Query::equal('subtitleInternalId', [$document->getSequence()]),
+        ], $dbForProject);
+
+        $path = $document->getAttribute('path', '');
+
+        if ($path === '') {
+            return;
+        }
+
+        try {
+            $deviceForVideos->delete($path);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete subtitle storage file: ' . $th->getMessage());
         }
     }
 

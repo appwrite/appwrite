@@ -401,6 +401,98 @@ trait VideoCustom
         $this->fail('Tmp source was still present at ' . $path . ' after ' . $timeout . 's');
     }
 
+    public function videoStoragePath(string $videoId, string $suffix = ''): string
+    {
+        $root = \defined('APP_STORAGE_VIDEOS') ? APP_STORAGE_VIDEOS : '/storage/videos';
+        $path = \rtrim($root, '/') . '/app-' . $this->getProject()['$id'] . '/' . $videoId;
+
+        if ($suffix !== '') {
+            $path .= '/' . \ltrim($suffix, '/');
+        }
+
+        return $path;
+    }
+
+    public function renditionStoragePath(string $videoId, string $name, string $renditionId): string
+    {
+        return $this->videoStoragePath($videoId, $name . '-' . $renditionId);
+    }
+
+    public function subtitleStoragePath(string $videoId, string $subtitleId): string
+    {
+        return $this->videoStoragePath($videoId, 'subtitles/' . $subtitleId . '.vtt');
+    }
+
+    public function waitUntilPathExists(string $path, int $timeout = 30): void
+    {
+        $deadline = \time() + $timeout;
+        $normalized = \rtrim($path, '/');
+
+        while (\time() < $deadline) {
+            \clearstatcache(true, $normalized);
+            if (\is_file($normalized) || \is_dir($normalized)) {
+                return;
+            }
+            \usleep(100000);
+        }
+
+        $this->fail('Path never appeared: ' . $path);
+    }
+
+    public function waitUntilPathGone(string $path, int $timeout = 60): void
+    {
+        $deadline = \time() + $timeout;
+        $normalized = \rtrim($path, '/');
+
+        while (\time() < $deadline) {
+            \clearstatcache(true, $normalized);
+            if (!\is_file($normalized) && !\is_dir($normalized)) {
+                return;
+            }
+            \usleep(100000);
+        }
+
+        $this->fail('Path still present: ' . $path);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function timelinePreviewIds(string $vtt): array
+    {
+        \preg_match_all('#previews/([A-Za-z0-9]+)#', $vtt, $matches);
+
+        return $matches[1] ?? [];
+    }
+
+    /**
+     * Polls until the sprite timeline exists and its preview ids differ from
+     * `$previousPreviewIds`, so a source update is not mistaken for the old sheet.
+     */
+    public function waitForTimelineRegenerated(string $videoId, array $previousPreviewIds, int $timeout = 300): array
+    {
+        $deadline = \time() + $timeout;
+        $response = [];
+
+        while (\time() < $deadline) {
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            if (($response['headers']['status-code'] ?? 0) === 200) {
+                $ids = $this->timelinePreviewIds((string) $response['body']);
+                if ($ids !== [] && $ids !== $previousPreviewIds) {
+                    return $response;
+                }
+            }
+
+            \usleep(500000);
+        }
+
+        $this->fail('Timeline did not regenerate for video ' . $videoId);
+    }
+
     /**
      * Polls a rendition until it leaves the queue-side states (`waiting`,
      * `started`, `ended`, `uploading`) and settles on `ready` or `error`.

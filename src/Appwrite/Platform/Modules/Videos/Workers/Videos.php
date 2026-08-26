@@ -21,6 +21,8 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
@@ -206,10 +208,9 @@ class Videos extends Action
             $sourcePath = $this->sourcePath($projectId, $videoId);
             $fetched = !$this->sourceReady($sourcePath, $video)
                 || $video->getAttribute('status') !== Base::STATUS_READY;
-            // Probe writes duration; capture this before so a later refetch
-            // (source GC'd after timeline) does not extract subtitles a second
-            // time and invalidate ids the client already observed.
-            $needsTimeline = empty($video->getAttribute('duration'));
+            // Sprite rows, not duration: a refetch after encode GC'd the tmp
+            // file must still enqueue timeline if sprites were never built.
+            $needsTimeline = !$this->hasSprites($dbForProject, $video);
 
             if ($fetched) {
                 $this->fetchSource(
@@ -1078,6 +1079,17 @@ class Videos extends Action
         ];
     }
 
+    private function hasSprites(Database $dbForProject, Document $video): bool
+    {
+        $sprites = $dbForProject->find('videos_previews', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::equal('type', ['sprite']),
+            Query::limit(1),
+        ]);
+
+        return !empty($sprites);
+    }
+
     private function sourceReady(string $sourcePath, Document $video): bool
     {
         return Base::sourceMatches($sourcePath, (int) $video->getAttribute('size', 0));
@@ -1230,6 +1242,14 @@ class Videos extends Action
         Document $video,
         bool $needsTimeline
     ): void {
+        if ($needsTimeline) {
+            $publisherForVideos->enqueue(new VideoMessage(
+                project: $project,
+                action: VideoAction::Timeline,
+                video: $video,
+            ));
+        }
+
         $renditions = $dbForProject->find('videos_renditions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('status', [Base::STATUS_WAITING]),
@@ -1254,20 +1274,17 @@ class Videos extends Action
                 output: (string) $rendition->getAttribute('output', ''),
             ));
         }
-
-        if ($needsTimeline) {
-            $publisherForVideos->enqueue(new VideoMessage(
-                project: $project,
-                action: VideoAction::Timeline,
-                video: $video,
-            ));
-        }
     }
 
     private function tryRelease(Database $dbForProject, string $projectId, string $videoId): void
     {
         $video = $dbForProject->getDocument('videos', $videoId);
         if ($video->isEmpty()) {
+            return;
+        }
+
+        // Timeline has no status row; keep the source until sprites exist.
+        if (!$this->hasSprites($dbForProject, $video)) {
             return;
         }
 
@@ -1355,12 +1372,22 @@ class Videos extends Action
 
     private function notifyVideo(Realtime $queueForRealtime, Document $project, Document $video): void
     {
+        $payload = $video->getArrayCopy();
+        // Video rows are project-internal and carry no ACL; stamp read so a
+        // session with videos.read can subscribe to `videos.{id}.update`.
+        if (empty($payload['$permissions'])) {
+            $payload['$permissions'] = [
+                Permission::read(Role::any()),
+                Permission::read(Role::users()),
+            ];
+        }
+
         $queueForRealtime
             ->setProject($project)
             ->setSubscribers(['console', $project->getId()])
             ->setEvent('videos.[videoId].update')
             ->setParam('videoId', $video->getId())
-            ->setPayload($video->getArrayCopy())
+            ->setPayload($payload)
             ->trigger();
     }
 

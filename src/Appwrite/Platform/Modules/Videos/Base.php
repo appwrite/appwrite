@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Videos;
 
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\View;
@@ -257,6 +259,99 @@ abstract class Base extends UtopiaAction
                     // Row is gone; stale device bytes are cleaned up with the video.
                 }
             }
+        }
+    }
+
+    /**
+     * Deletes a rendition row and enqueues lazy cleanup of its segments and files.
+     */
+    protected function deleteRendition(
+        Database $dbForProject,
+        Authorization $authorization,
+        DeletePublisher $publisherForDeletes,
+        Document $project,
+        Document $rendition
+    ): void {
+        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
+
+        if (!$deleted) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video rendition from DB');
+        }
+
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $rendition,
+        ));
+    }
+
+    /**
+     * Deletes a subtitle row and enqueues lazy cleanup of its segments and files.
+     */
+    protected function deleteSubtitle(
+        Database $dbForProject,
+        Authorization $authorization,
+        DeletePublisher $publisherForDeletes,
+        Document $project,
+        Document $subtitle
+    ): void {
+        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId()));
+
+        if (!$deleted) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video subtitle from DB');
+        }
+
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $subtitle,
+        ));
+    }
+
+    /**
+     * Drops every resource derived from the current source so an update can
+     * rebuild from a clean slate: renditions, subtitles, sprite previews, and
+     * the on-disk timeline directory.
+     */
+    protected function wipeDerivedResources(
+        Database $dbForProject,
+        Authorization $authorization,
+        DeletePublisher $publisherForDeletes,
+        Device $deviceForVideos,
+        Document $project,
+        Document $video
+    ): void {
+        $renditions = $authorization->skip(fn () => $dbForProject->find('videos_renditions', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
+
+        foreach ($renditions as $rendition) {
+            $this->deleteRendition($dbForProject, $authorization, $publisherForDeletes, $project, $rendition);
+        }
+
+        $subtitles = $authorization->skip(fn () => $dbForProject->find('videos_subtitles', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
+
+        foreach ($subtitles as $subtitle) {
+            $this->deleteSubtitle($dbForProject, $authorization, $publisherForDeletes, $project, $subtitle);
+        }
+
+        $previews = $authorization->skip(fn () => $dbForProject->find('videos_previews', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
+
+        foreach ($previews as $preview) {
+            $authorization->skip(fn () => $dbForProject->deleteDocument('videos_previews', $preview->getId()));
+        }
+
+        try {
+            $deviceForVideos->deletePath($video->getId() . '/timeline');
+        } catch (\Throwable) {
+            // Directory may already be empty; the worker rebuilds it from scratch.
         }
     }
 }

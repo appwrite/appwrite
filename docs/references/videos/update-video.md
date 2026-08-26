@@ -1,1 +1,1 @@
-Update a video by its unique ID, pointing it at a different source file. Metadata derived from the previous source is cleared and re-probed in the background.
+Update a video by its unique ID, pointing it at a different source file. Every derived artifact — renditions, subtitles (including uploads), sprite previews, and the timeline — is removed, metadata from the previous source is cleared, and the pipeline restarts from download. Request renditions and subtitles again against the new source. Only a `videos.[videoId].update` event is emitted.
