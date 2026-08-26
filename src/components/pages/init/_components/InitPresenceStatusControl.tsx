@@ -17,7 +17,7 @@ import {
   useInitPresence,
   type InitParticipantStatus,
 } from '@/lib/init/init-presence-context'
-import { useAvatarEmailHash } from '@/lib/init/avatar-email-hash'
+import { useAvatarEmailHash } from '@/lib/avatar-email-hash'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
 import { motion, useReducedMotion } from 'motion/react'

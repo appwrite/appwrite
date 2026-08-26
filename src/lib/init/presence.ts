@@ -1,7 +1,7 @@
 import { Permission, Query, Role } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { parseAvatarEmailHash } from '@/lib/init/avatar-email-hash'
+import { parseAvatarEmailHash } from '@/lib/avatar-email-hash'
 import { sanitizeInitPresenceActivity } from '@/lib/init/init-presence-activity-allowlist'
 import { parseInitPresenceTheme, type InitPresenceTheme } from '@/lib/init/init-presence-theme'
 import type { LaunchEventOnlineUser, InitCommunityCountry } from '@/lib/init/types'

@@ -56,7 +56,7 @@ import {
   analyticsAttrs,
   type AnalyticsActionId,
 } from '@/lib/analytics-actions'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import {
@@ -1446,8 +1446,9 @@ export function ConsoleHeader({
                     {...analyticsAttrs('user-menu')}
                     className="flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 transition-colors hover:bg-accent min-w-0"
                   >
-                    <InitialsAvatar
+                    <PhotoAvatar
                       name={displayName}
+                      email={userEmail}
                       size="sm"
                       className="shrink-0"
                     />

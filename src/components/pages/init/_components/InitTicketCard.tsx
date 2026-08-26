@@ -981,7 +981,9 @@ export const InitTicketCard = forwardRef<
           ref={shadowRef}
           data-init-ticket-capture-exclude
           className={cn(
-            'absolute inset-x-10 bottom-0 h-6 -translate-y-0.5 rounded-full blur-3xl',
+            // Radial falloff instead of filter:blur — Safari hard-clips large
+            // blurs to the element box and leaves a harsh oval edge.
+            'pointer-events-none absolute inset-x-6 bottom-0 h-12 -translate-y-1',
             shadowClassName,
           )}
           aria-hidden

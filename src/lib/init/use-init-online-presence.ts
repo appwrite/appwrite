@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { fetchLocale } from '@/lib/react-query/hooks/locale'
 import { LONG_STALE_TIME } from '@/lib/react-query/hooks/constants'
-import { hashEmailForAvatar } from '@/lib/init/avatar-email-hash'
+import { hashEmailForAvatar } from '@/lib/avatar-email-hash'
 import { retainInitPresencesRealtimeListener } from '@/lib/init/init-presences-realtime'
 import { buildInitPresenceActivityAllowlist } from '@/lib/init/init-presence-activity-allowlist'
 import {

@@ -324,9 +324,10 @@ export function InitTicketSection({
   const ticketCardRef = useRef<InitTicketCardHandle>(null)
 
   useEffect(() => {
-    setPageVideoCapturing(isCapturingVideo)
+    // Pause Jool / page motion for the full export, not only canvas capture.
+    setPageVideoCapturing(isExportingVideo)
     return () => setPageVideoCapturing(false)
-  }, [isCapturingVideo, setPageVideoCapturing])
+  }, [isExportingVideo, setPageVideoCapturing])
 
   useEffect(() => {
     if (!isAuthenticated) return

@@ -276,23 +276,28 @@ function drawTicketShadow(
   const [, , br, bl] = quad
   const anchorX = (br.x + bl.x) / 2
   const anchorY = Math.max(br.y, bl.y)
-  const shadowW = localWidth * 0.62
-  const shadowH = localHeight * 0.1
+  // Slightly larger ellipse than the old pre-blur shape so the soft falloff
+  // covers the same visual footprint without canvas `filter: blur` (Safari
+  // bands and hard-clips that path).
+  const shadowW = localWidth * 0.78
+  const shadowH = localHeight * 0.16
   const offsetY = Math.abs(rotateX) * 0.08
+  const cx = anchorX
+  const cy = anchorY - shadowH * 0.15 + offsetY
+  const core = isDark ? 'rgba(0,0,0,0.36)' : 'rgba(0,0,0,0.14)'
+  const mid = isDark ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.045)'
 
   ctx.save()
-  ctx.fillStyle = isDark ? 'rgba(0,0,0,0.42)' : 'rgba(0,0,0,0.16)'
-  ctx.filter = 'blur(28px)'
+  ctx.filter = 'none'
+  ctx.translate(cx, cy)
+  ctx.scale(shadowW / 2, shadowH / 2)
+  const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+  gradient.addColorStop(0, core)
+  gradient.addColorStop(0.42, mid)
+  gradient.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = gradient
   ctx.beginPath()
-  ctx.ellipse(
-    anchorX,
-    anchorY - shadowH * 0.2 + offsetY,
-    shadowW / 2,
-    shadowH / 2,
-    0,
-    0,
-    Math.PI * 2,
-  )
+  ctx.arc(0, 0, 1, 0, Math.PI * 2)
   ctx.fill()
   ctx.restore()
 }
