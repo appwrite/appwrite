@@ -99,7 +99,7 @@ class Get extends Action
 
         if ($userId === 'current') {
             $photoUser = clone $user;
-        } elseif (!empty($userId)) {
+        } else {
             $photoUser = $dbForProject->getDocument('users', $userId);
             if ($photoUser->isEmpty()) {
                 throw new Exception(Exception::USER_NOT_FOUND);
@@ -113,7 +113,7 @@ class Get extends Action
         // hash or name may describe anyone, so the user's identity photos,
         // email, and name must never shadow the avatar being asked for. The
         // user fills the profile only when nothing explicit was requested.
-        $overridden = !empty($emailHash) || !empty($name);
+        $overridden = $emailHash !== '' || $name !== '';
 
         if (!$overridden && !$photoUser->isEmpty()) {
             $userEmail = $photoUser->getAttribute('email', '');
@@ -121,35 +121,35 @@ class Get extends Action
 
             $profile = $profile->setAttribute('$id', $photoUser->getId());
 
-            if (!empty($userName)) {
+            if ($userName !== '') {
                 $profile = $profile->setAttribute('name', $userName);
             }
 
-            if (!empty($userEmail)) {
+            if ($userEmail !== '') {
                 $profile = $profile->setAttribute('emailHash', \hash('sha256', \strtolower(\trim($userEmail))));
             }
         }
 
-        if (!empty($name)) {
+        if ($name !== '') {
             $profile = $profile->setAttribute('name', $name);
         }
 
-        if (!empty($emailHash)) {
+        if ($emailHash !== '') {
             $profile = $profile->setAttribute('emailHash', $emailHash);
         }
 
         $providers = [];
 
-        if (!empty($profile->getId())) {
+        if ($profile->getId() !== '') {
             $providers[] = new OAuth2($dbForProject);
         }
 
-        if (!empty($profile->getAttribute('emailHash', ''))) {
+        if ($profile->getAttribute('emailHash', '') !== '') {
             $providers[] = new Gravatar();
             $providers[] = new Libavatar();
         }
 
-        if (!empty($profile->getAttribute('name', ''))) {
+        if ($profile->getAttribute('name', '') !== '') {
             $providers[] = new Initials();
         }
 

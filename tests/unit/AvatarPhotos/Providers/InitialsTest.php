@@ -14,6 +14,7 @@ final class InitialsTest extends TestCase
     public static function provideSupports(): \Iterator
     {
         yield 'name' => [['name' => 'Walter White'], true];
+        yield 'zero name' => [['name' => '0'], true];
         yield 'name and email' => [['name' => 'Walter White', 'email' => 'walter@appwrite.io'], true];
         yield 'email only' => [['email' => 'walter@appwrite.io'], false];
         yield 'blank name with email' => [['name' => ' ', 'email' => 'walter@appwrite.io'], false];

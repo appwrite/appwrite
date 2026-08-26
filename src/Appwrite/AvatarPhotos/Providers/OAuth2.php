@@ -30,7 +30,7 @@ class OAuth2 extends Photo
      */
     public function supports(Document $profile): bool
     {
-        return ! empty($profile->getId());
+        return $profile->getId() !== '';
     }
 
     public function get(Document $profile, int $width, int $height, string $rating): ?string

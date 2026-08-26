@@ -24,6 +24,13 @@ trait AvatarsBase
      */
     private const PHOTO_INITIALS_ALT_COLOR = ['r' => 124, 'g' => 103, 'b' => 254];
 
+    /**
+     * Corner colour of initials rendered for the name '0', which
+     * deterministically picks the blue theme (#68A3FE). '0' is falsy in
+     * PHP, so it guards every gate against empty() semantics.
+     */
+    private const PHOTO_INITIALS_ZERO_COLOR = ['r' => 104, 'g' => 163, 'b' => 254];
+
     public function testGetCreditCard(): array
     {
         /**
@@ -1634,6 +1641,19 @@ trait AvatarsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+
+        // '0' is falsy in PHP — it must still count as a provided name and
+        // render as initials, never fall back to the user's photo sources.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => '0',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_ZERO_COLOR, $response['body']);
 
         // An empty name is allowed and behaves as if it was not passed.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [

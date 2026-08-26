@@ -35,7 +35,7 @@ class Initials extends Photo
 
     public function supports(Document $profile): bool
     {
-        return !empty(\trim($profile->getAttribute('name', '')));
+        return \trim($profile->getAttribute('name', '')) !== '';
     }
 
     public function get(Document $profile, int $width, int $height, string $rating): ?string

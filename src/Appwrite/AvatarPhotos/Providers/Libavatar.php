@@ -19,7 +19,7 @@ class Libavatar extends Photo
 
     public function supports(Document $profile): bool
     {
-        return !empty($profile->getAttribute('emailHash', ''));
+        return $profile->getAttribute('emailHash', '') !== '';
     }
 
     public function get(Document $profile, int $width, int $height, string $rating): ?string

@@ -102,6 +102,21 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
 
+        // name '0' is falsy in PHP but is a real override: it must render as
+        // initials instead of returning the identity photo.
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'name' => '0',
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoBackground(self::PHOTO_INITIALS_ZERO_COLOR, $response['body']);
+
         // emailHash only: Gravatar and Libravatar miss on the random hash and
         // the chain ends at the static fallback — never the identity photo,
         // and never initials of the account's own name.
