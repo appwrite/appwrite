@@ -6,6 +6,7 @@ use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Schedule\Source\Chores;
 use DateInterval;
 use DateTime;
 use Utopia\Console;
@@ -14,7 +15,9 @@ use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
+use Utopia\Schedule\Scheduler;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
 
 class Maintenance extends Action
@@ -34,10 +37,11 @@ class Maintenance extends Action
             ->inject('publisherForCertificates')
             ->inject('certificateIssuer')
             ->inject('publisherForDeletes')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
-    public function action(string $type, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, Certificates $certificateIssuer, DeletePublisher $publisherForDeletes): void
+    public function action(string $type, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, Certificates $certificateIssuer, DeletePublisher $publisherForDeletes, Telemetry $telemetry): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
@@ -48,68 +52,128 @@ class Maintenance extends Action
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
         $jobInitTime = System::getEnv('_APP_MAINTENANCE_START_TIME', '00:00'); // (hour:minutes)
 
+        // The next occurrence of the configured start time, which anchors the
+        // grid. Occurrences are anchor + k x interval, so the run stays pinned
+        // to that wall-clock time instead of drifting by however long each run
+        // takes, the way sleeping for the interval did.
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
         $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-        $delay = $next->getTimestamp() - $now->getTimestamp();
 
-        /**
-         * If time passed for the target day.
-         */
-        if ($delay <= 0) {
+        if ($next->getTimestamp() <= $now->getTimestamp()) {
             $next->add(\DateInterval::createFromDateString('1 days'));
-            $delay = $next->getTimestamp() - $now->getTimestamp();
         }
 
-        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
-            $time = DatabaseDateTime::now();
+        // One entry per chore, not one closure over all of them. They share a
+        // cadence but nothing else: each enqueues to a different queue, and a
+        // failure in one says nothing about the next. Running them as one
+        // closure meant the first throw skipped every chore behind it -- and,
+        // under Console::loop, ended the loop for good.
+        $chores = [
+            'projects' => fn () => $this->notifyProjects($dbForPlatform, $publisherForDeletes, $usageStatsRetentionHourly),
+            'console' => fn () => $this->notifyConsole($console, $publisherForDeletes, $usageStatsRetentionHourly),
+            'connections' => fn () => $this->notifyDeleteConnections($publisherForDeletes),
+            'certificates' => fn () => $this->renewCertificates($dbForPlatform, $publisherForCertificates, $certificateIssuer),
+            'cache' => fn () => $this->notifyDeleteCache($cacheRetention, $publisherForDeletes),
+            'schedules' => fn () => $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes),
+            'csv-exports' => fn () => $this->notifyDeleteCSVExports($publisherForDeletes),
+        ];
 
-            Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
+        if ($type === 'trigger') {
+            foreach ($chores as $id => $chore) {
+                $this->chore($id, $chore);
+            }
 
-            // Iterate through project only if it was accessed in last 30 days
-            $dateInterval  = DateInterval::createFromDateString('30 days');
-            $before30days = (new DateTime())->sub($dateInterval);
-
-            $dbForPlatform->foreach(
-                'projects',
-                function (Document $project) use ($publisherForDeletes, $usageStatsRetentionHourly) {
-                    $publisherForDeletes->enqueue(new DeleteMessage(
-                        project: $project,
-                        type: DELETE_TYPE_MAINTENANCE,
-                        hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
-                    ));
-                },
-                [
-                    Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                    Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
-                    Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
-                    Query::limit(1000),
-                ]
-            );
-
-            $publisherForDeletes->enqueue(new DeleteMessage(
-                project: $console,
-                type: DELETE_TYPE_MAINTENANCE,
-                hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
-            ));
-
-            $this->notifyDeleteConnections($publisherForDeletes);
-            $this->renewCertificates($dbForPlatform, $publisherForCertificates, $certificateIssuer);
-            $this->notifyDeleteCache($cacheRetention, $publisherForDeletes);
-            $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
-            $this->notifyDeleteCSVExports($publisherForDeletes);
-        };
-
-        if ($type === 'loop') {
-            Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
-
-            Console::loop(function () use ($action) {
-                $action();
-            }, $interval, $delay);
-        } elseif ($type === 'trigger') {
-            $action();
+            return;
         }
+
+        Console::info('Anchoring the maintenance grid to ' . $next->format('Y-m-d H:i:s.v') . ', every ' . $interval . ' seconds.');
+
+        $scheduler = new Scheduler(
+            source: new Chores(\array_keys($chores), $interval, \DateTimeImmutable::createFromMutable($next)),
+            // The chore set is a constant, so there is nothing to re-read.
+            syncSeconds: $interval,
+            // Deliberately left at its default, unlike the usage sweep: a
+            // maintenance run enqueues a delete for every project in the
+            // region, and replaying a missed day on every restart would be
+            // worse than skipping it -- which is what the old loop did.
+            telemetry: $telemetry,
+            onError: function (\Throwable $error): void {
+                Console::error('maintenance: reconcile failed: ' . $error->getMessage());
+            },
+        );
+
+        $scheduler->run(function (array $due) use ($chores): null {
+            foreach ($due as $occurrence) {
+                $chore = $chores[$occurrence->id] ?? null;
+
+                if ($chore === null) {
+                    continue;
+                }
+
+                $this->chore($occurrence->id, $chore);
+            }
+
+            return null;
+        });
+
+        // run() returns only if something stopped the loop. Say so loudly: a
+        // scheduler that has stopped scheduling still looks alive and Ready.
+        Console::error('maintenance: scheduler loop returned, scheduling has stopped');
+    }
+
+    /**
+     * Run one chore, containing its failure.
+     *
+     * Nothing dispatched may throw: the Scheduler records a dispatch error and
+     * rethrows it, which ends run() -- and the process then stays alive and
+     * idle, never exiting, so restartPolicy never fires.
+     *
+     * @param callable(): void $chore
+     */
+    private function chore(string $id, callable $chore): void
+    {
+        $time = DatabaseDateTime::now();
+
+        try {
+            $chore();
+        } catch (\Throwable $th) {
+            Console::error("[{$time}] maintenance chore '{$id}' failed, retrying next interval: " . $th->getMessage());
+        }
+    }
+
+    private function notifyProjects(Database $dbForPlatform, DeletePublisher $publisherForDeletes, int $usageStatsRetentionHourly): void
+    {
+        // Iterate through project only if it was accessed in last 30 days
+        $dateInterval = DateInterval::createFromDateString('30 days');
+        $before30days = (new DateTime())->sub($dateInterval);
+
+        $dbForPlatform->foreach(
+            'projects',
+            function (Document $project) use ($publisherForDeletes, $usageStatsRetentionHourly) {
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_MAINTENANCE,
+                    hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
+                ));
+            },
+            [
+                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
+                Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
+                Query::limit(1000),
+            ]
+        );
+    }
+
+    private function notifyConsole(Document $console, DeletePublisher $publisherForDeletes, int $usageStatsRetentionHourly): void
+    {
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $console,
+            type: DELETE_TYPE_MAINTENANCE,
+            hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
+        ));
     }
 
     private function notifyDeleteConnections(DeletePublisher $publisherForDeletes): void

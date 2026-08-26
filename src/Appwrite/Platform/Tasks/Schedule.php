@@ -90,7 +90,7 @@ class Schedule extends Action
         $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
-            $this->loop(fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection));
+            $this->loop(fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));
         }
 
         while (true) {
