@@ -10,25 +10,22 @@ use PHPUnit\Framework\TestCase;
 
 final class VariableKeyTest extends TestCase
 {
-    public static function endpointKeys(): array
+    public static function endpointKeys(): \Iterator
     {
-        return [
-            'plain' => ['MY_KEY', true],
-            'lowercase' => ['my_key', true],
-            'leading underscore' => ['_KEY', true],
-            'digits after first char' => ['KEY_2', true],
-            'single letter' => ['a', true],
-
-            'empty' => ['', false],
-            'leading digit' => ['9KEY', false],
-            'space' => ['MY KEY', false],
-            'hyphen' => ['MY-KEY', false],
-            'dot' => ['my.key', false],
-            'equals sign' => ['FOO=BAR', false],
-            'trailing tab' => ["MY_KEY\t", false],
-            'accented letter' => ['RÉSUMÉ_KEY', false],
-            'utf-16 bytes' => ["A\x00C\x00M\x00E", false],
-        ];
+        yield 'plain' => ['MY_KEY', true];
+        yield 'lowercase' => ['my_key', true];
+        yield 'leading underscore' => ['_KEY', true];
+        yield 'digits after first char' => ['KEY_2', true];
+        yield 'single letter' => ['a', true];
+        yield 'empty' => ['', false];
+        yield 'leading digit' => ['9KEY', false];
+        yield 'space' => ['MY KEY', false];
+        yield 'hyphen' => ['MY-KEY', false];
+        yield 'dot' => ['my.key', false];
+        yield 'equals sign' => ['FOO=BAR', false];
+        yield 'trailing tab' => ["MY_KEY\t", false];
+        yield 'accented letter' => ['RÉSUMÉ_KEY', false];
+        yield 'utf-16 bytes' => ["A\x00C\x00M\x00E", false];
     }
 
     #[DataProvider('endpointKeys')]
@@ -45,26 +42,23 @@ final class VariableKeyTest extends TestCase
         $this->assertFalse($validator->isValid('ABCDE'));
     }
 
-    public static function envVarNames(): array
+    public static function envVarNames(): \Iterator
     {
-        return [
-            'plain' => ['MY_KEY', true],
-            // Keys that predate the endpoint rule and still deploy fine.
-            'hyphen' => ['MY-VAR', true],
-            'dot' => ['my.env-name', true],
-            'leading dot' => ['.profile', true],
-
-            'empty' => ['', false],
-            'single dot' => ['.', false],
-            'double dot' => ['..', false],
-            'double dot prefix' => ['..FOO', false],
-            'leading digit' => ['9FOO', false],
-            'space' => ['MY VAR', false],
-            'equals sign' => ['FOO=BAR', false],
-            'trailing tab' => ["SOME_APP_SECRET\t", false],
-            'accented letter' => ['RÉSUMÉ_KEY', false],
-            'utf-16 bytes' => ["A\x00C\x00M\x00E", false],
-        ];
+        yield 'plain' => ['MY_KEY', true];
+        // Keys that predate the endpoint rule and still deploy fine.
+        yield 'hyphen' => ['MY-VAR', true];
+        yield 'dot' => ['my.env-name', true];
+        yield 'leading dot' => ['.profile', true];
+        yield 'empty' => ['', false];
+        yield 'single dot' => ['.', false];
+        yield 'double dot' => ['..', false];
+        yield 'double dot prefix' => ['..FOO', false];
+        yield 'leading digit' => ['9FOO', false];
+        yield 'space' => ['MY VAR', false];
+        yield 'equals sign' => ['FOO=BAR', false];
+        yield 'trailing tab' => ["SOME_APP_SECRET\t", false];
+        yield 'accented letter' => ['RÉSUMÉ_KEY', false];
+        yield 'utf-16 bytes' => ["A\x00C\x00M\x00E", false];
     }
 
     #[DataProvider('envVarNames')]
