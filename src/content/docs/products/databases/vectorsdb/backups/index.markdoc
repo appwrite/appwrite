@@ -13,10 +13,10 @@ All backups are **hot** backups, ensuring zero downtime and fast recovery.
 You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. A backup captures the database along with its collections, documents, and embeddings.
 
 {% only_dark %}
-![Backups tab](/images/docs/databases/documentsdb/dark/backups-tab.avif)
+![Backups tab](/images/docs/products/databases/vectorsdb/dark/backups-tab.avif)
 {% /only_dark %}
 {% only_light %}
-![Backups tab](/images/docs/databases/documentsdb/backups-tab.avif)
+![Backups tab](/images/docs/products/databases/vectorsdb/backups-tab.avif)
 {% /only_light %}
 
 # Backup policies {% #backup-policies %}
