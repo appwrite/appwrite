@@ -2274,8 +2274,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     title={member.userName}
                                   >
                                     <PhotoAvatar
+                                      userId={member.userId}
                                       name={member.userName}
-                                      email={member.userEmail}
                                       size="md"
                                     />
                                   </div>
@@ -3601,11 +3601,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             <TableCell className="px-4 py-3">
                                               <div className="flex items-center gap-3 min-w-0">
                                                 <PhotoAvatar
+                                                  userId={member.userId}
                                                   name={
                                                     member.userName ||
                                                     member.userEmail
                                                   }
-                                                  email={member.userEmail}
                                                   size="sm"
                                                   className="shrink-0"
                                                 />
@@ -4133,11 +4133,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           }
                                                         >
                                                           <PhotoAvatar
+                                                            userId={
+                                                              member.userId
+                                                            }
                                                             name={
                                                               member.userName
-                                                            }
-                                                            email={
-                                                              member.userEmail
                                                             }
                                                             size="sm"
                                                           />

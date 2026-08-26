@@ -343,8 +343,6 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
                     {event.onlineUsers.slice(0, 4).map((user) => (
                       <PhotoAvatar
                         key={user.id}
-                        name={user.name}
-                        emailHash={user.emailHash}
                         userId={user.id}
                         size="sm"
                         className="ring-2 ring-background"

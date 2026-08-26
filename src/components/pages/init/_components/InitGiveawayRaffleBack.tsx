@@ -171,8 +171,6 @@ export function InitGiveawayRaffleBack({
             {winner ? (
               <div className="flex items-center gap-3">
                 <PhotoAvatar
-                  name={winner.name}
-                  emailHash={winner.emailHash}
                   userId={winner.id}
                   size="md"
                   className="rounded-full"

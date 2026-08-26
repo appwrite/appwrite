@@ -198,8 +198,6 @@ function PresenceAvatar({
       aria-hidden
     >
       <PhotoAvatar
-        name={user.name}
-        emailHash={user.emailHash}
         userId={user.id}
         size={size}
         className={cn('rounded-full', isRaffleWinner && RAFFLE_WINNER_AVATAR_CLASS)}

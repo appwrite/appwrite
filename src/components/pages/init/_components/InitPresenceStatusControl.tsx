@@ -17,7 +17,6 @@ import {
   useInitPresence,
   type InitParticipantStatus,
 } from '@/lib/init/init-presence-context'
-import { useAvatarEmailHash } from '@/lib/avatar-email-hash'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
 import { motion, useReducedMotion } from 'motion/react'
@@ -92,13 +91,13 @@ function PresenceStatusToggle({
 
 function PresenceStatusPanel({
   name,
-  emailHash,
+  userId,
   participantStatus,
   isUpdating,
   onStatusChange,
 }: {
   name: string
-  emailHash?: string
+  userId: string
   participantStatus: InitParticipantStatus
   isUpdating: boolean
   onStatusChange: (status: InitParticipantStatus) => void
@@ -109,8 +108,7 @@ function PresenceStatusPanel({
     <div className="space-y-3">
       <div className="flex items-start gap-2.5">
         <PhotoAvatar
-          name={name}
-          emailHash={emailHash}
+          userId={userId}
           size="sm"
           className="mt-0.5 shrink-0 rounded-full"
         />
@@ -195,7 +193,6 @@ export function InitPresenceStatusControl({
     setParticipantStatus,
   } = useInitPresence()
   const reduceMotion = useReducedMotion()
-  const emailHash = useAvatarEmailHash(account?.email)
 
   const name =
     account?.name?.trim() || account?.email?.split('@')[0]?.trim() || 'You'
@@ -227,8 +224,7 @@ export function InitPresenceStatusControl({
               >
                 <span className="relative">
                   <PhotoAvatar
-                    name={name}
-                    emailHash={emailHash}
+                    userId={account.$id}
                     size="sm"
                     className="rounded-full"
                   />
@@ -266,7 +262,7 @@ export function InitPresenceStatusControl({
         >
           <PresenceStatusPanel
             name={name}
-            emailHash={emailHash}
+            userId={account.$id}
             participantStatus={participantStatus}
             isUpdating={isParticipantStatusUpdating}
             onStatusChange={handleStatusChange}
@@ -283,7 +279,7 @@ export function InitPresenceStatusControl({
       </p>
       <PresenceStatusPanel
         name={name}
-        emailHash={emailHash}
+        userId={account.$id}
         participantStatus={participantStatus}
         isUpdating={isParticipantStatusUpdating}
         onStatusChange={handleStatusChange}
@@ -291,3 +287,4 @@ export function InitPresenceStatusControl({
     </div>
   )
 }
+

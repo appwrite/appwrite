@@ -1447,8 +1447,8 @@ export function ConsoleHeader({
                     className="flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 transition-colors hover:bg-accent min-w-0"
                   >
                     <PhotoAvatar
+                      userId={accountId}
                       name={displayName}
-                      email={userEmail}
                       size="sm"
                       className="shrink-0"
                     />
