@@ -46,7 +46,7 @@ class Initials extends Photo
 
         $name = $profile->getAttribute('name', '');
 
-        if (empty($this->getInitials($name))) {
+        if ($this->getInitials($name) === '') {
             return null;
         }
 
@@ -68,7 +68,7 @@ class Initials extends Photo
         $width = $width > 0 ? $width : self::DEFAULT_SIZE;
         $height = $height > 0 ? $height : self::DEFAULT_SIZE;
 
-        $bg = !empty($this->background)
+        $bg = $this->background !== ''
             ? '#' . \ltrim($this->background, '#')
             : $this->getTheme($initials);
 

@@ -45,7 +45,7 @@ class OAuth2 extends Photo
         foreach ($identities as $identity) {
             $url = $identity->getAttribute('photo', '');
 
-            if (empty($url)) {
+            if ($url === '') {
                 continue;
             }
 

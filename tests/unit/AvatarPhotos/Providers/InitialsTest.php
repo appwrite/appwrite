@@ -31,6 +31,32 @@ final class InitialsTest extends TestCase
         $this->assertSame($expected, (new Initials())->supports(new Document($attributes)));
     }
 
+    /**
+     * The initials of '0' are printable, so they must render — a falsy-but-
+     * present label previously fell through to the static fallback.
+     */
+    public function testGetRendersZeroName(): void
+    {
+        if (!\extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick is required to render initials.');
+        }
+
+        $this->assertNotNull((new Initials())->get(new Document(['name' => '0']), 100, 100, 'g'));
+    }
+
+    /**
+     * A label with no alphanumeric start has no initials to draw, so the
+     * provider declines and lets the static fallback answer.
+     */
+    public function testGetDeclinesUnprintableName(): void
+    {
+        if (!\extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick is required to render initials.');
+        }
+
+        $this->assertNull((new Initials())->get(new Document(['name' => '-']), 100, 100, 'g'));
+    }
+
     public function testGetIgnoresEmail(): void
     {
         $user = new Document(['email' => 'walter@appwrite.io']);
