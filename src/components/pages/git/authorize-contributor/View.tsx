@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  ArrowLeftRight,
-  Check,
-  ChevronDown,
-  ExternalLink,
-} from 'lucide-react'
+import { ArrowLeftRight, Check, ChevronDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -209,7 +204,6 @@ export function View({
                   aria-label={`${t('Open in new window')}: ${chipAriaLabel}`}
                 >
                   {chipInner}
-                  <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
                 </a>
               ) : (
                 <div className={chipClassName}>{chipInner}</div>
