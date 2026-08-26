@@ -18,6 +18,9 @@ class ScheduleMessages extends Action
 {
     public const UPDATE_TIMER = 3; // seconds between reconciliations
 
+    /** @var callable(string, int, callable): mixed */
+    private $locks;
+
     public function __construct()
     {
         $this
@@ -27,6 +30,7 @@ class ScheduleMessages extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -35,8 +39,10 @@ class ScheduleMessages extends Action
         return 'schedule-messages';
     }
 
-    public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, callable $locks): void
     {
+        $this->locks = $locks;
+
         $source = new Source\Messages($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
 
         $scheduler = new Scheduler(
@@ -64,13 +70,24 @@ class ScheduleMessages extends Action
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
             $now = DateTime::now();
-            // updateDocument never uses cache, so skip the subqueries.
-            $dbForPlatform->skipFilters(
-                fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                    'accessedAt' => $now
-                ])),
-                APP_PROJECTS_SUBQUERIES
+
+            // Concurrent occurrences each carry their own project snapshot, so
+            // every one of them reads the same stale accessedAt and would write
+            // it. The lock keeps that to one write, as the request path does.
+            ($this->locks)(
+                'lock:platform:' . ($project->getSequence() ?: $project->getId()) . ':projects:' . $project->getId() . ':accessedAt',
+                APP_PROJECT_ACCESS,
+                function () use ($dbForPlatform, $project, $now): void {
+                    // updateDocument never uses cache, so skip the subqueries.
+                    $dbForPlatform->skipFilters(
+                        fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                            'accessedAt' => $now
+                        ])),
+                        APP_PROJECTS_SUBQUERIES
+                    );
+                }
             );
+
             $project->setAttribute('accessedAt', $now);
         }
     }
