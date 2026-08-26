@@ -5,7 +5,7 @@
     "": {
       "name": "template-tanstack-start",
       "dependencies": {
-        "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@9b6588e",
+        "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@c876d8d",
         "@appwrite.io/specs": "github:appwrite/specs",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -135,7 +135,7 @@
     "use-sync-external-store": "^1.6.0",
   },
   "packages": {
-    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@9b6588e", { "dependencies": { "json-bigint": "1.0.0" } }],
+    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@c876d8d", { "dependencies": { "json-bigint": "1.0.0" } }],
 
     "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#aa50eda", {}, "appwrite-specs-aa50eda"],
 
