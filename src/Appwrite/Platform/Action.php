@@ -22,6 +22,7 @@ class Action extends UtopiaAction
     protected array $filters = [
         ...APP_PROJECTS_SUBQUERIES, // Project
         ...APP_USERS_SUBQUERIES, // Users
+        ...APP_TEAMS_SUBQUERIES, // Teams
         ...APP_TOPICS_SUBQUERIES, // Topics
         ...APP_FUNCTIONS_SUBQUERIES, // Sites / Functions
     ];
