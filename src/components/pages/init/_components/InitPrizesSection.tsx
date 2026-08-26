@@ -166,9 +166,7 @@ function DailyPrizeCell({
             </h4>
             <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
               <img src={meta.icon} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
-              <span className={PRIZE_LINE}>
-                {meta.label} · {giveaway.timeLabel}
-              </span>
+              <span className={PRIZE_LINE}>{meta.label}</span>
             </div>
           </div>
 
@@ -254,7 +252,7 @@ function GrandPrizeCell({
             <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
               <img src={platformMeta.icon} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
               <span className={PRIZE_LINE}>
-                {platformMeta.label} · {grandPrize.sessionTitle} · {grandPrize.timeLabel}
+                {platformMeta.label} · {grandPrize.sessionTitle}
               </span>
             </div>
           ) : null}

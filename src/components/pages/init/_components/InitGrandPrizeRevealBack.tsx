@@ -123,7 +123,7 @@ export function InitGrandPrizeRevealBack({
                 <div className="flex min-w-0 items-center gap-1.5 pt-1 text-[11px] text-muted-foreground">
                   <img src={platformMeta.icon} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
                   <span className="truncate">
-                    {platformMeta.label} · {grandPrize.sessionTitle} · {grandPrize.timeLabel}
+                    {platformMeta.label} · {grandPrize.sessionTitle}
                   </span>
                 </div>
               ) : null}

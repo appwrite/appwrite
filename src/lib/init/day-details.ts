@@ -246,13 +246,20 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
   },
 ]
 
+/**
+ * Sessions are authored in Pacific Time: livestreams at 9:00 AM with Reddit AMAs
+ * an hour later, except day 2, which runs in the afternoon. Init week falls
+ * entirely within PDT, so every entry carries the same -07:00 offset. Times are
+ * stored as absolute instants and rendered in the viewer's own zone - see
+ * `schedule-time.ts`.
+ */
 export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
   {
     id: 'sched-keynote',
     day: 1,
     platform: 'youtube',
     title: 'Appwrite 2.0 launch stream',
-    timeLabel: '10:00 AM',
+    startsAt: '2026-08-31T09:00:00-07:00',
     isLive: true,
   },
   {
@@ -260,7 +267,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 1,
     platform: 'reddit',
     title: 'Appwrite 2.0 AMA',
-    timeLabel: '2:00 PM',
+    startsAt: '2026-08-31T10:00:00-07:00',
     href: 'https://reddit.com/r/appwrite',
   },
   {
@@ -268,14 +275,15 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 2,
     platform: 'youtube',
     title: 'PostgreSQL deep dive',
-    timeLabel: '10:00 AM',
+    // Day 2 runs later than the rest of the week.
+    startsAt: '2026-09-01T13:30:00-07:00',
   },
   {
     id: 'sched-reddit-databases-ama',
     day: 2,
     platform: 'reddit',
     title: 'PostgreSQL AMA',
-    timeLabel: '3:00 PM',
+    startsAt: '2026-09-01T14:30:00-07:00',
     href: 'https://reddit.com/r/appwrite',
   },
   {
@@ -283,14 +291,14 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 3,
     platform: 'youtube',
     title: 'VectorsDB, DocumentsDB & MySQL deep dive',
-    timeLabel: '10:00 AM',
+    startsAt: '2026-09-02T09:00:00-07:00',
   },
   {
     id: 'sched-reddit-servers-ama',
     day: 3,
     platform: 'reddit',
     title: 'VectorsDB, DocumentsDB & MySQL AMA',
-    timeLabel: '6:00 PM',
+    startsAt: '2026-09-02T10:00:00-07:00',
     href: 'https://reddit.com/r/appwrite',
   },
   {
@@ -298,14 +306,14 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 4,
     platform: 'youtube',
     title: 'S3 for Appwrite Storage',
-    timeLabel: '10:00 AM',
+    startsAt: '2026-09-03T09:00:00-07:00',
   },
   {
     id: 'sched-reddit-s3-ama',
     day: 4,
     platform: 'reddit',
     title: 'S3 for Storage AMA',
-    timeLabel: '2:00 PM',
+    startsAt: '2026-09-03T10:00:00-07:00',
     href: 'https://reddit.com/r/appwrite',
   },
   {
@@ -313,22 +321,27 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 5,
     platform: 'youtube',
     title: 'Appwrite Firewall & Domains launch stream',
-    timeLabel: '10:00 AM',
-  },
-  {
-    id: 'sched-discord-closing',
-    day: 5,
-    platform: 'discord',
-    title: 'Init closing party',
-    timeLabel: '5:00 PM',
-    href: '/discord',
+    startsAt: '2026-09-04T09:00:00-07:00',
   },
   {
     id: 'sched-reddit-recap-ama',
     day: 5,
     platform: 'reddit',
     title: 'Init week AMA',
-    timeLabel: '7:00 PM',
+    startsAt: '2026-09-04T10:00:00-07:00',
     href: 'https://reddit.com/r/appwrite',
+  },
+  /**
+   * The community recap lands the day after the final launch day. It exists only
+   * in the schedule - the day timeline, event end date, and prizes section all
+   * still treat Init as a five-day week.
+   */
+  {
+    id: 'sched-discord-closing',
+    day: 6,
+    platform: 'discord',
+    title: 'Init community recap',
+    startsAt: '2026-09-05T09:00:00-07:00',
+    href: '/discord',
   },
 ]

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useInitHref } from '@/lib/init/use-init-href'
+import { useInitScheduleTime } from '@/lib/init/use-init-schedule-time'
 import { InitScheduleCalendarButton } from './InitScheduleCalendarButton'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 
@@ -36,6 +37,7 @@ export function InitScheduleRow({
 }) {
   const meta = INIT_SCHEDULE_PLATFORM_META[item.platform]
   const { setTransientActivity } = useInitPresenceActivity()
+  const formatScheduleTime = useInitScheduleTime()
   const sessionActivity = buildInitCheckingScheduleActivity(item.day)
   const actionHref =
     item.href ??
@@ -97,7 +99,9 @@ export function InitScheduleRow({
           inlineWhenWide && 'sm:shrink-0',
         )}
       >
-        {!isRecapMode && item.isLive ? 'Live now' : item.timeLabel}
+        {!isRecapMode && item.isLive
+          ? 'Live now'
+          : formatScheduleTime(item.startsAt)}
       </p>
     </div>
   )
