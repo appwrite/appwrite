@@ -6,7 +6,6 @@ use Appwrite\Extend\Exception;
 use Utopia\Platform\Action as PlatformAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Query\Exception as QueryException;
-use Utopia\Query\Method as QueryMethod;
 use Utopia\Query\Query;
 use Utopia\Usage\UsageQuery;
 
@@ -94,14 +93,13 @@ abstract class Action extends PlatformAction
      *
      * @param array<string> $queries Raw Utopia query strings from the request.
      * @param array<string> $allowedAttributes Attributes the endpoint accepts as filters.
-     * @param array<QueryMethod> $allowedMethods Query methods the endpoint accepts.
+     * @param array<string> $allowedMethods Query::TYPE_* values the endpoint accepts.
      * @return array<Query>
      * @throws Exception
      */
     protected function parseFilterQueries(array $queries, array $allowedAttributes, array $allowedMethods): array
     {
         $parsed = $this->parseQueries($queries);
-        $allowedMethodNames = \array_map(static fn (QueryMethod $method): string => $method->value, $allowedMethods);
 
         foreach ($parsed as $query) {
             $attribute = $query->getAttribute();
@@ -110,7 +108,7 @@ abstract class Action extends PlatformAction
             if ($attribute === '') {
                 throw new Exception(
                     Exception::GENERAL_QUERY_INVALID,
-                    "Structural queries (limit, offset, order, select, …) are not allowed in queries[]. Allowed methods: " . \implode(', ', $allowedMethodNames)
+                    "Structural queries (limit, offset, order, select, …) are not allowed in queries[]. Allowed methods: " . \implode(', ', $allowedMethods)
                 );
             }
 
@@ -124,7 +122,7 @@ abstract class Action extends PlatformAction
             if (!\in_array($method, $allowedMethods, true)) {
                 throw new Exception(
                     Exception::GENERAL_QUERY_INVALID,
-                    "Query method '{$method->value}' is not supported. Allowed: " . \implode(', ', $allowedMethodNames)
+                    "Query method '{$method}' is not supported. Allowed: " . \implode(', ', $allowedMethods)
                 );
             }
         }

@@ -2025,7 +2025,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => $refreshToken,
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-                    'photo' => $oauth2->getUserPhoto($accessToken),
                 ]));
             } catch (Duplicate) {
                 // The (provider, providerUid) unique index guards the same identity being connected to two users.
@@ -2041,12 +2040,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         } else {
-            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
-                'providerAccessToken' => $accessToken,
-                'providerRefreshToken' => $refreshToken,
-                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-                // Refresh the photo URL on every login so expired CDN links self-heal.
-                'photo' => $oauth2->getUserPhoto($accessToken),
+            $identity
+                ->setAttribute('providerAccessToken', $accessToken)
+                ->setAttribute('providerRefreshToken', $refreshToken)
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry));
+            $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                'providerAccessToken' => $identity->getAttribute('providerAccessToken'),
+                'providerRefreshToken' => $identity->getAttribute('providerRefreshToken'),
+                'providerAccessTokenExpiry' => $identity->getAttribute('providerAccessTokenExpiry'),
             ]));
         }
 
