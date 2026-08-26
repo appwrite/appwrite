@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { getLaunchEventBySlug } from '@/lib/init/events'
 
 export const Route = createFileRoute('/_api/init/ticket/$eventSlug')({
   server: {
     handlers: {
       GET: async ({ params, request }) => {
-        if (!getActiveProfileFeatures().init) {
+        if (!isInitSurfaceEnabled(request.headers.get('cookie'))) {
           return new Response('Not found', { status: 404 })
         }
 

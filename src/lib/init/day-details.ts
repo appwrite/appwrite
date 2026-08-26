@@ -252,7 +252,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 1,
     platform: 'youtube',
     title: 'Appwrite 2.0 launch stream',
-    timeLabel: 'Live now',
+    timeLabel: '10:00 AM',
     isLive: true,
   },
   {

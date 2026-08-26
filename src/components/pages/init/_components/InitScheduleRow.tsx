@@ -8,7 +8,7 @@ import { buildInitCheckingScheduleActivity } from '@/lib/init/init-presence-acti
 import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { isExternalInitHref } from '@/lib/init/links'
+import { useInitHref } from '@/lib/init/use-init-href'
 import { InitScheduleCalendarButton } from './InitScheduleCalendarButton'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 
@@ -42,8 +42,13 @@ export function InitScheduleRow({
     (item.platform === 'youtube'
       ? event.liveBanner?.href ?? INIT_YOUTUBE_FALLBACK_HREF
       : undefined)
+  const resolvedAction =
+    useInitHref(actionHref) ??
+    (item.platform === 'youtube'
+      ? { href: INIT_YOUTUBE_FALLBACK_HREF, external: true }
+      : null)
   const actionLabel = item.platform === 'youtube' ? 'Watch' : 'Join event'
-  const actionExternal = actionHref ? isExternalInitHref(actionHref) : false
+  const actionExternal = resolvedAction?.external ?? false
   const badge = (
     <span
       className={cn(
@@ -92,14 +97,14 @@ export function InitScheduleRow({
           inlineWhenWide && 'sm:shrink-0',
         )}
       >
-        {item.timeLabel}
+        {!isRecapMode && item.isLive ? 'Live now' : item.timeLabel}
       </p>
     </div>
   )
   const mainContent =
-    !inlineWhenWide && actionHref ? (
+    !inlineWhenWide && resolvedAction ? (
       <a
-        href={actionHref}
+        href={resolvedAction.href}
         {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         className="flex min-w-0 flex-1 items-start gap-4"
       >
@@ -132,7 +137,7 @@ export function InitScheduleRow({
         {!isRecapMode ? (
           <InitScheduleCalendarButton event={event} item={item} />
         ) : null}
-        {inlineWhenWide && actionHref ? (
+        {inlineWhenWide && resolvedAction ? (
           <>
             {!isRecapMode ? (
               <span
@@ -141,7 +146,7 @@ export function InitScheduleRow({
               />
             ) : null}
             <a
-              href={actionHref}
+              href={resolvedAction.href}
               {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground hover:text-foreground"
             >

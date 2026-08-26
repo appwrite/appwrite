@@ -15,9 +15,11 @@ import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   CONSOLE_OAUTH_PROVIDERS,
   OAUTH_LOGIN_ERROR,
+  isConsoleOAuthProviderEnabled,
 } from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
@@ -97,6 +99,14 @@ function SignInPage() {
   const [isOpeningMfa, setIsOpeningMfa] = useState(false)
 
   const handleOAuthLogin = async (provider: OAuthLoginMethod) => {
+    if (
+      !isConsoleOAuthProviderEnabled(
+        provider,
+        getActiveProfileFeatures().extraOAuthLogin,
+      )
+    ) {
+      return
+    }
     setOauthLoading(provider)
     try {
       // Build success and failure URLs

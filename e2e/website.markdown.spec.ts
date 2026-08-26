@@ -1,7 +1,4 @@
 import { expect, test } from './fixtures'
-import {
-  WEBSITE_ACCESS_COOKIE_NAME,
-} from '../src/lib/website-access'
 
 /**
  * Markdown / LLM text exports (llms.txt standard). Plain HTTP endpoints, no
@@ -10,9 +7,6 @@ import {
  * integration, llms indexes), so one page per type covers the route handler
  * and the Markdoc-to-Markdown transform for that content source.
  */
-
-/** Soft-launch gate accepts any non-empty cookie value (see src/lib/website-access). */
-const ACCESS_COOKIE = `${WEBSITE_ACCESS_COOKIE_NAME}=1`
 
 const MARKDOWN_CONTENT_TYPE = /^text\/markdown/
 const JSON_CONTENT_TYPE = /application\/json/
@@ -51,9 +45,7 @@ const MARKDOWN_PAGES: Array<{
 test.describe('markdown exports (read-only)', () => {
   for (const pageDef of MARKDOWN_PAGES) {
     test(`${pageDef.name} serves markdown`, async ({ request }) => {
-      const response = await request.get(pageDef.path, {
-        headers: { Cookie: ACCESS_COOKIE },
-      })
+      const response = await request.get(pageDef.path)
 
       expect(response.status(), `Unexpected HTTP for ${pageDef.path}`).toBe(200)
       expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
@@ -70,9 +62,7 @@ test.describe('markdown exports (read-only)', () => {
   }
 
   test('llms.txt hub serves curated agent index', async ({ request }) => {
-    const response = await request.get('/llms.txt', {
-      headers: { Cookie: ACCESS_COOKIE },
-    })
+    const response = await request.get('/llms.txt')
 
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
@@ -89,9 +79,7 @@ test.describe('markdown exports (read-only)', () => {
   })
 
   test('docs/llms.txt serves nested docs index', async ({ request }) => {
-    const response = await request.get('/docs/llms.txt', {
-      headers: { Cookie: ACCESS_COOKIE },
-    })
+    const response = await request.get('/docs/llms.txt')
 
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
@@ -104,9 +92,7 @@ test.describe('markdown exports (read-only)', () => {
 
   test('section markdown indexes list content links', async ({ request }) => {
     for (const path of ['/docs.md', '/blog.md', '/changelog.md', '/integrations.md']) {
-      const response = await request.get(path, {
-        headers: { Cookie: ACCESS_COOKIE },
-      })
+      const response = await request.get(path)
       expect(response.status(), path).toBe(200)
       expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
       const body = await response.text()
@@ -118,9 +104,7 @@ test.describe('markdown exports (read-only)', () => {
   test('well-known discovery documents serve MCP Server Card + AI Catalog', async ({
     request,
   }) => {
-    const mcp = await request.get('/.well-known/mcp/server-card.json', {
-      headers: { Cookie: ACCESS_COOKIE },
-    })
+    const mcp = await request.get('/.well-known/mcp/server-card.json')
     expect(mcp.status()).toBe(200)
     expect(mcp.headers()['content-type']).toMatch(
       /application\/(mcp-server-card\+json|json)/,
@@ -131,9 +115,7 @@ test.describe('markdown exports (read-only)', () => {
     expect(mcpBody.name).toBe('io.appwrite/mcp')
     expect(mcpBody.remotes?.[0]?.url).toContain('mcp.appwrite.io')
 
-    const catalog = await request.get('/.well-known/ai-catalog.json', {
-      headers: { Cookie: ACCESS_COOKIE },
-    })
+    const catalog = await request.get('/.well-known/ai-catalog.json')
     expect(catalog.status()).toBe(200)
     expect(catalog.headers()['content-type']).toMatch(
       /application\/(ai-catalog\+json|json)/,
@@ -146,9 +128,7 @@ test.describe('markdown exports (read-only)', () => {
       '/.well-known/mcp/server-card.json',
     )
 
-    const skills = await request.get('/.well-known/agent-skills/index.json', {
-      headers: { Cookie: ACCESS_COOKIE },
-    })
+    const skills = await request.get('/.well-known/agent-skills/index.json')
     expect(skills.status()).toBe(200)
     expect(skills.headers()['content-type']).toMatch(JSON_CONTENT_TYPE)
     const skillsBody = await skills.json()
@@ -157,9 +137,7 @@ test.describe('markdown exports (read-only)', () => {
   })
 
   test('robots.txt serves plain text with a tracked route', async ({ request }) => {
-    const response = await request.get('/robots.txt', {
-      headers: { Cookie: ACCESS_COOKIE },
-    })
+    const response = await request.get('/robots.txt')
 
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toMatch(/text\/plain/)
@@ -169,9 +147,7 @@ test.describe('markdown exports (read-only)', () => {
   })
 
   test('llms-full.txt serves aggregated docs markdown', async ({ request }) => {
-    const response = await request.get('/llms-full.txt', {
-      headers: { Cookie: ACCESS_COOKIE },
-    })
+    const response = await request.get('/llms-full.txt')
 
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
@@ -183,9 +159,7 @@ test.describe('markdown exports (read-only)', () => {
   })
 
   test('missing markdown page returns 404', async ({ request }) => {
-    const response = await request.get('/blog/post/this-post-does-not-exist.md', {
-      headers: { Cookie: ACCESS_COOKIE },
-    })
+    const response = await request.get('/blog/post/this-post-does-not-exist.md')
     expect(response.status()).toBe(404)
   })
 })

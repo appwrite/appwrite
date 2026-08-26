@@ -37,7 +37,6 @@ function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
   }
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
   if (normalized === '/reset') return true
-  if (normalized === '/access') return true
   return false
 }
 

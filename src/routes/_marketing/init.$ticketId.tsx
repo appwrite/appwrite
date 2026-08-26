@@ -1,6 +1,6 @@
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/init/ticket/View'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import {
   buildInitTicketShareUrl,
   getInitTicketShareImageSrc,
@@ -17,7 +17,7 @@ export const Route = createFileRoute('/_marketing/init/$ticketId')({
   },
   ssr: true,
   loader: async ({ params }) => {
-    if (!getActiveProfileFeatures().init) {
+    if (!isInitSurfaceEnabled()) {
       throw redirect({ to: '/', replace: true })
     }
 

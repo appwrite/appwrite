@@ -5,7 +5,6 @@ import { rootGuestRedirectMiddleware } from '@/server/middleware/root-guest-redi
 import { runtimeConfigMiddleware } from '@/server/middleware/runtime-config'
 import { seoIndexingMiddleware } from '@/server/middleware/seo-indexing'
 import { preLaunchMiddleware } from '@/server/middleware/pre-launch'
-import { websiteAccessMiddleware } from '@/server/middleware/website-access'
 
 export const startInstance = createStart(() => ({
   defaultSsr: true,
@@ -15,7 +14,6 @@ export const startInstance = createStart(() => ({
     seoIndexingMiddleware,
     runtimeConfigMiddleware,
     legacyRedirectsMiddleware,
-    websiteAccessMiddleware,
     preLaunchMiddleware,
     rootGuestRedirectMiddleware,
   ],

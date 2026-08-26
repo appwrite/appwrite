@@ -43,12 +43,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { LinkedInBrandIcon } from '@/lib/community/LinkedInBrandIcon'
+import { XBrandIcon } from '@/lib/community/XBrandIcon'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import {
   ChevronDown,
   Copy,
-  Linkedin,
   Loader2,
   Share2,
   SlidersHorizontal,
@@ -199,9 +200,7 @@ function ShareActions({
             className={shareMenuItemClass}
             onClick={onShareMenuClose}
           >
-            <span className="flex size-4 shrink-0 items-center justify-center text-[11px] font-bold text-muted-foreground">
-              X
-            </span>
+            <XBrandIcon className="size-4 shrink-0 text-muted-foreground" />
             Share on X
           </a>
           <a
@@ -211,7 +210,7 @@ function ShareActions({
             className={shareMenuItemClass}
             onClick={onShareMenuClose}
           >
-            <Linkedin className="size-4 shrink-0 text-muted-foreground" />
+            <LinkedInBrandIcon className="size-4 shrink-0 text-muted-foreground" />
             LinkedIn
           </a>
           <button

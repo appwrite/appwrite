@@ -2052,6 +2052,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
+                'Extra OAuth login',
+                'Show Google, GitLab, Bitbucket, and Cursor on console sign-in and sign-up. GitHub stays available.',
+                'extraOAuthLogin',
+                profileId,
+                features.extraOAuthLogin,
+                { category: 'Auth & security' },
+              ),
+              createProfileFeatureFlagItem(
                 'Cookie banner',
                 'Show the locale-gated cookie consent banner and footer cookie settings.',
                 'cookieBanner',
@@ -2558,6 +2566,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.nativeDbsMySQL,
     features.nativeDbsMongo,
     features.userVerification,
+    features.extraOAuthLogin,
     features.cookieBanner,
     features.blogDrafts,
     features.oauthApps,

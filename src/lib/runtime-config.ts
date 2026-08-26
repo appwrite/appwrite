@@ -40,8 +40,8 @@ const EMPTY_CONFIG: RuntimeConfig = {
   userVerification: '',
   cookieBanner: '',
   blogDrafts: '',
+  extraOAuthLogin: '',
   usageStats: '',
-  websiteAccess: '',
   preLaunch: '',
 }
 

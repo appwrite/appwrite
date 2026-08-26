@@ -1,9 +1,5 @@
 import type { Models } from '@appwrite.io/console'
 import {
-  findGitHubIdentity,
-  getGitHubUsername,
-} from '@/lib/init/github-identity'
-import {
   formatInitTicketNumber,
   type InitTicketPrefs,
 } from '@/lib/init/ticket-prefs'
@@ -22,7 +18,6 @@ type InitTicketRenderEvent = Pick<
 export interface InitTicketRenderData {
   dateRangeLabel: string
   holderName: string
-  githubUsername?: string
   ticketNumber: string
   prefs: InitTicketPrefs
   ticketAppearance: ResolvedInitTicketAppearance
@@ -54,13 +49,9 @@ export function buildInitTicketRenderData(params: {
   themeUsesDarkImage: boolean
   mockTypeId?: InitTicketTypeId | null
   fallbackHolderName?: string
-  githubUsername?: string
   ticketNumber?: string
 }): InitTicketRenderData {
   const accountName = getInitTicketAccountName(params.account)
-  const githubUsername =
-    params.githubUsername ??
-    getGitHubUsername(findGitHubIdentity(params.identities), accountName)
   const holderName = getInitTicketHolderName(
     accountName,
     params.prefs,
@@ -76,7 +67,6 @@ export function buildInitTicketRenderData(params: {
   return {
     dateRangeLabel: params.event.dateRangeLabel,
     holderName,
-    githubUsername,
     ticketNumber:
       params.ticketNumber ?? getInitTicketNumberForUser(params.account?.$id),
     prefs: params.prefs,

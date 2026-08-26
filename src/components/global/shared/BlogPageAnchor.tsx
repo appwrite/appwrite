@@ -2,7 +2,7 @@
 
 import { Link } from '@tanstack/react-router'
 import type { ComponentProps, ReactNode } from 'react'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useLocalMarketingEnabled } from '@/lib/marketing/local-marketing'
 import {
   getBlogPageUrl,
   isBlogPageExternal,
@@ -89,10 +89,10 @@ export function BlogPageAnchor({
   className,
   ...props
 }: BlogPageAnchorProps) {
-  const { features } = useConsoleProfile()
+  const marketingEnabled = useLocalMarketingEnabled()
   const blogPath = parseBlogPagePath(href)
-  const url = getBlogPageUrl(href, features.marketing)
-  const external = blogPath ? isBlogPageExternal(features.marketing) : url.startsWith('http')
+  const url = getBlogPageUrl(href, marketingEnabled)
+  const external = blogPath ? isBlogPageExternal(marketingEnabled) : url.startsWith('http')
 
   if (blogPath && !external) {
     return (

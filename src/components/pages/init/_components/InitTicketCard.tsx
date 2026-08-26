@@ -49,7 +49,6 @@ const FLIP_DRAG_THRESHOLD_PX = 10
 interface InitTicketCardProps {
   dateRangeLabel: string
   holderName: string
-  githubUsername?: string
   ticketNumber: string
   prefs: InitTicketPrefs
   ticketAppearance: ResolvedInitTicketAppearance
@@ -70,7 +69,6 @@ export type InitTicketCardHandle = {
 interface TicketFaceSharedProps {
   dateRangeLabel: string
   holderName: string
-  githubUsername?: string
   ticketNumber: string
   prefs: InitTicketPrefs
   passLabel: string
@@ -79,36 +77,6 @@ interface TicketFaceSharedProps {
   usesDarkImage: boolean
   ticketBgSrc: string
   inset: ReturnType<typeof initTicketInsetStyle>
-}
-
-function TicketGitHubBadge({
-  username,
-  usesDarkImage,
-}: {
-  username: string
-  usesDarkImage: boolean
-}) {
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-1.5',
-        usesDarkImage ? 'text-white/75' : 'text-neutral-600',
-      )}
-    >
-      <img
-        src="/icons/github.svg"
-        alt=""
-        aria-hidden
-        className={cn(
-          'size-3.5 shrink-0 object-contain',
-          usesDarkImage ? 'brightness-0 invert' : 'brightness-0',
-        )}
-      />
-      <span className="truncate text-[clamp(10px,1.8vw,12px)] font-medium">
-        @{username}
-      </span>
-    </div>
-  )
 }
 
 function getInitTicketStackIconSrc(
@@ -310,7 +278,6 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
   const {
     dateRangeLabel,
     holderName,
-    githubUsername,
     ticketNumber,
     prefs,
     passLabel,
@@ -371,12 +338,6 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
               >
                 {holderTitle}
               </p>
-              {githubUsername ? (
-                <TicketGitHubBadge
-                  username={githubUsername}
-                  usesDarkImage={usesDarkImage}
-                />
-              ) : null}
               <p
                 className={cn(
                   'text-[9px] font-semibold uppercase tracking-[0.2em]',
@@ -412,26 +373,20 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
 }
 
 function TicketBackFace(props: TicketFaceSharedProps) {
-  const {
-    dateRangeLabel,
-    holderName,
-    githubUsername,
-    ticketNumber,
-    prefs,
-    passLabel,
-    holderTitle,
-    accentColor,
-    usesDarkImage,
-  } = props
+  const { dateRangeLabel, ticketNumber, prefs, accentColor, usesDarkImage } =
+    props
   const mutedClass = usesDarkImage ? 'text-white/55' : 'text-neutral-500'
 
   const contentGrid = initTicketContentGridStyle()
 
   return (
     <TicketFaceShell {...props} isBack>
-      <div className="grid h-full min-h-0 overflow-visible" style={contentGrid}>
+      <div
+        className="grid h-full min-h-0 overflow-visible pb-[9%]"
+        style={contentGrid}
+      >
         <div className="flex min-w-0 flex-col justify-between pe-[8%]">
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <p
               className={cn(
                 'text-[9px] font-semibold uppercase tracking-[0.24em]',
@@ -455,7 +410,7 @@ function TicketBackFace(props: TicketFaceSharedProps) {
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div
               className="flex h-10 items-end justify-start gap-0.5 overflow-hidden"
               aria-hidden
@@ -473,7 +428,7 @@ function TicketBackFace(props: TicketFaceSharedProps) {
             </div>
             <div
               className={cn(
-                'space-y-1 border-t border-dashed pt-3',
+                'space-y-2 border-t border-dashed pt-4',
                 usesDarkImage ? 'border-white/20' : 'border-neutral-900/15',
               )}
             >
@@ -493,36 +448,6 @@ function TicketBackFace(props: TicketFaceSharedProps) {
               >
                 {dateRangeLabel}
               </p>
-              <p
-                className={cn(
-                  'truncate text-[clamp(11px,1.9vw,15px)] font-normal leading-tight',
-                  usesDarkImage ? 'text-white/90' : 'text-neutral-800',
-                )}
-              >
-                {holderName}
-              </p>
-              <p
-                className={cn(
-                  'truncate text-[11px] font-medium',
-                  usesDarkImage ? 'text-white/65' : 'text-neutral-500',
-                )}
-              >
-                {holderTitle}
-              </p>
-              <p
-                className={cn(
-                  'text-[9px] font-semibold uppercase tracking-[0.2em]',
-                  mutedClass,
-                )}
-              >
-                {passLabel}
-              </p>
-              {githubUsername ? (
-                <TicketGitHubBadge
-                  username={githubUsername}
-                  usesDarkImage={usesDarkImage}
-                />
-              ) : null}
               <TicketStackIcons
                 stack={prefs.stack}
                 usesDarkImage={usesDarkImage}
@@ -543,7 +468,6 @@ export const InitTicketCard = forwardRef<
   {
     dateRangeLabel,
     holderName,
-    githubUsername,
     ticketNumber,
     prefs,
     ticketAppearance,
@@ -573,10 +497,6 @@ export const InitTicketCard = forwardRef<
     () => (blurred ? scrambleSensitiveText(holderName) : holderName),
     [blurred, holderName],
   )
-  const displayGithubUsername = useMemo(() => {
-    if (!githubUsername) return undefined
-    return blurred ? scrambleSensitiveText(githubUsername) : githubUsername
-  }, [blurred, githubUsername])
   const displayTicketNumber = useMemo(
     () => (blurred ? scrambleSensitiveText(ticketNumber) : ticketNumber),
     [blurred, ticketNumber],
@@ -607,11 +527,9 @@ export const InitTicketCard = forwardRef<
   }, [shadowOffsetY])
 
   const inset = initTicketInsetStyle()
-
   const faceProps: TicketFaceSharedProps = {
     dateRangeLabel,
     holderName: displayHolderName,
-    githubUsername: displayGithubUsername,
     ticketNumber: displayTicketNumber,
     prefs,
     passLabel,

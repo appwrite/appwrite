@@ -50,7 +50,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   pageDirection: 'debug:pageDirection',
   /** App copy language preference used by the i18n provider. */
   language: 'debug:language',
-  /** Pre-launch lock: only /init (and sign-in) is reachable. Default on. */
+  /** Pre-launch lock: only Init (and sign-in) is reachable. Default on. */
   preLaunch: PRE_LAUNCH_DEBUG_STORAGE_KEY,
 } as const
 

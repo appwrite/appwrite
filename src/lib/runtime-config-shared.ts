@@ -23,13 +23,13 @@ export interface RuntimeConfig {
   cookieBanner: string
   /** Override for the profile's blogDrafts feature ('' = profile default). */
   blogDrafts: string
+  /**
+   * Override for extra console OAuth login/signup providers
+   * ('' = profile default, off).
+   */
+  extraOAuthLogin: string
   /** Override for backend-powered usage statistics ('' = Console variables). */
   usageStats: string
-  /**
-   * Demo / soft-launch website password gate (`/access`, Appwrite2 cookie).
-   * '' = enabled; `false` / `0` / `disabled` turns the gate off.
-   */
-  websiteAccess: string
   /**
    * Pre-launch lock: only `/init` (and sign-in) is public; `/` redirects to `/init`.
    * '' = enabled; `false` / `0` / `disabled` turns it off.
@@ -118,8 +118,8 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     userVerification: read('VITE_CONSOLE_USER_VERIFICATION'),
     cookieBanner: read('VITE_CONSOLE_COOKIE_BANNER'),
     blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
+    extraOAuthLogin: read('VITE_CONSOLE_EXTRA_OAUTH_LOGIN'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),
-    websiteAccess: read('VITE_CONSOLE_WEBSITE_ACCESS'),
     preLaunch: read('VITE_CONSOLE_PRE_LAUNCH'),
   }
 }

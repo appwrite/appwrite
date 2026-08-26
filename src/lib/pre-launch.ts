@@ -8,9 +8,9 @@ export const PRE_LAUNCH_COOKIE_NAME = 'debug_pre_launch'
 const PRE_LAUNCH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 
 /**
- * Pre-launch lock: only `/init` (and sign-in) is reachable.
- * Unset or unrecognized `VITE_CONSOLE_PRE_LAUNCH` → enabled.
- * `false` / `0` / `disabled` turns it off.
+ * Pre-launch lock: only Init (landing, ticket share pages, OG images) and
+ * sign-in are reachable. Unset or unrecognized `VITE_CONSOLE_PRE_LAUNCH`
+ * → enabled. `false` / `0` / `disabled` turns it off.
  */
 export function isPreLaunchEnabledFromEnv(
   envValue: string | null | undefined,
@@ -44,7 +44,6 @@ export function isPreLaunchAllowedPath(
   const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
   if (normalized === '/init' || normalized.startsWith('/init/')) return true
   if (normalized === '/og/init.png') return true
-  if (normalized === '/access') return true
   // Debug previews (pink menu) stay reachable while the rest of the site is locked.
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
   return AUTH_ALLOWED_PATHS.has(normalized)
@@ -146,7 +145,6 @@ export const PRE_LAUNCH_BOOT_SCRIPT = `(function(){
     var path = (location.pathname || '/').replace(/\\/+$/, '') || '/';
     if (path === '/init' || path.indexOf('/init/') === 0) return;
     if (path === '/og/init.png') return;
-    if (path === '/access') return;
     if (path === '/debug' || path.indexOf('/debug/') === 0) return;
     var auth = {
       '/sign-in': 1, '/sign-up': 1, '/sign-out': 1, '/recovery': 1, '/reset': 1,

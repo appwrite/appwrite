@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { AppwriteException, ID } from '@appwrite.io/console'
 import { Bug, Eye, EyeOff } from 'lucide-react'
@@ -22,12 +22,19 @@ import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { sdk } from '@/lib/appwrite/sdk'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   getLastLoginMethod,
   isOAuthLoginMethod,
   type LoginMethod,
   type OAuthLoginMethod,
 } from '@/lib/utils/auth-storage'
+import {
+  DEFAULT_CONSOLE_OAUTH_LOGIN,
+  getVisibleConsoleOAuthProviders,
+  isConsoleOAuthProviderEnabled,
+} from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
 import {
@@ -234,6 +241,13 @@ export function SignIn({
 }: SignInProps) {
   const t = useT()
   const { isDebugModeOpen } = useDebugMode()
+  const { features } = useConsoleProfile()
+  const oauthProviders = useMemo(() => {
+    const visible = new Set(
+      getVisibleConsoleOAuthProviders(features.extraOAuthLogin),
+    )
+    return OAUTH_PROVIDERS.filter((provider) => visible.has(provider.id))
+  }, [features.extraOAuthLogin])
   const schema =
     mode === 'sign-in' ? createLoginSchema(t) : createSignUpSchema(t)
   const form = useForm<FormValues>({
@@ -256,7 +270,16 @@ export function SignIn({
   const [showPassword, setShowPassword] = useState(false)
   const [expandedOAuth, setExpandedOAuth] = useState<OAuthLoginMethod>(() => {
     const last = getLastLoginMethod()
-    return isOAuthLoginMethod(last) ? last : 'github'
+    if (
+      isOAuthLoginMethod(last) &&
+      isConsoleOAuthProviderEnabled(
+        last,
+        getActiveProfileFeatures().extraOAuthLogin,
+      )
+    ) {
+      return last
+    }
+    return DEFAULT_CONSOLE_OAUTH_LOGIN
   })
 
   // Function to update last login method from storage
@@ -293,6 +316,12 @@ export function SignIn({
   useEffect(() => {
     updateLastLoginMethod()
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!oauthProviders.some((provider) => provider.id === expandedOAuth)) {
+      setExpandedOAuth(DEFAULT_CONSOLE_OAUTH_LOGIN)
+    }
+  }, [oauthProviders, expandedOAuth])
 
   const handleSubmit = (data: z.infer<typeof schema>) => {
     onSubmit(data)
@@ -370,7 +399,7 @@ export function SignIn({
                 <>
                   <style>{OAUTH_ACCORDION_STYLES}</style>
                   <div className="oauth-login-row">
-                    {OAUTH_PROVIDERS.map(({ id, Icon }) => {
+                    {oauthProviders.map(({ id, Icon }) => {
                       const label = oauthProviderLabel(id, mode, t)
                       const isLastUsed =
                         mode === 'sign-in' && lastLoginMethod === id

@@ -23,6 +23,19 @@ export type InitTicketStackId =
   | 'kotlin'
   | 'android'
   | 'apple'
+  | 'cursor'
+  | 'claude-code'
+  | 'codex'
+  | 'vscode'
+  | 'zed'
+  | 'opencode'
+  | 'antigravity'
+  | 'grok-build'
+  | 'windsurf'
+  | 'lovable'
+  | 'emergent'
+  | 'bolt'
+  | 'zenflow'
 
 export type InitTicketStackOption = {
   id: InitTicketStackId
@@ -30,21 +43,34 @@ export type InitTicketStackOption = {
   iconKey: string
 }
 
-/** Technologies Appwrite supports - used for ticket stack picker. */
+/** Technologies and AI tools Appwrite supports - used for ticket stack picker. */
 export const INIT_TICKET_STACK_OPTIONS: InitTicketStackOption[] = [
   { id: 'appwrite', label: 'Appwrite', iconKey: 'appwrite' },
+  { id: 'cursor', label: 'Cursor', iconKey: 'cursor' },
   { id: 'react', label: 'React', iconKey: 'react' },
-  { id: 'tanstack', label: 'TanStack Start', iconKey: 'tanstack' },
+  { id: 'claude-code', label: 'Claude Code', iconKey: 'claude-code' },
+  { id: 'tanstack', label: 'TanStack', iconKey: 'tanstack' },
+  { id: 'codex', label: 'Codex', iconKey: 'codex' },
   { id: 'next', label: 'Next.js', iconKey: 'next' },
+  { id: 'vscode', label: 'VS Code', iconKey: 'vscode' },
   { id: 'vue', label: 'Vue.js', iconKey: 'vue' },
+  { id: 'zed', label: 'Zed', iconKey: 'zed' },
   { id: 'nuxt', label: 'Nuxt', iconKey: 'nuxt' },
+  { id: 'opencode', label: 'OpenCode', iconKey: 'opencode' },
   { id: 'sveltekit', label: 'SvelteKit', iconKey: 'sveltekit' },
+  { id: 'antigravity', label: 'Antigravity', iconKey: 'antigravity' },
   { id: 'angular', label: 'Angular', iconKey: 'angular' },
+  { id: 'grok-build', label: 'Grok Build', iconKey: 'grok-build' },
   { id: 'solid', label: 'Solid', iconKey: 'solid' },
+  { id: 'windsurf', label: 'Windsurf', iconKey: 'windsurf' },
   { id: 'astro', label: 'Astro', iconKey: 'astro' },
+  { id: 'lovable', label: 'Lovable', iconKey: 'lovable' },
   { id: 'flutter', label: 'Flutter', iconKey: 'flutter' },
+  { id: 'emergent', label: 'Emergent', iconKey: 'emergent' },
   { id: 'react-native', label: 'React Native', iconKey: 'react-native' },
+  { id: 'bolt', label: 'Bolt', iconKey: 'bolt' },
   { id: 'node', label: 'Node.js', iconKey: 'node' },
+  { id: 'zenflow', label: 'Zenflow', iconKey: 'zenflow' },
   { id: 'python', label: 'Python', iconKey: 'python' },
   { id: 'go', label: 'Go', iconKey: 'go' },
   { id: 'php', label: 'PHP', iconKey: 'php' },

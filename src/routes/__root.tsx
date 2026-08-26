@@ -52,10 +52,6 @@ import {
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import {
-  WebsiteAccessGate,
-  WEBSITE_ACCESS_BOOT_SCRIPT,
-} from '@/components/global/auth/WebsiteAccessGate'
 import { PreLaunchRedirect } from '@/components/global/auth/PreLaunchRedirect'
 import {
   isPreLaunchAllowedPath,
@@ -460,7 +456,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
         <ScriptOnce>{getSsrClientIpScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
-        <ScriptOnce>{WEBSITE_ACCESS_BOOT_SCRIPT}</ScriptOnce>
         <ScriptOnce>{PRE_LAUNCH_BOOT_SCRIPT}</ScriptOnce>
         {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can
             auto-recover before the app module graph (and router listeners) load. */}
@@ -484,7 +479,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             }
           />
           <ClientThemeProvider>
-            <WebsiteAccessGate>
               <PreLaunchRedirect />
               <AnalyticsSessionPropsSync />
               <PageDirectionProvider>
@@ -542,7 +536,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                   </NavigationHistoryProvider>
                 </CookieConsentProvider>
               </PageDirectionProvider>
-            </WebsiteAccessGate>
           </ClientThemeProvider>
         </I18nProvider>
         <Scripts />

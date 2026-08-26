@@ -16,11 +16,11 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
 import { EventCtaButton } from '../shared/EventCtas'
-import { isExternalInitHref } from '@/lib/init/links'
 import { InitCollapsedDayNav } from './InitCollapsedDayNav'
 import { InitHeroBackground } from './InitHeroBackground'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
 import { InitWordmark } from './InitWordmark'
+import { useInitHref } from '@/lib/init/use-init-href'
 
 interface EventHeroProps {
   event: InitDisplayEvent
@@ -58,6 +58,7 @@ function CollapsedHeroBar({
   const barRef = useRef<HTMLDivElement>(null)
   const showDayNav = dayNumbers.length > 0
   const { setTransientActivity } = useInitPresenceActivity()
+  const resolvedLiveHref = useInitHref(liveBanner?.href)
   const handleJoolInteractionStart = useCallback(() => {
     setTransientActivity(buildInitPlayingWithJoolActivity())
   }, [setTransientActivity])
@@ -129,7 +130,7 @@ function CollapsedHeroBar({
                   <Badge variant="error" className="text-[10px] shrink-0">
                     Live
                   </Badge>
-                  {liveBanner.href ? (
+                  {resolvedLiveHref ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -137,8 +138,8 @@ function CollapsedHeroBar({
                       asChild
                     >
                       <a
-                        href={liveBanner.href}
-                        {...(isExternalInitHref(liveBanner.href)
+                        href={resolvedLiveHref.href}
+                        {...(resolvedLiveHref.external
                           ? { target: '_blank', rel: 'noopener noreferrer' }
                           : {})}
                       >
@@ -168,11 +169,11 @@ function CollapsedHeroBar({
                     {liveBanner.title}
                   </span>
                 </div>
-                {liveBanner.href ? (
+                {resolvedLiveHref ? (
                   <Button variant="outline" size="sm" className="h-7 shrink-0 text-[12px]" asChild>
                     <a
-                      href={liveBanner.href}
-                      {...(isExternalInitHref(liveBanner.href)
+                      href={resolvedLiveHref.href}
+                      {...(resolvedLiveHref.external
                         ? { target: '_blank', rel: 'noopener noreferrer' }
                         : {})}
                     >

@@ -112,6 +112,7 @@ import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
+import { resolveInitHref } from '@/lib/init/links'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { ShortcutGlyphs } from '@/components/global/shared/ShortcutGlyphs'
@@ -355,6 +356,7 @@ export function ConsoleHeader({
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
   const preLaunch = overrides.preLaunch
+  const localMarketing = features.marketing && !preLaunch
   const { access } = useOrganizationScopes(orgId ?? project?.teamId)
   const defaultMarketingHeaderNav = getDefaultMarketingHeaderNav(
     headerCopy.marketingNav,
@@ -367,19 +369,19 @@ export function ConsoleHeader({
         : []
   ).map((item) => {
     if (item.href === '/blog') {
-      return { ...item, href: getBlogPageUrl('/blog', features.marketing) }
+      return { ...item, href: getBlogPageUrl('/blog', localMarketing) }
     }
     if (item.href === '/blog/category/customer-stories') {
       return {
         ...item,
-        href: getBlogPageUrl('/blog/category/customer-stories', features.marketing),
+        href: getBlogPageUrl('/blog/category/customer-stories', localMarketing),
       }
     }
     if (item.href === '/docs') {
-      return { ...item, href: getMarketingPageUrl('/docs', features.marketing) }
+      return { ...item, href: getMarketingPageUrl('/docs', localMarketing) }
     }
     if (item.href === '/changelog') {
-      return { ...item, href: getMarketingPageUrl('/changelog', features.marketing) }
+      return { ...item, href: getMarketingPageUrl('/changelog', localMarketing) }
     }
     return item
   })
@@ -439,9 +441,22 @@ export function ConsoleHeader({
   const isAgentScope = isAgentPagePath(location.pathname)
   const showBackToOrganization =
     (isAccountScope || isAgentScope) && Boolean(orgId)
-  const isInitScope = features.init && location.pathname === '/init'
+  const isInitScope =
+    (features.init || preLaunch) && location.pathname === '/init'
   const initHeaderNavCta = isInitScope
     ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
+    : null
+  const resolvedInitHeaderNavCta = initHeaderNavCta
+    ? (() => {
+        const href = initHeaderNavCta.href ?? initHeaderNavCta.to
+        const resolved = resolveInitHref(href, preLaunch)
+        if (!resolved) return null
+        return {
+          label: initHeaderNavCta.label,
+          href: resolved.href,
+          external: resolved.external || Boolean(initHeaderNavCta.external),
+        }
+      })()
     : null
   const isOptionalAuth = isOptionalAuthPage(location.pathname)
   const optionalAuthResolved =
@@ -468,10 +483,10 @@ export function ConsoleHeader({
     (organizationPlan?.price ?? 0) === 0
   const showChangelogBadge = useChangelogNavBadge()
   const showOrgDomainsLink = Boolean(orgId && canShowOrgDomainsTab(access, features))
-  const docsHref = getMarketingPageUrl('/docs', features.marketing)
-  const changelogHref = getMarketingPageUrl('/changelog', features.marketing)
-  const homeHref = getMarketingPageUrl('/home', features.marketing)
-  const marketingNavLinksExternal = isMarketingPageExternal(features.marketing)
+  const docsHref = getMarketingPageUrl('/docs', localMarketing)
+  const changelogHref = getMarketingPageUrl('/changelog', localMarketing)
+  const homeHref = getMarketingPageUrl('/home', localMarketing)
+  const marketingNavLinksExternal = isMarketingPageExternal(localMarketing)
   const showCenterSearch = centerSearch && !hideSearch && !preLaunch
   const showRightSearch = !hideSearch && !centerSearch && !preLaunch
   const { modKey: searchModKey, isMac } = usePlatform()
@@ -666,30 +681,32 @@ export function ConsoleHeader({
           ) : null}
 
           {/* Init scope exit / try CTA */}
-          {initHeaderNavCta ? (
+          {resolvedInitHeaderNavCta ? (
             <Button
               asChild
               variant="ghost"
               size="sm"
               className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
             >
-              {initHeaderNavCta.to ? (
+              {initHeaderNavCta?.to && !resolvedInitHeaderNavCta.external ? (
                 <Link to={initHeaderNavCta.to}>
                   <ArrowLeft className="h-4 w-4" />
-                  {initHeaderNavCta.label}
+                  {resolvedInitHeaderNavCta.label}
                 </Link>
               ) : (
                 <a
-                  href={initHeaderNavCta.href}
-                  target={initHeaderNavCta.external ? '_blank' : undefined}
+                  href={resolvedInitHeaderNavCta.href}
+                  target={
+                    resolvedInitHeaderNavCta.external ? '_blank' : undefined
+                  }
                   rel={
-                    initHeaderNavCta.external
+                    resolvedInitHeaderNavCta.external
                       ? 'noopener noreferrer'
                       : undefined
                   }
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  {initHeaderNavCta.label}
+                  {resolvedInitHeaderNavCta.label}
                 </a>
               )}
             </Button>
@@ -1309,28 +1326,32 @@ export function ConsoleHeader({
 
               {/* Feedback / Support - console tools; on marketing only at very wide
                   widths so they cannot crowd the centered Changelog / stars. */}
-              <div
-                className={cn(
-                  'hidden shrink-0',
-                  showMarketingLinks ? '@[1720px]:flex' : '@[800px]:flex',
-                )}
-              >
-                <FeedbackPopover
-                  source="navbar"
-                  orgId={orgId}
-                  projectId={projectId ?? ''}
-                  billingPlanId={organizationPlan?.$id}
-                />
-              </div>
+              {!preLaunch ? (
+                <>
+                  <div
+                    className={cn(
+                      'hidden shrink-0',
+                      showMarketingLinks ? '@[1720px]:flex' : '@[800px]:flex',
+                    )}
+                  >
+                    <FeedbackPopover
+                      source="navbar"
+                      orgId={orgId}
+                      projectId={projectId ?? ''}
+                      billingPlanId={organizationPlan?.$id}
+                    />
+                  </div>
 
-              <div
-                className={cn(
-                  'hidden shrink-0',
-                  showMarketingLinks ? '@[1720px]:flex' : '@[900px]:flex',
-                )}
-              >
-                <SupportPopover orgId={orgId} />
-              </div>
+                  <div
+                    className={cn(
+                      'hidden shrink-0',
+                      showMarketingLinks ? '@[1720px]:flex' : '@[900px]:flex',
+                    )}
+                  >
+                    <SupportPopover orgId={orgId} />
+                  </div>
+                </>
+              ) : null}
 
               {/* Notifications - gated by the notifications profile feature */}
               {showNotifications && (
@@ -1407,13 +1428,16 @@ export function ConsoleHeader({
                 </div>
               )}
 
-              {/* Divider - hidden on small containers */}
-              <div
-                className={cn(
-                  'mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2',
-                  showMarketingLinks ? '@[1280px]:block' : '@[700px]:block',
-                )}
-              />
+              {/* Divider - hidden on small containers and in pre-launch
+                  (no neighboring console actions to separate from). */}
+              {!preLaunch ? (
+                <div
+                  className={cn(
+                    'mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2',
+                    showMarketingLinks ? '@[1280px]:block' : '@[700px]:block',
+                  )}
+                />
+              ) : null}
 
               {/* User Menu */}
               <DropdownMenu>

@@ -12,7 +12,7 @@ import {
   buildInitViewingGrandPrizeActivity,
 } from '@/lib/init/init-presence-activity'
 import { cn } from '@/lib/utils'
-import { isExternalInitHref } from '@/lib/init/links'
+import { useInitHref } from '@/lib/init/use-init-href'
 import { ArrowUpRight, Gift, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
@@ -121,6 +121,7 @@ function DailyPrizeCell({
   className?: string
 }) {
   const meta = PLATFORM_META[giveaway.platform]
+  const resolvedHref = useInitHref(giveaway.href)
   const presenceHandlers = usePrizePresenceHandlers(
     buildInitViewingDailyPrizeActivity(giveaway.day, giveaway.prizeDescription),
   )
@@ -150,7 +151,7 @@ function DailyPrizeCell({
             <span className="mx-1.5 text-border">·</span>
             {giveaway.dateLabel}
           </p>
-          {giveaway.href ? (
+          {resolvedHref ? (
             <ArrowUpRight
               className="size-3.5 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-foreground"
               aria-hidden
@@ -179,12 +180,13 @@ function DailyPrizeCell({
     </>
   )
 
-  if (giveaway.href) {
-    const external = isExternalInitHref(giveaway.href)
+  if (resolvedHref) {
     return (
       <a
-        href={giveaway.href}
-        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        href={resolvedHref.href}
+        {...(resolvedHref.external
+          ? { target: '_blank', rel: 'noopener noreferrer' }
+          : {})}
         className={shellClass}
         {...presenceHandlers}
       >
