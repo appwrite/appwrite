@@ -334,10 +334,9 @@ export function InitTicketSection({
       buildInitTicketShareMessage({
         eventName: event.name,
         dateRangeLabel: event.dateRangeLabel,
-        holderName,
         shareUrl,
       }),
-    [event.dateRangeLabel, event.name, holderName, shareUrl],
+    [event.dateRangeLabel, event.name, shareUrl],
   )
 
   const twitterShareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`
