@@ -76,12 +76,11 @@ class Resend extends OAuth2
             $this->tokens = \json_decode($this->request(
                 'POST',
                 $this->endpoint . 'token',
-                [
-                    'Content-Type: application/x-www-form-urlencoded',
-                    'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
-                ],
+                ['Content-Type: application/x-www-form-urlencoded'],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
                     'code' => $code,
                     'redirect_uri' => $this->callback,
                     'code_verifier' => $this->getPKCEVerifier(),
@@ -102,12 +101,11 @@ class Resend extends OAuth2
         $this->tokens = \json_decode($this->request(
             'POST',
             $this->endpoint . 'token',
-            [
-                'Content-Type: application/x-www-form-urlencoded',
-                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
-            ],
+            ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'refresh_token',
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
                 'refresh_token' => $refreshToken,
             ])
         ), true);
@@ -215,7 +213,6 @@ class Resend extends OAuth2
     {
         $client = new FetchClient();
         $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $client->addHeader('Authorization', 'Basic ' . \base64_encode($this->appID . ':' . $this->appSecret));
 
         // The redirect_uri must be a well-formed URL; Resend rejects the
         // request shape with invalid_request before authenticating the
@@ -225,6 +222,8 @@ class Resend extends OAuth2
             method: FetchClient::METHOD_POST,
             body: [
                 'grant_type' => 'authorization_code',
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
                 'code' => 'intentionally-invalid-code',
                 'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
                 'code_verifier' => 'intentionally-invalid-verifier-intentionally-invalid',

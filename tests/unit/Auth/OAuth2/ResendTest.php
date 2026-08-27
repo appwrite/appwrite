@@ -142,16 +142,18 @@ final class ResendTest extends TestCase
     }
 
     /**
-     * Basic auth already identifies the client, and the documented exchange
-     * does not repeat `client_id` in the body. The PKCE verifier is required.
+     * The client authenticates with `client_secret_post`, so both credentials
+     * travel in the body. The PKCE verifier is required regardless.
      */
-    public function testTokenExchangeAuthenticatesWithBasicAuthAndVerifier(): void
+    public function testTokenExchangeSendsClientCredentialsAndVerifier(): void
     {
         $resend = $this->createResendWithTokenResponse(
             \json_encode(['access_token' => 'access-token', 'refresh_token' => 'refresh-token'], JSON_THROW_ON_ERROR),
             function (array $body): void {
                 $this->assertSame([
                     'grant_type' => 'authorization_code',
+                    'client_id' => self::APP_ID,
+                    'client_secret' => self::APP_SECRET,
                     'code' => 'authorization-code',
                     'redirect_uri' => self::CALLBACK,
                     'code_verifier' => $body['code_verifier'] ?? '',
@@ -174,6 +176,8 @@ final class ResendTest extends TestCase
             function (array $body): void {
                 $this->assertSame([
                     'grant_type' => 'refresh_token',
+                    'client_id' => self::APP_ID,
+                    'client_secret' => self::APP_SECRET,
                     'refresh_token' => 'old-refresh-token',
                 ], $body);
             }
@@ -220,10 +224,6 @@ final class ResendTest extends TestCase
                 self::TOKEN_URL,
                 $this->callback(function (array $headers): bool {
                     $this->assertContains('Content-Type: application/x-www-form-urlencoded', $headers);
-                    $this->assertContains(
-                        'Authorization: Basic ' . \base64_encode(self::APP_ID . ':' . self::APP_SECRET),
-                        $headers,
-                    );
 
                     return true;
                 }),
@@ -233,8 +233,8 @@ final class ResendTest extends TestCase
                     }
 
                     \parse_str($payload, $body);
-                    $this->assertArrayNotHasKey('client_id', $body);
-                    $this->assertArrayNotHasKey('client_secret', $body);
+                    $this->assertSame(self::APP_ID, $body['client_id'] ?? null);
+                    $this->assertSame(self::APP_SECRET, $body['client_secret'] ?? null);
 
                     if ($assertBody !== null) {
                         $assertBody($body);
