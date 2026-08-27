@@ -19,7 +19,7 @@ const LEGACY_PRESENCE_ID_STORAGE_PREFIX = 'console.init.presenceId.'
 export const INIT_PRESENCE_STATUS_ONLINE = 'online'
 export const INIT_PRESENCE_STATUS_AWAY = 'away'
 
-import { buildInitRandomPresenceName } from '@/lib/init/init-presence-random-name'
+export function isInitAnonymousPresenceUserId(userId: string): boolean {
   return userId.trim().startsWith('anon_')
 }
 
