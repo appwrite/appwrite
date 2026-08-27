@@ -1095,6 +1095,107 @@ trait StorageBase
         $this->assertStringContainsString('60000x1', $preview['body']['message']);
     }
 
+    public function testFilePreviewSvg(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'SVG Previews',
+            'compression' => 'gzip',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.svg'), 'image/svg+xml', 'logo.svg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertEquals('image/svg+xml', $file['body']['mimeType']);
+
+        /**
+         * Test for SUCCESS - SVG preview is served as SVG
+         */
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/svg+xml', $preview['headers']['content-type']);
+        $this->assertEquals('script-src none;', $preview['headers']['content-security-policy']);
+        $this->assertEquals('nosniff', $preview['headers']['x-content-type-options']);
+        $this->assertStringContainsString('<svg', $preview['body']);
+
+        /**
+         * Test for SUCCESS - security headers survive a cache hit
+         */
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('hit', $preview['headers']['x-appwrite-cache']);
+        $this->assertEquals('image/svg+xml', $preview['headers']['content-type']);
+        $this->assertEquals('script-src none;', $preview['headers']['content-security-policy']);
+        $this->assertEquals('nosniff', $preview['headers']['x-content-type-options']);
+        $this->assertStringContainsString('<svg', $preview['body']);
+
+        /**
+         * Test for SUCCESS - scripts and event handlers are sanitized away
+         */
+        $dirty = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'script.svg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $dirty['headers']['status-code']);
+
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $dirty['body']['$id'] . '/preview', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/svg+xml', $preview['headers']['content-type']);
+        $this->assertStringContainsString('<svg', $preview['body']);
+        $this->assertStringNotContainsString('<script', $preview['body']);
+        $this->assertStringNotContainsString('onload', $preview['body']);
+        $this->assertStringNotContainsString('onclick', $preview['body']);
+        $this->assertStringNotContainsString('javascript:', $preview['body']);
+
+        /**
+         * Test for SUCCESS - explicit raster output falls back to the placeholder
+         */
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'output' => 'png',
+        ]);
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/png', $preview['headers']['content-type']);
+        $this->assertStringNotContainsString('<svg', $preview['body']);
+    }
+
     public function testFilePreviewCache(): void
     {
         $data = $this->setupBucketFile();
