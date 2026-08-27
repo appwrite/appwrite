@@ -100,6 +100,7 @@ function PresenceStatusPanel({
   isIdentityUpdating,
   onStatusChange,
   onIdentityVisibleChange,
+  faded = false,
 }: {
   name: string
   userId: string
@@ -110,30 +111,55 @@ function PresenceStatusPanel({
   isIdentityUpdating: boolean
   onStatusChange: (status: InitParticipantStatus) => void
   onIdentityVisibleChange: (visible: boolean) => void
+  faded?: boolean
 }) {
   const isOnline = participantStatus === 'online'
 
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-2.5">
-        {showPhoto ? (
-          <PhotoAvatar
-            userId={userId}
-            size="sm"
-            className="mt-0.5 shrink-0 rounded-full"
-          />
-        ) : (
-          <InitialsAvatar
-            name={name}
-            size="sm"
-            className="mt-0.5 shrink-0 rounded-full"
-          />
-        )}
+        <div
+          className={cn(
+            'shrink-0 transition-opacity duration-200',
+            faded && 'opacity-50',
+          )}
+        >
+          {showPhoto ? (
+            <PhotoAvatar
+              userId={userId}
+              size="sm"
+              className="mt-0.5 rounded-full"
+            />
+          ) : (
+            <InitialsAvatar
+              name={name}
+              size="sm"
+              className="mt-0.5 rounded-full"
+            />
+          )}
+        </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1">
-            <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
-              {name}
-            </p>
+          <div className="flex items-start gap-1">
+            <div
+              className={cn(
+                'min-w-0 flex-1 transition-opacity duration-200',
+                faded && 'opacity-50',
+              )}
+            >
+              <p className="truncate text-[13px] font-medium text-foreground">
+                {name}
+              </p>
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <StatusDot online={isOnline} />
+                <p className="text-[11px] leading-snug text-muted-foreground">
+                  {isOnline
+                    ? identityVisible
+                      ? 'Visible on Init'
+                      : 'Hidden from others'
+                    : 'Hidden from the online list'}
+                </p>
+              </div>
+            </div>
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
                 <Button
@@ -158,7 +184,7 @@ function PresenceStatusPanel({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top" className={ONLINE_USER_TOOLTIP_CLASS}>
-                <p className="text-[12px] leading-relaxed text-muted-foreground/70">
+                <p className="text-[12px] leading-relaxed text-popover-foreground">
                   {identityVisible
                     ? 'Others can see your name, photo, and country'
                     : 'Others see a random name with no photo or country'}
@@ -166,23 +192,17 @@ function PresenceStatusPanel({
               </TooltipContent>
             </Tooltip>
           </div>
-          <div className="mt-0.5 flex items-center gap-1.5">
-            <StatusDot online={isOnline} />
-            <p className="text-[11px] leading-snug text-muted-foreground">
-              {isOnline
-                ? identityVisible
-                  ? 'Visible on Init'
-                  : 'Hidden from others'
-                : 'Hidden from the online list'}
-            </p>
-          </div>
         </div>
       </div>
-      <PresenceStatusToggle
-        participantStatus={participantStatus}
-        disabled={isUpdating || isIdentityUpdating}
-        onStatusChange={onStatusChange}
-      />
+      <div
+        className={cn('transition-opacity duration-200', faded && 'opacity-50')}
+      >
+        <PresenceStatusToggle
+          participantStatus={participantStatus}
+          disabled={isUpdating || isIdentityUpdating}
+          onStatusChange={onStatusChange}
+        />
+      </div>
     </div>
   )
 }
@@ -259,6 +279,7 @@ export function InitPresenceStatusControl({
   }
 
   const showPhoto = identityVisible
+  const isStatusFaded = !identityVisible || participantStatus === 'offline'
 
   if (!account || !isReady) {
     return <InitPresenceStatusSkeleton collapsed={collapsed} isMobile={isMobile} />
@@ -276,7 +297,8 @@ export function InitPresenceStatusControl({
                 type="button"
                 className={cn(
                   'relative flex w-full items-center justify-center rounded-md py-2',
-                  'transition-colors hover:bg-accent/50',
+                  'transition-[opacity,colors] duration-200 hover:bg-accent/50',
+                  isStatusFaded && 'opacity-50',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 )}
                 aria-label={`Your status: ${isOnline ? 'Online' : 'Offline'}. Open status settings`}
@@ -331,6 +353,7 @@ export function InitPresenceStatusControl({
             isUpdating={isParticipantStatusUpdating}
             identityVisible={identityVisible}
             isIdentityUpdating={isIdentityVisibleUpdating}
+            faded={isStatusFaded}
             onStatusChange={handleStatusChange}
             onIdentityVisibleChange={handleIdentityVisibleChange}
           />
@@ -341,7 +364,12 @@ export function InitPresenceStatusControl({
 
   return (
     <div className={cn('px-2.5 py-3', isMobile && 'px-0 py-0')}>
-      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+      <p
+        className={cn(
+          'mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 transition-opacity duration-200',
+          isStatusFaded && 'opacity-50',
+        )}
+      >
         Your status
       </p>
       <PresenceStatusPanel
@@ -352,6 +380,7 @@ export function InitPresenceStatusControl({
         isUpdating={isParticipantStatusUpdating}
         identityVisible={identityVisible}
         isIdentityUpdating={isIdentityVisibleUpdating}
+        faded={isStatusFaded}
         onStatusChange={handleStatusChange}
         onIdentityVisibleChange={handleIdentityVisibleChange}
       />
