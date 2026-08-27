@@ -17,6 +17,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\JSON as DestinationJSON;
 use Utopia\Migration\Source;
+use Utopia\Span\Span;
+use Utopia\Span\Storage\Memory;
 use Utopia\Storage\Device;
 
 final class MigrationsWorkerExportTest extends TestCase
@@ -244,13 +246,11 @@ final class MigrationsWorkerExportTest extends TestCase
         ]));
     }
 
-    public function testNotificationAndLoggerFailuresDoNotEscape(): void
+    public function testNotificationFailureIsRecordedAndDoesNotEscape(): void
     {
-        $reported = 0;
         $worker = new class () extends Migrations {
-            public function notify(Document $migration, MailPublisher $publisherForMails, callable $logError): void
+            public function notify(Document $migration, MailPublisher $publisherForMails): void
             {
-                $this->logError = $logError;
                 $this->notifyExport(
                     migration: $migration,
                     success: true,
@@ -277,20 +277,24 @@ final class MigrationsWorkerExportTest extends TestCase
             }
         };
 
-        $worker->notify(
-            new Document([
-                '$id' => 'migration-id',
-                'source' => 'Appwrite',
-                'destination' => DestinationJSON::getName(),
-            ]),
-            $this->createStub(MailPublisher::class),
-            function () use (&$reported): void {
-                $reported++;
-                throw new \RuntimeException('Logger unavailable');
-            }
-        );
+        Span::setStorage(new Memory());
+        $span = Span::init('worker.migrations');
 
-        $this->assertSame(1, $reported);
+        try {
+            $worker->notify(
+                new Document([
+                    '$id' => 'migration-id',
+                    'source' => 'Appwrite',
+                    'destination' => DestinationJSON::getName(),
+                ]),
+                $this->createStub(MailPublisher::class),
+            );
+
+            $this->assertSame('warning', $span->get('level'));
+            $this->assertTrue($span->get('migration_export_notification_failed'));
+        } finally {
+            Span::setStorage(null);
+        }
     }
 
     public function testArtifactFinalizationFailureMarksMigrationFailed(): void
@@ -320,8 +324,6 @@ final class MigrationsWorkerExportTest extends TestCase
                     '$id' => 'project-id',
                     '$sequence' => 1,
                 ]);
-                $this->logError = static function (): void {
-                };
 
                 $this->processMigration(
                     $migration,
