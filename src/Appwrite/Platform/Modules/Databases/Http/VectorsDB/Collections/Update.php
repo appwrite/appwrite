@@ -39,7 +39,7 @@ class Update extends CollectionAction
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId')
             ->desc('Update collection')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'collections.write')
+            ->label('scope', 'vectorsdb.collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].update')
             ->label('audits.event', 'collection.update')
