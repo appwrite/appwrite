@@ -354,6 +354,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Podio',
     ],
+    'resend' => [
+        'name' => 'Resend',
+        'developers' => 'https://resend.com/docs/guides/building-a-resend-oauth-client',
+        'icon' => 'icon-resend',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Resend',
+    ],
     'salesforce' => [
         'name' => 'Salesforce',
         'developers' => 'https://developer.salesforce.com/docs/',
