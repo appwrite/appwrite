@@ -16,6 +16,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
+import { DatabaseTypeBetaBadge } from './DatabaseTypeBetaBadge'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -78,7 +79,6 @@ export function ProductDatabasesSection({
   viewMode,
   regionSupported = true,
 }: ProductDatabasesSectionProps) {
-  const t = useT()
   const Icon = sectionIcon(backend)
 
   if (!regionSupported) {
@@ -86,9 +86,7 @@ export function ProductDatabasesSection({
       <section className="mt-10">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
-          <Badge variant="info" className="text-[10px] shrink-0">
-            {t('Beta')}
-          </Badge>
+          <DatabaseTypeBetaBadge />
           <DedicatedDatabaseRegionUnavailableBadge />
           <p className="w-full text-[13px] text-muted-foreground">{description}</p>
         </div>
@@ -156,9 +154,7 @@ function ProductDatabasesSectionContent({
     <section className="mt-10">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
-        <Badge variant="info" className="text-[10px] shrink-0">
-          {t('Beta')}
-        </Badge>
+        <DatabaseTypeBetaBadge />
         <p className="w-full text-[13px] text-muted-foreground">{description}</p>
       </div>
 
@@ -423,7 +419,7 @@ function ProductDatabasesSectionContent({
                   icon={Icon}
                   title={`${t('No databases yet for')} ${title}`}
                   description={t(
-                    'Create this product database from the create database wizard.',
+                    'To create a database, use the creation wizard by clicking "Create database".',
                   )}
                   isEmpty
                   variant="card"

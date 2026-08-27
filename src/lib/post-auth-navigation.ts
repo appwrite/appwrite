@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 import {
@@ -68,6 +69,7 @@ export function isOAuth2FlowRedirect(redirect?: string): boolean {
  * auth pages, and `/` fall back to the default org console route.
  */
 export function resolvePostAuthRedirect(redirect?: string): string | undefined {
+  if (isPreLaunchModeEnabled()) return '/init'
   if (!redirect || !isValidRelativeRedirect(redirect)) return undefined
 
   const pathname = normalizeRedirectPathname(redirect)
@@ -118,6 +120,7 @@ export async function prefetchPostAuthDestination(
 ): Promise<void> {
   // Authorizing an OAuth2 app: skip org provisioning/prefetch entirely.
   if (isOAuth2FlowRedirect(redirect)) return
+  if (isPreLaunchModeEnabled()) return
 
   const resolvedRedirect = resolvePostAuthRedirect(redirect)
   if (resolvedRedirect) {

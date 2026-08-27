@@ -1,0 +1,14 @@
+---
+layout: changelog
+title: Browser-based login for the Appwrite CLI
+date: 2026-07-29
+cover: /images/blog/announcing-cli-device-authorization/cover.avif
+---
+
+`appwrite login` now signs you in through your browser using device authorization. The CLI displays a code and a URL, you confirm the code and approve the requested permissions in the browser, and the terminal completes the login automatically.
+
+Authorization uses your Console session, and you can revoke the CLI's access anytime from your account settings. Update to the latest version of the CLI to get the new flow. Non-interactive mode with API keys for CI is unchanged.
+
+{% arrow_link href="/blog/post/announcing-cli-device-authorization" %}
+Read the announcement
+{% /arrow_link %}

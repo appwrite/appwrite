@@ -44,7 +44,7 @@ import {
 } from '@/components/global/shared/ContextMenuIcon'
 import {
   getDeploymentStatusBadge,
-  isDeploymentCompleted,
+  canDownloadDeploymentBuildOutput,
   isDeploymentInProgress,
   isDeploymentTimeout,
   DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
@@ -251,6 +251,9 @@ export function View() {
   const [executeDrawerOpen, setExecuteDrawerOpen] = useState(false)
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [cancelTargetDeploymentId, setCancelTargetDeploymentId] = useState<
+    string | null
+  >(null)
+  const [deleteRowDeploymentId, setDeleteRowDeploymentId] = useState<
     string | null
   >(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -513,6 +516,7 @@ export function View() {
 
   const handleDownloadBuild = () => {
     if (!projectId || !functionId || !activeDeployment) return
+    if (!canDownloadDeploymentBuildOutput(activeDeployment.status)) return
     try {
       const projectSdk = sdk.forProject(projectId)
       const url = projectSdk.functions.getDeploymentDownload({
@@ -611,6 +615,27 @@ export function View() {
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to cancel build'))
+    },
+  })
+
+  const deleteRowMutation = useMutation({
+    mutationFn: async (deploymentId: string) => {
+      if (!projectId || !functionId) {
+        throw new Error('Project ID and Function ID are required')
+      }
+      await deleteFunctionDeployment(projectId, functionId, deploymentId)
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['deployments', 'project', projectId, functionId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      toast.success(t('Deployment deleted successfully'))
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t('Failed to delete deployment'))
     },
   })
 
@@ -1152,22 +1177,26 @@ export function View() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-[200]">
                     <DropdownMenuItem onClick={handleDownloadSource}>
-                      {t('Source code')}
+                      <MenuItemContent icon={FileCode}>
+                        {t('Source code')}
+                      </MenuItemContent>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
                       disabled={
-                        !isDeploymentCompleted(activeDeployment?.status)
+                        !canDownloadDeploymentBuildOutput(activeDeployment?.status)
                       }
                       title={
-                        !isDeploymentCompleted(activeDeployment?.status)
+                        !canDownloadDeploymentBuildOutput(activeDeployment?.status)
                           ? t(
-                              'Build output is available after the deployment has completed.',
+                              'Build output is only available for ready deployments.',
                             )
                           : undefined
                       }
                     >
-                      {t('Build output')}
+                      <MenuItemContent icon={Package}>
+                        {t('Build output')}
+                      </MenuItemContent>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1795,23 +1824,23 @@ export function View() {
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         disabled={
-                                          !isDeploymentCompleted(
+                                          !canDownloadDeploymentBuildOutput(
                                             deployment.status,
                                           )
                                         }
                                         title={
-                                          !isDeploymentCompleted(
+                                          !canDownloadDeploymentBuildOutput(
                                             deployment.status,
                                           )
                                             ? t(
-                                                'Build output is available after the deployment has completed.',
+                                                'Build output is only available for ready deployments.',
                                               )
                                             : undefined
                                         }
                                         onClick={(e) => {
                                           e.stopPropagation()
                                           if (
-                                            !isDeploymentCompleted(
+                                            !canDownloadDeploymentBuildOutput(
                                               deployment.status,
                                             )
                                           )
@@ -1867,41 +1896,12 @@ export function View() {
                                             : undefined
                                         : undefined
                                     }
-                                    onClick={async (e) => {
-                                      e.stopPropagation()
+                                    onSelect={() => {
                                       if (!canDeleteFromMenu) return
-                                      try {
-                                        await deleteFunctionDeployment(
-                                          projectId!,
-                                          functionId!,
-                                          deployment.$id,
-                                        )
-                                        await queryClient.refetchQueries({
-                                          queryKey: [
-                                            'deployments',
-                                            'project',
-                                            projectId,
-                                            functionId,
-                                          ],
-                                        })
-                                        await queryClient.refetchQueries({
-                                          queryKey: [
-                                            'function',
-                                            'project',
-                                            projectId,
-                                            functionId,
-                                          ],
-                                        })
-                                        toast.success(
-                                          t('Deployment deleted successfully'),
-                                        )
-                                      } catch (error) {
-                                        toast.error(
-                                          error instanceof Error
-                                            ? error.message
-                                            : t('Failed to delete deployment'),
-                                        )
-                                      }
+                                      const id = deployment.$id
+                                      openDialogAfterOverlayCloses(() =>
+                                        setDeleteRowDeploymentId(id),
+                                      )
                                     }}
                                   >
                                     <MenuItemContent icon={Trash2}>
@@ -2229,6 +2229,65 @@ export function View() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Delete confirmation for a list row */}
+      <Dialog
+        open={deleteRowDeploymentId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteRowDeploymentId(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
+            <DialogTitle>{t('Delete deployment')}</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              {t(
+                'Are you sure you want to delete this deployment? This action cannot be undone.',
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-4">
+            {displayedDeployments?.find(
+              (d) => d.$id === deleteRowDeploymentId,
+            ) && (
+              <DeploymentInfo
+                deployment={
+                  displayedDeployments.find(
+                    (d) => d.$id === deleteRowDeploymentId,
+                  )!
+                }
+                showStatus={true}
+              />
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteRowDeploymentId(null)}
+              disabled={deleteRowMutation.isPending}
+              className="h-9 text-[13px]"
+            >
+              {t('Cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (!deleteRowDeploymentId) return
+                const id = deleteRowDeploymentId
+                closeDialogBeforeOverlayUnmount(() =>
+                  setDeleteRowDeploymentId(null),
+                )
+                deleteRowMutation.mutate(id)
+              }}
+              disabled={deleteRowMutation.isPending || !deleteRowDeploymentId}
+              className="h-9 text-[13px]"
+            >
+              {t('Delete')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Cancel build confirmation */}
       <Dialog

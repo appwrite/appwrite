@@ -1,0 +1,104 @@
+---
+layout: post
+title: "Fixed window, sliding window, or token bucket? Choosing a rate limit strategy in Appwrite Firewall"
+description: Appwrite Firewall rate limit rules support three strategies. Learn how fixed window, sliding window, and token bucket work, where each one breaks down, and how to pick the right one for your traffic.
+date: 2026-08-20
+cover: /images/blog-local/firewall-rate-limit-strategies/cover.avif
+timeToRead: 9
+author: atharva
+category: security, best-practices
+draft: true
+faqs:
+  - question: "What is the difference between fixed window and sliding window rate limiting?"
+    answer: "A fixed window counts requests inside clock-aligned intervals and resets the counter when each interval ends, which lets a client briefly send up to twice the limit around a boundary. A sliding window weighs the previous interval's count by how much of the current interval has passed, producing a continuously moving count with no shared reset moment."
+  - question: "When should I use a token bucket rate limiter?"
+    answer: "Use a token bucket when clients legitimately send short bursts, such as batch writes or retries after a reconnect, but should still average out to a steady rate. The bucket size caps the burst while the refill rate enforces the long-run average."
+  - question: "What does 'Max bucket size' mean in a token bucket rate limit?"
+    answer: "It is the largest burst a client can send at once. The bucket holds at most that many tokens, each request spends one, and tokens refill continuously at the request limit divided by the interval. When left unset, it defaults to the request limit."
+  - question: "What happens when a request exceeds a rate limit in Appwrite?"
+    answer: "Appwrite responds with HTTP 429 and a Retry-After header indicating how many seconds to wait. The client is not banned; the next request is evaluated against the same counter again."
+  - question: "Can I change the strategy of an existing rate limit rule?"
+    answer: "No. The strategy is chosen when the rule is created and cannot be changed afterward. To switch strategies, delete the rule and create a new one with the strategy you want."
+---
+
+A rate limit sounds like one number, 100 requests per 60 seconds, but that number only tells you the budget, not how the budget is spent. Can a client fire all 100 requests in the first second? What happens in the last moment before the counter resets? Does a client that stayed quiet for a while earn the right to a burst?
+
+The answers come from the **strategy**, the algorithm that turns "100 per 60s" into a yes-or-no decision for every request that arrives. Appwrite Firewall supports three of them: fixed window, sliding window, and token bucket. All three enforce the same long-run rate. They differ in how they treat bursts and what happens at the edges of the time window, and that difference decides whether legitimate users pass through without noticing the limiter or get rejected at moments they can't predict.
+
+I'll walk through each strategy, show how it behaves over time, and end with a way to pick between them.
+
+# The anatomy of a rate limit rule {% #anatomy %}
+
+Every rate limit rule in Appwrite Firewall has the same core settings:
+
+| Setting | What it does |
+| --- | --- |
+| **Request limit** | How many requests are allowed per interval, from 1 to 1,000,000 |
+| **Interval (seconds)** | The length of the time window, from 1 second to 24 hours |
+| **Limit by** | The identity the counter is keyed on: **IP address** or **User ID** |
+| **Strategy** | Fixed window, sliding window, or token bucket |
+| **Max bucket size** | Token bucket only: the largest burst allowed. Defaults to the request limit when left unset |
+
+Two details are worth calling out before we get to the algorithms.
+
+First, **Limit by** decides who shares a budget. Limiting by IP address groups everyone behind the same address together, which is the right default for anonymous traffic but can be unfair to offices and mobile carriers where many users share one IP. Limiting by User ID gives every authenticated user their own counter. Rules keyed on User ID skip unauthenticated requests entirely, so lower-priority rules still get a chance to match them.
+
+Second, the strategy is fixed at creation. You can update the limit and interval of an existing rule, but to switch from fixed window to token bucket you delete the rule and create a new one.
+
+When a request goes over the limit, Appwrite responds with HTTP `429` and a `Retry-After` header telling the client how many seconds to back off. There is no penalty box. Appwrite checks the next request against the same counter, and once the math allows it, traffic flows again.
+
+# Fixed window {% #fixed-window %}
+
+Fixed window is the strategy most people picture when they hear "rate limiting". Time is cut into back-to-back windows of the interval length, aligned to the clock. With a 15-second interval, one window runs from 11:42:15 to 11:42:30, the next from 11:42:30 to 11:42:45, and so on. Each window has a counter. A request increments it; if the counter is already at the limit, the request is rejected. When the next window starts, the counter starts over at zero, for everyone at once.
+
+{% rate_limit_animation strategy="fixedWindow" /%}
+
+The appeal is that it's cheap and easy to reason about. One counter per client, one increment per request, and the mental model ("5 per 15 seconds, resets on the boundary") matches exactly what happens.
+
+The weakness lives at the boundary. A client can send the full limit in the last moment of one window and the full limit again in the first moment of the next. Over that short span it has sent up to twice the limit, and the limiter never objected. For a rule of 100 per minute, that's 200 requests landing within a couple of seconds, all technically legal. There's a second-order effect too. Because windows are clock-aligned, every limited client gets unblocked at the same instant, so clients that retry on a timer tend to pile up right after each reset.
+
+Pick fixed window when the limit exists as a coarse safety net rather than a precise contract. Protecting an expensive route from runaway scripts, capping requests to a webhook receiver, or putting a ceiling on an internal tool are all jobs where the boundary burst doesn't matter and predictability does.
+
+# Sliding window {% #sliding-window %}
+
+Sliding window exists to fix that boundary problem. Instead of forgetting the previous window the moment a new one starts, it keeps the previous window's count around and weighs it by how much of the current window has passed. Ten seconds into a 60-second window, the effective count is the current window's requests plus about five sixths of the previous window's. The count doesn't drop off a cliff at the boundary; it slides down continuously as old traffic ages out.
+
+{% rate_limit_animation strategy="slidingWindow" /%}
+
+The practical effect is twofold. The two-times spike that fixed windows permit at their edges disappears, because a burst sent moments before the boundary still counts, at nearly full weight, moments after it. And there is no synchronized reset moment. Each client's count decays on its own schedule, driven by when that client sent traffic, so limited clients come back gradually instead of stampeding at the top of the minute.
+
+The trade is a small one. The weighted count is an estimate, and the strategy is deliberately smooth, which means it has no concept of an earned burst. A client that was silent for ten minutes gets no more headroom than one that has been pushing the limit all along.
+
+Pick sliding window when you want the steadiest possible enforcement of a rate. Public API limits are the classic case: the number you publish is the number clients get, without an exploitable seam at the window edge and without herd behavior around resets.
+
+# Token bucket {% #token-bucket %}
+
+Token bucket thinks about the problem differently. Instead of counting requests inside a time window, it gives each client a bucket of tokens. Every request spends one token, and a request that finds the bucket empty is rejected. Tokens flow back in continuously at a steady rate, the request limit divided by the interval, and the bucket holds at most **Max bucket size** tokens. Anything above that spills over and is lost.
+
+{% rate_limit_animation strategy="tokenBucket" /%}
+
+This is the only strategy of the three where staying quiet earns you something. A client that idles for a while accumulates tokens, up to the bucket size, and can then spend them all at once. A rule of 10 requests per 60 seconds with a bucket of 250 means the long-run average is one request every 6 seconds, but a client that saved up can legitimately fire a 250-request burst before settling back to the refill pace. That maps well onto how clients behave: a mobile app reconnecting after a subway ride flushes its queue, a batch job writes fifty rows in a second, a client library retries a handful of failed calls in quick succession.
+
+The bucket size is the knob that makes this strategy flexible. Set it equal to the request limit (the default when you leave it unset) and token bucket behaves like a smoothed version of a simple rate. Set it well above the limit and you're explicitly welcoming bursts while still holding clients to the average. Set it low, and bursts get clipped almost immediately.
+
+Pick token bucket when burstiness is legitimate. If rejecting a reconnecting client's queue flush would be a bug rather than a feature, this is your strategy. The thing to watch is that capacity you grant in **Max bucket size** is capacity a misbehaving client can also spend, so size it to the biggest burst you're willing to serve.
+
+# Choosing between them {% #choosing %}
+
+| | Fixed window | Sliding window | Token bucket |
+| --- | --- | --- | --- |
+| Burst at window edges | Up to 2x the limit | Smoothed away | Not applicable |
+| Bursts after idle time | No | No | Yes, up to bucket size |
+| Reset behavior | Everyone at once, on the clock | Continuous, per client | Continuous refill |
+| Extra configuration | None | None | Max bucket size |
+| Feels like | A quota per interval | A steady rate | An allowance that accrues |
+
+A short way to decide:
+
+- **Fixed window** when you need a coarse ceiling and the simplest possible mental model. The boundary burst is the price, and for safety-net limits it's usually fine.
+- **Sliding window** when the published rate is a promise. Smooth enforcement, no exploitable edges, no synchronized resets.
+- **Token bucket** when bursts are part of normal client behavior and you want to allow them deliberately, with the bucket size as an explicit cap on how large a burst can get.
+
+One more consideration cuts across all three. The strategy interacts with **Limit by**. A token bucket keyed on IP address hands the shared office IP one communal bucket, which a single heavy user can drain for everyone behind it. If your traffic is authenticated, keying on User ID keeps one client's burst from spending another client's tokens.
+
+Rate limit rules sit alongside the rest of Appwrite Firewall's actions, so you can scope a rule with conditions, order rules by priority, and combine a strict token bucket on an expensive route with a generous sliding window across the rest of your API. To see the settings in context and configure your first rule, head to the [Firewall documentation](/docs/products/firewall/actions).

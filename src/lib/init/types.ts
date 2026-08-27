@@ -80,7 +80,8 @@ export interface LaunchEventScheduleItem {
   day: number
   title: string
   platform: LaunchSchedulePlatform
-  timeLabel: string
+  /** Absolute session start, authored in IST (e.g. `2026-08-31T21:30:00+05:30`). */
+  startsAt: string
   href?: string
   isLive?: boolean
 }
@@ -100,6 +101,8 @@ export interface LaunchEventOnlineUser {
   theme?: 'light' | 'dark'
   /** ISO 3166-1 alpha-2 country code from locale API. */
   countryCode?: string
+  /** SHA-256 hex of lowercase trimmed email for `avatars.getPhoto`. */
+  emailHash?: string
 }
 
 export interface InitCommunityCountry {
@@ -172,7 +175,6 @@ export interface LaunchEventDailyPrize {
   scheduleItemId: string
   sessionTitle: string
   platform: LaunchSchedulePlatform
-  timeLabel: string
   href?: string
   prizeDescription: string
   visual?: LaunchEventPrizeVisual
@@ -187,7 +189,6 @@ export interface LaunchEventGrandPrize {
   scheduleItemId?: string
   sessionTitle?: string
   platform?: LaunchSchedulePlatform
-  timeLabel?: string
   href?: string
   visual?: LaunchEventPrizeVisual
 }

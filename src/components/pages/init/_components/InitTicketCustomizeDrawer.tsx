@@ -39,7 +39,7 @@ export function InitTicketCustomizeDrawer({
       return
     }
     if (current.length >= INIT_TICKET_MAX_STACK) {
-      toast.error(`Choose up to ${INIT_TICKET_MAX_STACK} technologies`)
+      toast.error(`Choose up to ${INIT_TICKET_MAX_STACK} technologies and AI tools`)
       return
     }
     updatePrefs({ stack: [...current, id] })
@@ -88,8 +88,8 @@ export function InitTicketCustomizeDrawer({
           <div className="space-y-1">
             <p className="text-[13px] font-medium text-foreground">Your stack</p>
             <p className="text-[12px] text-muted-foreground">
-              Pick up to {INIT_TICKET_MAX_STACK} technologies you build with. Icons
-              appear on your ticket.
+              Pick up to {INIT_TICKET_MAX_STACK} technologies and AI tools you
+              build with. Icons appear on your ticket.
             </p>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">

@@ -287,7 +287,7 @@ bun run format:check
 | ----------------------------- | -------- | ------------------------------ | ---------------------------------------------------------------- |
 | `VITE_APPWRITE_ENDPOINT`      | Yes      | `https://cloud.appwrite.io/v1` | Appwrite API endpoint                                            |
 | `VITE_CONSOLE_PROFILE`        | No       | `cloud`                        | `cloud` or `self-hosted` – controls which features are available |
-| `VITE_CONSOLE_WEBSITE_ACCESS` | No       | on (unset)                     | Demo password gate (`/access`). Set `false` to disable           |
+| `VITE_CONSOLE_PRE_LAUNCH`     | No       | on (unset)                     | Pre-launch lock (`/init` only). Set `false` to disable           |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | No       | -                              | Stripe publishable key for billing                               |
 | `VITE_COMPANY_NAME`           | No       | `Appwrite`                     | Company name for branding                                        |
 | `VITE_CONTACT_SALES_URL`      | No       | -                              | Contact sales page URL                                           |

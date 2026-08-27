@@ -33,7 +33,7 @@ Background music: **Corporate Background Music** by prettyjohn1 ([Pixabay](https
 | Flow panels | Docs / API / Dashboard placeholders (2 from top, 1 from bottom) |
 | Console reveal | Rebuilt to reduce friction |
 | Feature × 7 | Title typewriter + browser clip (audit logs, usage, realtime, API explorer, keyboard, speed, unified flow) |
-| Slogan | Build like a team of hundreds |
+| Slogan | The open-source cloud for agents and developers |
 | Finale | Logo fade |
 
 ## Feature clips

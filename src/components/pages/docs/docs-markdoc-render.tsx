@@ -5,6 +5,7 @@ import React from 'react'
 import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
 import { useDocsPrompt } from '@/components/pages/docs/DocsPromptContext'
 import { Cards, CardsItem } from './markdoc/Cards'
+import { ComposeGenerator } from './markdoc/ComposeGenerator'
 import { Fence } from './markdoc/Fence'
 import { MarkdocIcon, MarkdocIconImage } from './markdoc/Icon'
 import { Info } from './markdoc/Info'
@@ -35,6 +36,7 @@ function PromptContentMarkdoc() {
 }
 
 const baseMarkdocComponents = {
+  ComposeGenerator,
   MultiCode,
   Fence,
   Tabs,
@@ -90,9 +92,9 @@ export function createDocsMarkdocComponents(compact: boolean) {
       <Heading {...props} compact={compact} />
     ),
     Accordion: MarkdocAccordion,
-    AccordionItem: (props: React.ComponentProps<typeof MarkdocAccordionItem>) => (
-      <MarkdocAccordionItem {...props} compact={compact} />
-    ),
+    AccordionItem: (
+      props: React.ComponentProps<typeof MarkdocAccordionItem>,
+    ) => <MarkdocAccordionItem {...props} compact={compact} />,
   }
 }
 

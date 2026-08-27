@@ -31,6 +31,7 @@ import {
   DatabaseZap,
   ShieldAlert,
   Sparkles,
+  Eye,
   Home,
   LayoutDashboard,
   BookOpen,
@@ -55,7 +56,7 @@ import {
   analyticsAttrs,
   type AnalyticsActionId,
 } from '@/lib/analytics-actions'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import {
@@ -103,7 +104,7 @@ import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
-import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
+import { ImpersonateConsoleUserDialog } from '@/components/global/shared/ImpersonateConsoleUserDialog'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
@@ -111,6 +112,7 @@ import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
+import { resolveInitHref } from '@/lib/init/links'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { ShortcutGlyphs } from '@/components/global/shared/ShortcutGlyphs'
@@ -318,6 +320,7 @@ export function ConsoleHeader({
   const navigate = useNavigate()
   const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false)
   const projectConnectDialog = useProjectConnectDialog()
   const [themeMounted, setThemeMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
@@ -352,6 +355,8 @@ export function ConsoleHeader({
     centerSearchPlaceholder ?? headerCopy.centerSearchPlaceholder
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
+  const preLaunch = overrides.preLaunch
+  const localMarketing = features.marketing && !preLaunch
   const { access } = useOrganizationScopes(orgId ?? project?.teamId)
   const defaultMarketingHeaderNav = getDefaultMarketingHeaderNav(
     headerCopy.marketingNav,
@@ -364,25 +369,25 @@ export function ConsoleHeader({
         : []
   ).map((item) => {
     if (item.href === '/blog') {
-      return { ...item, href: getBlogPageUrl('/blog', features.marketing) }
+      return { ...item, href: getBlogPageUrl('/blog', localMarketing) }
     }
     if (item.href === '/blog/category/customer-stories') {
       return {
         ...item,
-        href: getBlogPageUrl('/blog/category/customer-stories', features.marketing),
+        href: getBlogPageUrl('/blog/category/customer-stories', localMarketing),
       }
     }
     if (item.href === '/docs') {
-      return { ...item, href: getMarketingPageUrl('/docs', features.marketing) }
+      return { ...item, href: getMarketingPageUrl('/docs', localMarketing) }
     }
     if (item.href === '/changelog') {
-      return { ...item, href: getMarketingPageUrl('/changelog', features.marketing) }
+      return { ...item, href: getMarketingPageUrl('/changelog', localMarketing) }
     }
     return item
   })
-  const showMarketingNav = marketingNavItems.length > 0
-  const showAgent = features.agent && !showMarketingNav
-  const showNotifications = features.notifications && !showMarketingNav
+  const showMarketingNav = marketingNavItems.length > 0 && !preLaunch
+  const showAgent = features.agent && !showMarketingNav && !preLaunch
+  const showNotifications = features.notifications && !showMarketingNav && !preLaunch
   const showConnectAndCreate = canShowConnectSection(access, features)
   const canCreateProjectFlag = canCreateProject(access, features)
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
@@ -436,9 +441,22 @@ export function ConsoleHeader({
   const isAgentScope = isAgentPagePath(location.pathname)
   const showBackToOrganization =
     (isAccountScope || isAgentScope) && Boolean(orgId)
-  const isInitScope = features.init && location.pathname === '/init'
+  const isInitScope =
+    (features.init || preLaunch) && location.pathname === '/init'
   const initHeaderNavCta = isInitScope
     ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
+    : null
+  const resolvedInitHeaderNavCta = initHeaderNavCta
+    ? (() => {
+        const href = initHeaderNavCta.href ?? initHeaderNavCta.to
+        const resolved = resolveInitHref(href, preLaunch)
+        if (!resolved) return null
+        return {
+          label: initHeaderNavCta.label,
+          href: resolved.href,
+          external: resolved.external || Boolean(initHeaderNavCta.external),
+        }
+      })()
     : null
   const isOptionalAuth = isOptionalAuthPage(location.pathname)
   const optionalAuthResolved =
@@ -457,6 +475,7 @@ export function ConsoleHeader({
   // Wait for plan fetch so we do not flash the button while price is still unknown.
   // Marketing layout defers the control to @[1720px] so the centered nav stays clear.
   const showUpgradeButton =
+    !preLaunch &&
     features.billing &&
     orgId &&
     isPlanFetched &&
@@ -464,12 +483,12 @@ export function ConsoleHeader({
     (organizationPlan?.price ?? 0) === 0
   const showChangelogBadge = useChangelogNavBadge()
   const showOrgDomainsLink = Boolean(orgId && canShowOrgDomainsTab(access, features))
-  const docsHref = getMarketingPageUrl('/docs', features.marketing)
-  const changelogHref = getMarketingPageUrl('/changelog', features.marketing)
-  const homeHref = getMarketingPageUrl('/home', features.marketing)
-  const marketingNavLinksExternal = isMarketingPageExternal(features.marketing)
-  const showCenterSearch = centerSearch && !hideSearch
-  const showRightSearch = !hideSearch && !centerSearch
+  const docsHref = getMarketingPageUrl('/docs', localMarketing)
+  const changelogHref = getMarketingPageUrl('/changelog', localMarketing)
+  const homeHref = getMarketingPageUrl('/home', localMarketing)
+  const marketingNavLinksExternal = isMarketingPageExternal(localMarketing)
+  const showCenterSearch = centerSearch && !hideSearch && !preLaunch
+  const showRightSearch = !hideSearch && !centerSearch && !preLaunch
   const { modKey: searchModKey, isMac } = usePlatform()
   const agentToggleShortcutKeys = formatDisplayKeys(
     AGENT_TOGGLE_SHORTCUT_RAW,
@@ -557,7 +576,9 @@ export function ConsoleHeader({
             const linkOrgId =
               project?.teamId ||
               (headerAccount?.prefs?.organization as string | undefined)
-            const logoDestination = showMarketingNav
+            const logoDestination = preLaunch
+              ? ({ to: '/init' } as const)
+              : showMarketingNav
               ? ({ to: '/home' } as const)
               : showGuestHeader && features.init
                 ? ({ to: '/init' } as const)
@@ -660,37 +681,39 @@ export function ConsoleHeader({
           ) : null}
 
           {/* Init scope exit / try CTA */}
-          {initHeaderNavCta ? (
+          {resolvedInitHeaderNavCta ? (
             <Button
               asChild
               variant="ghost"
               size="sm"
               className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
             >
-              {initHeaderNavCta.to ? (
+              {initHeaderNavCta?.to && !resolvedInitHeaderNavCta.external ? (
                 <Link to={initHeaderNavCta.to}>
                   <ArrowLeft className="h-4 w-4" />
-                  {initHeaderNavCta.label}
+                  {resolvedInitHeaderNavCta.label}
                 </Link>
               ) : (
                 <a
-                  href={initHeaderNavCta.href}
-                  target={initHeaderNavCta.external ? '_blank' : undefined}
+                  href={resolvedInitHeaderNavCta.href}
+                  target={
+                    resolvedInitHeaderNavCta.external ? '_blank' : undefined
+                  }
                   rel={
-                    initHeaderNavCta.external
+                    resolvedInitHeaderNavCta.external
                       ? 'noopener noreferrer'
                       : undefined
                   }
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  {initHeaderNavCta.label}
+                  {resolvedInitHeaderNavCta.label}
                 </a>
               )}
             </Button>
           ) : null}
 
           {/* Project Selector - only show when in project context */}
-          {!isOrgOverview && (
+          {!isOrgOverview && !preLaunch && (
             <>
               {/* Project Selector */}
               <div className="hidden min-w-0 overflow-visible @[700px]:block">
@@ -1303,28 +1326,32 @@ export function ConsoleHeader({
 
               {/* Feedback / Support - console tools; on marketing only at very wide
                   widths so they cannot crowd the centered Changelog / stars. */}
-              <div
-                className={cn(
-                  'hidden shrink-0',
-                  showMarketingLinks ? '@[1720px]:flex' : '@[800px]:flex',
-                )}
-              >
-                <FeedbackPopover
-                  source="navbar"
-                  orgId={orgId}
-                  projectId={projectId ?? ''}
-                  billingPlanId={organizationPlan?.$id}
-                />
-              </div>
+              {!preLaunch ? (
+                <>
+                  <div
+                    className={cn(
+                      'hidden shrink-0',
+                      showMarketingLinks ? '@[1720px]:flex' : '@[800px]:flex',
+                    )}
+                  >
+                    <FeedbackPopover
+                      source="navbar"
+                      orgId={orgId}
+                      projectId={projectId ?? ''}
+                      billingPlanId={organizationPlan?.$id}
+                    />
+                  </div>
 
-              <div
-                className={cn(
-                  'hidden shrink-0',
-                  showMarketingLinks ? '@[1720px]:flex' : '@[900px]:flex',
-                )}
-              >
-                <SupportPopover orgId={orgId} />
-              </div>
+                  <div
+                    className={cn(
+                      'hidden shrink-0',
+                      showMarketingLinks ? '@[1720px]:flex' : '@[900px]:flex',
+                    )}
+                  >
+                    <SupportPopover orgId={orgId} />
+                  </div>
+                </>
+              ) : null}
 
               {/* Notifications - gated by the notifications profile feature */}
               {showNotifications && (
@@ -1332,9 +1359,6 @@ export function ConsoleHeader({
                   <NotificationCenterPopover />
                 </div>
               )}
-
-              {/* Operator tools (render nothing when account is not an impersonator) */}
-              <ImpersonateConsoleUserPopover />
 
               {/* Help/Agent - hidden on small containers; gated by the agent profile feature */}
               {showAgent && (
@@ -1404,13 +1428,16 @@ export function ConsoleHeader({
                 </div>
               )}
 
-              {/* Divider - hidden on small containers */}
-              <div
-                className={cn(
-                  'mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2',
-                  showMarketingLinks ? '@[1280px]:block' : '@[700px]:block',
-                )}
-              />
+              {/* Divider - hidden on small containers and in pre-launch
+                  (no neighboring console actions to separate from). */}
+              {!preLaunch ? (
+                <div
+                  className={cn(
+                    'mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2',
+                    showMarketingLinks ? '@[1280px]:block' : '@[700px]:block',
+                  )}
+                />
+              ) : null}
 
               {/* User Menu */}
               <DropdownMenu>
@@ -1419,7 +1446,8 @@ export function ConsoleHeader({
                     {...analyticsAttrs('user-menu')}
                     className="flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 transition-colors hover:bg-accent min-w-0"
                   >
-                    <InitialsAvatar
+                    <PhotoAvatar
+                      userId={accountId}
                       name={displayName}
                       size="sm"
                       className="shrink-0"
@@ -1464,6 +1492,8 @@ export function ConsoleHeader({
 
                   <DropdownMenuSeparator className="my-1 bg-border" />
 
+                  {preLaunch ? null : (
+                    <>
                   <DropdownMenuItem asChild>
                     <Link to="/account" className={ACCOUNT_MENU_ITEM_CLASS}>
                       <User className="h-4 w-4" />
@@ -1500,6 +1530,8 @@ export function ConsoleHeader({
                   ) : null}
 
                   <DropdownMenuSeparator className="my-1 bg-border" />
+                    </>
+                  )}
 
                   {/* Account Details */}
                   <div className="px-3 py-2 space-y-4 text-start">
@@ -1591,10 +1623,11 @@ export function ConsoleHeader({
                     )}
                   </div>
 
+                  {preLaunch ? null : (
                   <>
                     <DropdownMenuSeparator className="my-1 bg-border" />
 
-                    {showMarketingNav ? (
+                    {showMarketingNav && !preLaunch ? (
                       <DropdownMenuItem asChild>
                         <Link
                           {...(orgId
@@ -1702,8 +1735,9 @@ export function ConsoleHeader({
                       </a>
                     </DropdownMenuItem>
                   </>
+                  )}
 
-                  {showAdminSection && (
+                  {showAdminSection && !preLaunch && (
                     <>
                       <DropdownMenuSeparator className="my-1 bg-border" />
 
@@ -1731,6 +1765,18 @@ export function ConsoleHeader({
                           <span>{headerCopy.accountMenu.generator}</span>
                         </Link>
                       </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        className={ACCOUNT_MENU_ITEM_CLASS}
+                        onSelect={() => {
+                          window.setTimeout(() => {
+                            setImpersonateDialogOpen(true)
+                          }, 0)
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>{headerCopy.accountMenu.impersonate}</span>
+                      </DropdownMenuItem>
                     </>
                   )}
 
@@ -1749,6 +1795,10 @@ export function ConsoleHeader({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <ImpersonateConsoleUserDialog
+                open={impersonateDialogOpen}
+                onOpenChange={setImpersonateDialogOpen}
+              />
             </>
           )}
         </div>

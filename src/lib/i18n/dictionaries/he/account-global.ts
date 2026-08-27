@@ -393,7 +393,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Forgot your password?': 'שכחתם את הסיסמה?',
   'Go to console': 'מעבר לקונסולה',
   'Login to your account': 'התחברות לחשבון שלכם',
+  'Login with Bitbucket': 'התחברות עם Bitbucket',
+  'Login with Cursor': 'התחברות עם Cursor',
   'Login with GitHub': 'התחברות עם GitHub',
+  'Login with GitLab': 'התחברות עם GitLab',
+  'Login with Google': 'התחברות עם Google',
   Login: 'התחברות',
   'New Password': 'סיסמה חדשה',
   'No verification methods are available for this account. Contact support if you need help signing in.':
@@ -420,7 +424,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Sending…': 'שולח…',
   'Sign in': 'התחברות',
   'Sign up': 'הירשמו',
+  'Sign up with Bitbucket': 'הרשמה עם Bitbucket',
+  'Sign up with Cursor': 'הרשמה עם Cursor',
   'Sign up with GitHub': 'הרשמה עם GitHub',
+  'Sign up with GitLab': 'הרשמה עם GitLab',
+  'Sign up with Google': 'הרשמה עם Google',
   'Signed in as': 'מחוברים בתור',
   'Terms of Service': 'תנאי השימוש',
   'This will allow': 'פעולה זו תאפשר ל-',
@@ -1066,6 +1074,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Switch to the account the invitation was sent to in order to accept it.':
     'עברו לחשבון שאליו נשלחה ההזמנה כדי לאשר אותה.',
   'Switch account': 'החלפת חשבון',
+  'Use a different account': 'שימוש בחשבון אחר',
   'Signing out...': 'מתנתקים...',
   'Go to dashboard': 'מעבר ללוח הבקרה',
   'Invalid invitation link': 'קישור הזמנה לא תקין',
@@ -1081,7 +1090,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'By clicking continue, you agree to our':
     'בלחיצה על המשך, אתם מקבלים את',
   'By continuing, you agree to our': 'בהמשך התהליך, אתם מקבלים את',
+  'Failed to initiate Bitbucket login': 'התחלת ההתחברות עם Bitbucket נכשלה',
+  'Failed to initiate Cursor login': 'התחלת ההתחברות עם Cursor נכשלה',
   'Failed to initiate GitHub login': 'התחלת ההתחברות עם GitHub נכשלה',
+  'Failed to initiate GitLab login': 'התחלת ההתחברות עם GitLab נכשלה',
+  'Failed to initiate Google login': 'התחלת ההתחברות עם Google נכשלה',
   'Signed in but could not open the console':
     'ההתחברות הצליחה אך לא ניתן היה לפתוח את הקונסולה',
   'Could not open MFA verification': 'לא ניתן היה לפתוח את אימות ה-MFA',

@@ -107,7 +107,7 @@ export const sitesProductContent: ProductPageContent = {
     {
       question: 'Can I start from templates or quick-starts?',
       answer:
-        'Yes. Browse templates from Sites > Templates in the Console and filter by framework or use case. The create wizard walks you through GitHub setup, production branch, environment variables, and domain configuration. Official quick-starts cover Next.js, Nuxt, SvelteKit, Astro, Vue, TanStack Start, and more.',
+        'Yes. Browse templates from Sites > Templates in the Console and filter by framework or use case. The create wizard walks you through GitHub or Origin setup, production branch, environment variables, and domain configuration. Official quick-starts cover Next.js, Nuxt, SvelteKit, Astro, Vue, TanStack Start, and more.',
       links: [
         { label: 'Templates', href: '/docs/products/sites/templates' },
         { label: 'Quick start', href: '/docs/products/sites/quick-start' },

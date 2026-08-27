@@ -65,7 +65,7 @@ export type PatchMessagingProviderInput = {
 
 /**
  * Updates a messaging provider using the correct Console SDK method per
- * `provider.provider` (smtp, mailgun, twilio, fcm, …). There is no generic
+ * `provider.provider` (smtp, mailgun, ses, twilio, fcm, …). There is no generic
  * `messaging.updateProvider` on the project SDK.
  */
 export function patchMessagingProvider(
@@ -112,6 +112,8 @@ function dispatchIdentityOnly(
       return messaging.updateSendgridProvider(identity)
     case 'resend':
       return messaging.updateResendProvider(identity)
+    case 'ses':
+      return messaging.updateSesProvider(identity)
     case 'twilio':
       return messaging.updateTwilioProvider(identity)
     case 'vonage':
@@ -196,6 +198,19 @@ function dispatchWithMerged(
         name,
         enabled,
         apiKey: optStr(merged.apiKey),
+        fromName: optStr(merged.fromName),
+        fromEmail: optStr(merged.fromEmail),
+        replyToName: optStr(merged.replyToName),
+        replyToEmail: optStr(merged.replyToEmail),
+      })
+    case 'ses':
+      return messaging.updateSesProvider({
+        providerId,
+        name,
+        enabled,
+        accessKey: optStr(merged.accessKey),
+        secretKey: optStr(merged.secretKey),
+        region: optStr(merged.region),
         fromName: optStr(merged.fromName),
         fromEmail: optStr(merged.fromEmail),
         replyToName: optStr(merged.replyToName),

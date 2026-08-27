@@ -52,7 +52,7 @@ export default async ({ req, res, log, error }) => {
 
   // `res.json()` is a handy helper for sending JSON
   return res.json({
-    motto: 'Build like a team of hundreds_',
+    motto: 'The open-source cloud for agents and developers_',
     learn: 'https://appwrite.io/docs',
     connect: 'https://appwrite.io/discord',
     getInspired: 'https://builtwith.appwrite.io',
@@ -91,7 +91,7 @@ return function ($context) {
 
     // `res.json()` is a handy helper for sending JSON
     return $context->res->json([
-        'motto' => 'Build like a team of hundreds_',
+        'motto' => 'The open-source cloud for agents and developers_',
         'learn' => 'https://appwrite.io/docs',
         'connect' => 'https://appwrite.io/discord',
         'getInspired' => 'https://builtwith.appwrite.io',
@@ -130,7 +130,7 @@ def main(context):
 
     # `context.res.json()` is a handy helper for sending JSON
     return context.res.json({
-        "motto": "Build like a team of hundreds_",
+        "motto": "The open-source cloud for agents and developers_",
         "learn": "https://appwrite.io/docs",
         "connect": "https://appwrite.io/discord",
         "getInspired": "https://builtwith.appwrite.io",
@@ -164,7 +164,7 @@ def main(context)
 
   # `context.res.json()` is a handy helper for sending JSON
   return context.res.json({
-    "motto": "Build like a team of hundreds_",
+    "motto": "The open-source cloud for agents and developers_",
     "learn": "https://appwrite.io/docs",
     "connect": "https://appwrite.io/discord",
     "getInspired": "https://builtwith.appwrite.io",
@@ -199,7 +199,7 @@ export default ({ req, res, log, error }: any) => {
 
   // `res.json()` is a handy helper for sending JSON
   return res.json({
-    motto: "Build like a team of hundreds_",
+    motto: "The open-source cloud for agents and developers_",
     learn: "https://appwrite.io/docs",
     connect: "https://appwrite.io/discord",
     getInspired: "https://builtwith.appwrite.io",
@@ -247,7 +247,7 @@ func Main(Context openruntimes.Context) openruntimes.Response {
 	// `res.json()` is a handy helper for sending JSON
 	return Context.Res.Json(
 		Response{
-			Motto:       "Build like a team of hundreds_",
+			Motto:       "The open-source cloud for agents and developers_",
 			Learn:       "https://appwrite.io/docs",
 			Connect:     "https://appwrite.io/discord",
 			GetInspired: "https://builtwith.appwrite.io",
@@ -284,7 +284,7 @@ Future main(final context) async {
 
   // `res.json()` is a handy helper for sending JSON
   return context.res.json({
-    'motto': 'Build like a team of hundreds_',
+    'motto': 'The open-source cloud for agents and developers_',
     'learn': 'https://appwrite.io/docs',
     'connect': 'https://appwrite.io/discord',
     'getInspired': 'https://builtwith.appwrite.io',
@@ -325,7 +325,7 @@ class Main {
 
         // `context.res.json()` is a handy helper for sending JSON
         return context.res.json(mutableMapOf(
-            "motto" to "Build like a team of hundreds_",
+            "motto" to "The open-source cloud for agents and developers_",
             "learn" to "https://appwrite.io/docs",
             "connect" to "https://appwrite.io/discord",
             "getInspired" to "https://builtwith.appwrite.io"
@@ -367,7 +367,7 @@ public class Main {
         }
 
         Map json = new HashMap<>();
-        json.put("motto", "Build like a team of hundreds_");
+        json.put("motto", "The open-source cloud for agents and developers_");
         json.put("learn", "https://appwrite.io/docs");
         json.put("connect", "https://appwrite.io/discord");
         json.put("getInspired", "https://builtwith.appwrite.io");
@@ -407,7 +407,7 @@ func main(context: RuntimeContext) async throws -> RuntimeOutput {
 
     // `context.res.json()` is a handy helper for sending JSON
     return try context.res.json([
-        "motto": "Build like a team of hundreds_",
+        "motto": "The open-source cloud for agents and developers_",
         "learn": "https://appwrite.io/docs",
         "connect": "https://appwrite.io/discord",
         "getInspired": "https://builtwith.appwrite.io",
@@ -450,7 +450,7 @@ public class Handler {
         // `Context.Res.Json()` is a handy helper for sending JSON
         return Context.Res.Json(new Dictionary()
         {
-            { "motto", "Build like a team of hundreds_" },
+            { "motto", "The open-source cloud for agents and developers_" },
             { "learn", "https://appwrite.io/docs" },
             { "connect", "https://appwrite.io/discord" },
             { "getInspired", "https://builtwith.appwrite.io" },
@@ -489,7 +489,7 @@ pub fn main(context: Context) -> Response {
     // `context.res.json()` is a handy helper for sending JSON
     context.res.json(
         json!({
-            "motto": "Build like a team of hundreds_",
+            "motto": "The open-source cloud for agents and developers_",
             "learn": "https://appwrite.io/docs",
             "connect": "https://appwrite.io/discord",
             "getInspired": "https://builtwith.appwrite.io",

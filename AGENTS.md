@@ -1109,12 +1109,13 @@ Profiles control which features are available based on deployment type (cloud vs
 **Per-feature env overrides** (optional; unset = profile default):
 
 - `VITE_CONSOLE_USER_VERIFICATION` – `true`/`false` to force post-signup email verification
-- `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt, not the demo password gate)
+- `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
+- `VITE_CONSOLE_EXTRA_OAUTH_LOGIN` – `true`/`false` to show extra console OAuth login/signup methods (Google, GitLab, Bitbucket, Cursor). GitHub stays available. Off in both profiles by default.
 
-**Demo password gate** (not a profile feature; unset = on):
+**Pre-launch mode** (not a profile feature; unset = on):
 
-- `VITE_CONSOLE_WEBSITE_ACCESS` – `true`/`false` for the soft-launch `/access` password (Appwrite2 cookie). `false` disables the middleware redirect, boot cover, and password screen
+- `VITE_CONSOLE_PRE_LAUNCH` – locks the site so only `/init` is public (`/` redirects there). Sign-in/sign-up stay open and return to `/init` instead of the console. `false` / `0` / `disabled` turns it off. Debug menu → Settings → Flags → **Pre-launch** overrides this (stored in localStorage).
 
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
@@ -1635,7 +1636,7 @@ Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`)
 - **No local backend**: There is no local backend server and no `docker-compose`. The console is a client-side app that talks to a **remote backend** whose endpoint is set via the `VITE_*` endpoint variable documented in the `## Environment` section above. Copy `.env` from `.env.example` (`.env` is gitignored). In Cloud Agent VMs, the endpoint, the console fingerprint key, and other `VITE_*` values are injected as secrets and take precedence over the placeholder values in `.env.example`.
 - **Standard commands** (see README "Scripts" and `package.json`): `bun run dev` (Vite dev server on port 3000), `bun run lint` (ESLint), `bun run check` (`tsc --noEmit`), `bun run test` / `bun run e2e` (Playwright; needs `bun run install-browsers` first plus a reachable backend and `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` or `E2E_TEST_SESSION_SECRET`). Database write suites need `E2E_ORG_ID` (Frankfurt). Use `bun run e2e:mysql`, `bun run e2e:postgres`, `bun run e2e:tablesdb`, `bun run e2e:documentsdb`, `bun run e2e:vectorsdb`, or `bun run e2e:databases` to run only those projects.
 - **Pre-existing lint/type issues**: `bun run lint` and `bun run check` currently report many pre-existing errors in the repo (e.g. unused imports, and config-file type mismatches from the `rolldown-vite` alias in `vite.config.ts`). These are not caused by environment setup; do not treat them as setup failures.
-- **Login for manual testing**: To exercise authenticated flows, log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
+- **Login for manual testing**: To exercise authenticated console flows, turn off pre-launch (debug menu → Settings → Flags → Pre-launch, or `VITE_CONSOLE_PRE_LAUNCH=false`), then log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
 - **Vite alias**: `vite` is aliased to `npm:rolldown-vite` (Rolldown), so dev/build logs mention `ROLLDOWN-VITE`; this is expected.
 - **`remotion/` subfolder** is an independent package (launch video) with its own deps and no lockfile; it is not needed to run or test the console.
 

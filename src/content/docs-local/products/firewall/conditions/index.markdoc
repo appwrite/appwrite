@@ -46,7 +46,7 @@ The condition builder groups attributes by what they describe: the request, the 
 
 # Header and query parameter keys {% #header-and-query-parameter-keys %}
 
-**Header** and **Query parameter** conditions target a named key. Enter the header name (for example `x-api-client`) or parameter name (for example `token`) together with the operator and value. Keys are stored lowercase and matched case-insensitively, so `X-Api-Client` and `x-api-client` are the same condition.
+**Header** and **Query parameter** conditions target a named key. Enter the header name (for example `x-api-client`) or parameter name (for example `token`) together with the operator and value. Keys must be lowercase to match: the Console lowercases what you type, and request headers and query keys are compared lowercase. When creating rules through the API, write the key in lowercase yourself, or the condition never matches.
 
 Under the hood, these conditions use prefixed attributes: `headers.<name>` and `query.<key>`.
 
@@ -55,7 +55,7 @@ Under the hood, these conditions use prefixed attributes: `headers.<name>` and `
 - **IP address**: Accepts single IPs (`203.0.113.10`) and CIDR blocks (`10.0.0.0/8`). CIDR blocks only match with **equals** and **not equal**; other operators compare the value as a plain string.
 - **Path**: Taken from the request URI with the query string removed. An empty path is treated as `/`. Prefer `starts with` for prefixes such as `/v1/account`.
 - **Method**: Normalized to uppercase before matching.
-- **Country** and **Continent**: Use the resolved geo codes. When geo cannot be resolved, the value is `unresolved`. Inputs in the Console are stored uppercase.
+- **Country** and **Continent**: Use the resolved geo codes. Inputs in the Console are stored uppercase. When geo cannot be resolved, API traffic matches the value `unresolved`, while function and site traffic leaves the attribute empty (match it with **is empty**).
 - **Operating system** and **Browser**: Derived from the `User-Agent` header, so unusual clients may not resolve. Use the raw **User agent** attribute for exact header matching.
 
 # Operators {% #operators %}
@@ -81,7 +81,7 @@ Notes:
 
 # API-only attributes {% #api-only-attributes %}
 
-The Firewall API also accepts a few attributes the Console builder does not expose: `queryKeys` (the set of query parameter names), `osVersion`, and `browserVersion`. Rules using them still evaluate normally and appear in the rules list.
+The Firewall API also accepts a few attributes the Console builder does not expose: `queryKeys` (the set of query parameter names), `accept`, `acceptLanguage`, and `cookie` (the raw request headers), plus `resourceType`, `resourceId`, `deploymentId`, and `projectId`. Rules using them still evaluate normally and appear in the rules list.
 
 # Multiple conditions {% #multiple-conditions %}
 
@@ -98,8 +98,10 @@ For allowlists, prefer a [bypass](/docs/products/firewall/actions#bypass) rule w
 
 When you create or edit conditions, the Console can estimate how many recent usage events would have matched. Use that preview to tighten overly broad filters before enabling deny or rate limit.
 
+The estimate is an upper bound. Conditions on **continent**, **state**, **header**, and **query parameter** attributes, and any **does not contain** condition, have no usage equivalent and are skipped in the estimate, and **user agent** conditions are approximated by client name. The Console warns you when parts of a rule cannot be estimated.
+
 See [Monitor traffic](/docs/products/firewall/monitor) for overview metrics after rules are live.
 
-{% arrow_link href="/docs/products/firewall/create" %}
-Create a rule
+{% arrow_link href="/docs/products/firewall/block-countries" %}
+Block traffic by country
 {% /arrow_link %}

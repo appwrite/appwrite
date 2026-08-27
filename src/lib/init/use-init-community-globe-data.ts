@@ -5,9 +5,14 @@ import {
   listInitPresences,
 } from '@/lib/init/presence'
 import { useInitPresence } from '@/lib/init/init-presence-context'
-import type { InitDisplayEvent } from '@/lib/init/types'
+import type { InitCommunityCountry, InitDisplayEvent } from '@/lib/init/types'
 
 const COMMUNITY_REFRESH_MS = 30_000
+
+type PolledCommunityGlobe = {
+  countries: InitCommunityCountry[]
+  onlineCount: number
+}
 
 /**
  * Community globe data from live presence when available, otherwise polled list fetch.
@@ -19,13 +24,17 @@ export function useInitCommunityGlobeData(
   const presence = useInitPresence()
   const enabled = Boolean(event?.presenceEnabled && !event.isRecapMode && options?.enabled !== false)
 
-  const { data: polledCountries } = useQuery({
+  const { data: polled } = useQuery({
     queryKey: ['init', 'community-countries', event?.id],
-    queryFn: async () => {
-      if (!event) return []
+    queryFn: async (): Promise<PolledCommunityGlobe> => {
+      if (!event) return { countries: [], onlineCount: 0 }
       const online = await listInitPresences(event.id, 'online', 100)
       const allowlist = buildInitPresenceActivityAllowlist(event)
-      return aggregateInitCommunityCountries(online, allowlist)
+      return {
+        countries: aggregateInitCommunityCountries(online, allowlist),
+        // Full list length, not country-sum — some online users lack countryCode.
+        onlineCount: online.length,
+      }
     },
     enabled: enabled && (!presence.isReady || presence.communityCountries.length === 0),
     refetchInterval: COMMUNITY_REFRESH_MS,
@@ -35,16 +44,17 @@ export function useInitCommunityGlobeData(
   const countries =
     presence.communityCountries.length > 0
       ? presence.communityCountries
-      : (polledCountries ?? [])
+      : (polled?.countries ?? [])
 
   const developerCount =
-    presence.communityDeveloperCount > 0
+    presence.isReady && presence.communityDeveloperCount > 0
       ? presence.communityDeveloperCount
-      : countries.reduce((total, country) => total + country.count, 0)
+      : (polled?.onlineCount ??
+        countries.reduce((total, country) => total + country.count, 0))
 
   return {
     countries,
     developerCount,
-    isLive: presence.isReady && presence.communityCountries.length > 0,
+    isLive: presence.isReady && presence.communityDeveloperCount > 0,
   }
 }

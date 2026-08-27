@@ -2,10 +2,16 @@
 
 import Markdoc from '@markdoc/markdoc'
 import React, { useMemo, type ReactNode } from 'react'
-import { MarkdocAccordion, MarkdocAccordionItem } from '@/components/pages/docs/markdoc/Accordion'
+import {
+  MarkdocAccordion,
+  MarkdocAccordionItem,
+} from '@/components/pages/docs/markdoc/Accordion'
 import { Cards, CardsItem } from '@/components/pages/docs/markdoc/Cards'
 import { Fence } from '@/components/pages/docs/markdoc/Fence'
-import { MarkdocIcon, MarkdocIconImage } from '@/components/pages/docs/markdoc/Icon'
+import {
+  MarkdocIcon,
+  MarkdocIconImage,
+} from '@/components/pages/docs/markdoc/Icon'
 import { Info } from '@/components/pages/docs/markdoc/Info'
 import { MultiCode } from '@/components/pages/docs/markdoc/MultiCode'
 import { DocsImage } from '@/components/pages/docs/markdoc/DocsImage'
@@ -24,6 +30,7 @@ import {
 } from '@/components/pages/docs/markdoc/Nodes'
 import { Tabs, TabsItem } from '@/components/pages/docs/markdoc/Tabs'
 import { MarkdocYoutube } from '@/components/pages/docs/markdoc/Youtube'
+import { RateLimitStrategyAnimation } from '@/components/pages/docs/markdoc/RateLimitStrategyAnimation'
 import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
 import { DOCS_PROSE_LINK_CLASS } from '@/lib/docs/prose-link'
 import {
@@ -91,6 +98,7 @@ const markdocComponents = {
     </div>
   ),
   Youtube: MarkdocYoutube,
+  RateLimitStrategyAnimation,
 }
 
 type ChangelogMarkdownProps = {
@@ -113,7 +121,9 @@ export function ChangelogMarkdown({
   const proseBodyClass = bodyTextClass ?? DOCS_BODY_TEXT_CLASS
   const proseLinkClass = linkClassName ?? DOCS_PROSE_LINK_CLASS
   const proseDetailClasses =
-    proseVariant === 'blog' ? BLOG_PROSE_DETAIL_CLASSES : DOCS_PROSE_DETAIL_CLASSES
+    proseVariant === 'blog'
+      ? BLOG_PROSE_DETAIL_CLASSES
+      : DOCS_PROSE_DETAIL_CLASSES
 
   const rendered = useMemo(() => {
     const ast = Markdoc.parse(content)
@@ -121,17 +131,32 @@ export function ChangelogMarkdown({
     return Markdoc.renderers.react(transformed, React, {
       components: {
         ...markdocComponents,
-        Link: (props: { href?: string; children?: ReactNode; className?: string }) => (
-          <ChangelogLink {...props} className={props.className ?? proseLinkClass} />
+        Link: (props: {
+          href?: string
+          children?: ReactNode
+          className?: string
+        }) => (
+          <ChangelogLink
+            {...props}
+            className={props.className ?? proseLinkClass}
+          />
         ),
-        ArrowLink: ({ href, children }: { href?: string; children?: ReactNode }) => (
+        ArrowLink: ({
+          href,
+          children,
+        }: {
+          href?: string
+          children?: ReactNode
+        }) => (
           <ChangelogArrowLink href={href} textClassName={arrowLinkTextClass}>
             {children}
           </ChangelogArrowLink>
         ),
-        Heading: (props: { level?: number; id?: string; children?: ReactNode }) => (
-          <Heading {...props} proseVariant={proseVariant} />
-        ),
+        Heading: (props: {
+          level?: number
+          id?: string
+          children?: ReactNode
+        }) => <Heading {...props} proseVariant={proseVariant} />,
         Blockquote: (props: { children?: ReactNode }) => (
           <Blockquote {...props} proseVariant={proseVariant} />
         ),
@@ -151,17 +176,26 @@ export function ChangelogMarkdown({
           title?: string
           children?: React.ReactNode
         }) => (
-          <AccordionItem value={title ?? 'item'} className="rounded-lg border border-border px-4">
-            <AccordionTrigger className={cn(proseBodyClass, 'font-medium hover:no-underline')}>
+          <AccordionItem
+            value={title ?? 'item'}
+            className="rounded-lg border border-border px-4"
+          >
+            <AccordionTrigger
+              className={cn(proseBodyClass, 'font-medium hover:no-underline')}
+            >
               {title}
             </AccordionTrigger>
-            <AccordionContent className={proseBodyClass}>{itemChildren}</AccordionContent>
+            <AccordionContent className={proseBodyClass}>
+              {itemChildren}
+            </AccordionContent>
           </AccordionItem>
         ),
         CallToAction: ({ href, title }: { href?: string; title?: string }) => (
           <div className="not-prose my-6">
             <a
-              href={href?.startsWith('/') ? `${MARKETING_SITE_ORIGIN}${href}` : href}
+              href={
+                href?.startsWith('/') ? `${MARKETING_SITE_ORIGIN}${href}` : href
+              }
               className={cn(
                 'inline-flex items-center rounded-lg bg-[var(--brand-cta)] px-4 py-2 font-medium text-white hover:opacity-90',
                 proseVariant === 'blog'
@@ -177,7 +211,13 @@ export function ChangelogMarkdown({
         ),
       },
     })
-  }, [content, proseBodyClass, proseLinkClass, arrowLinkTextClass, proseVariant])
+  }, [
+    content,
+    proseBodyClass,
+    proseLinkClass,
+    arrowLinkTextClass,
+    proseVariant,
+  ])
 
   return (
     <ImagePreviewGalleryProvider>

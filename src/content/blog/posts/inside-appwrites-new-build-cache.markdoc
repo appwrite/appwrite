@@ -1,0 +1,90 @@
+---
+layout: post
+title: "Inside Appwrite's new build cache: 4x faster dependency installs"
+description: A deep dive into how Appwrite now caches your dependencies between builds, and what it means for your deployment times.
+date: 2026-08-13
+cover: /images/blog/inside-appwrites-new-build-cache/cover.avif
+timeToRead: 7
+author: torsten-dittmann
+category: engineering
+featured: false
+faqs:
+  - question: "What does Appwrite's build cache store?"
+    answer: "It stores your package manager's content-addressable stores, such as the pnpm store, between builds. The cache is packed into a single compressed SquashFS image, saved to storage after a successful build, and restored before the next one. Your project files and node_modules are rebuilt fresh every time."
+  - question: "Do I need to configure anything to use the build cache?"
+    answer: "No. The cache is keyed automatically per site or function, and your install command works unchanged. If no cache exists yet, the build runs exactly as before and saves a snapshot for next time."
+  - question: "Which package managers benefit the most?"
+    answer: "pnpm and bun see the biggest wins because they link packages from a content-addressable store instead of unpacking archives, so a restored store turns installs into a fast linking pass. npm and yarn caches are also covered."
+  - question: "Can a broken cache fail my build?"
+    answer: "No. The cache is best-effort by design. If a restore or save fails for any reason, the build continues without it, exactly as if the cache did not exist."
+---
+
+Every deployment on Appwrite builds inside a fresh, isolated environment. That isolation is great for reproducibility and security, but it comes with a tax: the build starts with an empty disk, with nothing carried over from previous builds, so your `pnpm install` re-downloads every package on every deployment, even if you only changed one line of code.
+
+We have now removed that tax. Appwrite's build network caches your dependencies between builds, and restoring them is fast enough that installs on a real-world Next.js app drop from **11.7s → 2.8s** with pnpm, and from **9.6s → 2.3s** with bun.
+
+Let's look at how it works under the hood.
+
+# The problem with clean builds
+
+When you deploy a site or function, Appwrite spins up a dedicated container for the build, runs your install and build commands, uploads the result, and throws the container away, so by design nothing survives between builds.
+
+For dependencies, that means the same work repeats every time. A typical production Next.js app pulls in hundreds of packages, and on every deployment your package manager resolves them, downloads them from the registry, and assembles `node_modules` from scratch. For the app we will use as an example throughout this post, that is roughly 650 packages re-downloaded for every one-line change.
+
+# What we built
+
+The build environment now mounts a cache volume, and the build pipeline does three extra things:
+
+1. **Before your install command runs**, Appwrite checks storage for a cache snapshot belonging to your site or function. If one exists, it is downloaded and unpacked into the package manager's store locations.
+2. **Your build runs unchanged.** The package manager finds its store already populated and skips the registry almost entirely.
+3. **After a successful build**, the updated store is packed and saved back to storage, so the next build benefits from anything new this one downloaded.
+
+The cache is keyed per resource, so different sites and functions never share snapshots, and a new resource always starts clean.
+
+# Why SquashFS
+
+Package manager stores are the worst case for storage systems: tens of thousands of tiny files. Moving them to object storage one by one would drown in per-file overhead, and a classic `tar.gz` archive is slow to unpack because gzip is single-threaded and extraction creates files strictly in sequence.
+
+Instead, we pack the store into a single [SquashFS](https://docs.kernel.org/filesystems/squashfs.html) image, the same compressed, read-only filesystem format Linux live systems boot from. This gives us three properties we wanted:
+
+- **Fast compression** that decompresses at multiple gigabytes per second, so unpacking is never the bottleneck.
+- **Parallel packing and unpacking** that uses every core available to the build container.
+- **One file means one storage request.** Restoring the cache is a single read, saving it is a single write.
+
+# The numbers
+
+![Dependency install times with the new build cache](/images/blog/inside-appwrites-new-build-cache/install-times.avif)
+
+We measured the cache with a Next.js application using 23 production dependencies, deployed through the Appwrite CLI, once with pnpm and once with bun.
+
+With pnpm:
+
+- **First build (no snapshot):** all 641 packages are downloaded from the registry, and the install completes in **11.7 seconds**.
+- **Every build after:** the snapshot is restored before `pnpm install` runs, and the same install completes in **2.8 seconds**.
+
+With bun:
+
+- **First build:** 646 packages installed in **9.6 seconds**.
+- **With a warm cache:** **2.3 seconds**.
+
+That is a 4.2x speedup for both package managers, with zero configuration changes in either case.
+
+The split between those two numbers also tells you where install time actually goes. A warm install does everything a cold one does except talk to the registry, so the difference between the two runs is pure download time:
+
+- **pnpm:** about 9 of the 11.7 cold-install seconds were downloads, leaving 2.8 seconds of lockfile resolution and linking.
+- **bun:** about 7.3 of its 9.6 seconds were downloads, leaving 2.3 seconds of linking.
+
+The cache removes the download share entirely. The reason the remaining work is so small is that pnpm links packages out of a single [content-addressable store](https://pnpm.io/motivation) and bun uses a similar [global cache](https://bun.sh/docs/install/cache) with hardlinks, instead of unpacking an archive for every package. With the store restored from the snapshot, an install becomes a linking pass over files that are already on disk.
+
+# Part of a broader performance effort
+
+The build cache is the latest in a series of changes aimed at making deployments on Appwrite faster. We previously [cut cold start times on Appwrite Sites](/blog/post/appwrite-sites-squashfs-migration), so your pages respond quickly even after sitting idle, and shipped [native Turbopack support](/blog/post/turbopack-support-appwrite-sites), so Next.js applications build on their faster bundler with no change to your build command. Caching dependencies carries that same focus into the install step, which for most projects is the slowest part of a build.
+
+The build cache is live across the Appwrite network. Deploy a site or function, and from your second build onward, your installs are already faster.
+
+# Resources
+
+- [Appwrite Sites docs](/docs/products/sites)
+- [Appwrite Functions docs](/docs/products/functions)
+- [Deploy sites from the CLI](/docs/tooling/command-line/sites)
+- [pnpm's content-addressable store](https://pnpm.io/motivation)

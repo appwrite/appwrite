@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Better tool search and clearer schemas in the Appwrite MCP server"
+date: 2026-08-17
+---
+
+The [**Appwrite MCP server**](/docs/tooling/ai/mcp-servers/api) has a set of improvements. These improvements help AI tools find the correct Appwrite tool quickly. They also help AI tools call each tool correctly on the first try.
+
+- **Search results show enum values and object shapes**: If a parameter accepts only some values, the search results show these values. For example, a relationship type shows `oneToOne|manyToOne|manyToMany|oneToMany`. If a parameter is an object, the search results show its keys. The model does not have to guess valid inputs.
+- **Full parameter descriptions**: The server does not truncate parameter descriptions. Important details, for example query limits and formats, stay complete.
+- **More accurate search results**: The tool search removes results that do not match the query. The tool search also matches different forms of the same word. The words `row` and `rows` find the same tools. A query for "read rows with pagination" finds list tools, not only single-item tools.
+- **Suggestions for incorrect tool names**: If a tool name is almost correct, the error message shows the closest tool names. The model does not have to do a new search.
+- **Fewer round-trips**: The result previews are larger. A typical list response fits fully in the tool result. An extra read of the results resource is not necessary.
+- **Clearer errors for unparsed responses**: Appwrite can accept a write operation, but the response can fail to parse. The error message now says that the operation was probably successful. It tells the model to make sure with a get or a list call before a retry. This prevents duplicate operations.
+
+These improvements are available on the [remote MCP server](/docs/tooling/ai/mcp-servers/api) at `https://mcp.appwrite.io/` and on the [local MCP server](/docs/advanced/self-hosting/mcp) for self-hosted instances.

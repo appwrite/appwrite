@@ -4,7 +4,7 @@ import type {
   LaunchEventOnlineUser,
   LaunchEventUserPresence,
 } from '@/lib/init/types'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -197,8 +197,8 @@ function PresenceAvatar({
       transition={PRESENCE_RING_PULSE_TRANSITION}
       aria-hidden
     >
-      <InitialsAvatar
-        name={user.name}
+      <PhotoAvatar
+        userId={user.id}
         size={size}
         className={cn('rounded-full', isRaffleWinner && RAFFLE_WINNER_AVATAR_CLASS)}
       />

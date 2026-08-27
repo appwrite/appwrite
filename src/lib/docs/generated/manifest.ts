@@ -346,6 +346,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
+    "slug": "advanced/self-hosting/configuration/topologies",
+    "title": "Worker topologies",
+    "description": "Choose between the combined and separate worker topologies for your self-hosted Appwrite instance. Learn which containers each topology runs and when to use each one.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "advanced/self-hosting/configuration/version-control",
     "title": "Version control",
     "description": "Configure version control integration for Functions and Sites in your self-hosted Appwrite instance.",
@@ -357,7 +364,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "advanced/self-hosting/mcp",
+    "title": "MCP server",
+    "description": "Connect LLMs and code-generation tools to your self-hosted Appwrite instance with the local MCP server.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "advanced/self-hosting/platforms/aws",
@@ -578,8 +592,8 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "partners/apps",
-    "title": "Apps",
-    "description": "Register and manage OAuth apps with the Appwrite Console Apps API. Publish integrations, manage client secrets, and connect users through OAuth 2.0.",
+    "title": "Sign in with Appwrite",
+    "description": "Build apps that access your users' Appwrite projects and organizations with consent-based, scoped OAuth2 tokens instead of pasted API keys.",
     "layout": "article",
     "readingTimeMinutes": 3
   },
@@ -596,6 +610,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Sign in with Appwrite from TVs, CLIs, and other input-constrained devices with the OAuth2 device authorization grant.",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/apps/installations",
+    "title": "Installations",
+    "description": "Install your app on an organization and act with installation tokens that need no signed-in user.",
+    "layout": "article",
+    "readingTimeMinutes": 6
   },
   {
     "slug": "partners/apps/quick-start",
@@ -875,70 +896,70 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Agent",
     "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, suggest next steps, and run approved actions.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/agent/actions",
     "title": "Actions",
     "description": "Learn what the Appwrite Agent can inspect, clarify, and do in your projects and in the Console.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/agent/add-memory",
     "title": "Add memory",
     "description": "Save a preference, instruction, or fact for the Appwrite Agent to reuse across conversations.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/agent/add-model",
     "title": "Add a custom model",
     "description": "Register a provider API key so the Appwrite Agent can use your own LLM credentials.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/agent/automations",
     "title": "Automations",
     "description": "Learn how Appwrite Agent automations run scheduled prompts and create conversations on a cron schedule.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/chat",
     "title": "Chat with the Agent",
     "description": "Open the Appwrite Agent panel or fullscreen chat, send prompts, and manage a conversation.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/connect-mcp",
     "title": "Connect Appwrite MCP",
     "description": "Authorize Appwrite MCP so Appwrite Agent can take approved actions in your projects.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/conversations",
     "title": "Conversations",
-    "description": "Learn how Appwrite Agent conversations work, including threading, attachments, voice, and conversation management.",
+    "description": "Learn how Appwrite Agent conversations work, including context, attachments, voice, queueing, and thread management.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/agent/create-automation",
     "title": "Create an automation",
     "description": "Schedule a recurring Appwrite Agent prompt with a cron schedule and optional model.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/agent/mcp",
     "title": "MCP connections",
-    "description": "Learn how the Appwrite Agent uses MCP servers to call tools and take actions in your projects.",
+    "description": "Learn how the Appwrite Agent uses MCP to call tools and take actions in your projects.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/memory",
@@ -952,14 +973,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Models",
     "description": "Learn how Appwrite Agent models work, including the default model and bring-your-own provider keys.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/quick-start",
     "title": "Start with Agent",
     "description": "Open the Appwrite Agent in the Console, ask your first question, and optionally connect MCP so it can take actions.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/ai",
@@ -1321,6 +1342,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 5
   },
   {
+    "slug": "products/auth/oauth-server/installations",
+    "title": "Installations",
+    "description": "Let clients install on teams in your project and act with installation tokens that need no signed-in user.",
+    "layout": "article",
+    "readingTimeMinutes": 7
+  },
+  {
     "slug": "products/auth/oauth-server/quick-start",
     "title": "OAuth2 server quick start",
     "description": "Enable Appwrite's OAuth2 server, register a client, and run your first authorization code sign-in end to end.",
@@ -1454,6 +1482,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "How to implement SSR authentication with Appwrite",
     "layout": "article",
     "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/auth/sign-in-with-appwrite",
+    "title": "Sign in with Appwrite",
+    "description": "Let users sign in to your app with their Appwrite account. Enable the Appwrite OAuth2 provider and create sessions with a consent-based flow.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/auth/team-invites",
@@ -2468,7 +2503,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Documents",
     "description": "Create, read, update, and delete documents in Appwrite VectorsDB. Learn how to store embedding vectors and metadata in your collections.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/vectorsdb/embeddings",
@@ -2508,9 +2543,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/databases/vectorsdb/quick-start",
     "title": "Start with VectorsDB",
-    "description": "Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and read them back.",
+    "description": "Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and search them by similarity.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/vectorsdb/timestamp-overrides",
@@ -2531,7 +2566,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Vector search",
     "description": "Run similarity search over your documents with Appwrite VectorsDB. Create an HNSW index on the embeddings field and rank documents by cosine, dot product, or Euclidean distance.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/domains",
@@ -2643,7 +2678,35 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Actions",
     "description": "Learn Firewall actions in Appwrite: deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit behavior.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 7
+  },
+  {
+    "slug": "products/firewall/allowlist-ips",
+    "title": "Allowlist trusted IP addresses",
+    "description": "Pair an Appwrite Firewall bypass rule with a deny rule so only trusted IP addresses reach a protected path.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/firewall/attack-mode",
+    "title": "Attack mode",
+    "description": "Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/firewall/block-countries",
+    "title": "Block traffic by country",
+    "description": "Create Appwrite Firewall deny rules that block project API traffic from specific countries.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/firewall/challenge-bots",
+    "title": "Challenge automated traffic",
+    "description": "Create Appwrite Firewall challenge rules that verify suspected bots before their requests continue.",
+    "layout": "article",
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/firewall/conditions",
@@ -2651,20 +2714,6 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.",
     "layout": "article",
     "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/firewall/create",
-    "title": "Create a rule",
-    "description": "Create an Appwrite Firewall rule with resource scope, conditions, action, and priority from the Console wizard.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/firewall/delete",
-    "title": "Delete a rule",
-    "description": "Remove an Appwrite Firewall rule from a project and understand the impact on traffic.",
-    "layout": "article",
-    "readingTimeMinutes": 2
   },
   {
     "slug": "products/firewall/monitor",
@@ -2688,6 +2737,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/firewall/rate-limit-auth",
+    "title": "Rate limit authentication traffic",
+    "description": "Create an Appwrite Firewall rate limit rule that slows brute-force attempts on authentication paths.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "products/firewall/rules",
     "title": "Rules",
     "description": "Learn what Appwrite Firewall rules contain, how enabled state works, and how plan limits apply.",
@@ -2702,9 +2758,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
-    "slug": "products/firewall/update",
-    "title": "Update a rule",
-    "description": "Change an existing Appwrite Firewall rule's name, scope, conditions, action settings, priority, or enabled state.",
+    "slug": "products/firewall/site-maintenance",
+    "title": "Redirect a site for maintenance",
+    "description": "Create Appwrite Firewall rules that send visitors of a site to a maintenance page and back.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -2896,6 +2952,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Send emails to your Appwrite users using SendGrid and Appwrite Messaging.",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/messaging/ses",
+    "title": "Amazon SES",
+    "description": "Send emails to your Appwrite users using Amazon SES and Appwrite Messaging.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/messaging/smtp",
@@ -3294,7 +3357,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "S3 API",
     "description": "Connect any S3-compatible client, SDK, or tool to Appwrite Storage. Configure credentials once, then manage buckets, objects, and multipart uploads over the S3 API.",
     "layout": "article",
-    "readingTimeMinutes": 9
+    "readingTimeMinutes": 10
   },
   {
     "slug": "products/storage/upload-download",
@@ -3521,9 +3584,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 5
   },
   {
-    "slug": "tooling/ai",
-    "title": "AI",
-    "description": "Discover Appwrite's AI tooling ecosystem. Build with AI-powered development tools, integrate AI capabilities into your apps, and leverage documentation designed for AI consumption.",
+    "slug": "tooling",
+    "title": "Tooling",
+    "description": "CLI, Terraform, Command Center, MCP, agent skills, IDEs, and vibe coding platforms for building with Appwrite.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -3537,56 +3600,63 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "tooling/ai/agents/antigravity",
     "title": "Google Antigravity",
-    "description": "Learn how you can add the Appwrite MCP servers to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.",
+    "description": "Learn how you can add the Appwrite MCP server to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
   {
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
-    "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
+    "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
   {
     "slug": "tooling/ai/agents/codex",
     "title": "Codex",
-    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
+    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
   {
     "slug": "tooling/ai/agents/cursor",
     "title": "Cursor",
-    "description": "Learn how to use Cursor with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
+    "description": "Learn how to use Cursor with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
   {
+    "slug": "tooling/ai/agents/grok-build",
+    "title": "Grok Build",
+    "description": "Learn how you can add the Appwrite MCP server to Grok Build to interact with both the Appwrite API and documentation.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
     "slug": "tooling/ai/agents/opencode",
     "title": "OpenCode",
-    "description": "Learn how you can add the Appwrite MCP servers to OpenCode to interact with both the Appwrite API and documentation.",
+    "description": "Learn how you can add the Appwrite MCP server to OpenCode to interact with both the Appwrite API and documentation.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
   {
     "slug": "tooling/ai/agents/vscode",
     "title": "VS Code",
-    "description": "Learn how you can use Appwrite with VS Code and GitHub Copilot for AI-assisted development. Get started quickly with pre-built prompts and connect to Appwrite MCP servers for deeper integration.",
+    "description": "Learn how you can use Appwrite with VS Code and GitHub Copilot for AI-assisted development. Get started quickly with pre-built prompts and connect to the Appwrite MCP server for deeper integration.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
   {
     "slug": "tooling/ai/agents/windsurf",
     "title": "Windsurf",
-    "description": "Learn how you can use Windsurf Editor with Appwrite by leveraging MCP servers and quick start prompts to build applications faster.",
+    "description": "Learn how you can use Windsurf Editor with Appwrite by leveraging the MCP server and quick start prompts to build applications faster.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
   {
     "slug": "tooling/ai/agents/zed",
     "title": "Zed",
-    "description": "Learn how you can use Zed with Appwrite by adding Appwrite MCP servers and installing Appwrite skills for AI-assisted development.",
+    "description": "Learn how you can use Zed with Appwrite by adding the Appwrite MCP server and installing Appwrite skills for AI-assisted development.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -3620,24 +3690,10 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "tooling/ai/mcp-servers",
-    "title": "Model Context Protocol",
-    "description": "Enable LLMs and code-generation tools to interact with your Appwrite project",
+    "title": "Appwrite MCP server",
+    "description": "Enable LLMs and code-generation tools to interact with your Appwrite project and documentation",
     "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "tooling/ai/mcp-servers/api",
-    "title": "MCP server for Appwrite API",
-    "description": "Enable LLMs and code-generation tools to interact with the Appwrite API",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "tooling/ai/mcp-servers/docs",
-    "title": "MCP server for Appwrite docs",
-    "description": "Enable LLMs and code-generation tools to interact with the Appwrite docs",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 4
   },
   {
     "slug": "tooling/ai/persistent-agents-with-realtime",
@@ -3852,44 +3908,44 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "tooling/ai/vector-db-and-embeddings",
     "title": "Vector DB and embeddings",
-    "description": "Using vector databases and embeddings with Appwrite.",
+    "description": "Build semantic search on Appwrite VectorsDB. Generate embeddings, store them alongside your content, and rank results by meaning with a TanStack Start app.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "tooling/ai/vibe-coding/bolt",
     "title": "Bolt",
-    "description": "Learn how to connect the Appwrite docs MCP server to Bolt for AI-assisted development with access to Appwrite documentation.",
+    "description": "Learn how to connect the Appwrite MCP server to Bolt for AI-assisted development with access to the Appwrite API and documentation.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
   {
     "slug": "tooling/ai/vibe-coding/claude-desktop",
     "title": "Claude Desktop",
-    "description": "Learn how to use Claude Desktop with Appwrite through quick start prompts and MCP servers for AI-assisted development.",
+    "description": "Learn how to use Claude Desktop with Appwrite through quick start prompts and the Appwrite MCP server for AI-assisted development.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
   {
     "slug": "tooling/ai/vibe-coding/emergent",
     "title": "Emergent",
-    "description": "Learn how to connect Appwrite MCP servers to Emergent for AI-assisted development with access to the Appwrite API and documentation.",
+    "description": "Learn how to connect the Appwrite MCP server to Emergent for AI-assisted development with access to the Appwrite API and documentation.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
   {
     "slug": "tooling/ai/vibe-coding/lovable",
     "title": "Lovable",
-    "description": "Learn how to connect the Appwrite docs MCP server to Lovable for AI-assisted development with access to Appwrite documentation.",
+    "description": "Learn how to connect the Appwrite MCP server to Lovable for AI-assisted development with access to the Appwrite API and documentation.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
   {
     "slug": "tooling/ai/vibe-coding/zenflow",
     "title": "Zenflow",
-    "description": "Learn how to add the Appwrite MCP servers to agents in Zenflow to interact with both the Appwrite API and documentation.",
+    "description": "Learn how to add the Appwrite MCP server to agents in Zenflow to interact with both the Appwrite API and documentation.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 1
   },
   {
     "slug": "tooling/appwriter",

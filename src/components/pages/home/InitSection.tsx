@@ -84,7 +84,7 @@ function HomeInitDayCard({
         ) : null}
       </div>
 
-      <h3 className="mt-3 text-[15px] font-semibold leading-none text-foreground">
+      <h3 className="mt-3 text-[15px] font-semibold leading-snug text-foreground">
         {t(day.title)}
       </h3>
       <p className="mt-3 min-h-[2lh] flex-1 line-clamp-2 text-[12px] leading-normal text-muted-foreground">

@@ -369,8 +369,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'この関数を削除してもよろしいですか? この操作は元に戻せません。',
   'Build must be ready before activating':
     'アクティブにする前にビルドが完了している必要があります',
-  'Build output is available after the deployment has completed.':
-    'ビルド出力は、デプロイが完了した後に確認できます。',
+  'Build output is only available for ready deployments.':
+    'ビルド出力は、準備完了のデプロイでのみ利用できます。',
   'Cannot delete the active deployment. Please activate another deployment first.':
     'アクティブなデプロイは削除できません。先に別のデプロイをアクティブにしてください。',
   'Choose the directory containing your function code':

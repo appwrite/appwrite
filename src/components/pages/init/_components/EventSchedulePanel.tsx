@@ -3,6 +3,7 @@ import type { InitDisplayEvent } from '@/lib/init/types'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitCheckingScheduleActivity } from '@/lib/init/init-presence-activity'
+import { formatInitScheduleDayDateLabel } from '@/lib/init/schedule-time'
 import { Button } from '@/components/ui/button'
 import { InitScheduleRow } from './InitScheduleRow'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -21,9 +22,14 @@ export function EventSchedulePanel({
   event,
   embedded = false,
 }: EventSchedulePanelProps) {
+  // Sessions can sit on a day with no launch-day card (e.g. the community recap).
   const scheduleDays = useMemo(() => {
-    return event.days.map((day) => day.day).sort((a, b) => a - b)
-  }, [event.days])
+    const days = new Set(event.days.map((day) => day.day))
+    for (const item of event.schedule) {
+      days.add(item.day)
+    }
+    return [...days].sort((a, b) => a - b)
+  }, [event.days, event.schedule])
 
   const defaultDay =
     event.currentDay > 0 && scheduleDays.includes(event.currentDay)
@@ -53,6 +59,13 @@ export function EventSchedulePanel({
     selectedDayInfo && !isLaunchEventDayLocked(selectedDayInfo)
       ? selectedDayInfo.title
       : null
+
+  const selectedDateLabel =
+    selectedDayInfo && !isLaunchEventDayLocked(selectedDayInfo)
+      ? selectedDayInfo.dateLabel
+      : !selectedDayInfo && dayEvents.length > 0
+        ? formatInitScheduleDayDateLabel(dayEvents[0].startsAt)
+        : null
 
   return (
     <div
@@ -116,9 +129,7 @@ export function EventSchedulePanel({
         </div>
         <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Day {selectedDay}
-          {selectedDayInfo && !isLaunchEventDayLocked(selectedDayInfo)
-            ? ` · ${selectedDayInfo.dateLabel}`
-            : null}
+          {selectedDateLabel ? ` · ${selectedDateLabel}` : null}
           {selectedTitle ? ` · ${selectedTitle}` : null}
         </p>
       </div>

@@ -31,6 +31,7 @@
     "test:ui": "playwright test --ui",
     "test:unit": "bun test tests/unit",
     "import:blog": "bun run scripts/import-blog.ts",
+    "import:changelog": "bun run scripts/import-changelog.ts && bun run generate:sitemap && bun run generate:docs-exports && bun run generate:cover-manifest",
     "import:docs": "bun run scripts/import-docs.ts && bun run generate:docs",
     "import:integrations": "bun run scripts/import-integrations.ts && bun run generate:sitemap",
     "generate:blog-local-images": "bun run scripts/generate-blog-local-images.ts",
@@ -52,7 +53,7 @@
     "i18n:audit:ja": "bun run scripts/i18n-audit-ja.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@6b0c8ad",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@c876d8d",
     "@appwrite.io/specs": "github:appwrite/specs",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -122,6 +123,7 @@
     "js-yaml": "^4.2.0",
     "lucide-react": "^0.544.0",
     "maplibre-gl": "^4.7.1",
+    "mediabunny": "^1.55.3",
     "monaco-editor": "^0.55.1",
     "motion": "^12.23.22",
     "next-themes": "^0.4.6",

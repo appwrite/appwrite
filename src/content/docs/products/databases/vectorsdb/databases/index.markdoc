@@ -7,15 +7,12 @@ Databases are the largest organizational unit in Appwrite.
 Each database contains a group of [collections](/docs/products/databases/vectorsdb/collections).
 
 # Shared and dedicated databases {% #shared-and-dedicated %}
-VectorsDB databases run on either shared or dedicated infrastructure.
+A VectorsDB database runs either on a shared pool that Appwrite manages for you, or on compute provisioned for your project alone.
 
-Shared databases run on infrastructure that Appwrite manages and scales for you. They are the fastest way to get started and you can create them from the Console or programmatically with a [Server SDK](/docs/sdks#server).
-
-Dedicated databases run on infrastructure provisioned for your project alone. They can only be created from the Appwrite Console. Once created, you manage their collections and documents with the same SDK methods as a shared database.
+Leave `specification` out and the database lands on the shared pool, where it is ready to use as soon as the call returns. Pass a specification instead and Appwrite provisions a dedicated database on that tier, which you can then resize, replicate, and fail over. Collections and documents work through the same methods either way.
 
 # Create in Console {% #create-in-console %}
-The easiest way to create a database is using the Appwrite Console.
-Navigate to the **Databases** page and click **Create database**, choose **VectorsDB** as the database type, and select your preferred tier.
+Navigate to the **Databases** page and click **Create database**, then choose **VectorsDB** as the database type. Name the database, select your preferred tier, and pick a replica count and backup policy. Click **Create database** to finish.
 
 # Create using Server SDKs {% #create-using-server-sdks %}
 You can programmatically create a shared database using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
@@ -192,7 +189,7 @@ let database = try await vectorsDB.create(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -207,6 +204,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "<DATABASE_ID>",
         "<NAME>",
         None, // enabled (optional)
+        None, // specification (optional)
+        None, // replicas (optional)
+        None, // sync_mode (optional)
     ).await?;
 
     println!("{:?}", result);
@@ -214,11 +214,191 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db create \
+appwrite vectorsdb create \
     --database-id <DATABASE_ID> \
     --name <NAME>
 ```
 {% /multicode %}
+
+# Choose a specification {% #choose-a-specification %}
+Three parameters on `create` and `update` decide what a database runs on.
+
+| Parameter | Description |
+| --- | --- |
+| `specification` | The compute tier. Defaults to `serverless`, which is the shared pool. Any other value provisions a dedicated database on that tier. |
+| `replicas` | How many high availability replicas back a dedicated database, from 0 to 5. High availability turns on above 0. |
+| `syncMode` | How replicas acknowledge writes: `async`, `sync`, or `quorum`. It applies once the database has at least one replica. |
+
+{% info title="Replicas need a dedicated specification" %}
+`replicas` and `syncMode` only apply to a dedicated database. Passing either one alongside a serverless specification fails with `database_ha_requires_dedicated`.
+{% /info %}
+
+Use the `listSpecifications` method to read the tiers your organization can select, along with their CPU, memory, connection limit, and price.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.listSpecifications();
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.listSpecifications();
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->listSpecifications();
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.list_specifications()
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.list_specifications()
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+DedicatedDatabaseSpecificationList result = await vectorsDB.ListSpecifications();
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+DedicatedDatabaseSpecificationList result = await vectorsDB.listSpecifications();
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val response = vectorsDB.listSpecifications()
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.listSpecifications(new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+        error.printStackTrace();
+        return;
+    }
+
+    System.out.println(result);
+}));
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let dedicatedDatabaseSpecificationList = try await vectorsDB.listSpecifications()
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::VectorsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.list_specifications().await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectorsdb list-specifications
+```
+{% /multicode %}
+
+Each entry has a `slug` to pass as `specification`, and an `enabled` flag that tells you whether your current plan can select it.
 
 # List databases {% #list-databases %}
 Use the `list` method to retrieve all databases in your project.
@@ -366,7 +546,7 @@ let databaseList = try await vectorsDB.list()
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -379,7 +559,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let result = vectors_db.list(
         None, // queries (optional)
-        None, // search (optional)
         None, // total (optional)
     ).await?;
 
@@ -388,7 +567,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db list
+appwrite vectorsdb list
 ```
 {% /multicode %}
 
@@ -557,7 +736,7 @@ let database = try await vectorsDB.get(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -577,7 +756,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db get \
+appwrite vectorsdb get \
     --database-id <DATABASE_ID>
 ```
 {% /multicode %}
@@ -757,7 +936,7 @@ let database = try await vectorsDB.update(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -772,6 +951,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "<DATABASE_ID>",
         "<NAME>",
         None, // enabled (optional)
+        None, // specification (optional)
+        None, // replicas (optional)
+        None, // sync_mode (optional)
     ).await?;
 
     println!("{:?}", result);
@@ -779,7 +961,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db update \
+appwrite vectorsdb update \
     --database-id <DATABASE_ID> \
     --name <NAME>
 ```
@@ -950,7 +1132,7 @@ try await vectorsDB.delete(
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -969,7 +1151,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite vectors-db delete \
+appwrite vectorsdb delete \
     --database-id <DATABASE_ID>
 ```
 {% /multicode %}

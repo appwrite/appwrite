@@ -123,7 +123,7 @@ export const DOCS_HOME_IDE_AI_TOOLS: DocsHomeToolCard[] = [
   {
     title: 'Codex',
     href: '/docs/tooling/ai/agents/codex',
-    iconSrc: '/icons/chatgpt.svg',
+    iconSrc: '/icons/codex.svg',
     badges: [OFFICIAL_TOOL_BADGE],
   },
   {
@@ -151,6 +151,11 @@ export const DOCS_HOME_IDE_AI_TOOLS: DocsHomeToolCard[] = [
     title: 'Google Antigravity',
     href: '/docs/tooling/ai/agents/antigravity',
     iconSrc: '/icons/google-antigravity.svg',
+  },
+  {
+    title: 'Grok Build',
+    href: '/docs/tooling/ai/agents/grok-build',
+    iconSrc: '/icons/grok-build.svg',
   },
 ]
 

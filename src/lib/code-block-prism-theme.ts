@@ -1,14 +1,9 @@
 import type { CSSProperties } from 'react'
 import type { PrismTheme } from 'prism-react-renderer'
-import { themes } from 'prism-react-renderer'
 import {
-  getCodeSyntaxColors,
+  CODE_SYNTAX_COLORS_CSS_VARS,
   prismSyntaxHighlightStyles,
 } from '@/lib/code-syntax-theme'
-import {
-  isHtmlDarkChrome,
-  isResolvedThemeDarkChrome,
-} from '@/lib/html-theme'
 
 const PRISM_BACKGROUND_KEYS = [
   'background',
@@ -30,24 +25,17 @@ export const CODE_BLOCK_PRISM_SURFACE_CLASS =
  * Connect modal and docs both render through ConnectCodeExample → CodeBlock →
  * buildCodeBlockPrismTheme(). Edit token colors here once; both surfaces update.
  */
-export function buildCodeBlockPrismTheme(
-  resolvedTheme: string | undefined,
-): PrismTheme {
-  const isDark =
-    resolvedTheme !== undefined
-      ? isResolvedThemeDarkChrome(resolvedTheme)
-      : isHtmlDarkChrome()
-
-  const base = isDark ? themes.vsDark : themes.vsLight
-  const colors = getCodeSyntaxColors(isDark)
-
+export function buildCodeBlockPrismTheme(): PrismTheme {
   return {
     plain: {
-      color: base.plain.color,
+      color: 'var(--code-plain)',
       backgroundColor: 'transparent',
       background: 'transparent',
     },
-    styles: prismSyntaxHighlightStyles(colors, base.plain.color),
+    styles: prismSyntaxHighlightStyles(
+      CODE_SYNTAX_COLORS_CSS_VARS,
+      'var(--code-plain)',
+    ),
   }
 }
 

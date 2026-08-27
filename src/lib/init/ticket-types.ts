@@ -92,8 +92,10 @@ export const INIT_TICKET_TYPE_CATALOG: Record<
     themeBackgroundSrcDark: INIT_TICKET_BG_SRC_DARK,
     themeAccentColorLight: 'var(--brand-cta)',
     themeAccentColorDark: 'var(--brand-cta)',
-    shadowClassName: 'bg-black/8',
-    shadowClassNameDarkTheme: 'bg-black/8',
+    shadowClassName:
+      'bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.14)_0%,rgba(0,0,0,0.05)_42%,transparent_72%)]',
+    shadowClassNameDarkTheme:
+      'bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.28)_0%,rgba(0,0,0,0.1)_42%,transparent_72%)]',
     shadowOffsetY: 0,
     passLabel: 'Init pass',
     holderTitle: 'Appwrite developer',
@@ -103,7 +105,8 @@ export const INIT_TICKET_TYPE_CATALOG: Record<
     backgroundSrc: INIT_TICKET_BG_SRC_SILVER,
     forceDarkChrome: true,
     accentColor: '#E4E4E7',
-    shadowClassName: 'bg-black/8',
+    shadowClassName:
+      'bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.28)_0%,rgba(0,0,0,0.1)_42%,transparent_72%)]',
     shadowOffsetY: 0,
     passLabel: 'Appwrite VIP',
     holderTitle: 'Appwrite developer',
@@ -113,6 +116,8 @@ export const INIT_TICKET_TYPE_CATALOG: Record<
     backgroundSrc: INIT_TICKET_BG_SRC_GOLD,
     forceDarkChrome: true,
     accentColor: '#FBBF24',
+    shadowClassName:
+      'bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.28)_0%,rgba(0,0,0,0.1)_42%,transparent_72%)]',
     shadowOffsetY: 0,
     passLabel: 'Contributor',
     holderTitle: 'Appwrite developer',

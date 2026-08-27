@@ -14,17 +14,12 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Copy, Check, Maximize2 } from 'lucide-react'
 import { Highlight, Prism } from 'prism-react-renderer'
-import { useTheme } from 'next-themes'
 import {
   buildCodeBlockPrismTheme,
   CODE_BLOCK_PRISM_SURFACE_CLASS,
   resolvePrismPreSurfaceStyle,
   stripPrismTokenBackground,
 } from '@/lib/code-block-prism-theme'
-import {
-  isHtmlDarkChrome,
-  isResolvedThemeDarkChrome,
-} from '@/lib/html-theme'
 import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { Button } from '@/components/ui/button'
@@ -304,7 +299,10 @@ export function CodeBlock({
   wrapLines = false,
 }: CodeBlockProps) {
   const t = useT()
-  const resolvedSurface = resolveCodeBlockSurface(surface, transparentBackground)
+  const resolvedSurface = resolveCodeBlockSurface(
+    surface,
+    transparentBackground,
+  )
   const [copied, setCopied] = useState(false)
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
   const preRef = useRef<HTMLPreElement>(null)
@@ -318,11 +316,6 @@ export function CodeBlock({
     Boolean(Prism.languages[prismLanguage])
   // Bump when async Prism grammars finish loading so Highlight re-tokenizes.
   const [, setLoadGeneration] = useState(0)
-  const { resolvedTheme } = useTheme()
-  const isDarkChrome =
-    resolvedTheme !== undefined
-      ? isResolvedThemeDarkChrome(resolvedTheme)
-      : isHtmlDarkChrome()
 
   const handleWheel = (e: React.WheelEvent<HTMLPreElement>) => {
     const pre = preRef.current
@@ -371,10 +364,7 @@ export function CodeBlock({
 
   const effectiveLanguage = languageIsRegistered ? prismLanguage : 'plaintext'
   const displayCode = useMemo(() => normalizeCodeBlockContent(code), [code])
-  const prismTheme = useMemo(
-    () => buildCodeBlockPrismTheme(resolvedTheme),
-    [isDarkChrome],
-  )
+  const prismTheme = useMemo(() => buildCodeBlockPrismTheme(), [])
 
   const isHeadless = variant === 'headless'
   const isNestedSurface = resolvedSurface === 'muted'
@@ -465,9 +455,7 @@ export function CodeBlock({
           <div
             className={cn(
               'flex h-10 shrink-0 items-center justify-between px-3',
-              isHeadless
-                ? 'border-0 bg-muted/20'
-                : 'border-b border-border',
+              isHeadless ? 'border-0 bg-muted/20' : 'border-b border-border',
             )}
           >
             <span className="text-[11px] font-medium text-muted-foreground">

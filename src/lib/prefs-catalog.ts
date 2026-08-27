@@ -119,7 +119,6 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     description: 'Dismissed coming-soon feature IDs (comma-separated).',
     category: 'Account',
   },
-
   // Layout / chrome
   {
     id: 'sidebarCollapsed',

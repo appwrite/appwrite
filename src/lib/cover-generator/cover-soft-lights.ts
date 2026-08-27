@@ -183,6 +183,7 @@ export const COVER_SOFT_LIGHT_VARIANTS: Record<
   beam: COVER_BEAM_SOFT_LIGHT_LAYOUT,
   glow: COVER_GLOW_SOFT_LIGHT_LAYOUT,
   mono: COVER_MONO_SOFT_LIGHT_LAYOUT,
+  none: {},
 }
 
 /** Dark hero themes get larger corner washes so the glow reads on the dark base. */
@@ -330,6 +331,10 @@ export function getCoverSoftLightLayoutsForTheme(
 ): Array<[string, CoverSoftLightLayout]> {
   const theme = getCoverTheme(themeId)
 
+  if (theme.softLightVariant === 'none') {
+    return []
+  }
+
   if (
     context?.templateId === 'integration-icon' &&
     theme.softLightVariant !== 'glow'
@@ -408,7 +413,7 @@ export function buildCoverSoftLightSvgDefs(
 }
 
 /**
- * Background stack: solid fill → pattern grid → soft lights (lights on top).
+ * Background stack: solid fill → pattern grid → soft lights.
  */
 export function buildCoverBrandBackgroundSvgLayers(
   themeId: CoverThemeId,
@@ -453,7 +458,9 @@ export function buildCoverBrandBackgroundSvgLayers(
   }
 }
 
-export function getCoverBackgroundGridStyleForTheme(themeId: CoverThemeId): {
+export function getCoverBackgroundGridStyleForTheme(
+  themeId: CoverThemeId,
+): {
   backgroundImage: string
   backgroundSize: string
   backgroundPosition?: string

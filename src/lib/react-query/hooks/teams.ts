@@ -99,6 +99,7 @@ export function mapOrganizationMembershipsToTeamMembers(
       name?: string
       userEmail?: string
       email?: string
+      userId?: string
       roles?: string[]
       role?: string
       user?: {
@@ -117,6 +118,7 @@ export function mapOrganizationMembershipsToTeamMembers(
 
     const name = m.userName || m.name || ''
     const email = m.userEmail || m.email || ''
+    const userId = m.userId?.trim() || undefined
 
     let role:
       | 'owner'
@@ -177,6 +179,7 @@ export function mapOrganizationMembershipsToTeamMembers(
 
     return {
       $id: m.$id || m.id,
+      userId,
       userName: name,
       userEmail: email,
       avatar,

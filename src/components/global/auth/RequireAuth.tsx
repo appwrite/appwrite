@@ -14,6 +14,7 @@ import {
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import {
@@ -38,9 +39,9 @@ function isAuthPage(pathname: string): boolean {
 /** Console routes that work without sign-in; account is optional. */
 export function isOptionalAuthPage(pathname: string): boolean {
   const features = getActiveProfileFeatures()
-  // Soft-launch password gate; guests land here before marketing/console.
-  if (pathname === '/access') return true
-  if (pathname === '/init') return features.init
+  if (pathname === '/init' || pathname.startsWith('/init/')) {
+    return isInitSurfaceEnabled()
+  }
   // Legacy `/agent` / `/assistant` still soft-auth while they redirect into org scope.
   if (
     pathname === '/agent' ||

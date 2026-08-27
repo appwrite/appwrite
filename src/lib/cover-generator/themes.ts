@@ -14,7 +14,7 @@ export type CoverThemeFamily = 'light' | 'dark'
 
 export type CoverBackgroundGridStyle = 'dots' | 'grid' | 'diagonal' | 'none'
 
-export type CoverSoftLightVariant = 'hero' | 'aurora' | 'beam' | 'glow' | 'mono'
+export type CoverSoftLightVariant = 'hero' | 'aurora' | 'beam' | 'glow' | 'mono' | 'none'
 
 export const COVER_BACKGROUND_GRID_LABELS: Record<CoverBackgroundGridStyle, string> = {
   dots: 'Dotted grid',
@@ -249,6 +249,11 @@ export function pickRandomCoverEditorThemeId(): CoverEditorThemeId {
   return COVER_EDITOR_THEME_IDS[index] ?? 'dark-plain'
 }
 
+const COVER_THEME_ID_ALIASES: Record<string, CoverThemeId> = {
+  'light-squares': 'light-plain',
+  'dark-squares': 'dark-plain',
+}
+
 export function isCoverThemeId(value: string): value is CoverThemeId {
   return (COVER_THEME_IDS as readonly string[]).includes(value)
 }
@@ -256,8 +261,10 @@ export function isCoverThemeId(value: string): value is CoverThemeId {
 export function resolveCoverThemeId(
   themeId: CoverThemeId | string | null | undefined,
 ): CoverThemeId {
-  if (typeof themeId === 'string' && isCoverThemeId(themeId)) {
-    return themeId
+  if (typeof themeId === 'string') {
+    if (isCoverThemeId(themeId)) return themeId
+    const aliased = COVER_THEME_ID_ALIASES[themeId]
+    if (aliased) return aliased
   }
 
   return DEFAULT_COVER_THEME_ID

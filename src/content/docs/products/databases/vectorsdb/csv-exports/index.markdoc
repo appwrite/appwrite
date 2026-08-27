@@ -69,11 +69,15 @@ doc-2,"[0.2,0.1,0.6,0.1]","read(""team:team-456""),update(""team:team-456"")"
 
 The roles used are API strings that can be found in the [permissions documentation](/docs/products/databases/vectorsdb/permissions).
 
+# Run the export {% #run-export %}
+
+Start an export with `POST /v1/migrations/csv/exports` and an [API key](/docs/advanced/platform/api-keys) that has the `migrations.write` scope. The request takes the `databaseId` and `collectionId` you are exporting, plus a `filename` for the file it writes. The `columns`, `queries`, `delimiter`, `enclosure`, `escape`, and `header` parameters described above are all optional.
+
 # Background processing {% #background-processing %}
 
-Large exports run as background tasks so they don't block your workflow. When an export completes, you receive an email with a short-lived download link to retrieve your CSV file.
+Exports run as background jobs, so a large collection doesn't block your workflow. Appwrite emails you a download link when the export finishes, unless you pass `notify` as `false`.
 
-This means you can start an export, close the Console, and return later to download your file. The Console displays a floating progress bar while the export is active.
+Open the database and select the **Export / Import** tab to watch the job and download the file once it completes.
 
 # Use cases {% #use-cases %}
 

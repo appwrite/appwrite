@@ -194,8 +194,7 @@ export function notifyInitTicketPrefsChange(
 export function buildInitTicketShareMessage(params: {
   eventName: string
   dateRangeLabel: string
-  holderName: string
   shareUrl: string
 }): string {
-  return `I'm going to ${params.eventName} (${params.dateRangeLabel}) as ${params.holderName}. One ticket holder wins exclusive Init swag on the last day - claim your pass: ${params.shareUrl}`
+  return `Something big is coming. I'm going to ${params.eventName} (${params.dateRangeLabel}). Five days of Appwrite launches, live sessions, and surprises. One ticket holder wins exclusive swag on the last day. Claim your pass: ${params.shareUrl}`
 }

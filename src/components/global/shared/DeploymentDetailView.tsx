@@ -28,6 +28,7 @@ import {
 import { useTheme } from 'next-themes'
 import {
   getDeploymentStatusBadge,
+  canDownloadDeploymentBuildOutput,
   isDeploymentCompleted,
   isDeploymentInProgress,
   isDeploymentTimeout,
@@ -1209,9 +1210,9 @@ export function DeploymentDetailView({
     onDownloadSource(projectId, resourceId, apiDeploymentId)
   }
 
-  // Handle download build output (only when deployment has completed)
+  // Handle download build output (only when deployment is ready)
   const handleDownloadBuild = () => {
-    if (!isDeploymentCompleted(deployment?.status)) return
+    if (!canDownloadDeploymentBuildOutput(deployment?.status)) return
     onDownloadBuild(projectId, resourceId, apiDeploymentId)
   }
 
@@ -1842,11 +1843,13 @@ export function DeploymentDetailView({
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleDownloadBuild}
-                    disabled={!isDeploymentCompleted(deployment?.status)}
+                    disabled={
+                      !canDownloadDeploymentBuildOutput(deployment?.status)
+                    }
                     title={
-                      !isDeploymentCompleted(deployment?.status)
+                      !canDownloadDeploymentBuildOutput(deployment?.status)
                         ? t(
-                            'Build output is available after the deployment has completed.',
+                            'Build output is only available for ready deployments.',
                           )
                         : undefined
                     }
@@ -2015,11 +2018,13 @@ export function DeploymentDetailView({
                       handleDownloadBuild()
                       setDeploymentActionsDrawerOpen(false)
                     }}
-                    disabled={!isDeploymentCompleted(deployment?.status)}
+                    disabled={
+                      !canDownloadDeploymentBuildOutput(deployment?.status)
+                    }
                     title={
-                      !isDeploymentCompleted(deployment?.status)
+                      !canDownloadDeploymentBuildOutput(deployment?.status)
                         ? t(
-                            'Build output is available after the deployment has completed.',
+                            'Build output is only available for ready deployments.',
                           )
                         : undefined
                     }

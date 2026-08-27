@@ -57,6 +57,7 @@ import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
 import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
 import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 import { useT } from '@/lib/i18n/translate'
+import { getRedeploySourceDeploymentId } from '@/lib/utils/deployment-status'
 
 /** When provided, Deployments view renders this below the active deployment card (filter + create). */
 export const DeploymentsToolbarContext =
@@ -111,7 +112,7 @@ function SiteLayoutContent() {
     return 'deployments'
   }, [location.pathname])
 
-  const activeDeploymentId = site?.deploymentId
+  const activeDeploymentId = getRedeploySourceDeploymentId(site)
   const isLogsTab = activeTab === 'logs'
   const cachedActiveDeployment =
     projectId && siteId && activeDeploymentId
@@ -395,7 +396,7 @@ function SiteLayoutContent() {
                 className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                 onClick={() => setRedeployDialogOpen(true)}
                 disabled={
-                  !site.deploymentId ||
+                  !activeDeploymentId ||
                   !activeDeployment ||
                   redeployMutation.isPending
                 }

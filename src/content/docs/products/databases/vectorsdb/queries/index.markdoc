@@ -30,6 +30,8 @@ By default, results are limited to the **first 25 items**.
 You can change this through [pagination](/docs/products/databases/vectorsdb/pagination).
 {% /info %}
 
+A single request accepts up to 100 queries. Because `listDocuments` sends them in the URL, a long list or a wide vector query can push past the URL length limit. `createQuery` accepts the same queries in the request body, where that limit does not apply. See [Send queries in the request body](/docs/products/databases/vectorsdb/vector-search#create-query).
+
 {% multicode %}
 
 ```client-web
@@ -37,7 +39,7 @@ import { Client, Query, VectorsDB } from "appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>');
+    .setProject('<YOUR_PROJECT_ID>');
 
 const vectorsDB = new VectorsDB(client);
 
@@ -59,7 +61,7 @@ const vectorsDB = new sdk.VectorsDB(client);
 
 client
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
+    .setProject('<YOUR_PROJECT_ID>')
     .setKey('<YOUR_API_KEY>')
 ;
 
@@ -84,7 +86,7 @@ import 'package:appwrite/appwrite.dart';
 void main() async {
     final client = Client()
         .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-        .setProject('<PROJECT_ID>');
+        .setProject('<YOUR_PROJECT_ID>');
 
     final vectorsDB = VectorsDB(client);
 
@@ -109,7 +111,7 @@ import AppwriteModels
 func main() async throws {
     let client = Client()
         .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
-        .setProject("<PROJECT_ID>")
+        .setProject("<YOUR_PROJECT_ID>")
 
     let vectorsDB = VectorsDB(client)
 
@@ -135,7 +137,7 @@ import io.appwrite.services.VectorsDB
 suspend fun main() {
     val client = Client(applicationContext)
         .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-        .setProject('<PROJECT_ID>');
+        .setProject('<YOUR_PROJECT_ID>');
 
     val vectorsDB = VectorsDB(client)
 
@@ -167,8 +169,8 @@ import (
 func main() {
     client := appwrite.NewClient(
         appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
-        appwrite.WithProject("<PROJECT_ID>"),
-        appwrite.WithKey("<API_KEY>"),
+        appwrite.WithProject("<YOUR_PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
     )
 
     vectorsDB := appwrite.NewVectorsDB(client)
@@ -190,7 +192,7 @@ func main() {
 ```
 ```server-rust
 use appwrite::Client;
-use appwrite::services::vectors_db::VectorsDB;
+use appwrite::services::VectorsDB;
 use appwrite::query::Query;
 use serde_json::Value;
 
@@ -198,7 +200,7 @@ use serde_json::Value;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new()
         .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
-        .set_project("<PROJECT_ID>")
+        .set_project("<YOUR_PROJECT_ID>")
         .set_key("<YOUR_API_KEY>");
 
     let vectors_db = VectorsDB::new(&client);
@@ -233,7 +235,7 @@ $client = new Client();
 
 $client
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    ->setProject('<PROJECT_ID>')
+    ->setProject('<YOUR_PROJECT_ID>')
     ->setKey('<YOUR_API_KEY>')
 ;
 
@@ -257,7 +259,7 @@ client = Client()
 
 (client
   .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
-  .set_project('<PROJECT_ID>')
+  .set_project('<YOUR_PROJECT_ID>')
   .set_key('<YOUR_API_KEY>')
 )
 
@@ -293,10 +295,10 @@ query {
 ```http
 GET /v1/vectorsdb/<DATABASE_ID>/collections/<COLLECTION_ID>/documents?queries[]=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22metadata.genre%22%2C%22values%22%3A%5B%22sci-fi%22%2C%22drama%22%5D%7D&queries[]=%7B%22method%22%3A%22greaterThan%22%2C%22attribute%22%3A%22metadata.year%22%2C%22values%22%3A%5B%222010%22%5D%7D HTTP/1.1
 Content-Type: application/json
-X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-Project: <YOUR_PROJECT_ID>
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"equal","attribute":"metadata.genre","values":["sci-fi","drama"]}' '{"method":"greaterThan","attribute":"metadata.year","values":["2010"]}'
@@ -341,7 +343,7 @@ Query.select(["metadata"])
 Query::select(vec!["metadata"]).to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"select","values":["metadata"]}'
@@ -405,7 +407,7 @@ Query.equal("metadata.genre", ["sci-fi"])
 Query::equal("metadata.genre", Value::Array(vec![Value::String("sci-fi".to_string())])).to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]}'
@@ -451,7 +453,7 @@ Query.notEqual("metadata.genre", "sci-fi")
 Query::not_equal("metadata.genre", "sci-fi").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"notEqual","attribute":"metadata.genre","values":["sci-fi"]}'
@@ -497,7 +499,7 @@ Query.lessThan("metadata.year", "2009")
 Query::less_than("metadata.year", "2009").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"lessThan","attribute":"metadata.year","values":["2009"]}'
@@ -543,7 +545,7 @@ Query.lessThanEqual("metadata.year", "2009")
 Query::less_than_equal("metadata.year", "2009").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"lessThanEqual","attribute":"metadata.year","values":["2009"]}'
@@ -589,7 +591,7 @@ Query.greaterThan("metadata.year", "2009")
 Query::greater_than("metadata.year", "2009").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"greaterThan","attribute":"metadata.year","values":["2009"]}'
@@ -635,7 +637,7 @@ Query.greaterThanEqual("metadata.year", "2009")
 Query::greater_than_equal("metadata.year", "2009").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"greaterThanEqual","attribute":"metadata.year","values":["2009"]}'
@@ -681,7 +683,7 @@ Query.between("metadata.year", "2005", "2010")
 Query::between("metadata.year", "2005", "2010").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"between","attribute":"metadata.year","values":["2005","2010"]}'
@@ -733,7 +735,7 @@ Query.notBetween("metadata.year", start: "2005", end: "2010")
 Query::not_between("metadata.year", "2005", "2010").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"notBetween","attribute":"metadata.year","values":["2005","2010"]}'
@@ -781,7 +783,7 @@ Query.isNull("metadata.archived")
 Query::is_null("metadata.archived").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"isNull","attribute":"metadata.archived"}'
@@ -827,7 +829,7 @@ Query.isNotNull("metadata.archived")
 Query::is_not_null("metadata.archived").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"isNotNull","attribute":"metadata.archived"}'
@@ -875,7 +877,7 @@ Query.startsWith("metadata.title", "Iron")
 Query::starts_with("metadata.title", "Iron").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"startsWith","attribute":"metadata.title","values":["Iron"]}'
@@ -927,7 +929,7 @@ Query.notStartsWith("metadata.title", value: "Iron")
 Query::not_starts_with("metadata.title", "Iron").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"notStartsWith","attribute":"metadata.title","values":["Iron"]}'
@@ -973,7 +975,7 @@ Query.endsWith("metadata.title", "Man")
 Query::ends_with("metadata.title", "Man").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"endsWith","attribute":"metadata.title","values":["Man"]}'
@@ -1025,7 +1027,7 @@ Query.notEndsWith("metadata.title", value: "Man")
 Query::not_ends_with("metadata.title", "Man").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"notEndsWith","attribute":"metadata.title","values":["Man"]}'
@@ -1113,7 +1115,7 @@ Query::contains("metadata.tags", Value::Array(vec![
 Query::contains("metadata.title", "Iron").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"contains","attribute":"metadata.tags","values":["space"]}'
@@ -1254,7 +1256,7 @@ Query::not_contains("metadata.tags", Value::Array(vec![
 Query::not_contains("metadata.title", "Iron").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"notContains","attribute":"metadata.tags","values":["space"]}'
@@ -1336,7 +1338,7 @@ Query::and(vec![
 ]).to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"and","values":[{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]},{"method":"startsWith","attribute":"metadata.title","values":["Inter"]}]}'
@@ -1412,7 +1414,7 @@ Query::or(vec![
 ]).to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"or","values":[{"method":"equal","attribute":"metadata.genre","values":["romance"]},{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]}]}'
@@ -1459,7 +1461,7 @@ query.OrderDesc("$createdAt")
 Query::order_desc("$createdAt").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"orderDesc","attribute":"$createdAt"}'
@@ -1502,7 +1504,7 @@ query.OrderAsc("$createdAt")
 Query::order_asc("$createdAt").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"orderAsc","attribute":"$createdAt"}'
@@ -1545,7 +1547,7 @@ query.OrderRandom()
 Query::order_random().to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"orderRandom"}'
@@ -1593,7 +1595,7 @@ Query.limit(25)
 Query::limit(25).to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"limit","values":[25]}'
@@ -1639,7 +1641,7 @@ Query.offset(0)
 Query::offset(0).to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"offset","values":[0]}'
@@ -1685,7 +1687,7 @@ Query.cursorAfter("62a7...f620")
 Query::cursor_after("62a7...f620").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"cursorAfter","values":["62a7...f620"]}'
@@ -1731,7 +1733,7 @@ Query.cursorBefore("62a7...a600")
 Query::cursor_before("62a7...a600").to_string()
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"cursorBefore","values":["62a7...a600"]}'
@@ -1861,7 +1863,7 @@ let documents = vectors_db.list_documents(
 ).await?;
 ```
 ```bash
-appwrite vectors-db list-documents \
+appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"or","values":[{"method":"and","values":[{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]},{"method":"greaterThan","attribute":"metadata.year","values":["2010"]}]},{"method":"and","values":[{"method":"equal","attribute":"metadata.genre","values":["romance"]},{"method":"lessThan","attribute":"metadata.year","values":["2005"]}]}]}'

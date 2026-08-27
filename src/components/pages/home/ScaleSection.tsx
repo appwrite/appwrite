@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useT } from '@/lib/i18n/translate'
+import { GITHUB_STARS_THOUSANDS } from '@/lib/marketing/social-stats'
 import { cn } from '@/lib/utils'
 
 const SCALE_QUOTE = {
@@ -44,7 +45,7 @@ function ScaleQuoteBelowChart() {
 
 const SCALE_STATS = [
   { value: 24, suffix: 'K+', label: 'Discord members' },
-  { value: 56, suffix: 'K+', label: 'GitHub stars' },
+  { value: GITHUB_STARS_THOUSANDS, suffix: 'K+', label: 'GitHub stars' },
   { value: 300, suffix: '+', label: 'PoP locations' },
   { value: 300, suffix: 'K+', label: 'Cloud projects' },
   { value: 500, suffix: 'K+', label: 'Developers' },

@@ -40,7 +40,7 @@ Use **Functions** when only one function's public traffic should be protected or
 - Deny non-`POST` methods on an HTTP-triggered function endpoint
 - Bypass Firewall checks for a trusted caller IP on that function only
 
-Select the function in the create wizard. The rule appears under the **Functions** tab, grouped by that function.
+Select the function in the create wizard. The rule appears when that function is selected in the resource selector.
 
 # When to use Sites {% #when-to-use-sites %}
 
@@ -50,12 +50,21 @@ Use **Sites** for a single deployed web app's public traffic:
 - Deny admin paths on a marketing site
 - Rate limit form submission paths for one site
 
-Select the site in the create wizard. The rule appears under the **Sites** tab.
+Select the site in the create wizard. The rule appears when that site is selected in the resource selector.
 
-# Tabs in the Console {% #tabs-in-the-console %}
+[Attack mode](/docs/products/firewall/attack-mode) is available only in this scope. Select a site on the Firewall page to challenge every visitor with one click during an incident.
 
-The Firewall page filters the list by scope tab. Creating a rule from a tab preselects that resource type. You can change the type in the create wizard or later when [updating](/docs/products/firewall/update) the rule.
+# Resource selector in the Console {% #resource-selector-in-the-console %}
 
-{% arrow_link href="/docs/products/firewall/create" %}
-Create a rule
+{% only_dark %}
+![Firewall resource selector with API and site scopes](/images/docs/firewall/dark/resource-selector.avif)
+{% /only_dark %}
+{% only_light %}
+![Firewall resource selector with API and site scopes](/images/docs/firewall/resource-selector.avif)
+{% /only_light %}
+
+The Firewall page filters the rules list with a resource selector. The **Project** group holds the **API** scope, and each function and site appears under its own group. Creating a rule while a function or site is selected preselects that resource in the wizard. You can change the resource type in the create wizard, or later from the rule's **Update** action.
+
+{% arrow_link href="/docs/products/firewall/site-maintenance" %}
+Redirect a site for maintenance
 {% /arrow_link %}

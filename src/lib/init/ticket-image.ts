@@ -76,8 +76,6 @@ export function buildInitTicketImageRenderData(
   const ticketNumber =
     searchParams.get('ticketNumber')?.trim() ||
     getInitTicketNumberForUser(searchParams.get('userId'))
-  const githubUsername =
-    searchParams.get('github')?.trim().replace(/^@+/, '') || undefined
 
   return buildInitTicketRenderData({
     event,
@@ -85,7 +83,6 @@ export function buildInitTicketImageRenderData(
     themeUsesDarkImage: parseThemeUsesDarkImage(searchParams),
     mockTypeId: parseTicketType(searchParams),
     fallbackHolderName: 'Your name',
-    githubUsername,
     ticketNumber,
   })
 }

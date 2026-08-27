@@ -33,7 +33,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     dateRangeLabel: 'AUGUST 31 - SEPTEMBER 4',
     headline: 'Init is happening August 31 - September 4',
     description:
-      'Init is happening August 31 - September 4. A week of exciting product launches, live sessions, and community events. Five days of launches, demos, and surprises.',
+      'Appwrite Init is happening August 31 - September 4. A week of exciting product launches, live sessions, and community events. Five days of launches, demos, and surprises.',
     startDate: '2026-08-31',
     endDate: '2026-09-04',
     status: 'active',

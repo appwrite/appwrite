@@ -43,7 +43,11 @@ export function OriginIcon({ className }: { className?: string }) {
       className={className}
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="m410.344 159.545-146.38-84.5111c-4.7-2.7145-10.5-2.7145-15.2 0l-146.373 84.5111c-3.9515 2.282-6.391 6.501-6.391 11.071v170.418c0 4.569 2.4395 8.789 6.391 11.07l146.379 84.512c4.701 2.714 10.501 2.714 15.201 0l146.38-84.512c3.951-2.281 6.391-6.501 6.391-11.07v-170.418c0-4.57-2.44-8.789-6.391-11.071zm-9.195 17.902-141.308 244.751c-.955 1.65-3.477.976-3.477-.934v-160.261c0-3.203-1.711-6.164-4.487-7.772l-138.786-80.127c-1.65-.956-.976-3.478.934-3.478h282.616c4.013 0 6.522 4.35 4.515 7.828h-.007z" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="m410.344 159.545-146.38-84.5111c-4.7-2.7145-10.5-2.7145-15.2 0l-146.373 84.5111c-3.9515 2.282-6.391 6.501-6.391 11.071v170.418c0 4.569 2.4395 8.789 6.391 11.07l146.379 84.512c4.701 2.714 10.501 2.714 15.201 0l146.38-84.512c3.951-2.281 6.391-6.501 6.391-11.07v-170.418c0-4.57-2.44-8.789-6.391-11.071zm-9.195 17.902-141.308 244.751c-.955 1.65-3.477.976-3.477-.934v-160.261c0-3.203-1.711-6.164-4.487-7.772l-138.786-80.127c-1.65-.956-.976-3.478.934-3.478h282.616c4.013 0 6.522 4.35 4.515 7.828h-.007z"
+      />
     </svg>
   )
 }
@@ -148,6 +152,51 @@ export function getProviderOwnerUrl(
 ): string | null {
   const meta = getKnownVcsProvider(provider)
   return meta ? meta.baseUrl(organization) : null
+}
+
+function encodeVcsPath(value: string): string {
+  return value
+    .split('/')
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join('/')
+}
+
+/**
+ * Build a provider web URL for a pull request (or GitLab merge request).
+ * Returns null when the provider is unknown or any path piece is missing, so
+ * callers can leave the control non-clickable instead of inventing a GitHub URL.
+ */
+export function getProviderPullRequestUrl(params: {
+  provider?: string
+  organization?: string
+  repositoryName?: string
+  pullRequestId?: string
+}): string | null {
+  const meta = getKnownVcsProvider(params.provider)
+  const organization = params.organization?.trim()
+  const repositoryName = params.repositoryName?.trim()
+  const pullRequestId = params.pullRequestId?.trim()
+  if (!meta || !organization || !repositoryName || !pullRequestId) {
+    return null
+  }
+
+  const owner = encodeVcsPath(organization)
+  const repo = encodeVcsPath(repositoryName)
+  const id = encodeURIComponent(pullRequestId)
+
+  switch (meta.id) {
+    case 'github':
+      return `https://github.com/${owner}/${repo}/pull/${id}`
+    case 'gitlab':
+      return `https://gitlab.com/${owner}/${repo}/-/merge_requests/${id}`
+    case 'bitbucket':
+      return `https://bitbucket.org/${owner}/${repo}/pull-requests/${id}`
+    case 'origin':
+      return `https://cursor.com/codebase/${owner}/${repo}/pull/${id}`
+    default:
+      return null
+  }
 }
 
 /**

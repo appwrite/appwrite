@@ -39,6 +39,11 @@ export type ConsoleProfileFeatures = {
   accountMfa: boolean
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
+  /**
+   * Extra console OAuth login/signup providers (Google, GitLab, Bitbucket,
+   * Cursor). GitHub is always shown.
+   */
+  extraOAuthLogin: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
   /** Organization OAuth apps */
@@ -112,6 +117,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   systemStatus: 'System status',
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
+  extraOAuthLogin: 'Extra OAuth login',
   compliance: 'Compliance',
   oauthApps: 'OAuth apps',
   oauth2Server: 'OAuth2 server',
@@ -165,6 +171,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
+      extraOAuthLogin: false,
       compliance: true,
       oauthApps: false,
       oauth2Server: true,
@@ -208,6 +215,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
+      extraOAuthLogin: false,
       compliance: false,
       oauthApps: false,
       oauth2Server: false,
@@ -482,7 +490,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS), applied on top
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_OAUTH_LOGIN), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -502,6 +510,10 @@ function applyEnvFeatureOverrides(
   const blogDrafts = parseEnvFeatureOverride(config.blogDrafts)
   if (blogDrafts !== null) {
     next = { ...next, blogDrafts }
+  }
+  const extraOAuthLogin = parseEnvFeatureOverride(config.extraOAuthLogin)
+  if (extraOAuthLogin !== null) {
+    next = { ...next, extraOAuthLogin }
   }
   const usageStatsOverride = parseEnvFeatureOverride(config.usageStats)
   if (usageStatsOverride !== null) {

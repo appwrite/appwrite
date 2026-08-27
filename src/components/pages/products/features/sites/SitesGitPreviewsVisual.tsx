@@ -23,9 +23,9 @@ export function SitesGitPreviewsVisual() {
   const t = useT()
   return (
     <ProductFeatureVisualFrame
-      eyebrow="GitHub"
+      eyebrow="GitHub and Origin"
       title={t('Pull request')}
-      headerIconSrc="/icons/github.svg"
+      headerIconSrc={['/icons/github.svg', '/icons/origin.svg']}
     >
       <div className="flex gap-3">
         <BotAvatar />

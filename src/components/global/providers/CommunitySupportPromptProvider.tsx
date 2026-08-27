@@ -33,6 +33,7 @@ function shouldSuppressOnPath(pathname: string): boolean {
   if (isOptionalAuthPage(pathname)) return true
   if (isMarketingPagePath(pathname)) return true
   if (pathname.startsWith('/debug/')) return true
+  if (pathname.startsWith('/git/')) return true
   return false
 }
 

@@ -12,9 +12,15 @@ import { SignIn } from '@/components/global/auth/SignIn'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
-import { AppwriteException, OAuthProvider } from '@appwrite.io/console'
+import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { setLastLoginMethod } from '@/lib/utils/auth-storage'
+import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  CONSOLE_OAUTH_PROVIDERS,
+  OAUTH_LOGIN_ERROR,
+  isConsoleOAuthProviderEnabled,
+} from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -87,11 +93,21 @@ function SignInPage() {
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const [isGitHubLoading, setIsGitHubLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState<OAuthLoginMethod | null>(
+    null,
+  )
   const [isOpeningMfa, setIsOpeningMfa] = useState(false)
 
-  const handleGitHubLogin = async () => {
-    setIsGitHubLoading(true)
+  const handleOAuthLogin = async (provider: OAuthLoginMethod) => {
+    if (
+      !isConsoleOAuthProviderEnabled(
+        provider,
+        getActiveProfileFeatures().extraOAuthLogin,
+      )
+    ) {
+      return
+    }
+    setOauthLoading(provider)
     try {
       // Build success and failure URLs
       const resolvedRedirect = resolvePostAuthRedirect(search.redirect)
@@ -100,25 +116,21 @@ function SignInPage() {
         : `${window.location.origin}/`
       const failureUrl = `${window.location.origin}/sign-in${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
-      // Store GitHub as last login method before redirecting
-      setLastLoginMethod('github')
+      setLastLoginMethod(provider)
 
-      // Create OAuth2 session - this may return a URL or void (if it redirects automatically)
       const url = await sdk.forConsole.account.createOAuth2Session({
-        provider: OAuthProvider.Github,
+        provider: CONSOLE_OAUTH_PROVIDERS[provider],
         success: successUrl,
         failure: failureUrl,
       })
 
-      // If URL is returned, redirect manually; otherwise SDK handles redirect automatically
       if (typeof url === 'string') {
         window.location.href = url
       }
-      // If void, the SDK has already initiated the redirect, so we don't need to do anything
     } catch (error: unknown) {
-      setIsGitHubLoading(false)
-      toast.error(getErrorMessage(error, t('Failed to initiate GitHub login')))
-      console.error('GitHub OAuth error:', error)
+      setOauthLoading(null)
+      toast.error(getErrorMessage(error, t(OAUTH_LOGIN_ERROR[provider])))
+      console.error(`${provider} OAuth error:`, error)
     }
   }
 
@@ -229,9 +241,9 @@ function SignInPage() {
         <SignIn
           mode="sign-in"
           onSubmit={(data) => signInMutation.mutate(data)}
-          onGitHubLogin={handleGitHubLogin}
+          onOAuthLogin={handleOAuthLogin}
           isLoading={signInMutation.isPending || isOpeningMfa}
-          isGitHubLoading={isGitHubLoading}
+          oauthLoading={oauthLoading}
           redirect={search.redirect}
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">

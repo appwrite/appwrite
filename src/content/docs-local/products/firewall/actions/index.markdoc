@@ -52,8 +52,11 @@ Behavior:
 
 - The Console creates challenge rules with the platform default challenge type. The API also accepts an optional `challengeType` parameter.
 - Like other actions, a matching challenge rule stops further rule evaluation for that request.
+- The interactive challenge page is served for **function** and **site** traffic when a browser navigates to the resource. **API**-scoped challenge rules reject matching requests with a `403` challenge-required error, since API clients cannot solve an interactive challenge. Prefer deny or rate limit for API scopes unless your clients handle the challenge flow.
 
 Challenged requests appear in [traffic overview](/docs/products/firewall/monitor) under the **Challenged** series.
+
+To challenge **every** visitor to a site without building a rule by hand, use [Attack mode](/docs/products/firewall/attack-mode).
 
 # Rate limit {% #rate-limit %}
 
@@ -123,6 +126,6 @@ Redirect sends matching clients to another URL without running later Firewall ru
 
 Use redirects for maintenance pages, deprecated endpoints, or moving traffic off a path without denying it.
 
-{% arrow_link href="/docs/products/firewall/create" %}
-Create a rule
+{% arrow_link href="/docs/products/firewall/rate-limit-auth" %}
+Rate limit authentication traffic
 {% /arrow_link %}

@@ -39,7 +39,7 @@ export const firewallProductContent: ProductPageContent = {
       answer:
         'Yes. While creating a rule, the Console estimates how many recent usage events would match your current conditions for the selected resource scope and date range. Use that preview to tighten filters before you enable the rule, then confirm outcomes in traffic overview.',
       links: [
-        { label: 'Create a rule', href: '/docs/products/firewall/create' },
+        { label: 'Quick start', href: '/docs/products/firewall/quick-start' },
         { label: 'Monitor traffic', href: '/docs/products/firewall/monitor' },
       ],
     },
@@ -47,14 +47,19 @@ export const firewallProductContent: ProductPageContent = {
       question: 'What does traffic overview show?',
       answer:
         'The Firewall page chart summarizes Passed request volume alongside Denied, Rate limited, Redirected, and Challenged series for the selected date range. Bypass matches and under-quota rate limit matches allow traffic without publishing a Firewall outcome metric. Use the overview with your rules list to verify policies after enablement.',
-      links: [{ label: 'Monitor traffic', href: '/docs/products/firewall/monitor' }],
+      links: [
+        { label: 'Monitor traffic', href: '/docs/products/firewall/monitor' },
+      ],
     },
     {
       question: 'Is Firewall available on every plan?',
       answer:
         'Firewall is available on Appwrite Cloud. Rule limits depend on your organization plan. Disabled rules still count toward plan limits but are not evaluated.',
       links: [
-        { label: 'Plan limits', href: '/docs/products/firewall/rules#plan-limits' },
+        {
+          label: 'Plan limits',
+          href: '/docs/products/firewall/rules#plan-limits',
+        },
         { label: 'Pricing', href: '/pricing' },
       ],
     },

@@ -6,7 +6,7 @@ You can add the MCP server to various AI tools and code editors:
 {% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" icon="claude" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="openai" %}
+{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="codex" %}
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" icon="cursor-ai" %}
@@ -28,6 +28,9 @@ You can add the MCP server to various AI tools and code editors:
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/agents/antigravity" title="Google Antigravity" icon="google-antigravity" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/grok-build" title="Grok Build" icon="grok-build" %}
 {% /cards_item %}
 
 {% /cards %}
@@ -39,7 +42,7 @@ You can add the MCP server to various AI tools and code editors:
 {% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" icon="claude" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="openai" %}
+{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="codex" %}
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" icon="cursor-ai" %}
@@ -61,6 +64,9 @@ You can add the MCP server to various AI tools and code editors:
 {% /cards_item %}
 
 {% cards_item href="/docs/tooling/ai/agents/antigravity" title="Google Antigravity" icon="google-antigravity" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/grok-build" title="Grok Build" icon="grok-build" %}
 {% /cards_item %}
 
 {% /cards %}

@@ -16,7 +16,7 @@ See the Terraform Registry for generated schemas: [messaging_provider](https://r
 | `appwrite_messaging_topic` | Define a topic for targeting subscribers |
 | `appwrite_messaging_subscriber` | Attach subscribers to a topic |
 
-The `type` argument on `appwrite_messaging_provider` must be one of the supported provider kinds (for example `sendgrid`, `mailgun`, `smtp`, `resend`, `twilio`, `vonage`, `msg91`, `telesign`, `textmagic`, `apns`, `fcm`).
+The `type` argument on `appwrite_messaging_provider` must be one of the supported provider kinds (for example `sendgrid`, `mailgun`, `smtp`, `resend`, `ses`, `twilio`, `vonage`, `msg91`, `telesign`, `textmagic`, `apns`, `fcm`).
 
 # Examples {% #examples %}
 

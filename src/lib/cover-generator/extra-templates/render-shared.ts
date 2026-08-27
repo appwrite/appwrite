@@ -1,6 +1,5 @@
 import sharp from 'sharp'
 import {
-  getTitleFill,
   loadCoverImageBuffer,
   prepareCoverIconDataUri,
 } from '@/lib/cover-generator/brand-background'
@@ -257,14 +256,6 @@ export async function prepareExtraCoverImage(
     themeId,
     insetRatio: options?.insetRatio ?? 0,
   })
-}
-
-/** Gradient text fill when enabled, foreground otherwise. */
-export function getExtraTitleFill(
-  brand: ExtraCoverBrand,
-  gradient: boolean,
-): string {
-  return getTitleFill(brand, gradient)
 }
 
 export { COVER_HEIGHT as EXTRA_COVER_HEIGHT, COVER_WIDTH as EXTRA_COVER_WIDTH }

@@ -121,14 +121,16 @@ function tokensStateEqual(
 function SectionUpdateButton({
   disabled,
   pending,
+  disabledTooltip,
   onClick,
 }: {
   disabled?: boolean
   pending?: boolean
+  disabledTooltip?: string
   onClick: () => void
 }) {
   const t = useT()
-  return (
+  const button = (
     <Button
       size="sm"
       className="h-9 text-[13px]"
@@ -137,6 +139,23 @@ function SectionUpdateButton({
     >
       {t('Update')}
     </Button>
+  )
+
+  if (!disabled || pending || !disabledTooltip) {
+    return button
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">{button}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{disabledTooltip}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
 
@@ -609,9 +628,23 @@ export function View({ projectId }: OAuth2ServerViewProps) {
   })
 
   const handleUpdate = (section: OAuth2ServerSection) => {
+    if (requiresAuthorizationUrl) {
+      toast.error(
+        t('Authorization URL is required when the server is enabled.'),
+      )
+      document.getElementById('oauth2-authorization-url')?.focus()
+      return
+    }
     setPendingSection(section)
     updateMutation.mutate()
   }
+
+  const noEditPermissionTooltip = !canEdit
+    ? t("You don't have permission to update OAuth2 server settings.")
+    : undefined
+  const missingAuthorizationUrlTooltip = requiresAuthorizationUrl
+    ? t('Authorization URL is required when the server is enabled.')
+    : undefined
 
   if (!projectData) {
     return null
@@ -635,9 +668,8 @@ export function View({ projectId }: OAuth2ServerViewProps) {
         footer={
           <SectionUpdateButton
             pending={updateMutation.isPending && pendingSection === 'status'}
-            disabled={
-              !canEdit || isStatusUnchanged || requiresAuthorizationUrl
-            }
+            disabled={!canEdit || isStatusUnchanged}
+            disabledTooltip={noEditPermissionTooltip}
             onClick={() => handleUpdate('status')}
           />
         }
@@ -653,6 +685,11 @@ export function View({ projectId }: OAuth2ServerViewProps) {
             onCheckedChange={setEnabled}
           />
         </div>
+        {requiresAuthorizationUrl ? (
+          <p className="text-[12px] text-muted-foreground">
+            {t('Set an authorization URL below, then click Update.')}
+          </p>
+        ) : null}
       </SettingsSection>
 
       {enabled ? (
@@ -669,6 +706,9 @@ export function View({ projectId }: OAuth2ServerViewProps) {
                 }
                 disabled={
                   !canEdit || isIntegrationUnchanged || requiresAuthorizationUrl
+                }
+                disabledTooltip={
+                  noEditPermissionTooltip ?? missingAuthorizationUrlTooltip
                 }
                 onClick={() => handleUpdate('integration')}
               />
@@ -733,6 +773,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
               <SectionUpdateButton
                 pending={updateMutation.isPending && pendingSection === 'tokens'}
                 disabled={!canEdit || isTokensUnchanged}
+                disabledTooltip={noEditPermissionTooltip}
                 onClick={() => handleUpdate('tokens')}
               />
             }

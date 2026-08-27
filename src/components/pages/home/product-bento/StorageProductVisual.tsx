@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Image as ImageIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -124,6 +124,12 @@ function MockImagePreview() {
       )}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-muted-foreground/10 via-muted-foreground/5 to-transparent" />
+      <div className="absolute inset-0 grid place-items-center">
+        <ImageIcon
+          className={cn('size-6', productBentoIdle.brandIcon)}
+          aria-hidden
+        />
+      </div>
       <div
         className="pointer-events-none absolute inset-2 rounded-sm border border-dashed border-primary/0 opacity-0 transition-[opacity,border-color] duration-500 group-hover:border-primary/45 group-hover:opacity-100 motion-reduce:group-hover:opacity-100"
         style={{ transitionDelay: '160ms' }}

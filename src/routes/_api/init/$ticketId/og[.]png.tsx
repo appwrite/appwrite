@@ -1,13 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { initTicketStorageFileExists } from '@/lib/init/init-ticket-share'
 import { getInitTicketStorageFileViewUrl } from '@/lib/init/init-ticket-storage-config'
 
 export const Route = createFileRoute('/_api/init/$ticketId/og.png')({
   server: {
     handlers: {
-      GET: async ({ params }) => {
-        if (!getActiveProfileFeatures().init) {
+      GET: async ({ params, request }) => {
+        if (!isInitSurfaceEnabled(request.headers.get('cookie'))) {
           return new Response('Not found', { status: 404 })
         }
 

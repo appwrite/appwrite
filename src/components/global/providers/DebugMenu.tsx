@@ -42,6 +42,7 @@ import {
   ExternalLink,
   Link2,
   Network,
+  GitBranch,
 } from 'lucide-react'
 import {
   Popover,
@@ -69,6 +70,7 @@ import {
   type FeatureFlagsMenuDebugKey,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
+import { getPreLaunchDefault } from '@/lib/pre-launch'
 import {
   OVERVIEW_CHART_TAB_ORDER,
   OVERVIEW_CHART_TAB_DISABLE_KEYS,
@@ -163,6 +165,20 @@ const COMMUNITY_SUPPORT_WIZARD_CADENCE = `Shows the "A note from the team" wizar
 const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
 /** Debug menu stays English + LTR regardless of app language (developer tooling). */
 const DEBUG_MENU_LANGUAGE_COPY = getEnglishCatalog().app.debugMenu.language
+
+/** Scroll only the menu list. `scrollIntoView` also moves the document while the popover is still off-screen. */
+function scrollMenuItemIntoView(
+  container: HTMLElement,
+  element: HTMLElement,
+) {
+  const containerRect = container.getBoundingClientRect()
+  const elementRect = element.getBoundingClientRect()
+  if (elementRect.bottom > containerRect.bottom) {
+    container.scrollTop += elementRect.bottom - containerRect.bottom
+  } else if (elementRect.top < containerRect.top) {
+    container.scrollTop -= containerRect.top - elementRect.top
+  }
+}
 
 function DebugMenuBrandMark({ className }: { className?: string }) {
   return (
@@ -638,7 +654,10 @@ function createDebugFeatureFlagItem(
   onReset?: () => void,
   category?: string,
 ): MenuItem {
-  const defaultValue = FEATURE_FLAGS_MENU_DEBUG_DEFAULTS[key]
+  const defaultValue =
+    key === 'preLaunch'
+      ? getPreLaunchDefault()
+      : FEATURE_FLAGS_MENU_DEBUG_DEFAULTS[key]
 
   return {
     label,
@@ -1432,7 +1451,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Demos',
-            description: 'Preview alerts, banners, loaders, OAuth2, and pages.',
+            description: 'Preview alerts, banners, loaders, OAuth2, Git, and pages.',
             icon: <Bug className="h-3 w-3" />,
             submenu: [
               {
@@ -1824,6 +1843,61 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 ],
               },
               {
+                label: 'Git authorization',
+                description: 'Preview the GitHub contributor approval page.',
+                icon: <GitBranch className="h-3 w-3" />,
+                submenu: [
+                  {
+                    label: 'All screens',
+                    description: 'Open the Git authorization preview.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/authorize-contributor-preview',
+                        search: { status: 'awaiting' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <GitBranch className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Awaiting',
+                    description: 'PR deployment waiting for owner approval.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/authorize-contributor-preview',
+                        search: { status: 'awaiting' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <GitBranch className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Approved',
+                    description: 'Successful authorization outcome.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/authorize-contributor-preview',
+                        search: { status: 'success' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Check className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Failed',
+                    description: 'Authorization error from the API.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/authorize-contributor-preview',
+                        search: { status: 'error' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <AlertTriangle className="h-3 w-3" />,
+                  },
+                ],
+              },
+              {
                 label: 'Functions editor',
                 description: 'Preview the Functions local editor.',
                 onClick: () => {
@@ -1978,6 +2052,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
+                'Extra OAuth login',
+                'Show Google, GitLab, Bitbucket, and Cursor on console sign-in and sign-up. GitHub stays available.',
+                'extraOAuthLogin',
+                profileId,
+                features.extraOAuthLogin,
+                { category: 'Auth & security' },
+              ),
+              createProfileFeatureFlagItem(
                 'Cookie banner',
                 'Show the locale-gated cookie consent banner and footer cookie settings.',
                 'cookieBanner',
@@ -2066,6 +2148,21 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   disabled: profileId !== 'cloud',
                   category: 'Organization',
                 },
+              ),
+              createDebugFeatureFlagItem(
+                'Pre-launch',
+                'Lock the site to /init. Root redirects there; other pages are blocked. Sign-in stays open and returns to /init. On by default.',
+                'preLaunch',
+                overrides.preLaunch,
+                (checked) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    preLaunch: checked,
+                  }))
+                  setDebugOverride('preLaunch', checked)
+                },
+                undefined,
+                'Site',
               ),
               createDebugFeatureFlagItem(
                 'Activity chart',
@@ -2469,6 +2566,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.nativeDbsMySQL,
     features.nativeDbsMongo,
     features.userVerification,
+    features.extraOAuthLogin,
     features.cookieBanner,
     features.blogDrafts,
     features.oauthApps,
@@ -2596,15 +2694,26 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     if (!isOpen) return
     const frame = window.requestAnimationFrame(() => {
       if (hasSearchField) {
-        searchInputRef.current?.focus()
+        searchInputRef.current?.focus({ preventScroll: true })
         return
       }
       if (!isPanelSubmenu) {
-        menuListRef.current?.focus()
+        menuListRef.current?.focus({ preventScroll: true })
       }
     })
     return () => window.cancelAnimationFrame(frame)
   }, [isOpen, activeSubmenu, hasSearchField, isPanelSubmenu])
+
+  const handleOpenAutoFocus = useCallback((event: Event) => {
+    event.preventDefault()
+    if (hasSearchField) {
+      searchInputRef.current?.focus({ preventScroll: true })
+      return
+    }
+    if (!isPanelSubmenu) {
+      menuListRef.current?.focus({ preventScroll: true })
+    }
+  }, [hasSearchField, isPanelSubmenu])
 
   useEffect(() => {
     if (highlightedIndex < 0) return
@@ -2613,7 +2722,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     const el = root.querySelector<HTMLElement>(
       `[data-debug-nav-index="${highlightedIndex}"]`,
     )
-    el?.scrollIntoView({ block: 'nearest' })
+    if (el) scrollMenuItemIntoView(root, el)
   }, [highlightedIndex, navigableIdsKey])
 
   const activateNavigableEntry = useCallback(
@@ -2844,6 +2953,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           collisionPadding={DEBUG_MENU_EDGE_OFFSET_PX}
           className={cn(
             'z-[10060] flex max-h-[min(85dvh,var(--radix-popper-available-height,100dvh))] flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-popover p-0 shadow-xl',
+            // Neutralize default popover zoom/slide (they grow from the trigger). Fade is unchanged.
+            '![--tw-enter-scale:1] ![--tw-exit-scale:1] ![--tw-enter-translate-x:0px] ![--tw-enter-translate-y:0px] ![--tw-exit-translate-x:0px] ![--tw-exit-translate-y:0px]',
             currentSubmenu?.submenuVariant === 'profileComparison' ||
               currentSubmenu?.submenuVariant === 'communityShareExamples' ||
               currentSubmenu?.submenuVariant === 'prefsDebug' ||
@@ -2861,6 +2972,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           onWheelCapture={(event) => {
             event.stopPropagation()
           }}
+          onOpenAutoFocus={handleOpenAutoFocus}
           onKeyDown={handleMenuKeyDown}
           onEscapeKeyDown={handleEscapeKeyDown}
         >
@@ -2905,7 +3017,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--network-globe-edge)]/60" />
                   <Input
                     ref={searchInputRef}
-                    autoFocus
                     role="combobox"
                     aria-expanded
                     aria-controls="debug-menu-listbox"

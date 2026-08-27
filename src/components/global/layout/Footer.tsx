@@ -9,6 +9,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
 import { useOptionalCookieConsent } from '@/components/global/providers/CookieConsent'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import { LegacyAppwriteIcon } from '@/components/global/shared/LegacyAppwriteBrand'
 import { getFooterPolicyLinks } from '@/lib/legal/policies'
 import {
@@ -19,6 +20,7 @@ import {
   isBlogPageExternal,
   isMarketingPageExternal,
   isProductPageExternal,
+  MARKETING_SITE_ORIGIN,
   type MarketingPagePath,
 } from '@/lib/marketing/urls'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
@@ -332,6 +334,8 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const t = useT()
   const currentYear = new Date().getFullYear()
   const { isCloud, features } = useConsoleProfile()
+  const { preLaunch } = useDebugOverrides()
+  const localMarketing = features.marketing && !preLaunch
   const { catalog } = useI18n()
   const footerCopy = catalog.app.footer
   const newLabel = catalog.website.products.navigation.newLabel
@@ -339,7 +343,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const isLegacyTheme = useIsLegacyTheme()
   const cloudStatusEnabled = isCloud && features.systemStatus
   const expandedFooterGroups = getExpandedFooterGroups(
-    features.marketing,
+    localMarketing,
     footerCopy,
     features,
   )
@@ -347,8 +351,8 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const resourceLinks = [
     {
       label: footerCopy.links.docs,
-      href: getMarketingPageUrl('/docs', features.marketing),
-      external: isMarketingPageExternal(features.marketing),
+      href: getMarketingPageUrl('/docs', localMarketing),
+      external: isMarketingPageExternal(localMarketing),
     },
     { label: footerCopy.links.store, href: 'https://store.appwrite.io/', external: true }, // pragma: allowlist secret
     ...(cloudStatusEnabled
@@ -362,7 +366,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
       : []),
   ]
 
-  const legalLinks = getFooterPolicyLinks(features.marketing)
+  const legalLinks = getFooterPolicyLinks(localMarketing)
   const showCookieSettings = cookieConsent?.bannerRequired ?? false
 
   const socialLinks = [
@@ -389,7 +393,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
     },
     {
       label: footerCopy.social.discord,
-      href: '/discord',
+      href: preLaunch ? `${MARKETING_SITE_ORIGIN}/discord` : '/discord',
       icon: '/icons/discord-simple.svg',
     },
     {
@@ -479,8 +483,8 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
         {/* Right: SOC 2 (hidden on narrow containers), legal links, copyright */}
         <div className="flex shrink-0 items-center gap-2">
           <a
-            href={getDocsPageUrl('/docs/advanced/security', features.marketing)}
-            {...(isMarketingPageExternal(features.marketing)
+            href={getDocsPageUrl('/docs/advanced/security', localMarketing)}
+            {...(isMarketingPageExternal(localMarketing)
               ? { target: '_blank', rel: 'noopener noreferrer' }
               : {})}
             className={cn(

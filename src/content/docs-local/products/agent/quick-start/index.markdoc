@@ -34,7 +34,7 @@ You can attach files, use voice input where supported, stop a run in progress, r
 
 # Connect Appwrite MCP (optional) {% #connect-mcp %}
 
-Connecting [Appwrite MCP](/docs/tooling/ai/mcp-servers/api) lets the Agent call Appwrite tools with scopes you grant as **Appwrite Agent**. On Appwrite Cloud, the Console often establishes this connection automatically when you open the Agent. If the connection is missing or shows **Reconnect**, connect manually:
+Connecting [Appwrite MCP](/docs/tooling/ai/mcp-servers) lets the Agent call Appwrite tools with scopes you grant as **Appwrite Agent**. On Appwrite Cloud, the Console often establishes this connection automatically when you open the Agent. If the connection is missing or shows **Reconnect**, connect manually:
 
 1. In the Agent panel or at **Agent** > **Settings** > **MCP**, find **Appwrite MCP**.
 2. Click **Connect** and complete authorization if the Console prompts you.

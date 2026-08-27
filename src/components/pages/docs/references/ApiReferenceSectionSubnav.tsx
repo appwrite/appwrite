@@ -40,10 +40,15 @@ import { loadReferenceNavServiceCountsFn } from '@/server/functions/api-referenc
 import type { DocsNavParent } from '@/lib/docs/types'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
+  DOCS_NAV_CATEGORY_LABEL_CLASS,
+  DOCS_NAV_CATEGORY_TRIGGER_CLASS,
+  DOCS_NAV_ITEM_LIST_CLASS,
   DOCS_NAV_SCROLL_CLASS,
+  DOCS_NAV_TREE_GAP_CLASS,
   DOCS_SECTION_HEADER_CLASS,
   docsSidebarNavLinkClassName,
 } from '@/lib/docs/nav-styles'
+import { SECONDARY_SIDEBAR_WIDTH_CLASS } from '@/lib/layout/secondary-sidebar-nav'
 import {
   REFERENCE_SECTION_SUBNAV_DESKTOP_CLASS,
 } from './explorer-styles'
@@ -75,7 +80,7 @@ function SectionParentLink({
     <DocsRouteLink
       href={parent.href}
       onClick={onNavigate}
-      className="flex items-center gap-1.5 px-2 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-foreground/80"
+      className="flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-foreground/80"
     >
       <ChevronLeft className="size-3.5" strokeWidth={DOCS_MENU_ICON_STROKE} />
       {parent.label}
@@ -303,7 +308,7 @@ function ApiReferenceSectionSubnavShell({
           DOCS_NAV_SCROLL_CLASS,
         )}
       >
-        <div className="space-y-4">
+        <div className={DOCS_NAV_TREE_GAP_CLASS}>
           {parent ? <SectionParentLink parent={parent} onNavigate={onNavigate} /> : null}
 
           <div className="px-1">
@@ -376,13 +381,13 @@ function ReferenceServicesNav({
 
   return (
     <nav aria-label="API services">
-      <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className={DOCS_NAV_CATEGORY_LABEL_CLASS}>
         APIs
       </p>
       {isLoading ? (
-        <p className="px-2 py-2 text-[13px] text-muted-foreground">Loading services…</p>
+        <p className="px-2.5 py-2 text-[13px] text-muted-foreground">Loading services…</p>
       ) : !hasServices ? (
-        <p className="px-2 py-2 text-[13px] text-muted-foreground">
+        <p className="px-2.5 py-2 text-[13px] text-muted-foreground">
           No services available for this API.
         </p>
       ) : (
@@ -391,19 +396,24 @@ function ReferenceServicesNav({
           collapsible
           value={expandedGroupId}
           onValueChange={(value) => setExpandedGroupId(value)}
-          className="w-full space-y-1 px-2"
+          className={cn('w-full', DOCS_NAV_ITEM_LIST_CLASS)}
         >
           {productGroups.map((group) => (
             <AccordionItem
               key={group.id}
               value={group.id}
-              className="border-b border-border/50 pb-1 last:border-b-0 last:pb-0"
+              className="border-0"
             >
-              <AccordionTrigger className="gap-1.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:no-underline [&>svg]:size-3.5 [&>svg]:text-muted-foreground/70">
+              <AccordionTrigger
+                className={cn(
+                  DOCS_NAV_CATEGORY_TRIGGER_CLASS,
+                  'hover:no-underline [&>svg]:size-3.5 [&>svg]:text-muted-foreground/50',
+                )}
+              >
                 <span className="min-w-0 flex-1 truncate text-start">{group.label}</span>
               </AccordionTrigger>
               <AccordionContent className="pb-2 pt-0">
-                <ul className="space-y-0.5">
+                <ul className={DOCS_NAV_ITEM_LIST_CLASS}>
                   {group.services.map((service) => {
                     const isActive = normalizedPath === service.href
                     return (
@@ -439,7 +449,8 @@ export function ApiReferenceSectionSubnavPanel({
   return (
     <aside
       className={cn(
-        'relative z-10 hidden h-full w-[220px] shrink-0 flex-col overflow-hidden border-e border-border bg-background',
+        'relative z-10 hidden h-full shrink-0 flex-col overflow-hidden border-e border-border bg-background',
+        SECONDARY_SIDEBAR_WIDTH_CLASS,
         REFERENCE_SECTION_SUBNAV_DESKTOP_CLASS,
       )}
       aria-label={

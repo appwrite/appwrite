@@ -37,10 +37,10 @@ export function DocsHeroSection() {
             className="h-7 rounded-full px-3 text-[12px]"
             asChild
           >
-            <DocsRouteLink href="/docs/tooling/mcp" {...analyticsAttrs('docs-mcp-cta')}>
+            <DocsRouteLink href="/docs/tooling/ai/mcp-servers" {...analyticsAttrs('docs-mcp-cta')}>
               <McpIcon className="size-3.5 text-muted-foreground" />
               <span className="text-[var(--brand-cta)]">New</span>
-              MCP servers for AI agents
+              MCP server for AI agents
               <ArrowRight className="size-3.5" />
             </DocsRouteLink>
           </Button>

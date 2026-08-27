@@ -1,0 +1,103 @@
+---
+layout: post
+title: "What is server-side rendering? A beginner's guide"
+description: Learn what server-side rendering is, how SSR works, how it compares to CSR and SSG, and when to use it for faster, SEO-friendly web applications.
+date: 2026-07-22
+cover: /images/blog/what-is-server-side-rendering-a-beginners-guide/cover.avif
+timeToRead: 5
+author: atharva
+category: architecture
+featured: false
+unlisted: true
+faqs:
+  - question: What is the difference between SSR and CSR?
+    answer: SSR builds the page on the server so the first load is fast and SEO-friendly. CSR (client-side rendering) builds the page in the browser, which is smoother once loaded but slower on first load and weaker for SEO.
+  - question: What is the difference between SSR and SSG?
+    answer: SSR builds a page on every request, so content is always current. SSG (static site generation) builds all pages once at build time and serves them as static files, which is faster and cheaper but only updates when you rebuild.
+  - question: Is SSR good for SEO?
+    answer: Yes. Because search engine crawlers receive fully rendered HTML rather than an empty page that relies on JavaScript, server-rendered content is more reliably indexed.
+  - question: Which framework is best for SSR?
+    answer: "There's no single best. Next.js is the most popular choice for React, Nuxt for Vue, SvelteKit for Svelte, and Remix for React. The right one depends on the frontend framework you're already using."
+---
+**Server-side rendering (SSR) is when a web page's HTML is fully generated on the server for each request and sent to the browser ready to display, instead of being built in the browser with JavaScript.** This gives users content faster on first load and makes pages easier for search engines to index.
+
+If you've heard SSR mentioned alongside frameworks like Next.js, or wondered why some apps feel instant while others show a blank screen first, this is the concept behind it. This guide explains what server-side rendering is, how it works, how it compares to other rendering methods, and when you actually need it, in plain language.
+
+# How does server-side rendering work?
+
+To understand SSR, it helps to know the alternative. With [client-side rendering](https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/Rendering_and_compositing), the server sends a nearly empty HTML file plus a JavaScript bundle. The browser then downloads and runs that JavaScript to build the page. Until it finishes, the user often sees a blank screen or a loading spinner.
+
+Server-side rendering flips this around:
+
+1. The browser requests a page.
+2. The server runs the application code, fetches any data it needs, and renders the full HTML for that page.
+3. The server sends complete, ready-to-display HTML to the browser.
+4. The browser shows the content almost immediately, then loads JavaScript to make the page interactive.
+
+The key difference is where the work happens. SSR does the rendering on the server for every request, so the user sees real content sooner instead of waiting for their device to build the page.
+
+That final step, loading the JavaScript to make the page interactive, is called **hydration**. The server-rendered HTML is static at first, so buttons and other interactive elements don't work until the framework ["hydrates"](https://react.dev/reference/react-dom/client/hydrateRoot) the page by attaching event listeners and application state to the existing HTML, turning the static page into a live app. Hydration is powerful but has a cost: shipping and running that JavaScript takes time, and heavy hydration can delay when a page becomes usable. Reducing this cost is a major focus of modern frameworks.
+
+# Server-side rendering vs client-side rendering: What's the difference?
+
+This is the core comparison, and each approach has clear tradeoffs.
+
+Client-side rendering (CSR) builds the page in the browser. It makes for smooth navigation once loaded and reduces server work, but the first load is slower and the initial HTML is nearly empty, which can hurt SEO.
+
+Server-side rendering (SSR) builds the page on the server. The first load is faster and search engines receive full content, at the cost of more work per request on the server.
+
+A simple way to choose: reach for CSR for highly interactive apps behind a login, like dashboards, where first-load SEO doesn't matter. Reach for SSR for content that needs to load fast and rank well, like marketing pages, blogs, and storefronts.
+
+# Server-side rendering vs static site generation
+
+SSR is often confused with static site generation (SSG), because both send real HTML to the browser. The difference is *when* that HTML is built.
+
+SSR generates the page on every request, so the content is always current and can be personalized per user. SSG generates all pages once at build time, so they're served as static files that are extremely fast and cheap, but the content is fixed until the next build.
+
+Use SSG for content that rarely changes, such as documentation or a landing page. Use SSR when content is dynamic or personalized and needs to be fresh on every visit.
+
+# Benefits of server-side rendering
+
+SSR is popular because it solves real problems that pure client-side apps struggle with:
+
+* **Faster first contentful paint.** Users see meaningful content sooner because the browser doesn't have to build the page before showing anything. ([First Contentful Paint](https://web.dev/articles/fcp) is a core web performance metric.)
+* **Better SEO.** Search engine crawlers receive fully rendered HTML, so your content is reliably indexed instead of hidden behind JavaScript.
+* **Strong performance on weak devices.** The heavy rendering happens on the server, so low-powered phones and older devices aren't doing the work.
+* **Accurate link previews.** Social platforms read the server-rendered HTML, so shared links show correct titles and images.
+
+# Drawbacks of server-side rendering
+
+SSR isn't free, and it adds complexity you should weigh:
+
+* **Higher server load.** Rendering on every request uses more server resources than serving static files, which can raise costs at scale.
+* **Slower time to first byte.** The server does work before sending anything, so the very first byte can arrive later than with a static page.
+* **More complexity.** SSR apps are harder to build, deploy, and debug than purely client-side ones, since code runs in two environments.
+* **Caching challenges.** Because pages are dynamic, caching them effectively takes more thought than caching static output.
+
+# Which frameworks support server-side rendering?
+
+You rarely implement SSR by hand. Modern frameworks handle the heavy lifting and often let you mix rendering strategies per page. The most common options are [Next.js](https://nextjs.org/docs) for React, [Nuxt](https://nuxt.com/docs) for Vue, [SvelteKit](https://kit.svelte.dev/docs) for Svelte, and Remix for React. Angular offers SSR through Angular Universal.
+
+Many of these frameworks now support hybrid rendering, letting you choose SSR, SSG, or client-side rendering for each route, so you can match the approach to the content instead of committing your whole app to one method.
+
+# When should you use server-side rendering?
+
+SSR is worth it when fast initial load and search visibility matter, such as for content-heavy or public-facing pages: marketing sites, blogs, ecommerce product pages, and news. It's also useful when pages must be personalized per request yet still load quickly.
+
+It's usually overkill for internal tools, dashboards, and apps behind a login where SEO is irrelevant and users don't mind a brief initial load. In those cases, client-side rendering is simpler and often good enough. As with most architecture choices, match the rendering method to the job rather than defaulting to one everywhere.
+
+# Start building SSR apps with Appwrite
+
+[Appwrite Sites](/docs/products/sites) is where your server-rendered app runs. You deploy a framework like Next.js, Nuxt, or SvelteKit directly to Sites, and it executes the framework's server runtime for you, handling the per-request rendering this guide describes without you provisioning or maintaining servers. Because Sites lives in the same platform as the rest of your backend, your app renders right next to its data instead of reaching across the internet on every request.
+
+That proximity is what makes the data-fetching step fast and secure. Appwrite's [server SDKs](/docs/sdks) and [SSR-friendly authentication](/docs/products/auth/server-side-rendering) let you load data and manage sessions on the server, so the first render already contains real content and no session secrets ever reach the browser. Databases, Storage, and Functions sit behind the same clean API, so everything your server render needs is one call away.
+
+The result is the full SSR stack in one place: Sites runs the rendering, and Auth, Databases, Storage, and Functions feed it, all open-source and managed for you. [Sign up for Appwrite Cloud](https://cloud.appwrite.io/) or spin up a self-hosted instance in minutes, and give your next server-rendered build a real backend to grow on.
+
+## Resources
+
+* [Appwrite server SDKs](/docs/sdks)
+* [Server-side rendering with Appwrite](/docs/products/auth/server-side-rendering)
+* [Appwrite quick start guides](/docs/quick-starts)
+* [Appwrite on GitHub](https://github.com/appwrite/appwrite)
+* [Join the Appwrite Discord](https://appwrite.io/discord)

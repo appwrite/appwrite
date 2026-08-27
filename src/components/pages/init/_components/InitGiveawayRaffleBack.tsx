@@ -2,7 +2,7 @@ import type { LaunchEventDailyPrize, LaunchEventOnlineUser } from '@/lib/init/ty
 import { buildInitSpinningGiveawayRaffleActivity } from '@/lib/init/init-presence-activity'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { useInitThemeImageSrc } from '@/lib/init/use-init-theme-image'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Loader2, Sparkles, Trophy, X } from 'lucide-react'
@@ -170,7 +170,11 @@ export function InitGiveawayRaffleBack({
           >
             {winner ? (
               <div className="flex items-center gap-3">
-                <InitialsAvatar name={winner.name} size="md" className="rounded-full" />
+                <PhotoAvatar
+                  userId={winner.id}
+                  size="md"
+                  className="rounded-full"
+                />
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-cta)]">
                     <Trophy className="size-3.5" aria-hidden />
