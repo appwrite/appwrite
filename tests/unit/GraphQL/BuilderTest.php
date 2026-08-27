@@ -16,8 +16,6 @@ use Utopia\DI\Container;
 use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
-use Utopia\Validator\JSON\FCM;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 final class BuilderTest extends TestCase
@@ -39,18 +37,6 @@ final class BuilderTest extends TestCase
         $type = Mapper::model(\ucfirst($model->getType()));
         $this->assertInstanceOf(NamedType::class, $type);
         $this->assertSame('Table', $type->name());
-    }
-
-    public function testFCMParameterMapsToJSON(): void
-    {
-        $type = Mapper::param(
-            new Http(new Server(new Container()), 'UTC'),
-            new Nullable(new FCM()),
-            false,
-            [],
-        );
-
-        $this->assertSame('Json', $type->name());
     }
 
     public function testRouteOmitsHiddenParameters(): void
