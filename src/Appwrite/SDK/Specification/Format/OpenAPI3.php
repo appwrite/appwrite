@@ -756,7 +756,7 @@ class OpenAPI3 extends Format
                         $itemType = $validator->getValidator()->getType();
                         $node['schema']['items'] = match ($itemType) {
                             Validator::TYPE_FLOAT => ['type' => 'number', 'format' => 'double'],
-                            Validator::TYPE_MIXED => [],
+                            Validator::TYPE_MIXED => new \stdClass(),
                             default => ['type' => $itemType],
                         };
                         if (($param['example'] ?? '') !== '') {

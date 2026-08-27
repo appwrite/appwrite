@@ -86,6 +86,29 @@ class TestFormat extends Format
     }
 }
 
+class MixedValidator extends \Utopia\Validator
+{
+    public function getDescription(): string
+    {
+        return 'Mixed value';
+    }
+
+    public function isArray(): bool
+    {
+        return false;
+    }
+
+    public function isValid($value): bool
+    {
+        return true;
+    }
+
+    public function getType(): string
+    {
+        return self::TYPE_MIXED;
+    }
+}
+
 final class FormatTest extends TestCase
 {
     private TestFormat $format;
@@ -343,7 +366,8 @@ final class FormatTest extends TestCase
             ))
             ->param('percents', [], new ArrayList(new FloatValidator()), 'Percents.', optional: true)
             ->param('counts', [], new ArrayList(new IntegerValidator()), 'Counts.', optional: true)
-            ->param('labels', [], new ArrayList(new Text(16)), 'Labels.', optional: true);
+            ->param('labels', [], new ArrayList(new Text(16)), 'Labels.', optional: true)
+            ->param('values', [], new ArrayList(new MixedValidator()), 'Values.', optional: true);
 
         $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
         $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
@@ -351,6 +375,8 @@ final class FormatTest extends TestCase
         $this->assertSame(['type' => 'number', 'format' => 'double'], $properties['percents']['items']);
         $this->assertSame(['type' => 'integer'], $properties['counts']['items']);
         $this->assertSame(['type' => 'string'], $properties['labels']['items']);
+        $this->assertInstanceOf(\stdClass::class, $properties['values']['items']);
+        $this->assertSame('{}', json_encode($properties['values']['items']));
     }
 
     public function testMethodParameterOverridesFilterAndReplaceRouteParams(): void
