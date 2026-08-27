@@ -165,7 +165,10 @@ abstract class Database implements Source, Changes
             return $this->projects[$projectId];
         }
 
-        $project = $this->dbForPlatform->getDocument('projects', $projectId);
+        $project = $this->dbForPlatform->skipFilters(
+            fn () => $this->dbForPlatform->getDocument('projects', $projectId),
+            APP_PROJECTS_SUBQUERIES
+        );
 
         return $this->projects[$projectId] = $project;
     }
