@@ -44,6 +44,7 @@ use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
@@ -74,11 +75,6 @@ class Migrations extends Action
      */
     protected array $sourceReport = [];
 
-    /**
-     * @var callable|null
-     */
-    protected $logError = null;
-
     public static function getName(): string
     {
         return 'migrations';
@@ -97,7 +93,6 @@ class Migrations extends Action
             ->inject('dbForPlatform')
             ->inject('getDatabasesDB')
             ->inject('getProjectDB')
-            ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForMigrations')
             ->inject('deviceForFiles')
@@ -119,7 +114,6 @@ class Migrations extends Action
         Database $dbForPlatform,
         callable $getDatabasesDB,
         callable $getProjectDB,
-        callable $logError,
         Realtime $queueForRealtime,
         Device $deviceForMigrations,
         Device $deviceForFiles,
@@ -154,7 +148,6 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
-        $this->logError = $logError;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
 
@@ -172,7 +165,6 @@ class Migrations extends Action
             $this->dbForProject = null;
             $this->dbForPlatform = null;
             $this->project = null;
-            $this->logError = null;
             $this->deviceForMigrations = null;
             $this->deviceForFiles = null;
             $this->plan = [];
@@ -586,34 +578,8 @@ class Migrations extends Action
 
             $caughtError = $th;
 
-            // Mirror general.php's HTTP-error pattern: typed AppwriteException uses its
-            // registry-driven isPublishable() flag; library-thrown Migration\Exception is
-            // always user-facing; anything else is unknown and surfaced to Sentry.
-            if ($th instanceof Exception) {
-                $publish = $th->isPublishable();
-            } elseif ($th instanceof MigrationException) {
-                $publish = false;
-            } else {
-                $publish = true;
-            }
-
-            if ($publish) {
-                $extras = [
-                    'migrationId' => $migration->getId(),
-                    'source' => $migration->getAttribute('source') ?? '',
-                    'destination' => $migration->getAttribute('destination') ?? '',
-                ];
-
-                // Include source identifiers for Appwrite sources to make Sentry events
-                // self-debuggable. Never include the apiKey or any other secret.
-                if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
-                    $credentials = $migration->getAttribute('credentials', []) ?? [];
-                    $extras['sourceProjectId'] = $credentials['projectId'] ?? '';
-                    $extras['sourceEndpoint'] = $credentials['endpoint'] ?? '';
-                }
-
-                $this->reportError($th, $migration, $extras);
-            }
+            Span::add('level', 'warning');
+            Span::add('migration_status', 'failed');
         } finally {
             try {
                 $sourceErrors = $source?->getErrors() ?? [];
@@ -868,9 +834,9 @@ class Migrations extends Action
 
         $valid = \is_string($userInternalId) || (\is_int($userInternalId) && $userInternalId > 0);
         if (!$valid) {
-            $error = new \UnexpectedValueException('Invalid initiating user sequence for export migration.');
-            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
-            $this->reportError($error, $migration);
+            Console::error('Invalid initiating user sequence for export migration. Migration: ' . $migration->getId());
+            Span::add('level', 'warning');
+            Span::add('migration_export_skipped_reason', 'invalid_user_sequence');
             return new Document([]);
         }
 
@@ -879,9 +845,9 @@ class Migrations extends Action
         ]);
 
         if ($user->isEmpty()) {
-            $error = new \RuntimeException('Initiating user not found for export migration.');
-            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
-            $this->reportError($error, $migration);
+            Console::error('Initiating user not found for export migration. Migration: ' . $migration->getId());
+            Span::add('level', 'warning');
+            Span::add('migration_export_skipped_reason', 'missing_user');
         }
 
         return $user;
@@ -913,33 +879,8 @@ class Migrations extends Action
             );
         } catch (\Throwable $error) {
             Console::error('Failed to send the export notification for migration ' . $migration->getId() . ': ' . $error->getMessage());
-            $this->reportError($error, $migration);
-        }
-    }
-
-    /**
-     * @param array<string, mixed> $extras
-     */
-    protected function reportError(\Throwable $error, Document $migration, array $extras = []): void
-    {
-        if (!\is_callable($this->logError)) {
-            return;
-        }
-
-        try {
-            ($this->logError)(
-                $error,
-                'appwrite-worker',
-                'appwrite-queue-' . self::getName(),
-                [
-                    'migrationId' => $migration->getId(),
-                    'source' => $migration->getAttribute('source', ''),
-                    'destination' => $migration->getAttribute('destination', ''),
-                    ...$extras,
-                ]
-            );
-        } catch (\Throwable $loggingError) {
-            Console::error('Failed to report the migration error: ' . $loggingError->getMessage());
+            Span::add('level', 'warning');
+            Span::add('migration_export_notification_failed', true);
         }
     }
 
