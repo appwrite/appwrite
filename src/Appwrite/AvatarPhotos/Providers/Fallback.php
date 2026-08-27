@@ -6,18 +6,7 @@ use Appwrite\AvatarPhotos\Photo;
 use Utopia\Database\Document;
 
 /**
- * Static fallback provider.
- *
- * Returns a minimal built-in avatar image when all other providers have
- * failed.  The image is a simple SVG rendered to a PNG-compatible byte
- * string; designers can swap it out later for a brand-aligned asset
- * without changing any surrounding logic.
- *
- * The SVG depicts a neutral silhouette on an Appwrite-pink background —
- * similar to what "mystery man" (mp) looks like on Gravatar, but ours.
- *
- * This provider needs nothing from the user and never returns null, so it is
- * always safe to place last in the chain.
+ * Static fallback provider, a minimal built-in avatar placeholder
  */
 class Fallback extends Photo
 {
@@ -26,19 +15,16 @@ class Fallback extends Photo
         return 'fallback';
     }
 
-    public function supports(Document $user): bool
+    public function supports(Document $profile): bool
     {
         return true;
     }
 
-    public function get(Document $user, int $width, int $height, string $rating): ?string
+    public function get(Document $profile, int $width, int $height, string $rating): ?string
     {
         $width = $width > 0 ? $width : 256;
         $height = $height > 0 ? $height : 256;
 
-        // Generate an SVG silhouette and rasterise it with Imagick so the
-        // caller always receives a PNG regardless of whether SVG support is
-        // available in the client.
         $svg = $this->buildSvg($width, $height);
 
         if (\extension_loaded('imagick')) {
@@ -50,19 +36,13 @@ class Fallback extends Photo
                 $imagick->resizeImage($width, $height, \Imagick::FILTER_LANCZOS, 1);
                 return $imagick->getImageBlob();
             } catch (\Throwable) {
-                // Fall through to raw SVG on Imagick failure.
             }
         }
 
-        // Last resort: return the SVG bytes directly.  The HTTP action sets
-        // the content-type header to image/png, so this branch should be
-        // considered a degraded path.
+        // Last resort: return the SVG bytes directly
         return $svg;
     }
 
-    /**
-     * Build the SVG source for the fallback silhouette.
-     */
     private function buildSvg(int $width, int $height): string
     {
         return <<<SVG
