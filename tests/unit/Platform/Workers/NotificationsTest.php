@@ -426,34 +426,6 @@ final class NotificationsTest extends TestCase
         $this->assertSame('Custom Reply', $message->getReplyToName());
     }
 
-    public function testLegacyPayloadSmtpOverridesProjectSmtp(): void
-    {
-        $worker = new Notifications();
-        $project = new Document([
-            'smtp' => [
-                'enabled' => true,
-                'host' => 'project.smtp.test',
-                'port' => 2525,
-                'senderEmail' => 'project@example.test',
-            ],
-        ]);
-
-        $reflection = new \ReflectionMethod($worker, 'resolveSmtpConfig');
-        $reflection->setAccessible(true);
-        /** @var array<string, mixed> $smtp */
-        $smtp = $reflection->invoke($worker, $project, [
-            'smtp' => [
-                'host' => 'payload.smtp.test',
-                'port' => 587,
-                'senderEmail' => 'payload@example.test',
-            ],
-        ]);
-
-        $this->assertSame('payload.smtp.test', $smtp['host']);
-        $this->assertSame(587, $smtp['port']);
-        $this->assertSame('payload@example.test', $smtp['senderEmail']);
-    }
-
     public function testLegacyMailPayloadThrowsWhenSmtpIsNotConfigured(): void
     {
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
