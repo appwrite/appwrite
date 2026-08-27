@@ -14,18 +14,22 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
+use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Geo\Geo;
 use Appwrite\GraphQL\Schema;
-use Appwrite\Locale\GeoRecord;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
+use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Usage\Policy as UsagePolicy;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use OpenRuntimes\Orchestrator\Jobs;
+use Swoole\Table;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
 use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
@@ -38,7 +42,6 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
@@ -46,7 +49,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
-use Utopia\Fetch\Client;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
@@ -58,6 +60,7 @@ use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Usage\Tenant as UsageTenant;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
@@ -131,6 +134,18 @@ return function (Container $context): void {
     $context->set('queueForWebhooks', fn (Publisher $publisher) => new Webhook($publisher), ['publisher']);
     $context->set('queueForRealtime', fn () => new Realtime(), []);
     $context->set('usage', fn () => new UsageContext(), []);
+    $context->set('usageForProject', function (Document $project, UsageConnection $usageConnection): UsageTenant {
+        if (!$usageConnection->isEnabled()) {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
+        }
+        if (!$usageConnection->isReady()) {
+            throw new Exception(Exception::GENERAL_USAGE_NOT_READY);
+        }
+
+        $tenant = (string) $project->getSequence();
+        return new UsageTenant($usageConnection->getUsage(), $tenant === '' ? '__none__' : $tenant);
+    }, ['project', 'usageConnection']);
+    $context->set('usagePolicy', fn () => new UsagePolicy(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {
@@ -1074,6 +1089,10 @@ return function (Container $context): void {
     $context->set('resourceToken', function ($project, $dbForProject, $request, Authorization $authorization) {
         $tokenJWT = $request->getParam('token');
 
+        if (! \is_string($tokenJWT)) {
+            return new Document([]);
+        }
+
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
             $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY); // Instantiate with key, algo, maxAge and leeway.
@@ -1196,78 +1215,9 @@ return function (Container $context): void {
         return new Agent($adapter);
     }, ['register']);
 
-    $context->set('geoRecord', function ($request, Locale $locale, callable $getGeoForIp) {
-        $ip = $request->getIp();
-
-        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
-            Console::warning("Invalid IP address: {$ip}");
-            $ip = '0.0.0.0';
-        }
-
-        return $getGeoForIp($locale, $ip);
-    }, ['request', 'locale', 'getGeoForIp']);
-
-    $context->set('getGeoForIp', function () {
-        return function (Locale $locale, string $ip): GeoRecord {
-            $record = null;
-            $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
-            $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
-
-            if (!empty($geoEndpoint) && !empty($geoSecret) && filter_var($ip, FILTER_VALIDATE_IP)) {
-                try {
-                    $client = new Client();
-                    $client->addHeader('Authorization', 'Bearer ' . $geoSecret);
-                    $client->setTimeout(3000);
-
-                    $response = $client->fetch(\rtrim($geoEndpoint, '/') . "/ips/{$ip}", Client::METHOD_GET);
-                    if ($response->getStatusCode() === 200) {
-                        $body = $response->json();
-                        if (\is_array($body)) {
-                            $record = $body;
-                        }
-                    }
-                } catch (\Throwable $th) {
-                    Console::warning('Geo service unavailable: ' . $th->getMessage());
-                }
-            }
-
-            $countryCode = \strtoupper($record['countryCode'] ?? '--');
-            $continentCode = \strtoupper($record['continentCode'] ?? '--');
-
-            $eu = \array_map('strtoupper', Config::getParam('locale-eu'));
-            $currencies = Config::getParam('locale-currencies');
-            $currency = null;
-
-            if ($countryCode !== '--') {
-                foreach ($currencies as $element) {
-                    if (isset($element['locations'], $element['code']) && \in_array($countryCode, $element['locations'], true)) {
-                        $currency = $element['code'];
-                        break;
-                    }
-                }
-            }
-
-            $autonomousSystemNumber = $record['autonomousSystemNumber'] ?? null;
-
-            return (new GeoRecord([
-                'ip' => $ip,
-                'countryCode' => $countryCode,
-                'continentCode' => $continentCode,
-                'eu' => $countryCode !== '--' && \in_array($countryCode, $eu, true),
-                'currency' => $currency,
-                'latitude' => $record['latitude'] ?? null,
-                'longitude' => $record['longitude'] ?? null,
-                'timeZone' => $record['timeZone'] ?? null,
-                'weatherCode' => $record['weatherCode'] ?? null,
-                'postalCode' => $record['postalCode'] ?? null,
-                'autonomousSystemNumber' => $autonomousSystemNumber === null ? null : (string) $autonomousSystemNumber,
-                'autonomousSystemOrganization' => $record['autonomousSystemOrganization'] ?? null,
-                'connectionType' => $record['connection'] ?? null,
-                'connectionUsageType' => $record['user'] ?? $record['type'] ?? null,
-                'connectionOrganization' => $record['organization'] ?? null,
-                'isp' => $record['isp'] ?? null,
-            ]))
-                ->setLocale($locale);
-        };
-    }, []);
+    $context->set('geo', fn (Locale $locale, ?GeoClient $geoClient, Table $geoRecords) => new Geo(
+        $geoClient,
+        $locale,
+        $geoRecords
+    ), ['locale', 'geoClient', 'geoRecords']);
 };

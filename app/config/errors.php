@@ -116,8 +116,13 @@ return [
     ],
     Exception::GENERAL_USAGE_DISABLED => [
         'name' => Exception::GENERAL_USAGE_DISABLED,
-        'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
-        'code' => 501,
+        'description' => 'Usage stats are disabled. You can enable them by setting the _APP_USAGE_STATS environment variable of your Appwrite server.',
+        'code' => 403,
+    ],
+    Exception::GENERAL_USAGE_NOT_READY => [
+        'name' => Exception::GENERAL_USAGE_NOT_READY,
+        'description' => 'Usage storage is not ready. Please retry after the usage schema has been initialized.',
+        'code' => 503,
     ],
     Exception::GENERAL_NOT_IMPLEMENTED => [
         'name' => Exception::GENERAL_NOT_IMPLEMENTED,
@@ -1274,6 +1279,11 @@ return [
     Exception::VARIABLE_CANNOT_UNSET_SECRET => [
         'name' => Exception::VARIABLE_CANNOT_UNSET_SECRET,
         'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
+        'code' => 400,
+    ],
+    Exception::VARIABLE_INVALID_KEY => [
+        'name' => Exception::VARIABLE_INVALID_KEY,
+        'description' => 'Variable key is not a valid environment variable name. Update or delete the variable, then retry the deployment.',
         'code' => 400,
     ],
     Exception::GRAPHQL_NO_QUERY => [

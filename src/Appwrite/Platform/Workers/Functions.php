@@ -268,6 +268,16 @@ class Functions extends Action
                 break;
             case 'schedule':
                 $execution = new Document($payload['execution'] ?? []);
+
+                // The scheduler dispatches a snapshot without variables; a
+                // fresh read pulls them along with any other changes made
+                // since the snapshot was taken.
+                $function = $dbForProject->getDocument('functions', $function->getId());
+                if ($function->isEmpty()) {
+                    Console::log('Function not found, skipping scheduled execution.');
+                    break;
+                }
+
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,

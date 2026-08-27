@@ -59,6 +59,7 @@ class Exception extends \Exception
     public const string GENERAL_FEATURE_UNSUPPORTED = 'general_feature_unsupported';
     public const string GENERAL_CODES_DISABLED = 'general_codes_disabled';
     public const string GENERAL_USAGE_DISABLED = 'general_usage_disabled';
+    public const string GENERAL_USAGE_NOT_READY = 'general_usage_not_ready';
     public const string GENERAL_NOT_IMPLEMENTED = 'general_not_implemented';
     public const string GENERAL_INVALID_EMAIL = 'general_invalid_email';
     public const string GENERAL_INVALID_PHONE = 'general_invalid_phone';
@@ -347,6 +348,7 @@ class Exception extends \Exception
     public const string VARIABLE_NOT_FOUND = 'variable_not_found';
     public const string VARIABLE_ALREADY_EXISTS = 'variable_already_exists';
     public const string VARIABLE_CANNOT_UNSET_SECRET = 'variable_cannot_unset_secret';
+    public const string VARIABLE_INVALID_KEY = 'variable_invalid_key';
 
     /** Platform */
     public const string PLATFORM_NOT_FOUND = 'platform_not_found';

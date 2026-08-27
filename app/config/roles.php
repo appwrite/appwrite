@@ -78,6 +78,7 @@ $admins = [
     'webhooks.write',
     'project.read',
     'project.write',
+    'usage.read',
     'locale.read',
     'avatars.read',
     'health.read',
