@@ -2661,7 +2661,7 @@ Http::get('/v1/messaging/topics')
             // Safe to skip subquery, Does not return in Response
             $topics = $dbForProject->skipFilters(
                 fn () => $dbForProject->find('topics', $queries),
-                ['subQueryTopicTargets']
+                APP_TOPICS_SUBQUERIES
             );
             $total = $includeTotal ? $dbForProject->count('topics', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
@@ -2891,7 +2891,7 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
                     $topicId,
                     $totalAttribute,
                 ),
-                ['subQueryTopicTargets']
+                APP_TOPICS_SUBQUERIES
             ));
         } catch (DuplicateException) {
             throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
@@ -3102,7 +3102,7 @@ Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
                 $totalAttribute,
                 min: 0
             ),
-            ['subQueryTopicTargets']
+            APP_TOPICS_SUBQUERIES
         ));
 
         $queueForEvents
