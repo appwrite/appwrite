@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Coroutine;
 use Swoole\Runtime;
@@ -13,9 +14,19 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
-use Utopia\Mqtt\Broker;
+use Utopia\Mqtt\Adapter;
+use Utopia\Mqtt\Dispatcher;
+use Utopia\Mqtt\Handlers\Auth as AuthHandler;
+use Utopia\Mqtt\Handlers\Connect as ConnectHandler;
+use Utopia\Mqtt\Handlers\Disconnect as DisconnectHandler;
+use Utopia\Mqtt\Handlers\Ping as PingHandler;
+use Utopia\Mqtt\Handlers\Publish as PublishHandler;
+use Utopia\Mqtt\Handlers\Subscribe as SubscribeHandler;
+use Utopia\Mqtt\Handlers\Unsubscribe as UnsubscribeHandler;
+use Utopia\Mqtt\Packet;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 require_once __DIR__ . '/init.php';
@@ -39,8 +50,6 @@ if (!$container->has('pools')) {
     }, ['register']);
 }
 
-// DB bootstrap helpers, mirroring app/realtime.php. These are process-level (pools +
-// cache), not HTTP; the connection resources call them to reach the project/console DB.
 if (!function_exists('getCache')) {
     function getCache(): Cache
     {
@@ -220,12 +229,65 @@ $authorize = function (array $identity, string $topic) use ($container, $registe
 /** @var \Utopia\Telemetry\Adapter $telemetry */
 $telemetry = $container->get('telemetry');
 
-$broker = new Broker(
-    host: '0.0.0.0',
-    port: 1883,
-    maxPacketSize: (int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', '64000'),
-);
-$broker->onConnect($authenticate);
-$broker->onSubscribe($authorize);
-$broker->withTelemetry($telemetry);
-$broker->start();
+$adapter = new Adapter\Swoole(host: '0.0.0.0', port: 1883);
+$adapter->setPackageMaxLength((int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', '64000'));
+
+$mqtt = new Mqtt($adapter, $telemetry);
+
+$dispatcher = (new Dispatcher())
+    ->addHandler(new ConnectHandler())
+    ->addHandler(new SubscribeHandler())
+    ->addHandler(new UnsubscribeHandler())
+    ->addHandler(new PublishHandler())
+    ->addHandler(new AuthHandler())
+    ->addHandler(new PingHandler())
+    ->addHandler(new DisconnectHandler());
+
+$adapter->onStart(fn () => print("MQTT broker started\n"));
+
+$adapter->onReceive(function (int $fd, string $data) use (
+    $adapter,
+    $mqtt,
+    $dispatcher,
+    $authenticate,
+    $authorize,
+): void {
+    $packet = Packet::parse($data);
+    $connection = $mqtt->open($fd);
+
+    $span = Span::init('mqtt.' . $packet->name());
+    $span->set('mqtt.fd', $fd);
+    $span->set('project.id', $connection->projectId);
+    $span->set('user.id', $connection->identity['userId'] ?? '');
+
+    $reply = function (string $packet = '', bool $close = false) use ($adapter, $fd): void {
+        if ($packet !== '') {
+            $adapter->send($fd, $packet);
+        }
+        if ($close) {
+            $adapter->close($fd);
+        }
+    };
+
+    $packetContainer = new Container();
+    $packetContainer->set('mqtt', fn () => $mqtt);
+    $packetContainer->set('connection', fn () => $connection);
+    $packetContainer->set('packet', fn () => $packet);
+    $packetContainer->set('authenticator', fn () => $authenticate);
+    $packetContainer->set('authorizer', fn () => $authorize);
+    $packetContainer->set('reply', fn () => $reply);
+
+    try {
+        $dispatcher->dispatch($packetContainer, $packet->type);
+        $span->finish();
+    } catch (\Throwable $error) {
+        $span->finish(error: $error);
+        throw $error;
+    }
+});
+
+$adapter->onClose(function (int $fd) use ($mqtt): void {
+    $mqtt->close($fd);
+});
+
+$adapter->start();
