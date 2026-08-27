@@ -3,7 +3,7 @@
 namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter as MessagingAdapter;
-use Utopia\Mqtt\Adapter as Transport;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Metrics;
 use Utopia\Mqtt\Packet;
@@ -12,6 +12,8 @@ use Utopia\Telemetry\Adapter as Telemetry;
 
 class Mqtt extends MessagingAdapter
 {
+    private const CHANNEL = 'mqtt';
+
     /**
      * Connection registry.
      *
@@ -26,10 +28,10 @@ class Mqtt extends MessagingAdapter
 
     private ?SubscriptionStore $subscriptions = null;
 
-    public function __construct(
-        private readonly Transport $transport,
-        Telemetry $telemetry,
-    ) {
+    private ?PubSubPool $pubSubPool = null;
+
+    public function __construct(Telemetry $telemetry)
+    {
         $this->metrics = new Metrics($telemetry);
     }
 
@@ -40,6 +42,16 @@ class Mqtt extends MessagingAdapter
     private function subscriptions(): SubscriptionStore
     {
         return $this->subscriptions ??= new SubscriptionStore();
+    }
+
+    private function getPubSubPool(): PubSubPool
+    {
+        if ($this->pubSubPool === null) {
+            global $register;
+            $this->pubSubPool = new PubSubPool($register->get('pools')->get('pubsub'));
+        }
+
+        return $this->pubSubPool;
     }
 
     /** Get or create the connection state for a file descriptor. */
@@ -95,11 +107,15 @@ class Mqtt extends MessagingAdapter
     }
 
     /**
-     * Fan a published message out to a topic's subscribers over the transport, encoding
-     * a PUBLISH per subscriber (their protocol and packet id) and recording delivery
-     * telemetry. MQTT carries raw bytes, so the message and its inbound QoS ride in
-     * $options ($options['payload'], $options['qos']) rather than the array $payload;
-     * $channels holds the topics. The MQTT analogue of Realtime::send.
+     * Publish a message onto the 'mqtt' pub/sub channel for fan-out. Every broker
+     * worker listens on that channel and delivers to its own local subscribers, so a
+     * publish reaches subscribers regardless of which worker holds them — the MQTT
+     * analogue of Realtime::send publishing to the realtime firehose.
+     *
+     * MQTT carries raw bytes, so the message and its inbound QoS ride in $options
+     * ($options['payload'], $options['qos']) rather than the array $payload;
+     * $channels holds the topics. The payload is base64-encoded to survive the JSON
+     * envelope.
      *
      * @param array<mixed> $payload unused for MQTT (payload is binary, see $options)
      * @param array<int, string> $events ignored
@@ -114,28 +130,12 @@ class Mqtt extends MessagingAdapter
 
         foreach ($channels as $topic) {
             $this->metrics->messagesPublished->add(1, ['qos' => $qos]);
-
-            $subscribers = $this->getSubscribers($projectId, $topic);
-            if ($subscribers === []) {
-                $this->metrics->messagesDropped->add(1, ['reason' => 'no_subscriber']);
-                continue;
-            }
-
-            foreach ($subscribers as $fd => $grantedQos) {
-                $subscriber = $this->connections[$fd] ?? null;
-                if ($subscriber === null) {
-                    continue;
-                }
-                $effectiveQos = min($qos, $grantedQos);
-                $this->transport->send($fd, Packet::publish(
-                    $topic,
-                    $message,
-                    $effectiveQos,
-                    $subscriber->nextPacketId(),
-                    $subscriber->protocol,
-                ));
-                $this->metrics->messagesDelivered->add(1, ['qos' => $effectiveQos]);
-            }
+            $this->getPubSubPool()->publish(self::CHANNEL, (string) json_encode([
+                'project' => $projectId,
+                'topic' => $topic,
+                'qos' => $qos,
+                'payload' => base64_encode($message),
+            ]));
         }
     }
 
