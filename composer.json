@@ -82,7 +82,7 @@
         "utopia-php/dsn": "0.2.1",
         "utopia-php/http": "^2.0@RC",
         "utopia-php/fetch": "^1.1",
-        "utopia-php/validators": "^0.5",
+        "utopia-php/validators": "^0.6",
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.8.*",
         "utopia-php/lock": "0.3.*",
@@ -110,7 +110,7 @@
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*",
         "utopia-php/client": "^0.3.0",
-        "open-runtimes/sdk-for-php": "0.11.*",
+        "open-runtimes/sdk-for-php": "0.13.*",
         "utopia-php/schedule": "^0.2.0",
         "utopia-php/usage": "^0.15.0"
     },

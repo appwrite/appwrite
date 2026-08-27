@@ -167,7 +167,7 @@ abstract class Database implements Source, Changes
 
         $project = $this->dbForPlatform->skipFilters(
             fn () => $this->dbForPlatform->getDocument('projects', $projectId),
-            ['subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryBlocks', 'subQueryDevKeys']
+            APP_PROJECTS_SUBQUERIES
         );
 
         return $this->projects[$projectId] = $project;

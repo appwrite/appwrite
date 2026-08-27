@@ -387,7 +387,7 @@ class Messaging extends Action
                     Query::equal('$id', $topicIds),
                     Query::limit(\count($topicIds)),
                 ]),
-                ['subQueryTopicTargets']
+                APP_TOPICS_SUBQUERIES
             );
 
             foreach ($topics as $topic) {
