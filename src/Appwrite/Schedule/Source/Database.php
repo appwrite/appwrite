@@ -104,12 +104,6 @@ abstract class Database implements Source, Changes
      */
     private function rows(?\DateTimeImmutable $since): iterable
     {
-        // Temporarly accepting both 'fra' and 'default'
-        $regions = [System::getEnv('_APP_REGION', 'default')];
-        if (!\in_array('default', $regions)) {
-            $regions[] = 'default';
-        }
-
         $limit = 10_000;
         $sum = $limit;
         $latest = null;
@@ -117,7 +111,7 @@ abstract class Database implements Source, Changes
         while ($sum === $limit) {
             $queries = [
                 Query::limit($limit),
-                Query::equal('region', $regions),
+                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                 Query::equal('resourceType', [$this->type()]),
             ];
 
