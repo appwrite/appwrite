@@ -206,6 +206,7 @@ return [
             // Decrease to 128 as in index length?
             Attribute::string(key: 'providerUid', size: 2048),
             Attribute::string(key: 'providerEmail', size: 320),
+            Attribute::string(key: 'photo', size: 2048),
             Attribute::string(key: 'providerAccessToken', size: 16384, filters: ['encrypt']),
             Attribute::datetime(key: 'providerAccessTokenExpiry', signed: false, filters: ['datetime']),
             Attribute::string(key: 'providerRefreshToken', size: 16384, filters: ['encrypt']),

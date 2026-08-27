@@ -4229,20 +4229,21 @@
                 "issues": "https://github.com/utopia-php/fetch/issues",
                 "source": "https://github.com/utopia-php/fetch/tree/1.1.2"
             },
+            "abandoned": true,
             "time": "2026-04-29T11:19:19+00:00"
         },
         {
             "name": "utopia-php/http",
-            "version": "2.0.0-rc23",
+            "version": "2.0.0-rc24",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "57525e47c56783ea624b0f02339b4ec8f90cca1a"
+                "reference": "ab04601b24a229bc66d09adbd96aa55039c39dbf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/57525e47c56783ea624b0f02339b4ec8f90cca1a",
-                "reference": "57525e47c56783ea624b0f02339b4ec8f90cca1a",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/ab04601b24a229bc66d09adbd96aa55039c39dbf",
+                "reference": "ab04601b24a229bc66d09adbd96aa55039c39dbf",
                 "shasum": ""
             },
             "require": {
@@ -4280,9 +4281,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc23"
+                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc24"
             },
-            "time": "2026-08-14T06:49:12+00:00"
+            "time": "2026-08-26T14:23:01+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4876,16 +4877,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "1.4.0",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "74c7ad088f83f53b1fbac5cc224f3c9be49e5774"
+                "reference": "520919e7e326cc8a81e13a33f17d350e7ecba070"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/74c7ad088f83f53b1fbac5cc224f3c9be49e5774",
-                "reference": "74c7ad088f83f53b1fbac5cc224f3c9be49e5774",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/520919e7e326cc8a81e13a33f17d350e7ecba070",
+                "reference": "520919e7e326cc8a81e13a33f17d350e7ecba070",
                 "shasum": ""
             },
             "require": {
@@ -4936,9 +4937,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/1.4.0"
+                "source": "https://github.com/utopia-php/queue/tree/1.5.0"
             },
-            "time": "2026-08-19T13:41:02+00:00"
+            "time": "2026-08-26T12:23:38+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5288,20 +5289,19 @@
         },
         {
             "name": "utopia-php/telemetry",
-            "version": "0.4.6",
+            "version": "0.4.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/telemetry.git",
-                "reference": "f96778a01792c32df0876fe1f38a79b9588445d8"
+                "reference": "186dc1c1f92fbd15a1aa6a63515d0f4251dc88ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/f96778a01792c32df0876fe1f38a79b9588445d8",
-                "reference": "f96778a01792c32df0876fe1f38a79b9588445d8",
+                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/186dc1c1f92fbd15a1aa6a63515d0f4251dc88ff",
+                "reference": "186dc1c1f92fbd15a1aa6a63515d0f4251dc88ff",
                 "shasum": ""
             },
             "require": {
-                "ext-protobuf": "*",
                 "nyholm/psr7": "1.*",
                 "open-telemetry/exporter-otlp": "1.*",
                 "open-telemetry/sdk": "1.*",
@@ -5312,6 +5312,7 @@
                 "swoole/ide-helper": "6.*"
             },
             "suggest": {
+                "ext-protobuf": "For better performance, when dealing with the protobuf format",
                 "ext-sockets": "Required for the Swoole transport implementation",
                 "ext-swoole": "Required for the Swoole transport implementation"
             },
@@ -5333,9 +5334,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/telemetry/issues",
-                "source": "https://github.com/utopia-php/telemetry/tree/0.4.6"
+                "source": "https://github.com/utopia-php/telemetry/tree/0.4.7"
             },
-            "time": "2026-08-05T17:56:48+00:00"
+            "time": "2026-08-26T17:59:59+00:00"
         },
         {
             "name": "utopia-php/usage",
@@ -5721,16 +5722,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "4.6.0",
+            "version": "4.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "142a854e83149826762e368d207eeaa004966617"
+                "reference": "ee11cfcb8e5fc625a9b990591464442f61df35ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/142a854e83149826762e368d207eeaa004966617",
-                "reference": "142a854e83149826762e368d207eeaa004966617",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ee11cfcb8e5fc625a9b990591464442f61df35ac",
+                "reference": "ee11cfcb8e5fc625a9b990591464442f61df35ac",
                 "shasum": ""
             },
             "require": {
@@ -5767,9 +5768,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/4.6.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/4.7.0"
             },
-            "time": "2026-08-25T12:48:46+00:00"
+            "time": "2026-08-26T13:57:12+00:00"
         },
         {
             "name": "brianium/paratest",
