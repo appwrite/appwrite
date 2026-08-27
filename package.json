@@ -173,7 +173,7 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@tanstack/router-cli": "^1.132.21",
-    "@types/bun": "^1.2.22",
+    "@types/bun": "^1.4.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.12.0",
     "@types/prismjs": "^1.26.6",
