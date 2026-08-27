@@ -27,6 +27,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Autodesk\Update as Upd
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitbucket\Update as UpdateOAuth2Bitbucket;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitly\Update as UpdateOAuth2Bitly;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Box\Update as UpdateOAuth2Box;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Cloudflare\Update as UpdateOAuth2Cloudflare;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Dailymotion\Update as UpdateOAuth2Dailymotion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Discord\Update as UpdateOAuth2Discord;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Disqus\Update as UpdateOAuth2Disqus;
@@ -195,6 +196,7 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Bitbucket::getName(), new UpdateOAuth2Bitbucket());
         $this->addAction(UpdateOAuth2Bitly::getName(), new UpdateOAuth2Bitly());
         $this->addAction(UpdateOAuth2Box::getName(), new UpdateOAuth2Box());
+        $this->addAction(UpdateOAuth2Cloudflare::getName(), new UpdateOAuth2Cloudflare());
         $this->addAction(UpdateOAuth2Autodesk::getName(), new UpdateOAuth2Autodesk());
         $this->addAction(UpdateOAuth2Google::getName(), new UpdateOAuth2Google());
         $this->addAction(UpdateOAuth2Zoom::getName(), new UpdateOAuth2Zoom());
