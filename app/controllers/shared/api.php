@@ -447,6 +447,19 @@ Http::init()
         if (! empty($method)) {
             $namespace = \strtolower($method->getNamespace());
 
+            // An operator turns a database product off when its engine is not deployed,
+            // so the route is unavailable to everyone, keys and privileged roles included.
+            $productEngines = [
+                'documentsdb' => '_APP_DOCUMENTSDB',
+                'vectorsdb' => '_APP_VECTORSDB',
+            ];
+            if (
+                isset($productEngines[$namespace])
+                && System::getEnv($productEngines[$namespace], 'enabled') !== 'enabled'
+            ) {
+                throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+            }
+
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && ! $project->getAttribute('services', [])[$namespace]
