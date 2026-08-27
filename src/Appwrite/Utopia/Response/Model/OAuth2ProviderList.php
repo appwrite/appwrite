@@ -59,6 +59,7 @@ class OAuth2ProviderList extends Model
                     Response::MODEL_OAUTH2_OKTA,
                     Response::MODEL_OAUTH2_KICK,
                     Response::MODEL_OAUTH2_MICROSOFT,
+                    Response::MODEL_OAUTH2_CLOUDFLARE,
                     Response::MODEL_OAUTH2_HUGGINGFACE,
                 ],
                 'description' => 'List of OAuth2 providers.',

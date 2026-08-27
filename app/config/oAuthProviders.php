@@ -90,6 +90,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Bitly',
     ],
+    'cloudflare' => [
+        'name' => 'Cloudflare',
+        'developers' => 'https://developers.cloudflare.com/cloudflare-one/',
+        'icon' => 'icon-cloudflare',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Cloudflare',
+    ],
     'box' => [
         'name' => 'Box',
         'developers' => 'https://developer.box.com/reference/',

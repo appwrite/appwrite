@@ -18,6 +18,7 @@ trait OAuth2Base
             'amazon' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'github' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'apple' => ['serviceId' => '', 'keyId' => '', 'teamId' => '', 'p8File' => '', 'enabled' => false],
+            'cloudflare' => ['clientId' => '', 'clientSecret' => '', 'team' => '', 'enabled' => false],
             'oidc' => ['clientId' => '', 'clientSecret' => '', 'wellKnownURL' => '', 'authorizationURL' => '', 'tokenURL' => '', 'userInfoURL' => '', 'prompt' => [], 'enabled' => false],
             'okta' => ['clientId' => '', 'clientSecret' => '', 'domain' => '', 'authorizationServerId' => '', 'enabled' => false],
             'google' => ['clientId' => '', 'clientSecret' => '', 'prompt' => ['consent'], 'enabled' => false],
