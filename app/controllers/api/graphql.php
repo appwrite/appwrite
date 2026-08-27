@@ -276,11 +276,17 @@ function execute(
             }
         }
 
+        // JSON `{}` is decoded as stdClass; GraphQL requires ?array.
+        $variableValues = $indexed['variables'] ?? null;
+        if ($variableValues instanceof \stdClass) {
+            $variableValues = \get_object_vars($variableValues);
+        }
+
         $promises[] = GraphQL::promiseToExecute(
             $promiseAdapter,
             $schema,
             $source,
-            variableValues: $indexed['variables'] ?? null,
+            variableValues: $variableValues,
             operationName: $indexed['operationName'] ?? null,
             validationRules: $validations
         );

@@ -1035,12 +1035,17 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
                 ]
             ]);
 
+            // Send `connected` before subscribe()/updateStats(). Those steps put the
+            // connection in the in-memory delivery tree and then hit the platform DB
+            // / usage queue (coroutine yields). A pub/sub event delivered in that
+            // window would otherwise become the client's first websocket frame.
+            $server->send([$connection], $connectedPayloadJson);
+            $outboundBytes += \strlen($connectedPayloadJson);
+
             $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $targetUser->getId());
             $realtime->connections[$connection]['authorization'] = $authorization;
             $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
             $updateStats($project->getId(), $project->getAttribute('teamId'));
-            $server->send([$connection], $connectedPayloadJson);
-            $outboundBytes += \strlen($connectedPayloadJson);
             triggerStats([
                 METRIC_REALTIME_OUTBOUND => \strlen($connectedPayloadJson),
             ], $project->getId());
@@ -1064,29 +1069,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $sanitizedUser = empty($targetUser->getId()) ? null : $response->output($targetUser, Response::MODEL_ACCOUNT);
 
         $mapping = [];
+        $prepared = [];
         foreach ($subscriptions as $index => $subscription) {
             $subscriptionId = ID::unique();
-
-            $realtime->subscribe(
-                $project->getId(),
-                $connection,
-                $subscriptionId,
-                $roles,
-                $subscription['channels'],
-                $subscription['queries'],
-                $targetUser->getId()
-            );
-
             $mapping[$index] = $subscriptionId;
-        }
-
-        $realtime->connections[$connection]['authorization'] = $authorization;
-        $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
-        $updateStats($project->getId(), $project->getAttribute('teamId'));
-
-        $subscriptionCount = \count($subscriptions);
-        if (!empty($subscriptions)) {
-            $register->get('telemetry.workerSubscriptionCounter')->add(\count($subscriptions), $register->get('telemetry.workerAttributes'));
+            $prepared[] = [$subscriptionId, $subscription];
         }
 
         $connectedPayloadJson = json_encode([
@@ -1098,8 +1085,34 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             ]
         ]);
 
+        // Handshake first: URL channels subscribe the connection into the delivery
+        // tree before `connected` is sent, and updateStats() yields on DB/queue I/O.
+        // Concurrent events (especially on the shared console `presences` channel)
+        // can then race ahead of the handshake frame.
         $server->send([$connection], $connectedPayloadJson);
         $outboundBytes += \strlen($connectedPayloadJson);
+
+        foreach ($prepared as [$subscriptionId, $subscription]) {
+            $realtime->subscribe(
+                $project->getId(),
+                $connection,
+                $subscriptionId,
+                $roles,
+                $subscription['channels'],
+                $subscription['queries'],
+                $targetUser->getId()
+            );
+        }
+
+        $realtime->connections[$connection]['authorization'] = $authorization;
+        $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
+        $updateStats($project->getId(), $project->getAttribute('teamId'));
+
+        $subscriptionCount = \count($subscriptions);
+        if (!empty($subscriptions)) {
+            $register->get('telemetry.workerSubscriptionCounter')->add(\count($subscriptions), $register->get('telemetry.workerAttributes'));
+        }
+
         triggerStats([
             METRIC_REALTIME_OUTBOUND => \strlen($connectedPayloadJson),
         ], $project->getId());

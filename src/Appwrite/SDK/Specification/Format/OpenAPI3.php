@@ -629,34 +629,55 @@ class OpenAPI3 extends Format
 
                 switch ($class) {
                     case \Utopia\Database\Validator\UID::class:
+                    case \Utopia\Database\Validator\Key::class:
+                    case \Appwrite\Utopia\Database\Validator\ProjectId::class:
+                    case \Appwrite\Platform\Modules\Compute\Validator\VariableKey::class:
                     case \Utopia\Validator\Text::class:
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\BigInt::class:
                         // BigInt validator reports Database::VAR_BIGINT, but OpenAPI expects scalar types.
                         // We expose it as int64 to keep schema consistent with Column/Attribute models.
                         $node['schema']['type'] = 'integer';
                         $node['schema']['format'] = 'int64';
-                        if (!empty($param['example'])) {
+                        if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];
                         }
                         break;
                     case \Utopia\Validator\Boolean::class:
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: false;
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : false;
                         break;
                     case \Appwrite\Utopia\Database\Validator\CustomId::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-appwrite'] = [
                             'idGenerator' => 'ID.unique',
                         ];
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        break;
+                    case \Appwrite\Task\Validator\Cron::class:
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '0 0 * * *';
+                        break;
+                    case \Utopia\Validator\HexColor::class:
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'FFFFFF';
+                        break;
+                    case \Utopia\Validator\Hostname::class:
+                    case \Utopia\Domains\Validator\PublicDomain::class:
+                    case \Utopia\Validator\Domain::class:
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'example.com';
+                        break;
+                    case \Appwrite\Utopia\Database\Validator\Folder::class:
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'photos/2026';
                         break;
                     case \Utopia\Database\Validator\Datetime::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'datetime';
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: Model::TYPE_DATETIME_EXAMPLE;
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : Model::TYPE_DATETIME_EXAMPLE;
                         break;
                     case \Utopia\Database\Validator\Spatial::class:
                         /** @var Spatial $validator */
@@ -691,7 +712,7 @@ class OpenAPI3 extends Format
                                 ],
                             ],
                         };
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: match ($validator->getSpatialType()) {
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : match ($validator->getSpatialType()) {
                             Database::VAR_POINT => '[1, 2]',
                             Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
                             Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
@@ -701,25 +722,25 @@ class OpenAPI3 extends Format
                     case \Utopia\Emails\Validator\Email::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'email';
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: 'email@example.com';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'email@example.com';
                         break;
                     case \Utopia\Validator\Host::class:
                     case \Utopia\Validator\URL::class:
                     case \Appwrite\Network\Validator\Redirect::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: 'https://example.com';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'https://example.com';
                         break;
                     case \Utopia\Validator\JSON::class:
                     case \Utopia\Validator\JSON\ObjectValidator::class:
                     case \Utopia\Validator\Assoc::class:
                         $node['schema']['type'] = 'object';
                         $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: '{}';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '{}';
                         break;
                     case \Utopia\Validator\JSON\ArrayValidator::class:
                         $node['schema']['type'] = 'array';
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: '[]';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '[]';
                         break;
                     case \Appwrite\Utopia\Request\Validator\File::class:
                         $consumes = ['multipart/form-data'];
@@ -729,10 +750,16 @@ class OpenAPI3 extends Format
                     case \Utopia\Validator\ArrayList::class:
                         /** @var ArrayList $validator */
                         $node['schema']['type'] = 'array';
-                        $node['schema']['items'] = [
-                            'type' => $validator->getValidator()->getType(),
-                        ];
-                        if (!empty($param['example'])) {
+                        // Validator::TYPE_FLOAT is gettype()'s 'double', and TYPE_MIXED has no
+                        // OpenAPI equivalent at all. Emitting either verbatim produces a schema
+                        // no OpenAPI parser accepts, so an SDK cannot be generated from the spec.
+                        $itemType = $validator->getValidator()->getType();
+                        $node['schema']['items'] = match ($itemType) {
+                            Validator::TYPE_FLOAT => ['type' => 'number', 'format' => 'double'],
+                            Validator::TYPE_MIXED => new \stdClass(),
+                            default => ['type' => $itemType],
+                        };
+                        if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];
                         }
                         break;
@@ -747,36 +774,36 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: [Permission::read(Role::any())];
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : [Permission::read(Role::any())];
                         break;
                     case \Utopia\Database\Validator\Roles::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '["' . Role::any()->toString() . '"]';
                         break;
                     case \Appwrite\Auth\Validator\Password::class:
                     case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'password';
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: 'password';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'password';
                         break;
                     case \Appwrite\Auth\Validator\Phone::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'phone';
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: '+12065550100'; // In the US, 555 is reserved like example.com
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '+12065550100'; // In the US, 555 is reserved like example.com
                         break;
                     case \Utopia\Validator\Range::class:
                         /** @var Range $validator */
                         $node['schema']['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
                         $node['schema']['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: $validator->getMin();
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : $validator->getMin();
                         break;
                     case \Utopia\Validator\Integer::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = $validator->getFormat();
-                        if (!empty($param['example'])) {
+                        if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];
                         }
                         break;
@@ -784,7 +811,7 @@ class OpenAPI3 extends Format
                     case \Utopia\Validator\FloatValidator::class:
                         $node['schema']['type'] = 'number';
                         $node['schema']['format'] = 'float';
-                        if (!empty($param['example'])) {
+                        if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];
                         }
                         break;
@@ -796,7 +823,7 @@ class OpenAPI3 extends Format
                             $node['schema']['items'] = [
                                 'type' => $validator->getType(),
                             ];
-                            if (!empty($param['example'])) {
+                            if (($param['example'] ?? '') !== '') {
                                 $node['schema']['example'] = $param['example'];
                             }
 
@@ -837,7 +864,7 @@ class OpenAPI3 extends Format
                             }
                         } else {
                             $node['schema']['type'] = $validator->getType();
-                            $node['schema']['example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
+                            $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : $validator->getList()[0];
 
                             if ($validator->getType() === 'string') {
                                 $enum = $param['enum'] ?? null;
@@ -881,7 +908,7 @@ class OpenAPI3 extends Format
                         break;
                     case \Appwrite\Utopia\Database\Validator\CompoundUID::class:
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['example'] = ($param['example'] ?? '') ?: '<ID1:ID2>';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '<ID1:ID2>';
                         break;
                     case \Appwrite\Utopia\Database\Validator\Operation::class:
                         if ($array) {
@@ -897,7 +924,7 @@ class OpenAPI3 extends Format
                         } else {
                             $node['schema']['type'] = 'object';
                         }
-                        if (empty($param['example'])) {
+                        if (($param['example'] ?? '') === '') {
                             $example = [
                                 'action' => 'create',
                                 'databaseId' => '<DATABASE_ID>',
@@ -917,7 +944,7 @@ class OpenAPI3 extends Format
                         break;
                     default:
                         $node['schema']['type'] = 'string';
-                        if (!empty($param['example'])) {
+                        if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];
                         }
                         break;

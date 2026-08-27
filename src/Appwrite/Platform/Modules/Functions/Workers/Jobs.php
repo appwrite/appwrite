@@ -42,8 +42,16 @@ use Utopia\System\System;
  * atomic and a lock timeout retries cleanly).
  *
  * Handlers are protected extension points: downstream workers (e.g. cloud)
- * override finalize() and wrap parent:: — before it for work that must
- * precede 'ready' (edge distribution), after it for post-activation work.
+ * override finalize() and wrap parent:: for post-activation work.
+ *
+ * The ready transition can be deferred. Once a build has passed every check this
+ * worker makes, onVerified() runs and deferred() is asked whether the deployment
+ * may be called ready yet; a subclass with work of its own to finish first starts
+ * it in the former and answers true from the latter until it is done. Both are
+ * no-ops here, where a verified build has nothing left to wait for. Whatever the
+ * subclass is waiting on reports back as its own callback on this queue, handled
+ * in onCallback(), so the waiting happens between callbacks rather than inside one
+ * and nothing holds jobs-deployment:<id> while it is outstanding.
  */
 class Jobs extends Action
 {
@@ -130,7 +138,7 @@ class Jobs extends Action
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                default => $deployment,
+                default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
 
             // Console realtime on every callback (log stream + status).
@@ -187,6 +195,64 @@ class Jobs extends Action
         }
 
         return $deployment;
+    }
+
+    /**
+     * A callback this worker does not handle.
+     *
+     * Everything the jobs-service sends is matched above. A subclass that puts
+     * its own events on this queue handles them here, with the deployment already
+     * read and the lock already held, and returns the deployment as it left it —
+     * which is why the outcome of one is published like any other callback's.
+     *
+     * Returns the deployment untouched here: an unrecognised callback is not an
+     * error, it belongs to something this class does not know about.
+     *
+     * @param array<string, mixed> $data
+     */
+    protected function onCallback(
+        string $event,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Document $deployment,
+        array $data,
+        UsageContext $usage,
+        UsagePublisher $publisherForUsage,
+        ScreenshotPublisher $publisherForScreenshots,
+        Device $deviceForBuilds,
+        VcsFactory $vcsFactory,
+        Cache $cache,
+        array $platform,
+        array $plan,
+        Bus $bus,
+    ): Document {
+        return $deployment;
+    }
+
+    /**
+     * The build has passed every check and the deployment could be called ready.
+     *
+     * A no-op here. A subclass with work that must finish before that happens
+     * starts it here and defers the transition through deferred(). Called on
+     * every attempt at the transition, not only the first, so an override must be
+     * idempotent.
+     */
+    protected function onVerified(Database $dbForProject, Document $project, Document $deployment, Cache $cache): void
+    {
+    }
+
+    /**
+     * Whether the ready transition has to wait for something.
+     *
+     * Never here: a verified build has nothing left outstanding. A subclass
+     * answers true while its own work is unfinished, so that 'ready' is not
+     * published before the deployment can actually be served, and false once it
+     * is done or has given up waiting.
+     */
+    protected function deferred(Document $deployment, Cache $cache): bool
+    {
+        return false;
     }
 
     /**
@@ -350,6 +416,16 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
+        // Every check this worker makes has passed, so the deployment is publishable
+        // as far as it is concerned. Idempotent: each retry of the join arrives here.
+        $this->onVerified($dbForProject, $project, $deployment, $cache);
+
+        // Something else is not finished. Whatever it is reports back as its own
+        // callback, which re-enters through onCallback() and retries this.
+        if ($this->deferred($deployment, $cache)) {
+            return $deployment;
+        }
+
         return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus, $size);
     }
 
@@ -434,6 +510,14 @@ class Jobs extends Action
         ]);
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
+        // latestDeployment* must be written before activate(). activate() sets
+        // deploymentId then walks platform rules; under parallel Sites e2e that
+        // scan is slow enough that clients waiting on deploymentId observe a
+        // stale latestDeploymentId (still the previous deployment).
+        if (! $resource->isEmpty()) {
+            $this->updateLatestDeployment($dbForProject, $resource);
+        }
+
         if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
             $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
         }
@@ -455,11 +539,9 @@ class Jobs extends Action
             BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
         }
 
-        // Keep the resource's "latest deployment" pointer + status current, and
-        // (re)activate its schedule so the scheduler enqueues cron executions
+        // (Re)activate its schedule so the scheduler enqueues cron executions
         // (sites have no scheduleId, so schedule() no-ops for them).
         if (! $resource->isEmpty()) {
-            $this->updateLatestDeployment($dbForProject, $resource);
             $this->schedule($dbForProject, $dbForPlatform, $resource);
         }
 
@@ -568,6 +650,7 @@ class Jobs extends Action
             Query::equal('resourceType', [$resource->getCollection()]),
             Query::equal('resourceInternalId', [$resource->getSequence()]),
             Query::orderDesc('$createdAt'),
+            Query::orderDesc('$sequence'),
         ]);
 
         if ($latest->isEmpty()) {

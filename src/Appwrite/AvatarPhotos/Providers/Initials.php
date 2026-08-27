@@ -9,22 +9,12 @@ use ImagickPixel;
 use Utopia\Database\Document;
 
 /**
- * Initials provider.
- *
- * Generates a coloured square with the user's initials. This is the single
- * implementation behind both the photo-resolution chain and the standalone
- * GET /v1/avatars/initials endpoint — the endpoint renders an arbitrary label
- * through render(), the chain resolves the label off the user first.
+ * Generates a coloured square from user's name
  */
 class Initials extends Photo
 {
-    /** Font used to render the initials, relative to the project root. */
     private const FONT_PATH = '/app/assets/fonts/inter-v8-latin-regular.woff2';
-
-    /** Edge length used when the caller does not ask for a size. */
     private const DEFAULT_SIZE = 500;
-
-    /** Colour palette — a theme is picked from the initials themselves. */
     private array $themes = [
         ['background' => '#FD366E'], // Pink
         ['background' => '#FE9567'], // Orange
@@ -43,24 +33,20 @@ class Initials extends Photo
         return 'initials';
     }
 
-    public function supports(Document $user): bool
+    public function supports(Document $profile): bool
     {
-        return !empty(\trim($this->getLabel($user)));
+        return \trim($profile->getAttribute('name', '')) !== '';
     }
 
-    public function get(Document $user, int $width, int $height, string $rating): ?string
+    public function get(Document $profile, int $width, int $height, string $rating): ?string
     {
         if (!\extension_loaded('imagick')) {
             return null;
         }
 
-        $name = $this->getLabel($user);
+        $name = $profile->getAttribute('name', '');
 
-        // Nothing printable to draw — bail out so the static fallback can be
-        // used instead. The standalone endpoint has no such fallback and keeps
-        // rendering a plain coloured square, which is why this check lives
-        // here and not in render().
-        if (empty($this->getInitials($name))) {
+        if ($this->getInitials($name) === '') {
             return null;
         }
 
@@ -82,7 +68,7 @@ class Initials extends Photo
         $width = $width > 0 ? $width : self::DEFAULT_SIZE;
         $height = $height > 0 ? $height : self::DEFAULT_SIZE;
 
-        $bg = !empty($this->background)
+        $bg = $this->background !== ''
             ? '#' . \ltrim($this->background, '#')
             : $this->getTheme($initials);
 
@@ -94,8 +80,7 @@ class Initials extends Photo
 
         $punch->newImage($width, $height, 'transparent');
 
-        // Providers live at src/Appwrite/AvatarPhotos/Providers, four levels
-        // below the project root — same walk-up as Avatars\Http\Action.
+        // Providers live at src/Appwrite/AvatarPhotos/Providers
         $fontPath = \dirname(__DIR__, 4) . self::FONT_PATH;
         $draw->setFont($fontPath);
         $image->setFont($fontPath);
@@ -123,6 +108,7 @@ class Initials extends Photo
     private function getInitials(string $name): string
     {
         $words = \explode(' ', \strtoupper($name));
+
         // Fallback: split on underscores when there is no space
         $words = (\count($words) === 1) ? \explode('_', \strtoupper($name)) : $words;
 
@@ -157,16 +143,5 @@ class Initials extends Photo
         $rand = ($rand > \count($this->themes) - 1) ? $rand % \count($this->themes) : $rand;
 
         return $this->themes[$rand]['background'];
-    }
-
-    /**
-     * Text the initials are derived from — the display name, falling back to
-     * the email address when the user has not set one.
-     */
-    private function getLabel(Document $user): string
-    {
-        $name = $user->getAttribute('name', '');
-
-        return !empty($name) ? $name : $user->getAttribute('email', '');
     }
 }

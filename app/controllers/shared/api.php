@@ -394,13 +394,16 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $projectInternalId = (string) ($project->getSequence() ?: $project->getId());
                 $lock->tryWithKey(
-                    'lock:platform:'.$projectInternalId.':projects:'.$project->getId().':accessedAt',
-                    fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
-                        'projects',
-                        $project->getId(),
-                        new Document(['accessedAt' => DateTime::now()])
+                    'lock:platform:projects:'.$project->getId().':accessedAt',
+                    // updateDocument never uses cache, so skip the subqueries.
+                    fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                        fn () => $dbForPlatform->updateDocument(
+                            'projects',
+                            $project->getId(),
+                            new Document(['accessedAt' => DateTime::now()])
+                        ),
+                        APP_PROJECTS_SUBQUERIES
                     )),
                     target: 'projects'
                 );
@@ -415,17 +418,28 @@ Http::init()
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
-                    $dbForProject->updateDocument('users', $user->getId(), new Document([
-                        'accessedAt' => $user->getAttribute('accessedAt')
-                    ]));
-                } else {
-                    $userInternalId = (string) ($user->getSequence() ?: $user->getId());
                     $lock->tryWithKey(
-                        'lock:platform:'.$userInternalId.':users:'.$user->getId().':accessedAt',
-                        fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
-                            'users',
-                            $user->getId(),
-                            new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                        'lock:project:'.$project->getSequence().':users:'.$user->getSequence().':accessedAt',
+                        // updateDocument never uses cache, so skip the subqueries.
+                        fn () => $dbForProject->skipFilters(
+                            fn () => $dbForProject->updateDocument('users', $user->getId(), new Document([
+                                'accessedAt' => $user->getAttribute('accessedAt')
+                            ])),
+                            APP_USERS_SUBQUERIES
+                        ),
+                        target: 'users'
+                    );
+                } else {
+                    $lock->tryWithKey(
+                        'lock:platform:'.$user->getSequence().':users:'.$user->getId().':accessedAt',
+                        // updateDocument never uses cache, so skip the subqueries.
+                        fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                            fn () => $dbForPlatform->updateDocument(
+                                'users',
+                                $user->getId(),
+                                new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                            ),
+                            APP_USERS_SUBQUERIES
                         )),
                         target: 'users'
                     );
@@ -539,7 +553,7 @@ Http::init()
 
                 foreach ($request->getParams() as $key => $value) {
                     if (! empty($value)) {
-                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
                     }
                 }
 
@@ -919,7 +933,7 @@ Http::shutdown()
 
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
                 if (! empty($value)) {
-                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
                 }
             }
 
@@ -1218,9 +1232,13 @@ Http::shutdown()
             // we do not have a query operator for array merge keys
             $lock->tryWithKey(
                 'lock:platform:' . $project->getSequence() . ':onboarding',
-                fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                    'onboarding' => $byMethod,
-                ]))),
+                // updateDocument never uses cache, so skip the subqueries.
+                fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                        'onboarding' => $byMethod,
+                    ])),
+                    APP_PROJECTS_SUBQUERIES
+                )),
                 target: 'projects',
             );
         } catch (\Throwable) {

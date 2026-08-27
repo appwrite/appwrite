@@ -170,17 +170,17 @@ $register->set('pools', function () {
         'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
         'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
         'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
-        'user' => System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS', ''),
-        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+        'user' => System::getEnv('_APP_DB_USER_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
     $fallbackForVectorsDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORSDB', 'postgresql'),
         'host' => System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql'),
         'port' => System::getEnv('_APP_DB_PORT_VECTORSDB', '5432'),
-        'user' => System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS', ''),
-        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+        'user' => System::getEnv('_APP_DB_USER_VECTORSDB', '') ?: System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS_VECTORSDB', '') ?: System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA_VECTORSDB', '') ?: System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
 
     $connections = [

@@ -18,6 +18,7 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
@@ -97,7 +98,7 @@ $container->set('jobs', function () {
 $container->set('screenshots', function () {
     $client = (new Client(new CurlAdapter()))
         ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))
-        ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 30));
+        ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 60));
 
     return new ScreenshotsClient($client);
 }, []);
@@ -361,7 +362,12 @@ function getDevice(string $root, string $connection = ''): Device
     }
 }
 
-$container->set('geodb', fn ($register) => $register->get('geodb'), ['register']);
+$container->set('geoClient', function () {
+    $endpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
+    $secret = System::getEnv('_APP_GEO_SECRET', '');
+
+    return empty($endpoint) || empty($secret) ? null : GeoClient::pooled($endpoint, $secret);
+}, []);
 
 $container->set('passwordsDictionary', fn ($register) => $register->get('passwordsDictionary'), ['register']);
 

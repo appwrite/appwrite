@@ -47,18 +47,41 @@ class StatsResources extends Action
         $interval = max(1, (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', 3600));
 
         Console::loop(function () use ($dbForPlatform, $publisherForStatsResources, $usageConnection): void {
-            if (!$usageConnection->isReady()) {
-                throw new \RuntimeException('Usage schema is not ready');
-            }
-            $this->concurrency->sample($usageConnection->getUsage());
+            // Nothing here may end the loop. An exception escaping this closure
+            // ends Console::loop, and the process then stays alive and idle: it
+            // never exits, so restartPolicy never fires, and with no liveness
+            // probe nothing observes that scheduling has stopped. A single
+            // transient ClickHouse timeout on one tick silently ended gauge
+            // collection for a whole region, and the task went on reporting
+            // Ready for weeks while queueing nothing.
+            try {
+                if (!$usageConnection->isReady()) {
+                    Console::error('stats resources: usage schema is not ready, skipping cycle');
+                    return;
+                }
 
-            $last24Hours = (new \DateTime())->sub(new \DateInterval('P1D'));
-            $this->foreachDocument($dbForPlatform, 'projects', [
-                Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours)),
-                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-            ], function ($project) use ($publisherForStatsResources): void {
-                $publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $project));
-            });
+                // Concurrency sampling reads the usage store; project scheduling
+                // reads the platform DB. They share no data, so a failure in the
+                // first must not cost the second -- that coupling is what turned
+                // one bad read into no scheduling at all.
+                try {
+                    $this->concurrency->sample($usageConnection->getUsage());
+                } catch (\Throwable $th) {
+                    Console::error('stats resources: concurrency sample failed, continuing: ' . $th->getMessage());
+                }
+
+                $last24Hours = (new \DateTime())->sub(new \DateInterval('P1D'));
+                $this->foreachDocument($dbForPlatform, 'projects', [
+                    Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours)),
+                    Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                    Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
+                ], function ($project) use ($publisherForStatsResources): void {
+                    $publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $project));
+                });
+            } catch (\Throwable $th) {
+                // Cost a cycle, not the process: the next tick retries in full.
+                Console::error('stats resources: cycle failed, retrying next interval: ' . $th->getMessage());
+            }
         }, $interval);
     }
 }

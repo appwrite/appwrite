@@ -7,6 +7,7 @@ use Appwrite\AvatarPhotos\Providers\Fallback;
 use Appwrite\AvatarPhotos\Providers\Gravatar;
 use Appwrite\AvatarPhotos\Providers\Initials;
 use Appwrite\AvatarPhotos\Providers\Libavatar;
+use Appwrite\AvatarPhotos\Providers\OAuth2;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
@@ -14,15 +15,18 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\KeywordId;
 use Appwrite\Utopia\Response;
 use Utopia\Balancer\Algorithm\First;
 use Utopia\Balancer\Balancer;
 use Utopia\Balancer\Option;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Range;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Get extends Action
@@ -46,8 +50,10 @@ class Get extends Action
                 namespace: 'avatars',
                 group: null,
                 name: 'getPhoto',
-                description: <<<EOT
-                Returns the best available profile photo for the currently authenticated user. The endpoint tries each source in priority order and returns the first successful result: Gravatar, Libavatar, Appwrite Initials, built-in static fallback file.
+                description: <<<'EOT'
+                Returns the best available profile photo for a user. The endpoint tries each source in priority order and returns the first successful result: OAuth2 identity photo, Gravatar, Libravatar, Appwrite Initials, built-in static fallback.
+
+                The photo resolves for the currently authenticated user unless `userId` points at another user. Passing `emailHash` and/or `name` resolves the avatar from those values alone: the hash is looked up on Gravatar and Libravatar, the name is rendered as initials, and the user's own identity photos, email, and name leave the chain so they never shadow the avatar being asked for. Emails are only ever accepted pre-hashed, so no address ends up in a URL.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
@@ -56,7 +62,7 @@ class Get extends Action
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_NONE,
-                    )
+                    ),
                 ],
                 contentType: ContentType::IMAGE
             ))
@@ -65,8 +71,12 @@ class Get extends Action
             ->param('quality', 100, new Range(0, 100), 'Output image quality between 0 and 100. Defaults to 100.', true)
             ->param('output', 'png', new WhiteList(['png', 'jpg', 'webp'], true), 'Output image format. Defaults to \'png\'.', true)
             ->param('rating', 'g', new WhiteList(['g', 'pg', 'r', 'x'], true), 'Maximum image rating to fetch from Gravatar/Libravatar. Defaults to \'g\'.', true)
+            ->param('userId', 'current()', fn (Database $dbForProject) => new KeywordId('current()', $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID to resolve the photo for. Defaults to \'current()\' for the currently authenticated user.', true, ['dbForProject'], example: 'current()')
+            ->param('emailHash', '', new Text(64, 64, [...Text::NUMBERS, ...\range('a', 'f'), ...\range('A', 'F')]), 'SHA256 hash of the lowercase, trimmed email address to look up on Gravatar and Libravatar instead of the user\'s own photo sources. Pass the hash, never the address itself.', true)
+            ->param('name', '', new Text(128, 0), 'Name to render initials from instead of the user\'s own photo sources. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('user')
+            ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
@@ -76,22 +86,75 @@ class Get extends Action
         int $quality,
         string $output,
         string $rating,
+        string $userId,
+        string $emailHash,
+        string $name,
         Response $response,
         Document $user,
+        Database $dbForProject,
     ): void {
-        // -------------------------------------------------------------------
-        // Priority 1: OAuth2 session photo
-        // TODO: Resolve profile photo from the user's active OAuth2 token.
-        //       Each OAuth2 provider (Google, GitHub, …) exposes a profile-
-        //       picture URL. Add it as a provider at the front of the list.
-        //       Track in: https://github.com/appwrite/appwrite/issues/TODO
-        // -------------------------------------------------------------------
-        $providers = [
-            new Gravatar(),
-            new Libavatar(),
-            new Initials(),
-            new Fallback(),
-        ];
+        $emailHash = \strtolower($emailHash);
+
+        $photoUser = new Document();
+
+        if ($userId === 'current()') {
+            $photoUser = clone $user;
+        } else {
+            $photoUser = $dbForProject->getDocument('users', $userId);
+            if ($photoUser->isEmpty()) {
+                throw new Exception(Exception::USER_NOT_FOUND);
+            }
+        }
+
+        // has 'emailHash', 'name', '$id'
+        $profile = new Document();
+
+        // Explicit parameters replace the user's photo sources entirely — a
+        // hash or name may describe anyone, so the user's identity photos,
+        // email, and name must never shadow the avatar being asked for. The
+        // user fills the profile only when nothing explicit was requested.
+        $overridden = $emailHash !== '' || $name !== '';
+
+        if (!$overridden && !$photoUser->isEmpty()) {
+            $userEmail = $photoUser->getAttribute('email', '');
+            $userName = $photoUser->getAttribute('name', '');
+
+            $profile = $profile->setAttribute('$id', $photoUser->getId());
+
+            if ($userName !== '') {
+                $profile = $profile->setAttribute('name', $userName);
+            }
+
+            if ($userEmail !== '') {
+                $profile = $profile->setAttribute('emailHash', \hash('sha256', \strtolower(\trim($userEmail))));
+            }
+        }
+
+        if ($name !== '') {
+            $profile = $profile->setAttribute('name', $name);
+        }
+
+        if ($emailHash !== '') {
+            $profile = $profile->setAttribute('emailHash', $emailHash);
+        }
+
+        $providers = [];
+
+        if ($profile->getId() !== '') {
+            $providers[] = new OAuth2($dbForProject);
+        }
+
+        if ($profile->getAttribute('emailHash', '') !== '') {
+            $providers[] = new Gravatar();
+            $providers[] = new Libavatar();
+        }
+
+        if ($profile->getAttribute('name', '') !== '') {
+            $providers[] = new Initials();
+        }
+
+        $providers[] = new Fallback();
+
 
         $balancer = new Balancer(new First());
 
@@ -99,18 +162,13 @@ class Get extends Action
             $balancer->addOption(new Option(['provider' => $provider]));
         }
 
-        // Skip providers that lack the data they need — no email means no
-        // Gravatar lookup — so we never pay for a doomed network round-trip.
-        $balancer->addFilter(function (Option $option) use ($user) {
+        $balancer->addFilter(function (Option $option) use ($profile) {
             /** @var Photo $provider */
             $provider = $option->getState('provider');
-
-            return $provider->supports($user);
+            return $provider->supports($profile);
         });
 
-        // A provider that came up empty is out of the running; without this the
-        // First algorithm would hand back the same option forever.
-        $balancer->addFilter(fn (Option $option) => !$option->getState('attempted', false));
+        $balancer->addFilter(fn (Option $option) => ! $option->getState('attempted', false));
 
         $data = null;
 
@@ -120,7 +178,7 @@ class Get extends Action
             /** @var Photo $provider */
             $provider = $option->getState('provider');
 
-            $data = $provider->get($user, $width, $height, $rating);
+            $data = $provider->get($profile, $width, $height, $rating);
 
             if ($data !== null) {
                 break;
@@ -132,7 +190,7 @@ class Get extends Action
         }
 
         $contentType = match ($output) {
-            'jpg'  => 'image/jpeg',
+            'jpg' => 'image/jpeg',
             'webp' => 'image/webp',
             default => 'image/png',
         };
@@ -148,7 +206,7 @@ class Get extends Action
      */
     private function process(string $raw, int $width, int $height, int $quality, string $output): string
     {
-        if (!\extension_loaded('imagick') || empty($raw)) {
+        if (! \extension_loaded('imagick') || $raw === '') {
             return $raw;
         }
 
