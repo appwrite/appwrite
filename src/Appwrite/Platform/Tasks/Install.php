@@ -672,7 +672,12 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_CONFIG_FILES, InstallerServer::STATUS_COMPLETED, $messages);
             }
 
-            if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
+            // DocumentsDB runs on MongoDB, so the service, and its bind-mounted support
+            // files, can be present even when another engine backs the platform.
+            $needsMongo = $database === 'mongodb'
+                || ($input['_APP_DOCUMENTSDB'] ?? 'enabled') !== 'disabled';
+
+            if ($needsMongo && !$useExistingConfig && $startIndex <= 1) {
                 $this->copyMongoFilesIfNeeded();
             }
 

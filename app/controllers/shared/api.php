@@ -463,13 +463,13 @@ Http::init()
 
             // An operator turns a database product off when its engine is not deployed,
             // so the route is unavailable to everyone, keys and privileged roles included.
-            $productEngines = [
+            $productToggles = [
                 'documentsdb' => '_APP_DOCUMENTSDB',
                 'vectorsdb' => '_APP_VECTORSDB',
             ];
             if (
-                isset($productEngines[$namespace])
-                && System::getEnv($productEngines[$namespace], 'enabled') !== 'enabled'
+                isset($productToggles[$namespace])
+                && System::getEnv($productToggles[$namespace], 'enabled') !== 'enabled'
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
