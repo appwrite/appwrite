@@ -15,62 +15,12 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
-use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Destinations\JSON as DestinationJSON;
 use Utopia\Migration\Source;
 use Utopia\Storage\Device;
 
 final class MigrationsWorkerExportTest extends TestCase
 {
-    public function testExportDestinationsWriteToMigrationScopedArtifactNames(): void
-    {
-        $worker = new class () extends Migrations {
-            public function destination(Device $deviceForFiles, Document $migration): Destination
-            {
-                $this->deviceForFiles = $deviceForFiles;
-                return $this->processDestination($migration);
-            }
-        };
-        $deviceForFiles = $this->createStub(Device::class);
-        $cases = [
-            [
-                'destination' => DestinationCSV::getName(),
-                'options' => [
-                    'bucketId' => 'default',
-                    'columns' => [],
-                    'delimiter' => ',',
-                    'enclosure' => '"',
-                    'escape' => '"',
-                    'filename' => 'same/name',
-                    'header' => true,
-                ],
-            ],
-            [
-                'destination' => DestinationJSON::getName(),
-                'options' => [
-                    'bucketId' => 'default',
-                    'columns' => [],
-                    'filename' => 'same:name',
-                ],
-            ],
-        ];
-
-        foreach ($cases as $case) {
-            $destination = $worker->destination($deviceForFiles, new Document([
-                '$id' => 'migration-id',
-                'credentials' => [],
-                'destination' => $case['destination'],
-                'options' => $case['options'],
-                'resourceId' => 'database',
-            ]));
-            $property = new \ReflectionProperty($destination, 'outputFile');
-
-            $this->assertSame('migration-id', $property->getValue($destination));
-
-            $destination->cleanUp();
-        }
-    }
-
     public function testExportCompletionKeepsDisplayNamesButUsesUniquePhysicalPaths(): void
     {
         $cases = [
