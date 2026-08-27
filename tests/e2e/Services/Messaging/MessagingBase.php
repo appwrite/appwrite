@@ -988,7 +988,7 @@ trait MessagingBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('general_argument_invalid', $response['body']['type']);
-        $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'private_key' field, which signs the OAuth access-token request.", $response['body']['message']);
+        $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'private_key' field, which signs the OAuth access-token request. or null", $response['body']['message']);
     }
 
     public function testUpdateFCMProviderInvalidCredentials(): void
@@ -1019,7 +1019,7 @@ trait MessagingBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('general_argument_invalid', $response['body']['type']);
-        $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication.", $response['body']['message']);
+        $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication. or null", $response['body']['message']);
     }
 
     public function testUpdateProviderMissingCredentialsThrows(): void
