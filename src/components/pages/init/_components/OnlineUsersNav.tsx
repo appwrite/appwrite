@@ -199,6 +199,7 @@ function PresenceAvatar({
     >
       <PhotoAvatar
         userId={user.id}
+        name={user.name}
         size={size}
         className={cn('rounded-full', isRaffleWinner && RAFFLE_WINNER_AVATAR_CLASS)}
       />
