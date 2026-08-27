@@ -14,7 +14,6 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
-use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
@@ -178,13 +177,8 @@ class Get extends Action
         $algorithm = $file->getAttribute('algorithm', Compression::NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
-
-        // Imagick can't rasterize SVG, so an SVG is previewable only as-is;
-        // an explicit raster output format falls back to the placeholder
-        $isSvg = $mime === 'image/svg+xml';
-        $previewable = \in_array($mime, $inputs) && !($isSvg && !empty($output));
-        if (!$previewable || $file->getAttribute('sizeActual') > (int) System::getEnv('_APP_STORAGE_PREVIEW_LIMIT', APP_STORAGE_READ_BUFFER)) {
-            if (!$previewable) {
+        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) System::getEnv('_APP_STORAGE_PREVIEW_LIMIT', APP_STORAGE_READ_BUFFER)) {
+            if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
             } else {
                 // it was an image but the file size exceeded the limit
@@ -196,14 +190,13 @@ class Get extends Action
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $deviceForFiles = $deviceForLocal;
-            $isSvg = false;
         }
 
         if (!$deviceForFiles->exists($path)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if (empty($output) && !$isSvg) {
+        if (empty($output)) {
             // when file extension is provided but it's not one of our
             // supported outputs we fallback to `jpg`
             if (!empty($type) && !array_key_exists($type, $outputs)) {
@@ -247,84 +240,68 @@ class Get extends Action
 
         $decompressionTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime;
 
-        if ($isSvg) {
-            // Served as-is since Imagick can't rasterize SVG; sanitized to
-            // strip scripts, event handlers and other executable content
-            $sanitizer = new SvgSanitizer();
-            $sanitizer->minify(true);
-            $data = $sanitizer->sanitize($source);
-            if ($data === false) {
-                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Malformed SVG file');
+        $maxWidth = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_WIDTH);
+        $maxHeight = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_HEIGHT);
+        $maxArea = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_AREA);
+        $dimensions = \getimagesizefromstring($source);
+        if ($dimensions !== false) {
+            [$sourceWidth, $sourceHeight] = $dimensions;
+            if (
+                ($maxWidth > 0 && $sourceWidth > $maxWidth) ||
+                ($maxHeight > 0 && $sourceHeight > $maxHeight) ||
+                ($maxArea > 0 && $sourceWidth * $sourceHeight > $maxArea)
+            ) {
+                throw new Exception(
+                    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+                    \sprintf('Image resolution %dx%d exceeds the maximum allowed %dx%d or %d total pixels', $sourceWidth, $sourceHeight, $maxWidth, $maxHeight, $maxArea)
+                );
             }
-
-            $response
-                ->addHeader('Content-Security-Policy', 'script-src none;')
-                ->addHeader('X-Content-Type-Options', 'nosniff');
-        } else {
-            $maxWidth = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_WIDTH);
-            $maxHeight = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_HEIGHT);
-            $maxArea = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_AREA);
-            $dimensions = \getimagesizefromstring($source);
-            if ($dimensions !== false) {
-                [$sourceWidth, $sourceHeight] = $dimensions;
-                if (
-                    ($maxWidth > 0 && $sourceWidth > $maxWidth) ||
-                    ($maxHeight > 0 && $sourceHeight > $maxHeight) ||
-                    ($maxArea > 0 && $sourceWidth * $sourceHeight > $maxArea)
-                ) {
-                    throw new Exception(
-                        Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
-                        \sprintf('Image resolution %dx%d exceeds the maximum allowed %dx%d or %d total pixels', $sourceWidth, $sourceHeight, $maxWidth, $maxHeight, $maxArea)
-                    );
-                }
-            }
-
-            try {
-                $image = new Image($source);
-            } catch (\Exception $e) {
-                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
-            }
-
-            if ($width > 0 || $height > 0 || $gravity !== Image::GRAVITY_CENTER) {
-                Span::add('storage.transform.crop.width', $width);
-                Span::add('storage.transform.crop.height', $height);
-                Span::add('storage.transform.crop.gravity', $gravity);
-                $image->crop($width, $height, $gravity);
-            }
-
-            if ($opacity !== 1.0) {
-                Span::add('storage.transform.opacity', $opacity);
-                $image->setOpacity($opacity);
-            }
-
-            if (!empty($background)) {
-                Span::add('storage.transform.background', $background);
-                $image->setBackground('#' . $background);
-            }
-
-            if ($borderWidth > 0) {
-                Span::add('storage.transform.border.width', $borderWidth);
-                Span::add('storage.transform.border.color', $borderColor);
-                $image->setBorder($borderWidth, '#' . $borderColor);
-            }
-
-            if ($borderRadius > 0) {
-                Span::add('storage.transform.borderRadius', $borderRadius);
-                $image->setBorderRadius($borderRadius);
-            }
-
-            if ($rotation !== 0) {
-                Span::add('storage.transform.rotation', $rotation);
-                $image->setRotation(($rotation + 360) % 360);
-            }
-
-            if ($quality !== -1) {
-                Span::add('storage.transform.quality', $quality);
-            }
-
-            $data = $image->output($output, $quality);
-            unset($image);
         }
+
+        try {
+            $image = new Image($source);
+        } catch (\Exception $e) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
+        }
+
+        if ($width > 0 || $height > 0 || $gravity !== Image::GRAVITY_CENTER) {
+            Span::add('storage.transform.crop.width', $width);
+            Span::add('storage.transform.crop.height', $height);
+            Span::add('storage.transform.crop.gravity', $gravity);
+            $image->crop($width, $height, $gravity);
+        }
+
+        if ($opacity !== 1.0) {
+            Span::add('storage.transform.opacity', $opacity);
+            $image->setOpacity($opacity);
+        }
+
+        if (!empty($background)) {
+            Span::add('storage.transform.background', $background);
+            $image->setBackground('#' . $background);
+        }
+
+        if ($borderWidth > 0) {
+            Span::add('storage.transform.border.width', $borderWidth);
+            Span::add('storage.transform.border.color', $borderColor);
+            $image->setBorder($borderWidth, '#' . $borderColor);
+        }
+
+        if ($borderRadius > 0) {
+            Span::add('storage.transform.borderRadius', $borderRadius);
+            $image->setBorderRadius($borderRadius);
+        }
+
+        if ($rotation !== 0) {
+            Span::add('storage.transform.rotation', $rotation);
+            $image->setRotation(($rotation + 360) % 360);
+        }
+
+        if ($quality !== -1) {
+            Span::add('storage.transform.quality', $quality);
+        }
+
+        $data = $image->output($output, $quality);
 
         $renderingTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime - $decompressionTime;
 
@@ -342,7 +319,7 @@ class Get extends Action
         Span::add('storage.timing.rendering_seconds', $renderingTime);
         Span::add('storage.timing.total_seconds', $totalTime);
 
-        $contentType = $isSvg ? 'image/svg+xml' : ((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg']);
+        $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
         //Do not update transformedAt if it's a console user
         if (!$user->isPrivileged($authorization->getRoles())) {
@@ -371,5 +348,7 @@ class Get extends Action
             ->addHeader('Cache-Control', $cacheControl)
             ->setContentType($contentType)
             ->file($data);
+
+        unset($image);
     }
 }

@@ -1129,34 +1129,43 @@ trait StorageBase
         $this->assertEquals('image/svg+xml', $file['body']['mimeType']);
 
         /**
-         * Test for SUCCESS - SVG preview is served as SVG
+         * Test for SUCCESS - SVG is rasterized at its intrinsic size
          */
         $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $preview['headers']['status-code']);
-        $this->assertEquals('image/svg+xml', $preview['headers']['content-type']);
-        $this->assertEquals('script-src none;', $preview['headers']['content-security-policy']);
-        $this->assertEquals('nosniff', $preview['headers']['x-content-type-options']);
-        $this->assertStringContainsString('<svg', $preview['body']);
+        $this->assertEquals('image/jpeg', $preview['headers']['content-type']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($preview['body']);
+        $this->assertSame('JPEG', $image->getImageFormat());
+        $this->assertSame(120, $image->getImageWidth());
+        $this->assertSame(120, $image->getImageHeight());
 
         /**
-         * Test for SUCCESS - security headers survive a cache hit
+         * Test for SUCCESS - transformations apply to SVG input
          */
         $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'output' => 'png',
+        ]);
 
         $this->assertEquals(200, $preview['headers']['status-code']);
-        $this->assertEquals('hit', $preview['headers']['x-appwrite-cache']);
-        $this->assertEquals('image/svg+xml', $preview['headers']['content-type']);
-        $this->assertEquals('script-src none;', $preview['headers']['content-security-policy']);
-        $this->assertEquals('nosniff', $preview['headers']['x-content-type-options']);
-        $this->assertStringContainsString('<svg', $preview['body']);
+        $this->assertEquals('image/png', $preview['headers']['content-type']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($preview['body']);
+        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame(300, $image->getImageWidth());
+        $this->assertSame(100, $image->getImageHeight());
 
         /**
-         * Test for SUCCESS - scripts and event handlers are sanitized away
+         * Test for SUCCESS - embedded scripts are harmless in rasterized output
          */
         $dirty = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
@@ -1175,25 +1184,13 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $preview['headers']['status-code']);
-        $this->assertEquals('image/svg+xml', $preview['headers']['content-type']);
-        $this->assertStringContainsString('<svg', $preview['body']);
-        $this->assertStringNotContainsString('<script', $preview['body']);
-        $this->assertStringNotContainsString('onload', $preview['body']);
-        $this->assertStringNotContainsString('onclick', $preview['body']);
-        $this->assertStringNotContainsString('javascript:', $preview['body']);
-
-        /**
-         * Test for SUCCESS - explicit raster output falls back to the placeholder
-         */
-        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'output' => 'png',
-        ]);
-
-        $this->assertEquals(200, $preview['headers']['status-code']);
-        $this->assertEquals('image/png', $preview['headers']['content-type']);
+        $this->assertEquals('image/jpeg', $preview['headers']['content-type']);
         $this->assertStringNotContainsString('<svg', $preview['body']);
+        $this->assertStringNotContainsString('<script', $preview['body']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($preview['body']);
+        $this->assertSame('JPEG', $image->getImageFormat());
     }
 
     public function testFilePreviewCache(): void

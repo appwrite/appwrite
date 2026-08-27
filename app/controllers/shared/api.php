@@ -751,13 +751,6 @@ Http::init()
                     $cache->save($key, $data);
                 }
 
-                // SVG is served as-is, so replay the security headers the action sends
-                if ($cacheLog->getAttribute('mimeType') === 'image/svg+xml') {
-                    $response
-                        ->addHeader('Content-Security-Policy', 'script-src none;')
-                        ->addHeader('X-Content-Type-Options', 'nosniff');
-                }
-
                 $response
                     ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
