@@ -750,9 +750,15 @@ class OpenAPI3 extends Format
                     case \Utopia\Validator\ArrayList::class:
                         /** @var ArrayList $validator */
                         $node['schema']['type'] = 'array';
-                        $node['schema']['items'] = [
-                            'type' => $validator->getValidator()->getType(),
-                        ];
+                        // Validator::TYPE_FLOAT is gettype()'s 'double', and TYPE_MIXED has no
+                        // OpenAPI equivalent at all. Emitting either verbatim produces a schema
+                        // no OpenAPI parser accepts, so an SDK cannot be generated from the spec.
+                        $itemType = $validator->getValidator()->getType();
+                        $node['schema']['items'] = match ($itemType) {
+                            Validator::TYPE_FLOAT => ['type' => 'number', 'format' => 'double'],
+                            Validator::TYPE_MIXED => [],
+                            default => ['type' => $itemType],
+                        };
                         if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];
                         }

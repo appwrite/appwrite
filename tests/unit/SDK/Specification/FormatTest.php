@@ -54,7 +54,9 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean as BooleanValidator;
 use Utopia\Validator\Domain;
+use Utopia\Validator\FloatValidator;
 use Utopia\Validator\HexColor;
+use Utopia\Validator\Integer as IntegerValidator;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
@@ -322,6 +324,33 @@ final class FormatTest extends TestCase
         $this->assertEqualsWithDelta(2.5, $properties['ratio']['example'], PHP_FLOAT_EPSILON);
         $this->assertTrue($properties['enabled']['example']);
         $this->assertSame('["one","two"]', $properties['text']['example']);
+    }
+
+    public function testArrayListItemTypesAreValidOpenApiTypes(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('percents', [], new ArrayList(new FloatValidator()), 'Percents.', optional: true)
+            ->param('counts', [], new ArrayList(new IntegerValidator()), 'Counts.', optional: true)
+            ->param('labels', [], new ArrayList(new Text(16)), 'Labels.', optional: true);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        $this->assertSame(['type' => 'number', 'format' => 'double'], $properties['percents']['items']);
+        $this->assertSame(['type' => 'integer'], $properties['counts']['items']);
+        $this->assertSame(['type' => 'string'], $properties['labels']['items']);
     }
 
     public function testMethodParameterOverridesFilterAndReplaceRouteParams(): void
