@@ -9,19 +9,12 @@ use ImagickPixel;
 use Utopia\Database\Document;
 
 /**
- * Generates a coloured square from user's name
+ * Generates a grey square with the initials of the user's name.
  */
 class Initials extends Photo
 {
     private const FONT_PATH = '/app/assets/fonts/inter-v8-latin-regular.woff2';
     private const DEFAULT_SIZE = 500;
-    private array $themes = [
-        ['background' => '#FD366E'], // Pink
-        ['background' => '#FE9567'], // Orange
-        ['background' => '#7C67FE'], // Purple
-        ['background' => '#68A3FE'], // Blue
-        ['background' => '#85DBD8'], // Mint
-    ];
 
     public function __construct(
         private readonly string $background = '',
@@ -68,80 +61,109 @@ class Initials extends Photo
         $width = $width > 0 ? $width : self::DEFAULT_SIZE;
         $height = $height > 0 ? $height : self::DEFAULT_SIZE;
 
-        $bg = $this->background !== ''
+        $background = $this->background !== ''
             ? '#' . \ltrim($this->background, '#')
-            : $this->getTheme($initials);
+            : self::SURFACE;
 
         $image = new Imagick();
-        $punch = new Imagick();
-        $draw  = new ImagickDraw();
+        $image->newImage($width, $height, $background);
+        $image->setImageFormat('png');
 
-        $fontSize = \min($width, $height) / 2;
+        // Longer initials shrink to keep fitting the square
+        $fontSize = \min($width, $height) * 1.6 / (2 + \mb_strlen($initials, 'UTF-8'));
 
-        $punch->newImage($width, $height, 'transparent');
-
-        // Providers live at src/Appwrite/AvatarPhotos/Providers
-        $fontPath = \dirname(__DIR__, 4) . self::FONT_PATH;
-        $draw->setFont($fontPath);
-        $image->setFont($fontPath);
-
-        $draw->setFillColor(new ImagickPixel('black'));
+        $draw = new ImagickDraw();
+        $draw->setFont($this->getFont());
+        $draw->setFillColor(new ImagickPixel(self::FIGURE));
         $draw->setFontSize($fontSize);
         $draw->setTextAlignment(Imagick::ALIGN_CENTER);
-        $draw->annotation($width / 1.97, ($height / 2) + ($fontSize / 3), $initials);
 
-        $punch->drawImage($draw);
-        $punch->negateImage(true, Imagick::CHANNEL_ALPHA);
-
-        $image->newImage($width, $height, $bg);
-        $image->setImageFormat('png');
-        $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
+        $image->annotateImage($draw, $width / 1.97, ($height / 2) + ($fontSize / 3), 0, $initials);
 
         return $image->getImageBlob();
     }
 
     /**
-     * First letter of the first two words, skipping words that do not start
-     * with an alphanumeric character. Underscores stand in for spaces when the
-     * label has none.
+     * First letter of every word, uppercased, capped at four — mapped onto
+     * characters the bundled font can draw.
      */
     private function getInitials(string $name): string
     {
-        $words = \explode(' ', \strtoupper($name));
+        // Uppercased before the split so a case change that alters length,
+        // like 'ß' to 'SS', still yields one letter per word
+        $words = \array_slice($this->getWords(\mb_strtoupper($name, 'UTF-8')), 0, 4);
 
-        // Fallback: split on underscores when there is no space
-        $words = (\count($words) === 1) ? \explode('_', \strtoupper($name)) : $words;
+        $initials = \implode('', \array_map(fn (string $word) => \mb_substr($word, 0, 1, 'UTF-8'), $words));
 
-        $initials = '';
-
-        foreach ($words as $key => $w) {
-            if (\ctype_alnum($w[0] ?? '')) {
-                $initials .= $w[0];
-
-                if ($key === 1) {
-                    break;
-                }
-            }
-        }
-
-        return $initials;
+        return $this->getDrawable($initials);
     }
 
     /**
-     * Background colour for a set of initials. Derived from the initials so the
-     * same label always gets the same colour.
+     * Words that start with a letter or digit, split on spaces — or on
+     * underscores when the label has none.
+     *
+     * @return string[]
      */
-    private function getTheme(string $initials): string
+    private function getWords(string $name): array
     {
-        $code = 0;
+        $words = \explode(' ', \trim($name));
 
-        foreach (\str_split($initials) as $char) {
-            $code += \ord($char);
+        // Fallback: split on underscores when there is no space
+        $words = (\count($words) === 1) ? \explode('_', $words[0]) : $words;
+
+        return \array_values(\array_filter(
+            $words,
+            fn (string $word) => \preg_match('/^[\p{L}\p{N}]/u', $word) === 1,
+        ));
+    }
+
+    /**
+     * Map letters onto characters the bundled font can draw. Characters
+     * without a glyph are transliterated to Latin (Ł → L, А → A) and dropped
+     * when no Latin form is available, so letters never render as a blank
+     * square.
+     */
+    private function getDrawable(string $letters): string
+    {
+        $drawable = '';
+
+        foreach (\mb_str_split($letters, 1, 'UTF-8') as $char) {
+            if (!$this->hasGlyph($char) && \function_exists('transliterator_transliterate')) {
+                $latin = (string) \transliterator_transliterate('Any-Latin; Latin-ASCII', $char);
+                $char = \mb_strtoupper(\mb_substr($latin, 0, 1, 'UTF-8'), 'UTF-8');
+            }
+
+            if ($char !== '' && $this->hasGlyph($char)) {
+                $drawable .= $char;
+            }
         }
 
-        $rand = (int) \substr((string) $code, -1);
-        $rand = ($rand > \count($this->themes) - 1) ? $rand % \count($this->themes) : $rand;
+        return $drawable;
+    }
 
-        return $this->themes[$rand]['background'];
+    /**
+     * Whether the bundled font has a visible glyph for the character —
+     * missing glyphs draw as blank space, not as a replacement box.
+     */
+    private function hasGlyph(string $char): bool
+    {
+        $canvas = new Imagick();
+        $canvas->newImage(32, 32, 'transparent');
+
+        $draw = new ImagickDraw();
+        $draw->setFont($this->getFont());
+        $draw->setFontSize(24);
+        $draw->setFillColor(new ImagickPixel('black'));
+        $draw->annotation(4, 26, $char);
+
+        $canvas->drawImage($draw);
+
+        return $canvas->getImageChannelRange(Imagick::CHANNEL_ALPHA)['maxima'] > 0;
+    }
+
+    private function getFont(): string
+    {
+        // Providers live at src/Appwrite/AvatarPhotos/Providers
+        return \dirname(__DIR__, 4) . self::FONT_PATH;
     }
 }

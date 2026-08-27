@@ -8,22 +8,11 @@ use Tests\E2E\Client;
 trait AvatarsBase
 {
     /**
-     * Corner colour of the built-in static fallback avatar (#FD366E).
+     * Corner colour of every avatar Appwrite draws itself (#4F4F4F). The
+     * initials square and the static fallback share one neutral surface, so
+     * the corner says an image was drawn — never which provider drew it.
      */
-    private const PHOTO_FALLBACK_COLOR = ['r' => 253, 'g' => 54, 'b' => 110];
-
-    /**
-     * Corner colour of initials rendered for the name 'W W': the 'WW'
-     * initials deterministically pick the mint theme (#85DBD8).
-     */
-    private const PHOTO_INITIALS_COLOR = ['r' => 133, 'g' => 219, 'b' => 216];
-
-    /**
-     * Corner colour of initials rendered for the name '0', which
-     * deterministically picks the blue theme (#68A3FE). '0' is falsy in
-     * PHP, so it guards every gate against empty() semantics.
-     */
-    private const PHOTO_INITIALS_ZERO_COLOR = ['r' => 104, 'g' => 163, 'b' => 254];
+    private const PHOTO_SURFACE_COLOR = ['r' => 79, 'g' => 79, 'b' => 79];
 
     public function testGetCreditCard(): array
     {
@@ -1561,7 +1550,7 @@ trait AvatarsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
 
         /**
          * Test for FAILURE
@@ -1621,7 +1610,7 @@ trait AvatarsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
 
         // The explicit name replaces the authenticated user's photo sources —
         // the identity-photo case is covered in AvatarsCustomClientTest.
@@ -1634,7 +1623,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
 
         // '0' is falsy in PHP — it must still count as a provided name and
         // render as initials, never fall back to the user's photo sources.
@@ -1647,7 +1636,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_ZERO_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
 
         // An empty name is allowed and behaves as if it was not passed.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
@@ -1676,27 +1665,73 @@ trait AvatarsBase
     }
 
     /**
-     * Assert the avatar is the built-in static fallback. When ImageMagick
-     * runs under a security policy that blocks the SVG module the endpoint
-     * serves the fallback as raw SVG source instead of a rasterised PNG, so
-     * both encodings are accepted.
+     * Assert the avatar is generated initials.
+     *
+     * The surface alone cannot say so — the static fallback draws on the same
+     * grey — so this also asserts the person mark is absent.
+     */
+    private function assertPhotoInitials(string $blob): void
+    {
+        $this->assertPhotoBackground(self::PHOTO_SURFACE_COLOR, $blob);
+
+        $this->assertFalse(
+            $this->photoHasPersonMark($blob),
+            'Expected rendered initials but got the static fallback — the provider chain fell through.'
+        );
+    }
+
+    /**
+     * Assert the avatar is the built-in static fallback. When Imagick is
+     * missing entirely the endpoint serves the fallback as raw SVG source
+     * instead of a drawn PNG, so both encodings are accepted.
      */
     private function assertPhotoFallback(string $blob): void
     {
         if (\str_contains(\substr($blob, 0, 256), '<svg')) {
-            $this->assertStringContainsString('#FD366E', $blob);
+            $this->assertStringContainsString('#4F4F4F', $blob);
 
             return;
         }
 
-        $this->assertPhotoBackground(self::PHOTO_FALLBACK_COLOR, $blob);
+        $this->assertPhotoBackground(self::PHOTO_SURFACE_COLOR, $blob);
+
+        $this->assertTrue(
+            $this->photoHasPersonMark($blob),
+            'Expected the static fallback but the avatar carries no person mark.'
+        );
+    }
+
+    /**
+     * Whether the fallback's person mark is drawn.
+     *
+     * Samples down the mark's left shoulder, which is figure colour on the
+     * fallback and bare surface on initials — letters are centred and never
+     * reach that far down or out. Sampling a short run rather than one pixel
+     * keeps the check clear of the stroke's edges at small sizes.
+     */
+    private function photoHasPersonMark(string $blob): bool
+    {
+        $image = new \Imagick();
+        $image->readImageBlob($blob);
+
+        $x = (int) \round($image->getImageWidth() * 0.34);
+        $to = (int) \round($image->getImageHeight() * 0.73);
+
+        for ($y = (int) \round($image->getImageHeight() * 0.68); $y <= $to; $y++) {
+            $color = $image->getImagePixelColor($x, $y)->getColor();
+
+            if ($color['r'] > 200 && $color['g'] > 200 && $color['b'] > 200) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
      * Assert both top corners of an avatar match an expected background
      * colour. Corners are always background — initials are drawn in the
-     * centre and the fallback silhouette never reaches the top edge — so a
-     * corner sample tells apart which provider produced the image.
+     * centre and the person mark never reaches the top edge.
      */
     private function assertPhotoBackground(array $rgb, string $blob): void
     {
