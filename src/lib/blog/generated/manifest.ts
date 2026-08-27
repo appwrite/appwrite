@@ -43,7 +43,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "comparisons",
     "featured": false,
     "draft": true,
-    "cover": "/images/blog/native-databases-vs-appwrite-databases/cover.png",
+    "cover": "/images/blog/native-databases-vs-appwrite-databases/cover.avif",
     "hasCover": true
   },
   {
@@ -72,7 +72,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement",
     "featured": false,
     "draft": true,
-    "cover": "/images/blog/announcing-worker-topologies/cover.png",
+    "cover": "/images/blog/announcing-worker-topologies/cover.avif",
     "hasCover": true
   },
   {
@@ -358,7 +358,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "tutorial",
     "featured": false,
     "draft": true,
-    "cover": "/images/blog/x-oauth2-appwrite/cover.avif",
+    "cover": "/images/blog/sign-in-with-appwrite-guide/cover.avif",
     "hasCover": true
   },
   {
@@ -734,7 +734,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement",
     "featured": false,
     "draft": true,
-    "cover": "/images/blog/announcing-oauth2-server/cover.png",
+    "cover": "/images/blog/announcing-oauth2-server/cover.avif",
     "hasCover": true
   },
   {
@@ -806,7 +806,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement",
     "featured": false,
     "draft": true,
-    "cover": "/images/blog/announcing-vectorsdb/cover.png",
+    "cover": "/images/blog/announcing-vectorsdb/cover.avif",
     "hasCover": true
   },
   {
@@ -821,7 +821,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement",
     "featured": false,
     "draft": true,
-    "cover": "/images/blog/announcing-documentsdb/cover.png",
+    "cover": "/images/blog/announcing-documentsdb/cover.avif",
     "hasCover": true
   },
   {
@@ -836,7 +836,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement",
     "featured": false,
     "draft": true,
-    "cover": "/images/blog/announcing-native-mysql-databases/cover.png",
+    "cover": "/images/blog/announcing-native-mysql-databases/cover.avif",
     "hasCover": true
   },
   {
@@ -851,7 +851,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement",
     "featured": false,
     "draft": true,
-    "cover": "/images/blog/announcing-native-postgresql-databases/cover.png",
+    "cover": "/images/blog/announcing-native-postgresql-databases/cover.avif",
     "hasCover": true
   },
   {
