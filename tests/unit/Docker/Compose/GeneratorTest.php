@@ -80,6 +80,23 @@ final class GeneratorTest extends TestCase
         $this->assertArrayHasKey('postgresql', $compose['services'], 'still the platform engine');
     }
 
+    public function testProductReusesThePlatformEngine(): void
+    {
+        $compose = $this->render([
+            'database' => 'mongodb',
+            'enableDocumentsDB' => true,
+            'enableVectorsDB' => false,
+        ]);
+
+        $engines = \array_intersect(
+            ['postgresql', 'mariadb', 'mongodb'],
+            \array_keys($compose['services'])
+        );
+
+        $this->assertSame(['mongodb'], \array_values($engines), 'DocumentsDB reuses MongoDB rather than adding a second engine');
+        $this->assertArrayNotHasKey('postgresql', $compose['services']);
+    }
+
     public function testPlatformEngineSurvivesItsProductBeingDisabled(): void
     {
         $compose = $this->render([
