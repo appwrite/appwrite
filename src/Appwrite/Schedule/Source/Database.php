@@ -121,7 +121,6 @@ abstract class Database implements Source, Changes
                 $queries[] = Query::equal('active', [true]);
             } else {
                 $queries[] = Query::greaterThanEqual('resourceUpdatedAt', DateTime::format(\DateTime::createFromImmutable($since)));
-                $queries[] = Query::orderAsc('resourceUpdatedAt');
             }
 
             if ($latest !== null) {
