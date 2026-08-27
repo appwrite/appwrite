@@ -98,6 +98,7 @@ final class MessagingTest extends Scope
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
                     "private_key" => "test-private-key",
                 ]
             ],
@@ -198,6 +199,7 @@ final class MessagingTest extends Scope
                     'type' => 'service_account',
                     'project_id' => 'test-project',
                     'private_key_id' => 'test-project-id',
+                    'client_email' => 'test@appwrite.iam.gserviceaccount.com',
                     'private_key' => "test-private-key",
                 ]
             ],
@@ -744,6 +746,7 @@ final class MessagingTest extends Scope
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
                     "private_key" => "test-private-key",
                 ]
             ],

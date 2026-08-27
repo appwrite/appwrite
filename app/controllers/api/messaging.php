@@ -1028,6 +1028,14 @@ Http::post('/v1/messaging/providers/fcm')
             ? \json_decode($serviceAccountJSON, true)
             : normalizeJsonObject($serviceAccountJSON);
 
+        if (!\is_null($serviceAccountJSON)) {
+            foreach (['project_id', 'client_email', 'private_key'] as $field) {
+                if (!isset($serviceAccountJSON[$field]) || !\is_string($serviceAccountJSON[$field]) || \trim($serviceAccountJSON[$field]) === '') {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "FCM service account JSON must include a non-empty '{$field}' field.");
+                }
+            }
+        }
+
         $credentials = [];
 
         if (!\is_null($serviceAccountJSON)) {
@@ -2360,16 +2368,22 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
             ]);
         }
 
-        if (!\is_null($enabled)) {
-            if ($enabled) {
-                if (\array_key_exists('serviceAccountJSON', $provider->getAttribute('credentials'))) {
-                    $provider->setAttribute('enabled', true);
-                } else {
-                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
-                }
-            } else {
-                $provider->setAttribute('enabled', false);
+        if (!\is_null($serviceAccountJSON) || $enabled === true) {
+            $credentials = $provider->getAttribute('credentials');
+
+            if (!\array_key_exists('serviceAccountJSON', $credentials)) {
+                throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
             }
+
+            foreach (['project_id', 'client_email', 'private_key'] as $field) {
+                if (!isset($credentials['serviceAccountJSON'][$field]) || !\is_string($credentials['serviceAccountJSON'][$field]) || \trim($credentials['serviceAccountJSON'][$field]) === '') {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "FCM service account JSON must include a non-empty '{$field}' field.");
+                }
+            }
+        }
+
+        if (!\is_null($enabled)) {
+            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);

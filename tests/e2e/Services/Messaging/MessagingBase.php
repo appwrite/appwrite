@@ -115,6 +115,7 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
                     "private_key" => "test-private-key",
                 ],
             ],
@@ -208,6 +209,7 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
                     "private_key" => "test-private-key",
                 ]
             ],
@@ -824,6 +826,7 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
                     "private_key" => "test-private-key",
                 ],
             ],
@@ -912,6 +915,7 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
                     "private_key" => "test-private-key",
                 ]
             ],
@@ -959,6 +963,55 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Mailgun2', $response['body']['name']);
         $this->assertEquals(false, $response['body']['enabled']);
+    }
+
+    public function testCreateFCMProviderInvalidCredentials(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Invalid FCM',
+            'serviceAccountJSON' => [
+                'project_id' => 'test-project',
+                'client_email' => 'test@appwrite.iam.gserviceaccount.com',
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertEquals("FCM service account JSON must include a non-empty 'private_key' field.", $response['body']['message']);
+    }
+
+    public function testUpdateFCMProviderInvalidCredentials(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'FCM',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/fcm/' . $provider['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'serviceAccountJSON' => [
+                'project_id' => 'test-project',
+                'private_key' => 'test-private-key',
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertEquals("FCM service account JSON must include a non-empty 'client_email' field.", $response['body']['message']);
     }
 
     public function testUpdateProviderMissingCredentialsThrows(): void
