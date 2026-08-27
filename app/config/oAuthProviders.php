@@ -101,6 +101,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Box',
     ],
+    'cloudflare' => [
+        'name' => 'Cloudflare',
+        'developers' => 'https://developers.cloudflare.com/fundamentals/oauth/',
+        'icon' => 'icon-cloudflare',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Cloudflare',
+    ],
     'dailymotion' => [
         'name' => 'Dailymotion',
         'developers' => 'https://developers.dailymotion.com/api/',
