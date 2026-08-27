@@ -172,9 +172,6 @@ class Generator
     }
 
     /**
-     * @return string[]
-     */
-    /**
      * Engines the enabled database products need, on top of the platform engine.
      *
      * @return array<int, string>
