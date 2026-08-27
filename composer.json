@@ -20,7 +20,7 @@
     },
     "require": {
         "php": ">=8.5",
-        "utopia-php/validators": "^0.5"
+        "utopia-php/validators": "^0.6"
     },
     "suggest": {
         "ext-yaml": "Required only for the YAML parser"
