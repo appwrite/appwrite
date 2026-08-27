@@ -235,6 +235,7 @@ services:
       - _APP_MIGRATION_HOST
       - _APP_GEO_SECRET
       - _APP_GEO_ENDPOINT
+      - _APP_LIMIT_DATABASE_BATCH
   appwrite-console:
     logging:
       driver: json-file
@@ -319,6 +320,7 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_LIMIT_DATABASE_BATCH
       - _APP_POOL_ADAPTER=swoole
 
   appwrite-worker:
@@ -473,6 +475,7 @@ services:
       - _APP_MIGRATION_HOST
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
+      - _APP_LIMIT_DATABASE_BATCH
 
   appwrite-task-scheduler:
     entrypoint: schedule
@@ -706,6 +709,7 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_LIMIT_DATABASE_BATCH
   appwrite-worker-builds:
     profiles:
       - separate
