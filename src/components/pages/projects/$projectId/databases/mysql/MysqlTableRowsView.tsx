@@ -10,9 +10,12 @@ import { useProject } from '@/lib/react-query/hooks/projects'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   buildListSearchParams,
+  encodeSort,
   getQueryParam,
   getSearch,
+  getSort,
   mapToQueryParam,
+  parseSort,
   mysqlRowsFilterColumns,
   queryParamToMap,
   urlFromRouterLocation,
@@ -88,6 +91,12 @@ export function MysqlTableRowsView({
     () => (filterMap.size > 0 ? Array.from(filterMap.keys()) : undefined),
     [filterMap],
   )
+  const rowsSort = useMemo(
+    () =>
+      getSort(new URL(rowsListUrl)) ??
+      parseSort(routeSearch?.sort as string | undefined),
+    [rowsListUrl, routeSearch?.sort],
+  )
   const hasActiveFilters = filterMap.size > 0 || Boolean(urlSearch)
 
   const [rowsFiltersOpen, setRowsFiltersOpen] = useState(false)
@@ -125,7 +134,7 @@ export function MysqlTableRowsView({
     setRequestedPage(1)
     setDisplayedPage(1)
     clearSelection()
-  }, [urlSearch, filterKeys, clearSelection])
+  }, [urlSearch, filterKeys, rowsSort?.sortBy, rowsSort?.sortOrder, clearSelection])
 
   useEffect(() => {
     if (strippedPaginationFromUrlRef.current) return
@@ -140,6 +149,9 @@ export function MysqlTableRowsView({
       search: buildListSearchParams({
         search: urlSearch ?? '',
         query: query || undefined,
+        sort: rowsSort
+          ? encodeSort(rowsSort.sortBy, rowsSort.sortOrder)
+          : undefined,
       }),
       replace: true,
     })
@@ -151,6 +163,7 @@ export function MysqlTableRowsView({
     routeSearch?.page,
     routeSearch?.query,
     rowsListUrl,
+    rowsSort,
     tableId,
     urlSearch,
   ])
@@ -159,8 +172,14 @@ export function MysqlTableRowsView({
     () => ({
       search: urlSearch,
       filterKeys,
+      ...(rowsSort
+        ? {
+            orderBy: rowsSort.sortBy,
+            orderDirection: rowsSort.sortOrder,
+          }
+        : {}),
     }),
-    [filterKeys, urlSearch],
+    [filterKeys, rowsSort, urlSearch],
   )
 
   const {
@@ -198,11 +217,24 @@ export function MysqlTableRowsView({
   }, [displayedPage, requestedFetching, requestedPage])
 
   const navigateToRowsList = useCallback(
-    (updates: { search?: string; query?: string }) => {
+    (updates: { search?: string; query?: string; sort?: string | null }) => {
+      const query =
+        updates.query !== undefined
+          ? updates.query || undefined
+          : getQueryParam(rowsListUrl) ??
+            (routeSearch?.query as string | undefined) ??
+            undefined
+      const sortParam =
+        updates.sort !== undefined
+          ? updates.sort ?? undefined
+          : rowsSort
+            ? encodeSort(rowsSort.sortBy, rowsSort.sortOrder)
+            : undefined
       const nextSearch = buildListSearchParams({
         search:
           updates.search !== undefined ? updates.search : urlSearch ?? '',
-        query: updates.query,
+        query,
+        sort: sortParam,
       })
       navigate({
         ...mysqlNav({ projectId, databaseId }).table({ tableId }).rows(),
@@ -210,7 +242,7 @@ export function MysqlTableRowsView({
         replace: true,
       })
     },
-    [databaseId, navigate, projectId, tableId, urlSearch],
+    [databaseId, navigate, projectId, routeSearch?.query, rowsListUrl, rowsSort, tableId, urlSearch],
   )
 
   const handleApplyFilter = useCallback(
@@ -259,6 +291,25 @@ export function MysqlTableRowsView({
       navigateToRowsList({ search: value })
     },
     [navigateToRowsList],
+  )
+
+  const handleSortColumn = useCallback(
+    (columnKey: string) => {
+      let nextSort: string | null
+      if (rowsSort?.sortBy === columnKey) {
+        nextSort =
+          rowsSort.sortOrder === 'asc'
+            ? encodeSort(columnKey, 'desc')
+            : null
+      } else {
+        nextSort = encodeSort(columnKey, 'asc')
+      }
+      setRequestedPage(1)
+      setDisplayedPage(1)
+      clearSelection()
+      navigateToRowsList({ sort: nextSort })
+    },
+    [clearSelection, navigateToRowsList, rowsSort],
   )
 
   const handlePageChange = useCallback(
@@ -440,6 +491,9 @@ export function MysqlTableRowsView({
           selectedRowKeys={canWrite ? selectedRowKeys : undefined}
           onToggleRow={canWrite ? handleToggleRow : undefined}
           onToggleAllRows={canWrite ? handleToggleAllRows : undefined}
+          sortBy={rowsSort?.sortBy}
+          sortOrder={rowsSort?.sortOrder}
+          onSortColumn={handleSortColumn}
           currentPage={displayedPage}
           totalItems={requestedFetching ? total : (requestedTotal ?? total)}
           pageSize={pageSize}
