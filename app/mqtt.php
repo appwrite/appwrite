@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Coroutine;
 use Swoole\Runtime;
@@ -8,6 +9,7 @@ use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -24,6 +26,7 @@ use Utopia\Mqtt\Handlers\Publish as PublishHandler;
 use Utopia\Mqtt\Handlers\Subscribe as SubscribeHandler;
 use Utopia\Mqtt\Handlers\Unsubscribe as UnsubscribeHandler;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Server;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -232,7 +235,10 @@ $telemetry = $container->get('telemetry');
 $adapter = new Adapter\Swoole(host: '0.0.0.0', port: 1883);
 $adapter->setPackageMaxLength((int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', '64000'));
 
-$mqtt = new Mqtt($adapter, $telemetry);
+$server = new Server($adapter);
+$server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$action} error: " . $error->getMessage()));
+
+$mqtt = new Mqtt($telemetry);
 
 $dispatcher = (new Dispatcher())
     ->addHandler(new ConnectHandler())
@@ -243,10 +249,67 @@ $dispatcher = (new Dispatcher())
     ->addHandler(new PingHandler())
     ->addHandler(new DisconnectHandler());
 
-$adapter->onStart(fn () => print("MQTT broker started\n"));
+$server->onStart(fn () => print("MQTT broker started\n"));
 
-$adapter->onReceive(function (int $fd, string $data) use (
-    $adapter,
+$server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register): void {
+    go(function () use ($server, $mqtt, $register): void {
+        $attempts = 0;
+        while ($attempts < 300) {
+            try {
+                $pubsub = new PubSubPool($register->get('pools')->get('pubsub'));
+
+                if ($pubsub->ping(true)) {
+                    $attempts = 0;
+                }
+
+                $pubsub->subscribe(['mqtt'], function (mixed $redis, string $channel, string $payload) use ($server, $mqtt): void {
+                    $event = json_decode($payload, true);
+                    if (!\is_array($event)) {
+                        return;
+                    }
+
+                    $projectId = (string) ($event['project'] ?? '');
+                    $topic = (string) ($event['topic'] ?? '');
+                    $qos = (int) ($event['qos'] ?? 0);
+                    $message = base64_decode((string) ($event['payload'] ?? ''));
+
+                    $subscribers = $mqtt->getSubscribers($projectId, $topic);
+                    if ($subscribers === []) {
+                        // No local subscriber on this worker; with multiple workers this
+                        // counts per-worker rather than as a global drop.
+                        $mqtt->metrics->messagesDropped->add(1, ['reason' => 'no_subscriber']);
+                        return;
+                    }
+
+                    foreach ($subscribers as $fd => $grantedQos) {
+                        $subscriber = $mqtt->connections[$fd] ?? null;
+                        if ($subscriber === null) {
+                            continue;
+                        }
+                        $effectiveQos = min($qos, $grantedQos);
+                        $server->send($fd, Packet::publish(
+                            $topic,
+                            $message,
+                            $effectiveQos,
+                            $subscriber->nextPacketId(),
+                            $subscriber->protocol,
+                        ));
+                        $mqtt->metrics->messagesDelivered->add(1, ['qos' => $effectiveQos]);
+                    }
+                });
+            } catch (\Throwable $error) {
+                $attempts++;
+                Console::error('MQTT pub/sub connection error: ' . $error->getMessage());
+                sleep(DATABASE_RECONNECT_SLEEP);
+            }
+        }
+
+        Console::error('Failed to maintain MQTT pub/sub subscription');
+    });
+});
+
+$server->onReceive(function (int $fd, string $data) use (
+    $server,
     $mqtt,
     $dispatcher,
     $authenticate,
@@ -260,12 +323,12 @@ $adapter->onReceive(function (int $fd, string $data) use (
     $span->set('project.id', $connection->projectId);
     $span->set('user.id', $connection->identity['userId'] ?? '');
 
-    $reply = function (string $packet = '', bool $close = false) use ($adapter, $fd): void {
+    $reply = function (string $packet = '', bool $close = false) use ($server, $fd): void {
         if ($packet !== '') {
-            $adapter->send($fd, $packet);
+            $server->send($fd, $packet);
         }
         if ($close) {
-            $adapter->close($fd);
+            $server->close($fd);
         }
     };
 
@@ -286,8 +349,8 @@ $adapter->onReceive(function (int $fd, string $data) use (
     }
 });
 
-$adapter->onClose(function (int $fd) use ($mqtt): void {
+$server->onClose(function (int $fd) use ($mqtt): void {
     $mqtt->close($fd);
 });
 
-$adapter->start();
+$server->start();
