@@ -111,7 +111,7 @@
     "@xterm/addon-search": "^0.15.0",
     "@xterm/xterm": "^5.5.0",
     "animejs": "^4.4.1",
-    "appwrite-cli-wasm": "27.1.0",
+    "appwrite-cli-wasm": "27.2.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
