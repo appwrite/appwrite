@@ -346,8 +346,6 @@ services:
       - traefik.tcp.services.appwrite_mqtt.loadbalancer.server.port=1883
     networks:
       - appwrite
-    ports:
-      - 1883:1883
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
