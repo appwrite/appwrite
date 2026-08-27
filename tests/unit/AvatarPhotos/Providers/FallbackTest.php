@@ -46,9 +46,9 @@ final class FallbackTest extends TestCase
     }
 
     /**
-     * The person mark is an outline, and ImageMagick's built-in SVG renderer
-     * ignores strokes — reading the markup back would yield a bare surface,
-     * so the mark has to be drawn rather than rasterised.
+     * ImageMagick's security policy can forbid decoding SVG altogether, so
+     * the mark has to be drawn with primitives rather than rasterised from
+     * the markup.
      */
     public function testGetDrawsPersonMark(): void
     {

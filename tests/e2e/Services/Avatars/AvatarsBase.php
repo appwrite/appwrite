@@ -1707,7 +1707,7 @@ trait AvatarsBase
      * Samples down the mark's left shoulder, which is figure colour on the
      * fallback and bare surface on initials — letters are centred and never
      * reach that far down or out. Sampling a short run rather than one pixel
-     * keeps the check clear of the stroke's edges at small sizes.
+     * keeps the check clear of the mark's edges at small sizes.
      */
     private function photoHasPersonMark(string $blob): bool
     {
