@@ -116,7 +116,8 @@ trait MessagingBase
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
                     "client_email" => "test@appwrite.iam.gserviceaccount.com",
-                    "private_key" => "test-private-key",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ],
             ],
             'apns' => [
@@ -210,7 +211,8 @@ trait MessagingBase
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
                     "client_email" => "test@appwrite.iam.gserviceaccount.com",
-                    "private_key" => "test-private-key",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'apns' => [
@@ -827,7 +829,8 @@ trait MessagingBase
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
                     "client_email" => "test@appwrite.iam.gserviceaccount.com",
-                    "private_key" => "test-private-key",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ],
             ],
             'apns' => [
@@ -916,7 +919,8 @@ trait MessagingBase
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
                     "client_email" => "test@appwrite.iam.gserviceaccount.com",
-                    "private_key" => "test-private-key",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'apns' => [
@@ -975,14 +979,16 @@ trait MessagingBase
             'providerId' => ID::unique(),
             'name' => 'Invalid FCM',
             'serviceAccountJSON' => [
+                'type' => 'service_account',
                 'project_id' => 'test-project',
                 'client_email' => 'test@appwrite.iam.gserviceaccount.com',
+                'token_uri' => 'https://oauth2.googleapis.com/token',
             ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('general_argument_invalid', $response['body']['type']);
-        $this->assertEquals("FCM service account JSON must include a non-empty 'private_key' field.", $response['body']['message']);
+        $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'private_key' field, which signs the OAuth access-token request.", $response['body']['message']);
     }
 
     public function testUpdateFCMProviderInvalidCredentials(): void
@@ -1004,14 +1010,16 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'serviceAccountJSON' => [
+                'type' => 'service_account',
                 'project_id' => 'test-project',
-                'private_key' => 'test-private-key',
+                'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
+                'token_uri' => 'https://oauth2.googleapis.com/token',
             ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('general_argument_invalid', $response['body']['type']);
-        $this->assertEquals("FCM service account JSON must include a non-empty 'client_email' field.", $response['body']['message']);
+        $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication.", $response['body']['message']);
     }
 
     public function testUpdateProviderMissingCredentialsThrows(): void
