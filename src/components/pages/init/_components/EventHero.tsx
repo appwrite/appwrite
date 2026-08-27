@@ -11,7 +11,7 @@ import {
 } from '@/lib/init/use-init-scroll-spy-day'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitPlayingWithJoolActivity } from '@/lib/init/init-presence-activity'
-import { PhotoAvatar } from '@/components/global/shared/Avatar'
+import { InitPresenceUserAvatar } from '@/components/pages/init/_components/InitPresenceUserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -362,9 +362,10 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
                 <>
                   <div className="flex -space-x-2">
                     {event.onlineUsers.slice(0, 4).map((user) => (
-                      <PhotoAvatar
+                      <InitPresenceUserAvatar
                         key={user.id}
-                        userId={user.id}
+                        user={user}
+                        displayName={user.name}
                         size="sm"
                         className="ring-2 ring-background"
                       />

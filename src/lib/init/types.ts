@@ -95,6 +95,8 @@ export interface LaunchEventActivity {
 
 export interface LaunchEventOnlineUser {
   id: string
+  /** Console account ID (`presence.$id`); use for self-matching when `id` is anonymized. */
+  ownerId?: string
   name: string
   activity: string
   isLive?: boolean
@@ -105,6 +107,8 @@ export interface LaunchEventOnlineUser {
   emailHash?: string
   /** When this user became online for the current Init session (ISO 8601). */
   onlineAt?: string
+  /** Presence row uses an anonymous ID; name, photo, and country are withheld. */
+  identityHidden?: boolean
 }
 
 export interface InitCommunityCountry {

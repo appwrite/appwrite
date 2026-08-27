@@ -4,7 +4,7 @@ import {
   getHtmlThemeKey,
   isResolvedThemeDarkChrome,
 } from '@/lib/html-theme'
-import type { GlobeConfig } from '@/components/ui/globe'
+import type { GlobeConfig } from '@/components/ui/globe-types'
 
 function subscribeToTheme(onStoreChange: () => void) {
   const observer = new MutationObserver(onStoreChange)

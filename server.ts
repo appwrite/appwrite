@@ -77,6 +77,7 @@ import {
   getAllMarketingPrerenderPaths,
   getMarketingPrerenderHtmlFile,
 } from './src/lib/marketing/marketing-build-paths.ts'
+import { getInitPrerenderHtmlFile } from './src/lib/init/init-prerender-paths.ts'
 import { isThreadsRoutePath } from './src/lib/threads/prerender-paths.ts'
 import {
   isLegacyConsolePath,
@@ -600,6 +601,27 @@ async function initializeStaticRoutes(
         size: file.size,
         type: 'text/html; charset=utf-8',
       })
+    }
+
+    // Init is client-only but prerendered so production serves static HTML
+    // (avoids root SSR memory growth under pre-launch traffic).
+    const initHtmlFile = getInitPrerenderHtmlFile('/init')
+    if (initHtmlFile) {
+      const initFilepath = path.join(clientDirectory, initHtmlFile)
+      const initFile = Bun.file(initFilepath)
+      if (await initFile.exists()) {
+        routes['/init'] = async (req: Request) =>
+          htmlResponse(req, await initFile.text(), {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-store',
+          })
+
+        skipped.push({
+          route: '/init',
+          size: initFile.size,
+          type: 'text/html; charset=utf-8',
+        })
+      }
     }
 
     // Show detailed file overview only when verbose mode is enabled

@@ -19,6 +19,10 @@ const LEGACY_PRESENCE_ID_STORAGE_PREFIX = 'console.init.presenceId.'
 export const INIT_PRESENCE_STATUS_ONLINE = 'online'
 export const INIT_PRESENCE_STATUS_AWAY = 'away'
 
+import { buildInitRandomPresenceName } from '@/lib/init/init-presence-random-name'
+  return userId.trim().startsWith('anon_')
+}
+
 export function buildInitOnlineStatus(eventId: string): string {
   return `init:${eventId}`
 }
@@ -44,6 +48,27 @@ export type InitPresenceMetadata = {
 /** Presence row ID is the signed-in console user ID (one log per user). */
 export function buildInitPresenceId(userId: string): string {
   return userId
+}
+
+/** Stable pseudonymous `userId` for GDPR-aligned presence rows (no avatar lookup). */
+export async function buildInitAnonymousPresenceUserId(
+  ownerUserId: string,
+  eventId: string,
+): Promise<string> {
+  const input = `init-anon:${eventId}:${ownerUserId}`
+  if (!crypto?.subtle) {
+    return `anon_${ownerUserId.slice(0, 8)}`
+  }
+  const msgBuffer = new TextEncoder().encode(input)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  const hash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+  return `anon_${hash.slice(0, 24)}`
+}
+
+/** Map key for presence rows; always the document ID (real console account). */
+export function getInitPresenceMapKey(presence: InitPresenceRecord): string {
+  return presence.$id?.trim() || presence.userId?.trim() || ''
 }
 
 /** Remove legacy per-event random presence IDs from localStorage. */
@@ -166,13 +191,13 @@ export function collectInitHiddenOnlinePresences(
 
   for (const presence of online.values()) {
     if (isInitHiddenPresence(presence)) {
-      byUserId.set(presence.userId, presence)
+      byUserId.set(getInitPresenceMapKey(presence), presence)
     }
   }
 
   for (const presence of away.values()) {
     if (isInitHiddenPresence(presence)) {
-      byUserId.set(presence.userId, presence)
+      byUserId.set(getInitPresenceMapKey(presence), presence)
     }
   }
 
@@ -187,15 +212,18 @@ function placeInitPresenceInMaps(
   presence: InitPresenceRecord,
   eventId: string,
 ): void {
+  const mapKey = getInitPresenceMapKey(presence)
+  if (!mapKey) return
+
   if (isInitHiddenPresence(presence) || isInitAwayStatus(presence, eventId)) {
-    maps.away.set(presence.userId, presence)
-    maps.online.delete(presence.userId)
+    maps.away.set(mapKey, presence)
+    maps.online.delete(mapKey)
     return
   }
 
   if (isInitOnlineStatus(presence, eventId)) {
-    maps.online.set(presence.userId, presence)
-    maps.away.delete(presence.userId)
+    maps.online.set(mapKey, presence)
+    maps.away.delete(mapKey)
   }
 }
 
@@ -295,10 +323,10 @@ export function applyInitPresenceRealtimeRecord(
 
   const normalizedDelete = normalizeInitPresenceRecord(rawPresence)
   if (options?.deleted) {
-    const userId = normalizedDelete?.userId
-    if (userId) {
-      nextOnline.delete(userId)
-      nextAway.delete(userId)
+    const mapKey = normalizedDelete ? getInitPresenceMapKey(normalizedDelete) : ''
+    if (mapKey) {
+      nextOnline.delete(mapKey)
+      nextAway.delete(mapKey)
     }
     return { online: nextOnline, away: nextAway }
   }
@@ -308,18 +336,19 @@ export function applyInitPresenceRealtimeRecord(
     return { online: nextOnline, away: nextAway }
   }
 
-  const previous = nextOnline.get(normalized.userId) ?? nextAway.get(normalized.userId)
+  const mapKey = getInitPresenceMapKey(normalized)
+  const previous = nextOnline.get(mapKey) ?? nextAway.get(mapKey)
   const presence = mergePresenceRecordUpdate(previous, normalized)
 
   if (!presenceMatchesInitEvent(presence, eventId)) {
-    nextOnline.delete(presence.userId)
-    nextAway.delete(presence.userId)
+    nextOnline.delete(mapKey)
+    nextAway.delete(mapKey)
     return { online: nextOnline, away: nextAway }
   }
 
   if (!isPresenceActive(presence)) {
-    nextOnline.delete(presence.userId)
-    nextAway.delete(presence.userId)
+    nextOnline.delete(mapKey)
+    nextAway.delete(mapKey)
     return { online: nextOnline, away: nextAway }
   }
 
@@ -344,19 +373,20 @@ export function overlayInitPresenceListFetch(
   const nextOnline = new Map(previous.online)
   const nextAway = new Map(previous.away)
 
-  for (const [userId, presence] of onlineFromApi) {
+  for (const [, presence] of onlineFromApi) {
     if (!isInitOnlineStatus(presence, eventId) || !isPresenceActive(presence)) {
       continue
     }
     placeInitPresenceInMaps({ online: nextOnline, away: nextAway }, presence, eventId)
   }
 
-  for (const [userId, presence] of awayFromApi) {
+  for (const [, presence] of awayFromApi) {
     if (!isInitAwayStatus(presence, eventId) || !isPresenceActive(presence)) {
       continue
     }
-    nextAway.set(userId, presence)
-    nextOnline.delete(userId)
+    const mapKey = getInitPresenceMapKey(presence)
+    nextAway.set(mapKey, presence)
+    nextOnline.delete(mapKey)
   }
 
   for (const [userId, presence] of nextOnline) {
@@ -454,8 +484,12 @@ export function presenceToOnlineUser(
   activityAllowlist: ReadonlySet<string>,
 ): LaunchEventOnlineUser {
   const metadata = parseInitPresenceMetadata(presence.metadata)
+  const ownerId = getInitPresenceMapKey(presence)
+  const identityHidden = isInitAnonymousPresenceUserId(presence.userId)
   return {
     id: presence.userId,
+    ownerId: identityHidden ? undefined : ownerId,
+    identityHidden,
     name: metadata?.name || 'Console user',
     activity: sanitizeInitPresenceActivity(metadata?.activity, activityAllowlist),
     isLive: metadata?.isLive,
@@ -545,17 +579,16 @@ export async function listInitPresences(
 }
 
 export async function upsertInitPresence(params: {
-  userId: string
+  presenceId: string
+  ownerUserId: string
   status: string
   metadata: InitPresenceMetadata
 }): Promise<InitPresenceRecord> {
-  const presenceId = buildInitPresenceId(params.userId)
   const presence = await sdk.forConsole.presences.upsert({
-    presenceId,
-    userId: params.userId,
+    presenceId: params.presenceId,
     status: params.status,
     metadata: params.metadata,
-    permissions: buildInitPresencePermissions(params.userId),
+    permissions: buildInitPresencePermissions(params.ownerUserId),
     expiresAt: buildInitPresenceExpiresAt(),
   })
 
@@ -577,7 +610,7 @@ export function buildPresenceMapForEvent(
   for (const presence of presences) {
     const normalized = normalizeInitPresenceRecord(presence)
     if (!normalized || !presenceMatchesInitEvent(normalized, eventId)) continue
-    map.set(normalized.userId, normalized)
+    map.set(getInitPresenceMapKey(normalized), normalized)
   }
   return map
 }

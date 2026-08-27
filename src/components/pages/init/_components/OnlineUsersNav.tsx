@@ -4,7 +4,7 @@ import type {
   LaunchEventOnlineUser,
   LaunchEventUserPresence,
 } from '@/lib/init/types'
-import { PhotoAvatar } from '@/components/global/shared/Avatar'
+import { InitPresenceUserAvatar } from './InitPresenceUserAvatar'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -53,13 +53,6 @@ const PRESENCE_LIST_TRANSITION = { duration: 0.22, ease: PRESENCE_LIST_EASE }
 const PRESENCE_ACTIVITY_ENTER_TRANSITION = { duration: 0.22, ease: PRESENCE_LIST_EASE }
 const PRESENCE_ACTIVITY_EXIT_TRANSITION = { duration: 0.14, ease: PRESENCE_LIST_EASE }
 const PRESENCE_RING_PULSE_TRANSITION = { duration: 0.42, ease: PRESENCE_LIST_EASE }
-
-function buildPresenceStatusKey(
-  user: LaunchEventOnlineUser,
-  presence: LaunchEventUserPresence,
-): string {
-  return `${presence}:${user.isLive ? 'live' : 'idle'}`
-}
 
 /** Readable popover-style tooltip for collapsed sidebar rows (not inverted xs pills). */
 const ONLINE_USER_TOOLTIP_CLASS =
@@ -141,7 +134,9 @@ function OnlineUserTooltipDetails({
         name={name}
         activity={activity}
         reactionPulse={reactionPulse}
-        isSelf={Boolean(selfUserId && userId === selfUserId)}
+        isSelf={Boolean(
+          selfUserId && userId && (userId === selfUserId),
+        )}
       />
       <OnlineUserActivity activity={activity} className="text-muted-foreground/70" />
     </div>
@@ -179,30 +174,33 @@ function OnlineUserName({
 function PresenceAvatar({
   user,
   displayName,
-  presence,
+  isSelf,
+  identityVisible,
   size = 'sm',
   isRaffleWinner = false,
 }: {
   user: LaunchEventOnlineUser
   displayName: string
-  presence: LaunchEventUserPresence
+  isSelf: boolean
+  identityVisible: boolean
   size?: AvatarSize
   isRaffleWinner?: boolean
 }) {
   const reduceMotion = useReducedMotion()
-  const statusKey = buildPresenceStatusKey(user, presence)
 
   return (
     <motion.span
-      key={isRaffleWinner ? `winner-${statusKey}` : statusKey}
+      key={isRaffleWinner ? `winner-${user.id}` : user.id}
       className={PRESENCE_AVATAR_SHELL_CLASS}
       animate={reduceMotion ? undefined : { scale: [1, 1.14, 1] }}
       transition={PRESENCE_RING_PULSE_TRANSITION}
       aria-hidden
     >
-      <PhotoAvatar
-        userId={user.id}
-        name={displayName}
+      <InitPresenceUserAvatar
+        user={user}
+        displayName={displayName}
+        isSelf={isSelf}
+        identityVisible={identityVisible}
         size={size}
         className={cn('rounded-full', isRaffleWinner && RAFFLE_WINNER_AVATAR_CLASS)}
       />
@@ -264,6 +262,8 @@ function OnlineUserRow({
   collapsed,
   isMobile = false,
   selfUserId,
+  selfPresenceMapKey,
+  identityVisible,
   reactionPulse = 0,
   isRaffleWinner = false,
 }: {
@@ -272,12 +272,20 @@ function OnlineUserRow({
   collapsed: boolean
   isMobile?: boolean
   selfUserId?: string
+  selfPresenceMapKey?: string | null
+  identityVisible: boolean
   reactionPulse?: number
   isRaffleWinner?: boolean
 }) {
   const reduceMotion = useReducedMotion()
   const avatarSize: AvatarSize = isMobile ? 'md' : 'sm'
-  const isSelf = Boolean(selfUserId && user.id === selfUserId)
+  const selfMapKey = selfPresenceMapKey ?? selfUserId
+  const isSelf = Boolean(
+    selfUserId &&
+      (user.ownerId === selfUserId ||
+        user.id === selfUserId ||
+        (selfMapKey && user.id === selfMapKey)),
+  )
   const displayName = formatInitPresenceDisplayName(user.name, { isSelf })
   const displayActivity = formatInitPresenceActivityDisplay(user.activity)
 
@@ -299,7 +307,8 @@ function OnlineUserRow({
       <PresenceAvatar
         user={user}
         displayName={displayName}
-        presence={presence}
+        isSelf={isSelf}
+        identityVisible={identityVisible}
         size={avatarSize}
         isRaffleWinner={isRaffleWinner}
       />
@@ -352,7 +361,8 @@ function OnlineUserRow({
               <PresenceAvatar
                 user={user}
                 displayName={displayName}
-                presence={presence}
+                isSelf={isSelf}
+                identityVisible={identityVisible}
                 size={avatarSize}
                 isRaffleWinner={isRaffleWinner}
               />
@@ -366,7 +376,7 @@ function OnlineUserRow({
             <OnlineUserTooltipDetails
               name={displayName}
               activity={user.activity}
-              userId={user.id}
+              userId={user.ownerId ?? user.id}
               selfUserId={selfUserId}
               reactionPulse={reactionPulse}
             />
@@ -440,6 +450,8 @@ function UserCategory({
   collapsed,
   isMobile = false,
   selfUserId,
+  selfPresenceMapKey,
+  identityVisible,
   reactionPulse,
   raffleWinnerId = null,
   infoTooltip,
@@ -451,6 +463,8 @@ function UserCategory({
   collapsed: boolean
   isMobile?: boolean
   selfUserId?: string
+  selfPresenceMapKey?: string | null
+  identityVisible: boolean
   reactionPulse?: number
   raffleWinnerId?: string | null
   infoTooltip?: string
@@ -514,6 +528,8 @@ function UserCategory({
                 collapsed={collapsed}
                 isMobile={isMobile}
                 selfUserId={selfUserId}
+                selfPresenceMapKey={selfPresenceMapKey}
+                identityVisible={identityVisible}
                 reactionPulse={reactionPulse}
                 isRaffleWinner={Boolean(raffleWinnerId && user.id === raffleWinnerId)}
               />
@@ -692,6 +708,8 @@ function OnlineUsersNavContent({
   isLoading = false,
   isAuthenticated = false,
   selfUserId,
+  selfPresenceMapKey,
+  identityVisible,
   reactionPulse,
   raffleWinnerId = null,
 }: {
@@ -702,6 +720,8 @@ function OnlineUsersNavContent({
   isLoading?: boolean
   isAuthenticated?: boolean
   selfUserId?: string
+  selfPresenceMapKey?: string | null
+  identityVisible: boolean
   reactionPulse?: number
   raffleWinnerId?: string | null
 }) {
@@ -739,6 +759,8 @@ function OnlineUsersNavContent({
             collapsed={collapsed}
             isMobile={isMobile}
             selfUserId={selfUserId}
+            selfPresenceMapKey={selfPresenceMapKey}
+            identityVisible={identityVisible}
             reactionPulse={reactionPulse}
             raffleWinnerId={raffleWinnerId}
             infoTooltip="This feature is powered by Appwrite Realtime and Appwrite Presences."
@@ -750,6 +772,8 @@ function OnlineUsersNavContent({
             collapsed={collapsed}
             isMobile={isMobile}
             selfUserId={selfUserId}
+            selfPresenceMapKey={selfPresenceMapKey}
+            identityVisible={identityVisible}
             reactionPulse={reactionPulse}
           />
           <InvisibleOnlineCountFooter
@@ -833,7 +857,8 @@ export function OnlineUsersNav({
   const [collapsed, setCollapsed] = useState(false)
   const [reactionPulse, setReactionPulse] = useState(0)
   const { data: account } = useQuery(consoleAccountQueryOptions())
-  const { isReady: isPresenceReady, onlineThemeCounts } = useInitPresence()
+  const { isReady: isPresenceReady, onlineThemeCounts, identityVisible, selfPresenceMapKey } =
+    useInitPresence()
   const raffle = useInitGiveawayRaffleContext()
   const isAuthenticated = Boolean(account)
   const isLoadingPresence = showPanel && isAuthenticated && !isPresenceReady
@@ -869,6 +894,8 @@ export function OnlineUsersNav({
                 isLoading={isLoadingPresence}
                 isAuthenticated={isAuthenticated}
                 selfUserId={selfUserId}
+                selfPresenceMapKey={selfPresenceMapKey}
+                identityVisible={identityVisible}
                 reactionPulse={reactionPulse}
                 raffleWinnerId={raffle?.raffleWinnerId ?? null}
               />
@@ -959,6 +986,8 @@ export function OnlineUsersNav({
               isLoading={isLoadingPresence}
               isAuthenticated={isAuthenticated}
               selfUserId={selfUserId}
+              selfPresenceMapKey={selfPresenceMapKey}
+              identityVisible={identityVisible}
               reactionPulse={reactionPulse}
               raffleWinnerId={raffle?.raffleWinnerId ?? null}
             />

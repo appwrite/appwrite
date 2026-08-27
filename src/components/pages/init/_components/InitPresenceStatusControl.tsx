@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
-import { PhotoAvatar } from '@/components/global/shared/Avatar'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
+import { Button } from '@/components/ui/button'
 import {
   Popover,
   PopoverContent,
@@ -92,44 +93,94 @@ function PresenceStatusToggle({
 function PresenceStatusPanel({
   name,
   userId,
+  showPhoto,
   participantStatus,
   isUpdating,
+  identityVisible,
+  isIdentityUpdating,
   onStatusChange,
+  onIdentityVisibleChange,
 }: {
   name: string
   userId: string
+  showPhoto: boolean
   participantStatus: InitParticipantStatus
   isUpdating: boolean
+  identityVisible: boolean
+  isIdentityUpdating: boolean
   onStatusChange: (status: InitParticipantStatus) => void
+  onIdentityVisibleChange: (visible: boolean) => void
 }) {
   const isOnline = participantStatus === 'online'
 
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-2.5">
-        <PhotoAvatar
-          userId={userId}
-          size="sm"
-          className="mt-0.5 shrink-0 rounded-full"
-        />
+        {showPhoto ? (
+          <PhotoAvatar
+            userId={userId}
+            size="sm"
+            className="mt-0.5 shrink-0 rounded-full"
+          />
+        ) : (
+          <InitialsAvatar
+            name={name}
+            size="sm"
+            className="mt-0.5 shrink-0 rounded-full"
+          />
+        )}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-medium text-foreground">{name}</p>
-          <div className="mt-0.5 flex items-start gap-1.5">
-            <StatusDot online={isOnline} className="mt-1" />
-            <p className="min-h-[2lh] text-[11px] leading-normal text-muted-foreground">
-              {isOnline ? 'Visible to others on Init' : 'Hidden from the online list'}
+          <div className="flex items-center gap-1">
+            <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
+              {name}
+            </p>
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-6 shrink-0 text-muted-foreground hover:text-foreground"
+                  aria-pressed={identityVisible}
+                  aria-label={
+                    identityVisible
+                      ? 'Hide your identity from others'
+                      : 'Show your identity to others'
+                  }
+                  disabled={isUpdating || isIdentityUpdating}
+                  onClick={() => onIdentityVisibleChange(!identityVisible)}
+                >
+                  {identityVisible ? (
+                    <Eye className="size-3.5" />
+                  ) : (
+                    <EyeOff className="size-3.5" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className={ONLINE_USER_TOOLTIP_CLASS}>
+                <p className="text-[12px] leading-relaxed text-muted-foreground/70">
+                  {identityVisible
+                    ? 'Others can see your name, photo, and country'
+                    : 'Others see a random name with no photo or country'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <div className="mt-0.5 flex items-center gap-1.5">
+            <StatusDot online={isOnline} />
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              {isOnline
+                ? identityVisible
+                  ? 'Visible on Init'
+                  : 'Hidden from others'
+                : 'Hidden from the online list'}
             </p>
           </div>
-        </div>
-        <div className="flex size-3.5 shrink-0 items-center justify-center" aria-hidden={!isUpdating}>
-          {isUpdating ? (
-            <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-          ) : null}
         </div>
       </div>
       <PresenceStatusToggle
         participantStatus={participantStatus}
-        disabled={isUpdating}
+        disabled={isUpdating || isIdentityUpdating}
         onStatusChange={onStatusChange}
       />
     </div>
@@ -166,9 +217,8 @@ function InitPresenceStatusSkeleton({
         <Skeleton className="mt-0.5 size-8 shrink-0 rounded-full bg-muted/80 dark:bg-muted/40" />
         <div className="min-w-0 flex-1 space-y-2">
           <Skeleton className="h-3.5 w-[58%] bg-muted/80 dark:bg-muted/40" />
-          <Skeleton className="min-h-[2lh] w-full bg-muted/80 dark:bg-muted/40" />
+          <Skeleton className="h-3 w-full bg-muted/80 dark:bg-muted/40" />
         </div>
-        <span className="size-3.5 shrink-0" aria-hidden />
       </div>
       <div className="grid grid-cols-2 gap-1.5">
         <Skeleton className="h-8 rounded-md bg-muted/80 dark:bg-muted/40" />
@@ -190,7 +240,10 @@ export function InitPresenceStatusControl({
     participantStatus,
     isParticipantStatusUpdating,
     isReady,
+    identityVisible,
+    isIdentityVisibleUpdating,
     setParticipantStatus,
+    setIdentityVisible,
   } = useInitPresence()
   const reduceMotion = useReducedMotion()
 
@@ -200,6 +253,12 @@ export function InitPresenceStatusControl({
   const handleStatusChange = (status: InitParticipantStatus) => {
     void setParticipantStatus(status)
   }
+
+  const handleIdentityVisibleChange = (visible: boolean) => {
+    void setIdentityVisible(visible)
+  }
+
+  const showPhoto = identityVisible
 
   if (!account || !isReady) {
     return <InitPresenceStatusSkeleton collapsed={collapsed} isMobile={isMobile} />
@@ -223,11 +282,15 @@ export function InitPresenceStatusControl({
                 aria-label={`Your status: ${isOnline ? 'Online' : 'Offline'}. Open status settings`}
               >
                 <span className="relative">
-                  <PhotoAvatar
-                    userId={account.$id}
-                    size="sm"
-                    className="rounded-full"
-                  />
+                  {showPhoto ? (
+                    <PhotoAvatar
+                      userId={account.$id}
+                      size="sm"
+                      className="rounded-full"
+                    />
+                  ) : (
+                    <InitialsAvatar name={name} size="sm" className="rounded-full" />
+                  )}
                   <motion.span
                     key={isOnline ? 'online' : 'offline'}
                     className={cn(
@@ -263,9 +326,13 @@ export function InitPresenceStatusControl({
           <PresenceStatusPanel
             name={name}
             userId={account.$id}
+            showPhoto={showPhoto}
             participantStatus={participantStatus}
             isUpdating={isParticipantStatusUpdating}
+            identityVisible={identityVisible}
+            isIdentityUpdating={isIdentityVisibleUpdating}
             onStatusChange={handleStatusChange}
+            onIdentityVisibleChange={handleIdentityVisibleChange}
           />
         </PopoverContent>
       </Popover>
@@ -280,9 +347,13 @@ export function InitPresenceStatusControl({
       <PresenceStatusPanel
         name={name}
         userId={account.$id}
+        showPhoto={showPhoto}
         participantStatus={participantStatus}
         isUpdating={isParticipantStatusUpdating}
+        identityVisible={identityVisible}
+        isIdentityUpdating={isIdentityVisibleUpdating}
         onStatusChange={handleStatusChange}
+        onIdentityVisibleChange={handleIdentityVisibleChange}
       />
     </div>
   )

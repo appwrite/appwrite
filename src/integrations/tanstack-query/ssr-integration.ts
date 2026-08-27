@@ -24,6 +24,8 @@ export function setupQueryClientRouterIntegration(
       renderCleanupRegistered = true
       router.serverSsr.onRenderFinished(() => {
         queryClient.clear()
+        queryClient.getQueryCache().clear()
+        queryClient.getMutationCache().clear()
       })
     }
 

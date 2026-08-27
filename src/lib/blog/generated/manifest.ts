@@ -17,20 +17,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "init-4-around-the-corner",
-    "href": "/blog/post/init-4-around-the-corner",
-    "title": "Init 4.0 is around the corner",
-    "description": "Init returns August 31 to September 4 with a new format, a global live experience powered by Appwrite Realtime and Presences, and prizes worth showing up for. After August 31, you will look at Appwrite differently.",
-    "date": "2026-08-27",
-    "lastUpdated": "2026-08-27",
-    "timeToRead": 5,
-    "author": "eldad-fux",
-    "category": "init, announcement",
-    "featured": true,
-    "cover": "/images/blog-local/init-4-around-the-corner/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "comparing-embedding-models-in-vectorsdb",
     "href": "/blog/post/comparing-embedding-models-in-vectorsdb",
     "title": "Comparing the embedding models available in VectorsDB",

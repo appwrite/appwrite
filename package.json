@@ -51,7 +51,9 @@
     "socials": "bun run scripts/socials.ts",
     "cloudflare-stats": "bun run scripts/cloudflare-stats.ts",
     "i18n:audit:he": "bun run scripts/i18n-audit-he.ts",
-    "i18n:audit:ja": "bun run scripts/i18n-audit-ja.ts"
+    "i18n:audit:ja": "bun run scripts/i18n-audit-ja.ts",
+    "benchmark:init-server-memory": "bun run scripts/benchmark-init-server-memory.ts",
+    "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
     "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@c876d8d",
