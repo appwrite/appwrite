@@ -3,7 +3,7 @@ layout: post
 title: "Announcing the Appwrite OAuth2 server: Turn your project into an identity provider"
 description: Your Appwrite project can now act as an OAuth 2.1 and OpenID Connect provider, so other apps can offer Sign in with your product and request scoped access to your APIs.
 date: 2026-07-15
-cover: /images/blog/announcing-oauth2-server/cover.png
+cover: /images/blog/announcing-oauth2-server/cover.avif
 timeToRead: 6
 author: matej-baco
 category: announcement

@@ -3,7 +3,7 @@ layout: post
 title: "Announcing VectorsDB: Similarity search as a first-class Appwrite database"
 description: Store embeddings, generate them from text with built-in models, and rank documents by similarity without adding a separate vector service to your stack.
 date: 2026-07-09
-cover: /images/blog/announcing-vectorsdb/cover.png
+cover: /images/blog/announcing-vectorsdb/cover.avif
 timeToRead: 6
 author: atharva
 category: announcement

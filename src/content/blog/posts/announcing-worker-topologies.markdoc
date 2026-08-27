@@ -3,7 +3,7 @@ layout: post
 title: "Introducing worker topologies for self-hosted Appwrite"
 description: Self-hosted Appwrite now runs all background workers in a single container by default. Learn how the combined topology works and when to scale out with separate workers.
 date: 2026-08-20
-cover: /images/blog/announcing-worker-topologies/cover.png
+cover: /images/blog/announcing-worker-topologies/cover.avif
 timeToRead: 5
 author: atharva
 category: announcement
