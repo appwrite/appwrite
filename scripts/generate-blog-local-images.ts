@@ -9,7 +9,8 @@
  *
  * Run: bun run generate:blog-local-images [slug]
  */
-import { access, mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { access } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
@@ -136,6 +137,7 @@ async function generateMcpServerOauth2Images(outputDir: string): Promise<void> {
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
+  'announcing-appwrite-domains': convertCoverSourceToAvif,
   'turn-your-app-into-an-mcp-server': generateMcpServerOauth2Images,
 }
 

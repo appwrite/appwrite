@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "Buy domains and host DNS inside your Appwrite organization"
+date: 2026-09-04
+cover: /images/blog-local/announcing-appwrite-domains/cover.avif
+---
+
+[Appwrite Domains](/docs/products/domains) is now available on Appwrite Cloud. Open **Organization** > **Domains** to register a name across more than 160 TLDs, [transfer an existing registration in](/docs/products/domains/transfer), or [add a domain you keep registered elsewhere](/docs/products/domains/external) by pointing its nameservers at `ns1.appwrite.zone` and `ns2.appwrite.zone`.
+
+Verified domains get an authoritative DNS zone you edit in the Console, with A, AAAA, CNAME, MX, TXT, NS, SRV, CAA, HTTPS, and ALIAS records, BIND zone file import and export, and [one-click MX presets](/docs/products/domains/presets) for Google Workspace, Outlook, Mailgun, Zoho, ProtonMail, and iCloud. Records that carry routing and TLS renewal are locked so they cannot be edited away.
+
+[Attach hostnames](/docs/products/domains/connect) to Sites, Functions, and custom API endpoints from the same zone, and Appwrite issues and renews the certificates. Auto-renewal, registrar transfer out, and moving a domain to another organization you own all live on the domain **Settings** tab.
+
+{% arrow_link href="/blog/post/announcing-appwrite-domains" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/domains/quick-start" %}
+Start with Domains
+{% /arrow_link %}

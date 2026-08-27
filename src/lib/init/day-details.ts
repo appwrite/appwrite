@@ -225,7 +225,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day5-domains-blog',
         typeLabel: 'Blog',
         title: 'Introducing Appwrite Domains',
-        href: '/blog',
+        href: '/blog/post/announcing-appwrite-domains',
         actionLabel: 'Read article',
       },
       {
