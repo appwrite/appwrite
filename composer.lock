@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9481b6eabc4b962abea525da82d4e962",
+    "content-hash": "390448d7a8976e58bf2e0a1306dbc7d7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4399,11 +4399,17 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "1.0.999",
+            "version": "1.0.0-rc18",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/monorepo.git",
-                "reference": "cursor/multi-job-queue-platform-f0c8"
+                "url": "https://github.com/utopia-php/platform.git",
+                "reference": "aab0b18f26cf851e8f48d6a6bb36e92ed597ce50"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/aab0b18f26cf851e8f48d6a6bb36e92ed597ce50",
+                "reference": "aab0b18f26cf851e8f48d6a6bb36e92ed597ce50",
+                "shasum": ""
             },
             "require": {
                 "ext-json": "*",
@@ -4417,9 +4423,26 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\Platform\\": "packages/platform/src/Platform"
+                    "Utopia\\Platform\\": "src/Platform"
                 }
-            }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Light and Fast Platform Library",
+            "keywords": [
+                "framework",
+                "php",
+                "platform",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/platform/issues",
+                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc18"
+            },
+            "time": "2026-08-18T15:36:41+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -8532,8 +8555,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5,
-        "utopia-php/platform": 5
+        "utopia-php/http": 5
     },
     "prefer-stable": true,
     "prefer-lowest": false,
