@@ -666,7 +666,6 @@ class OpenAPI3 extends Format
                         break;
                     case \Utopia\Validator\Hostname::class:
                     case \Utopia\Domains\Validator\PublicDomain::class:
-                    case \Utopia\Domains\Validator\Domain::class:
                     case \Utopia\Validator\Domain::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'example.com';
