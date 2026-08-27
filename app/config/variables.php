@@ -524,7 +524,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => 'password'
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DB_ADAPTER_VECTORSDB',
@@ -578,7 +578,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => 'password'
+                'filter' => ''
             ],
             [
                 'name' => '_APP_CONNECTIONS_DATABASE_DOCUMENTSDB',
