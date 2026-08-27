@@ -6,6 +6,7 @@ namespace Tests\Unit\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Appwrite as AppwriteProvider;
+use Appwrite\Auth\OAuth2\Cloudflare;
 use Appwrite\Auth\OAuth2\Etsy;
 use Appwrite\Auth\OAuth2\Kick;
 use Appwrite\Auth\OAuth2\X;
@@ -27,6 +28,7 @@ final class PKCETest extends TestCase
         yield 'x' => [X::class];
         yield 'kick' => [Kick::class];
         yield 'appwrite' => [AppwriteProvider::class];
+        yield 'cloudflare' => [Cloudflare::class];
     }
 
     protected function setUp(): void

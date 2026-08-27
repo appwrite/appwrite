@@ -67,6 +67,7 @@ class Get extends Action
                             Response::MODEL_OAUTH2_SALESFORCE,
                             Response::MODEL_OAUTH2_YAHOO,
                             Response::MODEL_OAUTH2_HUGGINGFACE,
+                            Response::MODEL_OAUTH2_CLOUDFLARE,
                             Response::MODEL_OAUTH2_LINKEDIN,
                             Response::MODEL_OAUTH2_DISQUS,
                             Response::MODEL_OAUTH2_AMAZON,
