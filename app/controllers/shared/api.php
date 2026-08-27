@@ -532,7 +532,7 @@ Http::init()
             && $devKey->isEmpty();
 
         $abuseLimit = $route->getLabel('abuse-limit', 0);
-        $increasedLimitProjects = \array_filter(\explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', '')));
+        $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
         if (\in_array($project->getId(), $increasedLimitProjects, true)) {
             $abuseLimit *= 100;
         }

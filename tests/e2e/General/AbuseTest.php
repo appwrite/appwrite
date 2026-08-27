@@ -32,7 +32,7 @@ final class AbuseTest extends Scope
     #[Group('abuseEnabled')]
     public function testAbuseIncreasedLimitProject(): void
     {
-        $increasedLimitProjects = \array_filter(\explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', '')));
+        $increasedLimitProjects = \array_values(\array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', '')))));
         if (empty($increasedLimitProjects)) {
             $this->markTestSkipped('No projects with increased rate limits configured.');
         }
