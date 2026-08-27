@@ -25,7 +25,7 @@ class XList extends TransactionsList
             ->setHttpPath('/v1/vectorsdb/transactions')
             ->desc('List transactions')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'vectorsdb.documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',

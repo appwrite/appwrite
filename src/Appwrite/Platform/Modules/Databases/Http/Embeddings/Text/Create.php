@@ -76,7 +76,7 @@ class Create extends CreateDocumentAction
                 )
             ])
             ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesMaxEmbeddingTexts'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'])
-            ->param('model', AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, new WhiteList(AppwriteAdapter::MODELS), 'The embedding model to use for generating vector embeddings.', true, enum: new Enum(name: 'EmbeddingModel'))
+            ->param('model', AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, new WhiteList([AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, AppwriteAdapter::MODEL_ALL_MINILM]), 'The embedding model to use for generating vector embeddings.', true, enum: new Enum(name: 'EmbeddingModel'))
             ->inject('response')
             ->inject('project')
             ->inject('embeddingAgent')
