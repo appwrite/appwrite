@@ -26,7 +26,8 @@ class Cloudflare extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'openid',
+        'user-details.read',
+        'offline_access',
     ];
 
     /**
@@ -161,22 +162,24 @@ class Cloudflare extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['sub'] ?? '';
+        return (string)($user['id'] ?? '');
     }
 
     /**
-     * Cloudflare Dashboard OAuth2 only exposes 'sub' in userinfo.
-     *
      * @param string $accessToken
      *
      * @return string
      */
     public function getUserEmail(string $accessToken): string
     {
-        return '';
+        $user = $this->getUser($accessToken);
+
+        return (string)($user['email'] ?? '');
     }
 
     /**
+     * Cloudflare does not expose an email verification status.
+     *
      * @param string $accessToken
      *
      * @return bool
@@ -187,19 +190,19 @@ class Cloudflare extends OAuth2
     }
 
     /**
-     * Cloudflare Dashboard OAuth2 does not expose a name claim.
-     *
      * @param string $accessToken
      *
      * @return string
      */
     public function getUserName(string $accessToken): string
     {
-        return '';
+        $user = $this->getUser($accessToken);
+
+        return \trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
     }
 
     /**
-     * Cloudflare Dashboard OAuth2 does not expose a picture claim.
+     * Cloudflare does not expose a profile picture.
      *
      * @param string $accessToken
      *
@@ -211,6 +214,10 @@ class Cloudflare extends OAuth2
     }
 
     /**
+     * Identity comes from the Cloudflare API user details endpoint, granted by
+     * the 'user-details.read' scope. The OIDC userinfo endpoint requires the
+     * 'openid' scope, which Cloudflare OAuth clients cannot be granted.
+     *
      * @param string $accessToken
      *
      * @return array
@@ -218,18 +225,18 @@ class Cloudflare extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://dash.cloudflare.com/oauth2/userinfo', [
+            $response = $this->request('GET', 'https://api.cloudflare.com/client/v4/user', [
                 'Authorization: Bearer ' . \urlencode($accessToken),
                 'Accept: application/json',
             ]);
 
-            $decodedUser = \json_decode($user, true);
+            $decoded = \json_decode($response, true);
 
-            if (!\is_array($decodedUser) || isset($decodedUser['error'])) {
+            if (!\is_array($decoded) || empty($decoded['success']) || !\is_array($decoded['result'] ?? null)) {
                 throw new Exception('Cloudflare did not return valid user information.', 400);
             }
 
-            $this->user = $decodedUser;
+            $this->user = $decoded['result'];
         }
 
         return $this->user;
