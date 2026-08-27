@@ -88,11 +88,13 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $skipFilters = ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships'];
-
         $selects = Query::getByType($queries, [Query::TYPE_SELECT]);
-        if (empty($selects)) {
-            $skipFilters[] = 'subQueryTargets';
+
+        $skipFilters = APP_USERS_SUBQUERIES;
+        if (!empty($selects)) {
+            // Targets are batch-loaded below only when no selects are given; otherwise
+            // the per-user subquery still has to run.
+            $skipFilters = \array_diff($skipFilters, ['subQueryTargets']);
         }
 
         $users = [];

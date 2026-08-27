@@ -62,9 +62,40 @@ class V25 extends Migration
                 case 'projects':
                     if ($collectionType === 'console') {
                         try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'onboarding');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"onboarding\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
                             $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'schedules':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'projectInternalId');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"projectInternalId\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        $indexes = [
+                            '_key_region_resourceType_projectInternalId_resourceId',
+                            '_key_project_internal_id_region',
+                        ];
+                        foreach ($indexes as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -185,6 +216,16 @@ class V25 extends Migration
 
                         $this->dbForProject->purgeCachedCollection($id);
                     }
+                    break;
+
+                case 'identities':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'photo');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"photo\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
             }
         }
