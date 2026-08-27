@@ -50,6 +50,8 @@ class View extends Action
 
         $defaultEmailCertificates = $vars['_APP_EMAIL_CERTIFICATES']['default'] ?? '';
         $defaultForceHttps = ($vars['_APP_OPTIONS_FORCE_HTTPS']['default'] ?? 'disabled') === 'enabled';
+        $defaultDocumentsDB = ($vars['_APP_DOCUMENTSDB']['default'] ?? 'enabled') !== 'disabled';
+        $defaultVectorsDB = ($vars['_APP_VECTORSDB']['default'] ?? 'enabled') !== 'disabled';
         if ($isLocalInstall && empty($defaultEmailCertificates)) {
             $defaultEmailCertificates = 'walterobrien@example.com';
         }
