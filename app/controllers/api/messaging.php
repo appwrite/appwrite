@@ -46,6 +46,7 @@ use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
+use Utopia\Validator\JSON\FCM as FCMValidator;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
@@ -1016,7 +1017,7 @@ Http::post('/v1/messaging/providers/fcm')
     ])
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('serviceAccountJSON', null, new Nullable(new JSONObject()), 'FCM service account JSON.', true)
+    ->param('serviceAccountJSON', null, new Nullable(new FCMValidator()), 'FCM service account JSON.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -2330,7 +2331,7 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
-    ->param('serviceAccountJSON', null, new Nullable(new JSONObject()), 'FCM service account JSON.', true)
+    ->param('serviceAccountJSON', null, new Nullable(new FCMValidator()), 'FCM service account JSON.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -2360,16 +2361,22 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
             ]);
         }
 
-        if (!\is_null($enabled)) {
-            if ($enabled) {
-                if (\array_key_exists('serviceAccountJSON', $provider->getAttribute('credentials'))) {
-                    $provider->setAttribute('enabled', true);
-                } else {
-                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
-                }
-            } else {
-                $provider->setAttribute('enabled', false);
+        if (!\is_null($serviceAccountJSON) || $enabled === true) {
+            $credentials = $provider->getAttribute('credentials');
+
+            if (!\array_key_exists('serviceAccountJSON', $credentials)) {
+                throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
             }
+
+            $validator = new FCMValidator();
+
+            if (!$validator->isValid($credentials['serviceAccountJSON'])) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
+            }
+        }
+
+        if (!\is_null($enabled)) {
+            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
