@@ -38,6 +38,7 @@ class Factory
         $database
             ->setDatabase($this->database)
             ->setAuthorization($this->authorization)
+            ->setDropUnknownAttributes(true)
             ->setNamespace($this->platformNamespace);
 
         $this->configureDocumentTypes($database);
@@ -61,7 +62,8 @@ class Factory
 
         $database
             ->setDatabase($this->database)
-            ->setAuthorization($this->authorization);
+            ->setAuthorization($this->authorization)
+            ->setDropUnknownAttributes(true);
 
         $this->configureDocumentTypes($database);
         $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
@@ -84,6 +86,7 @@ class Factory
         $database
             ->setDatabase($this->database)
             ->setAuthorization($this->authorization)
+            ->setDropUnknownAttributes(true)
             ->setSharedTables(true)
             ->setGlobalCollections($logsCollections)
             ->setNamespace('logsV1');
@@ -97,6 +100,10 @@ class Factory
         return $this->applyHooks($database);
     }
 
+    /**
+     * Databases and tables the caller owns. Unknown attributes stay a rejected write here:
+     * the schema is theirs, so dropping one would silently discard data they sent.
+     */
     public function tenant(
         Document $databaseDocument,
         Document $project,
