@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useInitPresence } from '@/lib/init/init-presence-context'
+import { formatInitPresenceDisplayName } from '@/lib/init/format-init-presence-display-name'
 import { parseInitReactingActivity, formatInitPresenceActivityDisplay } from '@/lib/init/reactions'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { useT } from '@/lib/i18n/translate'
@@ -177,11 +178,13 @@ function OnlineUserName({
 
 function PresenceAvatar({
   user,
+  displayName,
   presence,
   size = 'sm',
   isRaffleWinner = false,
 }: {
   user: LaunchEventOnlineUser
+  displayName: string
   presence: LaunchEventUserPresence
   size?: AvatarSize
   isRaffleWinner?: boolean
@@ -199,7 +202,7 @@ function PresenceAvatar({
     >
       <PhotoAvatar
         userId={user.id}
-        name={user.name}
+        name={displayName}
         size={size}
         className={cn('rounded-full', isRaffleWinner && RAFFLE_WINNER_AVATAR_CLASS)}
       />
@@ -275,6 +278,7 @@ function OnlineUserRow({
   const reduceMotion = useReducedMotion()
   const avatarSize: AvatarSize = isMobile ? 'md' : 'sm'
   const isSelf = Boolean(selfUserId && user.id === selfUserId)
+  const displayName = formatInitPresenceDisplayName(user.name, { isSelf })
   const displayActivity = formatInitPresenceActivityDisplay(user.activity)
 
   const row = (
@@ -294,6 +298,7 @@ function OnlineUserRow({
       {isRaffleWinner ? <RaffleWinnerSparkles /> : null}
       <PresenceAvatar
         user={user}
+        displayName={displayName}
         presence={presence}
         size={avatarSize}
         isRaffleWinner={isRaffleWinner}
@@ -301,7 +306,7 @@ function OnlineUserRow({
       {(!collapsed || isMobile) && (
         <div className="relative z-[1] min-w-0 flex-1 text-start">
           <OnlineUserName
-            name={user.name}
+            name={displayName}
             activity={user.activity}
             reactionPulse={reactionPulse}
             isSelf={isSelf}
@@ -341,15 +346,16 @@ function OnlineUserRow({
                 isRaffleWinner ? RAFFLE_WINNER_SURFACE_CLASS : 'hover:bg-accent/50',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               )}
-              aria-label={`${user.name}. ${isRaffleWinner ? 'Winner!' : displayActivity}`}
+              aria-label={`${displayName}. ${isRaffleWinner ? 'Winner!' : displayActivity}`}
             >
               {isRaffleWinner ? <RaffleWinnerSparkles /> : null}
               <PresenceAvatar
-        user={user}
-        presence={presence}
-        size={avatarSize}
-        isRaffleWinner={isRaffleWinner}
-      />
+                user={user}
+                displayName={displayName}
+                presence={presence}
+                size={avatarSize}
+                isRaffleWinner={isRaffleWinner}
+              />
             </button>
           </TooltipTrigger>
           <TooltipContent
@@ -358,7 +364,7 @@ function OnlineUserRow({
             className={ONLINE_USER_TOOLTIP_CLASS}
           >
             <OnlineUserTooltipDetails
-              name={user.name}
+              name={displayName}
               activity={user.activity}
               userId={user.id}
               selfUserId={selfUserId}
@@ -398,24 +404,32 @@ function UserCategoryCount({ count }: { count: number }) {
   )
 }
 
-function UserCategoryCounts({
-  visibleCount,
-  hiddenCount = 0,
+function UserCategoryCounts({ totalCount }: { totalCount: number }) {
+  return <UserCategoryCount count={totalCount} />
+}
+
+function InvisibleOnlineCountFooter({
+  hiddenCount,
+  collapsed,
+  isMobile = false,
 }: {
-  visibleCount: number
-  hiddenCount?: number
+  hiddenCount: number
+  collapsed: boolean
+  isMobile?: boolean
 }) {
   const t = useT()
 
+  if (hiddenCount <= 0 || (collapsed && !isMobile)) return null
+
   return (
-    <span className="flex min-w-0 items-center justify-end gap-1.5">
-      <UserCategoryCount count={visibleCount} />
-      {hiddenCount > 0 ? (
-        <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground/60">
-          +{hiddenCount.toLocaleString()} {t('invisible')}
-        </span>
-      ) : null}
-    </span>
+    <p
+      className={cn(
+        'px-2.5 pt-2 text-[11px] font-medium tabular-nums text-muted-foreground/60',
+        isMobile && 'px-3',
+      )}
+    >
+      +{hiddenCount.toLocaleString()} {t('invisible')}
+    </p>
   )
 }
 
@@ -488,7 +502,7 @@ function UserCategory({
                   </Tooltip>
                 ) : null}
               </div>
-              <UserCategoryCounts visibleCount={users.length} hiddenCount={hiddenCount} />
+              <UserCategoryCounts totalCount={users.length + hiddenCount} />
             </div>
           )}
           <AnimatePresence initial={false} mode="popLayout">
@@ -737,6 +751,11 @@ function OnlineUsersNavContent({
             isMobile={isMobile}
             selfUserId={selfUserId}
             reactionPulse={reactionPulse}
+          />
+          <InvisibleOnlineCountFooter
+            hiddenCount={event.hiddenOnlineCount}
+            collapsed={collapsed}
+            isMobile={isMobile}
           />
         </div>
       )}
