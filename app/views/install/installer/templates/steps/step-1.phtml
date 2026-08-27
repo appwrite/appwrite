@@ -10,6 +10,8 @@ $defaultEmailCertificates ??= '';
 $defaultForceHttps ??= false;
 $defaultAssistantOpenAIKey ??= '';
 $defaultDatabase ??= 'postgresql';
+$defaultDocumentsDB ??= true;
+$defaultVectorsDB ??= true;
 $enabledDatabases ??= ['postgresql', 'mariadb', 'mongodb'];
 $selectedDatabase = $lockedDatabase ?: $defaultDatabase;
 $isDatabaseLocked = !empty($lockedDatabase);
@@ -106,6 +108,32 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                     <?php } ?>
                 </div>
             </div>
+
+            <label class="toggle-option" for="documentsdb">
+                <span class="toggle-option-content">
+                    <span class="typography-text-m-500 text-neutral-primary">DocumentsDB</span>
+                    <span id="documentsdb-description" class="typography-text-xs-400 text-neutral-tertiary">Schemaless document API. Runs on MongoDB, which is deployed alongside your database when this is on.</span>
+                </span>
+                <span class="toggle-switch">
+                    <input type="checkbox" id="documentsdb" name="documentsDB" class="sr-only" aria-describedby="documentsdb-description" <?php echo $defaultDocumentsDB ? 'checked' : ''; ?>>
+                    <span class="toggle-switch-track" aria-hidden="true">
+                        <span class="toggle-switch-thumb"></span>
+                    </span>
+                </span>
+            </label>
+
+            <label class="toggle-option" for="vectorsdb">
+                <span class="toggle-option-content">
+                    <span class="typography-text-m-500 text-neutral-primary">VectorsDB</span>
+                    <span id="vectorsdb-description" class="typography-text-xs-400 text-neutral-tertiary">Vector search API. Runs on PostgreSQL, which is deployed alongside your database when this is on.</span>
+                </span>
+                <span class="toggle-switch">
+                    <input type="checkbox" id="vectorsdb" name="vectorsDB" class="sr-only" aria-describedby="vectorsdb-description" <?php echo $defaultVectorsDB ? 'checked' : ''; ?>>
+                    <span class="toggle-switch-track" aria-hidden="true">
+                        <span class="toggle-switch-thumb"></span>
+                    </span>
+                </span>
+            </label>
 
             <div class="accordion">
                 <button

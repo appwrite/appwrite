@@ -20,6 +20,8 @@
         opensslKey: null,
         assistantOpenAIKey: null,
         topology: 'combined',
+        documentsDB: true,
+        vectorsDB: true,
         accountEmail: null,
         accountPassword: null
     };
