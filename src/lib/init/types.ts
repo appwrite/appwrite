@@ -286,6 +286,7 @@ export interface LaunchEvent {
   onlineUsers: LaunchEventOnlineUser[]
   recentlyOnlineUsers: LaunchEventOnlineUser[]
   onlineCount: number
+  hiddenOnlineCount: number
   othersOnlineCount: number
   liveBanner?: LaunchEventLiveBanner
   primaryCta: LaunchEventCta

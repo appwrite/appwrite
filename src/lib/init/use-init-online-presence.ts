@@ -17,6 +17,8 @@ import {
   buildPresenceMapForEvent,
   clearLegacyInitPresenceStorage,
   isInitAwayStatus,
+  collectInitHiddenOnlinePresences,
+  isInitHiddenPresence,
   isInitOnlineStatus,
   isPresenceDeleteEvent,
   isPresenceMutationEvent,
@@ -44,8 +46,8 @@ import {
 import type { LaunchEvent, LaunchEventOnlineUser, InitCommunityCountry } from '@/lib/init/types'
 import { useTheme } from 'next-themes'
 
-const SIDEBAR_USER_LIMIT = 16
-const AWAY_USER_LIMIT = 8
+const SIDEBAR_USER_LIMIT = 100
+const AWAY_USER_LIMIT = 100
 const ACTIVITY_PUBLISH_DEBOUNCE_MS = 300
 /** Safety-net list sync when realtime events are missed (reconnect, tab background). */
 const INIT_PRESENCE_LIST_REFRESH_MS = 5 * 60_000
@@ -78,6 +80,7 @@ export type InitOnlinePresenceState = {
   onlineUsers: LaunchEventOnlineUser[]
   recentlyOnlineUsers: LaunchEventOnlineUser[]
   onlineCount: number
+  hiddenOnlineCount: number
   othersOnlineCount: number
   onlineThemeCounts: { light: number; dark: number }
   communityCountries: InitCommunityCountry[]
@@ -96,6 +99,7 @@ const EMPTY_STATE: InitOnlinePresenceState = {
   onlineUsers: [],
   recentlyOnlineUsers: [],
   onlineCount: 0,
+  hiddenOnlineCount: 0,
   othersOnlineCount: 0,
   onlineThemeCounts: { light: 0, dark: 0 },
   communityCountries: [],
@@ -237,7 +241,7 @@ export function useInitOnlinePresence(
 
   const refreshLists = useCallback(async (scopeEventId: string) => {
     const [online, away] = await Promise.all([
-      listInitPresences(scopeEventId, 'online'),
+      listInitPresences(scopeEventId, 'online', SIDEBAR_USER_LIMIT),
       listInitPresences(scopeEventId, 'away', AWAY_USER_LIMIT),
     ])
 
@@ -700,8 +704,36 @@ export function useInitOnlinePresence(
     void activityDisplayVersion
     const selfOnlineActivity = accountUserId ? resolveActivity(false) : null
 
+    const hiddenOnlinePresences = collectInitHiddenOnlinePresences(
+      presenceMaps.online,
+      presenceMaps.away,
+    )
+    let hiddenOnlineCount = hiddenOnlinePresences.length
+    if (
+      accountUserId &&
+      participantStatus === 'offline' &&
+      !hiddenOnlinePresences.some((presence) => presence.userId === accountUserId)
+    ) {
+      hiddenOnlineCount += 1
+    }
+
+    const visibleOnlinePresences = [...presenceMaps.online.values()].filter((presence) => {
+      if (isInitHiddenPresence(presence)) return false
+      if (
+        accountUserId &&
+        presence.userId === accountUserId &&
+        participantStatus === 'offline'
+      ) {
+        return false
+      }
+      return true
+    })
+    const visibleAwayPresences = [...presenceMaps.away.values()].filter(
+      (presence) => !isInitHiddenPresence(presence),
+    )
+
     const allOnlineUsers = mapPresencesToOnlineUsers(
-      presenceMaps.online.values(),
+      visibleOnlinePresences,
       activityAllowlist,
     ).map((user) =>
       accountUserId && selfOnlineActivity && user.id === accountUserId
@@ -710,14 +742,14 @@ export function useInitOnlinePresence(
     )
     const onlineUsers = allOnlineUsers.slice(0, SIDEBAR_USER_LIMIT)
     const recentlyOnlineUsers = mapPresencesToOnlineUsers(
-      presenceMaps.away.values(),
+      visibleAwayPresences,
       activityAllowlist,
     ).slice(0, AWAY_USER_LIMIT)
-    const onlineCount = presenceMaps.online.size
+    const onlineCount = visibleOnlinePresences.length + hiddenOnlineCount
     const othersOnlineCount = Math.max(0, onlineCount - onlineUsers.length)
     const onlineThemeCounts = countInitPresenceThemes(allOnlineUsers)
     const communityCountries = aggregateInitCommunityCountries(
-      presenceMaps.online.values(),
+      [...visibleOnlinePresences, ...hiddenOnlinePresences],
       activityAllowlist,
     )
     // Match sidebar onlineCount. Country aggregation skips users without a
@@ -728,6 +760,7 @@ export function useInitOnlinePresence(
       onlineUsers,
       recentlyOnlineUsers,
       onlineCount,
+      hiddenOnlineCount,
       othersOnlineCount,
       onlineThemeCounts,
       communityCountries,

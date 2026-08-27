@@ -2,6 +2,7 @@ import { Permission, Query, Role } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { parseAvatarEmailHash } from '@/lib/avatar-email-hash'
+import { INIT_PRESENCE_ACTIVITY_OFFLINE } from '@/lib/init/init-presence-activity'
 import { sanitizeInitPresenceActivity } from '@/lib/init/init-presence-activity-allowlist'
 import { parseInitPresenceTheme, type InitPresenceTheme } from '@/lib/init/init-presence-theme'
 import type { LaunchEventOnlineUser, InitCommunityCountry } from '@/lib/init/types'
@@ -150,6 +151,54 @@ export function isInitAwayStatus(
   return parseInitPresenceMetadata(presence.metadata)?.eventId === eventId
 }
 
+/** Users who opted out of the visible online list (participant status offline). */
+export function isInitHiddenPresence(presence: InitPresenceRecord): boolean {
+  const metadata = parseInitPresenceMetadata(presence.metadata)
+  return metadata?.activity?.trim() === INIT_PRESENCE_ACTIVITY_OFFLINE
+}
+
+/** Hidden-but-connected presences (deduped by user id). */
+export function collectInitHiddenOnlinePresences(
+  online: Map<string, InitPresenceRecord>,
+  away: Map<string, InitPresenceRecord>,
+): InitPresenceRecord[] {
+  const byUserId = new Map<string, InitPresenceRecord>()
+
+  for (const presence of online.values()) {
+    if (isInitHiddenPresence(presence)) {
+      byUserId.set(presence.userId, presence)
+    }
+  }
+
+  for (const presence of away.values()) {
+    if (isInitHiddenPresence(presence)) {
+      byUserId.set(presence.userId, presence)
+    }
+  }
+
+  return [...byUserId.values()]
+}
+
+function placeInitPresenceInMaps(
+  maps: {
+    online: Map<string, InitPresenceRecord>
+    away: Map<string, InitPresenceRecord>
+  },
+  presence: InitPresenceRecord,
+  eventId: string,
+): void {
+  if (isInitHiddenPresence(presence) || isInitAwayStatus(presence, eventId)) {
+    maps.away.set(presence.userId, presence)
+    maps.online.delete(presence.userId)
+    return
+  }
+
+  if (isInitOnlineStatus(presence, eventId)) {
+    maps.online.set(presence.userId, presence)
+    maps.away.delete(presence.userId)
+  }
+}
+
 /** Keep realtime/local rows when a list fetch returns before the index catches up. */
 export function mergeInitPresenceMaps(
   previous: Map<string, InitPresenceRecord>,
@@ -274,13 +323,7 @@ export function applyInitPresenceRealtimeRecord(
     return { online: nextOnline, away: nextAway }
   }
 
-  if (isInitAwayStatus(presence, eventId)) {
-    nextAway.set(presence.userId, presence)
-    nextOnline.delete(presence.userId)
-  } else if (isInitOnlineStatus(presence, eventId)) {
-    nextOnline.set(presence.userId, presence)
-    nextAway.delete(presence.userId)
-  }
+  placeInitPresenceInMaps({ online: nextOnline, away: nextAway }, presence, eventId)
 
   return reconcileExclusivePresenceMaps(nextOnline, nextAway, eventId)
 }
@@ -305,8 +348,7 @@ export function overlayInitPresenceListFetch(
     if (!isInitOnlineStatus(presence, eventId) || !isPresenceActive(presence)) {
       continue
     }
-    nextOnline.set(userId, presence)
-    nextAway.delete(userId)
+    placeInitPresenceInMaps({ online: nextOnline, away: nextAway }, presence, eventId)
   }
 
   for (const [userId, presence] of awayFromApi) {

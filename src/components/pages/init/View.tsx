@@ -71,6 +71,7 @@ function InitPageContent({
       onlineUsers: presence.onlineUsers,
       recentlyOnlineUsers: presence.recentlyOnlineUsers,
       onlineCount: presence.onlineCount,
+      hiddenOnlineCount: presence.hiddenOnlineCount,
       othersOnlineCount: presence.othersOnlineCount,
     }
   }, [baseEvent, presence])

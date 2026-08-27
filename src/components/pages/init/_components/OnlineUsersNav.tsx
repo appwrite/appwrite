@@ -398,6 +398,27 @@ function UserCategoryCount({ count }: { count: number }) {
   )
 }
 
+function UserCategoryCounts({
+  visibleCount,
+  hiddenCount = 0,
+}: {
+  visibleCount: number
+  hiddenCount?: number
+}) {
+  const t = useT()
+
+  return (
+    <span className="flex min-w-0 items-center justify-end gap-1.5">
+      <UserCategoryCount count={visibleCount} />
+      {hiddenCount > 0 ? (
+        <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground/60">
+          +{hiddenCount.toLocaleString()} {t('invisible')}
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
 function UserCategory({
   label,
   users,
@@ -408,6 +429,7 @@ function UserCategory({
   reactionPulse,
   raffleWinnerId = null,
   infoTooltip,
+  hiddenCount = 0,
 }: {
   label: string
   users: LaunchEventOnlineUser[]
@@ -418,6 +440,7 @@ function UserCategory({
   reactionPulse?: number
   raffleWinnerId?: string | null
   infoTooltip?: string
+  hiddenCount?: number
 }) {
   const t = useT()
   const reduceMotion = useReducedMotion()
@@ -428,7 +451,7 @@ function UserCategory({
 
   return (
     <AnimatePresence initial={false}>
-      {users.length > 0 ? (
+      {users.length > 0 || hiddenCount > 0 ? (
         <motion.div
           key={label}
           initial={reduceMotion ? false : { opacity: 0 }}
@@ -465,7 +488,7 @@ function UserCategory({
                   </Tooltip>
                 ) : null}
               </div>
-              <UserCategoryCount count={users.length} />
+              <UserCategoryCounts visibleCount={users.length} hiddenCount={hiddenCount} />
             </div>
           )}
           <AnimatePresence initial={false} mode="popLayout">
@@ -670,7 +693,9 @@ function OnlineUsersNavContent({
 }) {
   const t = useT()
   const hasUsers =
-    event.onlineUsers.length > 0 || event.recentlyOnlineUsers.length > 0
+    event.onlineUsers.length > 0 ||
+    event.recentlyOnlineUsers.length > 0 ||
+    event.hiddenOnlineCount > 0
 
   const emptyMessage = isAuthenticated
     ? t('No one else online yet. You are connected.')
@@ -695,6 +720,7 @@ function OnlineUsersNavContent({
           <UserCategory
             label="Online now"
             users={event.onlineUsers}
+            hiddenCount={event.hiddenOnlineCount}
             presence="online"
             collapsed={collapsed}
             isMobile={isMobile}

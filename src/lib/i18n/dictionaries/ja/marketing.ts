@@ -577,6 +577,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'on GitHub': 'GitHubで',
   'On this page': 'このページの内容',
   'Online now': 'オンライン中',
+  invisible: '非表示',
   'on X': 'Xで',
   'On-set monitor during the first Init filming in Prague': 'プラハでの初回Init撮影時のモニター',
   'Once your Appwrite account is created, go to our Docs and get started with Appwrite Cloud.': 'Appwriteアカウント作成後、ドキュメントを参照してAppwrite Cloudを始めましょう。',
