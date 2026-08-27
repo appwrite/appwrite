@@ -27,6 +27,8 @@ import {
   isPresenceMutationEvent,
   listInitPresences,
   mapPresencesToOnlineUsers,
+  dedupeInitSelfOnlineUsers,
+  dedupeInitSelfPresenceRecords,
   INIT_ONLINE_PRESENCE_LIST_LIMIT,
   overlayInitPresenceListFetch,
   parseInitPresenceMetadata,
@@ -473,16 +475,24 @@ export function useInitOnlinePresence(
         if (away) {
           setPresenceMaps((previous) => {
             const nextOnline = new Map(previous.online)
-            nextOnline.delete(mapKey)
             const nextAway = new Map(previous.away)
+            if (previousPresenceId && previousPresenceId !== nextPresenceId) {
+              nextOnline.delete(previousPresenceId)
+              nextAway.delete(previousPresenceId)
+            }
+            nextOnline.delete(mapKey)
             nextAway.set(mapKey, presence)
             return reconcileMapsForEvent({ online: nextOnline, away: nextAway }, eventId)
           })
         } else {
           setPresenceMaps((previous) => {
             const nextOnline = new Map(previous.online)
-            nextOnline.set(mapKey, presence)
             const nextAway = new Map(previous.away)
+            if (previousPresenceId && previousPresenceId !== nextPresenceId) {
+              nextOnline.delete(previousPresenceId)
+              nextAway.delete(previousPresenceId)
+            }
+            nextOnline.set(mapKey, presence)
             nextAway.delete(mapKey)
             return reconcileMapsForEvent({ online: nextOnline, away: nextAway }, eventId)
           })
@@ -837,7 +847,7 @@ export function useInitOnlinePresence(
       hiddenOnlineCount += 1
     }
 
-    const visibleOnlinePresences = [...presenceMaps.online.values()].filter((presence) => {
+    const visibleOnlinePresencesRaw = [...presenceMaps.online.values()].filter((presence) => {
       if (isInitHiddenPresence(presence)) return false
       if (
         selfMapKey &&
@@ -848,11 +858,27 @@ export function useInitOnlinePresence(
       }
       return true
     })
-    const visibleAwayPresences = [...presenceMaps.away.values()].filter(
+    const visibleOnlinePresences =
+      accountUserId && selfMapKey
+        ? dedupeInitSelfPresenceRecords(
+            visibleOnlinePresencesRaw,
+            accountUserId,
+            selfMapKey,
+          )
+        : visibleOnlinePresencesRaw
+    const visibleAwayPresencesRaw = [...presenceMaps.away.values()].filter(
       (presence) => !isInitHiddenPresence(presence),
     )
+    const visibleAwayPresences =
+      accountUserId && selfMapKey
+        ? dedupeInitSelfPresenceRecords(
+            visibleAwayPresencesRaw,
+            accountUserId,
+            selfMapKey,
+          )
+        : visibleAwayPresencesRaw
 
-    const allOnlineUsers = mapPresencesToOnlineUsers(
+    const mappedOnlineUsers = mapPresencesToOnlineUsers(
       visibleOnlinePresences,
       activityAllowlist,
     ).map((user) => {
@@ -864,26 +890,45 @@ export function useInitOnlinePresence(
         ...user,
         ownerId: accountUserId,
         name: accountName || user.name,
+        identityHidden: !identityVisible,
+        ...(identityVisible
+          ? {}
+          : { countryCode: undefined, emailHash: undefined }),
         ...(selfOnlineActivity ? { activity: selfOnlineActivity } : {}),
       }
     })
+    const allOnlineUsers =
+      accountUserId && selfMapKey
+        ? dedupeInitSelfOnlineUsers(mappedOnlineUsers, accountUserId, selfMapKey)
+        : mappedOnlineUsers
     const onlineUsers = allOnlineUsers.slice(0, SIDEBAR_USER_LIMIT)
-    const recentlyOnlineUsers = mapPresencesToOnlineUsers(
+    const mappedRecentlyOnlineUsers = mapPresencesToOnlineUsers(
       visibleAwayPresences,
       activityAllowlist,
-    )
-      .map((user) => {
-        if (!accountUserId || !selfMapKey) return user
-        const isSelf =
-          user.ownerId === accountUserId || user.id === selfMapKey
-        if (!isSelf) return user
-        return {
-          ...user,
-          ownerId: accountUserId,
-          name: accountName || user.name,
-        }
-      })
-      .slice(0, AWAY_USER_LIMIT)
+    ).map((user) => {
+      if (!accountUserId || !selfMapKey) return user
+      const isSelf =
+        user.ownerId === accountUserId || user.id === selfMapKey
+      if (!isSelf) return user
+      return {
+        ...user,
+        ownerId: accountUserId,
+        name: accountName || user.name,
+        identityHidden: !identityVisible,
+        ...(identityVisible
+          ? {}
+          : { countryCode: undefined, emailHash: undefined }),
+      }
+    })
+    const recentlyOnlineUsers = (
+      accountUserId && selfMapKey
+        ? dedupeInitSelfOnlineUsers(
+            mappedRecentlyOnlineUsers,
+            accountUserId,
+            selfMapKey,
+          )
+        : mappedRecentlyOnlineUsers
+    ).slice(0, AWAY_USER_LIMIT)
     const onlineCount = visibleOnlinePresences.length + hiddenOnlineCount
     const onlineCountCapped =
       onlineListFetchCapped || visibleOnlinePresences.length >= SIDEBAR_USER_LIMIT

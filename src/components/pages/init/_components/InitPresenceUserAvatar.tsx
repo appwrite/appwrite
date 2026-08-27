@@ -18,8 +18,10 @@ export function shouldShowInitPresenceUserPhoto(
   user: LaunchEventOnlineUser,
   options?: { isSelf?: boolean; identityVisible?: boolean },
 ): boolean {
-  if (!user.identityHidden) return true
-  return Boolean(options?.isSelf && options?.identityVisible)
+  if (options?.isSelf) {
+    return Boolean(options.identityVisible)
+  }
+  return !user.identityHidden
 }
 
 export function InitPresenceUserAvatar({

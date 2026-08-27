@@ -511,6 +511,52 @@ export function sortOnlineUsers(users: LaunchEventOnlineUser[]): LaunchEventOnli
   })
 }
 
+/** Drop stale self rows when identity visibility switches between real and anonymous IDs. */
+export function dedupeInitSelfOnlineUsers(
+  users: LaunchEventOnlineUser[],
+  accountUserId: string,
+  selfPresenceMapKey: string,
+): LaunchEventOnlineUser[] {
+  const selfRowCount = users.filter(
+    (user) =>
+      user.ownerId === accountUserId ||
+      user.id === accountUserId ||
+      user.id === selfPresenceMapKey,
+  ).length
+
+  if (selfRowCount <= 1) return users
+
+  return users.filter((user) => {
+    const isSelf =
+      user.ownerId === accountUserId ||
+      user.id === accountUserId ||
+      user.id === selfPresenceMapKey
+    if (!isSelf) return true
+    return user.id === selfPresenceMapKey
+  })
+}
+
+/** Same dedupe for raw presence rows (sidebar count + list source). */
+export function dedupeInitSelfPresenceRecords(
+  presences: InitPresenceRecord[],
+  accountUserId: string,
+  selfPresenceMapKey: string,
+): InitPresenceRecord[] {
+  const selfRowCount = presences.filter((presence) => {
+    const mapKey = getInitPresenceMapKey(presence)
+    return mapKey === accountUserId || mapKey === selfPresenceMapKey
+  }).length
+
+  if (selfRowCount <= 1) return presences
+
+  return presences.filter((presence) => {
+    const mapKey = getInitPresenceMapKey(presence)
+    const isSelf = mapKey === accountUserId || mapKey === selfPresenceMapKey
+    if (!isSelf) return true
+    return mapKey === selfPresenceMapKey
+  })
+}
+
 /** Aggregate online participants by country code for the community globe. */
 export function aggregateInitCommunityCountries(
   presences: Iterable<InitPresenceRecord>,
