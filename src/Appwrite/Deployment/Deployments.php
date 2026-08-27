@@ -4,6 +4,7 @@ namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
@@ -213,11 +214,18 @@ readonly class Deployments
         try {
             $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
         } catch (\Throwable $error) {
+            // A refused variable key is the owner's to fix, so the build log
+            // carries the actual reason; anything else stays a generic
+            // internal error.
+            $buildLogs = $error instanceof Exception && $error->getType() === Exception::VARIABLE_INVALID_KEY
+                ? "\n" . $error->getMessage() . "\n"
+                : "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n";
+
             // Guarded like the transition above: a cancel that landed while the
             // job was being submitted must not be reported as a failure.
             $this->dbForProject->updateDocuments('deployments', new Document([
                 'status' => 'failed',
-                'buildLogs' => "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n",
+                'buildLogs' => $buildLogs,
                 'buildEndedAt' => DateTime::now(),
             ]), [
                 Query::equal('$id', [$deployment->getId()]),
@@ -589,6 +597,19 @@ readonly class Deployments
         }
         foreach ($resource->getAttribute('vars', []) as $var) {
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
+
+        // Keys that predate the VariableKey endpoint guard can hold bytes the
+        // orchestrator refuses in an env var name (a stray tab, UTF-16 text),
+        // which would reject the whole build job after submission. Refuse only
+        // what the cluster would refuse, before the job leaves this process.
+        foreach (\array_keys($vars) as $key) {
+            if (!VariableKey::isEnvVarName((string) $key)) {
+                throw new Exception(
+                    Exception::VARIABLE_INVALID_KEY,
+                    'Variable key ' . \json_encode((string) $key) . ' is not a valid environment variable name. Update or delete this variable, then retry the deployment.'
+                );
+            }
         }
 
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([

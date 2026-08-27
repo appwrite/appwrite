@@ -85,6 +85,6 @@ abstract class Photo
 
         $body = $response->getBody();
 
-        return empty($body) ? null : $body;
+        return $body === '' ? null : $body;
     }
 }
