@@ -49,6 +49,58 @@ export function isPreLaunchAllowedPath(
   return AUTH_ALLOWED_PATHS.has(normalized)
 }
 
+/**
+ * Heavy marketing/content routes that should not run while the site is locked to
+ * Init. Bots and RSS consumers still hit these even when document navigations
+ * redirect to `/init`, which can OOM small containers.
+ */
+export function isPreLaunchHeavyContentPath(
+  pathname: string | null | undefined,
+): boolean {
+  const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
+  if (normalized === '/health') return false
+  if (normalized.startsWith('/assets/')) return false
+  if (normalized.startsWith('/api/init/')) return false
+  if (normalized.startsWith('/init/') && normalized.endsWith('/og.png')) {
+    return false
+  }
+
+  const heavyPrefixes = [
+    '/blog',
+    '/changelog',
+    '/docs',
+    '/integrations',
+    '/threads',
+    '/home',
+    '/products',
+    '/pricing',
+    '/company',
+    '/og/image.png',
+    '/og/image',
+  ]
+  if (heavyPrefixes.some((prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`))) {
+    return true
+  }
+
+  const heavyExact = new Set([
+    '/blog.md',
+    '/changelog.md',
+    '/integrations.md',
+    '/docs.md',
+    '/llms.txt',
+    '/llms-full.txt',
+    '/blog/rss.xml',
+    '/changelog/rss.xml',
+    '/sitemap.xml',
+    '/robots.txt',
+  ])
+  if (heavyExact.has(normalized)) return true
+  if (normalized.startsWith('/docs/llms')) return true
+  if (normalized.startsWith('/.well-known/')) return true
+
+  return false
+}
+
 function parseBooleanFlag(raw: string | null | undefined): boolean | null {
   if (raw == null) return null
   const normalized = raw.toLowerCase().trim()
