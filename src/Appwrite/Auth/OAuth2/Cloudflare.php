@@ -5,6 +5,9 @@ namespace Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2;
 use Utopia\Fetch\Client as FetchClient;
 
+// Reference Material
+// https://developers.cloudflare.com/cloudflare-one/applications/configure-apps/saas-apps/generic-oidc-saas/
+
 class Cloudflare extends OAuth2
 {
     use PKCE;
@@ -288,17 +291,20 @@ class Cloudflare extends OAuth2
         $client = new FetchClient();
         $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
         $client->addHeader('Accept', 'application/json');
-        $client->addHeader('Authorization', 'Basic ' . \base64_encode($this->appID . ':' . $this->getClientSecret()));
 
+        // The redirect_uri must be a well-formed URL; a malformed request shape
+        // can be rejected with invalid_request before the client is
+        // authenticated, which would mask bad credentials.
         $response = $client->fetch(
             url: $this->getBaseURL() . '/token',
             method: FetchClient::METHOD_POST,
             body: [
                 'grant_type' => 'authorization_code',
                 'code' => 'intentionally-invalid-code',
-                'redirect_uri' => 'intentionally-invalid-redirect',
+                'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
                 'client_id' => $this->appID,
                 'client_secret' => $this->getClientSecret(),
+                'code_verifier' => 'intentionally-invalid-verifier-intentionally-invalid',
             ]
         );
 
