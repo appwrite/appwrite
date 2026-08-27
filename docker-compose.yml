@@ -1649,7 +1649,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.7.2
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.8.0
     restart: unless-stopped
     user: root
     networks:
@@ -1664,8 +1664,8 @@ services:
       - DOCKER_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator:8080
       # Sidecars ship with the service and move with it, so they share its tag.
-      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:1.7.2
-      - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.7.2
+      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:1.8.0
+      - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.8.0
 
   mariadb:
     image: mariadb:10.11
