@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
+import { ColumnArrayCheckbox } from '@/components/pages/projects/$projectId/databases/_components/ColumnArrayCheckbox'
 import {
   Command,
   CommandEmpty,
@@ -261,30 +261,17 @@ export function MysqlColumnTypeSelector({
       ) : null}
 
       {resolvedShowArrayOption && supportsArray ? (
-        <div className="flex items-start gap-2">
-          <Checkbox
-            id="mysql-column-array"
-            checked={value.isArray === true}
-            onCheckedChange={(checked) =>
-              onChange({
-                ...value,
-                isArray: checked === true,
-              })
-            }
-            className="mt-0.5"
-          />
-          <div className="space-y-1">
-            <Label
-              htmlFor="mysql-column-array"
-              className="text-[12px] font-medium leading-none"
-            >
-              {t('Define as array')}
-            </Label>
-            <p className="text-[11px] text-muted-foreground">
-              {t('Store multiple values of this type in a single column.')}
-            </p>
-          </div>
-        </div>
+        <ColumnArrayCheckbox
+          id="mysql-column-array"
+          checked={value.isArray === true}
+          onCheckedChange={(checked) =>
+            onChange({
+              ...value,
+              isArray: checked,
+            })
+          }
+          variant="detailed"
+        />
       ) : null}
 
       {resolvedShowTypeOptions &&

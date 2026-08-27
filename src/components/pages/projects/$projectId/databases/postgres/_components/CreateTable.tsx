@@ -769,7 +769,7 @@ export function CreateTable({
                           }
                           className="h-8 font-mono text-[12px]"
                           placeholder={t(
-                            getPostgresColumnDefaultPlaceholder(column.typeState.typeId),
+                            getPostgresColumnDefaultPlaceholder(column.typeState),
                           )}
                           aria-label={t('Default value')}
                         />

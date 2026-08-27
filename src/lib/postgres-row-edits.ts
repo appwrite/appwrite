@@ -15,6 +15,8 @@ import {
 } from '@/lib/postgres-sql'
 import type { PostgresRowIdentity } from '@/lib/postgres-row-sql'
 
+import type { DatabaseArrayElementType } from '@/lib/database-array-field'
+
 export type PostgresColumnEditMeta = {
   typeId: PostgresColumnTypeId
   dataType: string
@@ -22,6 +24,7 @@ export type PostgresColumnEditMeta = {
   nullable: boolean
   isPrimaryKey: boolean
   hasDefault: boolean
+  isArray: boolean
   length?: number
   numericPrecision?: number
   numericScale?: number
@@ -57,16 +60,44 @@ export function getPostgresColumnEditMeta(
     nullable: column.is_nullable === 'YES',
     isPrimaryKey: isPostgresPrimaryKeyColumn(column),
     hasDefault: column.column_default != null && column.column_default !== '',
+    isArray: typeState.isArray === true,
     length: typeState.length,
     numericPrecision: typeState.numericPrecision,
     numericScale: typeState.numericScale,
   }
 }
 
+export function getPostgresArrayElementFieldType(
+  typeId: PostgresColumnTypeId,
+): DatabaseArrayElementType {
+  if (typeId === 'boolean') return 'boolean'
+  if (isPostgresDatetimeType(typeId)) return 'datetime'
+  if (typeId === 'bigint') return 'bigint'
+  if (
+    typeId === 'smallint' ||
+    typeId === 'integer' ||
+    typeId === 'smallserial' ||
+    typeId === 'serial' ||
+    typeId === 'bigserial'
+  ) {
+    return 'integer'
+  }
+  if (
+    typeId === 'real' ||
+    typeId === 'double precision' ||
+    typeId === 'numeric'
+  ) {
+    return 'double'
+  }
+  if (typeId === 'text') return 'text'
+  return 'string'
+}
+
 export function getPostgresInlineFieldType(
   meta: PostgresColumnEditMeta,
   value?: RowCellValue,
 ): string {
+  if (meta.isArray) return 'array'
   if (meta.typeId === 'boolean') return 'boolean'
   if (isPostgresDatetimeType(meta.typeId)) return 'datetime'
   if (
@@ -234,8 +265,13 @@ export function isPostgresColumnRequired(column: PostgresTableColumnRow): boolea
 
 export function valueToPostgresEditString(
   value: RowCellValue,
-  _meta: PostgresColumnEditMeta,
-): string {
+  meta: PostgresColumnEditMeta,
+): string | RowCellValue[] {
+  if (meta.isArray) {
+    if (value === null || value === undefined) return []
+    if (Array.isArray(value)) return value as RowCellValue[]
+    return []
+  }
   if (value === null || value === undefined) return ''
   if (typeof value === 'boolean') return value ? 'true' : 'false'
   if (typeof value === 'object') return JSON.stringify(value, null, 2)
@@ -328,6 +364,65 @@ export function parseAndValidatePostgresCellInput(
   }
 
   return { ok: true, value: trimmed }
+}
+
+export function parseAndValidatePostgresArrayInput(
+  items: RowCellValue[],
+  column: PostgresTableColumnRow,
+): ParseResult {
+  const meta = getPostgresColumnEditMeta(column)
+  const required = isPostgresColumnRequired(column)
+  const elementType = getPostgresArrayElementFieldType(meta.typeId)
+
+  if (required && items.length === 0) {
+    return { ok: false, error: 'This field is required.' }
+  }
+
+  const validated: RowCellValue[] = []
+  for (let index = 0; index < items.length; index += 1) {
+    const item = items[index]
+    if (item === null) {
+      if (required) {
+        return {
+          ok: false,
+          error: `Item ${index + 1} cannot be null.`,
+        }
+      }
+      validated.push(null)
+      continue
+    }
+
+    if (elementType === 'boolean') {
+      if (typeof item !== 'boolean') {
+        return { ok: false, error: `Item ${index + 1} must be true or false.` }
+      }
+      validated.push(item)
+      continue
+    }
+
+    if (
+      elementType === 'integer' ||
+      elementType === 'bigint' ||
+      elementType === 'double'
+    ) {
+      if (typeof item !== 'number' && typeof item !== 'bigint') {
+        return { ok: false, error: `Item ${index + 1} must be a valid number.` }
+      }
+      validated.push(item)
+      continue
+    }
+
+    const stringValue = String(item)
+    if (meta.length != null && stringValue.length > meta.length) {
+      return {
+        ok: false,
+        error: `Item ${index + 1} exceeds maximum length of ${meta.length} characters.`,
+      }
+    }
+    validated.push(stringValue)
+  }
+
+  return { ok: true, value: validated }
 }
 
 export function makePostgresPendingEditKey(

@@ -32,6 +32,15 @@ import { useT } from '@/lib/i18n/translate'
 
 /** Mid-card cluster area; taller so node headers + live metric placeholders stay readable. */
 export const DATABASE_CLUSTER_PREVIEW_HEIGHT = 200
+
+/** Fixed section heights for databases list grid cards (header / body / footer align across cards). */
+export const DATABASE_GRID_CARD_HEADER_CLASSNAME = 'h-14 shrink-0 overflow-hidden'
+export const DATABASE_GRID_CARD_BODY_CLASSNAME =
+  'h-[var(--database-grid-card-body-height)] shrink-0 overflow-hidden'
+export const DATABASE_GRID_CARD_BODY_HEIGHT_STYLE = {
+  ['--database-grid-card-body-height' as string]: `${DATABASE_CLUSTER_PREVIEW_HEIGHT}px`,
+}
+export const DATABASE_GRID_CARD_FOOTER_CLASSNAME = 'min-h-[52px] shrink-0'
 /** Interactive settings viewport (replication HA diagram). */
 export const DATABASE_CLUSTER_INTERACTIVE_HEIGHT = 280
 /** Interactive viewport when the connection-pooler proxy row is included. */
@@ -1002,8 +1011,10 @@ export function DatabaseClusterPreview({
     </div>
   ) : (
     <div
-      className={cn('min-w-0', className)}
-      style={{ height: previewHeight }}
+      className={cn('min-w-0', withSectionDivider ? 'flex-1' : 'h-full', className)}
+      style={
+        withSectionDivider ? { minHeight: previewHeight } : undefined
+      }
       role="img"
       aria-label={ariaLabel}
     >

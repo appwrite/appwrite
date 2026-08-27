@@ -3,11 +3,13 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
+  getPostgresArrayElementFieldType,
   getPostgresColumnEditMeta,
   getPostgresInlineFieldType,
   isPostgresColumnRequired,
   isPostgresColumnRequiredOnCreate,
   isPostgresColumnSystemGenerated,
+  parseAndValidatePostgresArrayInput,
   parseAndValidatePostgresCellInput,
   postgresColumnAutoGeneratesOnInsert,
   postgresColumnCanOmitOnCreate,
@@ -34,6 +36,14 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useT } from '@/lib/i18n/translate'
+import { DatabaseArrayFieldEditor } from '@/components/pages/projects/$projectId/databases/_components/DatabaseArrayFieldEditor'
+import {
+  databaseRowFieldOverlayClass,
+  databaseRowTextareaPadding,
+  DATABASE_ROW_FIELD_INLINE_COUNTER_PADDING,
+  DATABASE_ROW_TEXTAREA_CLASS,
+} from '@/components/pages/projects/$projectId/databases/_components/DatabaseArrayItemTextField'
+import { isSpreadsheetRtlText } from '@/lib/spreadsheet-cell-formatting'
 
 type PostgresRowEditDrawerProps = {
   open: boolean
@@ -48,8 +58,8 @@ type PostgresRowEditDrawerProps = {
   canWrite?: boolean
 }
 
-/** `null` = explicit SQL NULL; string = raw edit value. */
-type PostgresRowFieldDraft = string | null
+/** `null` = explicit SQL NULL; string = raw edit value; array = array column draft. */
+type PostgresRowFieldDraft = string | null | RowCellValue[]
 
 function isJsonType(typeId: string): boolean {
   return typeId === 'json' || typeId === 'jsonb'
@@ -140,15 +150,28 @@ export function PostgresRowEditDrawer({
     const nextDraft: Record<string, PostgresRowFieldDraft> = {}
     for (const column of editableColumns) {
       const meta = getPostgresColumnEditMeta(column)
-      const fieldType = getPostgresInlineFieldType(meta)
       const value = row?.[column.column_name] as RowCellValue | undefined
+      if (meta.isArray) {
+        if (value === null) {
+          nextDraft[column.column_name] = null
+        } else if (Array.isArray(value)) {
+          nextDraft[column.column_name] = value as RowCellValue[]
+        } else {
+          nextDraft[column.column_name] = []
+        }
+        continue
+      }
+
+      const fieldType = getPostgresInlineFieldType(meta)
       if (value === null) {
         nextDraft[column.column_name] = null
       } else if (value === undefined) {
         nextDraft[column.column_name] =
           fieldType === 'boolean' ? 'false' : ''
       } else {
-        nextDraft[column.column_name] = valueToPostgresEditString(value, meta)
+        const editValue = valueToPostgresEditString(value, meta)
+        nextDraft[column.column_name] =
+          typeof editValue === 'string' ? editValue : []
       }
     }
     setDraft(nextDraft)
@@ -170,7 +193,13 @@ export function PostgresRowEditDrawer({
       handleFieldChange(columnName, null)
       return
     }
-    handleFieldChange(columnName, '')
+    const column = editableColumns.find(
+      (entry) => entry.column_name === columnName,
+    )
+    const isArrayColumn = column
+      ? getPostgresColumnEditMeta(column).isArray
+      : false
+    handleFieldChange(columnName, isArrayColumn ? [] : '')
   }
 
   const handleSave = async () => {
@@ -184,6 +213,42 @@ export function PostgresRowEditDrawer({
       if (!isCreate && isPostgresColumnSystemGenerated(column)) continue
 
       const rawDraft = draft[column.column_name]
+      const meta = getPostgresColumnEditMeta(column)
+
+      if (meta.isArray) {
+        if (rawDraft === null) {
+          const required = isCreate
+            ? isPostgresColumnRequiredOnCreate(column)
+            : isPostgresColumnRequired(column)
+          if (required) {
+            nextErrors[column.column_name] = 'This field is required.'
+            continue
+          }
+          values[column.column_name] = null
+          continue
+        }
+
+        if (!Array.isArray(rawDraft)) continue
+
+        if (isCreate && rawDraft.length === 0) {
+          if (postgresColumnCanOmitOnCreate(column)) continue
+          if (column.is_nullable === 'YES') {
+            values[column.column_name] = []
+            continue
+          }
+          nextErrors[column.column_name] = 'This field is required.'
+          continue
+        }
+
+        const result = parseAndValidatePostgresArrayInput(rawDraft, column)
+        if (!result.ok) {
+          nextErrors[column.column_name] = result.error
+          continue
+        }
+        values[column.column_name] = result.value
+        continue
+      }
+
       if (rawDraft === null) {
         const required = isCreate
           ? isPostgresColumnRequiredOnCreate(column)
@@ -199,7 +264,7 @@ export function PostgresRowEditDrawer({
       // Empty create fields: omit only when Postgres will assign a value
       // (auto-generate or non-PK default). Primary keys without auto-generation
       // are required so we never insert a colliding default.
-      if (isCreate && !(rawDraft ?? '').trim()) {
+      if (isCreate && typeof rawDraft === 'string' && !rawDraft.trim()) {
         if (postgresColumnCanOmitOnCreate(column)) continue
         if (column.is_nullable === 'YES') {
           values[column.column_name] = null
@@ -209,7 +274,8 @@ export function PostgresRowEditDrawer({
         continue
       }
 
-      const result = parseAndValidatePostgresCellInput(rawDraft ?? '', column)
+      const scalarDraft = typeof rawDraft === 'string' ? rawDraft : ''
+      const result = parseAndValidatePostgresCellInput(scalarDraft, column)
       if (!result.ok) {
         nextErrors[column.column_name] = result.error
         continue
@@ -291,7 +357,8 @@ export function PostgresRowEditDrawer({
                       : undefined
                   const draftValue = draft[column.column_name]
                   const isNull = draftValue === null
-                  const stringValue = isNull ? '' : (draftValue ?? '')
+                  const stringValue = isNull ? '' : Array.isArray(draftValue) ? '' : (draftValue ?? '')
+                  const arrayItems = Array.isArray(draftValue) ? draftValue : []
                   const error = errors[column.column_name]
                   const inputId = `postgres-row-field-${column.column_name}`
                   const readOnly =
@@ -301,6 +368,13 @@ export function PostgresRowEditDrawer({
                     !readOnly && column.is_nullable === 'YES'
                   const useTextarea =
                     isJsonType(meta.typeId) || isLongTextType(meta.typeId)
+                  const isRTLContent = isSpreadsheetRtlText(stringValue)
+                  const textareaPadding = databaseRowTextareaPadding({
+                    showNullCheckbox: showNullToggle,
+                  })
+                  const inputSidePadding = showNullToggle
+                    ? DATABASE_ROW_FIELD_INLINE_COUNTER_PADDING
+                    : ''
 
                   return (
                     <div key={column.column_name} className="space-y-1.5">
@@ -326,6 +400,42 @@ export function PostgresRowEditDrawer({
                           readOnly
                           className="h-9 bg-muted/30 text-[13px]"
                         />
+                      ) : fieldType === 'array' ? (
+                        <div className="space-y-2">
+                          {showNullToggle ? (
+                            <div className="flex items-center gap-1.5">
+                              <Checkbox
+                                id={`${inputId}-null`}
+                                checked={isNull}
+                                onCheckedChange={(checked) =>
+                                  handleNullToggle(
+                                    column.column_name,
+                                    checked === true,
+                                  )
+                                }
+                                className="h-4 w-4"
+                              />
+                              <label
+                                htmlFor={`${inputId}-null`}
+                                className="cursor-pointer select-none text-[11px] text-muted-foreground"
+                              >
+                                {t('Null')}
+                              </label>
+                            </div>
+                          ) : null}
+                          <DatabaseArrayFieldEditor
+                            idPrefix={inputId}
+                            items={arrayItems}
+                            onChange={(items) =>
+                              handleFieldChange(column.column_name, items)
+                            }
+                            elementType={getPostgresArrayElementFieldType(meta.typeId)}
+                            required={required}
+                            maxLength={meta.length}
+                            disabled={readOnly || isNull}
+                            autoFocus={focusedField === column.column_name}
+                          />
+                        </div>
                       ) : fieldType === 'boolean' ? (
                         <div className="flex items-center gap-2">
                           <Switch
@@ -393,11 +503,15 @@ export function PostgresRowEditDrawer({
                           ) : null}
                         </div>
                       ) : useTextarea ? (
-                        <div className="relative">
+                        <div
+                          className="relative"
+                          dir={isRTLContent ? 'rtl' : 'ltr'}
+                        >
                           <Textarea
                             id={inputId}
                             value={stringValue}
                             disabled={isNull}
+                            dir={isRTLContent ? 'rtl' : 'ltr'}
                             onChange={(event) =>
                               handleFieldChange(
                                 column.column_name,
@@ -409,9 +523,10 @@ export function PostgresRowEditDrawer({
                               required ? undefined : emptyPlaceholder
                             }
                             className={cn(
-                              'min-h-[36px] max-h-[600px] resize-none text-[13px] font-mono',
+                              DATABASE_ROW_TEXTAREA_CLASS,
+                              isJsonType(meta.typeId) && 'font-mono',
                               isNull && 'cursor-not-allowed opacity-50',
-                              showNullToggle ? 'pb-8 pe-28' : 'pb-2',
+                              textareaPadding,
                             )}
                             aria-invalid={error ? true : undefined}
                             autoFocus={focusedField === column.column_name}
@@ -421,19 +536,26 @@ export function PostgresRowEditDrawer({
                               columnName={column.column_name}
                               checked={isNull}
                               onCheckedChange={(checked) =>
-                                handleNullToggle(column.column_name, checked)
+                                handleNullToggle(
+                                  column.column_name,
+                                  checked === true,
+                                )
                               }
-                              className="bottom-2 end-2"
+                              className={databaseRowFieldOverlayClass('textarea')}
                             />
                           ) : null}
                         </div>
                       ) : (
-                        <div className="relative">
+                        <div
+                          className="relative"
+                          dir={isRTLContent ? 'rtl' : 'ltr'}
+                        >
                           <Input
                             id={inputId}
                             type="text"
                             value={stringValue}
                             disabled={isNull}
+                            dir={isRTLContent ? 'rtl' : 'ltr'}
                             onChange={(event) =>
                               handleFieldChange(
                                 column.column_name,
@@ -444,9 +566,9 @@ export function PostgresRowEditDrawer({
                               required ? undefined : emptyPlaceholder
                             }
                             className={cn(
-                              'h-9 text-[13px]',
+                              'field-sizing-fixed h-9 w-full text-[13px] text-start',
                               isNull && 'cursor-not-allowed opacity-50',
-                              showNullToggle && 'pe-28',
+                              inputSidePadding,
                             )}
                             aria-invalid={error ? true : undefined}
                             autoFocus={focusedField === column.column_name}
@@ -456,9 +578,12 @@ export function PostgresRowEditDrawer({
                               columnName={column.column_name}
                               checked={isNull}
                               onCheckedChange={(checked) =>
-                                handleNullToggle(column.column_name, checked)
+                                handleNullToggle(
+                                  column.column_name,
+                                  checked === true,
+                                )
                               }
-                              className="top-1/2 end-2 -translate-y-1/2"
+                              className={databaseRowFieldOverlayClass('input')}
                             />
                           ) : null}
                         </div>
