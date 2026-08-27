@@ -157,6 +157,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
                 'providerAccessToken' => $identity->getAttribute('providerAccessToken'),
                 'providerRefreshToken' => $identity->getAttribute('providerRefreshToken'),
                 'providerAccessTokenExpiry' => $identity->getAttribute('providerAccessTokenExpiry'),
+                'providerIdToken' => $identity->getAttribute('providerIdToken'),
             ];
         }
     }
@@ -208,6 +209,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             ->setAttribute('providerRefreshToken', $identity->getAttribute('providerRefreshToken'))
             ->setAttribute('providerAccessToken', $identity->getAttribute('providerAccessToken'))
             ->setAttribute('providerAccessTokenExpiry', $identity->getAttribute('providerAccessTokenExpiry'))
+            ->setAttribute('providerIdToken', $identity->getAttribute('providerIdToken'))
             ->setAttribute('factors', \array_merge($session->getAttribute('factors', []), ['oauth2']));
     }
 
@@ -913,6 +915,8 @@ Http::patch('/v1/account/sessions/:sessionId')
             $session
                 ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                 ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
+                // OIDC providers may omit the id_token on refresh; keep the stored one then.
+                ->setAttribute('providerIdToken', $oauth2->getIdToken('') ?: $session->getAttribute('providerIdToken', ''))
                 ->setAttribute('providerAccessTokenExpiry', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry(''))));
         }
 
@@ -1623,11 +1627,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $accessToken = '';
         $refreshToken = '';
+        $idToken = '';
         $accessTokenExpiry = 0;
 
         try {
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
+            $idToken = $oauth2->getIdToken($code);
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
 
         } catch (OAuth2Exception $ex) {
@@ -2024,6 +2030,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'providerEmail' => $providerEmail,
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => $refreshToken,
+                    'providerIdToken' => $idToken,
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                     'photo' => $oauth2->getUserPhoto($accessToken),
                 ]));
@@ -2044,6 +2051,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
+                'providerIdToken' => $idToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                 // Refresh the photo URL on every login so expired CDN links self-heal.
                 'photo' => $oauth2->getUserPhoto($accessToken),
@@ -2119,6 +2127,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'providerUid' => $oauth2ID,
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
+                'providerIdToken' => $idToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
