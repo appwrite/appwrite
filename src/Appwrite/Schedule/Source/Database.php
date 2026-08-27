@@ -104,11 +104,7 @@ abstract class Database implements Source, Changes
      */
     private function rows(?\DateTimeImmutable $since): iterable
     {
-        // Temporarly accepting both 'fra' and 'default'
-        $regions = [System::getEnv('_APP_REGION', 'default')];
-        if (!\in_array('default', $regions)) {
-            $regions[] = 'default';
-        }
+        $region = System::getEnv('_APP_REGION', 'default');
 
         $limit = 10_000;
         $sum = $limit;
@@ -117,7 +113,7 @@ abstract class Database implements Source, Changes
         while ($sum === $limit) {
             $queries = [
                 Query::limit($limit),
-                Query::equal('region', $regions),
+                Query::equal('region', [$region]),
                 Query::equal('resourceType', [$this->type()]),
             ];
 
@@ -167,7 +163,7 @@ abstract class Database implements Source, Changes
 
         $project = $this->dbForPlatform->skipFilters(
             fn () => $this->dbForPlatform->getDocument('projects', $projectId),
-            ['subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryBlocks', 'subQueryDevKeys']
+            APP_PROJECTS_SUBQUERIES
         );
 
         return $this->projects[$projectId] = $project;

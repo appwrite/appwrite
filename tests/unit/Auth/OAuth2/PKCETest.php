@@ -8,6 +8,7 @@ use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Appwrite as AppwriteProvider;
 use Appwrite\Auth\OAuth2\Etsy;
 use Appwrite\Auth\OAuth2\Kick;
+use Appwrite\Auth\OAuth2\Resend;
 use Appwrite\Auth\OAuth2\X;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -27,6 +28,7 @@ final class PKCETest extends TestCase
         yield 'x' => [X::class];
         yield 'kick' => [Kick::class];
         yield 'appwrite' => [AppwriteProvider::class];
+        yield 'resend' => [Resend::class];
     }
 
     protected function setUp(): void
