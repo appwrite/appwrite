@@ -23,6 +23,7 @@ import {
   listInitPresences,
   mapPresencesToOnlineUsers,
   overlayInitPresenceListFetch,
+  parseInitPresenceMetadata,
   pruneExpiredPresenceMaps,
   reconcileExclusivePresenceMaps,
   upsertInitPresence,
@@ -165,6 +166,10 @@ export function useInitOnlinePresence(
     online: new Map(),
     away: new Map(),
   }))
+  const presenceMapsRef = useRef(presenceMaps)
+  presenceMapsRef.current = presenceMaps
+  /** Stable across heartbeats; reset when the user goes away. */
+  const selfOnlineAtRef = useRef<string | null>(null)
   const [isReady, setIsReady] = useState(false)
   const [participantStatus, setParticipantStatusState] =
     useState<InitParticipantStatus>('online')
@@ -209,7 +214,11 @@ export function useInitOnlinePresence(
   accountUserIdRef.current = accountUserId
 
   const buildMetadata = useCallback(
-    (away: boolean, emailHash?: string): InitPresenceMetadata | null => {
+    (
+      away: boolean,
+      emailHash?: string,
+      onlineAt?: string,
+    ): InitPresenceMetadata | null => {
       if (!eventId || !accountName) return null
       return {
         eventId,
@@ -220,6 +229,7 @@ export function useInitOnlinePresence(
           resolveInitPresenceTheme(resolvedThemeRef.current),
         countryCode: countryCodeRef.current,
         emailHash: emailHash || emailHashRef.current,
+        ...(away || !onlineAt ? {} : { onlineAt }),
       }
     },
     [accountName, eventId, resolveActivity],
@@ -341,7 +351,21 @@ export function useInitOnlinePresence(
         emailHashRef.current = undefined
       }
 
-      const metadata = buildMetadata(away, emailHash)
+      let onlineAt: string | undefined
+      if (away) {
+        selfOnlineAtRef.current = null
+      } else {
+        if (!selfOnlineAtRef.current) {
+          const existingOnline = presenceMapsRef.current.online.get(accountUserId)
+          const fromMap = existingOnline
+            ? parseInitPresenceMetadata(existingOnline.metadata)?.onlineAt
+            : undefined
+          selfOnlineAtRef.current = fromMap ?? new Date().toISOString()
+        }
+        onlineAt = selfOnlineAtRef.current
+      }
+
+      const metadata = buildMetadata(away, emailHash, onlineAt)
       if (!metadata) return false
 
       const status = away ? buildInitAwayStatus(eventId) : buildInitOnlineStatus(eventId)
@@ -487,6 +511,7 @@ export function useInitOnlinePresence(
       transientActivityRef.current = null
       priorityActivityRef.current = null
       participantOnlineRef.current = true
+      selfOnlineAtRef.current = null
       lastPublishedThemeRef.current = null
       pendingThemePublishRef.current = null
       initialThemeSyncDoneRef.current = false
@@ -503,6 +528,7 @@ export function useInitOnlinePresence(
       transientActivityRef.current = null
       priorityActivityRef.current = null
       participantOnlineRef.current = true
+      selfOnlineAtRef.current = null
       lastPublishedThemeRef.current = null
       pendingThemePublishRef.current = null
       initialThemeSyncDoneRef.current = false

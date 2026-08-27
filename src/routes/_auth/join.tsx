@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
@@ -362,19 +363,13 @@ function AcceptInviteContent() {
         </Card>
         <p className="mt-6 text-center text-xs text-muted-foreground">
           {t('By accepting this invitation, you agree to our')}{' '}
-          <a
-            href="#"
-            className="link-neutral"
-          >
+          <MarketingSiteLink className="link-neutral" href="/terms">
             {t('Terms of Service')}
-          </a>{' '}
+          </MarketingSiteLink>{' '}
           {t('and')}{' '}
-          <a
-            href="#"
-            className="link-neutral"
-          >
+          <MarketingSiteLink className="link-neutral" href="/privacy">
             {t('Privacy Policy')}
-          </a>
+          </MarketingSiteLink>
           .
         </p>
         <div className="mt-10 md:mt-16 flex justify-center">

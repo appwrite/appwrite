@@ -103,6 +103,8 @@ export interface LaunchEventOnlineUser {
   countryCode?: string
   /** SHA-256 hex of lowercase trimmed email for `avatars.getPhoto`. */
   emailHash?: string
+  /** When this user became online for the current Init session (ISO 8601). */
+  onlineAt?: string
 }
 
 export interface InitCommunityCountry {

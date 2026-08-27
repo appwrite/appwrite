@@ -36,6 +36,8 @@ export type InitPresenceMetadata = {
   countryCode?: string
   /** SHA-256 hex of lowercase trimmed email for `avatars.getPhoto`. */
   emailHash?: string
+  /** When the user became online this session (ISO 8601). Stable across heartbeats. */
+  onlineAt?: string
 }
 
 /** Presence row ID is the signed-in console user ID (one log per user). */
@@ -91,6 +93,10 @@ export function parseInitPresenceMetadata(
   const countryCode =
     typeof record.countryCode === 'string' ? record.countryCode.trim().toUpperCase() : ''
   const emailHash = parseAvatarEmailHash(record.emailHash)
+  const onlineAt =
+    typeof record.onlineAt === 'string' && record.onlineAt.trim()
+      ? record.onlineAt.trim()
+      : undefined
   return {
     eventId,
     name,
@@ -99,6 +105,7 @@ export function parseInitPresenceMetadata(
     theme: parseInitPresenceTheme(record.theme),
     countryCode: countryCode || undefined,
     emailHash,
+    onlineAt,
   }
 }
 
@@ -413,6 +420,8 @@ export function presenceToOnlineUser(
     theme: metadata?.theme,
     countryCode: metadata?.countryCode,
     emailHash: metadata?.emailHash,
+    // Prefer session onlineAt; fall back to createdAt for legacy presence rows.
+    onlineAt: metadata?.onlineAt || presence.$createdAt,
   }
 }
 
@@ -420,7 +429,9 @@ export function sortOnlineUsers(users: LaunchEventOnlineUser[]): LaunchEventOnli
   return [...users].sort((a, b) => {
     const liveDelta = Number(Boolean(b.isLive)) - Number(Boolean(a.isLive))
     if (liveDelta !== 0) return liveDelta
-    return a.name.localeCompare(b.name)
+    return (
+      new Date(b.onlineAt ?? 0).getTime() - new Date(a.onlineAt ?? 0).getTime()
+    )
   })
 }
 

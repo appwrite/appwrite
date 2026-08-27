@@ -10,6 +10,7 @@ import {
 import { z } from 'zod'
 import { SignIn } from '@/components/global/auth/SignIn'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { sdk } from '@/lib/appwrite/sdk'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { AppwriteException } from '@appwrite.io/console'
@@ -248,19 +249,13 @@ function SignInPage() {
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
           {t('By clicking continue, you agree to our')}{' '}
-          <a
-            href="#"
-            className="link-neutral"
-          >
+          <MarketingSiteLink className="link-neutral" href="/terms">
             {t('Terms of Service')}
-          </a>{' '}
+          </MarketingSiteLink>{' '}
           {t('and')}{' '}
-          <a
-            href="#"
-            className="link-neutral"
-          >
+          <MarketingSiteLink className="link-neutral" href="/privacy">
             {t('Privacy Policy')}
-          </a>
+          </MarketingSiteLink>
           .
         </p>
         <div className="mt-10 md:mt-16 flex justify-center">
