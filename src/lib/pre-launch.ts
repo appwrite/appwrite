@@ -43,6 +43,7 @@ export function isPreLaunchAllowedPath(
 ): boolean {
   const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
   if (normalized === '/init' || normalized.startsWith('/init/')) return true
+  if (normalized === '/discord') return true
   if (normalized === '/og/init.png') return true
   // Debug previews (pink menu) stay reachable while the rest of the site is locked.
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
@@ -196,6 +197,7 @@ export const PRE_LAUNCH_BOOT_SCRIPT = `(function(){
     if (!enabled) return;
     var path = (location.pathname || '/').replace(/\\/+$/, '') || '/';
     if (path === '/init' || path.indexOf('/init/') === 0) return;
+    if (path === '/discord') return;
     if (path === '/og/init.png') return;
     if (path === '/debug' || path.indexOf('/debug/') === 0) return;
     var auth = {

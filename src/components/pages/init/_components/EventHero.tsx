@@ -1,4 +1,5 @@
 import { INIT_PRIZES_SECTION_ID } from '@/lib/init/init-section-ids'
+import { formatInitCappedCount } from '@/lib/init/presence'
 import type { InitDisplayEvent, LaunchEventLiveBanner } from '@/lib/init/types'
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -21,6 +22,7 @@ import { InitHeroBackground } from './InitHeroBackground'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
 import { InitWordmark } from './InitWordmark'
 import { useInitHref } from '@/lib/init/use-init-href'
+import { useT } from '@/lib/i18n/translate'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 
 /** Tailwind `sm` - skip sticky-header Jool on phones for performance. */
@@ -201,6 +203,7 @@ function CollapsedHeroBar({
 }
 
 export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
+  const t = useT()
   const { data: account } = useQuery(consoleAccountQueryOptions())
   const heroRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -217,6 +220,15 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const handleJoolInteractionEnd = useCallback(() => {
     setTransientActivity(null)
   }, [setTransientActivity])
+
+  const giveawayDiscordCta = useMemo(() => {
+    if (!event.giveaway?.secondaryCtaHref) return null
+    return {
+      label: t(event.giveaway.secondaryCtaLabel ?? 'Join on Discord'),
+      href: event.giveaway.secondaryCtaHref,
+      external: true,
+    }
+  }, [event.giveaway, t])
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -327,11 +339,20 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
               {!account ? (
                 <EventCtaButton cta={event.primaryCta} variant="brandCta" size="lg" />
               ) : event.prizes ? (
-                <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-                  <a href={`#${INIT_PRIZES_SECTION_ID}`}>
-                    {event.giveaway?.ctaLabel ?? 'View prizes'}
-                  </a>
-                </Button>
+                <>
+                  <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
+                    <a href={`#${INIT_PRIZES_SECTION_ID}`}>
+                      {event.giveaway?.ctaLabel ?? 'View prizes'}
+                    </a>
+                  </Button>
+                  {giveawayDiscordCta ? (
+                    <EventCtaButton
+                      cta={giveawayDiscordCta}
+                      variant="outline"
+                      size="lg"
+                    />
+                  ) : null}
+                </>
               ) : null}
             </div>
           ) : null}
@@ -349,8 +370,8 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
                       />
                     ))}
                   </div>
-                  <span className="text-[12px] text-muted-foreground">
-                    {event.onlineCount.toLocaleString()} online now
+                  <span className="text-[12px] tabular-nums text-muted-foreground">
+                    {formatInitCappedCount(event.onlineCount, event.onlineCountCapped)} online now
                   </span>
                 </>
               ) : null}

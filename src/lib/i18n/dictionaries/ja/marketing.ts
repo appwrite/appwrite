@@ -493,6 +493,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Join a lean, AI-native team': 'リーンでAI-nativeなチームに参加',
   'Join a vibrant community': '活気あるコミュニティに参加',
   'Join Discord': 'Discordに参加',
+  'Join on Discord': 'Discordに参加',
   'Join Init': 'Initに参加',
   'Join our Discord': 'Discordに参加',
   'Join the Appwrite Startups program': 'Appwrite Startupsプログラムに参加',

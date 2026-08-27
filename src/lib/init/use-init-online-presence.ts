@@ -24,6 +24,7 @@ import {
   isPresenceMutationEvent,
   listInitPresences,
   mapPresencesToOnlineUsers,
+  INIT_ONLINE_PRESENCE_LIST_LIMIT,
   overlayInitPresenceListFetch,
   parseInitPresenceMetadata,
   pruneExpiredPresenceMaps,
@@ -46,8 +47,8 @@ import {
 import type { LaunchEvent, LaunchEventOnlineUser, InitCommunityCountry } from '@/lib/init/types'
 import { useTheme } from 'next-themes'
 
-const SIDEBAR_USER_LIMIT = 100
-const AWAY_USER_LIMIT = 100
+const SIDEBAR_USER_LIMIT = INIT_ONLINE_PRESENCE_LIST_LIMIT
+const AWAY_USER_LIMIT = INIT_ONLINE_PRESENCE_LIST_LIMIT
 const ACTIVITY_PUBLISH_DEBOUNCE_MS = 300
 /** Safety-net list sync when realtime events are missed (reconnect, tab background). */
 const INIT_PRESENCE_LIST_REFRESH_MS = 5 * 60_000
@@ -81,6 +82,7 @@ export type InitOnlinePresenceState = {
   recentlyOnlineUsers: LaunchEventOnlineUser[]
   onlineCount: number
   hiddenOnlineCount: number
+  onlineCountCapped: boolean
   othersOnlineCount: number
   onlineThemeCounts: { light: number; dark: number }
   communityCountries: InitCommunityCountry[]
@@ -100,6 +102,7 @@ const EMPTY_STATE: InitOnlinePresenceState = {
   recentlyOnlineUsers: [],
   onlineCount: 0,
   hiddenOnlineCount: 0,
+  onlineCountCapped: false,
   othersOnlineCount: 0,
   onlineThemeCounts: { light: 0, dark: 0 },
   communityCountries: [],
@@ -170,6 +173,7 @@ export function useInitOnlinePresence(
     online: new Map(),
     away: new Map(),
   }))
+  const [onlineListFetchCapped, setOnlineListFetchCapped] = useState(false)
   const presenceMapsRef = useRef(presenceMaps)
   presenceMapsRef.current = presenceMaps
   /** Stable across heartbeats; reset when the user goes away. */
@@ -244,6 +248,8 @@ export function useInitOnlinePresence(
       listInitPresences(scopeEventId, 'online', SIDEBAR_USER_LIMIT),
       listInitPresences(scopeEventId, 'away', AWAY_USER_LIMIT),
     ])
+
+    setOnlineListFetchCapped(online.length >= SIDEBAR_USER_LIMIT)
 
     setPresenceMaps((previous) => {
       const onlineFromApi = buildPresenceMapForEvent(online, scopeEventId)
@@ -510,6 +516,7 @@ export function useInitOnlinePresence(
   useEffect(() => {
     if (!enabled || !eventId) {
       setPresenceMaps(createEmptyPresenceMaps())
+      setOnlineListFetchCapped(false)
       setIsReady(false)
       baselineActivityRef.current = INIT_PRESENCE_ACTIVITY_ON_INIT
       transientActivityRef.current = null
@@ -527,6 +534,7 @@ export function useInitOnlinePresence(
     // an authenticated console session (Role.users), so skip list/realtime here.
     if (!accountUserId) {
       setPresenceMaps(createEmptyPresenceMaps())
+      setOnlineListFetchCapped(false)
       setIsReady(true)
       baselineActivityRef.current = INIT_PRESENCE_ACTIVITY_ON_INIT
       transientActivityRef.current = null
@@ -746,6 +754,8 @@ export function useInitOnlinePresence(
       activityAllowlist,
     ).slice(0, AWAY_USER_LIMIT)
     const onlineCount = visibleOnlinePresences.length + hiddenOnlineCount
+    const onlineCountCapped =
+      onlineListFetchCapped || visibleOnlinePresences.length >= SIDEBAR_USER_LIMIT
     const othersOnlineCount = Math.max(0, onlineCount - onlineUsers.length)
     const onlineThemeCounts = countInitPresenceThemes(allOnlineUsers)
     const communityCountries = aggregateInitCommunityCountries(
@@ -761,6 +771,7 @@ export function useInitOnlinePresence(
       recentlyOnlineUsers,
       onlineCount,
       hiddenOnlineCount,
+      onlineCountCapped,
       othersOnlineCount,
       onlineThemeCounts,
       communityCountries,
@@ -781,6 +792,7 @@ export function useInitOnlinePresence(
     enabled,
     isReady,
     isParticipantStatusUpdating,
+    onlineListFetchCapped,
     presenceMaps,
     participantStatus,
     resolveActivity,

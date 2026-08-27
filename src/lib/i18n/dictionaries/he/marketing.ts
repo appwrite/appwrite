@@ -635,6 +635,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Join a lean, AI-native team': 'הצטרפו לצוות רזה ו-AI-native',
   'Join a vibrant community': 'הצטרפו לקהילה תוססת',
   'Join Discord': 'הצטרפו ל-Discord',
+  'Join on Discord': 'הצטרפו ל-Discord',
   'Join Init': 'הצטרפו ל-Init',
   'Join our Discord': 'הצטרפו ל-Discord שלנו',
   'Join the Appwrite Education program in collaboration with the GitHub Student Developer Pack. Students access Appwrite Cloud for free throughout their studies.': // pragma: allowlist secret

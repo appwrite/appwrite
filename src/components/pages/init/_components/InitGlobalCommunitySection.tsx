@@ -7,6 +7,7 @@ import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitExploringGlobeActivity } from '@/lib/init/init-presence-activity'
 import { INIT_GLOBE_SECTION_ID } from '@/lib/init/init-section-ids'
 import type { InitCommunityCountry } from '@/lib/init/types'
+import { formatInitCappedCount } from '@/lib/init/presence'
 import { cn } from '@/lib/utils'
 
 function serializeCommunityCountries(countries: InitCommunityCountry[]): string {
@@ -16,11 +17,13 @@ function serializeCommunityCountries(countries: InitCommunityCountry[]): string 
 function InitGlobePresenceStats({
   countries,
   developerCount,
+  developerCountCapped = false,
   isLive,
   className,
 }: {
   countries: InitCommunityCountry[]
   developerCount: number
+  developerCountCapped?: boolean
   isLive: boolean
   className?: string
 }) {
@@ -60,7 +63,9 @@ function InitGlobePresenceStats({
         ) : null}
         {developers > 0 ? (
           <>
-            <span className="font-semibold">{developers.toLocaleString()}</span>
+            <span className="font-semibold">
+              {formatInitCappedCount(developers, developerCountCapped)}
+            </span>
             <span className="text-muted-foreground"> online</span>
           </>
         ) : null}
@@ -73,6 +78,7 @@ function InitGlobePresenceStats({
 type InitCommunityGlobeProps = {
   countries: InitCommunityCountry[]
   developerCount: number
+  developerCountCapped?: boolean
   isLive: boolean
   className?: string
 }
@@ -80,6 +86,7 @@ type InitCommunityGlobeProps = {
 function InitCommunityGlobe({
   countries,
   developerCount,
+  developerCountCapped = false,
   isLive,
   className,
 }: InitCommunityGlobeProps) {
@@ -122,6 +129,7 @@ function InitCommunityGlobe({
       <InitGlobePresenceStats
         countries={countries}
         developerCount={developerCount}
+        developerCountCapped={developerCountCapped}
         isLive={isLive}
         className="absolute bottom-4 start-3 z-30 sm:bottom-5 sm:start-4"
       />
@@ -132,6 +140,7 @@ function InitCommunityGlobe({
 type InitGlobalCommunitySectionProps = {
   countries: InitCommunityCountry[]
   developerCount: number
+  developerCountCapped?: boolean
   isLive: boolean
   isAuthenticated: boolean
 }
@@ -139,6 +148,7 @@ type InitGlobalCommunitySectionProps = {
 export function InitGlobalCommunitySection({
   countries,
   developerCount,
+  developerCountCapped = false,
   isLive,
   isAuthenticated,
 }: InitGlobalCommunitySectionProps) {
@@ -184,6 +194,7 @@ export function InitGlobalCommunitySection({
           <InitCommunityGlobe
             countries={countries}
             developerCount={developerCount}
+            developerCountCapped={developerCountCapped}
             isLive={isLive}
             className="relative z-20 -mt-6 w-full sm:-mt-10 lg:-mt-14"
           />

@@ -510,6 +510,13 @@ function enrichPresenceRecord(
   }
 }
 
+/** Max online/away presences fetched for the Init sidebar and total count cap signal. */
+export const INIT_ONLINE_PRESENCE_LIST_LIMIT = 100
+
+export function formatInitCappedCount(count: number, capped: boolean): string {
+  return `${count.toLocaleString()}${capped ? '+' : ''}`
+}
+
 export async function listInitPresences(
   eventId: string,
   mode: 'online' | 'away',

@@ -162,6 +162,8 @@ export interface LaunchEventGiveaway {
   imageSrcDark: string
   ctaLabel?: string
   ctaHref?: string
+  secondaryCtaLabel?: string
+  secondaryCtaHref?: string
 }
 
 export interface LaunchEventPrizeVisual {
@@ -287,6 +289,7 @@ export interface LaunchEvent {
   recentlyOnlineUsers: LaunchEventOnlineUser[]
   onlineCount: number
   hiddenOnlineCount: number
+  onlineCountCapped: boolean
   othersOnlineCount: number
   liveBanner?: LaunchEventLiveBanner
   primaryCta: LaunchEventCta
