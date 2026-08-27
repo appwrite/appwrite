@@ -23,7 +23,7 @@ class OAuth2Cloudflare extends OAuth2Base
      */
     public function getClientIdExample(): string
     {
-        return '8c33c3da9e8f392k71m1f9dc1a190cb3707ad27ba4d19bff45c900e6dfet1f4a';
+        return '4b866000000000000000000000c9e4e2';
     }
 
     /**
@@ -31,7 +31,7 @@ class OAuth2Cloudflare extends OAuth2Base
      */
     public function getClientSecretExample(): string
     {
-        return '2d106b111a390d9692ab9a8a295ac05668632b17bbb342d149209aaaaa100000';
+        return 'cfoc_5Q6YRl0000000000000000000000000000000000003d214f';
     }
 
     /**
