@@ -1168,12 +1168,10 @@ class Install extends Action
         $volumes = \array_filter(\array_map('trim', $output));
 
         // The new volume usually does not exist yet: Compose creates it when the containers
-        // start, which is after this runs. Only a volume that is already there with files in
-        // it means there is nothing to carry over. Reading a volume that does not exist would
-        // create an empty one, so the listing gates that.
-        if (\in_array($target, $volumes, true) && $files($target) > 0) {
-            return;
-        }
+        // start, which is after this runs, and the copy below creates it earlier so the
+        // artifacts are in place before anything reads them. Reading a volume that does not
+        // exist would create an empty one, so the listing gates that.
+        $targetFiles = \in_array($target, $volumes, true) ? $files($target) : 0;
 
         $legacy = [];
         foreach ($volumes as $volume) {
@@ -1183,6 +1181,18 @@ class Install extends Action
         }
 
         if ($legacy === []) {
+            return;
+        }
+
+        // Something has already written to the new volume, so a copy could overwrite newer
+        // artifacts with older ones. Say so rather than skipping in silence: an installation
+        // that upgraded once and rebuilt a single deployment still has the rest stranded.
+        if ($targetFiles > 0) {
+            Console::warning(
+                '"' . $target . '" already holds build files, so nothing was copied from '
+                . \implode(', ', $legacy) . '. Deployments built before the upgrade may still be'
+                . ' missing their artifacts; copy them across manually if any fail to run.'
+            );
             return;
         }
 
