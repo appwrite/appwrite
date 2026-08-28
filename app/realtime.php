@@ -399,6 +399,13 @@ $workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0))
 $adapter = new Adapter\Swoole(port: System::getEnv('PORT', 80));
 $adapter
     ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
+    // Cap what a client that has stopped draining can make the reactor hold on its
+    // behalf. Uncapped, the reactor buffers every undelivered frame in process memory
+    // without limit while push() still reports success; that is what OOMKills realtime
+    // containers. Worst case is now this size x connections, so 512KB against ~1200
+    // connections bounds the buffers at ~600MB. Raise it if legitimate clients on slow
+    // links are being disconnected, lower it if containers still run out of memory.
+    ->setSocketBufferSize(intval(System::getEnv('_APP_REALTIME_SOCKET_BUFFER_SIZE', 524288)))
     ->setWorkerNumber($workerNumber);
 
 $server = new Server($adapter);

@@ -350,6 +350,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_REALTIME_SOCKET_BUFFER_SIZE',
+                'description' => 'Maximum bytes the Realtime server will hold per connection for a client that is not keeping up. A connection that exceeds it is disconnected and expected to reconnect, rather than growing the server\'s memory without limit. Defaults to 512KB.',
+                'introduction' => '1.9.0',
+                'default' => 524288,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_WORKER_PER_CORE',
                 'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
                 'introduction' => '0.13.0',
