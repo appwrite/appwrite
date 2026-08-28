@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "73691e710166b3440cfef452f270a39e",
+    "content-hash": "76fd21a7cd11c9149e8b179feacbb55c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4869,20 +4869,23 @@
         },
         {
             "name": "utopia-php/span",
-            "version": "3.0.2",
+            "version": "4.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/span.git",
-                "reference": "6f9042c1ae1fa5a3e890b5c9a92cbf1388422945"
+                "reference": "8505a2331772bd84ca60333e01ce6b6d068ee1dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/span/zipball/6f9042c1ae1fa5a3e890b5c9a92cbf1388422945",
-                "reference": "6f9042c1ae1fa5a3e890b5c9a92cbf1388422945",
+                "url": "https://api.github.com/repos/utopia-php/span/zipball/8505a2331772bd84ca60333e01ce6b6d068ee1dc",
+                "reference": "8505a2331772bd84ca60333e01ce6b6d068ee1dc",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2"
+                "php": ">=8.4",
+                "psr/http-client": "^1.0",
+                "utopia-php/client": "^0.2 || ^0.3 || ^0.4",
+                "utopia-php/psr7": "^0.1 || ^0.2"
             },
             "require-dev": {
                 "swoole/ide-helper": "^5.0"
@@ -4903,9 +4906,9 @@
             "description": "Simple span tracing library for PHP with coroutine support",
             "support": {
                 "issues": "https://github.com/utopia-php/span/issues",
-                "source": "https://github.com/utopia-php/span/tree/3.0.2"
+                "source": "https://github.com/utopia-php/span/tree/4.2.0"
             },
-            "time": "2026-06-10T14:42:53+00:00"
+            "time": "2026-08-28T00:40:32+00:00"
         },
         {
             "name": "utopia-php/storage",
