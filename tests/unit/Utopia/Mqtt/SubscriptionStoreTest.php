@@ -20,29 +20,25 @@ final class SubscriptionStoreTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0: string, 1: string, 2: bool}>
+     * @return \Iterator<string, array{string, string, bool}>
      */
-    public static function matchProvider(): array
+    public static function matchProvider(): \Iterator
     {
-        return [
-            // filter, publish topic, should match
-            'exact single level'            => ['sport', 'sport', true],
-            'exact rejects deeper'          => ['sport', 'sport/x', false],
-            'exact rejects sibling'         => ['a/b', 'a/c', false],
-
-            '+ matches one level'           => ['sport/+', 'sport/x', true],
-            '+ requires a level'            => ['sport/+', 'sport', false],
-            '+ does not span two levels'    => ['sport/+', 'sport/x/y', false],
-            '+ leading level'               => ['+/hello', 'test/hello', true],
-            '+ leading needs a level'       => ['+/hello', 'hello', false],
-            '+ interior level'              => ['test/+/x', 'test/a/x', true],
-            '+ interior is single level'    => ['test/+/x', 'test/a/b/x', false],
-
-            '# matches parent level'        => ['sport/#', 'sport', true],
-            '# matches one deeper'          => ['sport/#', 'sport/x', true],
-            '# matches many deeper'         => ['sport/#', 'sport/x/y', true],
-            'root # matches everything'     => ['#', 'a/b/c', true],
-        ];
+        // filter, publish topic, should match
+        yield 'exact single level' => ['sport', 'sport', true];
+        yield 'exact rejects deeper' => ['sport', 'sport/x', false];
+        yield 'exact rejects sibling' => ['a/b', 'a/c', false];
+        yield '+ matches one level' => ['sport/+', 'sport/x', true];
+        yield '+ requires a level' => ['sport/+', 'sport', false];
+        yield '+ does not span two levels' => ['sport/+', 'sport/x/y', false];
+        yield '+ leading level' => ['+/hello', 'test/hello', true];
+        yield '+ leading needs a level' => ['+/hello', 'hello', false];
+        yield '+ interior level' => ['test/+/x', 'test/a/x', true];
+        yield '+ interior is single level' => ['test/+/x', 'test/a/b/x', false];
+        yield '# matches parent level' => ['sport/#', 'sport', true];
+        yield '# matches one deeper' => ['sport/#', 'sport/x', true];
+        yield '# matches many deeper' => ['sport/#', 'sport/x/y', true];
+        yield 'root # matches everything' => ['#', 'a/b/c', true];
     }
 
     #[DataProvider('matchProvider')]

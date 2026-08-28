@@ -59,19 +59,17 @@ final class MqttTest extends TestCase
      * Topic-filter matching flows through to the store: + is one level, # is this
      * level onward, an exact filter matches only itself.
      *
-     * @return array<string, array{0: string, 1: string, 2: bool}>
+     * @return \Iterator<string, array{string, string, bool}>
      */
-    public static function wildcardProvider(): array
+    public static function wildcardProvider(): \Iterator
     {
-        return [
-            'exact match'          => ['test/hello', 'test/hello', true],
-            'exact miss'           => ['test/hello', 'test/world', false],
-            '+ one level'          => ['test/+', 'test/hello', true],
-            '+ not multi level'    => ['test/+', 'test/a/b', false],
-            '# multi level'        => ['test/#', 'test/a/b', true],
-            '# matches parent'     => ['test/#', 'test', true],
-            '# not sibling'        => ['test/#', 'other', false],
-        ];
+        yield 'exact match' => ['test/hello', 'test/hello', true];
+        yield 'exact miss' => ['test/hello', 'test/world', false];
+        yield '+ one level' => ['test/+', 'test/hello', true];
+        yield '+ not multi level' => ['test/+', 'test/a/b', false];
+        yield '# multi level' => ['test/#', 'test/a/b', true];
+        yield '# matches parent' => ['test/#', 'test', true];
+        yield '# not sibling' => ['test/#', 'other', false];
     }
 
     #[DataProvider('wildcardProvider')]
