@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
+use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
@@ -527,6 +528,10 @@ class Install extends Action
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, false);
 
+        // Read before the compose file and .env are rewritten below, which would replace
+        // the version being upgraded from with the one being upgraded to.
+        $installedVersion = $isUpgrade ? $this->readInstalledVersion() : '';
+
         $isCLI = php_sapi_name() === 'cli';
         if ($isLocalInstall || $isUpgrade) {
             $useExistingConfig = false;
@@ -648,7 +653,7 @@ class Install extends Action
             }
 
             if ($isUpgrade && $startIndex <= 1) {
-                $this->migrateBuildsVolumeIfNeeded($input);
+                $this->runInfrastructureMigrations($installedVersion, $version, $input);
             }
 
             if (!$noStart) {
@@ -1131,101 +1136,62 @@ class Install extends Action
     }
 
     /**
-     * Carry build artifacts onto the builds volume when its name changes across an upgrade.
+     * Runs the infrastructure migrations for the releases this upgrade crosses.
      *
-     * Before 2.0 the builds volume was declared without a name, so Compose prefixed it with
-     * the project: appwrite_appwrite-builds. 2.0 names it explicitly, because jobs-service
-     * build containers are created outside the Compose project and mount it by that literal
-     * name. Starting 2.0 on a pre-2.0 installation therefore mounts a new, empty volume and
-     * leaves every existing artifact behind: deployments stay in the database pointing at
-     * build paths that no longer resolve, and requests fail on a runtime timeout rather than
-     * anything that names the missing file.
-     *
-     * Copies rather than moves, so the previous volume stays available to roll back to.
+     * These change what the containers run on rather than what is inside the database, so
+     * they happen after the new compose file and .env are written and before anything
+     * starts. Without a version to upgrade from there is no range to migrate, and nothing
+     * runs.
      *
      * @param array<string, mixed> $input
      */
-    private function migrateBuildsVolumeIfNeeded(array $input): void
+    private function runInfrastructureMigrations(string $from, string $to, array $input): void
     {
-        $target = (string) ($input['_APP_BUILDS_VOLUME'] ?? '') ?: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds');
-        $image = (string) ($input['_APP_IMAGE'] ?? 'appwrite/appwrite') . ':' . (string) ($input['_APP_VERSION'] ?? 'latest');
+        if ($from === '' || $to === '') {
+            return;
+        }
 
-        // Counted with the Appwrite image, which the upgrade has already pulled, so reading a
-        // volume never depends on fetching another one.
-        $files = static function (string $volume) use ($image): int {
-            $output = [];
-            \exec(
-                'docker run --rm -v ' . \escapeshellarg($volume . ':/v:ro') . ' ' . \escapeshellarg($image)
-                . ' sh -c ' . \escapeshellarg('find /v -type f 2>/dev/null | wc -l') . ' 2>/dev/null',
-                $output
-            );
+        foreach (InfrastructureMigration::between($from, $to) as $migration) {
+            Console::info('Running infrastructure migration: ' . $migration->getName());
 
-            return (int) \trim((string) ($output[0] ?? '0'));
-        };
+            try {
+                $migration->setContext($input, $this->path)->execute();
+            } catch (\Throwable $error) {
+                // A failed migration leaves the upgrade able to continue: the containers
+                // still start, and what could not be changed is reported rather than
+                // taking the whole upgrade down with it.
+                Console::warning('Infrastructure migration "' . $migration->getName() . '" failed: ' . $error->getMessage());
+            }
+        }
+    }
 
-        $output = [];
-        \exec('docker volume ls --format ' . \escapeshellarg('{{.Name}}') . ' 2>/dev/null', $output);
-        $volumes = \array_filter(\array_map('trim', $output));
+    /**
+     * Version of the installation being upgraded, empty when it cannot be determined.
+     *
+     * The compose file is authoritative -- it is what the running containers were started
+     * from -- and .env covers installations whose compose file is missing or unreadable.
+     */
+    private function readInstalledVersion(): string
+    {
+        $data = $this->readExistingCompose();
 
-        // The new volume usually does not exist yet: Compose creates it when the containers
-        // start, which is after this runs, and the copy below creates it earlier so the
-        // artifacts are in place before anything reads them. Reading a volume that does not
-        // exist would create an empty one, so the listing gates that.
-        $targetFiles = \in_array($target, $volumes, true) ? $files($target) : 0;
-
-        $legacy = [];
-        foreach ($volumes as $volume) {
-            if ($volume !== $target && \str_ends_with($volume, '_' . $target) && $files($volume) > 0) {
-                $legacy[] = $volume;
+        if ($data !== '') {
+            try {
+                $version = (new Compose($data))->getService('appwrite')->getImageVersion();
+                if ($version !== '') {
+                    return $version;
+                }
+            } catch (\Throwable) {
+                // Falls through to .env below.
             }
         }
 
-        if ($legacy === []) {
-            return;
+        $envData = @\file_get_contents($this->path . '/' . $this->getEnvFileName());
+        if ($envData === false) {
+            return '';
         }
 
-        // Something has already written to the new volume, so a copy could overwrite newer
-        // artifacts with older ones. Say so rather than skipping in silence: an installation
-        // that upgraded once and rebuilt a single deployment still has the rest stranded.
-        if ($targetFiles > 0) {
-            Console::warning(
-                '"' . $target . '" already holds build files, so nothing was copied from '
-                . \implode(', ', $legacy) . '. Deployments built before the upgrade may still be'
-                . ' missing their artifacts; copy them across manually if any fail to run.'
-            );
-            return;
-        }
-
-        if (\count($legacy) > 1) {
-            Console::warning(
-                'Found more than one previous build volume (' . \implode(', ', $legacy) . '), so none was copied.'
-                . ' Copy the correct one onto "' . $target . '" before using existing deployments.'
-            );
-            return;
-        }
-
-        $source = $legacy[0];
-        Console::info('Copying build artifacts from "' . $source . '" to "' . $target . '"...');
-
-        $output = [];
-        $exit = 0;
-        \exec(\sprintf(
-            'docker run --rm -v %s:/from:ro -v %s:/to %s sh -c %s 2>&1',
-            \escapeshellarg($source),
-            \escapeshellarg($target),
-            \escapeshellarg($image),
-            \escapeshellarg('cp -a /from/. /to/')
-        ), $output, $exit);
-
-        if ($exit !== 0) {
-            Console::warning(
-                'Failed to copy build artifacts from "' . $source . '": ' . \implode(' ', $output)
-                . '. Existing deployments will need rebuilding.'
-            );
-            return;
-        }
-
-        Console::success('Copied ' . $files($target) . ' build file(s). "' . $source . '" was left in place.');
+        return (string) ((new Env($envData))->list()['_APP_VERSION'] ?? '');
     }
 
     private function copyMongoFilesIfNeeded(): void
