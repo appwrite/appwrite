@@ -1651,7 +1651,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.8.2
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.8.3
     restart: unless-stopped
     user: root
     networks:
