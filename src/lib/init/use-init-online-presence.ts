@@ -24,7 +24,7 @@ import { buildInitPresenceActivityAllowlist } from '@/lib/init/init-presence-act
 import {
   INIT_PRESENCE_HEARTBEAT_MS,
   applyInitPresenceRealtimeRecord,
-  aggregateInitCommunityCountries,
+  aggregateInitCommunityCountriesFromUsers,
   buildInitAwayStatus,
   buildInitAnonymousPresenceUserId,
   buildInitOnlineStatus,
@@ -52,6 +52,7 @@ import {
   deleteInitPresence,
   type InitPresenceMetadata,
 } from '@/lib/init/presence'
+import { normalizeCountryCode } from '@/lib/locale/country-lookups'
 import { buildInitRandomPresenceName } from '@/lib/init/init-presence-random-name'
 import {
   INIT_PRESENCE_ACTIVITY_LEFT,
@@ -173,7 +174,9 @@ export function useInitOnlinePresence(
   })
 
   const countryCodeRef = useRef<string | undefined>(undefined)
-  countryCodeRef.current = localeData?.countryCode?.trim().toUpperCase() || undefined
+  const localeCountryCode =
+    normalizeCountryCode(localeData?.countryCode) ?? undefined
+  countryCodeRef.current = localeCountryCode
 
   const identityHiddenByDefault = localeData
     ? isInitPresenceIdentityHiddenByDefault(localeData)
@@ -784,7 +787,13 @@ export function useInitOnlinePresence(
   ])
 
   useEffect(() => {
-    if (!enabled || !eventId || !accountUserId || !isReady || !localeData?.countryCode) {
+    if (
+      !enabled ||
+      !eventId ||
+      !accountUserId ||
+      !isReady ||
+      !normalizeCountryCode(localeData?.countryCode)
+    ) {
       return
     }
     void publishPresence(!participantOnlineRef.current, { refresh: false })
@@ -939,6 +948,12 @@ export function useInitOnlinePresence(
           )
         : visibleAwayPresencesRaw
 
+    const selfCountryOverlay = identityVisible
+      ? countryCodeRef.current
+        ? { countryCode: countryCodeRef.current }
+        : {}
+      : { countryCode: undefined, emailHash: undefined }
+
     const mappedOnlineUsers = mapPresencesToOnlineUsers(
       visibleOnlinePresences,
       activityAllowlist,
@@ -952,9 +967,7 @@ export function useInitOnlinePresence(
         ownerId: accountUserId,
         name: accountName || user.name,
         identityHidden: !identityVisible,
-        ...(identityVisible
-          ? {}
-          : { countryCode: undefined, emailHash: undefined }),
+        ...selfCountryOverlay,
         ...(selfOnlineActivity ? { activity: selfOnlineActivity } : {}),
       }
     })
@@ -968,9 +981,7 @@ export function useInitOnlinePresence(
       ownerId: accountUserId!,
       name: accountName || user.name,
       identityHidden: !identityVisible,
-      ...(identityVisible
-        ? {}
-        : { countryCode: undefined, emailHash: undefined }),
+      ...selfCountryOverlay,
       ...(selfOnlineActivity ? { activity: selfOnlineActivity } : {}),
     })
 
@@ -1031,7 +1042,9 @@ export function useInitOnlinePresence(
         name: accountName || user.name,
         identityHidden: !identityVisible,
         ...(identityVisible
-          ? {}
+          ? countryCodeRef.current
+            ? { countryCode: countryCodeRef.current }
+            : {}
           : { countryCode: undefined, emailHash: undefined }),
       }
     })
@@ -1051,10 +1064,23 @@ export function useInitOnlinePresence(
       onlineListFetchCapped || allOnlineUsers.length >= SIDEBAR_USER_LIMIT
     const othersOnlineCount = Math.max(0, onlineCount - onlineUsers.length)
     const onlineThemeCounts = countInitPresenceThemes(allOnlineUsers)
-    const communityCountries = aggregateInitCommunityCountries(
-      [...visibleOnlinePresences, ...hiddenOnlinePresences],
-      activityAllowlist,
-    )
+    // Use the same post-overlay users as the sidebar so a visible identity always
+    // contributes locale country even when raw presence metadata lags or omits it.
+    let communityCountries = aggregateInitCommunityCountriesFromUsers([
+      ...allOnlineUsers,
+      ...mapPresencesToOnlineUsers(hiddenOnlinePresences, activityAllowlist),
+    ])
+    if (
+      identityVisible &&
+      participantStatus === 'online' &&
+      localeCountryCode &&
+      !communityCountries.some((country) => country.code === localeCountryCode)
+    ) {
+      communityCountries = [
+        ...communityCountries,
+        { code: localeCountryCode, count: 1 },
+      ].sort((a, b) => b.count - a.count || a.code.localeCompare(b.code))
+    }
     // Match sidebar onlineCount. Country aggregation skips users without a
     // locale countryCode, so summing country counts under-reports "X online".
     const communityDeveloperCount = onlineCount
@@ -1094,6 +1120,7 @@ export function useInitOnlinePresence(
     isIdentityVisibleUpdating,
     identityHiddenByDefault,
     identityVisible,
+    localeCountryCode,
     onlineListFetchCapped,
     presenceMaps,
     participantStatus,
