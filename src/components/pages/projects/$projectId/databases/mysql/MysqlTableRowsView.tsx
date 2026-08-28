@@ -286,6 +286,20 @@ export function MysqlTableRowsView({
     navigateToRowsList({ query: '' })
   }, [navigateToRowsList])
 
+  const handleApplyQuery = useCallback(
+    (queryParam: string | undefined, sortParam?: string) => {
+      navigateToRowsList({
+        query: queryParam ?? '',
+        sort: sortParam ?? null,
+      })
+    },
+    [navigateToRowsList],
+  )
+
+  const handleResetFilters = useCallback(() => {
+    navigateToRowsList({ query: '', sort: null })
+  }, [navigateToRowsList])
+
   const handleSearchChange = useCallback(
     (value: string) => {
       navigateToRowsList({ search: value })
@@ -414,6 +428,8 @@ export function MysqlTableRowsView({
         onApplyFilter={handleApplyFilter}
         onRemoveFilter={handleRemoveFilter}
         onClearAll={handleClearAllFilters}
+        onApplyQuery={handleApplyQuery}
+        onReset={handleResetFilters}
         filterScope={filterScope}
         resourceLabel="rows"
         teamId={project?.teamId}
@@ -424,8 +440,10 @@ export function MysqlTableRowsView({
       filterMap,
       filterScope,
       handleApplyFilter,
+      handleApplyQuery,
       handleClearAllFilters,
       handleRemoveFilter,
+      handleResetFilters,
       project?.teamId,
       rowsFiltersOpen,
     ],
