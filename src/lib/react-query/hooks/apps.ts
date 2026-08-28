@@ -13,7 +13,10 @@ import {
 } from '@tanstack/react-query'
 import { ID, Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { mapAppsToMarketplaceApps } from '@/lib/marketplace/map-app'
+import {
+  mapAppsToMarketplaceApps,
+  sortMarketplaceApps,
+} from '@/lib/marketplace/map-app'
 import type { MarketplaceApp } from '@/lib/marketplace/types'
 import { DEFAULT_STALE_TIME } from './constants'
 
@@ -235,7 +238,9 @@ export function useMarketplaceCatalog(
   const apps = useMemo(
     () =>
       data?.apps
-        ? mapListedApps(data.apps, organizationId!, teamNamesById)
+        ? sortMarketplaceApps(
+            mapListedApps(data.apps, organizationId!, teamNamesById),
+          )
         : [],
     [data?.apps, organizationId, teamNamesById],
   )
