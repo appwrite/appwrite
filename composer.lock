@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55334da9d9e92ccd15b3c9c18d49d92d",
+    "content-hash": "22bef66d93895cbeb36fc531b8be53c0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5254,16 +5254,16 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "1.0.0",
+            "version": "dev-remove-adapter-connection-mem",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "d230de8d4d2450184297327238ed1fbde676b8d2"
+                "reference": "2a61752d6fee657e3d9b0046ea6e6e642c285d6f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/d230de8d4d2450184297327238ed1fbde676b8d2",
-                "reference": "d230de8d4d2450184297327238ed1fbde676b8d2",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/2a61752d6fee657e3d9b0046ea6e6e642c285d6f",
+                "reference": "2a61752d6fee657e3d9b0046ea6e6e642c285d6f",
                 "shasum": ""
             },
             "require": {
@@ -5283,7 +5283,25 @@
                     "Utopia\\WebSocket\\": "src/WebSocket"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\WebSocket\\Tests\\": "tests/e2e"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test --preset=psr12 src tests"
+                ],
+                "format": [
+                    "./vendor/bin/pint --preset=psr12 src tests"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level max src tests"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -5296,10 +5314,10 @@
                 "websocket"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/1.0.0"
+                "source": "https://github.com/utopia-php/websocket/tree/remove-adapter-connection-mem",
+                "issues": "https://github.com/utopia-php/websocket/issues"
             },
-            "time": "2026-02-05T13:40:16+00:00"
+            "time": "2026-08-28T07:51:46+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -8553,10 +8571,18 @@
             "time": "2026-08-21T04:56:47+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/websocket",
+            "version": "dev-remove-adapter-connection-mem",
+            "alias": "2.0.0",
+            "alias_normalized": "2.0.0.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/http": 5
+        "utopia-php/http": 5,
+        "utopia-php/websocket": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
