@@ -860,7 +860,7 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): int {
-        $queries = Query::parseQueries($data['queries'] ?? []);
+        $queries = $this->parseStoredQueries($data['queries'] ?? []);
         $updateData = new Document($data['data']);
 
         $dependentDocs = [];
@@ -982,7 +982,7 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): int {
-        $queries = Query::parseQueries($data['queries'] ?? []);
+        $queries = $this->parseStoredQueries($data['queries'] ?? []);
 
         $count = $dbForProject->deleteDocuments(
             $collectionId,
@@ -1006,5 +1006,35 @@ class Update extends Action
         $transactionState->applyBulkDeleteToState($collectionId, $queries, $state);
 
         return $count;
+    }
+
+    /**
+     * Parse queries stored on a transaction log.
+     *
+     * Each query may be an SDK JSON string or an already-decoded
+     * `{method, attribute, values}` array.
+     *
+     * @param array<mixed> $queries
+     * @return array<Query>
+     * @throws QueryException
+     */
+    private function parseStoredQueries(array $queries): array
+    {
+        $parsed = [];
+
+        foreach ($queries as $query) {
+            if (\is_array($query)) {
+                $parsed[] = Query::parseQuery($query);
+                continue;
+            }
+
+            if (!\is_string($query)) {
+                throw new QueryException('Invalid query. Must be a string or array, got ' . \gettype($query));
+            }
+
+            $parsed[] = Query::parse($query);
+        }
+
+        return $parsed;
     }
 }
