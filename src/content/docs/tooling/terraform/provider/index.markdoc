@@ -53,16 +53,63 @@ You can supply credentials via environment variables instead of hard-coding them
 export APPWRITE_ENDPOINT="https://<REGION>.cloud.appwrite.io/v1"
 export APPWRITE_PROJECT_ID="project-id"
 export APPWRITE_API_KEY="api-key"
+
+# Only needed for organization-scoped resources
+export APPWRITE_ORGANIZATION_ID="organization-id"
+export APPWRITE_ORGANIZATION_API_KEY="organization-api-key"
 ```
 
-When an environment variable is set, the matching provider argument does not need to appear in the configuration.
+When an environment variable is set, the matching provider argument does not need to appear in the configuration. Values set directly in the `provider` block take precedence over the environment.
 
 | Provider argument | Environment variable | Required | Description |
 |-------------|------------------------|----------|-------------|
 | `endpoint` | `APPWRITE_ENDPOINT` | yes | Appwrite API endpoint |
 | `project_id` | `APPWRITE_PROJECT_ID` | no | Default project ID for resources (omit if you set `project_id` on each resource) |
 | `api_key` | `APPWRITE_API_KEY` | yes | API key with permissions for the resources you manage |
+| `organization_id` | `APPWRITE_ORGANIZATION_ID` | no | Default organization ID for organization-scoped resources |
+| `organization_api_key` | `APPWRITE_ORGANIZATION_API_KEY` | no | Organization key for projects and project API keys. Falls back to `api_key` |
 | `self_signed` | - | no | Accept self-signed TLS certificates (Community Edition) |
+| `http_timeout_seconds` | - | no | How long to wait for a single API response. Defaults to 120 |
+
+# Organization credentials {% #organization-credentials %}
+
+Most resources live inside a project and authenticate with a project `api_key`. [Projects and project API keys](/docs/tooling/terraform/resources/projects) sit **above** a project, so they need an **organization** key instead — supplied as `organization_api_key`, with `organization_id` naming the organization.
+
+```hcl
+provider "appwrite" {
+  endpoint   = "https://<REGION>.cloud.appwrite.io/v1"
+  project_id = "project-id"
+  api_key    = var.appwrite_api_key
+
+  organization_id      = "organization-id"
+  organization_api_key = var.appwrite_organization_api_key
+}
+```
+
+`organization_api_key` falls back to `api_key` when omitted, for backwards compatibility. The provider recognises modern key prefixes and reports an actionable error when a resource is handed the wrong kind of credential; legacy unprefixed keys are validated by Appwrite itself.
+
+| Resource | Credential | Scopes |
+|----------|------------|--------|
+| `appwrite_project` | `organization_api_key` | `projects.read`, `projects.write` |
+| `appwrite_project_key` | `organization_api_key` | `keys.read`, `keys.write` |
+| Everything else | `api_key` | Per product, for example `rules.*` for proxy rules |
+
+Both `organization_id` and `project_id` can also be set per resource, which is what lets one configuration manage several organizations or projects at once.
+
+# Request timeouts {% #request-timeouts %}
+
+`http_timeout_seconds` sets how long the provider waits for a **single** API response before giving up. It defaults to 120 seconds.
+
+```hcl
+provider "appwrite" {
+  endpoint             = "https://<REGION>.cloud.appwrite.io/v1"
+  project_id           = "project-id"
+  api_key              = "api-key"
+  http_timeout_seconds = 180
+}
+```
+
+Some endpoints complete their work inline rather than asynchronously — updating a [connection pooler](/docs/tooling/terraform/resources/dedicated-databases#connection-pooling) restarts the sidecar, for example — so a short timeout can make Terraform report a failure for work the server already applied. This is separate from the waits the provider performs itself: provisioning a dedicated database or building an index polls until the resource settles, and is not bounded by this setting.
 
 # Project scoping {% #project-scoping %}
 
@@ -72,10 +119,21 @@ You can set `project_id` on the **provider** as the default for all resources, o
 
 Use a key with the scopes required for the resources you manage (for example TablesDB, Storage, Messaging, Functions, Sites, Auth, webhooks, and backups). Follow the principle of least privilege and rotate keys stored outside Terraform.
 
+{% info title="DocumentsDB and VectorsDB use the legacy Databases scopes" %}
+[DocumentsDB](/docs/tooling/terraform/resources/documentsdb) and [VectorsDB](/docs/tooling/terraform/resources/vectorsdb) are gated behind `databases.write`, `collections.write`, and `documents.write` — **not** the TablesDB scopes (`tables.*`, `rows.*`). The Appwrite Console does not always offer those checkboxes; where it does not, set them on the key through the project keys API, since a key's scope list accepts names the Console does not render.
+{% /info %}
+
+# Sensitive state {% #sensitive-state %}
+
+[Dedicated databases](/docs/tooling/terraform/resources/dedicated-databases) export `connection_string` and `connection_password` as sensitive read-only attributes, and branches export their own credentials. These are written to Terraform state, so use a remote backend with encryption and access control, and mark any output carrying them `sensitive = true`.
+
 # Related {% #related %}
 
 - [Overview](/docs/tooling/terraform): full resource list
+- [Projects](/docs/tooling/terraform/resources/projects): projects and project API keys
 - [Databases](/docs/tooling/terraform/resources/databases): TablesDB resources
+- [Dedicated databases](/docs/tooling/terraform/resources/dedicated-databases): PostgreSQL, MySQL, and MongoDB
+- [DocumentsDB](/docs/tooling/terraform/resources/documentsdb) and [VectorsDB](/docs/tooling/terraform/resources/vectorsdb): document and embedding collections
 - [Storage](/docs/tooling/terraform/resources/storage): buckets and files
 - [Messaging](/docs/tooling/terraform/resources/messaging): providers, topics, and subscribers
 - [Self-hosting](/docs/advanced/self-hosting): install and run the Appwrite server (not the same as configuring project resources with this provider)

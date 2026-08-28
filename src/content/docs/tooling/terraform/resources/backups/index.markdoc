@@ -6,6 +6,10 @@ description: Configure Appwrite backup policies with Terraform where your plan s
 
 The `appwrite_backup_policy` resource configures **backup policies** for supported resources. Availability depends on your Appwrite Cloud plan or self-hosted setup.
 
+{% info title="Dedicated databases have their own policies" %}
+`appwrite_backup_policy` covers resources on Appwrite's **shared** infrastructure. A [dedicated database](/docs/tooling/terraform/resources/dedicated-databases#backups) is backed up with its engine-specific resource instead — `appwrite_postgresql_backup_policy`, `appwrite_mysql_backup_policy`, or `appwrite_mongo_backup_policy` — which also supports incremental backups and shipping to a bucket you own.
+{% /info %}
+
 See the Terraform Registry: [backup_policy](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/backup_policy). The [provider repository](https://github.com/appwrite/terraform-provider-appwrite) lists the full argument reference.
 
 # Resource {% #resource %}
@@ -42,4 +46,5 @@ resource "appwrite_backup_policy" "production" {
 # Related {% #related %}
 
 - [Databases](/docs/tooling/terraform/resources/databases): TablesDB resources you can target with `resource_id`
+- [Dedicated databases](/docs/tooling/terraform/resources/dedicated-databases): backup policies and backup storage for PostgreSQL, MySQL, and MongoDB
 - [Configuration](/docs/tooling/terraform/provider): authentication and endpoints

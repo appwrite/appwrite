@@ -1,0 +1,146 @@
+---
+layout: article
+title: VectorsDB
+description: Manage Appwrite VectorsDB databases, collections, indexes, and embeddings with the official Terraform provider.
+---
+
+**VectorsDB** stores embeddings in collections and searches them by vector similarity. Its Terraform resources mirror [DocumentsDB](/docs/tooling/terraform/resources/documentsdb) — the two products share one implementation — with one difference that matters: a VectorsDB collection has a required `dimension` and takes no typed attributes.
+
+For full generated schemas, see the Terraform Registry: [vectorsdb](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/vectorsdb), [vectorsdb_collection](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/vectorsdb_collection), [vectorsdb_index](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/vectorsdb_index), and [vectorsdb_document](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/vectorsdb_document).
+
+# Resources {% #resources %}
+
+| Resource | Purpose |
+|----------|---------|
+| `appwrite_vectorsdb` | Create a VectorsDB database in your project |
+| `appwrite_vectorsdb_collection` | Create a collection of fixed-dimension embeddings |
+| `appwrite_vectorsdb_index` | Index one or more document attributes |
+| `appwrite_vectorsdb_document` | Manage seed and reference embeddings |
+
+# Data sources {% #data-sources %}
+
+| Data source | Purpose |
+|-------------|---------|
+| `appwrite_vectorsdb` | Look up a database by ID |
+| `appwrite_vectorsdb_specifications` | List the compute specifications your billing plan allows |
+
+{% info title="VectorsDB needs the legacy Databases scopes" %}
+VectorsDB is gated behind the **legacy Databases scopes** (`databases.write`, `collections.write`, `documents.write`), not the TablesDB ones (`tables.*`, `rows.*`). This is not obvious from the product name, and the Appwrite Console does not always offer those checkboxes. Where it does not, set the scopes on the key through the project keys API — a key's scope list accepts names the Console does not render.
+{% /info %}
+
+# Creating a database {% #creating-a-database %}
+
+```hcl
+resource "appwrite_vectorsdb" "main" {
+  name = "embeddings"
+}
+```
+
+Setting `specification` places the database on **dedicated infrastructure** reserved for your project, which is billed separately. Size it from the VectorsDB catalogue, since each product publishes its own:
+
+```hcl
+data "appwrite_vectorsdb_specifications" "available" {}
+
+resource "appwrite_vectorsdb" "production" {
+  name = "embeddings"
+  specification = one([
+    for s in data.appwrite_vectorsdb_specifications.available.specifications :
+    s.slug if s.enabled
+  ])
+  replicas  = 1
+  sync_mode = "sync"
+}
+```
+
+{% info title="Some deployments require a specification" %}
+Omitting `specification` runs the database on the deployment's **shared pool**, but not every deployment has one configured. Where none is, the API rejects creation with `dedicated_database_required` and a `specification` becomes mandatory.
+{% /info %}
+
+`replicas` excludes the primary, and `sync_mode` (`async`, `sync`, or `quorum`) only matters when it is greater than 0. Creating a database with a dedicated backing waits for that backing to finish provisioning. Read-only attributes report `type`, `engine`, `status`, `created_at`, and `updated_at`; `engine` and `status` are empty when there is no dedicated backing.
+
+# Collections {% #collections %}
+
+`dimension` is **required** and must match the model producing your embeddings — `text-embedding-3-small` emits 1536 values, for example. Changing it later re-indexes the collection, so pick it deliberately.
+
+```hcl
+resource "appwrite_vectorsdb_collection" "articles" {
+  database_id = appwrite_vectorsdb.main.id
+  id          = "article-embeddings"
+  name        = "Article embeddings"
+  dimension   = 1536
+
+  permissions       = ["read(\"any\")"]
+  document_security = true
+}
+```
+
+VectorsDB collections take **no typed attribute definitions**: `attributes` is read-only here and exists only so both products share one state shape. Conversely, `dimension` is rejected at plan time on a DocumentsDB collection.
+
+# Indexes {% #indexes %}
+
+```hcl
+resource "appwrite_vectorsdb_index" "by_source" {
+  database_id   = appwrite_vectorsdb.main.id
+  collection_id = appwrite_vectorsdb_collection.articles.id
+  key           = "by_source"
+  type          = "key"
+  attributes    = ["source_id"]
+}
+```
+
+`orders` (`ASC` or `DESC`) and `lengths` are positional, matching `attributes` entry for entry. Indexes have **no update route**, so changing any argument replaces the index. Creation is asynchronous and Terraform waits for the index to become available; `status` reports `available`, `processing`, `deleting`, `stuck`, or `failed`.
+
+# Documents {% #documents %}
+
+A VectorsDB document carries its embedding, which must have exactly the collection's `dimension` values.
+
+```hcl
+resource "appwrite_vectorsdb_collection" "toy" {
+  database_id = appwrite_vectorsdb.main.id
+  name        = "Toy embeddings"
+  dimension   = 4
+}
+
+resource "appwrite_vectorsdb_document" "seed" {
+  database_id   = appwrite_vectorsdb.main.id
+  collection_id = appwrite_vectorsdb_collection.toy.id
+  id            = "seed"
+
+  data = jsonencode({
+    embedding = [0.1, 0.2, 0.3, 0.4]
+    source_id = "article-1"
+  })
+}
+```
+
+Real embeddings come from a model, so they are normally written by your application rather than pinned in configuration. Keep this resource for seed and reference records: only the keys present in `data` are tracked, so fields written by other clients do not show as drift.
+
+# Looking up a database {% #looking-up-a-database %}
+
+```hcl
+data "appwrite_vectorsdb" "existing" {
+  id = "embeddings"
+}
+
+resource "appwrite_vectorsdb_collection" "example" {
+  database_id = data.appwrite_vectorsdb.existing.id
+  name        = "Example"
+  dimension   = 1536
+}
+```
+
+# Importing {% #importing %}
+
+```bash
+terraform import appwrite_vectorsdb.main <database-id>
+terraform import appwrite_vectorsdb_collection.articles <database-id>/<collection-id>
+terraform import appwrite_vectorsdb_index.by_source <database-id>/<collection-id>/<key>
+terraform import appwrite_vectorsdb_document.seed <database-id>/<collection-id>/<document-id>
+```
+
+# Related {% #related %}
+
+- [DocumentsDB](/docs/tooling/terraform/resources/documentsdb): the same shape, for schemaless JSON
+- [Dedicated databases](/docs/tooling/terraform/resources/dedicated-databases): PostgreSQL, MySQL, and MongoDB
+- [Databases](/docs/tooling/terraform/resources/databases): relational TablesDB
+- [Configuration](/docs/tooling/terraform/provider): authentication and endpoints

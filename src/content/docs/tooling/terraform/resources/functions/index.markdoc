@@ -145,4 +145,5 @@ See the [Terraform Registry](https://registry.terraform.io/providers/appwrite/ap
 # Related {% #related %}
 
 - [Functions product docs](/docs/products/functions)
+- [Custom domains](/docs/tooling/terraform/resources/domains): serve this from your own domain with `appwrite_proxy_rule`
 - [Configuration](/docs/tooling/terraform/provider)

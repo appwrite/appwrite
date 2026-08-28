@@ -1,0 +1,69 @@
+---
+layout: article
+title: Custom domains
+description: Point custom domains at Appwrite sites and functions with the appwrite_proxy_rule Terraform resource.
+---
+
+The `appwrite_proxy_rule` resource attaches a **custom domain** to an Appwrite site or function. Appwrite verifies the domain and issues a certificate for it, so the rule's useful state is mostly read-only: you declare the domain and target, and read back verification progress.
+
+See the Terraform Registry for the full schema: [proxy_rule](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/proxy_rule).
+
+# Resource {% #resource %}
+
+| Resource | Purpose |
+|----------|---------|
+| `appwrite_proxy_rule` | Serve a site or function from a custom domain |
+
+This resource uses a standard **project** API key with `rules.read` and `rules.write` scopes.
+
+# Example {% #example %}
+
+```hcl
+resource "appwrite_site" "example" {
+  name          = "example-site"
+  framework     = "other"
+  build_runtime = "node-22"
+}
+
+resource "appwrite_proxy_rule" "example" {
+  domain      = "www.example.com"
+  type        = "site"
+  resource_id = appwrite_site.example.id
+}
+```
+
+`type` is `site` or `function`, and `resource_id` is the ID of the target. Set `branch` to have a VCS branch update the rule automatically.
+
+Point the domain's DNS at Appwrite before or shortly after applying; until it resolves, verification stays pending.
+
+# Reading verification state {% #reading-verification-state %}
+
+`status` reports domain verification, and `logs` carries the verification or certificate-generation output — the first place to look when a domain does not come up. `renew_at` is when the certificate auto-renews.
+
+```hcl
+output "domain_status" {
+  value = appwrite_proxy_rule.example.status
+}
+
+output "domain_logs" {
+  value = appwrite_proxy_rule.example.logs
+}
+```
+
+# Importing {% #importing %}
+
+```bash
+terraform import appwrite_proxy_rule.example <project-id>/<rule-id>
+terraform import appwrite_proxy_rule.example <rule-id>
+```
+
+The second form works when `project_id` is configured on the provider.
+
+Some installations derive the rule ID as `md5(lower(domain))`, but others use generated IDs. Always prefer the ID the API returns rather than computing one.
+
+# Related {% #related %}
+
+- [Sites](/docs/tooling/terraform/resources/sites): sites you can put behind a domain
+- [Functions](/docs/tooling/terraform/resources/functions): functions you can put behind a domain
+- [Projects](/docs/tooling/terraform/resources/projects): projects and project API keys
+- [Configuration](/docs/tooling/terraform/provider): authentication and endpoints
