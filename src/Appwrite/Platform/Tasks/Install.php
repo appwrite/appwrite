@@ -647,6 +647,10 @@ class Install extends Action
                 $this->copyMongoFilesIfNeeded();
             }
 
+            if ($isUpgrade && $startIndex <= 1) {
+                $this->migrateBuildsVolumeIfNeeded($input);
+            }
+
             if (!$noStart) {
                 $shouldStartContainers = $startIndex <= 2;
                 if ($shouldStartContainers) {
@@ -1124,6 +1128,112 @@ class Install extends Action
         if (!\file_put_contents($this->path . '/' . $envFileName, $template->render(false))) {
             throw new \Exception('Failed to save environment variables file');
         }
+    }
+
+    /**
+     * Carry build artifacts onto the builds volume when its name changes across an upgrade.
+     *
+     * Before 2.0 the builds volume was declared without a name, so Compose prefixed it with
+     * the project: appwrite_appwrite-builds. 2.0 names it explicitly, because jobs-service
+     * build containers are created outside the Compose project and mount it by that literal
+     * name. Starting 2.0 on a pre-2.0 installation therefore mounts a new, empty volume and
+     * leaves every existing artifact behind: deployments stay in the database pointing at
+     * build paths that no longer resolve, and requests fail on a runtime timeout rather than
+     * anything that names the missing file.
+     *
+     * Copies rather than moves, so the previous volume stays available to roll back to.
+     *
+     * @param array<string, mixed> $input
+     */
+    private function migrateBuildsVolumeIfNeeded(array $input): void
+    {
+        $target = (string) ($input['_APP_BUILDS_VOLUME'] ?? '') ?: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds');
+
+        $image = (string) ($input['_APP_IMAGE'] ?? 'appwrite/appwrite') . ':' . (string) ($input['_APP_VERSION'] ?? 'latest');
+
+        if (!$this->volumeExists($target) || $this->volumeFileCount($target, $image) > 0) {
+            return;
+        }
+
+        $legacy = [];
+        foreach ($this->listVolumes() as $volume) {
+            if ($volume !== $target && \str_ends_with($volume, '_' . $target) && $this->volumeFileCount($volume, $image) > 0) {
+                $legacy[] = $volume;
+            }
+        }
+
+        if ($legacy === []) {
+            return;
+        }
+
+        if (\count($legacy) > 1) {
+            Console::warning(
+                'Found more than one previous build volume (' . \implode(', ', $legacy) . '), so none was copied.'
+                . ' Copy the correct one onto "' . $target . '" before using existing deployments.'
+            );
+            return;
+        }
+
+        $source = $legacy[0];
+        Console::info('Copying build artifacts from "' . $source . '" to "' . $target . '"...');
+
+        $command = \sprintf(
+            'docker run --rm -v %s:/from:ro -v %s:/to %s sh -c %s 2>&1',
+            \escapeshellarg($source),
+            \escapeshellarg($target),
+            \escapeshellarg($image),
+            \escapeshellarg('cp -a /from/. /to/')
+        );
+
+        $output = [];
+        $exit = 0;
+        \exec($command, $output, $exit);
+
+        if ($exit !== 0) {
+            Console::warning(
+                'Failed to copy build artifacts from "' . $source . '": ' . \implode(' ', $output)
+                . '. Existing deployments will need rebuilding.'
+            );
+            return;
+        }
+
+        Console::success('Copied ' . $this->volumeFileCount($target, $image) . ' build file(s). "' . $source . '" was left in place.');
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function listVolumes(): array
+    {
+        $output = [];
+        \exec('docker volume ls --format ' . \escapeshellarg('{{.Name}}') . ' 2>/dev/null', $output);
+
+        return \array_values(\array_filter(\array_map('trim', $output)));
+    }
+
+    private function volumeExists(string $volume): bool
+    {
+        $output = [];
+        $exit = 0;
+        \exec('docker volume inspect ' . \escapeshellarg($volume) . ' 2>/dev/null', $output, $exit);
+
+        return $exit === 0;
+    }
+
+    /**
+     * Counts files with the Appwrite image, which the upgrade has already pulled, so
+     * inspecting a volume never depends on fetching another one.
+     */
+    private function volumeFileCount(string $volume, string $image): int
+    {
+        $output = [];
+        \exec(
+            'docker run --rm -v ' . \escapeshellarg($volume . ':/v:ro') . ' ' . \escapeshellarg($image)
+            . ' sh -c ' . \escapeshellarg('find /v -type f 2>/dev/null | wc -l') . ' 2>/dev/null',
+            $output
+        );
+
+        return (int) \trim((string) ($output[0] ?? '0'));
     }
 
     private function copyMongoFilesIfNeeded(): void
