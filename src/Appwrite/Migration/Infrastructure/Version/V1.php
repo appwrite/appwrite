@@ -113,7 +113,7 @@ class V1 extends Migration
         // container -- while everything it did run reports success.
         $stdout = '';
         $stderr = '';
-        Console::execute(
+        $exit = Console::execute(
             'docker run --rm -v ' . \escapeshellarg($source . ':/from:ro') . ' -v ' . \escapeshellarg($target . ':/to')
             . ' ' . \escapeshellarg($image) . ' sh -c ' . \escapeshellarg(
                 'cd /from && find . -type f | while read -r file; do'
@@ -128,6 +128,14 @@ class V1 extends Migration
         );
 
         $missing = \array_filter(\array_map('trim', \explode("\n", $stdout)));
+
+        // A container that never ran lists nothing missing, which would otherwise read the
+        // same as a copy that left nothing behind.
+        if ($exit !== 0) {
+            throw new \RuntimeException(
+                'could not copy build artifacts from "' . $source . '": ' . (\trim($stderr) ?: 'docker exited with ' . $exit)
+            );
+        }
 
         if ($missing !== []) {
             throw new \RuntimeException(
