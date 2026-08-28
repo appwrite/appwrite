@@ -24,19 +24,13 @@ class V1 extends Migration
     }
 
     /**
-     * Copies build artifacts onto the builds volume, whose name changed in 2.0.
+     * Migrates the old builds volume to the one the orchestrator is pinned to:
+     * <project>_appwrite-builds to appwrite-builds.
      *
-     * Before 2.0 the volume was declared without a name, so Compose prefixed it with the
-     * project and it became <project>_appwrite-builds. 2.0 names it explicitly, because
-     * jobs-service build containers are created outside the Compose project and mount it
-     * by that literal name through _APP_BUILDS_VOLUME.
-     *
-     * Starting 2.0 on an older installation therefore mounts a new, empty volume and
-     * leaves every existing artifact behind. Deployments stay in the database looking
-     * healthy, pointing at build paths that no longer resolve, so the executor cannot
-     * unpack a source that is not there, never starts a runtime, and the request fails on
-     * the resource timeout. The only log line names the runtime rather than the missing
-     * file.
+     * Compose prefixed the volume with the project until 2.0, which names it explicitly so
+     * jobs-service build containers, created outside the Compose project, can mount it by a
+     * fixed name. Without this the upgrade mounts a new, empty volume and every existing
+     * artifact is left behind.
      */
     private function carryBuildArtifacts(): void
     {
