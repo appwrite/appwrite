@@ -187,8 +187,7 @@ class Swoole extends Adapter
                     // process() is total; net for a stray throw so it isn't lost
                     error_log('Uncaught error while processing queue message: ' . $error->getMessage());
                 } finally {
-                    $waitGroup->done();
-                    $slots->pop();
+                    $this->releaseSlot($waitGroup, $slots);
                 }
             });
         }
@@ -241,8 +240,7 @@ class Swoole extends Adapter
                     // processFrom() is total; net for a stray throw so it isn't lost
                     error_log('Uncaught error while processing queue message: ' . $error->getMessage());
                 } finally {
-                    $waitGroup->done();
-                    $slots->pop();
+                    $this->releaseSlot($waitGroup, $slots);
                 }
             });
         }
@@ -260,6 +258,30 @@ class Swoole extends Adapter
         }
 
         return $this->resources();
+    }
+
+    #[\Override]
+    protected function releaseContext(): void
+    {
+        if (Coroutine::getCid() !== -1) {
+            $context = Coroutine::getContext();
+            unset($context[self::CONTEXT_KEY]);
+        }
+
+        parent::releaseContext();
+    }
+
+    /**
+     * Pop the concurrency slot even if wait-group accounting throws, so a
+     * failed teardown cannot permanently cap the worker below maxCoroutines.
+     */
+    private function releaseSlot(WaitGroup $waitGroup, Channel $slots): void
+    {
+        try {
+            $waitGroup->done();
+        } finally {
+            $slots->pop();
+        }
     }
 
     protected function reap(): void
