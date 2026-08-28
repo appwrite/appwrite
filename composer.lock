@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55334da9d9e92ccd15b3c9c18d49d92d",
+    "content-hash": "76fd21a7cd11c9149e8b179feacbb55c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4284,16 +4284,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "2.0.4",
+            "version": "2.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "49eca43d246660d09c35fb18c37bdada963fd184"
+                "reference": "3ea1ce64b4eb7f2d7aec15d4de6a76b41a5d5eb8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/49eca43d246660d09c35fb18c37bdada963fd184",
-                "reference": "49eca43d246660d09c35fb18c37bdada963fd184",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/3ea1ce64b4eb7f2d7aec15d4de6a76b41a5d5eb8",
+                "reference": "3ea1ce64b4eb7f2d7aec15d4de6a76b41a5d5eb8",
                 "shasum": ""
             },
             "require": {
@@ -4333,9 +4333,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/2.0.4"
+                "source": "https://github.com/utopia-php/migration/tree/2.0.6"
             },
-            "time": "2026-08-19T09:09:34+00:00"
+            "time": "2026-08-27T20:12:58+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4869,20 +4869,23 @@
         },
         {
             "name": "utopia-php/span",
-            "version": "3.0.2",
+            "version": "4.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/span.git",
-                "reference": "6f9042c1ae1fa5a3e890b5c9a92cbf1388422945"
+                "reference": "8505a2331772bd84ca60333e01ce6b6d068ee1dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/span/zipball/6f9042c1ae1fa5a3e890b5c9a92cbf1388422945",
-                "reference": "6f9042c1ae1fa5a3e890b5c9a92cbf1388422945",
+                "url": "https://api.github.com/repos/utopia-php/span/zipball/8505a2331772bd84ca60333e01ce6b6d068ee1dc",
+                "reference": "8505a2331772bd84ca60333e01ce6b6d068ee1dc",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2"
+                "php": ">=8.4",
+                "psr/http-client": "^1.0",
+                "utopia-php/client": "^0.2 || ^0.3 || ^0.4",
+                "utopia-php/psr7": "^0.1 || ^0.2"
             },
             "require-dev": {
                 "swoole/ide-helper": "^5.0"
@@ -4903,9 +4906,9 @@
             "description": "Simple span tracing library for PHP with coroutine support",
             "support": {
                 "issues": "https://github.com/utopia-php/span/issues",
-                "source": "https://github.com/utopia-php/span/tree/3.0.2"
+                "source": "https://github.com/utopia-php/span/tree/4.2.0"
             },
-            "time": "2026-06-10T14:42:53+00:00"
+            "time": "2026-08-28T00:40:32+00:00"
         },
         {
             "name": "utopia-php/storage",
@@ -5254,16 +5257,16 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "d230de8d4d2450184297327238ed1fbde676b8d2"
+                "reference": "291980bc9ed112927e81a0db8600f122ffd7aab0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/d230de8d4d2450184297327238ed1fbde676b8d2",
-                "reference": "d230de8d4d2450184297327238ed1fbde676b8d2",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/291980bc9ed112927e81a0db8600f122ffd7aab0",
+                "reference": "291980bc9ed112927e81a0db8600f122ffd7aab0",
                 "shasum": ""
             },
             "require": {
@@ -5297,9 +5300,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/1.0.0"
+                "source": "https://github.com/utopia-php/websocket/tree/2.0.0"
             },
-            "time": "2026-02-05T13:40:16+00:00"
+            "time": "2026-08-28T08:23:09+00:00"
         },
         {
             "name": "webmozart/assert",
