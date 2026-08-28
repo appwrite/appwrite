@@ -1151,7 +1151,10 @@ class Install extends Action
 
         $image = (string) ($input['_APP_IMAGE'] ?? 'appwrite/appwrite') . ':' . (string) ($input['_APP_VERSION'] ?? 'latest');
 
-        if (!$this->volumeExists($target) || $this->volumeFileCount($target, $image) > 0) {
+        // The new volume usually does not exist yet: Compose creates it when the containers
+        // start, which is after this runs. Only an existing volume that already holds files
+        // means there is nothing to carry over.
+        if ($this->volumeExists($target) && $this->volumeFileCount($target, $image) > 0) {
             return;
         }
 
