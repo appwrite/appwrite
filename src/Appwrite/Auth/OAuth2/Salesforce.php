@@ -25,7 +25,8 @@ class Salesforce extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        "openid"
+        'openid',
+        'profile',
     ];
 
     /**
@@ -158,6 +159,18 @@ class Salesforce extends OAuth2
         }
 
         return false;
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['picture'] ?? '';
     }
 
     /**

@@ -153,6 +153,28 @@ class Yandex extends OAuth2
      *
      * @return string
      */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        if (! empty($user['is_avatar_empty'])) {
+            return '';
+        }
+
+        $avatarId = $user['default_avatar_id'] ?? '';
+
+        if ($avatarId === '') {
+            return '';
+        }
+
+        return 'https://avatars.yandex.net/get-yapic/' . $avatarId . '/islands-200';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);

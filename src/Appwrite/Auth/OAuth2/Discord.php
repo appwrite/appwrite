@@ -158,6 +158,38 @@ class Discord extends OAuth2
      *
      * @return string
      */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+        $id = $user['id'] ?? '';
+        $avatar = $user['avatar'] ?? '';
+
+        if ($id === '') {
+            return '';
+        }
+
+        if ($avatar !== '') {
+            $extension = \str_starts_with($avatar, 'a_') ? 'gif' : 'png';
+
+            return 'https://cdn.discordapp.com/avatars/' . $id . '/' . $avatar . '.' . $extension . '?size=512';
+        }
+
+        $discriminator = $user['discriminator'] ?? '0';
+
+        if ($discriminator === '0') {
+            $index = (\intval($id) >> 22) % 6;
+        } else {
+            $index = (int) $discriminator % 5;
+        }
+
+        return 'https://cdn.discordapp.com/embed/avatars/' . $index . '.png';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);

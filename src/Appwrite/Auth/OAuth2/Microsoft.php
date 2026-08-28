@@ -153,6 +153,19 @@ class Microsoft extends OAuth2
 
     /**
      * @param string $accessToken
+     * 
+     * @return string
+     * 
+     * Microsoft returns image binary. The implementation is kept empty
+     * until setPhoto() method is implemented
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        return '';
+    }
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
