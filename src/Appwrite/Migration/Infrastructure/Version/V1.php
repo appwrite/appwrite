@@ -105,18 +105,22 @@ class V1 extends Migration
         $source = $legacy[0];
         Console::info('Copying build artifacts from "' . $source . '" to "' . $target . '"...');
 
-        // Never overwrites, so an artifact rebuilt since an earlier attempt keeps the newer
-        // copy, and a copy that died half way is finished rather than started again. What is
-        // still missing afterwards is listed, because a copy can stop early -- a full disk,
-        // a killed container -- while everything it did run reports success.
+        // Only what is not already there in full is copied, so a copy that died half way is
+        // carried on rather than started again. Matching on size rather than existence is
+        // what makes that safe: a copy killed mid-file leaves a short one behind, which has
+        // to be recognised as unfinished and written again. What is still not intact
+        // afterwards is listed, because a copy can stop early -- a full disk, a killed
+        // container -- while everything it did run reports success.
         $stdout = '';
         $stderr = '';
         Console::execute(
             'docker run --rm -v ' . \escapeshellarg($source . ':/from:ro') . ' -v ' . \escapeshellarg($target . ':/to')
             . ' ' . \escapeshellarg($image) . ' sh -c ' . \escapeshellarg(
                 'cd /from && find . -type f | while read -r file; do'
-                . ' [ -f "/to/$file" ] || { mkdir -p "/to/$(dirname "$file")" && cp -a "$file" "/to/$file"; };'
-                . ' [ -f "/to/$file" ] || echo "$file"; done'
+                . ' size=$(stat -c %s "$file");'
+                . ' [ "$(stat -c %s "/to/$file" 2>/dev/null)" = "$size" ] ||'
+                . ' { mkdir -p "/to/$(dirname "$file")" && cp -a "$file" "/to/$file"; };'
+                . ' [ "$(stat -c %s "/to/$file" 2>/dev/null)" = "$size" ] || echo "$file"; done'
             ),
             '',
             $stdout,

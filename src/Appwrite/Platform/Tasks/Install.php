@@ -698,8 +698,10 @@ class Install extends Action
             // database. The new compose file and .env are written by now, and a volume or a
             // mount can only be moved while nothing is attached to it -- so this has to
             // happen before anything starts, including a start the operator does by hand
-            // after --no-start.
-            if ($isUpgrade && $installedVersion !== '' && $startIndex <= 2) {
+            // after --no-start. Not bounded by the step being resumed from: a version is
+            // only still here because the changes for it have not all landed yet, whichever
+            // step the attempt that left it got to.
+            if ($isUpgrade && $installedVersion !== '') {
                 $applied = true;
 
                 foreach (InfrastructureMigration::between($installedVersion, $version) as $migration) {
