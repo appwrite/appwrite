@@ -41,16 +41,23 @@ Setting `specification` places the database on **dedicated infrastructure** rese
 ```hcl
 data "appwrite_vectorsdb_specifications" "available" {}
 
-resource "appwrite_vectorsdb" "production" {
-  name = "embeddings"
-  specification = one([
+output "available_specifications" {
+  value = [
     for s in data.appwrite_vectorsdb_specifications.available.specifications :
-    s.slug if s.enabled
-  ])
-  replicas  = 1
-  sync_mode = "sync"
+    { slug = s.slug, cpu = s.cpu, memory = s.memory, price = s.price }
+    if s.enabled
+  ]
+}
+
+resource "appwrite_vectorsdb" "production" {
+  name          = "embeddings"
+  specification = "s-2vcpu-4gb"
+  replicas      = 1
+  sync_mode     = "sync"
 }
 ```
+
+Pick the slug deliberately from what the catalogue reports rather than deriving it — see [asserting a specification at plan time](/docs/tooling/terraform/resources/dedicated-databases#sizing-from-the-specifications-data-source) for a `precondition` that fails the plan when a slug is not enabled on your billing plan.
 
 {% info title="Some deployments require a specification" %}
 Omitting `specification` runs the database on the deployment's **shared pool**, but not every deployment has one configured. Where none is, the API rejects creation with `dedicated_database_required` and a `specification` becomes mandatory.

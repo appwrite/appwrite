@@ -64,7 +64,7 @@ Changing `specification` resizes the database in place. Changing `version` perfo
 
 # Sizing from the specifications data source {% #sizing-from-the-specifications-data-source %}
 
-Compute slugs (`s-1vcpu-1gb` through `s-8vcpu-64gb`) are not all enabled on every billing plan. Read the catalogue instead of hardcoding a slug that may be rejected:
+Compute slugs (`s-1vcpu-1gb` through `s-8vcpu-64gb`) are not all enabled on every billing plan, and a slug your plan does not allow is rejected at apply. Read the catalogue to see what you can pick:
 
 ```hcl
 data "appwrite_postgresql_specifications" "available" {}
@@ -76,18 +76,44 @@ output "available_specifications" {
     if s.enabled
   ]
 }
-
-resource "appwrite_postgresql_database" "production" {
-  name    = "production"
-  version = "17"
-  specification = one([
-    for s in data.appwrite_postgresql_specifications.available.specifications :
-    s.slug if s.enabled
-  ])
-}
 ```
 
 Each specification reports `slug`, `name`, `cpu`, `memory`, `max_connections`, `included_storage`, `included_bandwidth`, `price`, and `enabled`.
+
+Then choose one deliberately. How much compute a database gets is a decision to make explicitly, not something to derive from whatever the catalogue happens to return:
+
+```hcl
+resource "appwrite_postgresql_database" "production" {
+  name          = "production"
+  version       = "17"
+  specification = "s-2vcpu-4gb"
+}
+```
+
+To catch an unavailable slug while planning rather than halfway through an apply, assert your choice against the catalogue:
+
+```hcl
+variable "database_specification" {
+  type    = string
+  default = "s-2vcpu-4gb"
+}
+
+resource "appwrite_postgresql_database" "production" {
+  name          = "production"
+  version       = "17"
+  specification = var.database_specification
+
+  lifecycle {
+    precondition {
+      condition = contains(
+        [for s in data.appwrite_postgresql_specifications.available.specifications : s.slug if s.enabled],
+        var.database_specification
+      )
+      error_message = "Specification ${var.database_specification} is not enabled on this billing plan."
+    }
+  }
+}
+```
 
 # High availability and recovery {% #high-availability-and-recovery %}
 
