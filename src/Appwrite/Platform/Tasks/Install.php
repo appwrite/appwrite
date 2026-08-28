@@ -353,7 +353,7 @@ class Install extends Action
             $enabledDatabases[] = $lockedDatabase;
         }
 
-        $this->setInstallerConfig([
+        $config = [
             'defaultHttpPort' => $defaultHttpPort,
             'defaultHttpsPort' => $defaultHttpsPort,
             'organization' => $organization,
@@ -366,7 +366,16 @@ class Install extends Action
             'enabledDatabases' => $enabledDatabases,
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
-        ]);
+        ];
+
+        // Restarting the installer rewrites this config, which would drop the version an
+        // interrupted upgrade started from -- the one record left once the compose file and
+        // .env read as the version being installed.
+        if (isset($installerConfig['upgradeFrom'])) {
+            $config['upgradeFrom'] = $installerConfig['upgradeFrom'];
+        }
+
+        $this->setInstallerConfig($config);
 
         // Start Swoole-based installer server in background
         // Redirect stdout/stderr to a log file so exec() returns immediately

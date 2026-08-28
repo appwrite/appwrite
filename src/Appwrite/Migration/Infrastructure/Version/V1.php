@@ -65,20 +65,17 @@ class V1 extends Migration
 
         $volumes = \array_filter(\array_map('trim', \explode("\n", $stdout)));
 
-        // The new volume usually does not exist yet: Compose creates it when the containers
-        // start, which is after this runs, and the copy below creates it earlier so the
-        // artifacts are in place before anything reads them. Reading a volume that does not
-        // exist would create an empty one, so the listing gates that.
-        $targetFiles = \in_array($target, $volumes, true) ? $files($target) : 0;
-        $unreadable = $targetFiles === null;
-
         $legacy = [];
+        $unreadable = false;
         foreach ($volumes as $volume) {
             if ($volume === $target || !\str_ends_with($volume, '_' . $target)) {
                 continue;
             }
 
             $count = $files($volume);
+
+            // Told apart from an empty volume, and raised rather than warned about: the copy
+            // can still be made once whatever stopped the read is fixed.
             if ($count === null) {
                 $unreadable = true;
                 break;
@@ -89,25 +86,11 @@ class V1 extends Migration
             }
         }
 
-        // Told apart from an empty volume, and raised rather than warned about: the copy
-        // can still be made once whatever stopped the read is fixed.
         if ($unreadable) {
             throw new \RuntimeException('could not read the contents of the build volumes');
         }
 
         if ($legacy === []) {
-            return;
-        }
-
-        // Something has already written to the new volume, so a copy could overwrite newer
-        // artifacts with older ones. Say so rather than skipping in silence: an installation
-        // that upgraded once and rebuilt a single deployment still has the rest stranded.
-        if ($targetFiles > 0) {
-            Console::warning(
-                '"' . $target . '" already holds build files, so nothing was copied from '
-                . \implode(', ', $legacy) . '. Deployments built before the upgrade may still be'
-                . ' missing their artifacts; copy them across manually if any fail to run.'
-            );
             return;
         }
 
@@ -122,19 +105,30 @@ class V1 extends Migration
         $source = $legacy[0];
         Console::info('Copying build artifacts from "' . $source . '" to "' . $target . '"...');
 
+        // Never overwrites, so an artifact rebuilt since an earlier attempt keeps the newer
+        // copy, and a copy that died half way is finished rather than started again. What is
+        // still missing afterwards is listed, because a copy can stop early -- a full disk,
+        // a killed container -- while everything it did run reports success.
         $stdout = '';
         $stderr = '';
-        $exit = Console::execute(
+        Console::execute(
             'docker run --rm -v ' . \escapeshellarg($source . ':/from:ro') . ' -v ' . \escapeshellarg($target . ':/to')
-            . ' ' . \escapeshellarg($image) . ' cp -a /from/. /to/',
+            . ' ' . \escapeshellarg($image) . ' sh -c ' . \escapeshellarg(
+                'cd /from && find . -type f | while read -r file; do'
+                . ' [ -f "/to/$file" ] || { mkdir -p "/to/$(dirname "$file")" && cp -a "$file" "/to/$file"; };'
+                . ' [ -f "/to/$file" ] || echo "$file"; done'
+            ),
             '',
             $stdout,
             $stderr
         );
 
-        if ($exit !== 0) {
+        $missing = \array_filter(\array_map('trim', \explode("\n", $stdout)));
+
+        if ($missing !== []) {
             throw new \RuntimeException(
-                'could not copy build artifacts from "' . $source . '": ' . \trim($stderr ?: $stdout)
+                \count($missing) . ' build file(s) could not be copied from "' . $source . '"'
+                . ($stderr === '' ? '' : ': ' . \trim($stderr))
             );
         }
 
