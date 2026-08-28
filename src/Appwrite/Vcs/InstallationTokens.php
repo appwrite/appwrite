@@ -85,12 +85,30 @@ class InstallationTokens
                     $lockAge = 0;
                 }
                 if ($lockAge > 120) {
-                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
-                    try {
-                        $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $lock])));
-                        $acquired = true;
-                    } catch (\Throwable) {
-                        // Another process beat us to it after we deleted the stale lock — fall through.
+                    // Double-check: re-read the lock before deleting to guard against a concurrent
+                    // worker that evicted the same stale document and placed a fresh one between our
+                    // initial read and this delete. If $createdAt changed, a fresh lock is now active
+                    // and we must not touch it.
+                    $currentLock = $authorization->skip(fn () => $dbForPlatform->getDocument('vcsCommentLocks', $lock));
+                    $stillStale = !$currentLock->isEmpty()
+                        && $currentLock->getAttribute('$createdAt') === $existingLock->getAttribute('$createdAt');
+
+                    if ($stillStale) {
+                        try {
+                            $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
+                        } catch (\Throwable) {
+                            // Another worker won the race — the stale lock is already gone.
+                            $stillStale = false;
+                        }
+                    }
+
+                    if ($stillStale) {
+                        try {
+                            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $lock])));
+                            $acquired = true;
+                        } catch (\Throwable) {
+                            // Another process created a new lock after our delete — fall through.
+                        }
                     }
                 }
             }
