@@ -131,7 +131,7 @@ Use a key with the scopes required for the resources you manage (for example Tab
 
 - [Overview](/docs/tooling/terraform): full resource list
 - [Projects](/docs/tooling/terraform/resources/projects): projects and project API keys
-- [Databases](/docs/tooling/terraform/resources/databases): TablesDB resources
+- [TablesDB](/docs/tooling/terraform/resources/databases): databases, tables, columns, indexes, and rows
 - [Dedicated databases](/docs/tooling/terraform/resources/dedicated-databases): PostgreSQL, MySQL, and MongoDB
 - [DocumentsDB](/docs/tooling/terraform/resources/documentsdb) and [VectorsDB](/docs/tooling/terraform/resources/vectorsdb): document and embedding collections
 - [Storage](/docs/tooling/terraform/resources/storage): buckets and files

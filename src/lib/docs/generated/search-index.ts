@@ -6363,13 +6363,13 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   },
   {
     "slug": "tooling/terraform/resources/databases",
-    "title": "Databases",
+    "title": "TablesDB",
     "description": "Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.",
     "excerpt": "The provider exposes Appwrite **TablesDB** as Terraform resources. Typical order: create a **database** (), then **tables**, then **columns** and **indexes**, and optionally **rows**. This page covers **TablesDB**, Appwrite's relational product on shared infrastructure. The provider also manages dedicated databases (PostgreSQL, MySQL, and MongoDB on reserved infrastructure), DocumentsDB (schemaless JSON collections), and VectorsDB (embeddings searched by similarity). For full generated schemas, see the Terraform Registry: tablesdb, tablesdb_table, tablesdb_column, tablesdb_index, and tablesdb_row. The provider repository contains the source and examples. TablesDB resources…",
     "breadcrumbs": [
       "Tooling",
       "Resources",
-      "Databases"
+      "TablesDB"
     ]
   },
   {

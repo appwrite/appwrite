@@ -362,6 +362,6 @@ Backup storage is the exception: it has no read route, so it cannot be imported.
 
 - [DocumentsDB](/docs/tooling/terraform/resources/documentsdb): schemaless JSON collections
 - [VectorsDB](/docs/tooling/terraform/resources/vectorsdb): embeddings searched by similarity
-- [Databases](/docs/tooling/terraform/resources/databases): TablesDB on shared infrastructure
+- [TablesDB](/docs/tooling/terraform/resources/databases): the relational product on shared infrastructure
 - [Backups](/docs/tooling/terraform/resources/backups): backup policies for shared databases
 - [Configuration](/docs/tooling/terraform/provider): authentication, endpoints, and timeouts

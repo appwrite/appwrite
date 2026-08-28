@@ -2606,7 +2606,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           label: "Resources",
           items: [
             {
-              label: "Databases",
+              label: "TablesDB",
               href: "/docs/tooling/terraform/resources/databases",
             },
             {

@@ -45,6 +45,6 @@ resource "appwrite_backup_policy" "production" {
 
 # Related {% #related %}
 
-- [Databases](/docs/tooling/terraform/resources/databases): TablesDB resources you can target with `resource_id`
+- [TablesDB](/docs/tooling/terraform/resources/databases): databases you can target with `resource_id`
 - [Dedicated databases](/docs/tooling/terraform/resources/dedicated-databases): backup policies and backup storage for PostgreSQL, MySQL, and MongoDB
 - [Configuration](/docs/tooling/terraform/provider): authentication and endpoints

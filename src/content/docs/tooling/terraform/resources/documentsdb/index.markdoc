@@ -171,5 +171,5 @@ terraform import appwrite_documentsdb_document.defaults <database-id>/<collectio
 
 - [VectorsDB](/docs/tooling/terraform/resources/vectorsdb): the same shape, for embeddings
 - [Dedicated databases](/docs/tooling/terraform/resources/dedicated-databases): PostgreSQL, MySQL, and MongoDB
-- [Databases](/docs/tooling/terraform/resources/databases): relational TablesDB
+- [TablesDB](/docs/tooling/terraform/resources/databases): the relational product on shared infrastructure
 - [Configuration](/docs/tooling/terraform/provider): authentication and endpoints

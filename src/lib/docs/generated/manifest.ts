@@ -4075,7 +4075,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "tooling/terraform/resources/databases",
-    "title": "Databases",
+    "title": "TablesDB",
     "description": "Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.",
     "layout": "article",
     "readingTimeMinutes": 2

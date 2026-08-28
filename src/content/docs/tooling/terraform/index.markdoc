@@ -87,7 +87,7 @@ The provider works with **Appwrite Cloud** and **Community Edition** (self-hoste
 {% cards_item href="/docs/tooling/terraform/provider" title="Configuration" %}
 Install the provider, set endpoints, environment variables, and optional per-resource `project_id`.
 {% /cards_item %}
-{% cards_item href="/docs/tooling/terraform/resources/databases" title="Databases" %}
+{% cards_item href="/docs/tooling/terraform/resources/databases" title="TablesDB" %}
 TablesDB: databases, tables, columns, indexes, and rows.
 {% /cards_item %}
 {% cards_item href="/docs/tooling/terraform/resources/dedicated-databases" title="Dedicated databases" %}
