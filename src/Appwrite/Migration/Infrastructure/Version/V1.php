@@ -7,27 +7,38 @@ use Utopia\Console;
 use Utopia\System\System;
 
 /**
- * Carries build artifacts onto the builds volume, whose name changed in 2.0.
- *
- * Before 2.0 the volume was declared without a name, so Compose prefixed it with the
- * project and it became <project>_appwrite-builds. 2.0 names it explicitly, because
- * jobs-service build containers are created outside the Compose project and mount it by
- * that literal name through _APP_BUILDS_VOLUME.
- *
- * Starting 2.0 on an older installation therefore mounts a new, empty volume and leaves
- * every existing artifact behind. Deployments stay in the database looking healthy,
- * pointing at build paths that no longer resolve, so the executor cannot unpack a source
- * that is not there, never starts a runtime, and the request fails on the resource
- * timeout. The only log line names the runtime rather than the missing file.
+ * Infrastructure changes introduced by 2.0.
  */
 class V1 extends Migration
 {
     public function getName(): string
     {
-        return 'Carry build artifacts onto the renamed builds volume';
+        return '2.0.0';
     }
 
-    public function execute(): void
+    protected function changes(): array
+    {
+        return [
+            'Carry build artifacts onto the renamed builds volume' => $this->carryBuildArtifacts(...),
+        ];
+    }
+
+    /**
+     * Copies build artifacts onto the builds volume, whose name changed in 2.0.
+     *
+     * Before 2.0 the volume was declared without a name, so Compose prefixed it with the
+     * project and it became <project>_appwrite-builds. 2.0 names it explicitly, because
+     * jobs-service build containers are created outside the Compose project and mount it
+     * by that literal name through _APP_BUILDS_VOLUME.
+     *
+     * Starting 2.0 on an older installation therefore mounts a new, empty volume and
+     * leaves every existing artifact behind. Deployments stay in the database looking
+     * healthy, pointing at build paths that no longer resolve, so the executor cannot
+     * unpack a source that is not there, never starts a runtime, and the request fails on
+     * the resource timeout. The only log line names the runtime rather than the missing
+     * file.
+     */
+    private function carryBuildArtifacts(): void
     {
         $target = (string) ($this->env['_APP_BUILDS_VOLUME'] ?? '') ?: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds');
         $image = (string) ($this->env['_APP_IMAGE'] ?? 'appwrite/appwrite') . ':' . (string) ($this->env['_APP_VERSION'] ?? 'latest');

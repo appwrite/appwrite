@@ -98,13 +98,39 @@ abstract class Migration
     }
 
     /**
-     * Describes the change, for the upgrade log.
+     * The release these changes belong to, for the upgrade log.
      */
     abstract public function getName(): string;
 
     /**
-     * Applies the change. Must be safe to run again: an upgrade can be retried, and a
-     * partly applied change must not be made worse by a second pass.
+     * The changes this release makes, described for the upgrade log, in the order they
+     * must be applied.
+     *
+     * Each must be safe to run again: an upgrade can be retried, and a partly applied
+     * change must not be made worse by a second pass.
+     *
+     * @return array<string, callable(): void>
      */
-    abstract public function execute(): void;
+    abstract protected function changes(): array;
+
+    /**
+     * Applies every change in the release.
+     *
+     * A change that fails does not stop the ones after it. They are independent -- a
+     * volume that could not be copied says nothing about a file that has to move -- and
+     * skipping the rest would leave more of the installation behind than the one failure
+     * warrants.
+     */
+    final public function execute(): void
+    {
+        foreach ($this->changes() as $description => $change) {
+            Console::info($this->getName() . ': ' . $description);
+
+            try {
+                $change();
+            } catch (\Throwable $error) {
+                Console::warning('"' . $description . '" failed: ' . $error->getMessage());
+            }
+        }
+    }
 }

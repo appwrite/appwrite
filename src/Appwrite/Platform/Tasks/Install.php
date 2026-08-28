@@ -1152,7 +1152,7 @@ class Install extends Action
         }
 
         foreach (InfrastructureMigration::between($from, $to) as $migration) {
-            Console::info('Running infrastructure migration: ' . $migration->getName());
+            Console::info('Applying infrastructure changes from ' . $migration->getName() . '...');
 
             try {
                 $migration->setContext($input, $this->path)->execute();
@@ -1160,7 +1160,7 @@ class Install extends Action
                 // A failed migration leaves the upgrade able to continue: the containers
                 // still start, and what could not be changed is reported rather than
                 // taking the whole upgrade down with it.
-                Console::warning('Infrastructure migration "' . $migration->getName() . '" failed: ' . $error->getMessage());
+                Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
             }
         }
     }
