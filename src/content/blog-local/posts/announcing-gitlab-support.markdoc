@@ -1,0 +1,100 @@
+---
+layout: post
+title: "Announcing GitLab support for Appwrite Sites and Functions"
+description: Connect a GitLab account to Appwrite and deploy Sites and Functions directly from your GitLab repositories, including projects that live inside GitLab groups.
+date: 2026-09-02
+cover: /images/blog-local/announcing-gitlab-support/cover.avif
+timeToRead: 7
+author: aditya-oberai
+category: announcement
+featured: false
+draft: true
+callToAction: true
+faqs:
+  - question: "Can Appwrite deploy from a GitLab repository?"
+    answer: "Yes. Connect a GitLab account from **Project settings** > **Git configuration**, or from the empty state in the Site and Function creation wizards. Once connected, GitLab repositories appear in the same repository picker as GitHub ones, and pushes create deployments the same way."
+  - question: "Does Appwrite support GitLab groups, or only personal projects?"
+    answer: "Both. A single GitLab connection can expose your personal namespace and every group you belong to. The repository picker lists each namespace as its own row, so a group behaves like any other owner, and new repositories can be created directly inside a group."
+  - question: "Do I need to mirror my GitLab repository to GitHub?"
+    answer: "No. Appwrite talks to GitLab directly. Mirroring was the old workaround for getting GitLab code onto Appwrite, and it is no longer necessary for Sites or Functions."
+  - question: "Do merge requests get preview deployments?"
+    answer: "Pushes to a branch other than your production branch create a deployment that is built but not activated, and Appwrite generates a [preview link](/docs/products/sites/previews) for it. Only members of your Appwrite organization can open that link. Deployment details link back to the originating merge request on GitLab."
+  - question: "Can one Appwrite project use GitLab and GitHub at the same time?"
+    answer: "Yes. Connections are per provider, and a project can hold several at once. Owners from every connected provider appear together in one repository picker, and different Sites and Functions in the same project can deploy from different providers."
+  - question: "Can I create a new GitLab repository from the Appwrite Console?"
+    answer: "Yes, where your Appwrite server reports that GitLab supports it. The Site and Function creation wizards offer to create a new repository alongside connecting an existing one, and you choose which namespace, personal or group, the new project lands in."
+  - question: "Does connecting GitLab change how build triggers work?"
+    answer: "No. Branch filters, path filters, install commands, build commands, and output directories are configured per Site or Function and behave identically regardless of which Git provider backs the repository. See [Deploy from Git](/docs/products/sites/deploy-from-git)."
+---
+
+Git-based deployment on Appwrite has meant GitHub. If your code lived on GitLab, you had three unappealing options: mirror the repository to GitHub and keep the mirror honest, script the Appwrite CLI into your GitLab CI pipeline and rebuild preview deployments yourself, or move the repository outright.
+
+None of those are deployment. They are workarounds for a missing adapter.
+
+Today, we are announcing **GitLab support** across Appwrite Sites and Functions. Connect a GitLab account once, pick a repository, and every push builds and deploys the way a GitHub push always has.
+
+# What ships today
+
+- **GitLab everywhere Git appears.** Connect from **Project settings** > **Git configuration**, or from the empty state in the Site and Function creation wizards.
+- **Personal namespaces and groups.** One connection can expose your personal projects and every group you belong to, each listed as its own selectable owner.
+- **Repository creation inside a group.** Create a new GitLab project from the wizard and choose the namespace it lands in, rather than creating it on GitLab first and coming back.
+- **Push to deploy.** Commits to your production branch build and activate. Commits to any other branch build and produce a preview link.
+- **Links that resolve to GitLab.** Deployment details link to the right commit, branch, and merge request on `gitlab.com`, using GitLab's URL shapes rather than GitHub's.
+
+Everything else about a deployment stays where it was. Branch filters, path filters, install and build commands, root directories, and output directories are configured per Site or Function and do not care which provider is behind the repository.
+
+# Connecting a GitLab account
+
+Open a project and go to **Settings** > **Git configuration**. Alongside **Connect GitHub**, you will now see **Connect GitLab**. Choosing it sends you through GitLab's OAuth consent screen and returns you to the Console with the connection saved to the project.
+
+You can also start from scratch. When you create a Site or a Function and have no Git connection yet, the wizard's empty state offers the same set of providers, so connecting GitLab and picking a repository happen in one pass instead of two.
+
+The Console only offers providers your Appwrite server actually has credentials for, so you never see a connect button that fails the moment you click it.
+
+# Groups are owners, not a second step
+
+GitLab's namespace model is the part that does not map cleanly onto GitHub, and it is where most of this work went.
+
+On GitHub, an installation maps to exactly one owner: a user or an organization. On GitLab, one OAuth connection can reach your personal namespace and every group you are a member of, at any nesting depth. A naive port of the GitHub flow would have made you pick an installation, then pick a namespace inside it, which is two decisions to reach one repository.
+
+Instead, the repository picker flattens installations and their namespaces into a single list. Your personal namespace and each of your groups appear as sibling rows, next to any GitHub organizations you have connected. Selecting a GitLab group takes exactly as many clicks as selecting an organization on GitHub. Once the list grows past a handful of entries, a filter box appears so you can type instead of scroll.
+
+This carries into repository creation. When you create a new repository from the Site or Function wizard, the namespace you picked is where the GitLab project is created, so a repository intended for your platform team's group does not quietly land in your personal namespace.
+
+Where a capability does not exist on a provider, the Console hides it rather than failing at submit time. Repository creation and public repository visibility are both reported by the server per provider, so the wizard only offers what the provider behind your connection can actually do.
+
+# Deploying from a GitLab repository
+
+Once a repository is connected, the workflow is the one you already know from [Deploy from Git](/docs/products/sites/deploy-from-git).
+
+1. Check out the branch you configured as the production branch.
+2. Commit and push.
+3. Appwrite creates a deployment, builds it, and activates it.
+
+Pushes to your production branch, usually `main`, replace the active deployment and serve on your primary domain. Pushes to any other branch build without activating and generate a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open. Reviewing a merge request becomes a matter of opening its preview link rather than pulling the branch and running it locally.
+
+Branch filters and path filters narrow what triggers a build, which matters more on GitLab than it might sound. Monorepos are common there, and a path filter keeps a push to `docs/` from rebuilding a site that only depends on `apps/web/`.
+
+```txt
+apps/web/**
+packages/ui/**
+!docs/**
+```
+
+Deployment details link back to GitLab using GitLab's own URL shapes: `/-/merge_requests/<id>` for a merge request rather than GitHub's `/pull/<id>`, plus the matching commit and branch paths. The distinction sounds cosmetic until a link 404s, which is exactly what a provider-agnostic URL builder would have produced.
+
+# When GitLab support is the right call
+
+Reach for it when GitLab is already where your code and your reviews live. That is the common case in teams that adopted GitLab CI long before they picked a hosting platform, and in organizations whose group structure mirrors how they are organized internally.
+
+It also removes a specific class of drift. Mirroring a repository to GitHub purely so a deployment platform can see it means two remotes, one of which nobody reviews and which silently falls behind when the mirror job fails. Connecting GitLab directly deletes that failure mode instead of monitoring it.
+
+If your team is split across providers, you do not have to choose. A single Appwrite project can hold GitHub and GitLab connections at the same time, and their owners appear side by side in the same picker. Sites and Functions in one project can deploy from different providers.
+
+# Getting started with GitLab on Appwrite
+
+Open an existing Site or Function, go to **Settings** > **Git configuration**, and connect GitLab. Or create a new one on [Appwrite Cloud](https://cloud.appwrite.io) and pick GitLab from the wizard's provider list.
+
+- [Deploy Sites from Git](/docs/products/sites/deploy-from-git) covers build triggers, branch and path filters, install and build commands, and output directories.
+- [Deploy Functions from Git](/docs/products/functions/deploy-from-git) covers the same ground for serverless functions.
+- [Preview deployments](/docs/products/sites/previews) explains how branch deployments get their links and who can open them.

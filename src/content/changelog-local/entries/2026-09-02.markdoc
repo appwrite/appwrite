@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Deploy Appwrite Sites and Functions from GitLab"
+date: 2026-09-02
+cover: /images/blog-local/announcing-gitlab-support/cover.avif
+---
+
+**GitLab** is now a Git provider for Appwrite Sites and Functions. Connect a GitLab account from **Project settings** > **Git configuration**, or from the empty state in the Site and Function creation wizards, and deploy straight from your GitLab repositories.
+
+One connection covers your personal namespace and every group you belong to. Each namespace appears as its own owner in the repository picker, next to any GitHub organizations you have connected, so selecting a group takes no more clicks than selecting an organization. New repositories can be created directly inside the group you choose.
+
+Pushes behave as they always have. Your production branch builds and activates, and other branches build into a preview link that only members of your Appwrite organization can open. Commit, branch, and merge request links resolve to GitLab's own URL shapes.
+
+{% arrow_link href="/blog/post/announcing-gitlab-support" %}
+Read the announcement
+{% /arrow_link %}

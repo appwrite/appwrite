@@ -17,6 +17,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-bitbucket-support",
+    "href": "/blog/post/announcing-bitbucket-support",
+    "title": "Announcing Bitbucket support for Sites and Functions",
+    "description": "Appwrite now deploys from Bitbucket. Connect a workspace, pick a repository, and every push builds a Site or Function, with links that resolve to Bitbucket.",
+    "date": "2026-09-03",
+    "lastUpdated": "2026-09-03",
+    "timeToRead": 6,
+    "author": "aditya-oberai",
+    "category": "announcement",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog-local/announcing-bitbucket-support/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-s3-api",
     "href": "/blog/post/announcing-s3-api",
     "title": "Announcing the S3 API: Use any S3 client with Appwrite Storage",
@@ -29,6 +44,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "draft": true,
     "cover": "/images/blog/announcing-s3-api/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-gitlab-support",
+    "href": "/blog/post/announcing-gitlab-support",
+    "title": "Announcing GitLab support for Appwrite Sites and Functions",
+    "description": "Connect a GitLab account to Appwrite and deploy Sites and Functions directly from your GitLab repositories, including projects that live inside GitLab groups.",
+    "date": "2026-09-02",
+    "lastUpdated": "2026-09-02",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcement",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog-local/announcing-gitlab-support/cover.avif",
     "hasCover": true
   },
   {
@@ -837,7 +867,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement",
     "featured": false,
     "draft": true,
-    "cover": "/images/blog/announcing-vectorsdb/cover.png",
+    "cover": "/images/blog/announcing-vectorsdb/cover.avif",
     "hasCover": true
   },
   {
