@@ -2,12 +2,13 @@
 layout: post
 title: "Announcing the S3 API: Use any S3 client with Appwrite Storage"
 description: Appwrite Storage now exposes an S3-compatible API. Point the AWS CLI, the AWS SDKs, and tools like rclone at your Appwrite buckets, with no migration required.
-date: 2026-07-31
+date: 2026-09-03
 cover: /images/blog/announcing-s3-api/cover.avif
-timeToRead: 5
+timeToRead: 7
 author: torsten-dittmann
 category: announcement
 featured: false
+draft: true
 callToAction: true
 faqs:
   - question: "What is the Appwrite S3 API?"
@@ -22,6 +23,10 @@ faqs:
     answer: "Folders are virtual, as they are on S3 itself: they exist as `/`-separated prefixes in object keys. List a bucket with `delimiter=/` and an optional `prefix` to browse it like a directory tree, with folders returned under `CommonPrefixes` and files under `Contents`."
   - question: "How do object keys map to Appwrite files?"
     answer: "Object keys are file names, used directly. Uploading to `reports/january.pdf` stores a file of that name, and read, copy, and delete operations address it by the same key, so files created through the native Storage API or the Console are addressable over S3 under the names they already have. A key addresses exactly one object, so uploading to a key that already exists overwrites it, the way S3 does, and file names have to be unique within a bucket. See the [S3 API documentation](/docs/products/storage/s3) for details."
+  - question: "Can I share Appwrite Storage objects without handing out credentials?"
+    answer: "Yes, with a presigned URL. Sign one on your server and give it to the client. The URL carries its AWS Signature Version 4 authentication in the query string, authorizes exactly one operation on one object, and stops working once it expires, up to a maximum lifetime of 7 days. The API key secret that signed it is never part of the URL."
+  - question: "Can I call the S3 API from a browser?"
+    answer: "Yes, using a presigned URL. The S3 endpoint answers cross-origin requests from any origin and handles preflight, so browser JavaScript can upload to a presigned `PutObject` URL or stream a `Range` request without a proxy in between. Do not configure a browser S3 client with your API key secret; sign the URL on a server and hand the browser the URL instead."
 ---
 
 The S3 API has become the common language of object storage. The AWS CLI, the AWS SDKs, backup tools like rclone and s3cmd, data pipelines, and countless libraries all speak it. Until now, using them with Appwrite Storage meant writing glue code around the native API.
@@ -38,6 +43,7 @@ Appwrite Storage already gives you buckets, permissions, image transformations, 
 - **Reuse existing code.** Applications already written against the AWS SDKs connect to Appwrite by changing the client configuration, not the code.
 - **No migration required.** Buckets and files are addressable over both the native Storage API and the S3 API at the same time. Files uploaded over S3 show up in the Appwrite Console, and files uploaded through the Console or SDKs are listable and downloadable over S3.
 - **Multipart uploads out of the box.** SDK transfer managers and `aws s3 cp` upload large files in parts automatically, with the standard multipart operations fully supported.
+- **Hand out access without handing out credentials.** Sign a presigned URL on your server and give it to a browser, a mobile app, or a partner. It grants one operation on one object, expires on a schedule you set, and never exposes your API key.
 
 # How it works
 
@@ -129,6 +135,32 @@ Because the key is the name, a key addresses exactly one object: uploading to a 
 
 [Folders](/docs/products/storage/folders) work the way they do on S3 itself: they are virtual, existing as `/`-separated prefixes in object keys. List a bucket with the `/` delimiter and an optional `prefix` to browse it like a directory tree, with folders grouped under `CommonPrefixes` and files under `Contents`.
 
+# Share objects with presigned URLs
+
+Not every client should hold an API key. A presigned URL carries its AWS Signature Version 4 authentication in the query string instead of a header, so you can sign one on your server and hand it to a client that has no Appwrite credentials at all.
+
+```js
+// On your server: sign a URL the browser can upload to
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+const uploadUrl = await getSignedUrl(
+    client,
+    new PutObjectCommand({
+        Bucket: 'my-bucket',
+        Key: 'reports/january.pdf',
+        ContentType: 'application/pdf'
+    }),
+    { expiresIn: 900 }
+);
+```
+
+The signature covers the HTTP method, the object key, and every other query parameter, so the URL authorizes exactly one request. A URL signed for a download cannot be replayed as an upload, and changing the key invalidates it. You choose the lifetime when you generate it, anywhere from a second up to 7 days.
+
+The standard helpers all work: `getSignedUrl` in the AWS SDK for JavaScript, `generate_presigned_url` in boto3, and `createPresignedRequest` in the AWS SDK for PHP, along with `aws s3 presign`, `rclone link`, and `s5cmd presign`.
+
+The endpoint also answers cross-origin requests from any origin and handles preflight, so a presigned URL works directly from browser JavaScript. A web page can upload straight to a presigned `PutObject` URL or stream a `Range` request out of an object with no proxy in between, and response headers like `ETag`, `Content-Range`, and `Last-Modified` are exposed to client code.
+
 # What's supported
 
 The S3 API targets the operations most clients depend on:
@@ -136,6 +168,7 @@ The S3 API targets the operations most clients depend on:
 - **Bucket operations**: `ListBuckets`, `CreateBucket`, `HeadBucket`, `DeleteBucket`, and `GetBucketLocation`
 - **Object operations**: `PutObject`, `GetObject` (with `Range` and conditional requests), `HeadObject`, `CopyObject`, `DeleteObject`, `DeleteObjects`, `ListObjects`, and `ListObjectsV2`
 - **Multipart uploads**: the full flow, from `CreateMultipartUpload` through `UploadPart`, `UploadPartCopy`, `CompleteMultipartUpload`, `AbortMultipartUpload`, `ListMultipartUploads`, and `ListParts`
+- **Presigned URLs**: sign any supported operation into a URL, valid for up to 7 days, and use it from any client, including a browser
 
 Buckets keep their constraints under the S3 API: uploads that exceed the bucket's maximum file size or use a disallowed extension are rejected, and access is governed by [Appwrite permissions](/docs/products/storage/permissions) and API key scopes. Features outside this set, such as object tagging, lifecycle rules, bucket policies, and versioning, return standard `NotImplemented` errors, so clients fail cleanly. The full list is in the [limitations documentation](/docs/products/storage/s3#limitations).
 
@@ -146,11 +179,14 @@ The S3 API is available on **Appwrite Cloud** today.
 1. Navigate to **Overview** > **Integrations** > **API keys** and create an API key with the storage scopes your workload needs.
 2. Configure your S3 client with the `https://<REGION>.cloud.appwrite.io/v1/s3` endpoint, your project ID as the access key ID, and the API key secret as the secret access key.
 3. Run your existing S3 commands and code against your Appwrite buckets.
+4. To reach clients that have no Appwrite credentials, sign a [presigned URL](/docs/products/storage/s3#presigned-urls) on your server and hand it to them.
 
 Full documentation, including folder listings, file name rules, and error responses, is available on the [S3 API documentation page](/docs/products/storage/s3).
 
 # Resources
 
 - [S3 API documentation](/docs/products/storage/s3)
+- [Presigned URLs](/docs/products/storage/s3#presigned-urls)
+- [Browser access](/docs/products/storage/s3#browser-access)
 - [Storage documentation](/docs/products/storage)
 - [API keys documentation](/docs/advanced/security/api-keys)
