@@ -5,6 +5,9 @@ namespace Utopia\Mqtt\Handlers;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\V5;
+use Utopia\Mqtt\Properties;
+use Utopia\Mqtt\Property;
 use Utopia\Platform\Action;
 
 class Auth extends Action
@@ -33,12 +36,12 @@ class Auth extends Action
         $userProperties = [];
 
         if ($body !== '') {
-            // $body[0] is the reason code (0x19 re-authenticate)
-            // from the offset 1 everything is the mqtt v5 properties
-            $properties = Packet::readProperties($body, 1, $connection->protocol);
-            $method = $properties['authMethod'];
-            $data = $properties['authData'];
-            $userProperties = $properties['user'];
+            // $body[0] is the reason code (0x19 re-authenticate);
+            // from offset 1 everything is the MQTT 5.0 property block.
+            [$properties] = Properties::parse($body, 1);
+            $method = (string) ($properties->get(Property::AUTHENTICATION_METHOD) ?? '');
+            $data = (string) ($properties->get(Property::AUTHENTICATION_DATA) ?? '');
+            $userProperties = $properties->user();
         }
 
         // The AUTH packet re-sends projectId as a User Property.
@@ -53,34 +56,19 @@ class Auth extends Action
                 : [];
 
             if ($identity === []) {
-                $reply($this->disconnect(Packet::REASON_NOT_AUTHORIZED), true);
+                $reply(V5::disconnect(V5::REASON_NOT_AUTHORIZED), true);
                 return;
             }
 
             $connection->identity = $identity;
         }
 
-        // Acknowledge success on the live connection with an AUTH packet.
-        $reply($this->auth(Packet::AUTH_SUCCESS, $method), false);
-    }
-
-    private function disconnect(int $reasonCode): string
-    {
-        return chr(Packet::DISCONNECT << 4) . Packet::encodeLength(1) . chr($reasonCode);
-    }
-
-    private function auth(int $reasonCode, string $method, string $data = ''): string
-    {
-        $properties = '';
+        // Acknowledge success on the live connection with an AUTH packet that echoes
+        // the authentication method back.
+        $properties = new Properties();
         if ($method !== '') {
-            $properties .= chr(Packet::PROP_AUTH_METHOD) . Packet::encodeString($method);
+            $properties->add(new Property(Property::AUTHENTICATION_METHOD, $method));
         }
-        if ($data !== '') {
-            $properties .= chr(Packet::PROP_AUTH_DATA) . Packet::encodeString($data);
-        }
-
-        $variable = chr($reasonCode) . Packet::encodeLength(strlen($properties)) . $properties;
-
-        return chr(Packet::AUTH << 4) . Packet::encodeLength(strlen($variable)) . $variable;
+        $reply(V5::auth(V5::AUTH_SUCCESS, $properties), false);
     }
 }

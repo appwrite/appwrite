@@ -6,6 +6,9 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\V3;
+use Utopia\Mqtt\Packet\V5;
+use Utopia\Mqtt\Properties;
 use Utopia\Platform\Action;
 use Utopia\Span\Span;
 
@@ -29,7 +32,7 @@ class Publish extends Action
     public function action(Mqtt $mqtt, Connection $connection, Packet $packet, callable $reply): void
     {
         $body = $packet->body;
-        $qos = ($packet->flags >> 1) & 0x03;
+        $qos = $packet->qos();
 
         [$topic, $offset] = Packet::readString($body, 0);
 
@@ -38,7 +41,9 @@ class Publish extends Action
             $packetId = substr($body, $offset, 2);
             $offset += 2;
         }
-        $offset = Packet::skipProperties($body, $offset, $connection->protocol);
+        if ($connection->protocol >= 5) {
+            $offset = Properties::skip($body, $offset);
+        }
         $payload = substr($body, $offset);
 
         Span::add('mqtt.topic', $topic);
@@ -47,8 +52,8 @@ class Publish extends Action
         $mqtt->send($connection->projectId, [], [], [$topic], [], ['payload' => $payload, 'qos' => $qos]);
 
         if ($qos === 1) {
-            // PUBACK: packet id (reason/properties omitted -> valid for both versions)
-            $reply(chr(Packet::PUBACK << 4) . Packet::encodeLength(strlen($packetId)) . $packetId, false);
+            // PUBACK is a bare packet id in both versions (reason/properties omitted).
+            $reply($connection->protocol >= 5 ? V5::puback($packetId) : V3::puback($packetId), false);
         }
     }
 }

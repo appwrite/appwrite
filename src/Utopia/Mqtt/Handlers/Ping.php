@@ -22,6 +22,6 @@ class Ping extends Action
      */
     public function action(callable $reply): void
     {
-        $reply(chr(Packet::PINGRESP << 4) . Packet::encodeLength(0), false);
+        $reply(Packet::pingresp(), false);
     }
 }

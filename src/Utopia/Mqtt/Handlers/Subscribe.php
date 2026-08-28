@@ -6,6 +6,9 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\V3;
+use Utopia\Mqtt\Packet\V5;
+use Utopia\Mqtt\Properties;
 use Utopia\Platform\Action;
 use Utopia\Span\Span;
 
@@ -35,10 +38,18 @@ class Subscribe extends Action
         $packetId = substr($body, 0, 2);
         $offset += 2;
 
-        $subId = Packet::readProperties($body, $offset, $connection->protocol)['user']['subId'] ?? '';
-        $offset = Packet::skipProperties($body, $offset, $connection->protocol);
+        $subId = '';
+        if ($connection->protocol >= 5) {
+            [$properties, $offset] = Properties::parse($body, $offset);
+            $subId = (string) ($properties->user()['subId'] ?? '');
+        }
 
         $identity = $connection->identity;
+
+        // A denied filter answers with each version's own failure marker; a granted one
+        // with max QoS 1 (0x01), which is a granted-QoS byte in 3.1.1 and a Success
+        // reason code in 5.0.
+        $denied = $connection->protocol >= 5 ? V5::REASON_NOT_AUTHORIZED : V3::SUBSCRIBE_FAILURE;
 
         $granted = '';
         while ($offset < strlen($body)) {
@@ -46,9 +57,9 @@ class Subscribe extends Action
             $offset += 1; // subscription options byte
             Span::add('mqtt.topic', $filter);
 
-            // ACL: an unauthorized filter is answered Not Authorized and never stored.
+            // ACL: an unauthorized filter is refused and never stored.
             if ($authorizer !== null && !$authorizer($identity, $filter)) {
-                $granted .= chr(Packet::REASON_NOT_AUTHORIZED);
+                $granted .= chr($denied);
                 $mqtt->metrics->subscriptions->add(1, ['result' => 'denied']);
                 Span::add('mqtt.result', 'denied');
                 continue;
@@ -59,8 +70,11 @@ class Subscribe extends Action
             $mqtt->metrics->subscriptions->add(1, ['result' => 'granted']);
         }
 
-        // SUBACK: packet id (+ property length 0 for v5) + granted codes
-        $variable = $packetId . ($connection->protocol >= 5 ? Packet::encodeLength(0) : '') . $granted;
-        $reply(chr(Packet::SUBACK << 4) . Packet::encodeLength(strlen($variable)) . $variable, false);
+        $reply(
+            $connection->protocol >= 5
+                ? V5::suback($packetId, $granted)
+                : V3::suback($packetId, $granted),
+            false,
+        );
     }
 }

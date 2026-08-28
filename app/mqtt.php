@@ -26,6 +26,8 @@ use Utopia\Mqtt\Handlers\Publish as PublishHandler;
 use Utopia\Mqtt\Handlers\Subscribe as SubscribeHandler;
 use Utopia\Mqtt\Handlers\Unsubscribe as UnsubscribeHandler;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\V3;
+use Utopia\Mqtt\Packet\V5;
 use Utopia\Mqtt\Server;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -287,13 +289,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                             continue;
                         }
                         $effectiveQos = min($qos, $grantedQos);
-                        $server->send($fd, Packet::publish(
-                            $topic,
-                            $message,
-                            $effectiveQos,
-                            $subscriber->nextPacketId(),
-                            $subscriber->protocol,
-                        ));
+                        $packetId = $subscriber->nextPacketId();
+                        $server->send($fd, $subscriber->protocol >= 5
+                            ? V5::publish($topic, $message, $effectiveQos, $packetId)
+                            : V3::publish($topic, $message, $effectiveQos, $packetId));
                         $mqtt->metrics->messagesDelivered->add(1, ['qos' => $effectiveQos]);
                     }
                 });

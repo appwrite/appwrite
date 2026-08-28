@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9cc2463aa88f43848b152cf521b2bc24",
+    "content-hash": "147d04eecbbad30bffda849d77c6dec0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4371,6 +4371,68 @@
             "time": "2026-08-13T01:55:11+00:00"
         },
         {
+            "name": "utopia-php/mqtt",
+            "version": "dev-dev",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:utopia-php/mqtt.git",
+                "reference": "183f0603f94be4602075b9f7931c50412b8701b0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/183f0603f94be4602075b9f7931c50412b8701b0",
+                "reference": "183f0603f94be4602075b9f7931c50412b8701b0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.15",
+                "phpstan/phpstan": "^1.12",
+                "phpunit/phpunit": "^10.5",
+                "swoole/ide-helper": "5.1.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Mqtt\\": "src/Mqtt"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Mqtt\\Tests\\": "tests"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test --preset=psr12 src tests"
+                ],
+                "format": [
+                    "./vendor/bin/pint --preset=psr12 src tests"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level max src tests"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple abstraction for building MQTT 5.0 brokers.",
+            "keywords": [
+                "broker",
+                "framework",
+                "mqtt",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "time": "2026-08-28T05:53:03+00:00"
+        },
+        {
             "name": "utopia-php/platform",
             "version": "1.0.999",
             "source": {
@@ -8506,6 +8568,7 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
+        "utopia-php/mqtt": 20,
         "utopia-php/platform": 5
     },
     "prefer-stable": true,

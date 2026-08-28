@@ -6,6 +6,10 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\V3;
+use Utopia\Mqtt\Packet\V5;
+use Utopia\Mqtt\Properties;
+use Utopia\Mqtt\Property;
 use Utopia\Platform\Action;
 use Utopia\Span\Span;
 
@@ -40,22 +44,30 @@ class Connect extends Action
         $offset += 1; // connect flags
         $offset += 2; // keep alive
 
-        $properties = Packet::readProperties($body, $offset, $level);
+        // MQTT 3.1.1 carries no property block; enhanced auth and metadata are 5.0 only.
+        $authMethod = '';
+        $authData = '';
+        $user = [];
+        if ($level >= 5) {
+            [$properties] = Properties::parse($body, $offset);
+            $authMethod = (string) ($properties->get(Property::AUTHENTICATION_METHOD) ?? '');
+            $authData = (string) ($properties->get(Property::AUTHENTICATION_DATA) ?? '');
+            $user = $properties->user();
+        }
 
-        $projectId = $properties['user']['projectId'] ?? '';
+        $projectId = $user['projectId'] ?? '';
         $connection->projectId = $projectId;
-        $authMethod = $properties['authMethod'];
         Span::add('project.id', $projectId);
         Span::add('mqtt.auth_method', $authMethod);
 
         // TODO: add abuse limiting keyed on the client ip.
         if ($authenticator !== null) {
-            $identity = $authenticator($projectId, $authMethod, $properties['authData']);
+            $identity = $authenticator($projectId, $authMethod, $authData);
 
             if ($identity === []) {
                 $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'rejected']);
                 Span::add('mqtt.result', 'rejected');
-                $reply($this->connack($level, Packet::REASON_NOT_AUTHORIZED), true);
+                $reply($this->connack($level, false), true);
                 return;
             }
 
@@ -66,14 +78,16 @@ class Connect extends Action
         $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'accepted']);
         $mqtt->metrics->connectionsActive->add(1);
         $connection->active = true;
-        $reply($this->connack($level, Packet::REASON_SUCCESS), false);
+        $reply($this->connack($level, true), false);
     }
 
-    private function connack(int $level, int $reasonCode): string
+    /** CONNACK, with the acknowledgement code in each version's own vocabulary. */
+    private function connack(int $level, bool $accepted): string
     {
-        // CONNACK: [ack flags = 0][reason code](+ [property length = 0] for v5)
-        $variable = chr(0x00) . chr($reasonCode) . ($level >= 5 ? Packet::encodeLength(0) : '');
+        if ($level >= 5) {
+            return V5::connack($accepted ? V5::REASON_SUCCESS : V5::REASON_NOT_AUTHORIZED);
+        }
 
-        return chr(Packet::CONNACK << 4) . Packet::encodeLength(strlen($variable)) . $variable;
+        return V3::connack($accepted ? V3::RETURN_ACCEPTED : V3::RETURN_NOT_AUTHORIZED);
     }
 }

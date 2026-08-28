@@ -102,6 +102,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/vcs"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/mqtt"
         }
     ],
     "require": {
@@ -145,6 +149,7 @@
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.1",
         "utopia-php/migration": "^2.0.0",
+        "utopia-php/mqtt": "dev-dev",
         "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "3.0.*",

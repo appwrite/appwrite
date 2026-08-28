@@ -6,6 +6,9 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\V3;
+use Utopia\Mqtt\Packet\V5;
+use Utopia\Mqtt\Properties;
 use Utopia\Platform\Action;
 
 class Unsubscribe extends Action
@@ -32,8 +35,11 @@ class Unsubscribe extends Action
         $packetId = substr($body, 0, 2);
         $offset += 2;
 
-        $subId = Packet::readProperties($body, $offset, $connection->protocol)['user']['subId'] ?? '';
-        $offset = Packet::skipProperties($body, $offset, $connection->protocol);
+        $subId = '';
+        if ($connection->protocol >= 5) {
+            [$properties, $offset] = Properties::parse($body, $offset);
+            $subId = (string) ($properties->user()['subId'] ?? '');
+        }
 
         $count = 0;
         while ($offset < strlen($body)) {
@@ -42,11 +48,12 @@ class Unsubscribe extends Action
             $count++;
         }
 
-        // UNSUBACK: packet id (+ property length 0 + one reason code per filter for v5)
-        $variable = $packetId;
-        if ($connection->protocol >= 5) {
-            $variable .= Packet::encodeLength(0) . str_repeat(chr(Packet::REASON_SUCCESS), $count);
-        }
-        $reply(chr(Packet::UNSUBACK << 4) . Packet::encodeLength(strlen($variable)) . $variable, false);
+        // 5.0 carries a Success reason code per filter; 3.1.1 UNSUBACK is bare.
+        $reply(
+            $connection->protocol >= 5
+                ? V5::unsuback($packetId, $count)
+                : V3::unsuback($packetId),
+            false,
+        );
     }
 }
