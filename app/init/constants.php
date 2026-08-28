@@ -310,7 +310,7 @@ const MESSAGE_DELIVERY_ERRORS_LIMIT = 100; // Maximum number of per-recipient de
 const MESSAGE_SEND_MAX_RETRIES = 5; // Maximum number of attempts to deliver a batch when the provider throttles or fails transiently
 const MESSAGE_SEND_RETRY_DELAY = 1.0; // Base seconds for exponential backoff between batch send retries; overridable in tests for an instant suite
 const SCREENSHOT_UPLOAD_MAX_RETRIES = 4; // Maximum number of attempts to store a captured screenshot when storage fails transiently
-const SCREENSHOT_UPLOAD_RETRY_DELAY = 0.25; // Base seconds for exponential backoff between screenshot storage retries; overridable in tests for an instant suite
+const SCREENSHOT_UPLOAD_RETRY_DELAY = 0.25; // Base seconds for exponential backoff between screenshot storage retries
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';

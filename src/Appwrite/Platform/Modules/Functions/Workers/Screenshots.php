@@ -252,34 +252,18 @@ class Screenshots extends Action
         $this->recordTelemetry($counter, 'success');
     }
 
-    /**
-     * Storage can refuse connections for minutes at a time. Without a retry a
-     * brief outage discards screenshots that were already captured. Retries
-     * only transport failures, so a missing object still fails immediately.
-     *
-     * @throws TransportException
-     */
+    // A brief storage outage would otherwise discard captures that succeeded.
     protected function retryTransport(callable $operation): mixed
     {
         for ($attempt = 1; $attempt < SCREENSHOT_UPLOAD_MAX_RETRIES; $attempt++) {
             try {
                 return $operation();
             } catch (TransportException) {
-                \usleep((int) ($this->retryDelay() * (2 ** ($attempt - 1)) * 1000000));
+                \usleep((int) (SCREENSHOT_UPLOAD_RETRY_DELAY * (2 ** ($attempt - 1)) * 1000000));
             }
         }
 
-        // Final attempt: a still-failing storage backend surfaces its own error.
         return $operation();
-    }
-
-    /**
-     * Base seconds for exponential backoff between storage retries. Isolated so
-     * tests can override it to keep the suite instant.
-     */
-    protected function retryDelay(): float
-    {
-        return SCREENSHOT_UPLOAD_RETRY_DELAY;
     }
 
     protected function recordTelemetry(Counter $counter, string $result): void
