@@ -41,7 +41,7 @@ class Create extends DocumentCreate
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents')
             ->desc('Create document')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'vectorsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')

@@ -40,6 +40,8 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
@@ -52,6 +54,10 @@ use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean as BooleanValidator;
+use Utopia\Validator\Domain;
+use Utopia\Validator\FloatValidator;
+use Utopia\Validator\HexColor;
+use Utopia\Validator\Integer as IntegerValidator;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
@@ -78,6 +84,29 @@ class TestFormat extends Format
     public function arrayItemsSchema(mixed $example): array
     {
         return $this->getArrayItemsSchema($example);
+    }
+}
+
+class MixedValidator extends \Utopia\Validator
+{
+    public function getDescription(): string
+    {
+        return 'Mixed value';
+    }
+
+    public function isArray(): bool
+    {
+        return false;
+    }
+
+    public function isValid($value): bool
+    {
+        return true;
+    }
+
+    public function getType(): string
+    {
+        return self::TYPE_MIXED;
     }
 }
 
@@ -319,6 +348,36 @@ final class FormatTest extends TestCase
         $this->assertEqualsWithDelta(2.5, $properties['ratio']['example'], PHP_FLOAT_EPSILON);
         $this->assertTrue($properties['enabled']['example']);
         $this->assertSame('["one","two"]', $properties['text']['example']);
+    }
+
+    public function testArrayListItemTypesAreValidOpenApiTypes(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('percents', [], new ArrayList(new FloatValidator()), 'Percents.', optional: true)
+            ->param('counts', [], new ArrayList(new IntegerValidator()), 'Counts.', optional: true)
+            ->param('labels', [], new ArrayList(new Text(16)), 'Labels.', optional: true)
+            ->param('values', [], new ArrayList(new MixedValidator()), 'Values.', optional: true);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        $this->assertSame(['type' => 'number', 'format' => 'double'], $properties['percents']['items']);
+        $this->assertSame(['type' => 'integer'], $properties['counts']['items']);
+        $this->assertSame(['type' => 'string'], $properties['labels']['items']);
+        $this->assertInstanceOf(\stdClass::class, $properties['values']['items']);
+        $this->assertSame('{}', json_encode($properties['values']['items']));
     }
 
     public function testMethodParameterOverridesFilterAndReplaceRouteParams(): void
@@ -1045,5 +1104,65 @@ final class FormatTest extends TestCase
             $this->assertSame('array', $schemas[$name]['type'], "{$name} must serialise as an array");
             $this->assertSame(['type' => 'string'], $schemas[$name]['items'], "{$name} must hold query strings");
         }
+    }
+
+    public function testZeroIsKeptAsADeclaredExample(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('min', 0, new Range(0, 100), 'Minimum.', example: '0')
+            ->param('label', '', new Text(64), 'Label.', example: '0');
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        // "0" is falsy, so a truthiness check silently discards it and falls back
+        // to the validator default -- Range::getMin() here, and a <LABEL>
+        // placeholder for the string.
+        $this->assertSame(0, $properties['min']['example']);
+        $this->assertSame('0', $properties['label']['example']);
+    }
+
+    public function testValidatorsWithoutAnExampleFallBackToOne(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('key', '', new Key(), 'Column key.')
+            ->param('newKey', '', new Nullable(new Key()), 'New column key.', true)
+            ->param('domain', '', new Domain(), 'Domain name.')
+            ->param('background', '', new HexColor(), 'Background colour.');
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        // Without a case of their own these validators fell through to the
+        // default arm, which leaves no example at all and renders as an empty
+        // literal in every generated SDK example.
+        $this->assertSame('<KEY>', $properties['key']['example']);
+        $this->assertSame('<NEW_KEY>', $properties['newKey']['example']);
+        $this->assertSame('example.com', $properties['domain']['example']);
+        $this->assertSame('FFFFFF', $properties['background']['example']);
     }
 }

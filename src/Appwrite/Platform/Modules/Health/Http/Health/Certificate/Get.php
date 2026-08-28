@@ -30,7 +30,7 @@ class Get extends Action
             ->desc('Get the SSL certificate for a domain')
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
-            ->param('domain', null, new Multiple([new AnyOf([new URL(), new Domain()]), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
+            ->param('domain', null, new Multiple([new AnyOf([new URL(), new Domain()]), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name', example: 'example.com')
             ->inject('response')
             ->callback($this->action(...));
     }
