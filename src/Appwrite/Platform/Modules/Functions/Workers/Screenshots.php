@@ -20,7 +20,6 @@ use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
-use Utopia\Storage\Exception\TransportException;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
@@ -177,7 +176,7 @@ class Screenshots extends Action
                 $fileName = $fileId . '.png';
                 $path = $deviceForFiles->getPath($fileName);
                 $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                $success = $this->retryTransport(fn () => $deviceForFiles->write($path, new Stream($screenshot), $mimeType));
+                $success = $deviceForFiles->write($path, new Stream($screenshot), $mimeType);
 
                 if (!$success) {
                     throw new \Exception("Screenshot failed to save");
@@ -193,10 +192,10 @@ class Screenshots extends Action
                     'bucketInternalId' => $bucket->getSequence(),
                     'name' => $fileName,
                     'path' => $path,
-                    'signature' => $this->retryTransport(fn () => $deviceForFiles->getFileHash($path)),
+                    'signature' => $deviceForFiles->getFileHash($path),
                     'mimeType' => $mimeType,
                     'sizeOriginal' => \strlen($screenshot),
-                    'sizeActual' => $this->retryTransport(fn () => $deviceForFiles->getFileSize($path)),
+                    'sizeActual' => $deviceForFiles->getFileSize($path),
                     'algorithm' => Compression::NONE,
                     'comment' => '',
                     'chunksTotal' => 1,
@@ -244,20 +243,6 @@ class Screenshots extends Action
         }
 
         $this->recordTelemetry($counter, 'success');
-    }
-
-    // A brief storage outage would otherwise discard captures that succeeded.
-    protected function retryTransport(callable $operation): mixed
-    {
-        for ($attempt = 1; $attempt < SCREENSHOT_UPLOAD_MAX_RETRIES; $attempt++) {
-            try {
-                return $operation();
-            } catch (TransportException) {
-                \usleep((int) (SCREENSHOT_UPLOAD_RETRY_DELAY * (2 ** ($attempt - 1)) * 1000000));
-            }
-        }
-
-        return $operation();
     }
 
     protected function recordTelemetry(Counter $counter, string $result): void
