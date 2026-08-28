@@ -46,10 +46,6 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/vcs"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/websocket"
         }
     ],
     "require": {
@@ -105,7 +101,7 @@
         "utopia-php/user-agent": "0.1.*",
         "mustangostang/spyc": "0.6.*",
         "utopia-php/vcs": "5.*.*",
-        "utopia-php/websocket": "dev-remove-adapter-connection-mem as 2.0.0",
+        "utopia-php/websocket": "2.0.0",
         "dragonmantank/cron-expression": "3.4.*",
         "chillerlan/php-qrcode": "4.3.*",
         "adhocore/jwt": "1.1.*",
