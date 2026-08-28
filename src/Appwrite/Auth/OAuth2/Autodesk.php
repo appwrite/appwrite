@@ -149,15 +149,31 @@ class Autodesk extends OAuth2
     }
 
     /**
+     * `profileImages` is a flat object keyed by size (sizeX20…sizeX360), not an array.
+     *
      * @param string $accessToken
      *
      * @return string
+     *
+     * @see https://github.com/Autodesk-Forge/forge-api-nodejs-client/blob/master/docs/UserProfile.md
+     * @see https://github.com/Autodesk-Forge/forge-api-nodejs-client/blob/master/src/model/UserProfileProfileImages.js
      */
     public function getUserPhoto(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
+        $images = $user['profileImages'] ?? [];
 
-        return $user['profileImages']['sizeXLarge'] ?? '';
+        return $images['sizeX360']
+            ?? $images['sizeX240']
+            ?? $images['sizeX176']
+            ?? $images['sizeX160']
+            ?? $images['sizeX120']
+            ?? $images['sizeX80']
+            ?? $images['sizeX58']
+            ?? $images['sizeX50']
+            ?? $images['sizeX40']
+            ?? $images['sizeX20']
+            ?? '';
     }
 
     /**

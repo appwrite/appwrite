@@ -141,6 +141,9 @@ class Yammer extends OAuth2
      * @param string $accessToken
      *
      * @return string
+     *
+     * @see https://learn.microsoft.com/en-us/connectors/yammer/ (Definitions → User → mugshot_url)
+     * @see https://pnp.github.io/cli-microsoft365/cmd/viva/engage/engage-user-get/
      */
     public function getUserPhoto(string $accessToken): string
     {
