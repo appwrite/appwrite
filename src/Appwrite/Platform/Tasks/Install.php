@@ -672,28 +672,30 @@ class Install extends Action
                 $this->copyMongoFilesIfNeeded();
             }
 
-            // Changes to what the containers run on, rather than to what is inside the
-            // database, so they happen once the new compose file and .env are written and
-            // before anything starts.
-            if ($isUpgrade && $installedVersion !== '' && $startIndex <= 1) {
-                foreach (InfrastructureMigration::between($installedVersion, $version) as $migration) {
-                    Console::info('Applying infrastructure changes from ' . $migration->getName() . '...');
-
-                    try {
-                        $migration->setContext($input, $this->path)->execute();
-                    } catch (\Throwable $error) {
-                        // The containers still start: what could not be changed is reported
-                        // rather than taking the whole upgrade down with it.
-                        Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
-                    }
-                }
-            }
-
             if (!$noStart) {
                 $shouldStartContainers = $startIndex <= 2;
                 if ($shouldStartContainers) {
                     $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                     $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
+
+                    // Changes to what the containers run on, rather than to what is inside
+                    // the database. They belong to the start: the new compose file and .env
+                    // are written by now, and a volume or a mount can only be moved while
+                    // nothing is attached to it.
+                    if ($isUpgrade && $installedVersion !== '') {
+                        foreach (InfrastructureMigration::between($installedVersion, $version) as $migration) {
+                            Console::info('Applying infrastructure changes from ' . $migration->getName() . '...');
+
+                            try {
+                                $migration->setContext($input, $this->path)->execute();
+                            } catch (\Throwable $error) {
+                                // The containers still start: what could not be changed is
+                                // reported rather than taking the upgrade down with it.
+                                Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
+                            }
+                        }
+                    }
+
                     $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
 
                     if (!$isUpgrade) {

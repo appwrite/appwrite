@@ -38,33 +38,67 @@ class V1 extends Migration
         $image = (string) ($this->env['_APP_IMAGE'] ?? 'appwrite/appwrite') . ':' . (string) ($this->env['_APP_VERSION'] ?? 'latest');
 
         // Counted with the Appwrite image, which the upgrade has already pulled, so reading
-        // a volume never depends on fetching another one.
-        $files = static function (string $volume) use ($image): int {
-            $output = [];
-            \exec(
+        // a volume never depends on fetching another one. Null when the volume could not be
+        // read at all, which must not be mistaken for an empty one: that would read as
+        // nothing to migrate and strand the artifacts in silence.
+        $files = static function (string $volume) use ($image): ?int {
+            $stdout = '';
+            $stderr = '';
+            $exit = Console::execute(
                 'docker run --rm -v ' . \escapeshellarg($volume . ':/v:ro') . ' ' . \escapeshellarg($image)
-                . ' sh -c ' . \escapeshellarg('find /v -type f 2>/dev/null | wc -l') . ' 2>/dev/null',
-                $output
+                . ' sh -c ' . \escapeshellarg('find /v -type f | wc -l'),
+                '',
+                $stdout,
+                $stderr
             );
 
-            return (int) \trim((string) ($output[0] ?? '0'));
+            return $exit === 0 ? (int) \trim($stdout) : null;
         };
 
-        $output = [];
-        \exec('docker volume ls --format ' . \escapeshellarg('{{.Name}}') . ' 2>/dev/null', $output);
-        $volumes = \array_filter(\array_map('trim', $output));
+        $stdout = '';
+        $stderr = '';
+        $exit = Console::execute('docker volume ls --format ' . \escapeshellarg('{{.Name}}'), '', $stdout, $stderr);
+
+        if ($exit !== 0) {
+            Console::warning(
+                'Could not list Docker volumes: ' . \trim($stderr ?: $stdout) . '. Build artifacts from'
+                . ' before the upgrade were left where they are; existing deployments may need rebuilding.'
+            );
+            return;
+        }
+
+        $volumes = \array_filter(\array_map('trim', \explode("\n", $stdout)));
 
         // The new volume usually does not exist yet: Compose creates it when the containers
         // start, which is after this runs, and the copy below creates it earlier so the
         // artifacts are in place before anything reads them. Reading a volume that does not
         // exist would create an empty one, so the listing gates that.
         $targetFiles = \in_array($target, $volumes, true) ? $files($target) : 0;
+        $unreadable = $targetFiles === null;
 
         $legacy = [];
         foreach ($volumes as $volume) {
-            if ($volume !== $target && \str_ends_with($volume, '_' . $target) && $files($volume) > 0) {
+            if ($volume === $target || !\str_ends_with($volume, '_' . $target)) {
+                continue;
+            }
+
+            $count = $files($volume);
+            if ($count === null) {
+                $unreadable = true;
+                break;
+            }
+
+            if ($count > 0) {
                 $legacy[] = $volume;
             }
+        }
+
+        if ($unreadable) {
+            Console::warning(
+                'Could not read the contents of the build volumes, so nothing was copied.'
+                . ' Deployments built before the upgrade may need rebuilding.'
+            );
+            return;
         }
 
         if ($legacy === []) {
@@ -94,19 +128,19 @@ class V1 extends Migration
         $source = $legacy[0];
         Console::info('Copying build artifacts from "' . $source . '" to "' . $target . '"...');
 
-        $output = [];
-        $exit = 0;
-        \exec(\sprintf(
-            'docker run --rm -v %s:/from:ro -v %s:/to %s sh -c %s 2>&1',
-            \escapeshellarg($source),
-            \escapeshellarg($target),
-            \escapeshellarg($image),
-            \escapeshellarg('cp -a /from/. /to/')
-        ), $output, $exit);
+        $stdout = '';
+        $stderr = '';
+        $exit = Console::execute(
+            'docker run --rm -v ' . \escapeshellarg($source . ':/from:ro') . ' -v ' . \escapeshellarg($target . ':/to')
+            . ' ' . \escapeshellarg($image) . ' cp -a /from/. /to/',
+            '',
+            $stdout,
+            $stderr
+        );
 
         if ($exit !== 0) {
             Console::warning(
-                'Failed to copy build artifacts from "' . $source . '": ' . \implode(' ', $output)
+                'Failed to copy build artifacts from "' . $source . '": ' . \trim($stderr ?: $stdout)
                 . '. Existing deployments will need rebuilding.'
             );
             return;
