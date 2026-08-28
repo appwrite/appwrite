@@ -121,4 +121,5 @@ The best way to judge whether the abstraction tax is really gone is to pick the 
 - [Appwrite Databases documentation](/docs/products/databases)
 - [S3 API documentation](/docs/products/storage/s3)
 - [OAuth2 server documentation](/docs/products/auth/oauth-server)
-- [Firewall documentation](/docs/products/firewall) and [Domains documentation](/docs/products/domains)
+- [Firewall documentation](/docs/products/firewall)
+- [Domains documentation](/docs/products/domains)
