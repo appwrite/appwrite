@@ -30,7 +30,7 @@ class Upgrade extends Install
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new Text(length: 0), 'Database to use (mongodb|mariadb|postgresql)', true)
+            ->param('database', '', new Text(length: 0, min: 0), 'Ignored: an upgrade always keeps the database the installation already uses', true)
             ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
             ->param('migrate', false, new Boolean(true), 'Run database migration after upgrade', true)
             ->callback($this->action(...));
@@ -64,7 +64,9 @@ class Upgrade extends Install
             return;
         }
 
-        // Detect database from existing installation (CLI param is intentionally ignored)
+        // An upgrade always keeps the engine the installation already uses, so the
+        // requested value is only kept to tell the user it is being ignored.
+        $requestedDatabase = $database;
         $database = null;
         $compose = new Compose($data);
         foreach ($compose->getServices() as $service) {
@@ -87,6 +89,14 @@ class Upgrade extends Install
             // Pre-1.9.0 installations only supported MariaDB
             $database = 'mariadb';
             Console::info('No _APP_DB_ADAPTER found in existing configuration, defaulting to mariadb.');
+        }
+
+        if ($requestedDatabase !== '' && $requestedDatabase !== $database) {
+            Console::warning(
+                "Ignoring --database={$requestedDatabase}: this installation uses {$database} and an upgrade preserves it."
+                . " Appwrite cannot move an existing installation between database engines;"
+                . " switching requires a new installation and transferring your data into it."
+            );
         }
 
         $this->lockedDatabase = $database;

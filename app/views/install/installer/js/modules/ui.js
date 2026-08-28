@@ -265,6 +265,18 @@
             httpsBadge.classList.add(forceHttps ? 'badge-success' : 'badge-neutral');
         }
 
+        const productBadges = [
+            ['[data-review-documentsdb-badge]', formState?.documentsDB !== false],
+            ['[data-review-vectorsdb-badge]', formState?.vectorsDB !== false],
+        ];
+        productBadges.forEach(([selector, enabled]) => {
+            const badge = root.querySelector(selector);
+            if (!badge) return;
+            badge.textContent = enabled ? 'Enabled' : 'Disabled';
+            badge.classList.remove('badge-success', 'badge-neutral');
+            badge.classList.add(enabled ? 'badge-success' : 'badge-neutral');
+        });
+
         const assistantBadge = root.querySelector('[data-review-assistant-badge]');
         if (assistantBadge) {
             const hasAssistantKey = Boolean((formState?.assistantOpenAIKey || '').trim());
