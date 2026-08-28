@@ -513,12 +513,14 @@ trait StorageBase
         $bucketId = $bucket['body']['$id'];
 
         $cases = [
-            ['source' => 'logo.svg', 'mimeType' => 'image/svg+xml', 'contentType' => 'image/svg+xml'],
-            ['source' => 'logo.png', 'mimeType' => 'image/png', 'contentType' => 'image/png'],
-            ['source' => 'document.pdf', 'mimeType' => 'application/pdf', 'contentType' => 'application/pdf'],
+            // SVG is executable in a browser, so it is served as a download
+            // (attachment) and never rendered as a top-level document.
+            ['source' => 'logo.svg', 'mimeType' => 'image/svg+xml', 'contentType' => 'image/svg+xml', 'disposition' => 'attachment'],
+            ['source' => 'logo.png', 'mimeType' => 'image/png', 'contentType' => 'image/png', 'disposition' => 'inline'],
+            ['source' => 'document.pdf', 'mimeType' => 'application/pdf', 'contentType' => 'application/pdf', 'disposition' => 'inline'],
             // HTML is not in the storage-mimes allowlist on purpose: rendering
             // user uploads as HTML on the API origin would allow stored XSS.
-            ['source' => 'page.html', 'mimeType' => 'text/html', 'contentType' => 'text/plain'],
+            ['source' => 'page.html', 'mimeType' => 'text/html', 'contentType' => 'text/plain', 'disposition' => 'inline'],
         ];
 
         foreach ($cases as $case) {
@@ -543,8 +545,9 @@ trait StorageBase
 
             $this->assertEquals(200, $view['headers']['status-code'], $case['source']);
             $this->assertEquals($case['contentType'], $view['headers']['content-type'], $case['source']);
-            $this->assertEquals('script-src none;', $view['headers']['content-security-policy'], $case['source']);
+            $this->assertEquals("script-src 'none';", $view['headers']['content-security-policy'], $case['source']);
             $this->assertEquals('nosniff', $view['headers']['x-content-type-options'], $case['source']);
+            $this->assertStringStartsWith($case['disposition'] . ';', $view['headers']['content-disposition'], $case['source']);
             $this->assertEquals(\file_get_contents($source), $view['body'], $case['source']);
         }
     }
@@ -1093,6 +1096,210 @@ trait StorageBase
         $this->assertEquals(400, $preview['headers']['status-code']);
         $this->assertEquals(Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED, $preview['body']['type']);
         $this->assertStringContainsString('60000x1', $preview['body']['message']);
+    }
+
+    public function testFilePreviewSvg(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'SVG Previews',
+            'compression' => 'gzip',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.svg'), 'image/svg+xml', 'logo.svg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertEquals('image/svg+xml', $file['body']['mimeType']);
+
+        /**
+         * Test for SUCCESS - SVG is rasterized at its intrinsic size
+         */
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/jpeg', $preview['headers']['content-type']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($preview['body']);
+        $this->assertSame('JPEG', $image->getImageFormat());
+        $this->assertSame(120, $image->getImageWidth());
+        $this->assertSame(120, $image->getImageHeight());
+
+        /**
+         * Test for SUCCESS - transformations apply to SVG input
+         */
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'output' => 'png',
+        ]);
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/png', $preview['headers']['content-type']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($preview['body']);
+        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame(300, $image->getImageWidth());
+        $this->assertSame(100, $image->getImageHeight());
+
+        /**
+         * Test for SUCCESS - embedded scripts are harmless in rasterized output
+         */
+        $dirty = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'script.svg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $dirty['headers']['status-code']);
+
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $dirty['body']['$id'] . '/preview', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/jpeg', $preview['headers']['content-type']);
+        $this->assertStringNotContainsString('<svg', $preview['body']);
+        $this->assertStringNotContainsString('<script', $preview['body']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($preview['body']);
+        $this->assertSame('JPEG', $image->getImageFormat());
+    }
+
+    public function testFileViewSvgIsNotExecutable(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'SVG View Safety',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // A hostile SVG carrying <script>, onload, onclick, and a javascript: href.
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'script.svg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertEquals('image/svg+xml', $file['body']['mimeType']);
+
+        $view = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/view', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        /**
+         * Test for SUCCESS - the browser is never allowed to execute the SVG:
+         * it is served as a download, not rendered as a top-level document.
+         */
+        $this->assertEquals(200, $view['headers']['status-code']);
+        $this->assertStringStartsWith('attachment;', $view['headers']['content-disposition']);
+        $this->assertEquals("script-src 'none';", $view['headers']['content-security-policy']);
+        $this->assertEquals('nosniff', $view['headers']['x-content-type-options']);
+    }
+
+    public function testFilePreviewSvgNeutralizesAttacks(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'SVG Preview Safety',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // XXE (external entity → local file read) and SSRF/local-file references
+        // through <image>/<use>. Each must rasterize to a harmless bitmap with
+        // no trace of the payload.
+        $cases = [
+            ['source' => 'xxe.svg', 'forbidden' => ['<!DOCTYPE', 'ENTITY', 'root:', '/etc/passwd']],
+            ['source' => 'external.svg', 'forbidden' => ['169.254.169.254', 'file:', '/etc/passwd']],
+        ];
+
+        foreach ($cases as $case) {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/' . $case['source']), 'image/svg+xml', $case['source']),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertEquals(201, $file['headers']['status-code'], $case['source']);
+            // Confirm the server treats it as an SVG, so the SVG path is exercised.
+            $this->assertEquals('image/svg+xml', $file['body']['mimeType'], $case['source']);
+
+            $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            /**
+             * Test for SUCCESS - hostile SVG is rasterized to a plain image with
+             * none of the payload markup, references, or leaked file content.
+             */
+            $this->assertEquals(200, $preview['headers']['status-code'], $case['source']);
+            $this->assertEquals('image/jpeg', $preview['headers']['content-type'], $case['source']);
+
+            foreach ($case['forbidden'] as $needle) {
+                $this->assertStringNotContainsString($needle, $preview['body'], $case['source'] . ' leaked ' . $needle);
+            }
+
+            $image = new \Imagick();
+            $image->readImageBlob($preview['body']);
+            $this->assertSame('JPEG', $image->getImageFormat(), $case['source']);
+        }
     }
 
     public function testFilePreviewCache(): void

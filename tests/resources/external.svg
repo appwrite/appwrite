@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="120" height="120" viewBox="0 0 120 120">
+    <rect width="120" height="120" fill="#FD366E"/>
+    <image width="120" height="120" xlink:href="http://169.254.169.254/latest/meta-data/"/>
+    <use xlink:href="file:///etc/passwd"/>
+</svg>

@@ -12,6 +12,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Storage\Svg;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
@@ -177,6 +178,9 @@ class Get extends Action
         $algorithm = $file->getAttribute('algorithm', Compression::NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
+        // Key off the server-detected mime, not the extension: an SVG uploaded
+        // under a different filename is still rasterized as SVG by Imagick.
+        $isSvg = $mime === 'image/svg+xml';
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) System::getEnv('_APP_STORAGE_PREVIEW_LIMIT', APP_STORAGE_READ_BUFFER)) {
             if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
@@ -190,6 +194,8 @@ class Get extends Action
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $deviceForFiles = $deviceForLocal;
+            // We are now serving a raster placeholder logo, not the SVG.
+            $isSvg = false;
         }
 
         if (!$deviceForFiles->exists($path)) {
@@ -239,6 +245,19 @@ class Get extends Action
         }
 
         $decompressionTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime;
+
+        // Strip scripts, event handlers, external references, and the DOCTYPE
+        // before the raster engine parses the XML. This removes the XXE, SSRF,
+        // and delegate-abuse surface at the source, independent of the SVG
+        // coder the base image ships. Output is always rasterized, so the
+        // cleaned SVG is only ever turned into a bitmap, never served back.
+        if ($isSvg) {
+            $clean = Svg::sanitize($source);
+            if ($clean === null) {
+                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Invalid or unsafe SVG file');
+            }
+            $source = $clean;
+        }
 
         $maxWidth = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_WIDTH);
         $maxHeight = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_HEIGHT);
