@@ -529,8 +529,28 @@ class Install extends Action
         $this->applyLocalPaths($isLocalInstall, false);
 
         // Read before the compose file and .env are rewritten below, which would replace
-        // the version being upgraded from with the one being upgraded to.
-        $installedVersion = $isUpgrade ? $this->readInstalledVersion() : '';
+        // the version being upgraded from with the one being upgraded to. The compose file
+        // is authoritative -- it is what the running containers were started from -- and
+        // .env covers installations whose compose file is missing or unreadable.
+        $installedVersion = '';
+        if ($isUpgrade) {
+            $existingCompose = $this->readExistingCompose();
+
+            if ($existingCompose !== '') {
+                try {
+                    $installedVersion = (new Compose($existingCompose))->getService('appwrite')->getImageVersion();
+                } catch (\Throwable) {
+                    // No appwrite service to read a tag from; .env below covers it.
+                }
+            }
+
+            if ($installedVersion === '') {
+                $existingEnv = @\file_get_contents($this->path . '/' . $this->getEnvFileName());
+                $installedVersion = $existingEnv === false
+                    ? ''
+                    : (string) ((new Env($existingEnv))->list()['_APP_VERSION'] ?? '');
+            }
+        }
 
         $isCLI = php_sapi_name() === 'cli';
         if ($isLocalInstall || $isUpgrade) {
@@ -652,8 +672,21 @@ class Install extends Action
                 $this->copyMongoFilesIfNeeded();
             }
 
-            if ($isUpgrade && $startIndex <= 1) {
-                $this->runInfrastructureMigrations($installedVersion, $version, $input);
+            // Changes to what the containers run on, rather than to what is inside the
+            // database, so they happen once the new compose file and .env are written and
+            // before anything starts.
+            if ($isUpgrade && $installedVersion !== '' && $startIndex <= 1) {
+                foreach (InfrastructureMigration::between($installedVersion, $version) as $migration) {
+                    Console::info('Applying infrastructure changes from ' . $migration->getName() . '...');
+
+                    try {
+                        $migration->setContext($input, $this->path)->execute();
+                    } catch (\Throwable $error) {
+                        // The containers still start: what could not be changed is reported
+                        // rather than taking the whole upgrade down with it.
+                        Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
+                    }
+                }
             }
 
             if (!$noStart) {
@@ -1133,65 +1166,6 @@ class Install extends Action
         if (!\file_put_contents($this->path . '/' . $envFileName, $template->render(false))) {
             throw new \Exception('Failed to save environment variables file');
         }
-    }
-
-    /**
-     * Runs the infrastructure migrations for the releases this upgrade crosses.
-     *
-     * These change what the containers run on rather than what is inside the database, so
-     * they happen after the new compose file and .env are written and before anything
-     * starts. Without a version to upgrade from there is no range to migrate, and nothing
-     * runs.
-     *
-     * @param array<string, mixed> $input
-     */
-    private function runInfrastructureMigrations(string $from, string $to, array $input): void
-    {
-        if ($from === '' || $to === '') {
-            return;
-        }
-
-        foreach (InfrastructureMigration::between($from, $to) as $migration) {
-            Console::info('Applying infrastructure changes from ' . $migration->getName() . '...');
-
-            try {
-                $migration->setContext($input, $this->path)->execute();
-            } catch (\Throwable $error) {
-                // A failed migration leaves the upgrade able to continue: the containers
-                // still start, and what could not be changed is reported rather than
-                // taking the whole upgrade down with it.
-                Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
-            }
-        }
-    }
-
-    /**
-     * Version of the installation being upgraded, empty when it cannot be determined.
-     *
-     * The compose file is authoritative -- it is what the running containers were started
-     * from -- and .env covers installations whose compose file is missing or unreadable.
-     */
-    private function readInstalledVersion(): string
-    {
-        $data = $this->readExistingCompose();
-
-        if ($data !== '') {
-            try {
-                $version = (new Compose($data))->getService('appwrite')->getImageVersion();
-                if ($version !== '') {
-                    return $version;
-                }
-            } catch (\Throwable) {
-                // Falls through to .env below.
-            }
-        }
-
-        $envData = @\file_get_contents($this->path . '/' . $this->getEnvFileName());
-        if ($envData === false) {
-            return '';
-        }
-
-        return (string) ((new Env($envData))->list()['_APP_VERSION'] ?? '');
     }
 
     private function copyMongoFilesIfNeeded(): void
