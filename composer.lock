@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "76fd21a7cd11c9149e8b179feacbb55c",
+    "content-hash": "ccc304661866171cf625e0df17950e5f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3250,6 +3250,82 @@
                 "source": "https://github.com/utopia-php/cache/tree/5.0.0"
             },
             "time": "2026-08-21T11:04:48+00:00"
+        },
+        {
+            "name": "utopia-php/cdn",
+            "version": "0.0.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/cdn.git",
+                "reference": "e7fb311371462a6e67380cb03d1bdcc1698ba670"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/cdn/zipball/e7fb311371462a6e67380cb03d1bdcc1698ba670",
+                "reference": "e7fb311371462a6e67380cb03d1bdcc1698ba670",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "php": ">=8.5.0",
+                "utopia-php/balancer": "^0.4.1",
+                "utopia-php/client": "^0.3"
+            },
+            "require-dev": {
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "2.*",
+                "phpunit/phpunit": "^10.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Cdn\\": "src/Cdn"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\Cdn\\": "tests/Cdn"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "analyse": [
+                    "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=2G"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Torsten Dittmann",
+                    "email": "torsten@appwrite.io"
+                }
+            ],
+            "description": "CDN cache purge and certificate provider abstractions for Utopia PHP",
+            "keywords": [
+                "cache",
+                "cdn",
+                "library",
+                "php",
+                "tls",
+                "utopia",
+                "utopia-php"
+            ],
+            "support": {
+                "source": "https://github.com/utopia-php/cdn/tree/0.0.7",
+                "issues": "https://github.com/utopia-php/cdn/issues"
+            },
+            "time": "2026-08-28T13:19:44+00:00"
         },
         {
             "name": "utopia-php/circuit-breaker",
