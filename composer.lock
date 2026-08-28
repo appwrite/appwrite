@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55334da9d9e92ccd15b3c9c18d49d92d",
+    "content-hash": "73691e710166b3440cfef452f270a39e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5254,16 +5254,16 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "d230de8d4d2450184297327238ed1fbde676b8d2"
+                "reference": "291980bc9ed112927e81a0db8600f122ffd7aab0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/d230de8d4d2450184297327238ed1fbde676b8d2",
-                "reference": "d230de8d4d2450184297327238ed1fbde676b8d2",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/291980bc9ed112927e81a0db8600f122ffd7aab0",
+                "reference": "291980bc9ed112927e81a0db8600f122ffd7aab0",
                 "shasum": ""
             },
             "require": {
@@ -5297,9 +5297,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/1.0.0"
+                "source": "https://github.com/utopia-php/websocket/tree/2.0.0"
             },
-            "time": "2026-02-05T13:40:16+00:00"
+            "time": "2026-08-28T08:23:09+00:00"
         },
         {
             "name": "webmozart/assert",
