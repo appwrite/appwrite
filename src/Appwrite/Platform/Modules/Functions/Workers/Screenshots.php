@@ -20,6 +20,7 @@ use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
+use Utopia\Storage\Exception\TransportException;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
@@ -101,6 +102,8 @@ class Screenshots extends Action
         $date = \date('H:i:s');
         $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n");
 
+        $captured = false;
+
         try {
             $rule = $dbForPlatform->findOne('rules', [
                 Query::equal("projectInternalId", [$project->getSequence()]),
@@ -162,6 +165,8 @@ class Screenshots extends Action
                 );
             }
 
+            $captured = true;
+
             Span::add('screenshot.count', \count($captures));
 
             $mimeType = "image/png";
@@ -172,7 +177,7 @@ class Screenshots extends Action
                 $fileName = $fileId . '.png';
                 $path = $deviceForFiles->getPath($fileName);
                 $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                $success = $deviceForFiles->write($path, new Stream($screenshot), $mimeType);
+                $success = $this->retryTransport(fn () => $deviceForFiles->write($path, new Stream($screenshot), $mimeType));
 
                 if (!$success) {
                     throw new \Exception("Screenshot failed to save");
@@ -188,10 +193,10 @@ class Screenshots extends Action
                     'bucketInternalId' => $bucket->getSequence(),
                     'name' => $fileName,
                     'path' => $path,
-                    'signature' => $deviceForFiles->getFileHash($path),
+                    'signature' => $this->retryTransport(fn () => $deviceForFiles->getFileHash($path)),
                     'mimeType' => $mimeType,
                     'sizeOriginal' => \strlen($screenshot),
-                    'sizeActual' => $deviceForFiles->getFileSize($path),
+                    'sizeActual' => $this->retryTransport(fn () => $deviceForFiles->getFileSize($path)),
                     'algorithm' => Compression::NONE,
                     'comment' => '',
                     'chunksTotal' => 1,
@@ -225,7 +230,13 @@ class Screenshots extends Action
             ]));
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
-            $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
+            $stage = $captured ? 'Screenshot upload failed.' : 'Screenshot capturing failed.';
+
+            try {
+                $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m {$stage} Deployment will continue. Reason: {$th->getMessage()} [0m\n");
+            } catch (\Throwable) {
+                // Logging the failure must not replace the failure itself.
+            }
 
             $this->recordTelemetry($counter, 'failure');
 
@@ -233,6 +244,25 @@ class Screenshots extends Action
         }
 
         $this->recordTelemetry($counter, 'success');
+    }
+
+    /**
+     * Storage can refuse connections for minutes at a time. Without a retry a
+     * brief outage discards screenshots that were already captured.
+     *
+     * @throws TransportException
+     */
+    protected function retryTransport(callable $operation): mixed
+    {
+        foreach ([200000, 500000, 1000000] as $delay) {
+            try {
+                return $operation();
+            } catch (TransportException) {
+                \usleep($delay);
+            }
+        }
+
+        return $operation();
     }
 
     protected function recordTelemetry(Counter $counter, string $result): void
