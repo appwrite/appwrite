@@ -91,6 +91,8 @@ class Create extends Base
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
+        $this->assertSourceReady($video);
+
         $width = (int) $profile->getAttribute('width', 0);
         $height = (int) $profile->getAttribute('height', 0);
         $videoBitRate = (int) $profile->getAttribute('videoBitRate', 0);
@@ -115,16 +117,9 @@ class Create extends Base
             'progress' => '0',
         ])));
 
-        // Insert-then-read: if download already flipped the video to ready, start
-        // encoding now; otherwise the download job's ready-then-scan will pick
-        // this waiting row up.
-        $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $video->getId()));
-
         $publisherForVideos->enqueue(new VideoMessage(
             project: $project,
-            action: $video->getAttribute('status') === self::STATUS_READY
-                ? VideoAction::Encode
-                : VideoAction::Download,
+            action: VideoAction::Encode,
             video: $video,
             profile: $profile,
             rendition: $rendition,

@@ -38,9 +38,13 @@ final class Video extends Base
 
     public static function fromArray(array $data): static
     {
+        if (empty($data['action'])) {
+            throw new \InvalidArgumentException('Missing action in video message payload');
+        }
+
         return new self(
             project: new Document($data['project'] ?? []),
-            action: VideoAction::from($data['action'] ?? VideoAction::Encode->value),
+            action: VideoAction::from($data['action']),
             video: new Document($data['video'] ?? []),
             profile: !empty($data['profile']) ? new Document($data['profile']) : null,
             subtitle: !empty($data['subtitle']) ? new Document($data['subtitle']) : null,

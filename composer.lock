@@ -4035,16 +4035,16 @@
         },
         {
             "name": "utopia-php/http",
-            "version": "2.0.0-rc23",
+            "version": "2.0.0-rc24",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "57525e47c56783ea624b0f02339b4ec8f90cca1a"
+                "reference": "ab04601b24a229bc66d09adbd96aa55039c39dbf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/57525e47c56783ea624b0f02339b4ec8f90cca1a",
-                "reference": "57525e47c56783ea624b0f02339b4ec8f90cca1a",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/ab04601b24a229bc66d09adbd96aa55039c39dbf",
+                "reference": "ab04601b24a229bc66d09adbd96aa55039c39dbf",
                 "shasum": ""
             },
             "require": {
@@ -4082,9 +4082,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc23"
+                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc24"
             },
-            "time": "2026-08-14T06:49:12+00:00"
+            "time": "2026-08-26T14:23:01+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4534,16 +4534,16 @@
         },
         {
             "name": "utopia-php/psr7",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/psr7.git",
-                "reference": "115753c36194d53abe5587d383810724ac3a782d"
+                "reference": "7d3f88b9ee0b57237547eef634dbb5399b2a907e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/psr7/zipball/115753c36194d53abe5587d383810724ac3a782d",
-                "reference": "115753c36194d53abe5587d383810724ac3a782d",
+                "url": "https://api.github.com/repos/utopia-php/psr7/zipball/7d3f88b9ee0b57237547eef634dbb5399b2a907e",
+                "reference": "7d3f88b9ee0b57237547eef634dbb5399b2a907e",
                 "shasum": ""
             },
             "require": {
@@ -4574,9 +4574,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/psr7/issues",
-                "source": "https://github.com/utopia-php/psr7/tree/0.2.0"
+                "source": "https://github.com/utopia-php/psr7/tree/0.2.1"
             },
-            "time": "2026-07-06T12:40:23+00:00"
+            "time": "2026-08-25T12:45:40+00:00"
         },
         {
             "name": "utopia-php/query",

@@ -45,6 +45,31 @@ abstract class Base extends UtopiaAction
     public const STATUS_ERROR = 'error';
 
     /**
+     * Lifecycle of the video working copy on videos-tmp.
+     *
+     * Distinct from STATUS_* so rendition/subtitle filters are not polluted
+     * with download vocabulary. `ready` is shared with STATUS_READY because
+     * both mean "this resource can be used".
+     */
+    public const SOURCE_PENDING = 'pending';
+    public const SOURCE_DOWNLOADING = 'downloading';
+    public const SOURCE_READY = 'ready';
+    public const SOURCE_REMOVED = 'removed';
+    public const SOURCE_ERROR = 'error';
+
+    /** Root of a video's working directory on the shared videos-tmp volume. */
+    public static function tmpPath(string $projectId, string $videoId): string
+    {
+        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/app-' . $projectId . '/' . $videoId;
+    }
+
+    /** The downloaded working copy inside tmpPath(). */
+    public static function tmpSourcePath(string $projectId, string $videoId): string
+    {
+        return self::tmpPath($projectId, $videoId) . '/source';
+    }
+
+    /**
      * Storage-style chunk count for a payload of `$bytes`, using the same 5 MB
      * window as file uploads.
      */
@@ -67,9 +92,25 @@ abstract class Base extends UtopiaAction
      */
     public static function canReleaseSource(string $videoStatus, bool $hasInFlightRendition, bool $jobsRemain): bool
     {
-        return $videoStatus !== self::STATUS_STARTED
+        return $videoStatus !== self::SOURCE_DOWNLOADING
             && !$hasInFlightRendition
             && !$jobsRemain;
+    }
+
+    /**
+     * Timeline and rendition creates require a live working copy.
+     */
+    protected function assertSourceReady(Document $video): void
+    {
+        $status = (string) $video->getAttribute('status', '');
+
+        if ($status === self::SOURCE_REMOVED) {
+            throw new Exception(Exception::VIDEO_SOURCE_REMOVED);
+        }
+
+        if ($status !== self::SOURCE_READY) {
+            throw new Exception(Exception::VIDEO_NOT_READY);
+        }
     }
 
     /**
@@ -308,50 +349,4 @@ abstract class Base extends UtopiaAction
         ));
     }
 
-    /**
-     * Drops every resource derived from the current source so an update can
-     * rebuild from a clean slate: renditions, subtitles, sprite previews, and
-     * the on-disk timeline directory.
-     */
-    protected function wipeDerivedResources(
-        Database $dbForProject,
-        Authorization $authorization,
-        DeletePublisher $publisherForDeletes,
-        Device $deviceForVideos,
-        Document $project,
-        Document $video
-    ): void {
-        $renditions = $authorization->skip(fn () => $dbForProject->find('videos_renditions', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
-
-        foreach ($renditions as $rendition) {
-            $this->deleteRendition($dbForProject, $authorization, $publisherForDeletes, $project, $rendition);
-        }
-
-        $subtitles = $authorization->skip(fn () => $dbForProject->find('videos_subtitles', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
-
-        foreach ($subtitles as $subtitle) {
-            $this->deleteSubtitle($dbForProject, $authorization, $publisherForDeletes, $project, $subtitle);
-        }
-
-        $previews = $authorization->skip(fn () => $dbForProject->find('videos_previews', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
-
-        foreach ($previews as $preview) {
-            $authorization->skip(fn () => $dbForProject->deleteDocument('videos_previews', $preview->getId()));
-        }
-
-        try {
-            $deviceForVideos->deletePath($video->getId() . '/timeline');
-        } catch (\Throwable) {
-            // Directory may already be empty; the worker rebuilds it from scratch.
-        }
-    }
 }

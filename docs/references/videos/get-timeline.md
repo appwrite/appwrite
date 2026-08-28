@@ -1,1 +1,1 @@
-Get the WebVTT sprite timeline for a video, used to render scrubbing thumbnails in a player. The timeline is generated in the background after the video is created.
+Get the WebVTT sprite timeline for a video, used to render scrubbing thumbnails in a player. Queue generation with the create-timeline endpoint, then poll this endpoint until it returns a WebVTT document.

@@ -73,6 +73,7 @@ services:
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}

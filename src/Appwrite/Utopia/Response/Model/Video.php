@@ -40,6 +40,12 @@ class Video extends Model
                 'default' => '',
                 'example' => 'd5fg5ehg1c168g7c',
             ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Video name.',
+                'default' => '',
+                'example' => 'Product demo',
+            ])
             ->addRule('previewId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Preview image ID, taken from the sprite timeline.',
@@ -54,7 +60,7 @@ class Video extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Source download status: one of `waiting`, `started`, `ready` or `error`.',
+                'description' => 'Source status: one of `pending`, `downloading`, `ready`, `removed` or `error`.',
                 'default' => '',
                 'example' => 'ready',
             ])

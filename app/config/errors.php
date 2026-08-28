@@ -1556,6 +1556,31 @@ return [
         'description' => 'Video with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::VIDEO_NOT_READY => [
+        'name' => Exception::VIDEO_NOT_READY,
+        'description' => 'The video source is not ready. Call the create source endpoint and wait until the video status is ready before creating a timeline or rendition.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_SOURCE_REMOVED => [
+        'name' => Exception::VIDEO_SOURCE_REMOVED,
+        'description' => 'The video working copy has been released. Call the create source endpoint and wait until the video status is ready before creating a timeline or rendition.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_SOURCE_ALREADY_EXISTS => [
+        'name' => Exception::VIDEO_SOURCE_ALREADY_EXISTS,
+        'description' => 'The video working copy already exists and is ready. It can be created again only after it was removed or failed.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_SOURCE_IN_PROGRESS => [
+        'name' => Exception::VIDEO_SOURCE_IN_PROGRESS,
+        'description' => 'The video working copy is already being downloaded. Wait for the video status to become ready.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_TRACK_NOT_FOUND => [
+        'name' => Exception::VIDEO_TRACK_NOT_FOUND,
+        'description' => 'The video has no video track. Timeline generation requires a video stream.',
+        'code' => 400,
+    ],
     Exception::VIDEO_NOT_VALID => [
         'name' => Exception::VIDEO_NOT_VALID,
         'description' => 'The requested file is not a valid video or audio file.',

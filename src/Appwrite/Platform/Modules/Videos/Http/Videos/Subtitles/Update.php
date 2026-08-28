@@ -23,6 +23,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -63,11 +64,13 @@ class Update extends Base
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
-            ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the subtitle file.')
-            ->param('fileId', '', new UID(), 'Subtitle file unique ID.')
-            ->param('name', '', new Text(128), 'Subtitle display name.')
-            ->param('code', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Subtitle ISO 639-2 three-letter language code.')
-            ->param('default', false, new Boolean(true), 'Make this the default subtitle track for the video.', true)
+            ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the subtitle file. Omit together with fileId to only update name, code, or default.', true)
+            ->param('fileId', '', new UID(), 'Subtitle file unique ID. Omit together with bucketId to only update name, code, or default.', true)
+            // The name is rendered into HLS/DASH manifests, which are quote- and
+            // line-delimited; the allowlist keeps structural characters out at the door.
+            ->param('name', '', new Text(128, allowList: [...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER, ...Text::NUMBERS, ' ', '-', '.', ',', '(', ')', '_', '\'']), 'Subtitle display name. Allowed characters: a-z, A-Z, 0-9, space, and - . , ( ) _ \'', true)
+            ->param('code', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Subtitle ISO 639-2 three-letter language code (for example `heb` for Hebrew).', true)
+            ->param('default', null, new Nullable(new Boolean()), 'Make this the default subtitle track for the video. Omit to leave unchanged.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -86,7 +89,7 @@ class Update extends Base
         string $fileId,
         string $name,
         string $code,
-        bool $default,
+        ?bool $default,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -104,47 +107,67 @@ class Update extends Base
             throw new Exception(Exception::VIDEO_SUBTITLE_NOT_FOUND);
         }
 
-        $file = $this->assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
+        $replaceSource = $bucketId !== '' || $fileId !== '';
 
-        if (!\in_array($file->getAttribute('mimeType', ''), self::SUBTITLE_MIME_TYPES, true)) {
-            throw new Exception(Exception::VIDEO_SUBTITLE_NOT_VALID);
+        if ($replaceSource && ($bucketId === '' || $fileId === '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'bucketId and fileId must be provided together to replace a subtitle file.');
         }
 
+        $sourceChanged = false;
+
+        if ($replaceSource) {
+            $file = $this->assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
+
+            if (!\in_array($file->getAttribute('mimeType', ''), self::SUBTITLE_MIME_TYPES, true)) {
+                throw new Exception(Exception::VIDEO_SUBTITLE_NOT_VALID);
+            }
+
+            $sourceChanged = $subtitle->getAttribute('fileId') !== $file->getId();
+        }
+
+        $nextCode = $code !== '' ? $code : (string) $subtitle->getAttribute('code', '');
+
         // Uploads win over auto-extracted tracks for the same language.
-        $this->deleteEmbeddedSubtitlesForCode(
-            $dbForProject,
-            $authorization,
-            $deviceForVideos,
-            $video,
-            $code,
-            $subtitle->getId()
-        );
+        if ($nextCode !== '') {
+            $this->deleteEmbeddedSubtitlesForCode(
+                $dbForProject,
+                $authorization,
+                $deviceForVideos,
+                $video,
+                $nextCode,
+                $subtitle->getId()
+            );
+        }
 
-        $sourceChanged = $subtitle->getAttribute('fileId') !== $file->getId();
-
-        if ($default) {
+        if ($default === true) {
             $this->clearDefault($dbForProject, $authorization, $video, $subtitle->getId());
         }
 
-        $subtitle
-            ->setAttribute('bucketId', $file->getAttribute('bucketId', $bucketId))
-            ->setAttribute('bucketInternalId', $file->getAttribute('bucketInternalId', ''))
-            ->setAttribute('fileId', $file->getId())
-            ->setAttribute('fileInternalId', $file->getSequence())
-            ->setAttribute('name', $name)
-            ->setAttribute('code', $code)
-            ->setAttribute('default', $default);
+        $updates = [
+            'name' => $name !== '' ? $name : $subtitle->getAttribute('name'),
+            'code' => $nextCode,
+        ];
+
+        if ($default !== null) {
+            $updates['default'] = $default;
+        }
+
+        if ($replaceSource) {
+            $updates['bucketId'] = $file->getAttribute('bucketId', $bucketId);
+            $updates['bucketInternalId'] = $file->getAttribute('bucketInternalId', '');
+            $updates['fileId'] = $file->getId();
+            $updates['fileInternalId'] = $file->getSequence();
+        }
 
         // Only a new source needs re-packaging; renaming or re-flagging the default
         // track leaves the already-segmented WebVTT valid.
         if ($sourceChanged) {
-            $subtitle
-                ->setAttribute('status', self::STATUS_WAITING)
-                ->setAttribute('targetDuration', null)
-                ->setAttribute('path', null);
+            $updates['status'] = self::STATUS_WAITING;
+            $updates['targetDuration'] = null;
+            $updates['path'] = null;
         }
 
-        $subtitle = $authorization->skip(fn () => $dbForProject->updateDocument('videos_subtitles', $subtitle->getId(), $subtitle));
+        $subtitle = $authorization->skip(fn () => $dbForProject->updateDocument('videos_subtitles', $subtitle->getId(), new Document($updates)));
 
         if ($sourceChanged) {
             $publisherForVideos->enqueue(new VideoMessage(
@@ -181,7 +204,7 @@ class Update extends Base
             $authorization->skip(fn () => $dbForProject->updateDocument(
                 'videos_subtitles',
                 $subtitle->getId(),
-                $subtitle->setAttribute('default', false)
+                new Document(['default' => false])
             ));
         }
     }

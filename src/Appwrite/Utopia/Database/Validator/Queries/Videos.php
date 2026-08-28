@@ -7,6 +7,7 @@ class Videos extends Base
     public const ALLOWED_ATTRIBUTES = [
         'bucketId',
         'fileId',
+        'name',
         'size',
         'status',
         'format',

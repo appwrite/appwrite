@@ -1,0 +1,3 @@
+Materialise the working copy of a video's source file onto the transcode volume. The video is created in `pending` status; this endpoint enqueues the download, probe, and embedded-subtitle extraction. Poll the video until `status` is `ready` before creating a timeline or rendition.
+
+If the working copy is already downloading the request fails with a 409 `video_source_in_progress` error, and if it is already ready with a 409 `video_source_already_exists` error. After the last in-flight rendition finishes the working copy is released and `status` becomes `removed`; call this endpoint again before creating further timelines or renditions.

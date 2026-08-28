@@ -133,7 +133,7 @@ class Get extends Base
         }
 
         $manifest = $this->renderView('hls-subtitles', [
-            'targetDuration' => $subtitle->getAttribute('targetDuration', 0),
+            'targetDuration' => \max(1, (int) \ceil((float) $subtitle->getAttribute('targetDuration', 1))),
             'segments' => $entries,
         ]);
 

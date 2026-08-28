@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\Queries\Videos as VideosQueries;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -42,7 +43,7 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'videos',
-                name: 'listVideos',
+                name: 'list',
                 description: '/docs/references/videos/list-videos.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -57,6 +58,7 @@ class XList extends Base
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('user')
             ->inject('authorization')
             ->callback($this->action(...));
     }
@@ -67,8 +69,18 @@ class XList extends Base
         bool $includeTotal,
         Response $response,
         Database $dbForProject,
+        User $user,
         Authorization $authorization
     ): void {
+        // Video rows are project-internal and carry no ACL, so this listing reads
+        // with authorization skipped. Per-file access checks cannot express a
+        // cross-bucket listing, so gate it to the callers the SDK advertises
+        // (admin, API key) — otherwise any member with videos.read could
+        // enumerate every video in the project regardless of file permissions.
+        if (!$user->isPrivileged($authorization->getRoles()) && !$user->isKey($authorization->getRoles())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {

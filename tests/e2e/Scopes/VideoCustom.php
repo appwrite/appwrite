@@ -22,8 +22,11 @@ trait VideoCustom
     protected static array $videoFile = [];
     protected static array $subtitleFile = [];
     protected static array $videoFileWithSubtitles = [];
+    protected static array $videoFileWithUndeterminedSubtitles = [];
     protected static array $videoFileWithTwoSubtitles = [];
     protected static array $overrideSubtitleFile = [];
+    protected static array $audioOnlyFile = [];
+    protected static array $invalidVideoFile = [];
 
     /**
      * Bucket holding the source media, readable by anyone so the client-side
@@ -169,6 +172,74 @@ trait VideoCustom
     }
 
     /**
+     * Uploads the audio-only AAC fixture used to prove timeline create rejects
+     * sources with no video track.
+     */
+    public function getAudioOnlyFile(): array
+    {
+        if (!empty(self::$audioOnlyFile)) {
+            return self::$audioOnlyFile;
+        }
+
+        $source = \realpath(__DIR__ . '/../../resources/disk-a/audio-only.m4a');
+        $this->assertNotFalse($source);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new \CURLFile($source, 'audio/mp4', 'audio-only.m4a'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        self::$audioOnlyFile = [
+            '$id' => $file['body']['$id'],
+            'sizeOriginal' => $file['body']['sizeOriginal'],
+        ];
+
+        return self::$audioOnlyFile;
+    }
+
+    /**
+     * Uploads a file with a video MIME type that is not a valid media container,
+     * so create succeeds and the download worker settles on `error`.
+     */
+    public function getInvalidVideoFile(): array
+    {
+        if (!empty(self::$invalidVideoFile)) {
+            return self::$invalidVideoFile;
+        }
+
+        $source = \realpath(__DIR__ . '/../../resources/disk-a/not-a-video.mp4');
+        $this->assertNotFalse($source);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new \CURLFile($source, 'video/mp4', 'not-a-video.mp4'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        self::$invalidVideoFile = [
+            '$id' => $file['body']['$id'],
+            'sizeOriginal' => $file['body']['sizeOriginal'],
+        ];
+
+        return self::$invalidVideoFile;
+    }
+
+    /**
      * Uploads the short MP4 that carries a soft `mov_text` English track with the
      * cue text `EMBEDDED CUE` (see `video-with-subs.mp4`).
      */
@@ -200,6 +271,40 @@ trait VideoCustom
         ];
 
         return self::$videoFileWithSubtitles;
+    }
+
+    /**
+     * Uploads the short MP4 whose `mov_text` track is tagged `und` (no real
+     * language in the container), so extract stores `code=und`.
+     */
+    public function getVideoFileWithUndeterminedSubtitles(): array
+    {
+        if (!empty(self::$videoFileWithUndeterminedSubtitles)) {
+            return self::$videoFileWithUndeterminedSubtitles;
+        }
+
+        $source = \realpath(__DIR__ . '/../../resources/disk-a/video-with-und-subs.mp4');
+        $this->assertNotFalse($source);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new \CURLFile($source, 'video/mp4', 'video-with-und-subs.mp4'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        self::$videoFileWithUndeterminedSubtitles = [
+            '$id' => $file['body']['$id'],
+            'sizeOriginal' => $file['body']['sizeOriginal'],
+        ];
+
+        return self::$videoFileWithUndeterminedSubtitles;
     }
 
     /**
@@ -329,21 +434,117 @@ trait VideoCustom
         return $embedded;
     }
 
-    /**
-     * Polls a video until its source download leaves `waiting`/`started` and
-     * settles on `ready` or `error`.
-     */
-    public function waitForVideoReady(string $videoId, int $timeout = 120): array
+    public function createSource(string $videoId, array $headers = []): array
     {
-        $pending = ['waiting', 'started'];
+        return $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/source', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $headers !== [] ? $headers : $this->getHeaders()));
+    }
+
+    public function createTimeline(string $videoId, array $headers = []): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/timeline', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $headers !== [] ? $headers : $this->getHeaders()));
+    }
+
+    /**
+     * Create a video, enqueue its source download, and wait until status is ready.
+     *
+     * @return array<string, mixed> ready video document
+     */
+    public function createReadyVideo(?array $file = null, string $name = '', array $headers = []): array
+    {
+        $file ??= $this->getVideoFile();
+        $payload = [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $file['$id'],
+        ];
+        if ($name !== '') {
+            $payload['name'] = $name;
+        }
+
+        $create = $this->client->call(Client::METHOD_POST, '/videos', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $headers !== [] ? $headers : $this->getHeaders()), $payload);
+
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+        $this->assertEquals('pending', $create['body']['status']);
+
+        $source = $this->createSource($videoId, $headers);
+        $this->assertEquals(202, $source['headers']['status-code']);
+
+        $ready = $this->waitForVideoReady($videoId);
+        $this->assertEquals('ready', $ready['status'], 'Video source did not become ready');
+
+        return $ready;
+    }
+
+    /**
+     * Re-materialise the working copy when a prior timeline/rendition released it.
+     */
+    public function ensureSourceReady(string $videoId, array $headers = []): array
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $status = $response['body']['status'] ?? '';
+        if ($status !== 'ready') {
+            $this->createSource($videoId, $headers);
+            $response['body'] = $this->waitForVideoStatus($videoId, 'ready');
+        }
+
+        $this->assertEquals('ready', $response['body']['status'] ?? '');
+
+        return $response['body'];
+    }
+
+    public function waitForVideoStatus(string $videoId, string $status, int $timeout = 180): array
+    {
         $deadline = \time() + $timeout;
         $body = [];
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $body = $response['body'];
+            if (($body['status'] ?? '') === $status) {
+                return $body;
+            }
+            \usleep(500000);
+        }
+
+        return $body;
+    }
+
+    /**
+     * Polls a video until its source download leaves `pending`/`downloading`
+     * and settles on `ready`, `removed` or `error`.
+     */
+    public function waitForVideoReady(string $videoId, int $timeout = 120): array
+    {
+        $pending = ['pending', 'downloading'];
+        $deadline = \time() + $timeout;
+        $body = [];
+
+        while (\time() < $deadline) {
+            // Key headers, not getHeaders(): this polls processing state, and on
+            // the client side the session may have no read access to the video
+            // (e.g. a private source bucket), which would 401 the poll.
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
 
             $body = $response['body'];
 

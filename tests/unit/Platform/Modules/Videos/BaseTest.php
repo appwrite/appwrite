@@ -44,12 +44,13 @@ final class BaseTest extends TestCase
     public static function releaseGate(): array
     {
         return [
-            'idle ready' => [Base::STATUS_READY, false, false, true],
-            'idle error' => [Base::STATUS_ERROR, false, false, true],
-            'download running' => [Base::STATUS_STARTED, false, false, false],
-            'rendition in flight' => [Base::STATUS_READY, true, false, false],
-            'job dir remains' => [Base::STATUS_READY, false, true, false],
-            'waiting video with leftover job' => [Base::STATUS_WAITING, false, true, false],
+            'idle ready' => [Base::SOURCE_READY, false, false, true],
+            'idle error' => [Base::SOURCE_ERROR, false, false, true],
+            'download running' => [Base::SOURCE_DOWNLOADING, false, false, false],
+            'rendition in flight' => [Base::SOURCE_READY, true, false, false],
+            'job dir remains' => [Base::SOURCE_READY, false, true, false],
+            'pending video with leftover job' => [Base::SOURCE_PENDING, false, true, false],
+            'removed idle' => [Base::SOURCE_REMOVED, false, false, true],
         ];
     }
 }

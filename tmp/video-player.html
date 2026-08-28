@@ -77,6 +77,38 @@
       font-size: 0.8rem;
     }
     #downloadBar[hidden] { display: none; }
+    .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: #20262e;
+    }
+    .chip .code { opacity: 0.7; font-family: ui-monospace, monospace; }
+    .player-wrap { position: relative; }
+    #captionChip {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      z-index: 2;
+      display: none;
+    }
+    #captionChip.visible { display: inline-flex; }
+    #downloadBar { grid-template-columns: 1fr auto; align-items: center; }
+    #downloadPct { font-family: ui-monospace, monospace; font-size: 0.8rem; }
+    #videoMeta {
+      display: grid;
+      gap: 0.35rem 1.25rem;
+      grid-template-columns: 1fr 1fr;
+      font-size: 0.8rem;
+      font-family: ui-monospace, monospace;
+    }
+    #videoMeta[hidden] { display: none; }
+    #videoMeta div { display: flex; justify-content: space-between; gap: 0.75rem; }
+    #videoMeta dt { opacity: 0.55; }
     .rows { display: grid; gap: 0.4rem; }
     .row {
       display: grid;
@@ -182,7 +214,7 @@
 <body>
   <main>
     <h1>Appwrite Videos player <span class="muted" style="font-size:0.75rem;font-weight:400">hls-ladder-2</span></h1>
-    <p class="muted">Authenticate with the Web SDK, then upload or enter a video ID. The worker downloads the source once (chunk progress on the video), then encodes renditions. Poll for HLS, DASH, or CMAF playback.</p>
+    <p class="muted">Authenticate, then upload or paste a video ID. Create only writes the row. This page then calls source (download + extract embedded captions), waits until status is <code>ready</code>, and only then queues timeline + renditions in parallel. Optional uploaded captions win over extracted tracks for the same language.</p>
 
     <section class="panel">
       <h2>Connection &amp; auth <span class="muted">(Appwrite Web SDK)</span></h2>
@@ -228,8 +260,40 @@
           <input id="videoFile" type="file" accept="video/*" />
         </label>
         <label class="full">
+          Video name <span class="muted">(optional — defaults to the file name)</span>
+          <input id="videoName" placeholder="Product demo" maxlength="128" autocomplete="off" />
+        </label>
+        <label class="full">
           API key <span class="muted">(optional — only to create a public bucket)</span>
           <input id="apiKey" type="password" placeholder="standard API key with buckets.write + files.write" autocomplete="off" />
+        </label>
+        <label>
+          Subtitle file <span class="muted">(optional VTT / SRT)</span>
+          <input id="subtitleFile" type="file" accept=".vtt,.srt,text/vtt,application/x-subrip" />
+        </label>
+        <label>
+          Subtitle language
+          <select id="subtitleCode">
+            <option value="eng">English (eng)</option>
+            <option value="spa">Spanish (spa)</option>
+            <option value="fra">French (fra)</option>
+            <option value="deu">German (deu)</option>
+            <option value="heb">Hebrew (heb)</option>
+            <option value="ara">Arabic (ara)</option>
+            <option value="por">Portuguese (por)</option>
+            <option value="ita">Italian (ita)</option>
+            <option value="rus">Russian (rus)</option>
+            <option value="jpn">Japanese (jpn)</option>
+            <option value="zho">Chinese (zho)</option>
+            <option value="kor">Korean (kor)</option>
+            <option value="hin">Hindi (hin)</option>
+            <option value="nld">Dutch (nld)</option>
+            <option value="und">Undetermined (und)</option>
+          </select>
+        </label>
+        <label class="full">
+          Subtitle name <span class="muted">(optional — defaults to the language)</span>
+          <input id="subtitleName" placeholder="English" maxlength="128" autocomplete="off" />
         </label>
         <label class="full">
           Profile names
@@ -277,15 +341,39 @@
       </div>
       <div id="downloadBar" hidden>
         <span class="mono muted" id="downloadLabel">source download</span>
+        <span class="mono" id="downloadPct">0%</span>
         <progress id="downloadProgress" value="0" max="100"></progress>
       </div>
+      <div id="videoMeta" hidden></div>
       <div class="manifests muted" id="manifestLinks">Set a video ID to see manifest URLs.</div>
+      <div class="chips" id="subtitleChips"></div>
+      <div class="grid2">
+        <label>
+          Add subtitle file <span class="muted">(VTT / SRT)</span>
+          <input id="extraSubtitleFile" type="file" accept=".vtt,.srt,text/vtt,application/x-subrip" />
+        </label>
+        <label>
+          Language
+          <select id="extraSubtitleCode"></select>
+        </label>
+        <label class="full">
+          Display name <span class="muted">(optional)</span>
+          <input id="extraSubtitleName" placeholder="English" maxlength="128" autocomplete="off" />
+        </label>
+      </div>
+      <div class="actions">
+        <button type="button" id="addSubtitleBtn" disabled>Add subtitle</button>
+        <span class="mono muted" id="subtitleInfo"></span>
+      </div>
       <div class="rows" id="statusRows">
         <div class="muted">Waiting for auth + video ID…</div>
       </div>
     </section>
 
-    <video id="player" controls playsinline muted></video>
+    <div class="player-wrap">
+      <span id="captionChip" class="chip"></span>
+      <video id="player" controls playsinline muted></video>
+    </div>
 
     <div class="timeline disabled" id="timeline" aria-label="Seek with sprite preview">
       <div class="timeline__played" id="played"></div>
@@ -310,6 +398,11 @@
     const POLL_MS = 3000;
     const JWT_REFRESH_MS = 10 * 60 * 1000; // JWTs live 15 min; refresh early.
     const STORAGE_KEY = 'aw-videos-player';
+    const LANGUAGE_LABELS = {
+      eng: 'English', spa: 'Spanish', fra: 'French', deu: 'German', heb: 'Hebrew',
+      ara: 'Arabic', por: 'Portuguese', ita: 'Italian', rus: 'Russian', jpn: 'Japanese',
+      zho: 'Chinese', kor: 'Korean', hin: 'Hindi', nld: 'Dutch', und: 'Undetermined',
+    };
 
     const $ = (id) => document.getElementById(id);
     const authInfo = $('authInfo');
@@ -335,6 +428,11 @@
     const deleteVideoBtn = $('deleteVideoBtn');
     const stopBtn = $('stopBtn');
     const playbackSelect = $('playback');
+    const addSubtitleBtn = $('addSubtitleBtn');
+    const subtitleInfo = $('subtitleInfo');
+    const captionChip = $('captionChip');
+    const subtitleChips = $('subtitleChips');
+    const captionBlobs = [];
 
     let account = null;
     let storage = null;
@@ -411,6 +509,237 @@
       if ($('encodeCmaf').checked) outs.push('cmaf');
       return outs;
     }
+
+    function languageLabel(code) {
+      return LANGUAGE_LABELS[code] || code || 'unknown';
+    }
+
+    function sanitizeLabel(name) {
+      return String(name || '').replace(/[^a-zA-Z0-9 \-.,()_']/g, '').trim().slice(0, 128);
+    }
+
+    function subtitleOrigin(sub) {
+      return sub.fileId ? 'uploaded' : 'extracted';
+    }
+
+    function fillLanguageSelect(select, selected = 'eng') {
+      if (!select) return;
+      select.innerHTML = Object.entries(LANGUAGE_LABELS).map(([code, name]) => (
+        `<option value="${code}"${code === selected ? ' selected' : ''}>${name} (${code})</option>`
+      )).join('');
+    }
+
+    function showCaptionChip(label) {
+      if (!captionChip) return;
+      captionChip.textContent = label || '';
+      captionChip.classList.toggle('visible', Boolean(label));
+      captionChip.style.display = label ? 'inline-flex' : 'none';
+    }
+
+    function formatBytes(bytes) {
+      const n = Number(bytes) || 0;
+      if (n < 1024) return `${n} B`;
+      if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+      if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+      return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    }
+
+    function formatDurationMs(ms) {
+      const total = Math.max(0, Math.round((Number(ms) || 0) / 1000));
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    function resetProgressBars() {
+      uploadProgress.value = 0;
+      uploadProgress.hidden = true;
+      const bar = $('downloadBar');
+      const meter = $('downloadProgress');
+      const label = $('downloadLabel');
+      const pct = $('downloadPct');
+      if (meter) meter.value = 0;
+      if (pct) pct.textContent = '0%';
+      if (label) label.textContent = 'source download';
+      if (bar) bar.hidden = true;
+    }
+
+    function clearCaptionTracks() {
+      for (const el of [...video.querySelectorAll('track')]) {
+        if (el.src && el.src.startsWith('blob:')) URL.revokeObjectURL(el.src);
+        el.remove();
+      }
+      captionBlobs.length = 0;
+      if (video.dataset) video.dataset.captionIds = '';
+      showCaptionChip('');
+    }
+
+    function resetPlaybackUi() {
+      stopPolling();
+      destroyPlayer();
+      lastStatus = null;
+      cues = [];
+      spriteReady = false;
+      for (const url of spriteBlobs.values()) URL.revokeObjectURL(url);
+      spriteBlobs.clear();
+      spriteSizes.clear();
+      sheet.removeAttribute('src');
+      sheetPanel.classList.remove('open');
+      timeline.classList.add('disabled');
+      thumb.classList.remove('visible');
+      playingKey = null;
+      lastHlsReadySeen = 0;
+      selectedLevel = -1;
+      statusRows.innerHTML = '<div class="muted">Waiting for auth + video ID…</div>';
+      renderSubtitleChips([]);
+      if (subtitleInfo) subtitleInfo.textContent = '';
+      const meta = $('videoMeta');
+      if (meta) {
+        meta.hidden = true;
+        meta.innerHTML = '';
+      }
+      resetProgressBars();
+      pollInfo.textContent = 'idle';
+      statusEl.textContent = 'Idle';
+      renderManifestLinks();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[ch]));
+    }
+
+    function renderVideoMeta(videoDoc) {
+      const el = $('videoMeta');
+      if (!el) return;
+      if (!videoDoc || videoDoc.status !== 'ready') {
+        el.hidden = true;
+        el.innerHTML = '';
+        return;
+      }
+      const videoBit = [
+        videoDoc.videoCodec,
+        videoDoc.videoFormat,
+        videoDoc.videoBitRate ? `${Math.round(Number(videoDoc.videoBitRate) / 1000)} kbps` : '',
+        videoDoc.videoFrameRate ? `${videoDoc.videoFrameRate} fps` : '',
+      ].filter(Boolean).join(' · ');
+      const audioBit = [
+        videoDoc.audioCodec,
+        videoDoc.audioFormat,
+        videoDoc.audioBitRate ? `${Math.round(Number(videoDoc.audioBitRate) / 1000)} kbps` : '',
+        videoDoc.audioSampleRate ? `${videoDoc.audioSampleRate} Hz` : '',
+      ].filter(Boolean).join(' · ');
+      const rows = [
+        ['Name', videoDoc.name || '—'],
+        ['ID', videoDoc.$id || '—'],
+        ['Size', formatBytes(videoDoc.size)],
+        ['Duration', formatDurationMs(videoDoc.duration)],
+        ['Resolution', (videoDoc.width && videoDoc.height) ? `${videoDoc.width}×${videoDoc.height}` : '—'],
+        ['Aspect', videoDoc.aspectRatio || '—'],
+        ['Container', videoDoc.format || '—'],
+        ['Video', videoBit || '—'],
+        ['Audio', audioBit || '—'],
+      ];
+      el.innerHTML = rows.map(([key, val]) => (
+        `<div><dt>${escapeHtml(key)}</dt><dd>${escapeHtml(val)}</dd></div>`
+      )).join('');
+      el.hidden = false;
+    }
+
+    async function syncCaptionTracks(subtitles) {
+      const ready = (subtitles || []).filter((sub) => sub.status === 'ready');
+      const ids = ready.map((sub) => sub.$id).join(',');
+      if (video.dataset.captionIds === ids) return;
+      clearCaptionTracks();
+      video.dataset.captionIds = ids;
+      const videoId = config().videoId;
+      if (!videoId || !ready.length) return;
+
+      async function fetchSubtitleVtt(subtitleId) {
+        try {
+          return await api(
+            `/videos/${videoId}/outputs/dash/subtitles/${subtitleId}/manifest`,
+            { accept: 'text/vtt' }
+          );
+        } catch {
+          const playlist = await api(
+            `/videos/${videoId}/outputs/hls/subtitles/${subtitleId}/manifest`,
+            { accept: 'application/vnd.apple.mpegurl' }
+          );
+          const line = playlist.split('\n').map((row) => row.trim()).find((row) => row && !row.startsWith('#'));
+          if (!line) throw new Error('subtitle playlist has no segment');
+          const path = line.replace(/^https?:\/\/[^/]+/, '').replace(/^\/v1/, '');
+          return api(path.startsWith('/') ? path : `/${path}`, { accept: 'text/vtt' });
+        }
+      }
+
+      for (const sub of ready) {
+        try {
+          const vtt = await fetchSubtitleVtt(sub.$id);
+          const blob = URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' }));
+          captionBlobs.push(blob);
+          const track = document.createElement('track');
+          track.kind = 'subtitles';
+          track.label = `${sub.name || languageLabel(sub.code)} (${sub.code || 'und'})`;
+          track.srclang = sub.code || 'und';
+          track.src = blob;
+          if (sub.default) track.default = true;
+          video.appendChild(track);
+        } catch (err) {
+          console.warn('subtitle track skipped', sub.$id, err);
+        }
+      }
+
+      const tracks = [...video.textTracks];
+      if (!tracks.length) return;
+      const preferred = tracks.find((t) => t.mode === 'showing') || tracks[0];
+      for (const track of tracks) track.mode = 'disabled';
+      preferred.mode = 'showing';
+      showCaptionChip(preferred.label);
+      if (hls) hls.subtitleTrack = -1;
+    }
+
+    function renderSubtitleChips(subtitles) {
+      if (!subtitleChips) return;
+      if (!subtitles?.length) {
+        subtitleChips.innerHTML = '<span class="muted">No subtitle tracks yet. Extracted captions appear after source is ready; you can also upload a VTT/SRT.</span>';
+        return;
+      }
+      subtitleChips.innerHTML = subtitles.map((sub) => {
+        const lang = languageLabel(sub.code);
+        const origin = subtitleOrigin(sub);
+        const name = sub.name || lang;
+        return `<span class="chip">${name} <span class="code">${sub.code || 'und'}</span> · ${origin}${sub.default ? ' · default' : ''}</span>`;
+      }).join('');
+    }
+
+    async function attachSubtitle(videoId, file, code, name) {
+      const bucketId = $('bucketId').value.trim();
+      if (!bucketId) throw new Error('bucket ID required to upload a subtitle');
+      if (!storage) throw new Error('authenticate first');
+      const stored = await storage.createFile(
+        bucketId,
+        ID.unique(),
+        file,
+        [
+          Permission.read(Role.any()),
+          Permission.update(Role.user(currentUserId)),
+          Permission.delete(Role.user(currentUserId)),
+        ]
+      );
+      return apiPost(`/videos/${videoId}/subtitles`, {
+        bucketId,
+        fileId: stored.$id,
+        name: sanitizeLabel(name) || languageLabel(code),
+        code,
+        default: true,
+      });
+    }
+
+    fillLanguageSelect($('extraSubtitleCode'));
 
     function config() {
       return {
@@ -538,6 +867,7 @@
       uploadBtn.disabled = false;
       deleteVideoBtn.disabled = false;
       createBucketBtn.disabled = false;
+      if (addSubtitleBtn) addSubtitleBtn.disabled = false;
       uploadInfo.textContent = 'ready';
       persistConfig();
     }
@@ -621,6 +951,7 @@
       uploadBtn.disabled = true;
       deleteVideoBtn.disabled = true;
       createBucketBtn.disabled = true;
+      if (addSubtitleBtn) addSubtitleBtn.disabled = true;
       uploadInfo.textContent = 'authenticate first';
     });
 
@@ -679,6 +1010,23 @@
         throw new Error(`${res.status} ${path}${responseBody ? `: ${responseBody.slice(0, 180)}` : ''}`);
       }
       return res.json();
+    }
+
+    // Renditions may only be created once the source download finished — the
+    // endpoint rejects earlier requests with 400 `video_not_ready` — so poll
+    // the video until it settles on `ready` (or fail on `error`/timeout).
+    async function waitForVideoReady(videoId, onTick, timeoutMs = 300000) {
+      const deadline = Date.now() + timeoutMs;
+      while (Date.now() < deadline) {
+        const doc = await api(`/videos/${videoId}`);
+        const status = doc?.status || 'pending';
+        applyDownloadProgress(doc);
+        onTick?.(doc, status);
+        if (status === 'ready') return doc;
+        if (status === 'error') throw new Error('video source processing failed');
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      throw new Error('timed out waiting for the video source to become ready');
     }
 
     async function apiDelete(path) {
@@ -766,6 +1114,7 @@
         return;
       }
 
+      resetPlaybackUi();
       uploadBtn.disabled = true;
       uploadProgress.hidden = false;
       uploadProgress.value = 0;
@@ -808,12 +1157,23 @@
         const videoDoc = await apiPost('/videos', {
           bucketId,
           fileId: storedFile.$id,
+          name: $('videoName').value.trim() || file.name,
         });
         const newVideoId = videoDoc?.$id;
         if (!newVideoId) {
           throw new Error('create video returned no $id');
         }
-        const sourceStatus = videoDoc.status || 'waiting';
+        await apiPost(`/videos/${newVideoId}/source`, {});
+        const subtitleFile = $('subtitleFile').files[0];
+        if (subtitleFile) {
+          uploadInfo.textContent = 'uploading subtitle…';
+          await attachSubtitle(
+            newVideoId,
+            subtitleFile,
+            $('subtitleCode').value,
+            $('subtitleName').value
+          );
+        }
         const chunksTotal = Number(videoDoc.chunksTotal) || 0;
 
         // Prefer the first encode output the user ticked, so Load/watch matches
@@ -834,6 +1194,16 @@
         setVideoId(newVideoId);
         $('videoId').focus();
         $('videoId').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        subscribeDownloadEvents(newVideoId);
+
+        await waitForVideoReady(newVideoId, (doc, status) => {
+          applyDownloadProgress(doc);
+          const { total, uploaded, pct } = sourceProgress(doc);
+          uploadInfo.textContent = `source ${status} · ${pct}% · ${uploaded}/${total || '?'} chunks`;
+          if (status === 'ready') renderVideoMeta(doc);
+        });
+        resetProgressBars();
+        uploadInfo.textContent = 'source ready · probe complete';
 
         const profileList = await api('/videos/profiles');
         const profiles = profileList.profiles || [];
@@ -841,25 +1211,27 @@
           wantedProfiles.includes(String(profile.name || '').toLowerCase())
         );
 
+        uploadInfo.textContent = 'source ready · queueing timeline + renditions…';
+        const jobs = [apiPost(`/videos/${newVideoId}/timeline`, {})];
         let queued = 0;
         for (const profile of selected) {
           for (const output of outputs) {
-            uploadInfo.textContent = `queueing ${profile.name} · ${output}…`;
-            await apiPost(`/videos/${newVideoId}/renditions`, {
+            jobs.push(apiPost(`/videos/${newVideoId}/renditions`, {
               profileId: profile.$id,
               output,
-            });
+            }));
             queued += 1;
           }
         }
+        await Promise.all(jobs);
 
         const missing = wantedProfiles.filter((name) =>
           !selected.some((profile) => String(profile.name || '').toLowerCase() === name)
         );
 
         uploadInfo.textContent = missing.length
-          ? `created ${newVideoId} (${sourceStatus}, ${chunksTotal} chunks); missing profiles: ${missing.join(', ')}`
-          : `created ${newVideoId} · source ${sourceStatus} · queued ${queued} renditions (${outputs.join(', ')})`;
+          ? `created ${newVideoId} (ready, ${chunksTotal} chunks); missing profiles: ${missing.join(', ')}`
+          : `created ${newVideoId} · source ready · queued ${queued} renditions (${outputs.join(', ')})`;
         // Pass the id explicitly so polling cannot race on a stale input value.
         startPolling(newVideoId);
       } catch (err) {
@@ -870,6 +1242,42 @@
         console.error(err);
       } finally {
         uploadBtn.disabled = false;
+      }
+    });
+
+    $('videoFile')?.addEventListener('change', () => {
+      const picked = $('videoFile').files[0];
+      resetPlaybackUi();
+      $('videoId').value = '';
+      persistConfig();
+      renderManifestLinks();
+      if (picked) {
+        $('videoName').value = picked.name.replace(/\.[^.]+$/, '');
+      }
+    });
+
+    addSubtitleBtn?.addEventListener('click', async () => {
+      const videoId = $('videoId').value.trim();
+      const file = $('extraSubtitleFile').files[0];
+      if (!videoId) {
+        subtitleInfo.textContent = 'set a video ID first';
+        return;
+      }
+      if (!file) {
+        subtitleInfo.textContent = 'pick a VTT or SRT file';
+        return;
+      }
+      addSubtitleBtn.disabled = true;
+      try {
+        subtitleInfo.textContent = 'uploading subtitle…';
+        await attachSubtitle(videoId, file, $('extraSubtitleCode').value, $('extraSubtitleName').value);
+        subtitleInfo.textContent = 'subtitle queued';
+        await pollOnce();
+      } catch (err) {
+        subtitleInfo.textContent = `subtitle failed: ${err.message}`;
+        console.error(err);
+      } finally {
+        addSubtitleBtn.disabled = false;
       }
     });
 
@@ -1049,27 +1457,29 @@
       const bar = $('downloadBar');
       const meter = $('downloadProgress');
       const label = $('downloadLabel');
+      const pctEl = $('downloadPct');
       if (!bar || !meter || !label) return;
 
       const status = videoDoc?.status || '';
       const { total, uploaded, pct } = sourceProgress(videoDoc);
 
-      if (!status || status === 'missing') {
+      if (!status || status === 'missing' || status === 'ready') {
+        meter.value = 0;
+        if (pctEl) pctEl.textContent = '0%';
+        label.textContent = 'source download';
         bar.hidden = true;
         return;
       }
 
       meter.max = 100;
-      meter.value = status === 'ready' ? 100 : pct;
-      if (status === 'ready') {
-        label.textContent = 'source ready';
-        bar.hidden = true;
-      } else if (status === 'error') {
-        label.textContent = 'source download failed';
+      meter.value = pct;
+      if (pctEl) pctEl.textContent = `${pct}%`;
+      if (status === 'error') {
+        label.textContent = `source download failed · ${pct}%`;
         bar.hidden = false;
       } else {
         bar.hidden = false;
-        label.textContent = `source ${status} · ${uploaded}/${total || '?'} chunks (${pct}%)`;
+        label.textContent = `source ${status} · ${pct}% · ${uploaded}/${total || '?'} chunks`;
       }
     }
 
@@ -1105,7 +1515,7 @@
       });
     }
 
-    function renderStatus({ videoDoc, renditions, sprite }) {
+    function renderStatus({ videoDoc, renditions, sprite, subtitles = [] }) {
       const width = Number(videoDoc?.width) || 0;
       const height = Number(videoDoc?.height) || 0;
       if (width > 0 && height > 0) {
@@ -1124,11 +1534,27 @@
         : '';
       rows.push(`
         <div class="row">
-          <span>source ${videoDoc?.$id || '—'}</span>
+          <span>source ${videoDoc?.name || videoDoc?.$id || '—'}</span>
           <span>${sourceHint}${durationHint ? ` · ${durationHint}` : ''}</span>
           ${badge(vStatus)}
         </div>
       `);
+
+      if (!subtitles.length) {
+        rows.push(`<div class="row"><span>subtitles</span><span>none yet</span>${badge('waiting')}</div>`);
+      } else {
+        for (const sub of subtitles) {
+          const lang = languageLabel(sub.code);
+          const origin = subtitleOrigin(sub);
+          rows.push(`
+            <div class="row">
+              <span>subtitle · ${sub.name || lang} · ${origin}${sub.default ? ' · default' : ''}</span>
+              <span class="chip">${lang} <span class="code">${sub.code || 'und'}</span></span>
+              ${badge(sub.status)}
+            </div>
+          `);
+        }
+      }
 
       const mode = playbackMode();
       const activeOutput = outputForMode(mode);
@@ -1190,7 +1616,7 @@
         }
       }
 
-      const spriteClickable = sprite.status === 'ready';
+      const spriteClickable = sprite.status === 'ready' || cues.length > 0;
       const spriteOpen = sheetPanel.classList.contains('open');
       const spriteAttrs = spriteClickable
         ? ` class="row row--clickable${spriteOpen ? ' row--active' : ''}" data-action="sprite"`
@@ -1199,7 +1625,7 @@
         <div${spriteAttrs}>
           <span>sprite / timeline${spriteOpen ? ' · showing sheet' : spriteClickable ? ' · click to show sheet' : ''}</span>
           <span>${sprite.previewId ? `preview ${sprite.previewId}` : ''}</span>
-          ${badge(sprite.status)}
+          ${badge(spriteClickable ? 'ready' : sprite.status)}
         </div>
       `);
 
@@ -1300,8 +1726,10 @@
     }
 
     async function checkSprite(videoDoc) {
-      if (videoDoc?.status && videoDoc.status !== 'ready') {
-        return { status: videoDoc.status === 'error' ? 'error' : 'waiting', previewId: '' };
+      // Timeline lives in videos storage, not videos-tmp. After the last job
+      // the source status becomes `removed`; that must not hide a ready sprite.
+      if (videoDoc?.status === 'error') {
+        return { status: 'error', previewId: '' };
       }
       if (videoDoc?.previewId) {
         return { status: 'ready', previewId: videoDoc.previewId };
@@ -1323,9 +1751,16 @@
       const list = await api(`/videos/${cfg.videoId}/renditions`);
       const renditions = list.renditions || [];
       const sprite = await checkSprite(videoDoc);
+      let subtitles = [];
+      try {
+        const subtitleList = await api(`/videos/${cfg.videoId}/subtitles`);
+        subtitles = subtitleList.subtitles || [];
+      } catch { /* none yet, or endpoint not readable */ }
 
-      renderStatus({ videoDoc, renditions, sprite });
-      lastStatus = { videoDoc, renditions, sprite };
+      renderStatus({ videoDoc, renditions, sprite, subtitles });
+      renderSubtitleChips(subtitles);
+      renderVideoMeta(videoDoc);
+      lastStatus = { videoDoc, renditions, sprite, subtitles };
       applyDownloadProgress(videoDoc);
 
       const { total, uploaded, pct } = sourceProgress(videoDoc);
@@ -1338,9 +1773,14 @@
         return;
       }
 
-      if (sourceStatus !== 'ready') {
+      const sourcePlayable = sourceStatus === 'ready' || sourceStatus === 'removed';
+
+      if (!sourcePlayable) {
         statusEl.textContent = `Downloading source · ${uploaded}/${total || '?'} chunks (${pct}%)`;
-        pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · source ${sourceStatus} · ${uploaded}/${total} chunks`;
+        pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · source ${sourceStatus} · ${pct}% · ${uploaded}/${total} chunks`;
+        if (sprite.status === 'ready' && !cues.length) {
+          await loadSprites();
+        }
         return;
       }
 
@@ -1381,6 +1821,8 @@
       if (sprite.status === 'ready' && !cues.length) {
         await loadSprites();
       }
+
+      await syncCaptionTracks(subtitles);
     }
 
     async function startPlayback(cfg) {
@@ -1436,11 +1878,36 @@
 
       hls = new Hls({
         enableWorker: false,
+        subtitleDisplay: true,
         xhrSetup(xhr, url) {
           if (String(url).startsWith('blob:')) return;
           xhr.setRequestHeader('X-Appwrite-Project', cfg.projectId);
           xhr.setRequestHeader('X-Appwrite-JWT', jwt);
         },
+      });
+
+      hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => {
+        const tracks = hls.subtitleTracks || [];
+        if (!tracks.length) {
+          showCaptionChip('');
+          return;
+        }
+        if (video.querySelector('track')) {
+          hls.subtitleTrack = -1;
+          return;
+        }
+        const def = tracks.findIndex((t) => t.default);
+        hls.subtitleTrack = def >= 0 ? def : 0;
+      });
+      hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (_, data) => {
+        if (data.id < 0) {
+          showCaptionChip('');
+          return;
+        }
+        const track = hls.subtitleTracks?.[data.id];
+        const code = track?.lang || '';
+        const name = track?.name || languageLabel(code);
+        showCaptionChip(name ? `${name}${code ? ` (${code})` : ''}` : '');
       });
 
       hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
@@ -1646,6 +2113,7 @@
       video.removeAttribute('src');
       video.load();
       resetVideoAspect();
+      clearCaptionTracks();
     }
 
     function applyVideoAspect(width, height) {

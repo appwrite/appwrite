@@ -125,7 +125,10 @@ class Get extends Base
                 $end = \min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
             }
 
-            if ($unit !== 'bytes' || $start >= $end || $end >= $size) {
+            // `>` not `>=`: a single byte range (bytes=0-0, or the file's final
+            // byte) has start === end and is valid. Players probe segments that
+            // way before fetching the rest.
+            if ($unit !== 'bytes' || $start > $end || $end >= $size) {
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 

@@ -134,15 +134,16 @@ class Videos extends Action
             VideoAction::Download => $this->downloadSource(
                 $dbForProject,
                 $deviceForFiles,
+                $deviceForVideos,
                 $queueForRealtime,
-                $publisherForVideos,
                 $project,
                 $videoMessage
             ),
             VideoAction::Timeline => $this->timeline(
                 $dbForProject,
                 $deviceForVideos,
-                $publisherForVideos,
+                $queueForRealtime,
+                $project,
                 $videoMessage
             ),
             VideoAction::Subtitle => $this->subtitle(
@@ -165,41 +166,33 @@ class Videos extends Action
     }
 
     /**
-     * Fetch the source onto videos-tmp once, probe it, then fan out timeline
-     * and every waiting encode.
+     * Fetch the source onto videos-tmp, probe it, extract embedded text
+     * subtitles, and mark the video ready. Timeline and rendition jobs are
+     * client-enqueued; this job does not fan out.
      */
     private function downloadSource(
         Database $dbForProject,
         Device $deviceForFiles,
+        Device $deviceForVideos,
         Realtime $queueForRealtime,
-        VideoPublisher $publisherForVideos,
         Document $project,
         VideoMessage $videoMessage
     ): void {
         $projectId = $videoMessage->project->getId();
         $videoId = $videoMessage->video->getId();
-        $root = $this->scratchRoot($projectId, $videoId);
-        $lockPath = $root . '/source.lock';
+        $root = $this->getTmpPath($projectId, $videoId);
 
         if (!\is_dir($root) && !\mkdir($root, 0755, true) && !\is_dir($root)) {
             throw new \Exception('Failed to create videos-tmp directory');
         }
 
-        $lock = \fopen($lockPath, 'c');
-        if ($lock === false) {
-            throw new \Exception('Failed to open source lock');
-        }
-
         try {
-            if (!\flock($lock, LOCK_EX)) {
-                throw new \Exception('Failed to lock source download');
-            }
-
             $video = $dbForProject->getDocument('videos', $videoId);
             if ($video->isEmpty()) {
                 throw new \Exception('Video not found: ' . $videoId);
             }
 
+            $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
             $file = $this->resolveFile(
                 $dbForProject,
                 $video->getAttribute('bucketId', ''),
@@ -207,10 +200,7 @@ class Videos extends Action
             );
             $sourcePath = $this->sourcePath($projectId, $videoId);
             $fetched = !$this->sourceReady($sourcePath, $video)
-                || $video->getAttribute('status') !== Base::STATUS_READY;
-            // Sprite rows, not duration: a refetch after encode GC'd the tmp
-            // file must still enqueue timeline if sprites were never built.
-            $needsTimeline = !$this->hasSprites($dbForProject, $video);
+                || $video->getAttribute('status') !== Base::SOURCE_READY;
 
             if ($fetched) {
                 $this->fetchSource(
@@ -220,22 +210,48 @@ class Videos extends Action
                     $project,
                     $video,
                     $file,
-                    $sourcePath
+                    $sourcePath,
+                    $permissions
                 );
                 $video = $this->probe($dbForProject, $video, $file, $sourcePath);
             }
 
-            $video = $this->setVideoStatus(
+            if (!$video->getAttribute('subtitlesExtracted', false)) {
+                $workspace = $this->jobWorkspace($projectId, $videoId);
+                try {
+                    $this->extractEmbeddedSubtitles(
+                        $dbForProject,
+                        $deviceForVideos,
+                        $video,
+                        $sourcePath,
+                        $workspace['outDir'],
+                        $this->encoder()
+                    );
+                    $video = $dbForProject->updateDocument(
+                        'videos',
+                        $video->getId(),
+                        new Document(['subtitlesExtracted' => true])
+                    );
+                } catch (\Throwable $th) {
+                    Console::warning(
+                        'Videos worker: embedded subtitle extract failed for '
+                        . $videoId . ': ' . $th->getMessage()
+                    );
+                } finally {
+                    $this->cleanup($workspace['basePath']);
+                }
+            }
+
+            $this->setVideoStatus(
                 $dbForProject,
                 $queueForRealtime,
                 $project,
                 $video,
-                Base::STATUS_READY,
+                Base::SOURCE_READY,
+                $permissions,
                 (int) $video->getAttribute('chunksTotal', 1),
                 (int) $video->getAttribute('chunksTotal', 1)
             );
-
-            $this->fanOut($dbForProject, $publisherForVideos, $project, $video, $needsTimeline);
         } catch (\Throwable $th) {
             $video = $dbForProject->getDocument('videos', $videoId);
             if (!$video->isEmpty()) {
@@ -244,15 +260,12 @@ class Videos extends Action
                     $queueForRealtime,
                     $project,
                     $video,
-                    Base::STATUS_ERROR
+                    Base::SOURCE_ERROR,
+                    $this->sourceReadPermissions($dbForProject, $project, $video)
                 );
-                $this->failWaitingRenditions($dbForProject, $queueForRealtime, $project, $video);
             }
 
             throw $th;
-        } finally {
-            \flock($lock, LOCK_UN);
-            \fclose($lock);
         }
     }
 
@@ -262,7 +275,8 @@ class Videos extends Action
     private function timeline(
         Database $dbForProject,
         Device $deviceForVideos,
-        VideoPublisher $publisherForVideos,
+        Realtime $queueForRealtime,
+        Document $project,
         VideoMessage $videoMessage
     ): void {
         $video = $videoMessage->video;
@@ -271,10 +285,7 @@ class Videos extends Action
 
         try {
             Console::info('Videos worker: timeline started for video ' . $video->getId());
-            $inPath = $this->assertSource($dbForProject, $publisherForVideos, $videoMessage);
-            if ($inPath === null) {
-                return;
-            }
+            $inPath = $this->assertSource($dbForProject, $queueForRealtime, $project, $videoMessage);
 
             $encoder = $this->encoder();
 
@@ -287,15 +298,6 @@ class Videos extends Action
                 Console::warning('Videos worker: source has no video track; skipping timeline for ' . $video->getId());
                 return;
             }
-
-            $this->extractEmbeddedSubtitles(
-                $dbForProject,
-                $deviceForVideos,
-                $video,
-                $inPath,
-                $workspace['outDir'],
-                $encoder
-            );
 
             // Wipe previous sprites so a source-file update can regenerate cleanly
             // against the UNIQUE (videoId, type, name) index.
@@ -360,7 +362,7 @@ class Videos extends Action
             }
         } finally {
             $this->cleanup($workspace['basePath']);
-            $this->tryRelease($dbForProject, $projectId, $video->getId());
+            $this->tryRelease($dbForProject, $queueForRealtime, $project, $projectId, $video->getId());
         }
     }
 
@@ -379,7 +381,13 @@ class Videos extends Action
             throw new \Exception('Missing subtitle in payload');
         }
 
-        $video = $videoMessage->video;
+        // Re-fetch rather than trust the queue snapshot: a subtitle created before
+        // the source was probed carries duration 0, which would bake
+        // targetDuration "0.0" into the subtitle playlist.
+        $video = $dbForProject->getDocument('videos', $videoMessage->video->getId());
+        if ($video->isEmpty()) {
+            $video = $videoMessage->video;
+        }
         $workspace = $this->workspace($videoMessage->project->getId(), $video->getId());
 
         try {
@@ -468,17 +476,18 @@ class Videos extends Action
         $output = $videoMessage->output !== ''
             ? $videoMessage->output
             : (string) $rendition->getAttribute('output', Base::OUTPUT_HLS);
+        $permissions = $this->sourceReadPermissions($dbForProject, $project, $videoMessage->video);
+        $claimed = false;
 
         try {
+            // Every rendition owns exactly one Encode message, so a message whose
+            // row already left `waiting` is a stale redelivery and is dropped here.
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_WAITING) {
                 return;
             }
 
-            $inPath = $this->assertSource($dbForProject, $publisherForVideos, $videoMessage);
-            if ($inPath === null) {
-                return;
-            }
+            $inPath = $this->assertSource($dbForProject, $queueForRealtime, $project, $videoMessage);
 
             $video = $dbForProject->getDocument('videos', $videoId);
             $ffmpeg = new FFmpeg(threads: 4);
@@ -497,7 +506,8 @@ class Videos extends Action
                     'progress' => '0',
                 ])
             );
-            $this->notify($queueForRealtime, $project, $rendition, 'update');
+            $claimed = true;
+            $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
 
             $representation = new Representation(
                 width: (int) $profile->getAttribute('width'),
@@ -531,21 +541,25 @@ class Videos extends Action
                 . ' rendition=' . $rendition->getId()
             );
 
+            $lastProgress = -1;
             $package = $packager
                 ->open($inPath)
                 ->format($format)
                 ->add($representation)
                 ->output($target)
-                ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, &$rendition) {
+                ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress) {
                     if (!$progress instanceof Progress) {
                         return;
                     }
 
                     $percentage = (int) \round($progress->percent);
 
-                    if ($percentage % 3 !== 0) {
+                    // ffmpeg emits many ticks per percent; only write on a new
+                    // 3%-step boundary we have not already reported.
+                    if ($percentage % 3 !== 0 || $percentage === $lastProgress) {
                         return;
                     }
+                    $lastProgress = $percentage;
 
                     $rendition = $dbForProject->updateDocument(
                         'videos_renditions',
@@ -554,7 +568,7 @@ class Videos extends Action
                             'progress' => (string) $percentage,
                         ])
                     );
-                    $this->notify($queueForRealtime, $project, $rendition, 'update');
+                    $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
                 })
                 ->on(Packager::LOG, function (mixed $line) {
                     if (\is_string($line) && \trim($line) !== '') {
@@ -568,13 +582,12 @@ class Videos extends Action
                 . '-' . $rendition->getId() . '/';
 
             // Drop any leftover segments from a previous attempt at the same id.
-            $oldSegments = $dbForProject->find('videos_renditions_segments', [
+            // deleteDocuments paginates internally, so a long rendition's >1000
+            // segment rows (a ~100-minute HLS ladder at 6s segments) are all
+            // removed, not just the first APP_LIMIT_SUBQUERY page.
+            $dbForProject->deleteDocuments('videos_renditions_segments', [
                 Query::equal('renditionInternalId', [$rendition->getSequence()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
             ]);
-            foreach ($oldSegments as $segment) {
-                $dbForProject->deleteDocument('videos_renditions_segments', $segment->getId());
-            }
 
             [$metadata, $targetDuration] = $this->persistPackage(
                 $dbForProject,
@@ -594,7 +607,7 @@ class Videos extends Action
                     'targetDuration' => $targetDuration,
                 ], fn ($value) => $value !== null))
             );
-            $this->notify($queueForRealtime, $project, $rendition, 'update');
+            $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
 
             Console::info('Rendition ' . $rendition->getId() . ' conversion done');
 
@@ -602,7 +615,7 @@ class Videos extends Action
                 $package->files(),
                 $path,
                 $deviceForVideos,
-                function (int $index) use ($dbForProject, $queueForRealtime, $project, &$rendition, $path) {
+                function (int $index) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, $path) {
                     if ($index !== 0) {
                         return;
                     }
@@ -616,7 +629,7 @@ class Videos extends Action
                             'path' => $path,
                         ])
                     );
-                    $this->notify($queueForRealtime, $project, $rendition, 'update');
+                    $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
                 }
             );
 
@@ -629,7 +642,7 @@ class Videos extends Action
                     'progress' => '100',
                 ])
             );
-            $this->notify($queueForRealtime, $project, $rendition, 'update');
+            $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
         } catch (\Throwable $th) {
             $rendition = $dbForProject->updateDocument(
                 'videos_renditions',
@@ -644,7 +657,7 @@ class Videos extends Action
                     ],
                 ])
             );
-            $this->notify($queueForRealtime, $project, $rendition, 'update');
+            $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
 
             Console::error(
                 'Error encoding video ' . $videoMessage->video->getId() . PHP_EOL
@@ -655,23 +668,27 @@ class Videos extends Action
 
             throw $th;
         } finally {
-            try {
-                $computeMs = (int) \round((\microtime(true) - $startedAt) * 1000);
-                VideoUsage::publish(
-                    $usage,
-                    $videoMessage->video,
-                    $rendition,
-                    $project,
-                    $publisherForUsage,
-                    $storageBytes,
-                    $computeMs
-                );
-            } catch (\Throwable $th) {
-                Console::error('Failed to publish video usage: ' . $th->getMessage());
+            // Only a run that actually claimed the rendition (waiting -> started)
+            // is billable; duplicate messages and re-queued downloads are no-ops.
+            if ($claimed) {
+                try {
+                    $computeMs = (int) \round((\microtime(true) - $startedAt) * 1000);
+                    VideoUsage::publish(
+                        $usage,
+                        $videoMessage->video,
+                        $rendition,
+                        $project,
+                        $publisherForUsage,
+                        $storageBytes,
+                        $computeMs
+                    );
+                } catch (\Throwable $th) {
+                    Console::error('Failed to publish video usage: ' . $th->getMessage());
+                }
             }
 
             $this->cleanup($workspace['basePath']);
-            $this->tryRelease($dbForProject, $projectId, $videoId);
+            $this->tryRelease($dbForProject, $queueForRealtime, $project, $projectId, $videoId);
         }
     }
 
@@ -699,19 +716,15 @@ class Videos extends Action
         Document $subtitle,
         string $vttPath
     ): Document {
-        $segments = $dbForProject->find('videos_subtitles_segments', [
+        $dbForProject->deleteDocuments('videos_subtitles_segments', [
             Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
-            Query::limit(APP_LIMIT_SUBQUERY),
         ]);
-
-        foreach ($segments as $segment) {
-            $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId());
-        }
 
         $dir = $deviceForVideos->getPath($video->getId()) . '/subtitles/';
         $fileName = $subtitle->getId() . '.vtt';
         $fullPath = $dir . $fileName;
-        $duration = (string) \number_format(((int) $video->getAttribute('duration', 0)) / 1000, 1);
+        // HLS EXT-X-TARGETDURATION must be a decimal-integer (seconds, rounded up).
+        $duration = (string) \max(1, (int) \ceil(((int) $video->getAttribute('duration', 0)) / 1000));
 
         $dbForProject->createDocument('videos_subtitles_segments', new Document([
             'subtitleId' => $subtitle->getId(),
@@ -755,14 +768,6 @@ class Videos extends Action
     ): void {
         Console::info('Videos worker: extracting embedded subtitles for video ' . $video->getId());
 
-        $wiped = $this->wipeEmbeddedSubtitles($dbForProject, $deviceForVideos, $video);
-        if ($wiped > 0) {
-            Console::info(
-                'Videos worker: wiped ' . $wiped
-                . ' prior embedded subtitle(s) on video ' . $video->getId()
-            );
-        }
-
         $existing = $dbForProject->find('videos_subtitles', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -795,9 +800,14 @@ class Videos extends Action
         }
 
         $tracks = $info->tracks(Track::SUBTITLE);
+        $streams = \array_map(
+            static fn (Track $track) => $track->type . ':' . ($track->codec ?? 'unknown'),
+            $info->tracks
+        );
         Console::info(
             'Videos worker: found ' . \count($tracks)
             . ' subtitle stream(s) in source for video ' . $video->getId()
+            . ' streams=[' . \implode(', ', $streams) . ']'
         );
 
         $assignedDefault = false;
@@ -864,9 +874,11 @@ class Videos extends Action
                 continue;
             }
 
-            $name = $track->title
+            $name = $this->sanitizeMeta(
+                $track->title
                 ?? ($track->language !== null && $track->language !== '' ? $track->language : null)
-                ?? ('Track ' . $track->index);
+                ?? ('Track ' . $track->index)
+            );
 
             $isDefault = false;
             if (!$hasDefault && !$assignedDefault) {
@@ -941,69 +953,6 @@ class Videos extends Action
     }
 
     /**
-     * Delete auto-extracted (empty fileId) subtitle rows and their artifacts.
-     *
-     * @return int number of embedded rows removed
-     */
-    private function wipeEmbeddedSubtitles(
-        Database $dbForProject,
-        Device $deviceForVideos,
-        Document $video
-    ): int {
-        $existing = $dbForProject->find('videos_subtitles', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]);
-
-        $wiped = 0;
-
-        foreach ($existing as $subtitle) {
-            if (!empty($subtitle->getAttribute('fileId', ''))) {
-                continue;
-            }
-
-            Console::info(
-                'Videos worker: removing embedded subtitle ' . $subtitle->getId()
-                . ' code=' . $subtitle->getAttribute('code', '')
-                . ' on video ' . $video->getId()
-            );
-            $this->deleteSubtitleArtifacts($dbForProject, $deviceForVideos, $subtitle);
-            $wiped++;
-        }
-
-        return $wiped;
-    }
-
-    /**
-     * Remove segment rows, the subtitle document, and the device VTT path.
-     */
-    private function deleteSubtitleArtifacts(
-        Database $dbForProject,
-        Device $deviceForVideos,
-        Document $subtitle
-    ): void {
-        $segments = $dbForProject->find('videos_subtitles_segments', [
-            Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]);
-
-        foreach ($segments as $segment) {
-            $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId());
-        }
-
-        $path = $subtitle->getAttribute('path', '');
-        $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId());
-
-        if (!empty($path) && $deviceForVideos->exists($path)) {
-            try {
-                $deviceForVideos->delete($path);
-            } catch (\Throwable) {
-                // Best-effort; the DB row is the source of truth.
-            }
-        }
-    }
-
-    /**
      * Map a container language tag to an ISO 639-2 code2 used by the API.
      */
     private function subtitleLanguageCode(?string $language): string
@@ -1049,14 +998,14 @@ class Videos extends Action
         }
     }
 
-    private function scratchRoot(string $projectId, string $videoId): string
+    private function getTmpPath(string $projectId, string $videoId): string
     {
-        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/app-' . $projectId . '/' . $videoId;
+        return Base::tmpPath($projectId, $videoId);
     }
 
     private function sourcePath(string $projectId, string $videoId): string
     {
-        return $this->scratchRoot($projectId, $videoId) . '/source';
+        return Base::tmpSourcePath($projectId, $videoId);
     }
 
     /**
@@ -1066,7 +1015,7 @@ class Videos extends Action
      */
     private function jobWorkspace(string $projectId, string $videoId): array
     {
-        $basePath = $this->scratchRoot($projectId, $videoId) . '/jobs/' . \uniqid('', true);
+        $basePath = $this->getTmpPath($projectId, $videoId) . '/jobs/' . \uniqid('', true);
         $outDir = $basePath . '/out/';
 
         if (!\mkdir($outDir, 0755, true) && !\is_dir($outDir)) {
@@ -1079,30 +1028,17 @@ class Videos extends Action
         ];
     }
 
-    private function hasSprites(Database $dbForProject, Document $video): bool
-    {
-        $sprites = $dbForProject->find('videos_previews', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::equal('type', ['sprite']),
-            Query::limit(1),
-        ]);
-
-        return !empty($sprites);
-    }
-
     private function sourceReady(string $sourcePath, Document $video): bool
     {
         return Base::sourceMatches($sourcePath, (int) $video->getAttribute('size', 0));
     }
 
-    /**
-     * @return string|null local source path, or null when a download was re-queued
-     */
     private function assertSource(
         Database $dbForProject,
-        VideoPublisher $publisherForVideos,
+        Realtime $queueForRealtime,
+        Document $project,
         VideoMessage $videoMessage
-    ): ?string {
+    ): string {
         $video = $dbForProject->getDocument('videos', $videoMessage->video->getId());
         $path = $this->sourcePath($videoMessage->project->getId(), $video->getId());
 
@@ -1110,20 +1046,26 @@ class Videos extends Action
             return $path;
         }
 
-        $publisherForVideos->enqueue(new VideoMessage(
-            project: $videoMessage->project,
-            action: VideoAction::Download,
-            video: $video,
-            profile: $videoMessage->profile,
-            rendition: $videoMessage->rendition,
-            output: $videoMessage->output,
-        ));
+        // Disk is the truth: the row claims a live working copy but the file is
+        // gone (crash, manual cleanup). Correct the status so createSource can
+        // materialise the source again instead of refusing on `ready`.
+        if (!$video->isEmpty() && $video->getAttribute('status') === Base::SOURCE_READY) {
+            $this->setVideoStatus(
+                $dbForProject,
+                $queueForRealtime,
+                $project,
+                $video,
+                Base::SOURCE_REMOVED,
+                $this->sourceReadPermissions($dbForProject, $project, $video)
+            );
+        }
 
-        Console::warning('Videos worker: source missing or incomplete for ' . $video->getId() . '; re-queued download');
-
-        return null;
+        throw new \Exception('Source missing or incomplete for ' . $video->getId());
     }
 
+    /**
+     * @param array<string> $permissions
+     */
     private function fetchSource(
         Database $dbForProject,
         Device $deviceForFiles,
@@ -1131,7 +1073,8 @@ class Videos extends Action
         Document $project,
         Document $video,
         Document $file,
-        string $sourcePath
+        string $sourcePath,
+        array $permissions
     ): void {
         $fullPath = $file->getAttribute('path', '');
 
@@ -1141,26 +1084,20 @@ class Videos extends Action
 
         $storedSize = $deviceForFiles->getFileSize($fullPath);
         $chunks = Base::chunkCount($storedSize);
-        $partPath = $sourcePath . '.part';
+        $partPath = $sourcePath . '.' . \uniqid('', true) . '.part';
 
         $video = $this->setVideoStatus(
             $dbForProject,
             $queueForRealtime,
             $project,
             $video,
-            Base::STATUS_STARTED,
+            Base::SOURCE_DOWNLOADING,
+            $permissions,
             $chunks,
             0
         );
 
         Console::info('Downloading source for video ' . $video->getId() . ' in ' . $chunks . ' chunk(s)');
-
-        if (\is_file($partPath)) {
-            \unlink($partPath);
-        }
-        if (\is_file($sourcePath)) {
-            \unlink($sourcePath);
-        }
 
         $handle = \fopen($partPath, 'wb');
         if ($handle === false) {
@@ -1169,6 +1106,10 @@ class Videos extends Action
 
         try {
             $chunkSize = APP_LIMIT_UPLOAD_CHUNK_SIZE;
+            // Cap progress writes at ~100 regardless of size (a 5 GB source is 1000
+            // chunks); always report the final chunk. For small sources step is 1,
+            // so every chunk is still reported.
+            $step = \max(1, \intdiv($chunks, 100));
             for ($chunk = 1; $chunk <= $chunks; $chunk++) {
                 $offset = ($chunk - 1) * $chunkSize;
                 $length = (int) \min($chunkSize, $storedSize - $offset);
@@ -1177,15 +1118,18 @@ class Videos extends Action
                     throw new \Exception('Unable to write source chunk ' . $chunk);
                 }
 
-                $this->setVideoStatus(
-                    $dbForProject,
-                    $queueForRealtime,
-                    $project,
-                    $video,
-                    Base::STATUS_STARTED,
-                    $chunks,
-                    $chunk
-                );
+                if ($chunk % $step === 0 || $chunk === $chunks) {
+                    $this->setVideoStatus(
+                        $dbForProject,
+                        $queueForRealtime,
+                        $project,
+                        $video,
+                        Base::SOURCE_DOWNLOADING,
+                        $permissions,
+                        $chunks,
+                        $chunk
+                    );
+                }
             }
         } finally {
             \fclose($handle);
@@ -1217,10 +1161,15 @@ class Videos extends Action
                 };
             }
 
-            if (\file_put_contents($sourcePath, $data) === false) {
+            $decodedPath = $sourcePath . '.' . \uniqid('', true) . '.decoded';
+            if (\file_put_contents($decodedPath, $data) === false) {
                 throw new \Exception('Unable to write decrypted source');
             }
             \unlink($partPath);
+            if (!\rename($decodedPath, $sourcePath)) {
+                \unlink($decodedPath);
+                throw new \Exception('Unable to finalise source download');
+            }
         } elseif (!\rename($partPath, $sourcePath)) {
             throw new \Exception('Unable to finalise source download');
         }
@@ -1235,56 +1184,19 @@ class Videos extends Action
         }
     }
 
-    private function fanOut(
+    private function tryRelease(
         Database $dbForProject,
-        VideoPublisher $publisherForVideos,
+        Realtime $queueForRealtime,
         Document $project,
-        Document $video,
-        bool $needsTimeline
+        string $projectId,
+        string $videoId
     ): void {
-        if ($needsTimeline) {
-            $publisherForVideos->enqueue(new VideoMessage(
-                project: $project,
-                action: VideoAction::Timeline,
-                video: $video,
-            ));
-        }
-
-        $renditions = $dbForProject->find('videos_renditions', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::equal('status', [Base::STATUS_WAITING]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]);
-
-        foreach ($renditions as $rendition) {
-            $profile = $dbForProject->getDocument(
-                'videos_profiles',
-                $rendition->getAttribute('profileId', '')
-            );
-            if ($profile->isEmpty()) {
-                continue;
-            }
-
-            $publisherForVideos->enqueue(new VideoMessage(
-                project: $project,
-                action: VideoAction::Encode,
-                video: $video,
-                profile: $profile,
-                rendition: $rendition,
-                output: (string) $rendition->getAttribute('output', ''),
-            ));
-        }
-    }
-
-    private function tryRelease(Database $dbForProject, string $projectId, string $videoId): void
-    {
         $video = $dbForProject->getDocument('videos', $videoId);
         if ($video->isEmpty()) {
             return;
         }
 
-        // Timeline has no status row; keep the source until sprites exist.
-        if (!$this->hasSprites($dbForProject, $video)) {
+        if ($video->getAttribute('status') === Base::SOURCE_DOWNLOADING) {
             return;
         }
 
@@ -1299,60 +1211,46 @@ class Videos extends Action
             Query::limit(1),
         ]);
 
-        $jobs = $this->scratchRoot($projectId, $videoId) . '/jobs';
-        $jobsRemain = \is_dir($jobs) && !empty(\glob($jobs . '/*', GLOB_ONLYDIR));
-
-        if (!Base::canReleaseSource(
-            (string) $video->getAttribute('status', ''),
-            !empty($inFlight),
-            $jobsRemain
-        )) {
+        // Another encode is still using the tmp source — skip the jobs glob.
+        if (!empty($inFlight)) {
             return;
         }
 
-        foreach ([
-            $this->sourcePath($projectId, $videoId),
-            $this->sourcePath($projectId, $videoId) . '.part',
-            $this->scratchRoot($projectId, $videoId) . '/source.lock',
-        ] as $path) {
+        $jobs = $this->getTmpPath($projectId, $videoId) . '/jobs';
+        $jobsRemain = \is_dir($jobs) && !empty(\glob($jobs . '/*', GLOB_ONLYDIR));
+
+        if ($jobsRemain) {
+            return;
+        }
+
+        $sourcePath = $this->sourcePath($projectId, $videoId);
+        foreach (\glob($sourcePath . '*') ?: [] as $path) {
             if (\is_file($path)) {
                 \unlink($path);
                 Console::info('Released source [' . $path . ']');
             }
         }
+
+        $this->setVideoStatus(
+            $dbForProject,
+            $queueForRealtime,
+            $project,
+            $video,
+            Base::SOURCE_REMOVED,
+            $this->sourceReadPermissions($dbForProject, $project, $video)
+        );
     }
 
-    private function failWaitingRenditions(
-        Database $dbForProject,
-        Realtime $queueForRealtime,
-        Document $project,
-        Document $video
-    ): void {
-        $renditions = $dbForProject->find('videos_renditions', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::equal('status', [Base::STATUS_WAITING]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]);
-
-        foreach ($renditions as $rendition) {
-            $updated = $dbForProject->updateDocument(
-                'videos_renditions',
-                $rendition->getId(),
-                new Document([
-                    'status' => Base::STATUS_ERROR,
-                    'endedAt' => DateTime::now(),
-                ])
-            );
-            $this->notify($queueForRealtime, $project, $updated, 'update');
-        }
-    }
-
+    /**
+     * @param array<string> $permissions
+     */
     private function setVideoStatus(
         Database $dbForProject,
         Realtime $queueForRealtime,
         Document $project,
         Document $video,
         string $status,
+        array $permissions,
         ?int $chunksTotal = null,
         ?int $chunksUploaded = null
     ): Document {
@@ -1365,21 +1263,24 @@ class Videos extends Action
         }
 
         $video = $dbForProject->updateDocument('videos', $video->getId(), new Document($data));
-        $this->notifyVideo($queueForRealtime, $project, $video);
+        $this->notifyVideo($queueForRealtime, $project, $video, $permissions);
 
         return $video;
     }
 
-    private function notifyVideo(Realtime $queueForRealtime, Document $project, Document $video): void
+    /**
+     * @param array<string> $permissions
+     */
+    private function notifyVideo(Realtime $queueForRealtime, Document $project, Document $video, array $permissions): void
     {
         $payload = $video->getArrayCopy();
-        // Video rows are project-internal and carry no ACL; stamp read so a
-        // session with videos.read can subscribe to `videos.{id}.update`.
+        // Video rows are project-internal and carry no ACL; stamp the source
+        // bucket/file read roles (plus the console team, see
+        // sourceReadPermissions()) so realtime delivery matches the HTTP access
+        // model — a video backed by a private file must not broadcast its
+        // details to every subscriber.
         if (empty($payload['$permissions'])) {
-            $payload['$permissions'] = [
-                Permission::read(Role::any()),
-                Permission::read(Role::users()),
-            ];
+            $payload['$permissions'] = $permissions;
         }
 
         $queueForRealtime
@@ -1396,7 +1297,7 @@ class Videos extends Action
      */
     private function workspace(string $projectId, string $videoId): array
     {
-        $root = $this->scratchRoot($projectId, $videoId);
+        $root = $this->getTmpPath($projectId, $videoId);
         $basePath = $root . '/' . \uniqid('', true);
         $inDir = $basePath . '/in/';
         $outDir = $basePath . '/out/';
@@ -1615,6 +1516,36 @@ class Videos extends Action
     }
 
     /**
+     * Strips characters that could break out of a quoted manifest value.
+     *
+     * Track names, language tags and codec strings come from the container
+     * metadata of user-uploaded files, and both HLS attribute lists and MPD
+     * XML attributes are quote- and line-delimited: a `"` or newline in a
+     * value would let one uploader inject playlist lines or XML into the
+     * manifest served to every other viewer. Cleaning at persist time means
+     * the playback endpoints can render the stored metadata verbatim.
+     */
+    private function sanitizeMeta(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return \preg_replace('/[^\p{L}\p{N} .,:;\/@=+_\-]/u', '', $value);
+    }
+
+    /**
+     * Applies sanitizeMeta() to every string value of an attribute map.
+     *
+     * @param array<string, string> $attributes
+     * @return array<string, string>
+     */
+    private function sanitizeMetaMap(array $attributes): array
+    {
+        return \array_map(fn (string $value) => (string) $this->sanitizeMeta($value), $attributes);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function streamMeta(Variant $variant, int $streamId): array
@@ -1628,17 +1559,17 @@ class Videos extends Action
             $entry['path'] = \basename($variant->playlist);
         }
         if ($variant->language !== null) {
-            $entry['language'] = $variant->language;
-            $entry['name'] = $variant->language;
+            $entry['language'] = $this->sanitizeMeta($variant->language);
+            $entry['name'] = $this->sanitizeMeta($variant->language);
         }
         if ($variant->resolution() !== null) {
-            $entry['resolution'] = $variant->resolution();
+            $entry['resolution'] = $this->sanitizeMeta($variant->resolution());
         }
         if ($variant->bandwidth > 0) {
             $entry['bandwidth'] = (string) $variant->bandwidth;
         }
         if ($variant->codecs !== null) {
-            $entry['codecs'] = $variant->codecs;
+            $entry['codecs'] = $this->sanitizeMeta($variant->codecs);
         }
 
         return $entry;
@@ -1656,7 +1587,7 @@ class Videos extends Action
 
         foreach (['profiles', 'type', 'mediaPresentationDuration', 'maxSegmentDuration', 'minBufferTime'] as $key) {
             if (!empty($raw[$key])) {
-                $attributes[$key] = (string) $raw[$key];
+                $attributes[$key] = (string) $this->sanitizeMeta((string) $raw[$key]);
             }
         }
 
@@ -1691,11 +1622,11 @@ class Videos extends Action
 
             $adaptations[] = [
                 'id' => $index,
-                'attributes' => $adaptationAttrs,
+                'attributes' => $this->sanitizeMetaMap($adaptationAttrs),
                 'representation' => [
-                    'attributes' => $representationAttrs,
+                    'attributes' => $this->sanitizeMetaMap($representationAttrs),
                     'segmentList' => [
-                        'attributes' => $segmentListAttrs,
+                        'attributes' => $this->sanitizeMetaMap($segmentListAttrs),
                     ],
                 ],
             ];
@@ -1752,21 +1683,71 @@ class Videos extends Action
     }
 
     /**
+     * Read permissions to stamp onto rendition realtime payloads: the source
+     * bucket's and file's readers, plus the project's console team so the
+     * console receives progress events.
+     *
+     * @return array<string>
+     */
+    private function sourceReadPermissions(Database $dbForProject, Document $project, Document $video): array
+    {
+        $roles = [];
+
+        $teamId = (string) $project->getAttribute('teamId', '');
+        if ($teamId !== '') {
+            $roles[] = Role::team($teamId)->toString();
+        }
+
+        try {
+            $bucket = $dbForProject->getDocument('buckets', $video->getAttribute('bucketId', ''));
+            if (!$bucket->isEmpty()) {
+                $roles = \array_merge($roles, $bucket->getRead());
+
+                $file = $dbForProject->getDocument(
+                    'bucket_' . $bucket->getSequence(),
+                    $video->getAttribute('fileId', '')
+                );
+                $roles = \array_merge($roles, $file->getRead());
+            }
+        } catch (\Throwable) {
+            // Source may be mid-delete; the console team role above still applies.
+        }
+
+        return \array_map(
+            static fn (string $role) => Permission::read(Role::parse($role)),
+            \array_values(\array_unique($roles))
+        );
+    }
+
+    /**
      * Publishes a rendition change on the project's realtime channels.
+     *
+     * Rendition rows carry no ACL of their own, and the Realtime adapter derives
+     * delivery roles from the payload's read permissions — an empty set means the
+     * event is silently dropped. Stamp the roles resolved from the source
+     * bucket/file (see sourceReadPermissions()) so subscribers receive the event.
+     *
+     * @param array<string> $permissions
      */
     private function notify(
         Realtime $queueForRealtime,
         Document $project,
         Document $rendition,
-        string $action
+        string $action,
+        array $permissions
     ): void {
+        $payload = $rendition->getArrayCopy();
+        if (empty($payload['$permissions'])) {
+            $payload['$permissions'] = $permissions;
+        }
+
         $queueForRealtime
             ->setProject($project)
             ->setSubscribers(['console', $project->getId()])
             ->setEvent('videos.[videoId].renditions.[renditionId].' . $action)
             ->setParam('videoId', $rendition->getAttribute('videoId', ''))
             ->setParam('renditionId', $rendition->getId())
-            ->setPayload($rendition->getArrayCopy())
+            ->setPayload($payload)
             ->trigger();
     }
 }

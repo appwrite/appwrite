@@ -1,1 +1,1 @@
-Update a subtitle track by its unique ID. Changing the source file re-packages the track in the background.
+Update a subtitle track by its unique ID. Pass only `name`, `code`, and/or `default` to retag an extracted track (for example `und` → `heb` for Hebrew) without replacing the file. Changing `bucketId`/`fileId` re-packages the track in the background.

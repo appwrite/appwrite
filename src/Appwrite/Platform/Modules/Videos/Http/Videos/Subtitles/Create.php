@@ -65,7 +65,9 @@ class Create extends Base
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the subtitle file.')
             ->param('fileId', '', new UID(), 'Subtitle file unique ID.')
-            ->param('name', '', new Text(128), 'Subtitle display name.')
+            // The name is rendered into HLS/DASH manifests, which are quote- and
+            // line-delimited; the allowlist keeps structural characters out at the door.
+            ->param('name', '', new Text(128, allowList: [...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER, ...Text::NUMBERS, ' ', '-', '.', ',', '(', ')', '_', '\'']), 'Subtitle display name. Allowed characters: a-z, A-Z, 0-9, space, and - . , ( ) _ \'')
             ->param('code', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Subtitle ISO 639-2 three-letter language code.')
             ->param('default', false, new Boolean(true), 'Make this the default subtitle track for the video.', true)
             ->inject('response')

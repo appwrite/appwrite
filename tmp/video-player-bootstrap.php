@@ -175,8 +175,13 @@ $video = call($client, Client::METHOD_POST, '/videos', $apiHeaders, [
     'fileId' => $fileId,
 ]);
 $videoId = $video['body']['$id'];
-echo "videoId={$videoId} status=" . ($video['body']['status'] ?? 'waiting')
+echo "videoId={$videoId} status=" . ($video['body']['status'] ?? 'pending')
     . " chunksTotal=" . ($video['body']['chunksTotal'] ?? 0) . "\n";
+
+// The lifecycle is client-driven: nothing downloads until the source is
+// requested explicitly, and the timeline is its own request below.
+echo "==> Requesting source download\n";
+call($client, Client::METHOD_POST, '/videos/' . $videoId . '/source', $apiHeaders);
 
 echo "==> Waiting for source download\n";
 $downloaded = wait(function () use ($client, $apiHeaders, $videoId) {
@@ -188,7 +193,7 @@ $downloaded = wait(function () use ($client, $apiHeaders, $videoId) {
     if (in_array($status, ['ready', 'error'], true)) {
         return $response['body'];
     }
-    return null;
+    return;
 });
 
 if (($downloaded['status'] ?? '') !== 'ready') {
@@ -196,15 +201,9 @@ if (($downloaded['status'] ?? '') !== 'ready') {
     exit(1);
 }
 
-echo "==> Waiting for timeline\n";
-wait(function () use ($client, $apiHeaders, $videoId) {
-    $response = $client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $apiHeaders);
-    if (($response['headers']['status-code'] ?? 0) === 200 && is_string($response['body']) && str_contains($response['body'], 'WEBVTT')) {
-        return true;
-    }
-    return null;
-});
-
+// Queue the rendition before the timeline: the waiting rendition row keeps the
+// working copy alive, otherwise a fast timeline job releases the source and a
+// later rendition create fails with video_source_removed.
 echo "==> Creating HLS 360p rendition\n";
 $profiles = call($client, Client::METHOD_GET, '/videos/profiles', $apiHeaders);
 $profileId = null;
@@ -225,6 +224,18 @@ $rendition = call($client, Client::METHOD_POST, '/videos/' . $videoId . '/rendit
 ]);
 $renditionId = $rendition['body']['$id'];
 
+echo "==> Requesting timeline\n";
+call($client, Client::METHOD_POST, '/videos/' . $videoId . '/timeline', $apiHeaders);
+
+echo "==> Waiting for timeline\n";
+wait(function () use ($client, $apiHeaders, $videoId) {
+    $response = $client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $apiHeaders);
+    if (($response['headers']['status-code'] ?? 0) === 200 && is_string($response['body']) && str_contains($response['body'], 'WEBVTT')) {
+        return true;
+    }
+    return;
+});
+
 echo "==> Waiting for encode to finish\n";
 $ready = wait(function () use ($client, $apiHeaders, $videoId, $renditionId) {
     $response = $client->call(
@@ -237,7 +248,7 @@ $ready = wait(function () use ($client, $apiHeaders, $videoId, $renditionId) {
         return $response['body'];
     }
     echo "  status={$status} progress=" . ($response['body']['progress'] ?? '?') . "\n";
-    return null;
+    return;
 });
 
 if (($ready['status'] ?? '') !== 'ready') {

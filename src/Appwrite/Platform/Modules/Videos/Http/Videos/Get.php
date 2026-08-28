@@ -36,7 +36,7 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'videos',
-                name: 'getVideo',
+                name: 'get',
                 description: '/docs/references/videos/get-video.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

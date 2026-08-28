@@ -3,9 +3,6 @@
 namespace Appwrite\Platform\Modules\Videos\Http\Videos;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Video as VideoMessage;
-use Appwrite\Event\Message\VideoAction;
-use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
@@ -20,6 +17,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Text;
 
 class Create extends Base
 {
@@ -46,7 +44,7 @@ class Create extends Base
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'videos',
-                name: 'createVideo',
+                name: 'create',
                 description: '/docs/references/videos/create-video.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -58,26 +56,24 @@ class Create extends Base
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the source file.')
             ->param('fileId', '', new UID(), 'Source file unique ID.')
+            ->param('name', '', new Text(128), 'Video name. Defaults to the source file name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('user')
             ->inject('authorization')
             ->inject('queueForEvents')
-            ->inject('publisherForVideos')
             ->callback($this->action(...));
     }
 
     public function action(
         string $bucketId,
         string $fileId,
+        string $name,
         Response $response,
         Database $dbForProject,
-        Document $project,
         User $user,
         Authorization $authorization,
-        Event $queueForEvents,
-        VideoPublisher $publisherForVideos
+        Event $queueForEvents
     ): void {
         $file = $this->assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
 
@@ -95,6 +91,10 @@ class Create extends Base
             throw new Exception(Exception::VIDEO_NOT_VALID);
         }
 
+        if ($name === '') {
+            $name = (string) $file->getAttribute('name', '');
+        }
+
         // Video documents are project-internal: access is always derived from the
         // bucket/file they point at, so they carry no permissions of their own.
         $video = $authorization->skip(fn () => $dbForProject->createDocument('videos', new Document([
@@ -103,18 +103,14 @@ class Create extends Base
             'bucketInternalId' => $file->getAttribute('bucketInternalId', ''),
             'fileId' => $file->getId(),
             'fileInternalId' => $file->getSequence(),
+            'name' => $name,
             'size' => $file->getAttribute('sizeOriginal', 0),
-            'status' => self::STATUS_WAITING,
+            'status' => self::SOURCE_PENDING,
+            'subtitlesExtracted' => false,
             'chunksTotal' => self::chunkCount((int) $file->getAttribute('sizeOriginal', 0)),
             'chunksUploaded' => 0,
-            'search' => \implode(' ', [$file->getId(), $file->getAttribute('name', '')]),
+            'search' => \implode(' ', [$file->getId(), $name]),
         ])));
-
-        $publisherForVideos->enqueue(new VideoMessage(
-            project: $project,
-            action: VideoAction::Download,
-            video: $video,
-        ));
 
         $queueForEvents->setParam('videoId', $video->getId());
 
