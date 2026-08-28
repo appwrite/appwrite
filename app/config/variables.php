@@ -44,6 +44,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS',
+                'description' => 'Comma-separated list of project IDs that get increased API rate limits. Every endpoint rate limit is multiplied by 100 for the listed projects. By default, empty, so all projects use the standard rate limits.',
+                'introduction' => '1.9.7',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOCKING_ENABLED',
                 'description' => 'Enable distributed locking for platform writes. Locks coordinate concurrent updates across API pods so read-modify-write operations on shared documents do not lose updates. By default, set to \'enabled\'. Set to \'disabled\' as an emergency kill switch; locks become no-ops and concurrent writes will race.',
                 'introduction' => '1.9.3',
