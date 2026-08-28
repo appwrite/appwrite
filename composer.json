@@ -45,6 +45,10 @@
         },
         {
             "type": "vcs",
+            "url": "https://github.com/utopia-php/cdn"
+        },
+        {
+            "type": "vcs",
             "url": "https://github.com/utopia-php/vcs"
         }
     ],
@@ -70,6 +74,7 @@
         "utopia-php/auth": "^0.10",
         "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^5.0.0",
+        "utopia-php/cdn": "^0.0.7",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
