@@ -466,7 +466,7 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'usageChartInterval',
     scope: 'account',
     key: USER_PREFS_KEY_USAGE_CHART_INTERVAL,
-    description: 'Usage chart interval (15m, 1h, or 1d).',
+    description: 'Usage chart interval (1m, 15m, 1h, or 1d).',
     category: 'Usage',
   },
 

@@ -58,7 +58,8 @@ export function resolveConsoleChartInterval(
 ): UsageChartInterval | null {
   const value = interval?.trim().toLowerCase()
   if (!value) return null
-  if (value === '15m' || value === '1h' || value === '1d') return value
+  if (value === '1m' || value === '15m' || value === '1h' || value === '1d')
+    return value
   // Coarser/finer API intervals: plot raw points (no gap fill) rather than lie.
   return null
 }

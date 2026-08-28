@@ -162,6 +162,7 @@ function mergeValuesByTime(
 }
 
 function toUsageInterval(interval: UsageChartInterval): UsageInterval {
+  if (interval === '1m') return UsageInterval.OneMinute
   if (interval === '15m') return UsageInterval.FifteenMinutes
   if (interval === '1d') return UsageInterval.OneDay
   return UsageInterval.OneHour

@@ -3434,10 +3434,10 @@ export function clearLegacyBuildNotificationsOptedOutLocalStorage(): void {
 export const USER_PREFS_KEY_USAGE_CHART_DATE_RANGE =
   'console.usageChart.dateRange'
 
-/** Full key: `console.usageChart.interval` - `"15m"`, `"1h"`, or `"1d"`. */
+/** Full key: `console.usageChart.interval` - `"1m"`, `"15m"`, `"1h"`, or `"1d"`. */
 export const USER_PREFS_KEY_USAGE_CHART_INTERVAL = 'console.usageChart.interval'
 
-const USAGE_CHART_INTERVAL_PREF_VALUES = ['15m', '1h', '1d'] as const
+const USAGE_CHART_INTERVAL_PREF_VALUES = ['1m', '15m', '1h', '1d'] as const
 
 export type UsageChartIntervalPref = (typeof USAGE_CHART_INTERVAL_PREF_VALUES)[number]
 

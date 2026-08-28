@@ -447,12 +447,14 @@ function get15MinuteIntervalStart(date: Date): Date {
 }
 
 function getIntervalStart(date: Date, interval: UsageChartInterval): Date {
+  if (interval === '1m') return startOfMinute(date)
   if (interval === '15m') return get15MinuteIntervalStart(date)
   if (interval === '1h') return startOfHour(date)
   return startOfDay(date)
 }
 
 function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
+  if (interval === '1m') return addMinutes(date, 1)
   if (interval === '15m') return addMinutes(date, 15)
   if (interval === '1h') return addHours(date, 1)
   return addDays(date, 1)
@@ -511,7 +513,7 @@ function formatChartPointLabel(
   rangeFrom: Date,
   rangeTo: Date,
 ): string {
-  if (interval === '15m' || interval === '1h') {
+  if (interval === '1m' || interval === '15m' || interval === '1h') {
     const spansMultipleDays = !isSameDay(rangeFrom, rangeTo)
     return spansMultipleDays
       ? formatLocalizedDate(day, 'd MMM HH:mm')

@@ -578,6 +578,7 @@ export const jaProjectMiscTranslations: Record<string, string> = {
   'Bandwidth over time': '経時的な帯域幅',
   'Buckets': 'バケット',
   'Chart interval': 'チャート間隔',
+  '1m': '1 分',
   '15m': '15 分',
   '1h': '1 時間',
   '1d': '1 日',
