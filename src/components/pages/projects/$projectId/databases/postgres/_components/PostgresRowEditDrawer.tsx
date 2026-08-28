@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -124,6 +124,16 @@ export function PostgresRowEditDrawer({
   const isCreate = row == null
   const [draft, setDraft] = useState<Record<string, PostgresRowFieldDraft>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const fieldRefs = useRef<
+    Record<
+      string,
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLButtonElement
+      | null
+    >
+  >({})
+  const lastFocusedSessionRef = useRef<string | null>(null)
 
   const createMutation = useCreatePostgresTableRow(
     projectId,
@@ -144,6 +154,15 @@ export function PostgresRowEditDrawer({
       }),
     [columns, isCreate],
   )
+
+  const rowSessionKey = useMemo(() => {
+    if (!identity) return 'create'
+    if (identity.ctid) return `ctid:${identity.ctid}`
+    if (identity.primaryKeyValues) {
+      return JSON.stringify(identity.primaryKeyValues)
+    }
+    return 'edit'
+  }, [identity])
 
   useEffect(() => {
     if (!open) return
@@ -177,6 +196,58 @@ export function PostgresRowEditDrawer({
     setDraft(nextDraft)
     setErrors({})
   }, [editableColumns, open, row])
+
+  // Focus the clicked cell's field after open. BaseDrawer disableAutoFocus
+  // blurs on open, so React autoFocus alone is not enough (same as TablesDB).
+  useEffect(() => {
+    if (!open || !focusedField) return
+    const sessionKey = `${rowSessionKey}::${focusedField}`
+    if (lastFocusedSessionRef.current === sessionKey) return
+
+    let cancelled = false
+    let attempt = 0
+    const MAX_ATTEMPTS = 6
+
+    const tryPlaceCaret = () => {
+      if (cancelled) return
+      const el = fieldRefs.current[focusedField]
+      if (!el) {
+        if (attempt++ < MAX_ATTEMPTS) requestAnimationFrame(tryPlaceCaret)
+        return
+      }
+      el.focus({ preventScroll: true })
+      if (
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement
+      ) {
+        const len = el.value.length
+        if (len === 0 && attempt++ < MAX_ATTEMPTS) {
+          requestAnimationFrame(tryPlaceCaret)
+          return
+        }
+        if (len > 0) {
+          try {
+            el.setSelectionRange(len, len)
+          } catch {
+            // Number/email/etc. may reject selection APIs; ignore.
+          }
+        }
+      }
+      lastFocusedSessionRef.current = sessionKey
+    }
+
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(tryPlaceCaret)
+    })
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(rafId)
+    }
+  }, [open, focusedField, rowSessionKey])
+
+  useEffect(() => {
+    if (!open) lastFocusedSessionRef.current = null
+  }, [open])
 
   const handleFieldChange = (columnName: string, value: PostgresRowFieldDraft) => {
     setDraft((prev) => ({ ...prev, [columnName]: value }))
@@ -398,6 +469,10 @@ export function PostgresRowEditDrawer({
                           id={inputId}
                           value={stringValue}
                           readOnly
+                          ref={(el) => {
+                            fieldRefs.current[column.column_name] = el
+                          }}
+                          autoFocus={focusedField === column.column_name}
                           className="h-9 bg-muted/30 text-[13px]"
                         />
                       ) : fieldType === 'array' ? (
@@ -433,6 +508,9 @@ export function PostgresRowEditDrawer({
                             required={required}
                             maxLength={meta.length}
                             disabled={readOnly || isNull}
+                            focusRef={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
                             autoFocus={focusedField === column.column_name}
                           />
                         </div>
@@ -441,6 +519,10 @@ export function PostgresRowEditDrawer({
                           <Switch
                             id={inputId}
                             checked={stringValue === 'true'}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
+                            autoFocus={focusedField === column.column_name}
                             onCheckedChange={(checked) =>
                               handleFieldChange(
                                 column.column_name,
@@ -471,6 +553,9 @@ export function PostgresRowEditDrawer({
                               : emptyPlaceholder
                           }
                           className="w-full"
+                          triggerRef={(el) => {
+                            fieldRefs.current[column.column_name] = el
+                          }}
                           autoFocus={focusedField === column.column_name}
                         />
                       ) : isNumericInlineFieldType(fieldType) ? (
@@ -480,6 +565,9 @@ export function PostgresRowEditDrawer({
                             type="number"
                             inputMode="numeric"
                             value={stringValue}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
                             onChange={(event) => {
                               const next = event.target.value
                               handleFieldChange(
@@ -512,6 +600,9 @@ export function PostgresRowEditDrawer({
                             value={stringValue}
                             disabled={isNull}
                             dir={isRTLContent ? 'rtl' : 'ltr'}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
                             onChange={(event) =>
                               handleFieldChange(
                                 column.column_name,
@@ -556,6 +647,9 @@ export function PostgresRowEditDrawer({
                             value={stringValue}
                             disabled={isNull}
                             dir={isRTLContent ? 'rtl' : 'ltr'}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
                             onChange={(event) =>
                               handleFieldChange(
                                 column.column_name,

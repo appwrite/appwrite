@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -128,6 +128,16 @@ export function MysqlRowEditDrawer({
   const isCreate = row == null
   const [draft, setDraft] = useState<Record<string, MysqlRowFieldDraft>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const fieldRefs = useRef<
+    Record<
+      string,
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLButtonElement
+      | null
+    >
+  >({})
+  const lastFocusedSessionRef = useRef<string | null>(null)
 
   const createMutation = useCreateMysqlTableRow(
     projectId,
@@ -149,6 +159,15 @@ export function MysqlRowEditDrawer({
     [columns, isCreate],
   )
 
+  const rowSessionKey = useMemo(() => {
+    if (!identity) return 'create'
+    if (identity.ctid) return `ctid:${identity.ctid}`
+    if (identity.primaryKeyValues) {
+      return JSON.stringify(identity.primaryKeyValues)
+    }
+    return 'edit'
+  }, [identity])
+
   useEffect(() => {
     if (!open) return
     const nextDraft: Record<string, MysqlRowFieldDraft> = {}
@@ -168,6 +187,58 @@ export function MysqlRowEditDrawer({
     setDraft(nextDraft)
     setErrors({})
   }, [editableColumns, open, row])
+
+  // Focus the clicked cell's field after open. BaseDrawer disableAutoFocus
+  // blurs on open, so React autoFocus alone is not enough (same as TablesDB).
+  useEffect(() => {
+    if (!open || !focusedField) return
+    const sessionKey = `${rowSessionKey}::${focusedField}`
+    if (lastFocusedSessionRef.current === sessionKey) return
+
+    let cancelled = false
+    let attempt = 0
+    const MAX_ATTEMPTS = 6
+
+    const tryPlaceCaret = () => {
+      if (cancelled) return
+      const el = fieldRefs.current[focusedField]
+      if (!el) {
+        if (attempt++ < MAX_ATTEMPTS) requestAnimationFrame(tryPlaceCaret)
+        return
+      }
+      el.focus({ preventScroll: true })
+      if (
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement
+      ) {
+        const len = el.value.length
+        if (len === 0 && attempt++ < MAX_ATTEMPTS) {
+          requestAnimationFrame(tryPlaceCaret)
+          return
+        }
+        if (len > 0) {
+          try {
+            el.setSelectionRange(len, len)
+          } catch {
+            // Number/email/etc. may reject selection APIs; ignore.
+          }
+        }
+      }
+      lastFocusedSessionRef.current = sessionKey
+    }
+
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(tryPlaceCaret)
+    })
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(rafId)
+    }
+  }, [open, focusedField, rowSessionKey])
+
+  useEffect(() => {
+    if (!open) lastFocusedSessionRef.current = null
+  }, [open])
 
   const handleFieldChange = (columnName: string, value: MysqlRowFieldDraft) => {
     setDraft((prev) => ({ ...prev, [columnName]: value }))
@@ -345,6 +416,10 @@ export function MysqlRowEditDrawer({
                           id={inputId}
                           value={stringValue}
                           readOnly
+                          ref={(el) => {
+                            fieldRefs.current[column.column_name] = el
+                          }}
+                          autoFocus={focusedField === column.column_name}
                           className="h-9 bg-muted/30 text-[13px]"
                         />
                       ) : fieldType === 'boolean' ? (
@@ -352,6 +427,10 @@ export function MysqlRowEditDrawer({
                           <Switch
                             id={inputId}
                             checked={stringValue === 'true'}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
+                            autoFocus={focusedField === column.column_name}
                             onCheckedChange={(checked) =>
                               handleFieldChange(
                                 column.column_name,
@@ -375,6 +454,10 @@ export function MysqlRowEditDrawer({
                             id={inputId}
                             className="h-9 w-full text-[13px]"
                             aria-invalid={error ? true : undefined}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
+                            autoFocus={focusedField === column.column_name}
                           >
                             <SelectValue
                               placeholder={
@@ -409,6 +492,9 @@ export function MysqlRowEditDrawer({
                               : emptyPlaceholder
                           }
                           className="w-full"
+                          triggerRef={(el) => {
+                            fieldRefs.current[column.column_name] = el
+                          }}
                           autoFocus={focusedField === column.column_name}
                         />
                       ) : isNumericInlineFieldType(fieldType) ? (
@@ -418,6 +504,9 @@ export function MysqlRowEditDrawer({
                             type="number"
                             inputMode="numeric"
                             value={stringValue}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
                             onChange={(event) => {
                               const next = event.target.value
                               handleFieldChange(
@@ -450,6 +539,9 @@ export function MysqlRowEditDrawer({
                             value={stringValue}
                             disabled={isNull}
                             dir={isRTLContent ? 'rtl' : 'ltr'}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
                             onChange={(event) =>
                               handleFieldChange(
                                 column.column_name,
@@ -491,6 +583,9 @@ export function MysqlRowEditDrawer({
                             value={stringValue}
                             disabled={isNull}
                             dir={isRTLContent ? 'rtl' : 'ltr'}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
                             onChange={(event) =>
                               handleFieldChange(
                                 column.column_name,

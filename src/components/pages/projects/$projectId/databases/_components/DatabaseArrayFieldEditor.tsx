@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, type ReactNode, type Ref } from 'react'
 import {
   DndContext,
   KeyboardSensor,
@@ -46,7 +46,25 @@ export type DatabaseArrayFieldEditorProps = {
   maxLength?: number
   enumOptions?: string[]
   autoFocus?: boolean
+  /** Focus target for drawer open (first item control, or Add when empty). */
+  focusRef?: Ref<
+    HTMLInputElement | HTMLTextAreaElement | HTMLButtonElement | null
+  >
   disabled?: boolean
+}
+
+function assignFocusRef(
+  focusRef:
+    | Ref<HTMLInputElement | HTMLTextAreaElement | HTMLButtonElement | null>
+    | undefined,
+  el: HTMLInputElement | HTMLTextAreaElement | HTMLButtonElement | null,
+) {
+  if (!focusRef) return
+  if (typeof focusRef === 'function') {
+    focusRef(el)
+    return
+  }
+  focusRef.current = el
 }
 
 function arrayItemSortableId(idPrefix: string, index: number) {
@@ -135,6 +153,7 @@ export function DatabaseArrayFieldEditor({
   maxLength,
   enumOptions = [],
   autoFocus = false,
+  focusRef,
   disabled = false,
 }: DatabaseArrayFieldEditorProps) {
   const t = useT()
@@ -206,6 +225,11 @@ export function DatabaseArrayFieldEditor({
     const stringValue = isNull ? '' : String(item ?? '')
     const isRTLContent = isSpreadsheetRtlText(stringValue)
     const placeholder = `Item ${index + 1}`
+    const setFirstControlRef = (
+      el: HTMLInputElement | HTMLTextAreaElement | HTMLButtonElement | null,
+    ) => {
+      if (index === 0) assignFocusRef(focusRef, el)
+    }
 
     if (isNumericType) {
       return (
@@ -213,6 +237,7 @@ export function DatabaseArrayFieldEditor({
           type={elementType === 'bigint' ? 'text' : 'number'}
           inputMode="numeric"
           value={isNull ? '' : String(item ?? '')}
+          ref={setFirstControlRef}
           autoFocus={autoFocus && index === 0}
           disabled={disabled || isNull}
           onChange={(event) => {
@@ -231,6 +256,7 @@ export function DatabaseArrayFieldEditor({
           <Switch
             checked={item === true}
             disabled={disabled}
+            ref={setFirstControlRef}
             onCheckedChange={(checked) => updateItem(index, checked)}
           />
           <span className="text-[12px] text-muted-foreground">
@@ -249,7 +275,11 @@ export function DatabaseArrayFieldEditor({
             updateItem(index, value === 'null' ? null : value)
           }
         >
-          <SelectTrigger className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] focus:ring-0 focus:ring-offset-0">
+          <SelectTrigger
+            ref={setFirstControlRef}
+            autoFocus={autoFocus && index === 0}
+            className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] focus:ring-0 focus:ring-offset-0"
+          >
             <SelectValue placeholder={required ? undefined : 'NULL'} />
           </SelectTrigger>
           <SelectContent>
@@ -269,6 +299,7 @@ export function DatabaseArrayFieldEditor({
         <DateTimePicker
           value={isNull ? null : (item as string | null)}
           onChange={(value) => updateItem(index, value)}
+          triggerRef={setFirstControlRef}
           autoFocus={autoFocus && index === 0}
           disabled={disabled || isNull}
           clearable={!required}
@@ -284,6 +315,7 @@ export function DatabaseArrayFieldEditor({
           value={stringValue}
           onChange={(next) => updateItem(index, next)}
           disabled={disabled}
+          inputRef={setFirstControlRef}
           autoFocus={autoFocus && index === 0}
           maxLength={hasLimit ? maxLength : undefined}
           placeholder={placeholder}
@@ -299,6 +331,7 @@ export function DatabaseArrayFieldEditor({
       <Input
         value={stringValue}
         disabled={disabled || isNull}
+        ref={setFirstControlRef}
         autoFocus={autoFocus && index === 0}
         dir={isRTLContent ? 'rtl' : 'ltr'}
         maxLength={hasLimit ? maxLength : undefined}
@@ -420,6 +453,9 @@ export function DatabaseArrayFieldEditor({
         variant="ghost"
         size="sm"
         disabled={disabled}
+        ref={(el) => {
+          if (items.length === 0) assignFocusRef(focusRef, el)
+        }}
         onClick={addItem}
         className="h-9 w-full cursor-pointer justify-center rounded-none border-t border-foreground/10 bg-muted/30 text-[12px] text-muted-foreground hover:bg-muted/50 hover:text-foreground"
       >
