@@ -102,7 +102,7 @@ class Screenshots extends Action
         $date = \date('H:i:s');
         $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n");
 
-        $captured = false;
+        $stage = 'capture';
 
         try {
             $rule = $dbForPlatform->findOne('rules', [
@@ -165,7 +165,7 @@ class Screenshots extends Action
                 );
             }
 
-            $captured = true;
+            $stage = 'upload';
 
             Span::add('screenshot.count', \count($captures));
 
@@ -214,6 +214,8 @@ class Screenshots extends Action
                 $updates->setAttribute($key, $fileId);
             }
 
+            $stage = 'persist';
+
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing finished. [0m\n");
 
@@ -230,10 +232,14 @@ class Screenshots extends Action
             ]));
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
-            $stage = $captured ? 'Screenshot upload failed.' : 'Screenshot capturing failed.';
+            $failure = match ($stage) {
+                'upload' => 'Screenshot upload failed.',
+                'persist' => 'Screenshot could not be saved.',
+                default => 'Screenshot capturing failed.',
+            };
 
             try {
-                $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m {$stage} Deployment will continue. Reason: {$th->getMessage()} [0m\n");
+                $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m {$failure} Deployment will continue. Reason: {$th->getMessage()} [0m\n");
             } catch (\Throwable) {
                 // Logging the failure must not replace the failure itself.
             }
@@ -248,21 +254,32 @@ class Screenshots extends Action
 
     /**
      * Storage can refuse connections for minutes at a time. Without a retry a
-     * brief outage discards screenshots that were already captured.
+     * brief outage discards screenshots that were already captured. Retries
+     * only transport failures, so a missing object still fails immediately.
      *
      * @throws TransportException
      */
     protected function retryTransport(callable $operation): mixed
     {
-        foreach ([200000, 500000, 1000000] as $delay) {
+        for ($attempt = 1; $attempt < SCREENSHOT_UPLOAD_MAX_RETRIES; $attempt++) {
             try {
                 return $operation();
             } catch (TransportException) {
-                \usleep($delay);
+                \usleep((int) ($this->retryDelay() * (2 ** ($attempt - 1)) * 1000000));
             }
         }
 
+        // Final attempt: a still-failing storage backend surfaces its own error.
         return $operation();
+    }
+
+    /**
+     * Base seconds for exponential backoff between storage retries. Isolated so
+     * tests can override it to keep the suite instant.
+     */
+    protected function retryDelay(): float
+    {
+        return SCREENSHOT_UPLOAD_RETRY_DELAY;
     }
 
     protected function recordTelemetry(Counter $counter, string $result): void
