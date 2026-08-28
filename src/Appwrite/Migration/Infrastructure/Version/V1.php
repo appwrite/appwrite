@@ -60,11 +60,7 @@ class V1 extends Migration
         $exit = Console::execute('docker volume ls --format ' . \escapeshellarg('{{.Name}}'), '', $stdout, $stderr);
 
         if ($exit !== 0) {
-            Console::warning(
-                'Could not list Docker volumes: ' . \trim($stderr ?: $stdout) . '. Build artifacts from'
-                . ' before the upgrade were left where they are; existing deployments may need rebuilding.'
-            );
-            return;
+            throw new \RuntimeException('could not list Docker volumes: ' . \trim($stderr ?: $stdout));
         }
 
         $volumes = \array_filter(\array_map('trim', \explode("\n", $stdout)));
@@ -93,12 +89,10 @@ class V1 extends Migration
             }
         }
 
+        // Told apart from an empty volume, and raised rather than warned about: the copy
+        // can still be made once whatever stopped the read is fixed.
         if ($unreadable) {
-            Console::warning(
-                'Could not read the contents of the build volumes, so nothing was copied.'
-                . ' Deployments built before the upgrade may need rebuilding.'
-            );
-            return;
+            throw new \RuntimeException('could not read the contents of the build volumes');
         }
 
         if ($legacy === []) {
@@ -139,11 +133,9 @@ class V1 extends Migration
         );
 
         if ($exit !== 0) {
-            Console::warning(
-                'Failed to copy build artifacts from "' . $source . '": ' . \trim($stderr ?: $stdout)
-                . '. Existing deployments will need rebuilding.'
+            throw new \RuntimeException(
+                'could not copy build artifacts from "' . $source . '": ' . \trim($stderr ?: $stdout)
             );
-            return;
         }
 
         Console::success('Copied ' . $files($target) . ' build file(s). "' . $source . '" was left in place.');

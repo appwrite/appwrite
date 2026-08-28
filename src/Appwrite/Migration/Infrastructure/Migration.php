@@ -114,23 +114,28 @@ abstract class Migration
     abstract protected function changes(): array;
 
     /**
-     * Applies every change in the release.
+     * Applies every change in the release, reporting whether all of them landed.
      *
      * A change that fails does not stop the ones after it. They are independent -- a
      * volume that could not be copied says nothing about a file that has to move -- and
      * skipping the rest would leave more of the installation behind than the one failure
-     * warrants.
+     * warrants. The caller is told, so it can keep whatever it needs to try again.
      */
-    final public function execute(): void
+    final public function execute(): bool
     {
+        $applied = true;
+
         foreach ($this->changes() as $description => $change) {
             Console::info($this->getName() . ': ' . $description);
 
             try {
                 $change();
             } catch (\Throwable $error) {
+                $applied = false;
                 Console::warning('"' . $description . '" failed: ' . $error->getMessage());
             }
         }
+
+        return $applied;
     }
 }

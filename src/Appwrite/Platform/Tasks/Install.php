@@ -691,23 +691,29 @@ class Install extends Action
             // happen before anything starts, including a start the operator does by hand
             // after --no-start.
             if ($isUpgrade && $installedVersion !== '' && $startIndex <= 2) {
+                $applied = true;
+
                 foreach (InfrastructureMigration::between($installedVersion, $version) as $migration) {
                     Console::info('Applying infrastructure changes from ' . $migration->getName() . '...');
 
                     try {
-                        $migration->setContext($input, $this->path)->execute();
+                        $applied = $migration->setContext($input, $this->path)->execute() && $applied;
                     } catch (\Throwable $error) {
                         // The containers still start: what could not be changed is reported
                         // rather than taking the upgrade down with it.
+                        $applied = false;
                         Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
                     }
                 }
 
-                // Applied, so a later upgrade reads its starting version off the compose
-                // file again rather than replaying this one.
-                $installerConfig = $this->readInstallerConfig();
-                unset($installerConfig['upgradeFrom']);
-                $this->setInstallerConfig($installerConfig);
+                // Forgotten only once everything landed, so anything that failed is tried
+                // again next time; from here a later upgrade reads its starting version off
+                // the compose file rather than replaying this one.
+                if ($applied) {
+                    $installerConfig = $this->readInstallerConfig();
+                    unset($installerConfig['upgradeFrom']);
+                    $this->setInstallerConfig($installerConfig);
+                }
             }
 
             if (!$noStart) {
