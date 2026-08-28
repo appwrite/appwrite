@@ -9,29 +9,12 @@ use ImagickPixel;
 use Utopia\Database\Document;
 
 /**
- * Initials provider.
- *
- * Generates a coloured square with the user's initials. This is the single
- * implementation behind both the photo-resolution chain and the standalone
- * GET /v1/avatars/initials endpoint — the endpoint renders an arbitrary label
- * through render(), the chain resolves the label off the user first.
+ * Generates a grey square with the initials of the user's name.
  */
 class Initials extends Photo
 {
-    /** Font used to render the initials, relative to the project root. */
     private const FONT_PATH = '/app/assets/fonts/inter-v8-latin-regular.woff2';
-
-    /** Edge length used when the caller does not ask for a size. */
     private const DEFAULT_SIZE = 500;
-
-    /** Colour palette — a theme is picked from the initials themselves. */
-    private array $themes = [
-        ['background' => '#FD366E'], // Pink
-        ['background' => '#FE9567'], // Orange
-        ['background' => '#7C67FE'], // Purple
-        ['background' => '#68A3FE'], // Blue
-        ['background' => '#85DBD8'], // Mint
-    ];
 
     public function __construct(
         private readonly string $background = '',
@@ -43,24 +26,20 @@ class Initials extends Photo
         return 'initials';
     }
 
-    public function supports(Document $user): bool
+    public function supports(Document $profile): bool
     {
-        return !empty(\trim($this->getLabel($user)));
+        return \trim($profile->getAttribute('name', '')) !== '';
     }
 
-    public function get(Document $user, int $width, int $height, string $rating): ?string
+    public function get(Document $profile, int $width, int $height, string $rating): ?string
     {
         if (!\extension_loaded('imagick')) {
             return null;
         }
 
-        $name = $this->getLabel($user);
+        $name = $profile->getAttribute('name', '');
 
-        // Nothing printable to draw — bail out so the static fallback can be
-        // used instead. The standalone endpoint has no such fallback and keeps
-        // rendering a plain coloured square, which is why this check lives
-        // here and not in render().
-        if (empty($this->getInitials($name))) {
+        if ($this->getInitials($name) === '') {
             return null;
         }
 
@@ -82,91 +61,109 @@ class Initials extends Photo
         $width = $width > 0 ? $width : self::DEFAULT_SIZE;
         $height = $height > 0 ? $height : self::DEFAULT_SIZE;
 
-        $bg = !empty($this->background)
+        $background = $this->background !== ''
             ? '#' . \ltrim($this->background, '#')
-            : $this->getTheme($initials);
+            : self::SURFACE;
 
         $image = new Imagick();
-        $punch = new Imagick();
-        $draw  = new ImagickDraw();
+        $image->newImage($width, $height, $background);
+        $image->setImageFormat('png');
 
-        $fontSize = \min($width, $height) / 2;
+        // Longer initials shrink to keep fitting the square
+        $fontSize = \min($width, $height) * 1.6 / (2 + \mb_strlen($initials, 'UTF-8'));
 
-        $punch->newImage($width, $height, 'transparent');
-
-        // Providers live at src/Appwrite/AvatarPhotos/Providers, four levels
-        // below the project root — same walk-up as Avatars\Http\Action.
-        $fontPath = \dirname(__DIR__, 4) . self::FONT_PATH;
-        $draw->setFont($fontPath);
-        $image->setFont($fontPath);
-
-        $draw->setFillColor(new ImagickPixel('black'));
+        $draw = new ImagickDraw();
+        $draw->setFont($this->getFont());
+        $draw->setFillColor(new ImagickPixel(self::FIGURE));
         $draw->setFontSize($fontSize);
         $draw->setTextAlignment(Imagick::ALIGN_CENTER);
-        $draw->annotation($width / 1.97, ($height / 2) + ($fontSize / 3), $initials);
 
-        $punch->drawImage($draw);
-        $punch->negateImage(true, Imagick::CHANNEL_ALPHA);
-
-        $image->newImage($width, $height, $bg);
-        $image->setImageFormat('png');
-        $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
+        $image->annotateImage($draw, $width / 1.97, ($height / 2) + ($fontSize / 3), 0, $initials);
 
         return $image->getImageBlob();
     }
 
     /**
-     * First letter of the first two words, skipping words that do not start
-     * with an alphanumeric character. Underscores stand in for spaces when the
-     * label has none.
+     * First letter of every word, uppercased, capped at four — mapped onto
+     * characters the bundled font can draw.
      */
     private function getInitials(string $name): string
     {
-        $words = \explode(' ', \strtoupper($name));
+        // Uppercased before the split so a case change that alters length,
+        // like 'ß' to 'SS', still yields one letter per word
+        $words = \array_slice($this->getWords(\mb_strtoupper($name, 'UTF-8')), 0, 4);
+
+        $initials = \implode('', \array_map(fn (string $word) => \mb_substr($word, 0, 1, 'UTF-8'), $words));
+
+        return $this->getDrawable($initials);
+    }
+
+    /**
+     * Words that start with a letter or digit, split on spaces — or on
+     * underscores when the label has none.
+     *
+     * @return string[]
+     */
+    private function getWords(string $name): array
+    {
+        $words = \explode(' ', \trim($name));
+
         // Fallback: split on underscores when there is no space
-        $words = (\count($words) === 1) ? \explode('_', \strtoupper($name)) : $words;
+        $words = (\count($words) === 1) ? \explode('_', $words[0]) : $words;
 
-        $initials = '';
+        return \array_values(\array_filter(
+            $words,
+            fn (string $word) => \preg_match('/^[\p{L}\p{N}]/u', $word) === 1,
+        ));
+    }
 
-        foreach ($words as $key => $w) {
-            if (\ctype_alnum($w[0] ?? '')) {
-                $initials .= $w[0];
+    /**
+     * Map letters onto characters the bundled font can draw. Characters
+     * without a glyph are transliterated to Latin (Ł → L, А → A) and dropped
+     * when no Latin form is available, so letters never render as a blank
+     * square.
+     */
+    private function getDrawable(string $letters): string
+    {
+        $drawable = '';
 
-                if ($key === 1) {
-                    break;
-                }
+        foreach (\mb_str_split($letters, 1, 'UTF-8') as $char) {
+            if (!$this->hasGlyph($char) && \function_exists('transliterator_transliterate')) {
+                $latin = (string) \transliterator_transliterate('Any-Latin; Latin-ASCII', $char);
+                $char = \mb_strtoupper(\mb_substr($latin, 0, 1, 'UTF-8'), 'UTF-8');
+            }
+
+            if ($char !== '' && $this->hasGlyph($char)) {
+                $drawable .= $char;
             }
         }
 
-        return $initials;
+        return $drawable;
     }
 
     /**
-     * Background colour for a set of initials. Derived from the initials so the
-     * same label always gets the same colour.
+     * Whether the bundled font has a visible glyph for the character —
+     * missing glyphs draw as blank space, not as a replacement box.
      */
-    private function getTheme(string $initials): string
+    private function hasGlyph(string $char): bool
     {
-        $code = 0;
+        $canvas = new Imagick();
+        $canvas->newImage(32, 32, 'transparent');
 
-        foreach (\str_split($initials) as $char) {
-            $code += \ord($char);
-        }
+        $draw = new ImagickDraw();
+        $draw->setFont($this->getFont());
+        $draw->setFontSize(24);
+        $draw->setFillColor(new ImagickPixel('black'));
+        $draw->annotation(4, 26, $char);
 
-        $rand = (int) \substr((string) $code, -1);
-        $rand = ($rand > \count($this->themes) - 1) ? $rand % \count($this->themes) : $rand;
+        $canvas->drawImage($draw);
 
-        return $this->themes[$rand]['background'];
+        return $canvas->getImageChannelRange(Imagick::CHANNEL_ALPHA)['maxima'] > 0;
     }
 
-    /**
-     * Text the initials are derived from — the display name, falling back to
-     * the email address when the user has not set one.
-     */
-    private function getLabel(Document $user): string
+    private function getFont(): string
     {
-        $name = $user->getAttribute('name', '');
-
-        return !empty($name) ? $name : $user->getAttribute('email', '');
+        // Providers live at src/Appwrite/AvatarPhotos/Providers
+        return \dirname(__DIR__, 4) . self::FONT_PATH;
     }
 }

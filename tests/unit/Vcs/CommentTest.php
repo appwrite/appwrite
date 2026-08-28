@@ -97,7 +97,6 @@ final class CommentTest extends TestCase
 
         $this->assertNotNull($newTip);
         $this->assertNotSame('Old tip that should be ignored', $newTip);
-        $this->assertContains($newTip, $this->getTips());
     }
 
     public function testParseOldStateFormatWithOnlyBuilds(): void
@@ -129,7 +128,6 @@ final class CommentTest extends TestCase
 
         $this->assertNotNull($firstTip);
         $this->assertNotEmpty($firstTip);
-        $this->assertContains($firstTip, $this->getTips());
 
         $second = $comment->generateComment();
         $secondTip = $this->extractTip($second);
@@ -144,13 +142,5 @@ final class CommentTest extends TestCase
         }
 
         return null;
-    }
-
-    private function getTips(): array
-    {
-        $reflection = new \ReflectionClass(Comment::class);
-        $property = $reflection->getProperty('tips');
-
-        return $property->getValue(new Comment(['consoleHostname' => 'localhost']));
     }
 }

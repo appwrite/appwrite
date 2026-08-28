@@ -30,7 +30,7 @@ class Get extends CollectionGet
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId')
             ->desc('Get collection')
             ->groups(['api', 'database'])
-            ->label('scope', 'collections.read')
+            ->label('scope', 'vectorsdb.collections.read')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

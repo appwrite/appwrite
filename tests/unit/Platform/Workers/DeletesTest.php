@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
-use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Platform\Workers\Deletes;
+use Utopia\Cdn\Certificates\Provider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\None as NoCache;
@@ -41,7 +41,7 @@ final class DeletesTest extends TestCase
                 callable $getProjectDB,
                 callable $getDatabasesDB,
                 Device $device,
-                CertificatesAdapter $certificates,
+                Provider $certificates,
                 Bus $bus,
             ): void {
                 $this->deleteProject(
@@ -75,7 +75,7 @@ final class DeletesTest extends TestCase
                 $getProjectDB,
                 $getDatabasesDB,
                 $this->createStub(Device::class),
-                $this->createStub(CertificatesAdapter::class),
+                $this->createStub(Provider::class),
                 $this->createStub(Bus::class),
             );
         } catch (\RuntimeException $exception) {

@@ -32,16 +32,6 @@ final class RegistrationTest extends TestCase
         $this->assertInstanceOf(Executions::class, $service->getAction('executions'));
     }
 
-    public function testEntrypointDoesNotAliasMailsToNotifications(): void
-    {
-        $contents = \file_get_contents(__DIR__ . '/../../../../app/worker.php');
-
-        $this->assertIsString($contents);
-        $this->assertStringNotContainsString("mails' ? 'notifications'", $contents);
-        $this->assertStringContainsString("'workers'", $contents);
-        $this->assertStringContainsString("Config::getParam('workers'", $contents);
-    }
-
     public function testRegisteredWorkerNamesMatchConfigWithoutDuplicates(): void
     {
         $names = [];

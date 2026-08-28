@@ -2002,6 +2002,13 @@ return [
                 'lengths' => [],
                 'orders' => [],
             ],
+            [
+                '$id' => ID::custom('_key_commitHash_branch'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['providerCommitHash', 'providerBranch', '$sequence'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 

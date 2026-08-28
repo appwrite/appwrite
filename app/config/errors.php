@@ -1281,6 +1281,11 @@ return [
         'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
         'code' => 400,
     ],
+    Exception::VARIABLE_INVALID_KEY => [
+        'name' => Exception::VARIABLE_INVALID_KEY,
+        'description' => 'Variable key is not a valid environment variable name. Update or delete the variable, then retry the deployment.',
+        'code' => 400,
+    ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
         'description' => 'Param "query" is not optional.',
