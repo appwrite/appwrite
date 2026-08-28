@@ -53,7 +53,7 @@ class XList extends Base
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('output', null, new Nullable(new WhiteList(self::OUTPUTS, true)), 'Only return renditions packaged for this output format.', true, enum: new Enum(name: 'VideoOutput'))
-            ->param('status', null, new Nullable(new WhiteList([self::STATUS_WAITING, self::STATUS_STARTED, self::STATUS_ENDED, self::STATUS_UPLOADING, self::STATUS_READY, self::STATUS_ERROR], true)), 'Only return renditions in this transcoding state.', true, enum: new Enum(name: 'VideoRenditionStatus'))
+            ->param('status', null, new Nullable(new WhiteList([self::STATUS_WAITING, self::STATUS_STARTED, self::STATUS_ENDED, self::STATUS_UPLOADING, self::STATUS_READY, self::STATUS_ERROR, self::STATUS_ABORTED], true)), 'Only return renditions in this transcoding state.', true, enum: new Enum(name: 'VideoRenditionStatus'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')

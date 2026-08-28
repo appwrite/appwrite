@@ -91,7 +91,7 @@ class VideoRendition extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Transcoding status: one of `waiting`, `started`, `ended`, `uploading`, `ready` or `error`.',
+                'description' => 'Transcoding status: one of `waiting`, `started`, `ended`, `uploading`, `ready`, `error` or `aborted`.',
                 'default' => '',
                 'example' => 'ready',
             ])

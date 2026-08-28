@@ -43,6 +43,7 @@ abstract class Base extends UtopiaAction
     public const STATUS_UPLOADING = 'uploading';
     public const STATUS_READY = 'ready';
     public const STATUS_ERROR = 'error';
+    public const STATUS_ABORTED = 'aborted';
 
     /**
      * Lifecycle of the video working copy on videos-tmp.
@@ -56,6 +57,26 @@ abstract class Base extends UtopiaAction
     public const SOURCE_READY = 'ready';
     public const SOURCE_REMOVED = 'removed';
     public const SOURCE_ERROR = 'error';
+    public const SOURCE_ABORTED = 'aborted';
+
+    /**
+     * Source statuses the sweeper may abort when stale. Extend here later.
+     *
+     * @var list<string>
+     */
+    public const STALE_SOURCE_STATUSES = [
+        self::SOURCE_DOWNLOADING,
+    ];
+
+    /**
+     * Rendition statuses the sweeper may abort when stale. Extend here later
+     * (not uploading yet — segment upload has no DB heartbeats).
+     *
+     * @var list<string>
+     */
+    public const STALE_ENCODE_STATUSES = [
+        self::STATUS_STARTED,
+    ];
 
     /** Root of a video's working directory on the shared videos-tmp volume. */
     public static function tmpPath(string $projectId, string $videoId): string
@@ -95,6 +116,115 @@ abstract class Base extends UtopiaAction
         return $videoStatus !== self::SOURCE_DOWNLOADING
             && !$hasInFlightRendition
             && !$jobsRemain;
+    }
+
+    /**
+     * Whether the sweeper should abort a video source download.
+     *
+     * Requires status in STALE_SOURCE_STATUSES, incomplete chunks, and
+     * `$updatedAt` older than `$cutoff`.
+     */
+    public static function shouldAbortStaleDownload(Document $video, \DateTimeInterface $cutoff): bool
+    {
+        $status = (string) $video->getAttribute('status', '');
+        if (!\in_array($status, self::STALE_SOURCE_STATUSES, true)) {
+            return false;
+        }
+
+        $uploaded = (int) $video->getAttribute('chunksUploaded', 0);
+        $total = (int) $video->getAttribute('chunksTotal', 1);
+        if ($uploaded >= $total) {
+            return false;
+        }
+
+        $updatedAt = $video->getUpdatedAt();
+        if ($updatedAt === null || $updatedAt === '') {
+            return false;
+        }
+
+        return new \DateTime($updatedAt) < $cutoff;
+    }
+
+    /**
+     * Whether the sweeper should abort a rendition encode.
+     *
+     * Requires status in STALE_ENCODE_STATUSES, progress below 100, and
+     * `$updatedAt` older than `$cutoff`.
+     */
+    public static function shouldAbortStaleEncode(Document $rendition, \DateTimeInterface $cutoff): bool
+    {
+        $status = (string) $rendition->getAttribute('status', '');
+        if (!\in_array($status, self::STALE_ENCODE_STATUSES, true)) {
+            return false;
+        }
+
+        if ((int) $rendition->getAttribute('progress', 0) >= 100) {
+            return false;
+        }
+
+        $updatedAt = $rendition->getUpdatedAt();
+        if ($updatedAt === null || $updatedAt === '') {
+            return false;
+        }
+
+        return new \DateTime($updatedAt) < $cutoff;
+    }
+
+    /**
+     * Unlink the working copy and leftover `.part` / `.decoded` files under
+     * videos-tmp for this video. Does not touch permanent videos storage.
+     */
+    public static function releaseTmpSource(string $projectId, string $videoId): void
+    {
+        $sourcePath = self::tmpSourcePath($projectId, $videoId);
+        $root = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+        if (!\str_starts_with($sourcePath, $root)) {
+            return;
+        }
+
+        foreach (\glob($sourcePath . '*') ?: [] as $path) {
+            if (\is_file($path)) {
+                @\unlink($path);
+            }
+        }
+    }
+
+    /**
+     * Best-effort removal of orphaned encode job directories under videos-tmp.
+     */
+    public static function releaseTmpJobs(string $projectId, string $videoId): void
+    {
+        $jobs = self::tmpPath($projectId, $videoId) . '/jobs';
+        $root = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+        if (!\str_starts_with($jobs, $root) || !\is_dir($jobs)) {
+            return;
+        }
+
+        foreach (\glob($jobs . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+            self::rmdirRecursive($dir);
+        }
+    }
+
+    private static function rmdirRecursive(string $dir): void
+    {
+        $entries = \scandir($dir);
+        if ($entries === false) {
+            return;
+        }
+
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            $path = $dir . '/' . $entry;
+            if (\is_dir($path)) {
+                self::rmdirRecursive($path);
+            } else {
+                @\unlink($path);
+            }
+        }
+
+        @\rmdir($dir);
     }
 
     /**

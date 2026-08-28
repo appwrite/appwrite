@@ -60,7 +60,7 @@ class Video extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Source status: one of `pending`, `downloading`, `ready`, `removed` or `error`.',
+                'description' => 'Source status: one of `pending`, `downloading`, `ready`, `removed`, `error` or `aborted`.',
                 'default' => '',
                 'example' => 'ready',
             ])

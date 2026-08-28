@@ -1601,6 +1601,11 @@ return [
         'description' => 'Video rendition with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::VIDEO_RENDITION_ALREADY_EXISTS => [
+        'name' => Exception::VIDEO_RENDITION_ALREADY_EXISTS,
+        'description' => 'A rendition with the same profile and output already exists for this video. Delete it before creating again.',
+        'code' => 409,
+    ],
     Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND => [
         'name' => Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND,
         'description' => 'Video rendition segment with the requested ID could not be found.',

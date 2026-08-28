@@ -81,7 +81,8 @@ class Create extends Base
 
         // A live or in-flight working copy must not be fetched twice — reject
         // explicitly rather than no-op so the caller knows the request did
-        // nothing. `pending`, `removed` and `error` fall through to enqueue.
+        // nothing. `pending`, `removed`, `error` and `aborted` fall through
+        // to enqueue (re-download after a stale-download sweep).
         if ($status === self::SOURCE_DOWNLOADING) {
             throw new Exception(Exception::VIDEO_SOURCE_IN_PROGRESS);
         }

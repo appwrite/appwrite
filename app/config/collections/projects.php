@@ -3289,6 +3289,13 @@ return [
                 'lengths' => [],
                 'orders' => [],
             ],
+            [
+                '$id' => ID::custom('_key_status_updatedAt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['status', '$updatedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -3580,7 +3587,7 @@ return [
         'indexes' => [
             [
                 '$id' => ID::custom('_key_video_output_profile'),
-                'type' => Database::INDEX_KEY,
+                'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['videoId', 'output', 'profileId'],
                 'lengths' => [],
                 'orders' => [],
@@ -3596,6 +3603,13 @@ return [
                 '$id' => ID::custom('_key_status'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['status'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_status_updatedAt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['status', '$updatedAt'],
                 'lengths' => [],
                 'orders' => [],
             ],

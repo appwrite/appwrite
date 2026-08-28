@@ -542,21 +542,38 @@ class Videos extends Action
             );
 
             $lastProgress = -1;
+            // Once the row leaves `started` (sweeper abort, error park, e2e seed),
+            // never resume DB writes for this pack — even if status is set back to
+            // `started` before ffmpeg exits.
+            $halted = false;
+            $lastStatusCheck = 0.0;
             $package = $packager
                 ->open($inPath)
                 ->format($format)
                 ->add($representation)
                 ->output($target)
-                ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress) {
-                    if (!$progress instanceof Progress) {
+                ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$lastStatusCheck) {
+                    if ($halted || !$progress instanceof Progress) {
                         return;
                     }
 
+                    $now = \microtime(true);
                     $percentage = (int) \round($progress->percent);
+                    $onWriteBoundary = $percentage % 3 === 0 && $percentage !== $lastProgress;
+                    // Poll status ~every 500ms (and on write boundaries) so abort/
+                    // error parks are noticed without a DB read on every ffmpeg tick.
+                    if (!$onWriteBoundary && ($now - $lastStatusCheck) < 0.5) {
+                        return;
+                    }
+                    $lastStatusCheck = $now;
 
-                    // ffmpeg emits many ticks per percent; only write on a new
-                    // 3%-step boundary we have not already reported.
-                    if ($percentage % 3 !== 0 || $percentage === $lastProgress) {
+                    $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+                    if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_STARTED) {
+                        $halted = true;
+                        return;
+                    }
+
+                    if (!$onWriteBoundary) {
                         return;
                     }
                     $lastProgress = $percentage;
@@ -577,6 +594,17 @@ class Videos extends Action
                 })
                 ->pack(\rtrim($workspace['outDir'], '/'));
 
+            // Maintenance (or an e2e park) may have moved the row out of
+            // `started` while ffmpeg was still running — stop before ending.
+            $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            if (
+                $halted
+                || $current->isEmpty()
+                || $current->getAttribute('status') !== Base::STATUS_STARTED
+            ) {
+                return;
+            }
+
             $path = $deviceForVideos->getPath($video->getId())
                 . '/' . $rendition->getAttribute('name')
                 . '-' . $rendition->getId() . '/';
@@ -596,6 +624,14 @@ class Videos extends Action
                 $path,
                 $output
             );
+
+            $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            if (
+                $current->isEmpty()
+                || $current->getAttribute('status') !== Base::STATUS_STARTED
+            ) {
+                return;
+            }
 
             $rendition = $dbForProject->updateDocument(
                 'videos_renditions',
@@ -620,6 +656,14 @@ class Videos extends Action
                         return;
                     }
 
+                    $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+                    if (
+                        $current->isEmpty()
+                        || !\in_array($current->getAttribute('status'), [Base::STATUS_STARTED, Base::STATUS_ENDED], true)
+                    ) {
+                        return;
+                    }
+
                     $rendition = $dbForProject->updateDocument(
                         'videos_renditions',
                         $rendition->getId(),
@@ -633,6 +677,14 @@ class Videos extends Action
                 }
             );
 
+            $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            if (
+                $current->isEmpty()
+                || !\in_array($current->getAttribute('status'), [Base::STATUS_ENDED, Base::STATUS_UPLOADING], true)
+            ) {
+                return;
+            }
+
             $rendition = $dbForProject->updateDocument(
                 'videos_renditions',
                 $rendition->getId(),
@@ -644,6 +696,15 @@ class Videos extends Action
             );
             $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
         } catch (\Throwable $th) {
+            $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            // Do not overwrite aborted/error parks from maintenance or e2e seeding.
+            if (
+                !$current->isEmpty()
+                && \in_array($current->getAttribute('status'), [Base::STATUS_ABORTED, Base::STATUS_ERROR], true)
+            ) {
+                throw $th;
+            }
+
             $rendition = $dbForProject->updateDocument(
                 'videos_renditions',
                 $rendition->getId(),
@@ -1254,6 +1315,18 @@ class Videos extends Action
         ?int $chunksTotal = null,
         ?int $chunksUploaded = null
     ): Document {
+        // Maintenance may have aborted a stuck download. Late ready/error from
+        // that same worker must not overwrite aborted; a fresh download
+        // (aborted → downloading) must still be allowed for client retry.
+        $current = $dbForProject->getDocument('videos', $video->getId());
+        if (
+            !$current->isEmpty()
+            && $current->getAttribute('status') === Base::SOURCE_ABORTED
+            && \in_array($status, [Base::SOURCE_READY, Base::SOURCE_ERROR], true)
+        ) {
+            return $current;
+        }
+
         $data = ['status' => $status];
         if ($chunksTotal !== null) {
             $data['chunksTotal'] = $chunksTotal;

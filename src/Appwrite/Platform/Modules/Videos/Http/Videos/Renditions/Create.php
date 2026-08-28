@@ -16,6 +16,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -92,6 +93,16 @@ class Create extends Base
         }
 
         $this->assertSourceReady($video);
+
+        $existing = $authorization->skip(fn () => $dbForProject->find('videos_renditions', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::equal('profileId', [$profile->getId()]),
+            Query::equal('output', [$output]),
+            Query::limit(1),
+        ]));
+        if (!empty($existing)) {
+            throw new Exception(Exception::VIDEO_RENDITION_ALREADY_EXISTS);
+        }
 
         $width = (int) $profile->getAttribute('width', 0);
         $height = (int) $profile->getAttribute('height', 0);

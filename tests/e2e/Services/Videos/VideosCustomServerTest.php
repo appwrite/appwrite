@@ -643,6 +643,49 @@ class VideosCustomServerTest extends Scope
     }
 
     /**
+     * One rendition per video + profile + output. A duplicate is rejected; a
+     * different output with the same profile is allowed; after delete the same
+     * combination can be created again.
+     */
+    public function testCreateRenditionUniqueProfileOutput(): void
+    {
+        $ready = $this->createReadyVideo();
+        $videoId = $ready['$id'];
+        $profile = $this->seededProfile('360p');
+
+        $first = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $first['headers']['status-code']);
+        $firstId = $first['body']['$id'];
+
+        $duplicate = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals('video_rendition_already_exists', $duplicate['body']['type']);
+
+        $otherOutput = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'dash',
+        ]);
+        $this->assertEquals(202, $otherOutput['headers']['status-code']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        $retry = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $retry['headers']['status-code']);
+        $this->assertEquals('waiting', $retry['body']['status']);
+        $this->assertNotSame($firstId, $retry['body']['$id']);
+    }
+
+    /**
      * The worker picks the job up off the `videos` queue and drives the document
      * to `ready` once packaging and upload finish.
      */

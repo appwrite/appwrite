@@ -366,6 +366,7 @@ class Exception extends \Exception
     public const string VIDEO_TRACK_NOT_FOUND = 'video_track_not_found';
     public const string VIDEO_PROFILE_NOT_FOUND = 'video_profile_not_found';
     public const string VIDEO_RENDITION_NOT_FOUND = 'video_rendition_not_found';
+    public const string VIDEO_RENDITION_ALREADY_EXISTS = 'video_rendition_already_exists';
     public const string VIDEO_RENDITION_SEGMENT_NOT_FOUND = 'video_rendition_segment_not_found';
     public const string VIDEO_SUBTITLE_NOT_FOUND = 'video_subtitle_not_found';
     public const string VIDEO_SUBTITLE_NOT_VALID = 'video_subtitle_not_valid';
