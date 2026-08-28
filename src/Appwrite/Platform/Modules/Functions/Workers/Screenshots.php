@@ -102,7 +102,7 @@ class Screenshots extends Action
         $date = \date('H:i:s');
         $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n");
 
-        $stage = 'capture';
+        $captured = false;
 
         try {
             $rule = $dbForPlatform->findOne('rules', [
@@ -165,7 +165,7 @@ class Screenshots extends Action
                 );
             }
 
-            $stage = 'upload';
+            $captured = true;
 
             Span::add('screenshot.count', \count($captures));
 
@@ -214,8 +214,6 @@ class Screenshots extends Action
                 $updates->setAttribute($key, $fileId);
             }
 
-            $stage = 'persist';
-
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing finished. [0m\n");
 
@@ -232,11 +230,7 @@ class Screenshots extends Action
             ]));
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
-            $failure = match ($stage) {
-                'upload' => 'Screenshot upload failed.',
-                'persist' => 'Screenshot could not be saved.',
-                default => 'Screenshot capturing failed.',
-            };
+            $failure = $captured ? 'Screenshot could not be saved.' : 'Screenshot capturing failed.';
 
             try {
                 $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m {$failure} Deployment will continue. Reason: {$th->getMessage()} [0m\n");
