@@ -545,6 +545,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $register->set('telemetry.connectionCounter', fn () => $telemetry->createUpDownCounter('realtime.server.open_connections'));
     $register->set('telemetry.connectionCreatedCounter', fn () => $telemetry->createCounter('realtime.server.connection.created'));
     $register->set('telemetry.messageSentCounter', fn () => $telemetry->createCounter('realtime.server.message.sent'));
+    // Fan-out cost is driven by bytes, not message count: one large document to many
+    // subscribers allocates far more than many small ones. Without this, a burst that
+    // moves hundreds of MB is invisible next to a flat message rate.
+    $register->set('telemetry.outboundBytesCounter', fn () => $telemetry->createCounter('realtime.server.outbound_bytes', 'By'));
     $register->set('telemetry.deliveryDelayHistogram', fn () => $telemetry->createHistogram(
         name: 'realtime.server.delivery_delay',
         unit: 'ms',
@@ -639,18 +643,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
             $subscribers = $realtime->getSubscribers($event);
 
-            $groups = [];
             foreach ($subscribers as $id => $matched) {
-                $key = implode(',', array_keys($matched));
-                $groups[$key]['ids'][] = $id;
-                $groups[$key]['subscriptions'] = array_keys($matched);
-            }
-
-            foreach ($groups as $group) {
                 $data = $event['data'];
-                $data['subscriptions'] = $group['subscriptions'];
+                $data['subscriptions'] = array_keys($matched);
 
-                $server->send($group['ids'], json_encode([
+                $server->send([$id], json_encode([
                     'type' => 'event',
                     'data' => $data
                 ]));
@@ -788,35 +785,32 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
                 }
 
-                // Group connections by matched subscription IDs for batch sending
-                $groups = [];
-                foreach ($receivers as $id => $matched) {
-                    $key = implode(',', array_keys($matched));
-                    $groups[$key]['ids'][] = $id;
-                    $groups[$key]['subscriptions'] = array_keys($matched);
-                }
-
                 $total = 0;
                 $outboundBytes = 0;
 
-                foreach ($groups as $group) {
+                // One frame per connection. `subscriptions` carries that connection's
+                // matched subscription IDs, and those are ID::unique() per connection
+                // (see the subscribe handler), so no two connections can ever share a
+                // frame. The grouping this replaces keyed on exactly those IDs, so it
+                // never collapsed -- it always built one group of one.
+                foreach ($receivers as $id => $matched) {
                     $data = $event['data'];
-                    $data['subscriptions'] = $group['subscriptions'];
+                    $data['subscriptions'] = array_keys($matched);
 
                     $payloadJson = json_encode([
                         'type' => 'event',
                         'data' => $data
                     ]);
 
-                    $server->send($group['ids'], $payloadJson);
+                    $server->send([$id], $payloadJson);
 
-                    $count = count($group['ids']);
-                    $total += $count;
-                    $outboundBytes += strlen($payloadJson) * $count;
+                    $total++;
+                    $outboundBytes += strlen($payloadJson);
                 }
 
                 if ($total > 0) {
                     $register->get('telemetry.messageSentCounter')->add($total);
+                    $register->get('telemetry.outboundBytesCounter')->add($outboundBytes);
                     $stats->incr($event['project'], 'messages', $total);
                     $updatedAt = $event['data']['payload']['$updatedAt'] ?? null;
                     if (\is_string($updatedAt)) {
