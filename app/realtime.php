@@ -839,15 +839,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $projectId = $event['project'] ?? null;
 
                     if (!empty($projectId)) {
-                        $metrics = [
+                        // Reached only when $total > 0, and every frame carries the
+                        // literal envelope, so outbound bytes are always non-zero.
+                        triggerStats([
                             METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => $total,
-                        ];
-
-                        if ($outboundBytes > 0) {
-                            $metrics[METRIC_REALTIME_OUTBOUND] = $outboundBytes;
-                        }
-
-                        triggerStats($metrics, $projectId);
+                            METRIC_REALTIME_OUTBOUND => $outboundBytes,
+                        ], $projectId);
                     }
 
                 }
