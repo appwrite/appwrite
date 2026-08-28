@@ -1365,7 +1365,12 @@ export async function updatePostgresTableRow(
   identity: PostgresRowIdentity,
   changes: Record<string, RowCellValue>,
 ) {
-  const sql = buildPostgresUpdateRowSql(tableId, identity, changes)
+  const { columns } = await fetchPostgresTableRowColumns(
+    projectId,
+    databaseId,
+    tableId,
+  )
+  const sql = buildPostgresUpdateRowSql(tableId, identity, changes, columns)
   return executePostgresDatabaseSql(projectId, databaseId, sql)
 }
 
@@ -1381,7 +1386,7 @@ export async function createPostgresTableRow(
     tableId,
   )
   const filteredValues = filterPostgresRowCreateValues(values, columns)
-  const sql = buildPostgresInsertRowSql(tableId, filteredValues)
+  const sql = buildPostgresInsertRowSql(tableId, filteredValues, columns)
 
   // When serial/identity columns are omitted (left blank), Postgres uses
   // DEFAULT nextval(). If an earlier row used an explicit ID (or data was

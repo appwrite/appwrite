@@ -174,6 +174,14 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
+  DatabaseArrayItemTextField,
+  databaseRowFieldOverlayClass,
+  databaseRowTextareaPadding,
+  DATABASE_ROW_FIELD_INLINE_COUNTER_PADDING,
+  DATABASE_ROW_TEXTAREA_CLASS,
+} from '@/components/pages/projects/$projectId/databases/_components/DatabaseArrayItemTextField'
+import { isSpreadsheetRtlText } from '@/lib/spreadsheet-cell-formatting'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -2351,85 +2359,41 @@ function RowEditDrawer({
                                                     className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                                                   />
                                                 ) : (
-                                                  <Textarea
+                                                  <DatabaseArrayItemTextField
                                                     value={stringValue}
-                                                    onChange={(e) => {
-                                                      e.stopPropagation()
+                                                    onChange={(next) =>
                                                       handleArrayItemChange(
                                                         key,
                                                         index,
-                                                        e.target.value,
+                                                        next,
                                                       )
-                                                    }}
+                                                    }
                                                     onFocus={focusGuard}
-                                                    ref={(el) => setRef(el)}
+                                                    inputRef={(el) => setRef(el)}
                                                     autoFocus={
                                                       shouldFocus && index === 0
                                                     }
                                                     disabled={isNull}
-                                                    dir={
-                                                      isRTLContent ? 'rtl' : 'ltr'
-                                                    }
                                                     maxLength={
                                                       hasLimit ? size : undefined
                                                     }
-                                                    className={cn(
-                                                      'min-h-[36px] max-h-[600px] resize-none rounded-none border-0 bg-transparent px-3 py-2 text-[13px] focus-visible:ring-0 focus-visible:ring-offset-0',
-                                                      isNull &&
-                                                      'cursor-not-allowed opacity-50',
-                                                    )}
                                                     placeholder={`Item ${index + 1}`}
-                                                    rows={1}
+                                                    isNull={isNull}
+                                                    showNullCheckbox={showNullCheckbox}
+                                                    nullCheckboxId={`${key}-${index}-null`}
+                                                    onNullChange={(checked) => {
+                                                      const newArray = [
+                                                        ...((currentValue as unknown[]) ||
+                                                          []),
+                                                      ]
+                                                      newArray[index] = checked
+                                                        ? null
+                                                        : ''
+                                                      handleFieldChange(key, newArray)
+                                                    }}
                                                   />
                                                 )}
                                               </div>
-                                              {showFooter && (
-                                                <div className="flex items-center justify-end gap-3 border-t border-foreground/10 bg-muted/30 px-3 py-1">
-                                                  {hasLimit && (
-                                                    <span
-                                                      className={cn(
-                                                        'text-[10px] tabular-nums whitespace-nowrap',
-                                                        charCount > size
-                                                          ? 'font-medium text-destructive'
-                                                          : 'text-muted-foreground',
-                                                      )}
-                                                    >
-                                                      {charCount}/{size}
-                                                    </span>
-                                                  )}
-                                                  {showNullCheckbox && (
-                                                    <label
-                                                      htmlFor={`${key}-${index}-null`}
-                                                      className="flex cursor-pointer select-none items-center gap-1.5 text-[10px] text-muted-foreground"
-                                                    >
-                                                      <Checkbox
-                                                        id={`${key}-${index}-null`}
-                                                        checked={isNull}
-                                                        onCheckedChange={(
-                                                          checked,
-                                                        ) => {
-                                                          const newArray = [
-                                                            ...((currentValue as unknown[]) ||
-                                                              []),
-                                                          ]
-                                                          newArray[index] =
-                                                            checked ? null : ''
-                                                          handleFieldChange(
-                                                            key,
-                                                            newArray,
-                                                          )
-                                                        }}
-                                                        onClick={(e) =>
-                                                          e.stopPropagation()
-                                                        }
-                                                        className="h-3 w-3 cursor-pointer"
-                                                        disabled={false}
-                                                      />
-                                                      {t('Null')}
-                                                    </label>
-                                                  )}
-                                                </div>
-                                              )}
                                             </div>
                                             <button
                                               type="button"
@@ -2602,24 +2566,28 @@ function RowEditDrawer({
                                     fieldType === 'varchar') &&
                                   size !== null &&
                                   size > 0
-                                const isRTLContent = isRTL(stringValue)
+                                const isRTLContent = isSpreadsheetRtlText(stringValue)
                                 const showNullCheckbox = !isRequired
                                 const useTextarea =
                                   (size && size >= 50) ||
                                   fieldType === 'text' ||
                                   fieldType === 'mediumtext' ||
                                   fieldType === 'longtext'
-                                const needsCounterSpace =
-                                  hasLimit || showNullCheckbox
-                                const counterPadding = needsCounterSpace
-                                  ? isRTLContent
-                                    ? 'ps-28'
-                                    : 'pe-28'
-                                  : ''
+                                const textareaPadding = databaseRowTextareaPadding({
+                                  hasLimit,
+                                  showNullCheckbox,
+                                })
+                                const inputCounterPadding =
+                                  showNullCheckbox || hasLimit
+                                    ? DATABASE_ROW_FIELD_INLINE_COUNTER_PADDING
+                                    : ''
 
                                 return (
                                   <div className="space-y-1.5">
-                                    <div className="relative">
+                                    <div
+                                      className="relative"
+                                      dir={isRTLContent ? 'rtl' : 'ltr'}
+                                    >
                                       {useTextarea ? (
                                         <Textarea
                                           id={key}
@@ -2657,11 +2625,10 @@ function RowEditDrawer({
                                             hasLimit ? size : undefined
                                           }
                                           className={cn(
-                                            'min-h-[36px] max-h-[600px] text-[13px] resize-none',
+                                            DATABASE_ROW_TEXTAREA_CLASS,
                                             isNull &&
                                             'opacity-50 cursor-not-allowed',
-                                            showNullCheckbox ? 'pb-8' : 'pb-2',
-                                            counterPadding,
+                                            textareaPadding,
                                           )}
                                           rows={1}
                                         />
@@ -2690,23 +2657,16 @@ function RowEditDrawer({
                                             isRequired ? undefined : 'NULL'
                                           }
                                           className={cn(
-                                            'h-9 text-[13px]',
+                                            'field-sizing-fixed h-9 w-full text-[13px] text-start',
                                             isNull &&
                                             'opacity-50 cursor-not-allowed',
-                                            counterPadding,
+                                            inputCounterPadding,
                                           )}
                                         />
                                       )}
                                       <div
-                                        className={cn(
-                                          'absolute flex items-center gap-2 pointer-events-none',
-                                          useTextarea
-                                            ? isRTLContent
-                                              ? 'bottom-2 start-2'
-                                              : 'bottom-2 end-2'
-                                            : isRTLContent
-                                              ? 'top-1/2 -translate-y-1/2 start-2'
-                                              : 'top-1/2 -translate-y-1/2 end-2',
+                                        className={databaseRowFieldOverlayClass(
+                                          useTextarea ? 'textarea' : 'input',
                                         )}
                                       >
                                         {hasLimit && (

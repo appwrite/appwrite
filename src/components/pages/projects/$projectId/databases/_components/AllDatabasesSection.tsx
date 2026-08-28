@@ -53,6 +53,10 @@ import {
 import {
   DatabaseClusterPreview,
   clusterNodeStatusesFromDatabaseStatus,
+  DATABASE_GRID_CARD_BODY_CLASSNAME,
+  DATABASE_GRID_CARD_BODY_HEIGHT_STYLE,
+  DATABASE_GRID_CARD_FOOTER_CLASSNAME,
+  DATABASE_GRID_CARD_HEADER_CLASSNAME,
 } from './DatabaseClusterPreview'
 import { DatabaseContextMenu } from './DatabaseContextMenu'
 import { DatabaseOperationsChartPreview } from './DatabaseOperationsChartPreview'
@@ -228,10 +232,15 @@ function AllDatabasesGridCardShell({
         typeUnavailable
           ? 'cursor-not-allowed opacity-60'
           : RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-        showFooter && 'pb-0',
+        'pb-0',
       )}
     >
-      <div className="flex min-w-0 items-start justify-between gap-3">
+      <div
+        className={cn(
+          'flex min-w-0 items-start justify-between gap-3',
+          DATABASE_GRID_CARD_HEADER_CLASSNAME,
+        )}
+      >
         <div className="min-w-0 overflow-hidden">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <h3 className="truncate text-[14px] font-medium text-foreground">
@@ -265,29 +274,40 @@ function AllDatabasesGridCardShell({
         />
       </div>
 
-      {midContent}
+      <div
+        className={cn(
+          '-mx-4 mt-2 min-w-0 border-t border-border',
+          DATABASE_GRID_CARD_BODY_CLASSNAME,
+        )}
+        style={DATABASE_GRID_CARD_BODY_HEIGHT_STYLE}
+      >
+        {midContent}
+      </div>
 
-      {showFooter ? (
-        <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
-          <div className="flex min-w-0 items-center justify-between gap-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
-              {computeLabel ? (
-                <span className="truncate text-muted-foreground">
-                  {computeLabel}
-                </span>
-              ) : null}
-              {connectionsLabel ? (
-                <span className="truncate tabular-nums text-muted-foreground">
-                  {connectionsLabel}
-                </span>
-              ) : null}
-            </div>
-            {isBeta ? (
-              <DatabaseTypeBetaBadge className="shrink-0" />
+      <div
+        className={cn(
+          RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+          DATABASE_GRID_CARD_FOOTER_CLASSNAME,
+        )}
+      >
+        <div className="flex min-h-5 min-w-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
+            {showFooter && computeLabel ? (
+              <span className="truncate text-muted-foreground">
+                {computeLabel}
+              </span>
+            ) : null}
+            {showFooter && connectionsLabel ? (
+              <span className="truncate tabular-nums text-muted-foreground">
+                {connectionsLabel}
+              </span>
             ) : null}
           </div>
+          {showFooter && isBeta ? (
+            <DatabaseTypeBetaBadge className="shrink-0" />
+          ) : null}
         </div>
-      ) : null}
+      </div>
     </div>
   )
 
@@ -355,6 +375,7 @@ function AllDatabasesServerlessGridCard({
           projectId={projectId}
           databaseId={db.$id}
           enabled={showMonitor}
+          className="h-full"
         />
       }
     />
@@ -408,6 +429,8 @@ function AllDatabasesDedicatedGridCard({
           replicaCount={replicaCount}
           nodeStatuses={nodeStatuses}
           nodeMetrics={nodeMetrics}
+          withSectionDivider={false}
+          className="h-full"
         />
       }
       connectionsLabel={formatConnectionsLabel(connections, t)}

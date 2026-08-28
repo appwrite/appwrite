@@ -4,6 +4,10 @@ import {
 } from '@/lib/postgres-database-routes'
 import type { PostgresIndexAlgorithm } from '@/lib/postgres-index-metadata'
 import { quotePostgresStringLiteral, prefixPostgresSqlComment } from '@/lib/postgres-sql'
+import {
+  formatPostgresColumnTypeLabel,
+  parsePostgresColumnTypeFromRow,
+} from '@/lib/postgres-column-types'
 
 export function buildPostgresAddColumnSql(
   tableId: string,
@@ -284,10 +288,25 @@ export function buildPostgresDropTableSql(tableId: string): string {
 
 export function formatPostgresColumnType(row: {
   data_type: string
+  udt_name?: string
   character_maximum_length?: number | string | null
   numeric_precision?: number | string | null
   numeric_scale?: number | string | null
+  datetime_precision?: number | string | null
 }): string {
+  if (row.udt_name) {
+    return formatPostgresColumnTypeLabel(
+      parsePostgresColumnTypeFromRow({
+        data_type: row.data_type,
+        udt_name: row.udt_name,
+        character_maximum_length: row.character_maximum_length ?? null,
+        numeric_precision: row.numeric_precision ?? null,
+        numeric_scale: row.numeric_scale ?? null,
+        datetime_precision: row.datetime_precision ?? null,
+      }),
+    )
+  }
+
   const base = row.data_type
   const charLen = row.character_maximum_length
   if (charLen != null && charLen !== '') {

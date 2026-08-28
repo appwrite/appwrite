@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  endOfDay,
   formatDistanceToNow,
-  startOfDay,
-  subDays,
+  subHours,
 } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import type { LucideIcon } from 'lucide-react'
@@ -68,7 +66,7 @@ import {
   usageChartPointsToMonitorSeries,
 } from '@/lib/usage/dedicated-databases-usage'
 import {
-  DEFAULT_USAGE_CHART_INTERVAL,
+  DEFAULT_MONITOR_CHART_INTERVAL,
   resolveUsageChartIntervalForRange,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
@@ -89,8 +87,8 @@ const MONITOR_SCROLL_MARGIN =
 
 function getDefaultMonitorDateRange(): DateRange {
   return {
-    from: startOfDay(subDays(new Date(), 1)),
-    to: endOfDay(new Date()),
+    from: subHours(new Date(), 1),
+    to: new Date(),
   }
 }
 
@@ -216,7 +214,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
   const t = useT()
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultMonitorDateRange)
   const [chartInterval, setChartInterval] = useState<UsageChartInterval>(
-    DEFAULT_USAGE_CHART_INTERVAL,
+    DEFAULT_MONITOR_CHART_INTERVAL,
   )
   const [selectedOrdinal, setSelectedOrdinal] = useState(0)
   const [activeSectionId, setActiveSectionId] = useState('connections')

@@ -1,12 +1,12 @@
-import { endOfDay, startOfDay, subDays } from 'date-fns'
+import { subHours } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 
 export function getDefaultMonitorDateRange(): DateRange {
   return {
-    from: startOfDay(subDays(new Date(), 29)),
-    to: endOfDay(new Date()),
+    from: subHours(new Date(), 1),
+    to: new Date(),
   }
 }
 

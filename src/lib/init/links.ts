@@ -12,6 +12,9 @@ export function isExternalInitHref(href: string): boolean {
 
 export const INIT_TICKET_SECTION_HASH = '#ticket'
 
+/** Where Init YouTube sessions land when no per-session link is set. */
+export const INIT_YOUTUBE_CHANNEL_HREF = 'https://www.youtube.com/@Appwrite'
+
 export type ResolvedInitHref = {
   href: string
   external: boolean

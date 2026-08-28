@@ -770,9 +770,13 @@ export function validatePostgresColumnTypeState(
 }
 
 export function getPostgresColumnDefaultPlaceholder(
-  typeId: PostgresColumnTypeId,
+  state: PostgresColumnTypeState,
 ): string {
-  switch (typeId) {
+  if (state.isArray) {
+    return `'{}'::${buildPostgresColumnTypeSql(state)}`
+  }
+
+  switch (state.typeId) {
     case 'boolean':
       return 'NULL'
     case 'uuid':
