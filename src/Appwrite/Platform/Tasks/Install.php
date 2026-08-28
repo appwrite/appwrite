@@ -503,6 +503,7 @@ class Install extends Action
             return;
         }
 
+        $this->installerConfig = $config;
         putenv('APPWRITE_INSTALLER_CONFIG=' . $json);
         $path = InstallerServer::INSTALLER_CONFIG_FILE;
         if (@file_put_contents($path, $json) === false) {
@@ -527,30 +528,6 @@ class Install extends Action
     ): void {
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, false);
-
-        // Read before the compose file and .env are rewritten below, which would replace
-        // the version being upgraded from with the one being upgraded to. The compose file
-        // is authoritative -- it is what the running containers were started from -- and
-        // .env covers installations whose compose file is missing or unreadable.
-        $installedVersion = '';
-        if ($isUpgrade) {
-            $existingCompose = $this->readExistingCompose();
-
-            if ($existingCompose !== '') {
-                try {
-                    $installedVersion = (new Compose($existingCompose))->getService('appwrite')->getImageVersion();
-                } catch (\Throwable) {
-                    // No appwrite service to read a tag from; .env below covers it.
-                }
-            }
-
-            if ($installedVersion === '') {
-                $existingEnv = @\file_get_contents($this->path . '/' . $this->getEnvFileName());
-                $installedVersion = $existingEnv === false
-                    ? ''
-                    : (string) ((new Env($existingEnv))->list()['_APP_VERSION'] ?? '');
-            }
-        }
 
         $isCLI = php_sapi_name() === 'cli';
         if ($isLocalInstall || $isUpgrade) {
@@ -578,6 +555,42 @@ class Install extends Action
         $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
         if ($isLocalInstall) {
             $version = 'local';
+        }
+
+        // Read before the compose file and .env are rewritten below, which would replace
+        // the version being upgraded from with the one being upgraded to. The compose file
+        // is authoritative -- it is what the running containers were started from -- and
+        // .env covers installations whose compose file is missing or unreadable.
+        $installedVersion = '';
+        if ($isUpgrade) {
+            $existingCompose = $this->readExistingCompose();
+
+            if ($existingCompose !== '') {
+                try {
+                    $installedVersion = (new Compose($existingCompose))->getService('appwrite')->getImageVersion();
+                } catch (\Throwable) {
+                    // No appwrite service to read a tag from; .env below covers it.
+                }
+            }
+
+            if ($installedVersion === '') {
+                $existingEnv = @\file_get_contents($this->path . '/' . $this->getEnvFileName());
+                $installedVersion = $existingEnv === false
+                    ? ''
+                    : (string) ((new Env($existingEnv))->list()['_APP_VERSION'] ?? '');
+            }
+
+            // An attempt that was interrupted after rewriting those files leaves both
+            // reading as the version being installed, which would look like an upgrade with
+            // nothing to cross. Remember the version first, so a resumed attempt still knows
+            // where it started; the infrastructure changes below forget it once applied.
+            $installerConfig = $this->readInstallerConfig();
+
+            if ($installedVersion === '' || $installedVersion === $version) {
+                $installedVersion = (string) ($installerConfig['upgradeFrom'] ?? '');
+            } elseif (($installerConfig['upgradeFrom'] ?? null) !== $installedVersion) {
+                $this->setInstallerConfig(\array_merge($installerConfig, ['upgradeFrom' => $installedVersion]));
+            }
         }
 
         if (!$isLocalInstall && $this->hostPath === '') {
@@ -689,6 +702,12 @@ class Install extends Action
                         Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
                     }
                 }
+
+                // Applied, so a later upgrade reads its starting version off the compose
+                // file again rather than replaying this one.
+                $installerConfig = $this->readInstallerConfig();
+                unset($installerConfig['upgradeFrom']);
+                $this->setInstallerConfig($installerConfig);
             }
 
             if (!$noStart) {
