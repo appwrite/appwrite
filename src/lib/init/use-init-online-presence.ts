@@ -1,7 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type Models, type RealtimeResponseEvent } from '@appwrite.io/console'
 import { useQuery } from '@tanstack/react-query'
-import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import {
+  consoleAccountQueryOptions,
+  updateAccountPrefs,
+} from '@/lib/react-query/hooks/auth'
+import {
+  mergeInitPresencePrefsIntoAccountPrefs,
+  patchInitPresencePrefs,
+  readInitPresencePrefsFromAccountPrefs,
+  readInitPresencePrefsFromStorage,
+  resolveInitIdentityVisiblePreference,
+  resolveInitParticipantOnlinePreference,
+  writeInitPresencePrefsToStorage,
+  type InitPresencePrefs,
+} from '@/lib/init/init-presence-prefs'
 import { fetchLocale } from '@/lib/react-query/hooks/locale'
 import { LONG_STALE_TIME } from '@/lib/react-query/hooks/constants'
 import { hashEmailForAvatar } from '@/lib/avatar-email-hash'
@@ -29,6 +42,7 @@ import {
   mapPresencesToOnlineUsers,
   dedupeInitSelfOnlineUsers,
   dedupeInitSelfPresenceRecords,
+  sortOnlineUsers,
   INIT_ONLINE_PRESENCE_LIST_LIMIT,
   overlayInitPresenceListFetch,
   parseInitPresenceMetadata,
@@ -59,53 +73,7 @@ const AWAY_USER_LIMIT = INIT_ONLINE_PRESENCE_LIST_LIMIT
 const ACTIVITY_PUBLISH_DEBOUNCE_MS = 300
 /** Safety-net list sync when realtime events are missed (reconnect, tab background). */
 const INIT_PRESENCE_LIST_REFRESH_MS = 5 * 60_000
-const INIT_PARTICIPANT_ONLINE_SESSION_KEY = 'console.init.participantOnline'
-const INIT_PARTICIPANT_IDENTITY_VISIBLE_SESSION_KEY = 'console.init.participantIdentityVisible'
-
-function readParticipantOnlinePreference(): boolean {
-  if (typeof window === 'undefined') return true
-  try {
-    return window.sessionStorage.getItem(INIT_PARTICIPANT_ONLINE_SESSION_KEY) !== 'false'
-  } catch {
-    return true
-  }
-}
-
-function writeParticipantOnlinePreference(online: boolean): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.sessionStorage.setItem(
-      INIT_PARTICIPANT_ONLINE_SESSION_KEY,
-      online ? 'true' : 'false',
-    )
-  } catch {
-    /* private mode */
-  }
-}
-
-function readIdentityVisiblePreference(identityHiddenByDefault: boolean): boolean {
-  if (typeof window === 'undefined') return !identityHiddenByDefault
-  try {
-    const stored = window.sessionStorage.getItem(INIT_PARTICIPANT_IDENTITY_VISIBLE_SESSION_KEY)
-    if (stored === 'true') return true
-    if (stored === 'false') return false
-  } catch {
-    /* private mode */
-  }
-  return !identityHiddenByDefault
-}
-
-function writeIdentityVisiblePreference(visible: boolean): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.sessionStorage.setItem(
-      INIT_PARTICIPANT_IDENTITY_VISIBLE_SESSION_KEY,
-      visible ? 'true' : 'false',
-    )
-  } catch {
-    /* private mode */
-  }
-}
+const PRESENCE_PREFS_SAVE_DEBOUNCE_MS = 600
 
 export type InitParticipantStatus = 'online' | 'offline'
 
@@ -274,6 +242,48 @@ export function useInitOnlinePresence(
   const accountName = account?.name?.trim() || account?.email?.trim() || ''
   const accountUserIdRef = useRef(accountUserId)
   accountUserIdRef.current = accountUserId
+  const accountPrefsRef = useRef(account?.prefs as Record<string, unknown> | undefined)
+  accountPrefsRef.current = account?.prefs as Record<string, unknown> | undefined
+  const presencePrefsRef = useRef<InitPresencePrefs>({})
+  const presencePrefsSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const bootstrapScopeRef = useRef<string | null>(null)
+  const appliedPresencePrefsSourceRef = useRef<'none' | 'local' | 'account'>('none')
+  const presencePrefsDirtyRef = useRef(false)
+
+  const persistPresencePrefs = useCallback(
+    (patch: Partial<InitPresencePrefs>) => {
+      if (!eventId || !accountUserId) return
+
+      const fromAccount = readInitPresencePrefsFromAccountPrefs(
+        accountPrefsRef.current,
+        eventId,
+      )
+      const fromStorage = readInitPresencePrefsFromStorage(eventId, accountUserId)
+      const next = patchInitPresencePrefs(
+        { ...fromStorage, ...fromAccount, ...presencePrefsRef.current },
+        patch,
+      )
+      presencePrefsRef.current = next
+      presencePrefsDirtyRef.current = true
+      writeInitPresencePrefsToStorage(eventId, accountUserId, next)
+
+      if (presencePrefsSaveTimerRef.current) {
+        clearTimeout(presencePrefsSaveTimerRef.current)
+      }
+
+      presencePrefsSaveTimerRef.current = setTimeout(() => {
+        void updateAccountPrefs(
+          mergeInitPresencePrefsIntoAccountPrefs(
+            accountPrefsRef.current,
+            eventId,
+            next,
+          ),
+          'init-presence',
+        ).catch(() => undefined)
+      }, PRESENCE_PREFS_SAVE_DEBOUNCE_MS)
+    },
+    [accountUserId, eventId],
+  )
 
   const buildMetadata = useCallback(
     (
@@ -584,7 +594,7 @@ export function useInitOnlinePresence(
       setIsParticipantStatusUpdating(true)
       participantOnlineRef.current = online
       setParticipantStatusState(status)
-      writeParticipantOnlinePreference(online)
+      persistPresencePrefs({ participantOnline: online })
 
       if (!online) {
         transientActivityRef.current = null
@@ -598,7 +608,7 @@ export function useInitOnlinePresence(
         setIsParticipantStatusUpdating(false)
       }
     },
-    [accountUserId, bumpActivityDisplay, enabled, eventId, publishPresence],
+    [accountUserId, bumpActivityDisplay, enabled, eventId, persistPresencePrefs, publishPresence],
   )
 
   const setIdentityVisible = useCallback(
@@ -609,7 +619,7 @@ export function useInitOnlinePresence(
       setIsIdentityVisibleUpdating(true)
       identityVisibleRef.current = visible
       setIdentityVisibleState(visible)
-      writeIdentityVisiblePreference(visible)
+      persistPresencePrefs({ identityVisible: visible })
 
       try {
         await publishPresence(!participantOnlineRef.current)
@@ -617,11 +627,14 @@ export function useInitOnlinePresence(
         setIsIdentityVisibleUpdating(false)
       }
     },
-    [accountUserId, enabled, eventId, publishPresence],
+    [accountUserId, enabled, eventId, persistPresencePrefs, publishPresence],
   )
 
   useEffect(() => {
     if (!enabled || !eventId) {
+      bootstrapScopeRef.current = null
+      appliedPresencePrefsSourceRef.current = 'none'
+      presencePrefsDirtyRef.current = false
       setPresenceMaps(createEmptyPresenceMaps())
       setOnlineListFetchCapped(false)
       setIsReady(false)
@@ -665,11 +678,51 @@ export function useInitOnlinePresence(
 
     if (!themeReady || !localeData) return
 
-    const startOnline = readParticipantOnlinePreference()
+    const bootstrapScope = `${eventId}:${accountUserId}`
+    const isFreshBootstrap = bootstrapScopeRef.current !== bootstrapScope
+    if (isFreshBootstrap) {
+      bootstrapScopeRef.current = bootstrapScope
+      appliedPresencePrefsSourceRef.current = 'none'
+      presencePrefsDirtyRef.current = false
+    }
+
+    const accountPrefs = account?.prefs as Record<string, unknown> | undefined
+    const fromAccount = readInitPresencePrefsFromAccountPrefs(accountPrefs, eventId)
+    const fromStorage = readInitPresencePrefsFromStorage(eventId, accountUserId)
+    const shouldApplyStoredPrefs =
+      isFreshBootstrap ||
+      (fromAccount != null &&
+        appliedPresencePrefsSourceRef.current !== 'account' &&
+        !presencePrefsDirtyRef.current)
+
+    let startOnline = participantOnlineRef.current
+    let startIdentityVisible = identityVisibleRef.current
+
+    if (shouldApplyStoredPrefs) {
+      if (fromAccount) {
+        appliedPresencePrefsSourceRef.current = 'account'
+      } else if (fromStorage) {
+        appliedPresencePrefsSourceRef.current = 'local'
+      }
+
+      const stored = fromAccount ?? fromStorage
+      presencePrefsRef.current = stored ?? {}
+
+      startOnline = resolveInitParticipantOnlinePreference(
+        accountPrefs,
+        eventId,
+        accountUserId,
+      )
+      startIdentityVisible = resolveInitIdentityVisiblePreference(
+        accountPrefs,
+        eventId,
+        accountUserId,
+        identityHiddenByDefault,
+      )
+    }
+
     participantOnlineRef.current = startOnline
     setParticipantStatusState(startOnline ? 'online' : 'offline')
-
-    const startIdentityVisible = readIdentityVisiblePreference(identityHiddenByDefault)
     identityVisibleRef.current = startIdentityVisible
     setIdentityVisibleState(startIdentityVisible)
 
@@ -714,7 +767,7 @@ export function useInitOnlinePresence(
         themeActivityResetRef.current = null
       }
     }
-  }, [accountUserId, enabled, eventId, identityHiddenByDefault, localeData, refreshLists, themeReady])
+  }, [account?.prefs, accountUserId, enabled, eventId, identityHiddenByDefault, localeData, refreshLists, themeReady])
 
   useEffect(() => {
     if (!enabled || !eventId || !accountUserId || !isReady || !themeReady) return
@@ -792,6 +845,14 @@ export function useInitOnlinePresence(
       window.removeEventListener('pagehide', onPageHide)
     }
   }, [accountUserId, enabled, eventId, publishPresence])
+
+  useEffect(() => {
+    return () => {
+      if (presencePrefsSaveTimerRef.current) {
+        clearTimeout(presencePrefsSaveTimerRef.current)
+      }
+    }
+  }, [])
 
   const handlePresenceRealtimeRef = useRef(
     (_event: RealtimeResponseEvent<unknown>) => undefined,
@@ -897,10 +958,64 @@ export function useInitOnlinePresence(
         ...(selfOnlineActivity ? { activity: selfOnlineActivity } : {}),
       }
     })
-    const allOnlineUsers =
+    const allOnlineUsersBase =
       accountUserId && selfMapKey
         ? dedupeInitSelfOnlineUsers(mappedOnlineUsers, accountUserId, selfMapKey)
         : mappedOnlineUsers
+
+    const overlaySelfOnOnlineUser = (user: LaunchEventOnlineUser): LaunchEventOnlineUser => ({
+      ...user,
+      ownerId: accountUserId!,
+      name: accountName || user.name,
+      identityHidden: !identityVisible,
+      ...(identityVisible
+        ? {}
+        : { countryCode: undefined, emailHash: undefined }),
+      ...(selfOnlineActivity ? { activity: selfOnlineActivity } : {}),
+    })
+
+    let allOnlineUsers = allOnlineUsersBase
+    if (
+      participantStatus === 'online' &&
+      accountUserId &&
+      selfMapKey &&
+      !allOnlineUsers.some(
+        (user) =>
+          user.ownerId === accountUserId ||
+          user.id === accountUserId ||
+          user.id === selfMapKey,
+      )
+    ) {
+      const selfPresence = presenceMaps.online.get(selfMapKey)
+      const selfFromMap =
+        selfPresence && !isInitHiddenPresence(selfPresence)
+          ? mapPresencesToOnlineUsers([selfPresence], activityAllowlist)[0]
+          : undefined
+      const selfUser = overlaySelfOnOnlineUser(
+        selfFromMap ?? {
+          id: selfMapKey,
+          ownerId: accountUserId,
+          identityHidden: !identityVisible,
+          name: identityVisible
+            ? accountName || 'You'
+            : buildInitRandomPresenceName(selfMapKey),
+          activity: selfOnlineActivity ?? INIT_PRESENCE_ACTIVITY_ON_INIT,
+          ...(identityVisible && countryCodeRef.current
+            ? { countryCode: countryCodeRef.current }
+            : {}),
+          ...(identityVisible && emailHashRef.current
+            ? { emailHash: emailHashRef.current }
+            : {}),
+          onlineAt: selfOnlineAtRef.current ?? new Date().toISOString(),
+        },
+      )
+      allOnlineUsers = dedupeInitSelfOnlineUsers(
+        sortOnlineUsers([selfUser, ...allOnlineUsers]),
+        accountUserId,
+        selfMapKey,
+      )
+    }
+
     const onlineUsers = allOnlineUsers.slice(0, SIDEBAR_USER_LIMIT)
     const mappedRecentlyOnlineUsers = mapPresencesToOnlineUsers(
       visibleAwayPresences,
@@ -929,9 +1044,11 @@ export function useInitOnlinePresence(
           )
         : mappedRecentlyOnlineUsers
     ).slice(0, AWAY_USER_LIMIT)
-    const onlineCount = visibleOnlinePresences.length + hiddenOnlineCount
+    // Use the full visible list (before sidebar slice) plus hidden participants so
+    // hero, globe, and sidebar header share one total.
+    const onlineCount = allOnlineUsers.length + hiddenOnlineCount
     const onlineCountCapped =
-      onlineListFetchCapped || visibleOnlinePresences.length >= SIDEBAR_USER_LIMIT
+      onlineListFetchCapped || allOnlineUsers.length >= SIDEBAR_USER_LIMIT
     const othersOnlineCount = Math.max(0, onlineCount - onlineUsers.length)
     const onlineThemeCounts = countInitPresenceThemes(allOnlineUsers)
     const communityCountries = aggregateInitCommunityCountries(

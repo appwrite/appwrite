@@ -13,6 +13,7 @@
 import { USER_PREFS_KEY_COVER_GENERATIONS } from '@/lib/cover-generator/cover-generation-prefs'
 import { USER_PREFS_KEY_DIAGRAM_GENERATIONS } from '@/lib/diagram-generator/generation-prefs'
 import { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
+import { INIT_PRESENCE_PREFS_KEY_PREFIX } from '@/lib/init/init-presence-prefs'
 import { INIT_TICKET_PREFS_KEY_PREFIX } from '@/lib/init/ticket-prefs'
 import { USER_PREFS_KEY_REALTIME_DEBUGGER_PREFIX } from '@/lib/realtime/debugger-prefs'
 import { TEAM_PREFS_KEY_PINNED_PROJECT_IDS } from '@/lib/team-prefs-keys'
@@ -573,6 +574,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     prefix: INIT_TICKET_PREFS_KEY_PREFIX,
     description: 'Per-event Init ticket prefs (JSON).',
+    category: 'Init',
+  },
+  {
+    id: 'initPresence',
+    scope: 'account',
+    prefix: INIT_PRESENCE_PREFS_KEY_PREFIX,
+    description: 'Per-event Init presence prefs (identity visibility, online list).',
     category: 'Init',
   },
 
