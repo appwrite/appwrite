@@ -1148,19 +1148,36 @@ class Install extends Action
     private function migrateBuildsVolumeIfNeeded(array $input): void
     {
         $target = (string) ($input['_APP_BUILDS_VOLUME'] ?? '') ?: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds');
-
         $image = (string) ($input['_APP_IMAGE'] ?? 'appwrite/appwrite') . ':' . (string) ($input['_APP_VERSION'] ?? 'latest');
 
+        // Counted with the Appwrite image, which the upgrade has already pulled, so reading a
+        // volume never depends on fetching another one.
+        $files = static function (string $volume) use ($image): int {
+            $output = [];
+            \exec(
+                'docker run --rm -v ' . \escapeshellarg($volume . ':/v:ro') . ' ' . \escapeshellarg($image)
+                . ' sh -c ' . \escapeshellarg('find /v -type f 2>/dev/null | wc -l') . ' 2>/dev/null',
+                $output
+            );
+
+            return (int) \trim((string) ($output[0] ?? '0'));
+        };
+
+        $output = [];
+        \exec('docker volume ls --format ' . \escapeshellarg('{{.Name}}') . ' 2>/dev/null', $output);
+        $volumes = \array_filter(\array_map('trim', $output));
+
         // The new volume usually does not exist yet: Compose creates it when the containers
-        // start, which is after this runs. Only an existing volume that already holds files
-        // means there is nothing to carry over.
-        if ($this->volumeExists($target) && $this->volumeFileCount($target, $image) > 0) {
+        // start, which is after this runs. Only a volume that is already there with files in
+        // it means there is nothing to carry over. Reading a volume that does not exist would
+        // create an empty one, so the listing gates that.
+        if (\in_array($target, $volumes, true) && $files($target) > 0) {
             return;
         }
 
         $legacy = [];
-        foreach ($this->listVolumes() as $volume) {
-            if ($volume !== $target && \str_ends_with($volume, '_' . $target) && $this->volumeFileCount($volume, $image) > 0) {
+        foreach ($volumes as $volume) {
+            if ($volume !== $target && \str_ends_with($volume, '_' . $target) && $files($volume) > 0) {
                 $legacy[] = $volume;
             }
         }
@@ -1180,17 +1197,15 @@ class Install extends Action
         $source = $legacy[0];
         Console::info('Copying build artifacts from "' . $source . '" to "' . $target . '"...');
 
-        $command = \sprintf(
+        $output = [];
+        $exit = 0;
+        \exec(\sprintf(
             'docker run --rm -v %s:/from:ro -v %s:/to %s sh -c %s 2>&1',
             \escapeshellarg($source),
             \escapeshellarg($target),
             \escapeshellarg($image),
             \escapeshellarg('cp -a /from/. /to/')
-        );
-
-        $output = [];
-        $exit = 0;
-        \exec($command, $output, $exit);
+        ), $output, $exit);
 
         if ($exit !== 0) {
             Console::warning(
@@ -1200,43 +1215,7 @@ class Install extends Action
             return;
         }
 
-        Console::success('Copied ' . $this->volumeFileCount($target, $image) . ' build file(s). "' . $source . '" was left in place.');
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function listVolumes(): array
-    {
-        $output = [];
-        \exec('docker volume ls --format ' . \escapeshellarg('{{.Name}}') . ' 2>/dev/null', $output);
-
-        return \array_values(\array_filter(\array_map('trim', $output)));
-    }
-
-    private function volumeExists(string $volume): bool
-    {
-        $output = [];
-        $exit = 0;
-        \exec('docker volume inspect ' . \escapeshellarg($volume) . ' 2>/dev/null', $output, $exit);
-
-        return $exit === 0;
-    }
-
-    /**
-     * Counts files with the Appwrite image, which the upgrade has already pulled, so
-     * inspecting a volume never depends on fetching another one.
-     */
-    private function volumeFileCount(string $volume, string $image): int
-    {
-        $output = [];
-        \exec(
-            'docker run --rm -v ' . \escapeshellarg($volume . ':/v:ro') . ' ' . \escapeshellarg($image)
-            . ' sh -c ' . \escapeshellarg('find /v -type f 2>/dev/null | wc -l') . ' 2>/dev/null',
-            $output
-        );
-
-        return (int) \trim((string) ($output[0] ?? '0'));
+        Console::success('Copied ' . $files($target) . ' build file(s). "' . $source . '" was left in place.');
     }
 
     private function copyMongoFilesIfNeeded(): void
