@@ -11,6 +11,9 @@ import ThreeGlobe from 'three-globe'
 import { useThree, Canvas, extend, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import countries from '@/data/globe.json'
+import type { GlobeArc, GlobeConfig, GlobeMarker } from '@/components/ui/globe-types'
+
+export type { GlobeArc, GlobeConfig, GlobeMarker } from '@/components/ui/globe-types'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
@@ -38,26 +41,6 @@ function applyGlobeLand(globe: ThreeGlobe, landColor: string) {
     .polygonsData([])
 }
 
-type Position = {
-  order: number
-  startLat: number
-  startLng: number
-  endLat: number
-  endLng: number
-  arcAlt: number
-  color: string
-}
-
-export type GlobeMarker = {
-  lat: number
-  lng: number
-  color: string
-  count: number
-  pointRadius: number
-  ringMaxRadius: number
-  pointAltitude?: number
-}
-
 type GlobeRingEntry = {
   lat: number
   lng: number
@@ -74,37 +57,9 @@ function markerToRingEntry(marker: GlobeMarker): GlobeRingEntry {
   }
 }
 
-export type GlobeConfig = {
-  pointSize?: number
-  globeColor?: string
-  showAtmosphere?: boolean
-  atmosphereColor?: string
-  atmosphereAltitude?: number
-  emissive?: string
-  emissiveIntensity?: number
-  shininess?: number
-  polygonColor?: string
-  ambientLight?: string
-  directionalLeftLight?: string
-  directionalTopLight?: string
-  pointLight?: string
-  fogColor?: string
-  arcTime?: number
-  arcLength?: number
-  rings?: number
-  maxRings?: number
-  autoRotate?: boolean
-  autoRotateSpeed?: number
-  /** Even ambient lighting - no dark side on the sphere. */
-  evenLighting?: boolean
-  ambientLightIntensity?: number
-  directionalLightIntensity?: number
-  pointLightIntensity?: number
-}
-
 interface WorldProps {
   globeConfig: GlobeConfig
-  data: Position[]
+  data: GlobeArc[]
   markers?: GlobeMarker[]
   /** When false, pauses the WebGL render loop (e.g. globe scrolled off-screen). */
   active?: boolean
@@ -222,6 +177,17 @@ export function Globe({
       applyGlobeLand(globeRef.current, resolvedRef.current.polygonColor)
       setIsInitialized(true)
     }
+
+    return () => {
+      const globe = globeRef.current
+      const group = groupRef.current
+      if (globe && group) {
+        group.remove(globe)
+        globe.dispose?.()
+      }
+      globeRef.current = null
+      setIsInitialized(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -320,15 +286,15 @@ export function Globe({
 
     globeRef.current
       .arcsData(arcs)
-      .arcStartLat((entry) => (entry as Position).startLat)
-      .arcStartLng((entry) => (entry as Position).startLng)
-      .arcEndLat((entry) => (entry as Position).endLat)
-      .arcEndLng((entry) => (entry as Position).endLng)
-      .arcColor((entry) => (entry as Position).color)
-      .arcAltitude((entry: object) => (entry as Position).arcAlt)
+      .arcStartLat((entry) => (entry as GlobeArc).startLat)
+      .arcStartLng((entry) => (entry as GlobeArc).startLng)
+      .arcEndLat((entry) => (entry as GlobeArc).endLat)
+      .arcEndLng((entry) => (entry as GlobeArc).endLng)
+      .arcColor((entry) => (entry as GlobeArc).color)
+      .arcAltitude((entry: object) => (entry as GlobeArc).arcAlt)
       .arcStroke(() => ARC_STROKE)
       .arcDashLength(arcLength)
-      .arcDashInitialGap((entry) => (entry as Position).order)
+      .arcDashInitialGap((entry) => (entry as GlobeArc).order)
       .arcDashGap(15)
       .arcDashAnimateTime(() => arcTime)
 
@@ -476,7 +442,6 @@ export function World({
         alpha: true,
         antialias: true,
         powerPreference: 'high-performance',
-        preserveDrawingBuffer: true,
       }}
       camera={{
         fov: 50,

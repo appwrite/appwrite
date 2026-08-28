@@ -1,3 +1,4 @@
+import { formatInitPresenceDisplayName } from '@/lib/init/format-init-presence-display-name'
 import type { LaunchEventOnlineUser } from '@/lib/init/types'
 import { cn } from '@/lib/utils'
 import { motion, useReducedMotion } from 'motion/react'
@@ -37,11 +38,6 @@ function buildSegmentPath(index: number, count: number, radius: number) {
     `A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y}`,
     'Z',
   ].join(' ')
-}
-
-function firstName(name: string) {
-  const token = name.trim().split(/\s+/)[0] || name
-  return token.charAt(0).toUpperCase() + token.slice(1)
 }
 
 export function computeRaffleWheelRotation(
@@ -160,7 +156,10 @@ export function InitGiveawayRaffleWheel({
                       dominantBaseline="middle"
                       transform={`rotate(${labelRotation}, ${labelPosition.x}, ${labelPosition.y})`}
                     >
-                      {firstName(participant.name).slice(0, count > 14 ? 6 : 12)}
+                      {formatInitPresenceDisplayName(participant.name).slice(
+                        0,
+                        count > 14 ? 6 : 12,
+                      )}
                     </text>
                   </g>
                 ))}

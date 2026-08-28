@@ -27,6 +27,16 @@ function resolveCategory(tags: string[]): MarketplaceAppCategory {
   return 'devtools'
 }
 
+const RANK_TAG_PATTERN = /^rank:(\d+)$/
+
+function resolveRank(tags: string[]): number | undefined {
+  for (const tag of tags) {
+    const match = normalizeTag(tag).match(RANK_TAG_PATTERN)
+    if (match) return Number(match[1])
+  }
+  return undefined
+}
+
 function resolveCreators(contacts: string[]): MarketplaceAppCreator[] {
   if (!contacts.length) return []
   return contacts.map((contact) => {
@@ -67,6 +77,7 @@ export function mapAppToMarketplaceApp(
     author: isOwned ? 'Your organization' : author,
     creators: resolveCreators(app.contacts ?? []),
     featured: hasTag(tags, 'featured'),
+    rank: resolveRank(tags),
     isOfficial: hasTag(tags, 'official'),
     isVerified: hasTag(tags, 'verified'),
     isOwned,
@@ -88,6 +99,20 @@ export function mapAppToMarketplaceApp(
     deviceFlow: app.deviceFlow,
     teamId: app.teamId || undefined,
   }
+}
+
+/**
+ * Curated catalog order: `rank:N`-tagged apps first (ascending), unranked
+ * apps after, alphabetical within ties. Sections filtered from a sorted
+ * list (featured, categories, search) keep this order.
+ */
+export function sortMarketplaceApps(apps: MarketplaceApp[]): MarketplaceApp[] {
+  return [...apps].sort((a, b) => {
+    const rankA = a.rank ?? Number.POSITIVE_INFINITY
+    const rankB = b.rank ?? Number.POSITIVE_INFINITY
+    if (rankA !== rankB) return rankA - rankB
+    return a.name.localeCompare(b.name)
+  })
 }
 
 export function mapAppsToMarketplaceApps(

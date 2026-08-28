@@ -134,11 +134,7 @@ export function PhotoAvatar({
     setFailed(false)
   }, [src])
 
-  if (failed) {
-    return null
-  }
-
-  if (!src) {
+  if (failed || !src) {
     return <InitialsAvatar name={name} size={size} className={className} />
   }
 

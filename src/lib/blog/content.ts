@@ -1,6 +1,5 @@
 import { isFeatureEnabled } from '@/lib/console-profiles'
 import { extractDocsToc } from '@/lib/docs/toc'
-import type { DocsTocItem } from '@/lib/docs/types'
 import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import {
   BLOG_CATEGORY_SPOTLIGHT_POST_COUNT,
@@ -8,6 +7,7 @@ import {
   BLOG_SECONDARY_FEATURED_COUNT,
   BLOG_SPOTLIGHT_CATEGORY_SLUGS,
 } from './constants'
+import { BLOG_POST_MAP, BLOG_POSTS } from './generated/manifest'
 import { preprocessBlogMarkdocContent } from './preprocess'
 import {
   getFrontmatterAuthor,
@@ -25,17 +25,19 @@ import type {
   BlogPostsPage,
 } from './types'
 
+/**
+ * Lazy glob keeps the full blog corpus out of the server bundle until a post
+ * body is requested. Metadata comes from the build-time manifest.
+ */
 const importedPostLoaders = import.meta.glob('/src/content/blog/posts/*.markdoc', {
   query: '?raw',
   import: 'default',
-  eager: true,
-}) as Record<string, string>
+}) as Record<string, () => Promise<string>>
 
 const localPostLoaders = import.meta.glob('/src/content/blog-local/posts/*.markdoc', {
   query: '?raw',
   import: 'default',
-  eager: true,
-}) as Record<string, string>
+}) as Record<string, () => Promise<string>>
 
 const postLoaders = { ...importedPostLoaders, ...localPostLoaders }
 
@@ -50,6 +52,16 @@ const authorLoaders = import.meta.glob('/src/content/blog/authors/*.markdoc', {
   import: 'default',
   eager: true,
 }) as Record<string, string>
+
+const postPathBySlug = new Map<string, string>()
+for (const modulePath of Object.keys(postLoaders)) {
+  postPathBySlug.set(slugFromModulePath(modulePath, 'posts'), modulePath)
+}
+
+const rawPostCache = new Map<string, string>()
+const fullPostCache = new Map<string, BlogPost>()
+/** Bound SSR post cache so crawlers cannot retain every post body in memory. */
+const FULL_POST_CACHE_MAX = 32
 
 function slugFromModulePath(modulePath: string, segment: string): string {
   const match = modulePath.match(
@@ -69,8 +81,33 @@ function parseBoolean(value: unknown): boolean | undefined {
   return undefined
 }
 
-function buildBlogPost(modulePath: string, raw: string): BlogPost {
-  const slug = slugFromModulePath(modulePath, 'posts')
+function touchFullPostCache(slug: string, post: BlogPost): BlogPost {
+  if (fullPostCache.has(slug)) {
+    fullPostCache.delete(slug)
+  } else if (fullPostCache.size >= FULL_POST_CACHE_MAX) {
+    const oldest = fullPostCache.keys().next().value
+    if (oldest !== undefined) fullPostCache.delete(oldest)
+  }
+  fullPostCache.set(slug, post)
+  return post
+}
+
+async function loadRawPost(slug: string): Promise<string | null> {
+  const cached = rawPostCache.get(slug)
+  if (cached !== undefined) return cached
+
+  const modulePath = postPathBySlug.get(slug)
+  if (!modulePath) return null
+
+  const loader = postLoaders[modulePath]
+  if (!loader) return null
+
+  const raw = await loader()
+  rawPostCache.set(slug, raw)
+  return raw
+}
+
+function buildBlogPost(slug: string, raw: string): BlogPost {
   const { frontmatter, body } = parseBlogFrontmatter(raw)
   const content = preprocessBlogMarkdocContent(body.trim())
   const date =
@@ -138,10 +175,6 @@ function buildBlogAuthor(modulePath: string, raw: string): BlogAuthor {
   }
 }
 
-const allPosts = Object.entries(postLoaders)
-  .map(([modulePath, raw]) => buildBlogPost(modulePath, raw))
-  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-
 const allCategories = Object.entries(categoryLoaders)
   .map(([modulePath, raw]) => buildBlogCategory(modulePath, raw))
   .sort((a, b) => a.name.localeCompare(b.name))
@@ -150,40 +183,52 @@ const allAuthors = Object.entries(authorLoaders)
   .map(([modulePath, raw]) => buildBlogAuthor(modulePath, raw))
   .sort((a, b) => a.name.localeCompare(b.name))
 
-export const blogPostCount = allPosts.length
+export const blogPostCount = BLOG_POSTS.length
 
 function isPublicPost(post: BlogPostMeta): boolean {
   return !post.draft && !post.unlisted
 }
 
 export function getPublicBlogPosts(): BlogPostMeta[] {
-  return allPosts.filter(isPublicPost).map(toBlogPostMeta)
+  return BLOG_POSTS.filter(isPublicPost)
 }
 
 /** Draft posts, newest first. Only surfaced when the blogDrafts flag is on. */
 export function getDraftBlogPosts(): BlogPostMeta[] {
-  return allPosts.filter((post) => post.draft).map(toBlogPostMeta)
+  return BLOG_POSTS.filter((post) => post.draft)
 }
 
-export function getAllBlogPosts(): BlogPost[] {
-  return allPosts
+export async function getAllBlogPosts(): Promise<BlogPost[]> {
+  const posts: BlogPost[] = []
+  for (const meta of BLOG_POSTS) {
+    const post = await getBlogPost(meta.slug)
+    if (post) posts.push(post)
+  }
+  return posts
 }
 
-export function getBlogPost(slug: string): BlogPost | null {
-  const post = allPosts.find((entry) => entry.slug === slug) ?? null
-  if (!post) return null
-  if (post.draft && !isFeatureEnabled('blogDrafts')) return null
-  return post
+export async function getBlogPost(slug: string): Promise<BlogPost | null> {
+  const cached = fullPostCache.get(slug)
+  if (cached) return touchFullPostCache(slug, cached)
+
+  const meta = BLOG_POST_MAP[slug]
+  if (!meta) return null
+  if (meta.draft && !isFeatureEnabled('blogDrafts')) return null
+
+  const raw = await loadRawPost(slug)
+  if (!raw) return null
+
+  return touchFullPostCache(slug, buildBlogPost(slug, raw))
 }
 
-export function getBlogMarkdownExport(slug: string): string | null {
-  if (!getBlogPost(slug)) return null
+/** Synchronous accessor for routes that already have loader-fetched post data. */
+export function getBlogPostMeta(slug: string): BlogPostMeta | null {
+  return BLOG_POST_MAP[slug] ?? null
+}
 
-  const modulePath = Object.keys(postLoaders).find(
-    (path) => slugFromModulePath(path, 'posts') === slug,
-  )
-  if (!modulePath) return null
-  const raw = postLoaders[modulePath]
+export async function getBlogMarkdownExport(slug: string): Promise<string | null> {
+  if (!getBlogPostMeta(slug)) return null
+  const raw = await loadRawPost(slug)
   return raw ? markdocToMarkdown(raw) : null
 }
 
@@ -424,7 +469,6 @@ export function getBlogPostsPage(options: {
     navigation: generateBlogPageNavigation(safePage, totalPages),
   }
 }
-
 
 export function resolveBlogAuthors(
   authorSlugs: string | string[],

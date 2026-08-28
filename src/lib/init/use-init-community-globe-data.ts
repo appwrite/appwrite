@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { buildInitPresenceActivityAllowlist } from '@/lib/init/init-presence-activity-allowlist'
 import {
   aggregateInitCommunityCountries,
+  INIT_ONLINE_PRESENCE_LIST_LIMIT,
   listInitPresences,
 } from '@/lib/init/presence'
 import { useInitPresence } from '@/lib/init/init-presence-context'
@@ -12,6 +13,7 @@ const COMMUNITY_REFRESH_MS = 30_000
 type PolledCommunityGlobe = {
   countries: InitCommunityCountry[]
   onlineCount: number
+  onlineCountCapped: boolean
 }
 
 /**
@@ -27,13 +29,14 @@ export function useInitCommunityGlobeData(
   const { data: polled } = useQuery({
     queryKey: ['init', 'community-countries', event?.id],
     queryFn: async (): Promise<PolledCommunityGlobe> => {
-      if (!event) return { countries: [], onlineCount: 0 }
-      const online = await listInitPresences(event.id, 'online', 100)
+      if (!event) return { countries: [], onlineCount: 0, onlineCountCapped: false }
+      const online = await listInitPresences(event.id, 'online', INIT_ONLINE_PRESENCE_LIST_LIMIT)
       const allowlist = buildInitPresenceActivityAllowlist(event)
       return {
         countries: aggregateInitCommunityCountries(online, allowlist),
         // Full list length, not country-sum — some online users lack countryCode.
         onlineCount: online.length,
+        onlineCountCapped: online.length >= INIT_ONLINE_PRESENCE_LIST_LIMIT,
       }
     },
     enabled: enabled && (!presence.isReady || presence.communityCountries.length === 0),
@@ -52,9 +55,14 @@ export function useInitCommunityGlobeData(
       : (polled?.onlineCount ??
         countries.reduce((total, country) => total + country.count, 0))
 
+  const developerCountCapped = presence.isReady
+    ? presence.onlineCountCapped
+    : (polled?.onlineCountCapped ?? false)
+
   return {
     countries,
     developerCount,
+    developerCountCapped,
     isLive: presence.isReady && presence.communityDeveloperCount > 0,
   }
 }

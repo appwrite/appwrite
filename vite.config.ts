@@ -13,6 +13,10 @@ import {
   isMarketingPrerenderPath,
 } from './src/lib/marketing/marketing-build-paths'
 import { getSitesPrerenderConcurrency } from './src/lib/marketing/sites-prerender-scope'
+import {
+  INIT_PRERENDER_PATHS,
+  isInitPrerenderPath,
+} from './src/lib/init/init-prerender-paths'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 const decimalJsLightShim = path.resolve(
@@ -58,6 +62,13 @@ function rejectEmptyBuildAssetsPlugin() {
     },
   }
 }
+function getInitPrerenderPageEntries() {
+  return INIT_PRERENDER_PATHS.map((path) => ({
+    path,
+    prerender: { enabled: true },
+  }))
+}
+
 function getTanstackStartSitesOptions() {
   const prerenderConcurrency = getSitesPrerenderConcurrency()
   console.log(
@@ -70,12 +81,28 @@ function getTanstackStartSitesOptions() {
       crawlLinks: false,
       concurrency: prerenderConcurrency,
       failOnError: true,
-      filter: ({ path }: { path: string }) => isMarketingPrerenderPath(path),
+      filter: ({ path }: { path: string }) =>
+        isMarketingPrerenderPath(path) || isInitPrerenderPath(path),
     },
-    pages: getAllMarketingPrerenderPaths().map((path) => ({
-      path,
-      prerender: { enabled: true },
-    })),
+    pages: [
+      ...getAllMarketingPrerenderPaths().map((path) => ({
+        path,
+        prerender: { enabled: true },
+      })),
+      ...getInitPrerenderPageEntries(),
+    ],
+  }
+}
+
+function getTanstackStartCloudOptions() {
+  return {
+    prerender: {
+      enabled: true,
+      crawlLinks: false,
+      concurrency: 1,
+      failOnError: true,
+    },
+    pages: getInitPrerenderPageEntries(),
   }
 }
 
@@ -100,7 +127,11 @@ export default defineConfig(async () => {
         projects: ['./tsconfig.json'],
       }),
       tailwindcss(),
-      tanstackStart(isSitesBuild ? getTanstackStartSitesOptions() : undefined),
+      tanstackStart(
+        isSitesBuild
+          ? getTanstackStartSitesOptions()
+          : getTanstackStartCloudOptions(),
+      ),
       devtoolsJson(),
       viteReact(),
       docsContentHmrPlugin(),
@@ -171,7 +202,14 @@ export default defineConfig(async () => {
       // Keep native/heavy packages external; bundle recharts + its Redux chain so
       // Appwrite Sites ModClean cannot strip @reduxjs/toolkit's .mjs files from
       // node_modules (runtime then fails with Cannot find module …modern.mjs).
-      external: ['sharp', 'prismjs'],
+      external: [
+        'sharp',
+        'prismjs',
+        'three',
+        'three-globe',
+        '@react-three/fiber',
+        '@react-three/drei',
+      ],
       noExternal: [
         'recharts',
         '@reduxjs/toolkit',

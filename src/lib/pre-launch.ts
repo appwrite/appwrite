@@ -43,10 +43,63 @@ export function isPreLaunchAllowedPath(
 ): boolean {
   const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
   if (normalized === '/init' || normalized.startsWith('/init/')) return true
+  if (normalized === '/discord') return true
   if (normalized === '/og/init.png') return true
   // Debug previews (pink menu) stay reachable while the rest of the site is locked.
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
   return AUTH_ALLOWED_PATHS.has(normalized)
+}
+
+/**
+ * Heavy marketing/content routes that should not run while the site is locked to
+ * Init. Bots and RSS consumers still hit these even when document navigations
+ * redirect to `/init`, which can OOM small containers.
+ */
+export function isPreLaunchHeavyContentPath(
+  pathname: string | null | undefined,
+): boolean {
+  const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
+  if (normalized === '/health') return false
+  if (normalized.startsWith('/assets/')) return false
+  if (normalized.startsWith('/api/init/')) return false
+  if (normalized.startsWith('/init/') && normalized.endsWith('/og.png')) {
+    return false
+  }
+
+  const heavyPrefixes = [
+    '/blog',
+    '/changelog',
+    '/docs',
+    '/integrations',
+    '/threads',
+    '/home',
+    '/products',
+    '/pricing',
+    '/company',
+    '/og/image.png',
+    '/og/image',
+  ]
+  if (heavyPrefixes.some((prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`))) {
+    return true
+  }
+
+  const heavyExact = new Set([
+    '/blog.md',
+    '/changelog.md',
+    '/integrations.md',
+    '/docs.md',
+    '/llms.txt',
+    '/llms-full.txt',
+    '/blog/rss.xml',
+    '/changelog/rss.xml',
+    '/sitemap.xml',
+    '/robots.txt',
+  ])
+  if (heavyExact.has(normalized)) return true
+  if (normalized.startsWith('/docs/llms')) return true
+  if (normalized.startsWith('/.well-known/')) return true
+
+  return false
 }
 
 function parseBooleanFlag(raw: string | null | undefined): boolean | null {
@@ -144,6 +197,7 @@ export const PRE_LAUNCH_BOOT_SCRIPT = `(function(){
     if (!enabled) return;
     var path = (location.pathname || '/').replace(/\\/+$/, '') || '/';
     if (path === '/init' || path.indexOf('/init/') === 0) return;
+    if (path === '/discord') return;
     if (path === '/og/init.png') return;
     if (path === '/debug' || path.indexOf('/debug/') === 0) return;
     var auth = {

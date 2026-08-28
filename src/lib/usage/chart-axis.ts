@@ -39,6 +39,7 @@ export function resolveUsageChartXAxisMaxTicks(
       : USAGE_CHART_X_AXIS_MAX_TICKS
 
   switch (interval) {
+    case '1m':
     case '15m':
       return Math.min(base, 6)
     case '1d':
@@ -130,6 +131,7 @@ export function formatUsageChartXAxisLabel(
     previousTickDay != null && !isSameDay(day, previousTickDay)
 
   switch (interval) {
+    case '1m':
     case '15m':
       if (!multiDay) {
         return format(day, 'HH:mm')

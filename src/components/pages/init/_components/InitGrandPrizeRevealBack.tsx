@@ -1,3 +1,4 @@
+import { formatInitPresenceDisplayName } from '@/lib/init/format-init-presence-display-name'
 import type { LaunchEventGrandPrize, LaunchEventOnlineUser } from '@/lib/init/types'
 import { useInitThemeImageSrc } from '@/lib/init/use-init-theme-image'
 import { PhotoAvatar } from '@/components/global/shared/Avatar'
@@ -165,7 +166,9 @@ export function InitGrandPrizeRevealBack({
                   <Trophy className="size-3.5" aria-hidden />
                   Grand prize winner
                 </div>
-                <p className="truncate text-[15px] font-semibold text-foreground">{winner.name}</p>
+                <p className="truncate text-[15px] font-semibold text-foreground">
+                  {formatInitPresenceDisplayName(winner.name)}
+                </p>
               </div>
             </div>
           ) : (

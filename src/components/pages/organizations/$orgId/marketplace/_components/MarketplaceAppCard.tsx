@@ -3,6 +3,7 @@ import { MARKETPLACE_CATEGORY_ICONS } from '@/lib/marketplace/types'
 import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
 import { ResourceCard } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { MarketplaceAppBadges } from './MarketplaceAppBadges'
+import { MarketplaceAppLogo } from './MarketplaceAppLogo'
 import { useT } from '@/lib/i18n/translate'
 
 type MarketplaceAppCardProps = {
@@ -37,13 +38,7 @@ export function MarketplaceAppCard({ app, onClick }: MarketplaceAppCardProps) {
       subtitle={app.shortDescription}
       icon={logoUrl ? undefined : CategoryIcon}
       customIcon={
-        logoUrl ? (
-          <img
-            src={logoUrl}
-            alt=""
-            className="h-10 w-10 rounded-lg object-cover"
-          />
-        ) : undefined
+        logoUrl ? <MarketplaceAppLogo src={logoUrl} /> : undefined
       }
       iconColor={logoUrl ? 'bg-transparent p-0' : undefined}
       onClick={onClick}

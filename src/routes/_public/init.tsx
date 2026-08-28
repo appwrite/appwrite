@@ -1,11 +1,18 @@
+import { lazy, Suspense } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { View } from '@/components/pages/init/View'
+import { FullscreenLoader } from '@/components/ui/loader'
 import { getInitPageMetaTags } from '@/lib/init/init-seo'
 import { ensureConsoleAccountQueryData } from '@/lib/react-query/hooks/auth'
 import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 
+const InitView = lazy(() =>
+  import('@/components/pages/init/View').then((module) => ({
+    default: module.View,
+  })),
+)
+
 export const Route = createFileRoute('/_public/init')({
-  ssr: true,
+  ssr: false,
   component: InitPage,
   head: () => ({ meta: getInitPageMetaTags() }),
   loader: async ({ context }) => {
@@ -20,5 +27,9 @@ export const Route = createFileRoute('/_public/init')({
 })
 
 function InitPage() {
-  return <View />
+  return (
+    <Suspense fallback={<FullscreenLoader />}>
+      <InitView />
+    </Suspense>
+  )
 }
