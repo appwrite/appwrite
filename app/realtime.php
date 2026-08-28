@@ -393,8 +393,13 @@ $stats->create();
 $containerId = uniqid();
 $statsDocument = null;
 
-$workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0))
-    ?: intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+// Realtime is I/O bound: a single worker holding ~1200 websocket connections
+// measured 0.06-0.35 cores, so extra workers add forked interpreter copies (~84%
+// of a worker's footprint is fixed overhead, not connection state), duplicate the
+// firehose subscription so every worker json_decodes every event, and split the
+// accept distribution into a second, invisible balancing layer. Concurrency is the
+// deployment's job. `_APP_WORKERS_NUM` still overrides.
+$workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0)) ?: 1;
 
 $adapter = new Adapter\Swoole(port: System::getEnv('PORT', 80));
 $adapter
@@ -788,19 +793,23 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 $total = 0;
                 $outboundBytes = 0;
 
-                // One frame per connection. `subscriptions` carries that connection's
+                // One frame per connection: `subscriptions` carries that connection's
                 // matched subscription IDs, and those are ID::unique() per connection
                 // (see the subscribe handler), so no two connections can ever share a
-                // frame. The grouping this replaces keyed on exactly those IDs, so it
-                // never collapsed -- it always built one group of one.
-                foreach ($receivers as $id => $matched) {
-                    $data = $event['data'];
-                    $data['subscriptions'] = array_keys($matched);
+                // frame. (The grouping this replaced keyed on exactly those IDs and so
+                // never collapsed -- it always built one group of one.)
+                //
+                // `subscriptions` is the only part that varies, and it is small, so the
+                // document is serialised once per event rather than once per subscriber.
+                // This loop's json_encode was 26% of realtime's on-CPU work during a
+                // fan-out burst, against 2.8% at rest.
+                $data = $event['data'];
+                unset($data['subscriptions']);
+                $tail = $data === [] ? '' : ',' . substr(json_encode($data), 1, -1);
 
-                    $payloadJson = json_encode([
-                        'type' => 'event',
-                        'data' => $data
-                    ]);
+                foreach ($receivers as $id => $matched) {
+                    $payloadJson = '{"type":"event","data":{"subscriptions":'
+                        . json_encode(array_keys($matched)) . $tail . '}}';
 
                     $server->send([$id], $payloadJson);
 
