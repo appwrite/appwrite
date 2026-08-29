@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "73691e710166b3440cfef452f270a39e",
+    "content-hash": "ccc304661866171cf625e0df17950e5f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3252,6 +3252,82 @@
             "time": "2026-08-21T11:04:48+00:00"
         },
         {
+            "name": "utopia-php/cdn",
+            "version": "0.0.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/cdn.git",
+                "reference": "e7fb311371462a6e67380cb03d1bdcc1698ba670"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/cdn/zipball/e7fb311371462a6e67380cb03d1bdcc1698ba670",
+                "reference": "e7fb311371462a6e67380cb03d1bdcc1698ba670",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "php": ">=8.5.0",
+                "utopia-php/balancer": "^0.4.1",
+                "utopia-php/client": "^0.3"
+            },
+            "require-dev": {
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "2.*",
+                "phpunit/phpunit": "^10.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Cdn\\": "src/Cdn"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\Cdn\\": "tests/Cdn"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "analyse": [
+                    "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=2G"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Torsten Dittmann",
+                    "email": "torsten@appwrite.io"
+                }
+            ],
+            "description": "CDN cache purge and certificate provider abstractions for Utopia PHP",
+            "keywords": [
+                "cache",
+                "cdn",
+                "library",
+                "php",
+                "tls",
+                "utopia",
+                "utopia-php"
+            ],
+            "support": {
+                "source": "https://github.com/utopia-php/cdn/tree/0.0.7",
+                "issues": "https://github.com/utopia-php/cdn/issues"
+            },
+            "time": "2026-08-28T13:19:44+00:00"
+        },
+        {
             "name": "utopia-php/circuit-breaker",
             "version": "0.4.0",
             "source": {
@@ -4869,20 +4945,23 @@
         },
         {
             "name": "utopia-php/span",
-            "version": "3.0.2",
+            "version": "4.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/span.git",
-                "reference": "6f9042c1ae1fa5a3e890b5c9a92cbf1388422945"
+                "reference": "8505a2331772bd84ca60333e01ce6b6d068ee1dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/span/zipball/6f9042c1ae1fa5a3e890b5c9a92cbf1388422945",
-                "reference": "6f9042c1ae1fa5a3e890b5c9a92cbf1388422945",
+                "url": "https://api.github.com/repos/utopia-php/span/zipball/8505a2331772bd84ca60333e01ce6b6d068ee1dc",
+                "reference": "8505a2331772bd84ca60333e01ce6b6d068ee1dc",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2"
+                "php": ">=8.4",
+                "psr/http-client": "^1.0",
+                "utopia-php/client": "^0.2 || ^0.3 || ^0.4",
+                "utopia-php/psr7": "^0.1 || ^0.2"
             },
             "require-dev": {
                 "swoole/ide-helper": "^5.0"
@@ -4903,9 +4982,9 @@
             "description": "Simple span tracing library for PHP with coroutine support",
             "support": {
                 "issues": "https://github.com/utopia-php/span/issues",
-                "source": "https://github.com/utopia-php/span/tree/3.0.2"
+                "source": "https://github.com/utopia-php/span/tree/4.2.0"
             },
-            "time": "2026-06-10T14:42:53+00:00"
+            "time": "2026-08-28T00:40:32+00:00"
         },
         {
             "name": "utopia-php/storage",

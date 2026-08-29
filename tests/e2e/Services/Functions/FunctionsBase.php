@@ -258,10 +258,9 @@ trait FunctionsBase
     protected function packageFunction(string $function): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
-        // Unique archive per process: paratest packs the same fixture from
-        // many classes/methods at once. Sharing $folderPath/code.tar.gz lets
-        // one tar truncate the file another CURLFile is still reading
-        // (libcurl: "client mime read EOF fail, only N/M of needed bytes").
+        // Unique archive per call: ParaTest packs the same fixture concurrently.
+        // Sharing $folderPath/code.tar.gz lets one tar truncate the file while
+        // another CURLFile is still reading it.
         $tarPath = \sys_get_temp_dir() . '/appwrite-function-' . $function . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
         Console::execute(
