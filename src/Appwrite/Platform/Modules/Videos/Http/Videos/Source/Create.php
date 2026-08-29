@@ -88,7 +88,7 @@ class Create extends Base
         }
 
         if ($status === self::SOURCE_READY) {
-            if (\is_file(self::tmpSourcePath($project->getId(), $video->getId()))) {
+            if (self::sourceExists(self::tmpSourcePath($project->getId(), $video->getId()))) {
                 throw new Exception(Exception::VIDEO_SOURCE_ALREADY_EXISTS);
             }
 

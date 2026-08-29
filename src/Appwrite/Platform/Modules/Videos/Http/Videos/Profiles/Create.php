@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -58,6 +59,7 @@ class Create extends Base
             ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('user')
             ->inject('authorization')
             ->inject('queueForEvents')
             ->callback($this->action(...));
@@ -71,9 +73,12 @@ class Create extends Base
         int $height,
         Response $response,
         Database $dbForProject,
+        User $user,
         Authorization $authorization,
         Event $queueForEvents
     ): void {
+        $this->assertPrivilegedCaller($user, $authorization);
+
         $profile = $authorization->skip(fn () => $dbForProject->createDocument('videos_profiles', new Document([
             '$id' => ID::unique(),
             'name' => $name,

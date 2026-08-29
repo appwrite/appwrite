@@ -13,8 +13,12 @@ use Utopia\Database\Document;
 final class Video
 {
     /**
-     * Record metrics for a terminal rendition (status `ready` or `error`)
-     * onto the usage context and publish them.
+     * Record metrics for a settled rendition encode onto the usage context and
+     * publish them.
+     *
+     * The video count itself is not published here — that is a resource gauge
+     * owned by the StatsResources worker; publishing it per encode would count
+     * rendition attempts (and delete-and-retry cycles) as videos.
      *
      * @param int $storageBytes total bytes written to the videos device for this rendition
      * @param int $computeMs    wall-clock encode duration in milliseconds
@@ -32,17 +36,16 @@ final class Video
             ->setResource('video')
             ->setResourceInternalId((string) $video->getSequence());
 
-        switch ($rendition->getAttribute('status')) {
-            case 'ready':
-                $usage->addMetric(METRIC_RENDITIONS_SUCCESS, 1);
-                break;
-            case 'error':
-                $usage->addMetric(METRIC_RENDITIONS_FAILED, 1);
-                break;
+        // Anything that settles as not `ready` — error, a sweeper abort, a park
+        // observed mid-run — counts as failed, so success + failed always adds
+        // up to the renditions total.
+        if ($rendition->getAttribute('status') === 'ready') {
+            $usage->addMetric(METRIC_RENDITIONS_SUCCESS, 1);
+        } else {
+            $usage->addMetric(METRIC_RENDITIONS_FAILED, 1);
         }
 
         $usage
-            ->addMetric(METRIC_VIDEOS, 1)
             ->addMetric(METRIC_RENDITIONS, 1)
             ->addMetric(METRIC_VIDEOS_STORAGE, \max(0, $storageBytes))
             ->addMetric(METRIC_RENDITIONS_COMPUTE, \max(0, $computeMs));

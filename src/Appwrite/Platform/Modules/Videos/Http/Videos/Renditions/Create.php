@@ -15,6 +15,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -112,21 +113,42 @@ class Create extends Base
         // Created up front with status `waiting` rather than returning a bare 204,
         // so the caller has an id to poll and the worker always has a document to
         // report failure on.
-        $rendition = $authorization->skip(fn () => $dbForProject->createDocument('videos_renditions', new Document([
-            '$id' => ID::unique(),
-            'videoId' => $video->getId(),
-            'videoInternalId' => $video->getSequence(),
-            'profileId' => $profile->getId(),
-            'profileInternalId' => $profile->getSequence(),
-            'name' => $width . 'X' . $height . '@' . ($videoBitRate + $audioBitRate),
-            'width' => $width,
-            'height' => $height,
-            'videoBitRate' => $videoBitRate,
-            'audioBitRate' => $audioBitRate,
-            'output' => $output,
-            'status' => self::STATUS_WAITING,
-            'progress' => '0',
-        ])));
+        try {
+            $rendition = $authorization->skip(fn () => $dbForProject->createDocument('videos_renditions', new Document([
+                '$id' => ID::unique(),
+                'videoId' => $video->getId(),
+                'videoInternalId' => $video->getSequence(),
+                'profileId' => $profile->getId(),
+                'profileInternalId' => $profile->getSequence(),
+                'name' => $width . 'X' . $height . '@' . ($videoBitRate + $audioBitRate),
+                'width' => $width,
+                'height' => $height,
+                'videoBitRate' => $videoBitRate,
+                'audioBitRate' => $audioBitRate,
+                'output' => $output,
+                'status' => self::STATUS_WAITING,
+                'progress' => '0',
+            ])));
+        } catch (DuplicateException) {
+            // Lost a race with a concurrent create for the same profile and
+            // output — the unique index is the authority the pre-check above
+            // cannot be.
+            throw new Exception(Exception::VIDEO_RENDITION_ALREADY_EXISTS);
+        }
+
+        // The waiting row is the claim tryRelease looks for. Re-validate after
+        // insert so a concurrent timeline release that already dropped the
+        // working copy cannot leave us returning 202 for a doomed encode.
+        try {
+            $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
+            $this->assertSourceReady($video);
+            if (!self::sourceExists(self::tmpSourcePath($project->getId(), $videoId))) {
+                throw new Exception(Exception::VIDEO_SOURCE_REMOVED);
+            }
+        } catch (\Throwable $th) {
+            $authorization->skip(fn () => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
+            throw $th;
+        }
 
         $publisherForVideos->enqueue(new VideoMessage(
             project: $project,

@@ -21,7 +21,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Storage\Device;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -76,7 +75,6 @@ class Update extends Base
             ->inject('project')
             ->inject('user')
             ->inject('authorization')
-            ->inject('deviceForVideos')
             ->inject('queueForEvents')
             ->inject('publisherForVideos')
             ->callback($this->action(...));
@@ -95,7 +93,6 @@ class Update extends Base
         Document $project,
         User $user,
         Authorization $authorization,
-        Device $deviceForVideos,
         Event $queueForEvents,
         VideoPublisher $publisherForVideos
     ): void {
@@ -126,18 +123,6 @@ class Update extends Base
         }
 
         $nextCode = $code !== '' ? $code : (string) $subtitle->getAttribute('code', '');
-
-        // Uploads win over auto-extracted tracks for the same language.
-        if ($nextCode !== '') {
-            $this->deleteEmbeddedSubtitlesForCode(
-                $dbForProject,
-                $authorization,
-                $deviceForVideos,
-                $video,
-                $nextCode,
-                $subtitle->getId()
-            );
-        }
 
         if ($default === true) {
             $this->clearDefault($dbForProject, $authorization, $video, $subtitle->getId());

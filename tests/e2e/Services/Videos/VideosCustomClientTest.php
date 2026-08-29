@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Videos;
 
 use Tests\E2E\Client;
@@ -17,7 +19,7 @@ use WebSocket\TimeoutException;
  * Server-side behaviour lives in VideosCustomServerTest; this suite only covers
  * what changes when the caller is a session (or nobody at all).
  */
-class VideosCustomClientTest extends Scope
+final class VideosCustomClientTest extends Scope
 {
     use ProjectCustom;
     // Only the websocket helpers are wanted here; the trait's generic
@@ -199,32 +201,39 @@ class VideosCustomClientTest extends Scope
     }
 
     /**
-     * Documents current behaviour: a session can manage project-wide encoding
-     * profiles, because `videos.write` is granted to the users role and the
-     * profile routes are gated on that single scope.
-     *
-     * Note the mismatch — the profile endpoints declare
-     * `auth: [AuthType::ADMIN, AuthType::KEY]`, so the generated client SDKs do
-     * not expose them, yet the HTTP endpoints accept a session. Profiles are
-     * project configuration rather than user content, so the storage analogy
-     * (`buckets.write` is admin-only while `files.write` is not) argues for
-     * splitting the scope. Left as-is deliberately: tightening it is a product
-     * decision, not a test fix.
+     * Profiles are project configuration (like storage buckets), not user
+     * content. Create/update/delete require a privileged caller (console) or
+     * API key — matching the SDK auth list — even though `videos.write` is
+     * granted to the users role. Sessions may still read the ladder.
      */
-    public function testSessionCanManageProfiles(): void
+    public function testSessionCannotManageProfiles(): void
     {
-        $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->sessionHeaders(), [
+        $payload = [
             'name' => 'from-session',
             'videoBitRate' => 1000,
             'audioBitRate' => 64,
             'width' => 640,
             'height' => 360,
-        ]);
+        ];
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $create = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->sessionHeaders(), $payload);
+        $this->assertEquals(401, $create['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $create['body']['type']);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $response['body']['$id'], $this->sessionHeaders());
-        $this->assertEquals(204, $response['headers']['status-code']);
+        $seeded = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->serverHeaders(), $payload);
+        $this->assertEquals(201, $seeded['headers']['status-code']);
+        $profileId = $seeded['body']['$id'];
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/videos/profiles/' . $profileId, $this->sessionHeaders(), $payload);
+        $this->assertEquals(401, $update['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $update['body']['type']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $profileId, $this->sessionHeaders());
+        $this->assertEquals(401, $delete['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $delete['body']['type']);
+
+        $cleanup = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $profileId, $this->serverHeaders());
+        $this->assertEquals(204, $cleanup['headers']['status-code']);
     }
 
     /**

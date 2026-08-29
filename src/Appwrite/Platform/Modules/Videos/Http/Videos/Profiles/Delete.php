@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
@@ -54,6 +55,7 @@ class Delete extends Base
             ->param('profileId', '', new UID(), 'Video profile unique ID.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('user')
             ->inject('authorization')
             ->inject('queueForEvents')
             ->callback($this->action(...));
@@ -63,9 +65,12 @@ class Delete extends Base
         string $profileId,
         Response $response,
         Database $dbForProject,
+        User $user,
         Authorization $authorization,
         Event $queueForEvents
     ): void {
+        $this->assertPrivilegedCaller($user, $authorization);
+
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
 
         if ($profile->isEmpty()) {

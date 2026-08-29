@@ -17,8 +17,9 @@ use Utopia\Validator\WhiteList;
 /**
  * Aborts stuck video source downloads and encoding renditions.
  *
- * After abort, clients may POST /videos/:id/source or /videos/:id/renditions
- * again to re-queue the job.
+ * Covers downloading (including chunks-complete hangs), and encode phases
+ * `started` / `ended` / `uploading`. After abort, clients may POST
+ * /videos/:id/source or delete+recreate /videos/:id/renditions to re-queue.
  */
 class CleanStaleVideosResources extends Action
 {
@@ -170,7 +171,8 @@ class CleanStaleVideosResources extends Action
 
                     $videoId = (string) $rendition->getAttribute('videoId', '');
                     if ($videoId !== '') {
-                        Base::releaseTmpJobs($project->getId(), $videoId);
+                        // Rendition-scoped: do not wipe sibling encode/timeline jobs.
+                        Base::releaseTmpJob($project->getId(), $videoId, $rendition->getId());
                     }
 
                     Console::info(

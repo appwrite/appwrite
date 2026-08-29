@@ -33,14 +33,32 @@ final class BaseTest extends TestCase
         }
     }
 
+    public function testSourceExistsClearsStaleNegativeCache(): void
+    {
+        $path = \sys_get_temp_dir() . '/appwrite-video-source-' . \uniqid('', true);
+        // Prime PHP's stat cache with a miss, then create the file — without
+        // clearstatcache the next is_file() can still report false in-process.
+        $this->assertFalse(\is_file($path));
+        \file_put_contents($path, 'x');
+        try {
+            $this->assertTrue(Base::sourceExists($path));
+        } finally {
+            @\unlink($path);
+        }
+    }
+
     public function testStaleSourceStatusesContainsDownloadingOnly(): void
     {
         $this->assertSame([Base::SOURCE_DOWNLOADING], Base::STALE_SOURCE_STATUSES);
     }
 
-    public function testStaleEncodeStatusesContainsStartedOnly(): void
+    public function testStaleEncodeStatusesIncludesPostEncodePhases(): void
     {
-        $this->assertSame([Base::STATUS_STARTED], Base::STALE_ENCODE_STATUSES);
+        $this->assertSame([
+            Base::STATUS_STARTED,
+            Base::STATUS_ENDED,
+            Base::STATUS_UPLOADING,
+        ], Base::STALE_ENCODE_STATUSES);
     }
 
     #[DataProvider('releaseGate')]
@@ -92,11 +110,17 @@ final class BaseTest extends TestCase
                 'chunksTotal' => 10,
                 '$updatedAt' => '2026-01-01T12:30:00.000+00:00',
             ], false],
-            'complete chunks still downloading' => [[
+            'stale download with all chunks' => [[
                 'status' => Base::SOURCE_DOWNLOADING,
                 'chunksUploaded' => 10,
                 'chunksTotal' => 10,
                 '$updatedAt' => '2026-01-01T11:00:00.000+00:00',
+            ], true],
+            'fresh download with all chunks' => [[
+                'status' => Base::SOURCE_DOWNLOADING,
+                'chunksUploaded' => 10,
+                'chunksTotal' => 10,
+                '$updatedAt' => '2026-01-01T12:30:00.000+00:00',
             ], false],
             'ready status ignored' => [[
                 'status' => Base::SOURCE_READY,
@@ -132,21 +156,31 @@ final class BaseTest extends TestCase
                 'progress' => '50',
                 '$updatedAt' => '2026-01-01T11:00:00.000+00:00',
             ], true],
-            'started at 100' => [[
+            'stale started at 100' => [[
                 'status' => Base::STATUS_STARTED,
                 'progress' => '100',
                 '$updatedAt' => '2026-01-01T11:00:00.000+00:00',
-            ], false],
+            ], true],
             'fresh started' => [[
                 'status' => Base::STATUS_STARTED,
                 'progress' => '50',
                 '$updatedAt' => '2026-01-01T12:30:00.000+00:00',
             ], false],
-            'uploading excluded' => [[
+            'stale uploading' => [[
                 'status' => Base::STATUS_UPLOADING,
                 'progress' => '100',
                 '$updatedAt' => '2026-01-01T11:00:00.000+00:00',
+            ], true],
+            'fresh uploading' => [[
+                'status' => Base::STATUS_UPLOADING,
+                'progress' => '100',
+                '$updatedAt' => '2026-01-01T12:30:00.000+00:00',
             ], false],
+            'stale ended' => [[
+                'status' => Base::STATUS_ENDED,
+                'progress' => '99',
+                '$updatedAt' => '2026-01-01T11:00:00.000+00:00',
+            ], true],
             'waiting excluded' => [[
                 'status' => Base::STATUS_WAITING,
                 'progress' => '0',
@@ -181,26 +215,34 @@ final class BaseTest extends TestCase
         }
     }
 
-    public function testReleaseTmpJobsRemovesJobDirectories(): void
+    public function testReleaseTmpJobRemovesOnlyTargetJobDirectory(): void
     {
         $projectId = 'proj-' . \uniqid('', true);
         $videoId = 'vid-' . \uniqid('', true);
-        $jobs = Base::tmpPath($projectId, $videoId) . '/jobs';
-        $jobDir = $jobs . '/job-' . \uniqid('', true);
+        $staleId = 'rendition-stale';
+        $liveId = 'rendition-live';
+        $staleDir = Base::tmpJobPath($projectId, $videoId, $staleId);
+        $liveDir = Base::tmpJobPath($projectId, $videoId, $liveId);
 
-        $this->assertTrue(\mkdir($jobDir . '/out', 0755, true) || \is_dir($jobDir . '/out'));
-        \file_put_contents($jobDir . '/out/segment.ts', 'x');
+        $this->assertTrue(\mkdir($staleDir . '/out', 0755, true) || \is_dir($staleDir . '/out'));
+        $this->assertTrue(\mkdir($liveDir . '/out', 0755, true) || \is_dir($liveDir . '/out'));
+        \file_put_contents($staleDir . '/out/segment.ts', 'x');
+        \file_put_contents($liveDir . '/out/segment.ts', 'y');
 
         try {
-            Base::releaseTmpJobs($projectId, $videoId);
-            $this->assertDirectoryDoesNotExist($jobDir);
+            Base::releaseTmpJob($projectId, $videoId, $staleId);
+            $this->assertDirectoryDoesNotExist($staleDir);
+            $this->assertDirectoryExists($liveDir);
+            $this->assertFileExists($liveDir . '/out/segment.ts');
         } finally {
-            if (\is_dir($jobDir . '/out')) {
-                @\unlink($jobDir . '/out/segment.ts');
-                @\rmdir($jobDir . '/out');
+            foreach ([$staleDir, $liveDir] as $dir) {
+                if (\is_dir($dir . '/out')) {
+                    @\unlink($dir . '/out/segment.ts');
+                    @\rmdir($dir . '/out');
+                }
+                @\rmdir($dir);
             }
-            @\rmdir($jobDir);
-            @\rmdir($jobs);
+            @\rmdir(Base::tmpPath($projectId, $videoId) . '/jobs');
             @\rmdir(Base::tmpPath($projectId, $videoId));
             @\rmdir(\dirname(Base::tmpPath($projectId, $videoId)));
         }

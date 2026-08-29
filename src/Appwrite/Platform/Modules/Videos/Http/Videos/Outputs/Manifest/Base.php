@@ -69,6 +69,41 @@ abstract class Base extends VideosAction
     }
 
     /**
+     * Every segment matching `$filters`, ordered by `$sequence`.
+     *
+     * Playlists must ship the full ladder — a single `APP_LIMIT_SUBQUERY` page
+     * would truncate a long encode (~100 min at 6s segments). Count first, find
+     * with that limit, and refuse a partial page rather than serve a corrupt
+     * playlist. No cursor pagination: callers need the entire ordered list.
+     *
+     * @param array<Query> $filters Equality filters only (no limit/order/cursor)
+     * @return array<Document>
+     */
+    protected function getSegments(
+        Database $dbForProject,
+        Authorization $authorization,
+        string $collection,
+        array $filters
+    ): array {
+        $total = $authorization->skip(fn () => $dbForProject->count($collection, $filters));
+        if ($total === 0) {
+            return [];
+        }
+
+        $segments = $authorization->skip(fn () => $dbForProject->find($collection, [
+            ...$filters,
+            Query::orderAsc('$sequence'),
+            Query::limit($total),
+        ]));
+
+        if (\count($segments) !== $total) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR);
+        }
+
+        return $segments;
+    }
+
+    /**
      * Root for every URL inside a manifest.
      *
      * An absolute path rather than an absolute URL: the pre-merge code built these
@@ -267,12 +302,10 @@ abstract class Base extends VideosAction
             foreach ($parsed['adaptations'] ?? [] as $adaptation) {
                 $streamId = (int) ($adaptation['id'] ?? 0);
 
-                $segments = $authorization->skip(fn () => $dbForProject->find('videos_renditions_segments', [
+                $segments = $this->getSegments($dbForProject, $authorization, 'videos_renditions_segments', [
                     Query::equal('renditionInternalId', [$rendition->getSequence()]),
                     Query::equal('streamId', [$streamId]),
-                    Query::orderAsc('$sequence'),
-                    Query::limit(APP_LIMIT_SUBQUERY),
-                ]));
+                ]);
 
                 $init = '';
                 $media = [];
@@ -395,12 +428,10 @@ abstract class Base extends VideosAction
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        $segments = $authorization->skip(fn () => $dbForProject->find('videos_renditions_segments', [
+        $segments = $this->getSegments($dbForProject, $authorization, 'videos_renditions_segments', [
             Query::equal('renditionInternalId', [$rendition->getSequence()]),
             Query::equal('streamId', [$streamId]),
-            Query::orderAsc('$sequence'),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
+        ]);
 
         if (empty($segments)) {
             throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);

@@ -4,9 +4,19 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class VideoSubtitle extends Model
 {
+    /**
+     * `embedded` is derived, not stored: extracted tracks are the rows with no
+     * backing storage file.
+     */
+    public function filter(Document $document): Document
+    {
+        return $document->setAttribute('embedded', empty($document->getAttribute('fileId', '')));
+    }
+
     public function __construct()
     {
         $this
@@ -62,6 +72,12 @@ class VideoSubtitle extends Model
             ->addRule('default', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is this the default subtitle track?',
+                'default' => false,
+                'example' => false,
+            ])
+            ->addRule('embedded', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Was this track auto-extracted from the source container? Extracted tracks have no backing file; extraction runs once per video, so a deleted extracted track is not re-created.',
                 'default' => false,
                 'example' => false,
             ])

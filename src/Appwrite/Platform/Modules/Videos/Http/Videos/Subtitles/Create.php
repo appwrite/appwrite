@@ -22,7 +22,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Storage\Device;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -75,7 +74,6 @@ class Create extends Base
             ->inject('project')
             ->inject('user')
             ->inject('authorization')
-            ->inject('deviceForVideos')
             ->inject('queueForEvents')
             ->inject('publisherForVideos')
             ->callback($this->action(...));
@@ -93,7 +91,6 @@ class Create extends Base
         Document $project,
         User $user,
         Authorization $authorization,
-        Device $deviceForVideos,
         Event $queueForEvents,
         VideoPublisher $publisherForVideos
     ): void {
@@ -103,9 +100,6 @@ class Create extends Base
         if (!\in_array($file->getAttribute('mimeType', ''), self::SUBTITLE_MIME_TYPES, true)) {
             throw new Exception(Exception::VIDEO_SUBTITLE_NOT_VALID);
         }
-
-        // Uploads win over auto-extracted tracks for the same language.
-        $this->deleteEmbeddedSubtitlesForCode($dbForProject, $authorization, $deviceForVideos, $video, $code);
 
         if ($default) {
             $this->clearDefault($dbForProject, $authorization, $video);
@@ -125,6 +119,16 @@ class Create extends Base
             'status' => self::STATUS_WAITING,
         ])));
 
+        if (!$default) {
+            // Uploads outrank auto-extracted tracks: when the current default is
+            // an embedded track for the same language, the upload takes the flag
+            // so players pick the authored file first. Runs after the insert so a
+            // failed create cannot cost the video its default track. Nothing is
+            // deleted — extraction runs once per video, so removing an extracted
+            // track is irreversible and stays an explicit user action.
+            $subtitle = $this->takeDefaultFromEmbedded($dbForProject, $authorization, $video, $subtitle);
+        }
+
         $publisherForVideos->enqueue(new VideoMessage(
             project: $project,
             action: VideoAction::Subtitle,
@@ -139,6 +143,50 @@ class Create extends Base
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($subtitle, Response::MODEL_VIDEO_SUBTITLE);
+    }
+
+    /**
+     * Demote an auto-extracted default track of the same language and hand the
+     * flag to the just-created upload. An uploaded default (authored choice) is
+     * left alone.
+     *
+     * Demote before promote: a failure between the two writes leaves the video
+     * with no default rather than two, and players handle a missing default far
+     * better than a pair of DEFAULT=YES tracks in one manifest.
+     */
+    private function takeDefaultFromEmbedded(
+        Database $dbForProject,
+        Authorization $authorization,
+        Document $video,
+        Document $subtitle
+    ): Document {
+        $existing = $authorization->skip(fn () => $dbForProject->find('videos_subtitles', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::equal('default', [true]),
+            Query::limit(1),
+        ]));
+
+        $current = $existing[0] ?? null;
+
+        if (
+            $current === null
+            || !empty($current->getAttribute('fileId', ''))
+            || $current->getAttribute('code', '') !== $subtitle->getAttribute('code', '')
+        ) {
+            return $subtitle;
+        }
+
+        $authorization->skip(fn () => $dbForProject->updateDocument(
+            'videos_subtitles',
+            $current->getId(),
+            new Document(['default' => false])
+        ));
+
+        return $authorization->skip(fn () => $dbForProject->updateDocument(
+            'videos_subtitles',
+            $subtitle->getId(),
+            new Document(['default' => true])
+        ));
     }
 
     /**

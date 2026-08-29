@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
@@ -59,6 +60,7 @@ class Update extends Base
             ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('user')
             ->inject('authorization')
             ->inject('queueForEvents')
             ->callback($this->action(...));
@@ -73,9 +75,12 @@ class Update extends Base
         int $height,
         Response $response,
         Database $dbForProject,
+        User $user,
         Authorization $authorization,
         Event $queueForEvents
     ): void {
+        $this->assertPrivilegedCaller($user, $authorization);
+
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
 
         // The pre-merge endpoint threw PROJECT_NOT_FOUND here.

@@ -9,11 +9,9 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\View;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Platform\Action as UtopiaAction;
-use Utopia\Storage\Device;
 
 /**
  * Shared behaviour for the Videos module.
@@ -60,7 +58,7 @@ abstract class Base extends UtopiaAction
     public const SOURCE_ABORTED = 'aborted';
 
     /**
-     * Source statuses the sweeper may abort when stale. Extend here later.
+     * Source statuses the sweeper may abort when stale.
      *
      * @var list<string>
      */
@@ -69,13 +67,19 @@ abstract class Base extends UtopiaAction
     ];
 
     /**
-     * Rendition statuses the sweeper may abort when stale. Extend here later
-     * (not uploading yet — segment upload has no DB heartbeats).
+     * Rendition statuses the sweeper may abort when stale.
+     *
+     * Includes post-encode phases (`ended`, `uploading`): those update
+     * `$updatedAt` only on the status transition, so a crash leaves the row
+     * frozen with no further heartbeats — same recovery path as a stuck
+     * `started` encode.
      *
      * @var list<string>
      */
     public const STALE_ENCODE_STATUSES = [
         self::STATUS_STARTED,
+        self::STATUS_ENDED,
+        self::STATUS_UPLOADING,
     ];
 
     /** Root of a video's working directory on the shared videos-tmp volume. */
@@ -100,11 +104,24 @@ abstract class Base extends UtopiaAction
     }
 
     /**
+     * True when the tmp source file exists on disk.
+     *
+     * Clears PHP's per-path stat cache first — long-lived Swoole workers
+     * otherwise reuse a stale hit from an earlier request or coroutine.
+     */
+    public static function sourceExists(string $path): bool
+    {
+        \clearstatcache(true, $path);
+
+        return \is_file($path);
+    }
+
+    /**
      * True when the tmp source exists and its size matches the origin.
      */
     public static function sourceMatches(string $path, int $expected): bool
     {
-        return $expected > 0 && \is_file($path) && \filesize($path) === $expected;
+        return $expected > 0 && self::sourceExists($path) && \filesize($path) === $expected;
     }
 
     /**
@@ -121,19 +138,15 @@ abstract class Base extends UtopiaAction
     /**
      * Whether the sweeper should abort a video source download.
      *
-     * Requires status in STALE_SOURCE_STATUSES, incomplete chunks, and
-     * `$updatedAt` older than `$cutoff`.
+     * Requires status in STALE_SOURCE_STATUSES and `$updatedAt` older than
+     * `$cutoff`. Chunks-complete downloads are included: a crash after the
+     * last chunk leaves status `downloading` with no further heartbeats, and
+     * POST /source would 409 forever if we skipped them.
      */
     public static function shouldAbortStaleDownload(Document $video, \DateTimeInterface $cutoff): bool
     {
         $status = (string) $video->getAttribute('status', '');
         if (!\in_array($status, self::STALE_SOURCE_STATUSES, true)) {
-            return false;
-        }
-
-        $uploaded = (int) $video->getAttribute('chunksUploaded', 0);
-        $total = (int) $video->getAttribute('chunksTotal', 1);
-        if ($uploaded >= $total) {
             return false;
         }
 
@@ -148,17 +161,14 @@ abstract class Base extends UtopiaAction
     /**
      * Whether the sweeper should abort a rendition encode.
      *
-     * Requires status in STALE_ENCODE_STATUSES, progress below 100, and
-     * `$updatedAt` older than `$cutoff`.
+     * Requires status in STALE_ENCODE_STATUSES and `$updatedAt` older than
+     * `$cutoff`. Progress is ignored: a crash at 100% / during upload leaves
+     * the same frozen `$updatedAt` as a mid-encode hang.
      */
     public static function shouldAbortStaleEncode(Document $rendition, \DateTimeInterface $cutoff): bool
     {
         $status = (string) $rendition->getAttribute('status', '');
         if (!\in_array($status, self::STALE_ENCODE_STATUSES, true)) {
-            return false;
-        }
-
-        if ((int) $rendition->getAttribute('progress', 0) >= 100) {
             return false;
         }
 
@@ -190,19 +200,35 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Best-effort removal of orphaned encode job directories under videos-tmp.
+     * Per-job directory under `{tmpPath}/jobs/{jobId}/`.
+     *
+     * Encode jobs use the rendition id so a stale abort can release one workspace
+     * without wiping a sibling rendition (or timeline) still writing under the
+     * same video.
      */
-    public static function releaseTmpJobs(string $projectId, string $videoId): void
+    public static function tmpJobPath(string $projectId, string $videoId, string $jobId): string
     {
-        $jobs = self::tmpPath($projectId, $videoId) . '/jobs';
-        $root = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
-        if (!\str_starts_with($jobs, $root) || !\is_dir($jobs)) {
+        return self::tmpPath($projectId, $videoId) . '/jobs/' . $jobId;
+    }
+
+    /**
+     * Best-effort removal of one encode job directory under videos-tmp.
+     *
+     * Scoped to `$jobId` — never glob-deletes every jobs/* sibling.
+     */
+    public static function releaseTmpJob(string $projectId, string $videoId, string $jobId): void
+    {
+        if ($jobId === '' || \str_contains($jobId, '/') || \str_contains($jobId, '\\')) {
             return;
         }
 
-        foreach (\glob($jobs . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
-            self::rmdirRecursive($dir);
+        $dir = self::tmpJobPath($projectId, $videoId, $jobId);
+        $root = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+        if (!\str_starts_with($dir, $root) || !\is_dir($dir)) {
+            return;
         }
+
+        self::rmdirRecursive($dir);
     }
 
     private static function rmdirRecursive(string $dir): void
@@ -240,6 +266,18 @@ abstract class Base extends UtopiaAction
 
         if ($status !== self::SOURCE_READY) {
             throw new Exception(Exception::VIDEO_NOT_READY);
+        }
+    }
+
+    /**
+     * Profiles are project configuration (like storage buckets), not user content.
+     * SDK methods advertise ADMIN/KEY only — enforce the same at the HTTP layer
+     * so a session with `videos.write` cannot mutate the encode ladder.
+     */
+    protected function assertPrivilegedCaller(User $user, Authorization $authorization): void
+    {
+        if (!$user->isPrivileged($authorization->getRoles()) && !$user->isKey($authorization->getRoles())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
     }
 
@@ -379,58 +417,6 @@ abstract class Base extends UtopiaAction
         );
 
         return $video;
-    }
-
-    /**
-     * Remove auto-extracted subtitle tracks that share a language code with an
-     * upload. Uploaded rows (non-empty fileId) are never deleted here.
-     *
-     * @param string|null $exceptId subtitle id to leave alone (e.g. the row being updated)
-     */
-    protected function deleteEmbeddedSubtitlesForCode(
-        Database $dbForProject,
-        Authorization $authorization,
-        Device $deviceForVideos,
-        Document $video,
-        string $code,
-        ?string $exceptId = null
-    ): void {
-        $existing = $authorization->skip(fn () => $dbForProject->find('videos_subtitles', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::equal('code', [$code]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
-
-        foreach ($existing as $subtitle) {
-            if ($exceptId !== null && $subtitle->getId() === $exceptId) {
-                continue;
-            }
-
-            if (!empty($subtitle->getAttribute('fileId', ''))) {
-                continue;
-            }
-
-            $segments = $authorization->skip(fn () => $dbForProject->find('videos_subtitles_segments', [
-                Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]));
-
-            foreach ($segments as $segment) {
-                $authorization->skip(fn () => $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId()));
-            }
-
-            $authorization->skip(fn () => $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId()));
-
-            $path = $subtitle->getAttribute('path', '');
-
-            if (!empty($path)) {
-                try {
-                    $deviceForVideos->delete($path);
-                } catch (\Throwable) {
-                    // Row is gone; stale device bytes are cleaned up with the video.
-                }
-            }
-        }
     }
 
     /**

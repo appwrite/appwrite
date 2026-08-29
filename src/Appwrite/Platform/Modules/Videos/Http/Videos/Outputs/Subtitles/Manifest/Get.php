@@ -111,11 +111,9 @@ class Get extends Base
             return;
         }
 
-        $segments = $authorization->skip(fn () => $dbForProject->find('videos_subtitles_segments', [
+        $segments = $this->getSegments($dbForProject, $authorization, 'videos_subtitles_segments', [
             Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
-            Query::orderAsc('$sequence'),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
+        ]);
 
         if (empty($segments)) {
             throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Videos;
 
 use Tests\E2E\Client;
@@ -10,7 +12,7 @@ use Tests\E2E\Scopes\VideoCustom;
 use Utopia\Console;
 use Utopia\Database\DateTime;
 
-class VideosStaleResourcesServerTest extends Scope
+final class VideosStaleResourcesServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -163,7 +165,7 @@ class VideosStaleResourcesServerTest extends Scope
         $this->assertEquals(200, $file['headers']['status-code']);
     }
 
-    public function testCleanStaleSkipsDownloadWithAllChunks(): void
+    public function testCleanStaleAbortsDownloadWithAllChunks(): void
     {
         $videoId = $this->createPendingVideo();
         $this->seedStuckDownload($videoId, 10, 10, $this->hourAgo());
@@ -171,7 +173,7 @@ class VideosStaleResourcesServerTest extends Scope
         $this->triggerCleanStale();
 
         $body = $this->getVideo($videoId);
-        $this->assertEquals('downloading', $body['status']);
+        $this->assertEquals('aborted', $body['status']);
     }
 
     public function testCleanStaleSkipsFreshDownload(): void
@@ -263,7 +265,7 @@ class VideosStaleResourcesServerTest extends Scope
         $this->assertNotEmpty($body['endedAt']);
     }
 
-    public function testCleanStaleSkipsEncodeAt100(): void
+    public function testCleanStaleAbortsEncodeAt100(): void
     {
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
@@ -274,10 +276,11 @@ class VideosStaleResourcesServerTest extends Scope
         $this->triggerCleanStale();
 
         $body = $this->getRendition($videoId, $renditionId);
-        $this->assertEquals('started', $body['status']);
+        $this->assertEquals('aborted', $body['status']);
+        $this->assertNotEmpty($body['endedAt']);
     }
 
-    public function testCleanStaleIgnoresUploading(): void
+    public function testCleanStaleAbortsUploading(): void
     {
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
@@ -296,7 +299,31 @@ class VideosStaleResourcesServerTest extends Scope
         $this->triggerCleanStale();
 
         $body = $this->getRendition($videoId, $renditionId);
-        $this->assertEquals('uploading', $body['status']);
+        $this->assertEquals('aborted', $body['status']);
+        $this->assertNotEmpty($body['endedAt']);
+    }
+
+    public function testCleanStaleAbortsEnded(): void
+    {
+        $ready = $this->createReadyVideo();
+        $videoId = $ready['$id'];
+        $rendition = $this->createWaitingRendition($videoId);
+        $renditionId = $rendition['$id'];
+
+        $this->seedResource('videos_rendition', $renditionId, [
+            'status' => 'ended',
+            'progress' => '99',
+            'updatedAt' => $this->hourAgo(),
+        ]);
+        $this->seedResource('videos_rendition', $renditionId, [
+            'updatedAt' => $this->hourAgo(),
+        ]);
+
+        $this->triggerCleanStale();
+
+        $body = $this->getRendition($videoId, $renditionId);
+        $this->assertEquals('aborted', $body['status']);
+        $this->assertNotEmpty($body['endedAt']);
     }
 
     public function testCleanStaleIgnoresWaiting(): void

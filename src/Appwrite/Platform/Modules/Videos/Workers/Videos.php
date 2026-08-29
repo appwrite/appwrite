@@ -470,7 +470,7 @@ class Videos extends Action
 
         $projectId = $videoMessage->project->getId();
         $videoId = $videoMessage->video->getId();
-        $workspace = $this->jobWorkspace($projectId, $videoId);
+        $workspace = $this->jobWorkspace($projectId, $videoId, $rendition->getId());
         $startedAt = \microtime(true);
         $storageBytes = 0;
         $output = $videoMessage->output !== ''
@@ -1070,13 +1070,17 @@ class Videos extends Action
     }
 
     /**
-     * Per-job output directory under `{videoId}/jobs/{uniqid}/out/`.
+     * Per-job output directory under `{videoId}/jobs/{jobId}/out/`.
+     *
+     * Encode passes the rendition id so CleanStaleVideosResources can release
+     * that workspace alone. Timeline / subtitle extract omit `$jobId` and get a
+     * uniqid — those runs are not aborted via the rendition sweeper.
      *
      * @return array{basePath: string, outDir: string}
      */
-    private function jobWorkspace(string $projectId, string $videoId): array
+    private function jobWorkspace(string $projectId, string $videoId, ?string $jobId = null): array
     {
-        $basePath = $this->getTmpPath($projectId, $videoId) . '/jobs/' . \uniqid('', true);
+        $basePath = Base::tmpJobPath($projectId, $videoId, $jobId ?? \uniqid('', true));
         $outDir = $basePath . '/out/';
 
         if (!\mkdir($outDir, 0755, true) && !\is_dir($outDir)) {
@@ -1236,8 +1240,9 @@ class Videos extends Action
         }
 
         $expected = (int) $video->getAttribute('size', 0);
-        $actual = \is_file($sourcePath) ? (int) \filesize($sourcePath) : 0;
         if (!Base::sourceMatches($sourcePath, $expected)) {
+            // sourceMatches already cleared the path's stat cache.
+            $actual = \is_file($sourcePath) ? (int) \filesize($sourcePath) : 0;
             throw new \Exception(
                 'Source size mismatch for video ' . $video->getId()
                 . ': expected ' . $expected . ', got ' . $actual
@@ -1281,6 +1286,23 @@ class Videos extends Action
         $jobsRemain = \is_dir($jobs) && !empty(\glob($jobs . '/*', GLOB_ONLYDIR));
 
         if ($jobsRemain) {
+            return;
+        }
+
+        // Rendition create may have inserted `waiting` after the first find —
+        // re-check immediately before unlinking so we do not drop the source
+        // under a new claim.
+        $inFlight = $dbForProject->find('videos_renditions', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::equal('status', [
+                Base::STATUS_WAITING,
+                Base::STATUS_STARTED,
+                Base::STATUS_ENDED,
+                Base::STATUS_UPLOADING,
+            ]),
+            Query::limit(1),
+        ]);
+        if (!empty($inFlight)) {
             return;
         }
 

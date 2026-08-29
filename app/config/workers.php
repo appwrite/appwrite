@@ -91,6 +91,6 @@ return [
     'videos' => [
         'queue' => Event::VIDEOS_QUEUE_NAME,
         'queueEnv' => '_APP_VIDEOS_QUEUE_NAME',
-        'maxCoroutines' => 1,
+        'maxCoroutines' => 4,
     ],
 ];
