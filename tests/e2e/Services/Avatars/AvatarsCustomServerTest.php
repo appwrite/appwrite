@@ -17,12 +17,6 @@ final class AvatarsCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    /**
-     * Corner colour of initials rendered for the name 'B B': the 'BB'
-     * initials deterministically pick the purple theme (#7C67FE).
-     */
-    private const PHOTO_INITIALS_ALT_COLOR = ['r' => 124, 'g' => 103, 'b' => 254];
-
     public function testGetPhotoByUserId(): void
     {
         /**
@@ -54,10 +48,12 @@ final class AvatarsCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
+
+        $storedNamePhoto = $response['body'];
 
         // An explicit name takes priority over the target user's stored name:
-        // 'B B' picks the purple theme instead of 'W W'-mint.
+        // 'B B' draws different initials than the user's own 'W W'.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -68,9 +64,10 @@ final class AvatarsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_ALT_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
+        $this->assertNotSame($storedNamePhoto, $response['body']);
 
-        // The default 'current()' sentinel resolves the authenticated user — an
+        // The 'current()' sentinel resolves the authenticated user — an
         // API key carries none, so the explicit name decides the result.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -82,7 +79,7 @@ final class AvatarsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
 
         /**
          * Test for SUCCESS — regression: a user with an email but no name

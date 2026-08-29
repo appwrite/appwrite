@@ -44,6 +44,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS',
+                'description' => 'Comma-separated list of project IDs that get increased API rate limits. Every endpoint rate limit is multiplied by 100 for the listed projects. By default, empty, so all projects use the standard rate limits.',
+                'introduction' => '1.9.7',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOCKING_ENABLED',
                 'description' => 'Enable distributed locking for platform writes. Locks coordinate concurrent updates across API pods so read-modify-write operations on shared documents do not lose updates. By default, set to \'enabled\'. Set to \'disabled\' as an emergency kill switch; locks become no-ops and concurrent writes will race.',
                 'introduction' => '1.9.3',
@@ -471,6 +480,141 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_ADAPTER_DOCUMENTSDB',
+                'description' => 'Engine backing DocumentsDB. Only MongoDB is supported. Default value is: mongodb.',
+                'introduction' => '2.0.0',
+                'default' => 'mongodb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_HOST_DOCUMENTSDB',
+                'description' => 'DocumentsDB server host name address. Requires a reachable MongoDB. Default value is: mongodb.',
+                'introduction' => '2.0.0',
+                'default' => 'mongodb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PORT_DOCUMENTSDB',
+                'description' => 'DocumentsDB server TCP port. Default value is: 27017.',
+                'introduction' => '2.0.0',
+                'default' => '27017',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEMA_DOCUMENTSDB',
+                'description' => 'DocumentsDB schema name. Falls back to _APP_DB_SCHEMA when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_USER_DOCUMENTSDB',
+                'description' => 'DocumentsDB server user name. Falls back to _APP_DB_USER when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PASS_DOCUMENTSDB',
+                'description' => 'DocumentsDB server user password. Falls back to _APP_DB_PASS when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_ADAPTER_VECTORSDB',
+                'description' => 'Engine backing VectorsDB. Only PostgreSQL is supported. Default value is: postgresql.',
+                'introduction' => '2.0.0',
+                'default' => 'postgresql',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_HOST_VECTORSDB',
+                'description' => 'VectorsDB server host name address. Requires a reachable PostgreSQL. Default value is: postgresql.',
+                'introduction' => '2.0.0',
+                'default' => 'postgresql',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PORT_VECTORSDB',
+                'description' => 'VectorsDB server TCP port. Default value is: 5432.',
+                'introduction' => '2.0.0',
+                'default' => '5432',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEMA_VECTORSDB',
+                'description' => 'VectorsDB schema name. Falls back to _APP_DB_SCHEMA when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_USER_VECTORSDB',
+                'description' => 'VectorsDB server user name. Falls back to _APP_DB_USER when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PASS_VECTORSDB',
+                'description' => 'VectorsDB server user password. Falls back to _APP_DB_PASS when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DATABASE_DOCUMENTSDB',
+                'description' => 'Full DocumentsDB connection string, overriding the _APP_DB_*_DOCUMENTSDB values. Format: db_main=mongodb://user:pass@host:port/schema.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DATABASE_VECTORSDB',
+                'description' => 'Full VectorsDB connection string, overriding the _APP_DB_*_VECTORSDB values. Format: db_main=postgresql://user:pass@host:port/schema.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_DATABASE_BATCH',
+                'description' => 'Maximum number of rows or documents accepted by a single bulk database operation (createRows, upsertRows, updateRows, deleteRows and their document equivalents). Raising it increases memory use and query size per request, so tune it to what your database can handle. Default value is: 100.',
+                'introduction' => '2.0.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
         ],
     ],

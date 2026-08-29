@@ -394,13 +394,16 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $projectInternalId = (string) ($project->getSequence() ?: $project->getId());
                 $lock->tryWithKey(
-                    'lock:platform:'.$projectInternalId.':projects:'.$project->getId().':accessedAt',
-                    fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
-                        'projects',
-                        $project->getId(),
-                        new Document(['accessedAt' => DateTime::now()])
+                    'lock:platform:projects:'.$project->getId().':accessedAt',
+                    // updateDocument never uses cache, so skip the subqueries.
+                    fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                        fn () => $dbForPlatform->updateDocument(
+                            'projects',
+                            $project->getId(),
+                            new Document(['accessedAt' => DateTime::now()])
+                        ),
+                        APP_PROJECTS_SUBQUERIES
                     )),
                     target: 'projects'
                 );
@@ -415,17 +418,28 @@ Http::init()
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
-                    $dbForProject->updateDocument('users', $user->getId(), new Document([
-                        'accessedAt' => $user->getAttribute('accessedAt')
-                    ]));
-                } else {
-                    $userInternalId = (string) ($user->getSequence() ?: $user->getId());
                     $lock->tryWithKey(
-                        'lock:platform:'.$userInternalId.':users:'.$user->getId().':accessedAt',
-                        fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
-                            'users',
-                            $user->getId(),
-                            new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                        'lock:project:'.$project->getSequence().':users:'.$user->getSequence().':accessedAt',
+                        // updateDocument never uses cache, so skip the subqueries.
+                        fn () => $dbForProject->skipFilters(
+                            fn () => $dbForProject->updateDocument('users', $user->getId(), new Document([
+                                'accessedAt' => $user->getAttribute('accessedAt')
+                            ])),
+                            APP_USERS_SUBQUERIES
+                        ),
+                        target: 'users'
+                    );
+                } else {
+                    $lock->tryWithKey(
+                        'lock:platform:'.$user->getSequence().':users:'.$user->getId().':accessedAt',
+                        // updateDocument never uses cache, so skip the subqueries.
+                        fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                            fn () => $dbForPlatform->updateDocument(
+                                'users',
+                                $user->getId(),
+                                new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                            ),
+                            APP_USERS_SUBQUERIES
                         )),
                         target: 'users'
                     );
@@ -517,6 +531,12 @@ Http::init()
             && ! $user->isPrivileged($roles)
             && $devKey->isEmpty();
 
+        $abuseLimit = $route->getLabel('abuse-limit', 0);
+        $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
+        if (\in_array($project->getId(), $increasedLimitProjects, true)) {
+            $abuseLimit *= 100;
+        }
+
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
         $closestLimit = null;
@@ -527,7 +547,7 @@ Http::init()
             try {
                 $start = $request->getContentRangeStart();
                 $end = $request->getContentRangeEnd();
-                $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
+                $timeLimit = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600));
                 $timeLimit
                     ->setParam('{projectId}', $project->getId())
                     ->setParam('{userId}', $user->getId())
@@ -1218,9 +1238,13 @@ Http::shutdown()
             // we do not have a query operator for array merge keys
             $lock->tryWithKey(
                 'lock:platform:' . $project->getSequence() . ':onboarding',
-                fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                    'onboarding' => $byMethod,
-                ]))),
+                // updateDocument never uses cache, so skip the subqueries.
+                fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                        'onboarding' => $byMethod,
+                    ])),
+                    APP_PROJECTS_SUBQUERIES
+                )),
                 target: 'projects',
             );
         } catch (\Throwable) {

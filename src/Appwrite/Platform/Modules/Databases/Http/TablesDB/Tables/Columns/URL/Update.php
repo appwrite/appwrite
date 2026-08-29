@@ -59,7 +59,7 @@ class Update extends URLUpdate
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new Nullable(new URL()), 'Default value for column when not provided. Cannot be set when column is required.')
+            ->param('default', null, new Nullable(new URL()), 'Default value for column when not provided. Cannot be set when column is required.', example: 'https://example.com')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
