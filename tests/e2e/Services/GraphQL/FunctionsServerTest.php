@@ -118,7 +118,11 @@ final class FunctionsServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($deployment['body']['data']);
-        $this->assertArrayNotHasKey('errors', $deployment['body']);
+        $this->assertArrayNotHasKey(
+            'errors',
+            $deployment['body'],
+            \json_encode($deployment['body']['errors'] ?? [], JSON_THROW_ON_ERROR)
+        );
 
         // Poll get deployment until an error, or status is either 'ready' or 'failed'
         $deployment = $deployment['body']['data']['functionsCreateDeployment'];
