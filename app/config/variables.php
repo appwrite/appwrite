@@ -616,6 +616,24 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_DOCUMENTSDB',
+                'description' => 'Enables the DocumentsDB API, which runs on MongoDB. The installer does not deploy MongoDB, so provision one and point the _APP_DB_*_DOCUMENTSDB variables at it before enabling this; until then the /v1/documentsdb routes return a service disabled error. Default value is: disabled.',
+                'introduction' => '2.0.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VECTORSDB',
+                'description' => 'Enables the VectorsDB API, which runs on PostgreSQL. The installer does not deploy a PostgreSQL for it, so provision one and point the _APP_DB_*_VECTORSDB variables at it before enabling this; until then the /v1/vectorsdb routes return a service disabled error. Default value is: disabled.',
+                'introduction' => '2.0.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
