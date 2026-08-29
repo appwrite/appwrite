@@ -1378,14 +1378,19 @@ export function View() {
         </div>
 
         {/* Deployments filter + create (below active deployment card) */}
-        {deploymentsToolbar ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
-            {deploymentsToolbar}
-          </div>
-        ) : null}
+        <div
+          className={cn(
+            'mt-6',
+            deploymentsToolbar && 'space-y-4',
+          )}
+        >
+          {deploymentsToolbar ? (
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              {deploymentsToolbar}
+            </div>
+          ) : null}
 
-        {/* Deployments Table */}
-        <div className="mt-6">
+          {/* Deployments Table */}
           {deployments.length > 0 ? (
             <>
               <div className="rounded-lg border border-border bg-card">

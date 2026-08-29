@@ -46,6 +46,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Connect Git repository': 'Git リポジトリを接続',
   'Connect GitHub': 'GitHub を接続',
   'Connect GitLab': 'GitLab を接続',
+  'Connect Bitbucket': 'Bitbucket を接続',
+  'Connect Origin': 'Origin を接続',
   'Connect later': '後で接続',
   'Connect repository': 'リポジトリを接続',
   'Connect repository first': '先にリポジトリを接続してください',
