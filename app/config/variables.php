@@ -1079,9 +1079,9 @@ return [
             ],
             [
                 'name' => '_APP_COMPUTE_BUILD_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function or site. The default value is 2700 seconds.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function or site. The default value is 900 seconds.',
                 'introduction' => '1.7.0',
-                'default' => '2700',
+                'default' => '900',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

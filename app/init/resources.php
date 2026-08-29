@@ -83,7 +83,7 @@ $container->set('executor', fn () => new Executor(), []);
 $container->set('jobs', function () {
     $client = (new Client(new CurlAdapter()))
         ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
-        ->withTimeout(30);
+        ->withTimeout((float) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', '900'));
 
     // Keep the injection resolvable without _APP_JOBS_HOST and fail at call
     // time instead, so installs that never build stay bootable.
