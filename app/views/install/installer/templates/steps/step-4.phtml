@@ -67,14 +67,6 @@ $badgeClass = $defaultSecretKey !== '' ? 'badge-success' : 'badge-warning';
                         <span class="badge badge-neutral typography-text-xs-400" data-review-assistant-badge>Disabled</span>
                         <div class="review-label typography-text-xs-400 text-neutral-tertiary">Appwrite Assistant</div>
                     </div>
-                    <div class="review-row">
-                        <span class="badge badge-success typography-text-xs-400" data-review-documentsdb-badge>Enabled</span>
-                        <div class="review-label typography-text-xs-400 text-neutral-tertiary">DocumentsDB</div>
-                    </div>
-                    <div class="review-row">
-                        <span class="badge badge-success typography-text-xs-400" data-review-vectorsdb-badge>Enabled</span>
-                        <div class="review-label typography-text-xs-400 text-neutral-tertiary">VectorsDB</div>
-                    </div>
                     <?php if (!$isUpgrade) { ?>
                     <div class="review-row">
                         <span class="badge <?php echo $badgeClass; ?> typography-text-xs-400" data-review-badge>

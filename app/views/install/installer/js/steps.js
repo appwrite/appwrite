@@ -122,8 +122,6 @@
         State.setStateIfEmpty?.('httpsPort', root.querySelector('#https-port')?.value);
         State.setStateIfEmpty?.('emailCertificates', root.querySelector('#ssl-email')?.value);
         State.setStateIfEmpty?.('forceHttps', root.querySelector('#force-https')?.checked);
-        State.setStateIfEmpty?.('documentsDB', root.querySelector('#documentsdb')?.checked);
-        State.setStateIfEmpty?.('vectorsDB', root.querySelector('#vectorsdb')?.checked);
         State.setStateIfEmpty?.('assistantOpenAIKey', root.querySelector('#assistant-openai-key')?.value);
     };
 
@@ -143,16 +141,6 @@
         const forceHttps = root.querySelector('#force-https');
         if (forceHttps && typeof formState.forceHttps === 'boolean') {
             forceHttps.checked = formState.forceHttps;
-        }
-
-        const documentsDB = root.querySelector('#documentsdb');
-        if (documentsDB && typeof formState.documentsDB === 'boolean') {
-            documentsDB.checked = formState.documentsDB;
-        }
-
-        const vectorsDB = root.querySelector('#vectorsdb');
-        if (vectorsDB && typeof formState.vectorsDB === 'boolean') {
-            vectorsDB.checked = formState.vectorsDB;
         }
 
         const assistantKey = root.querySelector('#assistant-openai-key');
@@ -224,8 +212,6 @@
         bindInputToState(httpsPort, 'httpsPort');
         bindInputToState(sslEmail, 'emailCertificates');
         bindCheckboxToState(forceHttps, 'forceHttps');
-        bindCheckboxToState(root.querySelector('#documentsdb'), 'documentsDB');
-        bindCheckboxToState(root.querySelector('#vectorsdb'), 'vectorsDB');
         bindInputToState(assistantKey, 'assistantOpenAIKey');
 
         bindErrorClear?.(hostname);
