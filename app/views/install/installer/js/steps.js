@@ -486,17 +486,25 @@
                 let valid = true;
                 const email = root?.querySelector('#account-email');
                 const password = root?.querySelector('#account-password');
+                const emailValue = email?.value.trim() ?? '';
+                const passwordValue = password?.value ?? '';
 
-                if (!email || !email.value.trim()) {
+                // The account is optional -- the installer skips creating one when either
+                // field is blank, and it can be created from the console afterwards. Half
+                // an account is still an error, since that reads as an attempt to make one.
+                if (emailValue === '' && passwordValue === '') {
+                    return true;
+                }
+
+                if (emailValue === '') {
                     setFieldError?.(email, 'This field is required');
                     valid = false;
-                } else if (!isValidEmail?.(email.value.trim())) {
+                } else if (!isValidEmail?.(emailValue)) {
                     setFieldError?.(email, 'Please enter a valid email address');
                     valid = false;
                 }
 
-                const passwordValue = password?.value ?? '';
-                if (!password || !/\S/.test(passwordValue)) {
+                if (!/\S/.test(passwordValue)) {
                     setFieldError?.(password, 'This field is required');
                     valid = false;
                 } else if (!isValidPassword?.(passwordValue)) {
