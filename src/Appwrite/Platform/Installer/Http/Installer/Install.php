@@ -43,8 +43,6 @@ class Install extends Action
             ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
             ->param('database', '', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database adapter', true)
             ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology', true)
-            ->param('documentsDB', true, new \Utopia\Validator\Boolean(true), 'Deploy DocumentsDB and the MongoDB it runs on', true)
-            ->param('vectorsDB', true, new \Utopia\Validator\Boolean(true), 'Deploy VectorsDB and the PostgreSQL it runs on', true)
             ->param('installId', '', new Text(64, 0), 'Installation ID', true)
             ->param('retryStep', null, new Nullable(new WhiteList([
                 Server::STEP_CONFIG_FILES,
@@ -76,8 +74,6 @@ class Install extends Action
         string $accountPassword,
         string $database,
         string $topology,
-        bool $documentsDB,
-        bool $vectorsDB,
         string $installId,
         ?string $retryStep,
         bool $migrate,
@@ -237,8 +233,6 @@ class Install extends Action
                 '_APP_EMAIL_CERTIFICATES' => $emailCertificates,
                 '_APP_DB_ADAPTER' => $lockedDatabase ?? ($database ?: 'postgresql'),
                 '_APP_ASSISTANT_OPENAI_API_KEY' => $assistantOpenAIKey,
-                '_APP_DOCUMENTSDB' => $documentsDB ? 'enabled' : 'disabled',
-                '_APP_VECTORSDB' => $vectorsDB ? 'enabled' : 'disabled',
             ];
 
             $previousHadError = is_array($existing) && isset($existing['error']);

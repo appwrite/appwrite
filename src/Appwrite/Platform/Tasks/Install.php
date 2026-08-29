@@ -259,33 +259,6 @@ class Install extends Action
             $enableAssistant = true;
         }
 
-        // DocumentsDB runs on MongoDB and VectorsDB on PostgreSQL. Turning one off keeps
-        // its engine out of the installation, so only deploy what is actually used.
-        $products = [
-            'enableDocumentsDB' => ['var' => '_APP_DOCUMENTSDB', 'label' => 'DocumentsDB', 'engine' => 'MongoDB'],
-            'enableVectorsDB' => ['var' => '_APP_VECTORSDB', 'label' => 'VectorsDB', 'engine' => 'PostgreSQL'],
-        ];
-        $enabledProducts = [];
-        foreach ($products as $param => $product) {
-            // On an upgrade the existing .env has already seeded the default; on a fresh
-            // install the environment is how a scripted run states its choice.
-            $current = $existingInstallation
-                ? ($vars[$product['var']]['default'] ?? 'enabled') !== 'disabled'
-                : System::getEnv($product['var'], 'enabled') !== 'disabled';
-
-            if ($interactive === 'Y' && Console::isInteractive()) {
-                $answer = Console::confirm(
-                    "Enable {$product['label']}? It requires {$product['engine']} (Y/n)"
-                    . ($existingInstallation ? ($current ? ' [Currently enabled]' : ' [Currently disabled]') : '')
-                );
-                $enabledProducts[$param] = empty($answer) ? $current : \strtolower($answer) === 'y';
-            } else {
-                $enabledProducts[$param] = $current;
-            }
-
-            $vars[$product['var']]['default'] = $enabledProducts[$param] ? 'enabled' : 'disabled';
-        }
-
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHttpPort . ')');
             $httpPort = ($httpPort) ?: $defaultHttpPort;
@@ -660,8 +633,6 @@ class Install extends Action
             'database' => $database,
             'hostPath' => $this->hostPath,
             'enableAssistant' => $enableAssistant,
-            'enableDocumentsDB' => ($input['_APP_DOCUMENTSDB'] ?? 'enabled') !== 'disabled',
-            'enableVectorsDB' => ($input['_APP_VECTORSDB'] ?? 'enabled') !== 'disabled',
             'topology' => $this->topology,
         ]);
 
@@ -719,12 +690,7 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_CONFIG_FILES, InstallerServer::STATUS_COMPLETED, $messages);
             }
 
-            // DocumentsDB runs on MongoDB, so the service, and its bind-mounted support
-            // files, can be present even when another engine backs the platform.
-            $needsMongo = $database === 'mongodb'
-                || ($input['_APP_DOCUMENTSDB'] ?? 'enabled') !== 'disabled';
-
-            if ($needsMongo && !$useExistingConfig && $startIndex <= 1) {
+            if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
                 $this->copyMongoFilesIfNeeded();
             }
 

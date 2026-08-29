@@ -25,17 +25,6 @@ class Generator
         ],
     ];
 
-    /**
-     * Engine each specialised database product runs on. DocumentsDB only runs on
-     * MongoDB and VectorsDB only on PostgreSQL, so an enabled product needs its
-     * engine even when a different one backs the platform. A disabled product
-     * leaves its engine out, keeping the installation to what it actually uses.
-     */
-    private const array PRODUCT_BACKING_SERVICES = [
-        'enableDocumentsDB' => 'mongodb',
-        'enableVectorsDB' => 'postgresql',
-    ];
-
     private const array OPTIONAL_SERVICES = [
         'enableAssistant' => 'appwrite-assistant',
     ];
@@ -71,8 +60,6 @@ class Generator
         'database' => 'postgresql',
         'hostPath' => '',
         'enableAssistant' => false,
-        'enableDocumentsDB' => true,
-        'enableVectorsDB' => true,
         'topology' => 'combined',
     ];
 
@@ -172,23 +159,8 @@ class Generator
     }
 
     /**
-     * Engines the enabled database products need, on top of the platform engine.
-     *
-     * @return array<int, string>
+     * @return string[]
      */
-    private function getRequiredBackingServices(): array
-    {
-        $services = [];
-
-        foreach (self::PRODUCT_BACKING_SERVICES as $param => $service) {
-            if (!empty($this->params[$param])) {
-                $services[] = $service;
-            }
-        }
-
-        return $services;
-    }
-
     private function getSelectableServices(): array
     {
         $services = [];
@@ -208,15 +180,9 @@ class Generator
     {
         foreach (self::SELECTABLE_SERVICE_GROUPS as $param => $config) {
             foreach ($config['services'] as $service) {
-                if ($service === $this->params[$param]) {
-                    continue;
+                if ($service !== $this->params[$param]) {
+                    unset($services[$service]);
                 }
-
-                if (\in_array($service, $this->getRequiredBackingServices(), true)) {
-                    continue;
-                }
-
-                unset($services[$service]);
             }
         }
 
@@ -282,10 +248,6 @@ class Generator
         foreach (self::SELECTABLE_VOLUME_GROUPS as $param => $groups) {
             foreach ($groups as $service => $names) {
                 if ($service === $this->params[$param]) {
-                    continue;
-                }
-
-                if (\in_array($service, $this->getRequiredBackingServices(), true)) {
                     continue;
                 }
 
