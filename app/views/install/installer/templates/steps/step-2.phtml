@@ -37,6 +37,11 @@ $secretKeyValue = htmlspecialchars((string) $defaultSecretKey, ENT_QUOTES, 'UTF-
                             value="<?php echo $secretKeyValue; ?>"
                             minlength="1"
                             maxlength="64"
+                            autocomplete="off"
+                            data-1p-ignore
+                            data-lpignore="true"
+                            data-bwignore
+                            data-form-type="other"
                         >
                         <div class="input-action-buttons">
                             <span class="tooltip-wrapper" data-tooltip-default="Copy" data-tooltip-success="Copied">

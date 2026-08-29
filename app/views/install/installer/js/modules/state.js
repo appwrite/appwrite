@@ -20,6 +20,7 @@
         opensslKey: null,
         assistantOpenAIKey: null,
         topology: null,
+        accountName: null,
         accountEmail: null,
         accountPassword: null
     };
