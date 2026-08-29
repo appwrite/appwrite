@@ -182,6 +182,10 @@ return function (Container $container): void {
         }
 
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
+
+        $consoleHostnames = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''))));
+        $allowedHostnames = [...$allowedHostnames, ...$consoleHostnames];
+
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $allowedHostnames = [...$allowedHostnames, ...Platform::getHostnames($project->getAttribute('platforms', []))];
         }

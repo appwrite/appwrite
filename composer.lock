@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ccc304661866171cf625e0df17950e5f",
+    "content-hash": "8421ff4db771a69dea3af12a11983553",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3308,16 +3308,16 @@
         },
         {
             "name": "utopia-php/cdn",
-            "version": "0.0.7",
+            "version": "0.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cdn.git",
-                "reference": "e7fb311371462a6e67380cb03d1bdcc1698ba670"
+                "reference": "320ef34c4b16b321345cc5d96e51b528c6254a41"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cdn/zipball/e7fb311371462a6e67380cb03d1bdcc1698ba670",
-                "reference": "e7fb311371462a6e67380cb03d1bdcc1698ba670",
+                "url": "https://api.github.com/repos/utopia-php/cdn/zipball/320ef34c4b16b321345cc5d96e51b528c6254a41",
+                "reference": "320ef34c4b16b321345cc5d96e51b528c6254a41",
                 "shasum": ""
             },
             "require": {
@@ -3377,10 +3377,10 @@
                 "utopia-php"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/cdn/tree/0.0.7",
+                "source": "https://github.com/utopia-php/cdn/tree/0.0.8",
                 "issues": "https://github.com/utopia-php/cdn/issues"
             },
-            "time": "2026-08-28T13:19:44+00:00"
+            "time": "2026-08-29T11:50:39+00:00"
         },
         {
             "name": "utopia-php/circuit-breaker",
