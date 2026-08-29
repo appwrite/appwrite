@@ -36,7 +36,6 @@ import {
   useSiteGbHoursForSite,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { GbHoursUnitInfo } from '../../overview/GbHoursUnitInfo'
 import { ComputeMetricBentoCard } from './ComputeMetricBentoCard'
@@ -64,8 +63,7 @@ export function ComputeUsageSection({
 }: ComputeUsageSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
-  const { disableUsageBreakdownQueries } = useDebugOverrides()
-  const showBreakdown = !disableUsageBreakdownQueries && !siteId
+  const showBreakdown = !siteId
 
   const combinedExecutionsQuery = useProjectExecutionsOverview(
     projectId,

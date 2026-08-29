@@ -7,6 +7,10 @@ import {
   isFirewallDocsEnabled,
   isFirewallDocsSlug,
 } from './firewall-docs-feature'
+import {
+  isStorageS3DocsEnabled,
+  isStorageS3DocsSlug,
+} from './storage-s3-docs-feature'
 import { isPartnersDocsEnabled, isPartnersDocsSlug } from './partners-docs-feature'
 
 export type DocsSearchEntry = {
@@ -70,6 +74,7 @@ function isHiddenDocsSearchSlug(slug: string): boolean {
   if (!isPartnersDocsEnabled() && isPartnersDocsSlug(slug)) return true
   if (!isFirewallDocsEnabled() && isFirewallDocsSlug(slug)) return true
   if (!isAgentDocsEnabled() && isAgentDocsSlug(slug)) return true
+  if (!isStorageS3DocsEnabled() && isStorageS3DocsSlug(slug)) return true
   return false
 }
 

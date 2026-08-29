@@ -240,6 +240,7 @@ export const jaCatalog: EnCatalog = {
       badges: {
         ...enCatalog.app.sidebar.badges,
         soon: '近日公開',
+        new: '新着',
       },
       accessibility: {
         ...enCatalog.app.sidebar.accessibility,

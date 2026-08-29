@@ -32,6 +32,9 @@ import {
 import { cn } from '@/lib/utils'
 import { setBodyResizeDragActive } from '@/lib/layout/horizontal-resize'
 import { useT } from '@/lib/i18n/translate'
+import { useI18n } from '@/lib/i18n'
+import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
+import { isProjectFeatureNew } from '@/lib/layout/project-sidebar-new-badge'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import {
   CLI_SHELL_COLLAPSED_HEIGHT_PX,
@@ -173,6 +176,9 @@ function CliShellHeaderTitle({
   onRetry?: () => void
 }) {
   const t = useT()
+  const { catalog } = useI18n()
+  const showNewBadge = isProjectFeatureNew('terminal')
+
   return (
     <div className="flex min-w-0 items-center gap-2">
       <TerminalIcon
@@ -184,6 +190,9 @@ function CliShellHeaderTitle({
         <span className="truncate text-[13px] font-semibold text-foreground">
           {t('Terminal')}
         </span>
+        {showNewBadge ? (
+          <ProductNewBadge label={catalog.app.sidebar.badges.new} />
+        ) : null}
         {showBootstrapSpinner ? (
           <Loader2
             className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground"

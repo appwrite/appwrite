@@ -10,6 +10,10 @@ import {
   isFirewallDocsEnabled,
   isFirewallDocsSlug,
 } from '@/lib/docs/firewall-docs-feature'
+import {
+  isStorageS3DocsEnabled,
+  isStorageS3DocsSlug,
+} from '@/lib/docs/storage-s3-docs-feature'
 import { isPartnersDocsEnabled, isPartnersDocsSlug, shouldBlockPartnersDocs } from '@/lib/docs/partners-docs-feature'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
@@ -33,6 +37,7 @@ function isFeatureGatedDocsSlugHidden(
   }
   if (isFirewallDocsSlug(slug) && !isFirewallDocsEnabled()) return true
   if (isAgentDocsSlug(slug) && !isAgentDocsEnabled()) return true
+  if (isStorageS3DocsSlug(slug) && !isStorageS3DocsEnabled()) return true
   return false
 }
 

@@ -239,6 +239,7 @@ export const heCatalog: EnCatalog = {
       badges: {
         ...enCatalog.app.sidebar.badges,
         soon: 'בקרוב',
+        new: 'חדש',
       },
       accessibility: {
         ...enCatalog.app.sidebar.accessibility,

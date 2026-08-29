@@ -82,6 +82,8 @@ export type ConsoleProfileFeatures = {
   userVerification: boolean
   /** Project Firewall (rules, analytics, logs) under Protect */
   firewall: boolean
+  /** Storage S3-compatible API (Connect S3 tab, storage sidebar card, and S3 docs) */
+  storageS3: boolean
   /** Account affiliates program (referral codes, rewards, credit claims) */
   affiliates: boolean
   /**
@@ -133,6 +135,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
   firewall: 'Firewall',
+  storageS3: 'Storage S3',
   affiliates: 'Affiliates',
   cookieBanner: 'Cookie banner',
   blogDrafts: 'Blog drafts',
@@ -156,7 +159,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     description: 'Appwrite Cloud - full feature set',
     features: {
       billing: true,
-      domains: true,
+      domains: false,
       marketplace: false,
       usageStats: true,
       activity: true,
@@ -173,19 +176,20 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauthApps: false,
       oauth2Server: true,
       orgApiKeys: false,
-      agent: true,
+      agent: false,
       notifications: false,
       databaseBackups: true,
-      dedicatedDbsSupport: true,
+      dedicatedDbsSupport: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
-      nativeDbsPostgres: true,
-      nativeDbsMySQL: true,
+      nativeDbsPostgres: false,
+      nativeDbsMySQL: false,
       nativeDbsMongo: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
-      firewall: true,
+      firewall: false,
+      storageS3: false,
       affiliates: true,
       cookieBanner: true,
       blogDrafts: false,
@@ -227,6 +231,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       edgeNetwork: false,
       userVerification: false,
       firewall: false,
+      storageS3: false,
       affiliates: false,
       cookieBanner: false,
       blogDrafts: false,

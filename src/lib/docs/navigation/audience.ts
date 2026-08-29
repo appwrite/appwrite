@@ -7,6 +7,10 @@ import {
   isFirewallDocsEnabled,
   isFirewallDocsHref,
 } from '../firewall-docs-feature'
+import {
+  isStorageS3DocsEnabled,
+  isStorageS3DocsHref,
+} from '../storage-s3-docs-feature'
 import { DOCS_GLOBAL_NAV } from './global'
 import { DOCS_PARTNERS_GLOBAL_NAV } from './partners'
 
@@ -52,6 +56,9 @@ export function getDocsGlobalNav(audience: DocsAudience): DocsNavTree {
   }
   if (!isAgentDocsEnabled()) {
     navigation = withoutHref(navigation, isAgentDocsHref)
+  }
+  if (!isStorageS3DocsEnabled()) {
+    navigation = withoutHref(navigation, isStorageS3DocsHref)
   }
   return navigation
 }

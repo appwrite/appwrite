@@ -31,7 +31,6 @@ import {
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   OVERVIEW_CHART_HEIGHT,
   OVERVIEW_REQUESTS_ERROR,
@@ -352,11 +351,10 @@ export function RequestsSection({
 }: RequestsSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
-  const { disableUsageBreakdownQueries } = useDebugOverrides()
   const { isSelfHosted } = useConsoleProfile()
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<RequestsBreakdownDrawerState | null>(null)
-  const showBreakdown = !disableUsageBreakdownQueries
+  const showBreakdown = true
   const { lookups: countryLookups } = useCountryLookups()
 
   const {

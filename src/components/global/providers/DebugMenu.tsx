@@ -72,11 +72,6 @@ import {
 } from '@/lib/debug-overrides'
 import { getPreLaunchDefault } from '@/lib/pre-launch'
 import {
-  OVERVIEW_CHART_TAB_ORDER,
-  OVERVIEW_CHART_TAB_DISABLE_KEYS,
-  OVERVIEW_CHART_TAB_LABELS,
-} from '@/lib/overview-chart-tabs'
-import {
   detectUserOs,
   getUserOsLabel,
   USER_OS_LABELS,
@@ -2076,6 +2071,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
+                'Storage S3',
+                'Show the Connect S3 tab, storage sidebar S3 card, and S3 API docs.',
+                'storageS3',
+                profileId,
+                features.storageS3,
+                { category: 'Storage' },
+              ),
+              createProfileFeatureFlagItem(
                 'Project OAuth2 server',
                 profileId === 'cloud'
                   ? 'Project settings OAuth2 authorization server card on overview. Cloud profile only.'
@@ -2087,6 +2090,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   disabled: profileId !== 'cloud',
                   category: 'Auth & security',
                 },
+              ),
+              createProfileFeatureFlagItem(
+                'Organization domains',
+                'Org Domains tab (DNS, verification, buy/transfer domain) and related routes.',
+                'domains',
+                profileId,
+                features.domains,
+                { category: 'Organization' },
               ),
               createProfileFeatureFlagItem(
                 'Organization OAuth apps',
@@ -2288,68 +2299,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 undefined,
                 'UI & tools',
               ),
-              createDebugFeatureFlagItem(
-                'Disable usage breakdown queries',
-                'Skip dimension-based usage API calls on the project overview (top endpoints, buckets, functions/sites). Charts and KPIs still load.',
-                'disableUsageBreakdownQueries',
-                overrides.disableUsageBreakdownQueries,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    disableUsageBreakdownQueries: checked,
-                  }))
-                  setDebugOverride('disableUsageBreakdownQueries', checked)
-                  void queryClient.invalidateQueries({
-                    predicate: (query) =>
-                      query.queryKey[0] === 'usage-events' ||
-                      query.queryKey[0] === 'usage-gauges' ||
-                      query.queryKey[0] === 'usage-breakdown',
-                  })
-                },
-                () => {
-                  setOverrides(loadDebugOverrides())
-                  void queryClient.invalidateQueries({
-                    predicate: (query) =>
-                      query.queryKey[0] === 'usage-events' ||
-                      query.queryKey[0] === 'usage-gauges' ||
-                      query.queryKey[0] === 'usage-breakdown',
-                  })
-                },
-                'Usage & analytics',
-              ),
-              ...OVERVIEW_CHART_TAB_ORDER.map((tabId) => {
-                const disableKey = OVERVIEW_CHART_TAB_DISABLE_KEYS[tabId]
-                const label = OVERVIEW_CHART_TAB_LABELS[tabId]
-                return createDebugFeatureFlagItem(
-                  `Disable overview ${label.toLowerCase()} chart`,
-                  `Hide the ${label} tab and usage queries on the project overview.`,
-                  disableKey,
-                  overrides[disableKey],
-                  (checked) => {
-                    setOverrides((prev) => ({
-                      ...prev,
-                      [disableKey]: checked,
-                    }))
-                    setDebugOverride(disableKey, checked)
-                    void queryClient.invalidateQueries({
-                      predicate: (query) =>
-                        query.queryKey[0] === 'usage-events' ||
-                        query.queryKey[0] === 'usage-gauges' ||
-                        query.queryKey[0] === 'usage-breakdown',
-                    })
-                  },
-                  () => {
-                    setOverrides(loadDebugOverrides())
-                    void queryClient.invalidateQueries({
-                      predicate: (query) =>
-                        query.queryKey[0] === 'usage-events' ||
-                        query.queryKey[0] === 'usage-gauges' ||
-                        query.queryKey[0] === 'usage-breakdown',
-                    })
-                  },
-                  'Usage & analytics',
-                )
-              }),
               {
                 label: 'Reset all feature flags',
                 description:
@@ -2358,12 +2307,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   resetDebugProfileFeatureOverrides()
                   resetFeatureFlagsMenuDebugOverrides()
                   setOverrides(loadDebugOverrides())
-                  void queryClient.invalidateQueries({
-                    predicate: (query) =>
-                      query.queryKey[0] === 'usage-events' ||
-                      query.queryKey[0] === 'usage-gauges' ||
-                      query.queryKey[0] === 'usage-breakdown',
-                  })
                   setIsOpen(false)
                 },
                 icon: <RotateCcw className="h-3 w-3" />,
@@ -2572,11 +2515,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.oauthApps,
     features.oauth2Server,
     features.orgApiKeys,
+    features.domains,
     features.marketplace,
     features.partnersDocs,
     features.agent,
     features.notifications,
     features.firewall,
+    features.storageS3,
     features.init,
     endpointPreset,
     endpointCustomUrl,

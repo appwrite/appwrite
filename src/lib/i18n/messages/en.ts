@@ -215,6 +215,7 @@ export const enCatalog = {
       },
       badges: {
         soon: 'Soon',
+        new: 'New',
       },
       accessibility: {
         mainNavigation: 'Main navigation',

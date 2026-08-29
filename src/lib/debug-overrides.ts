@@ -34,12 +34,6 @@ export const DEBUG_OVERRIDE_KEYS = {
   userOs: 'debug:userOs',
   /** @deprecated Migrated to `userOs`; kept for one-time localStorage migration. */
   keyboardLayout: 'debug:keyboardLayout',
-  disableUsageBreakdownQueries: 'debug:disableUsageBreakdownQueries',
-  disableOverviewBandwidthChart: 'debug:disableOverviewBandwidthChart',
-  disableOverviewRequestsChart: 'debug:disableOverviewRequestsChart',
-  disableOverviewStorageChart: 'debug:disableOverviewStorageChart',
-  disableOverviewExecutionsChart: 'debug:disableOverviewExecutionsChart',
-  disableOverviewComputeChart: 'debug:disableOverviewComputeChart',
   /** When true, onboarding product sections are unlocked without completing Connect. */
   unlockOnboardingLocks: 'debug:unlockOnboardingLocks',
   /** When true, Get started progress panel previews the 100% complete advocacy state. */
@@ -113,14 +107,6 @@ export type DebugOverrides = {
    * shortcut labels / visualizer. `'auto'` uses device detection.
    */
   userOs: UserOsOverride
-  /** When true, skip usage listEvents/listGauges calls that pass dimensions (overview breakdown panels). */
-  disableUsageBreakdownQueries: boolean
-  /** When true, hide the matching usage chart tab on the project overview. */
-  disableOverviewBandwidthChart: boolean
-  disableOverviewRequestsChart: boolean
-  disableOverviewStorageChart: boolean
-  disableOverviewExecutionsChart: boolean
-  disableOverviewComputeChart: boolean
   /** When true, skip the Connect gate on the Get started onboarding page. */
   unlockOnboardingLocks: boolean
   /** When true, force Get started progress to 100% to preview advocacy copy + Star CTA. */
@@ -270,30 +256,6 @@ export function loadDebugOverrides(): DebugOverrides {
       'auto',
     ),
     userOs: readUserOsOverrideFromStorage(),
-    disableUsageBreakdownQueries: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.disableUsageBreakdownQueries,
-      false,
-    ),
-    disableOverviewBandwidthChart: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.disableOverviewBandwidthChart,
-      false,
-    ),
-    disableOverviewRequestsChart: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.disableOverviewRequestsChart,
-      false,
-    ),
-    disableOverviewStorageChart: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.disableOverviewStorageChart,
-      false,
-    ),
-    disableOverviewExecutionsChart: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.disableOverviewExecutionsChart,
-      false,
-    ),
-    disableOverviewComputeChart: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.disableOverviewComputeChart,
-      false,
-    ),
     unlockOnboardingLocks: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.unlockOnboardingLocks,
       false,
@@ -383,12 +345,6 @@ export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
   'showConstruction',
-  'disableUsageBreakdownQueries',
-  'disableOverviewBandwidthChart',
-  'disableOverviewRequestsChart',
-  'disableOverviewStorageChart',
-  'disableOverviewExecutionsChart',
-  'disableOverviewComputeChart',
   'unlockOnboardingLocks',
   'previewOnboardingComplete',
   'previewCommunitySupportWizard',
@@ -408,12 +364,6 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   showSuccessTeamCard: false,
   showFunctionsLocalEditor: false,
   showConstruction: getShowConstructionDefault(),
-  disableUsageBreakdownQueries: false,
-  disableOverviewBandwidthChart: false,
-  disableOverviewRequestsChart: false,
-  disableOverviewStorageChart: false,
-  disableOverviewExecutionsChart: false,
-  disableOverviewComputeChart: false,
   unlockOnboardingLocks: false,
   previewOnboardingComplete: false,
   previewCommunitySupportWizard: false,
@@ -475,12 +425,6 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     previewInitReactionConfetti: false,
     initLowPowerAnimations: 'auto',
     userOs: 'auto',
-    disableUsageBreakdownQueries: false,
-    disableOverviewBandwidthChart: false,
-    disableOverviewRequestsChart: false,
-    disableOverviewStorageChart: false,
-    disableOverviewExecutionsChart: false,
-    disableOverviewComputeChart: false,
     unlockOnboardingLocks: false,
     previewOnboardingComplete: false,
     previewCommunitySupportWizard: false,
@@ -499,11 +443,6 @@ export function useDebugOverrides(): DebugOverrides {
     return subscribeToDebugOverrides(setOverrides)
   }, [])
   return overrides
-}
-
-/** When false, overview usage fetchers skip dimension-based breakdown API calls. */
-export function areUsageBreakdownQueriesEnabled(): boolean {
-  return !loadDebugOverrides().disableUsageBreakdownQueries
 }
 
 export function getPageDirection(): PageDirectionOverride {
