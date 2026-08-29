@@ -137,6 +137,13 @@ class Get extends Action
             $contentType = $file->getAttribute('mimeType');
         }
 
+        // SVG is an executable document, not a passive image: a browser that
+        // navigates to it will run any embedded script in this origin. Forcing
+        // a download means it is never rendered as a top-level document.
+        // Embedding through <img src> still works and is safe (browsers load
+        // SVG there in a restricted mode with no scripting).
+        $disposition = $contentType === 'image/svg+xml' ? 'attachment' : 'inline';
+
         $size = $file->getAttribute('sizeOriginal', 0);
 
         $rangeHeader = $request->getHeaderLine('range');
@@ -162,9 +169,9 @@ class Get extends Action
 
         $response
             ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', 'script-src none;')
+            ->addHeader('Content-Security-Policy', "script-src 'none';")
             ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
+            ->addHeader('Content-Disposition', $disposition . '; filename="' . $file->getAttribute('name', '') . '"')
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
         ;
