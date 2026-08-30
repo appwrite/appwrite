@@ -64,7 +64,7 @@ class Get extends Action
         Document $project,
         array $platform
     ) {
-        $state = \json_encode([
+        $state = (string) \json_encode([
             'projectId' => $project->getId(),
             'success' => $success,
             'failure' => $failure,
@@ -83,7 +83,22 @@ class Get extends Action
             'redirect_uri' => $protocol . '://' . $hostname . "/v1/vcs/github/callback"
         ]);
 
+        // GitHub only echoes the state parameter back when it finishes through the
+        // redirect URI. Flows that end on the app's setup URL instead -- an
+        // organisation member requesting owner approval, or an owner approving that
+        // request -- arrive at the callback with no state at all, so mirror it into a
+        // short-lived cookie the callback can fall back to.
         $response
+            ->addCookie(
+                COOKIE_NAME_VCS_STATE,
+                $state,
+                \time() + COOKIE_EXPIRY_VCS_STATE,
+                COOKIE_PATH_VCS_STATE,
+                null,
+                $protocol === 'https',
+                true,
+                Response::COOKIE_SAMESITE_LAX
+            )
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($url);
