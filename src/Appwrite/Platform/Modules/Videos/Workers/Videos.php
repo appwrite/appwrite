@@ -470,7 +470,10 @@ class Videos extends Action
 
         $projectId = $videoMessage->project->getId();
         $videoId = $videoMessage->video->getId();
-        $workspace = $this->jobWorkspace($projectId, $videoId, $rendition->getId());
+        // Created only after this run wins the waiting→started claim. Workspace
+        // paths are keyed by rendition id, so a stale redelivery that mkdir+rm's
+        // the same tree would delete segments out from under a live ffmpeg.
+        $workspace = null;
         $startedAt = \microtime(true);
         $storageBytes = 0;
         $output = $videoMessage->output !== ''
@@ -497,17 +500,29 @@ class Videos extends Action
                 throw new \Exception('Not a valid media file: ' . $inPath);
             }
 
-            $rendition = $dbForProject->updateDocument(
+            // Compare-and-swap: concurrent coroutines can both see `waiting`;
+            // only one updateDocuments may transition the row.
+            $updated = $dbForProject->updateDocuments(
                 'videos_renditions',
-                $rendition->getId(),
                 new Document([
                     'startedAt' => DateTime::now(),
                     'status' => Base::STATUS_STARTED,
                     'progress' => '0',
-                ])
+                ]),
+                [
+                    Query::equal('$id', [$rendition->getId()]),
+                    Query::equal('status', [Base::STATUS_WAITING]),
+                ]
             );
+            if ($updated === 0) {
+                return;
+            }
+
+            $rendition = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             $claimed = true;
             $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
+
+            $workspace = $this->jobWorkspace($projectId, $videoId, $rendition->getId());
 
             $representation = new Representation(
                 width: (int) $profile->getAttribute('width'),
@@ -698,27 +713,29 @@ class Videos extends Action
         } catch (\Throwable $th) {
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             // Do not overwrite aborted/error parks from maintenance or e2e seeding.
-            if (
-                !$current->isEmpty()
-                && \in_array($current->getAttribute('status'), [Base::STATUS_ABORTED, Base::STATUS_ERROR], true)
-            ) {
-                throw $th;
-            }
+            // Pre-claim failures may only park while the row is still `waiting` —
+            // never clobber a sibling coroutine that already won the claim.
+            $status = $current->isEmpty() ? '' : (string) $current->getAttribute('status', '');
+            $mayPark = $claimed
+                ? !\in_array($status, [Base::STATUS_ABORTED, Base::STATUS_ERROR], true)
+                : $status === Base::STATUS_WAITING;
 
-            $rendition = $dbForProject->updateDocument(
-                'videos_renditions',
-                $rendition->getId(),
-                new Document([
-                    'status' => Base::STATUS_ERROR,
-                    'endedAt' => DateTime::now(),
-                    'progress' => $rendition->getAttribute('progress', '0'),
-                    'metadata' => [
-                        'code' => (string) $th->getCode(),
-                        'message' => \substr($th->getMessage(), 0, 255),
-                    ],
-                ])
-            );
-            $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
+            if (!$current->isEmpty() && $mayPark) {
+                $rendition = $dbForProject->updateDocument(
+                    'videos_renditions',
+                    $rendition->getId(),
+                    new Document([
+                        'status' => Base::STATUS_ERROR,
+                        'endedAt' => DateTime::now(),
+                        'progress' => $rendition->getAttribute('progress', '0'),
+                        'metadata' => [
+                            'code' => (string) $th->getCode(),
+                            'message' => \substr($th->getMessage(), 0, 255),
+                        ],
+                    ])
+                );
+                $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
+            }
 
             Console::error(
                 'Error encoding video ' . $videoMessage->video->getId() . PHP_EOL
@@ -748,7 +765,11 @@ class Videos extends Action
                 }
             }
 
-            $this->cleanup($workspace['basePath']);
+            // Never rm a workspace we did not create — that path is shared by
+            // rendition id and may belong to the coroutine that claimed it.
+            if ($workspace !== null) {
+                $this->cleanup($workspace['basePath']);
+            }
             $this->tryRelease($dbForProject, $queueForRealtime, $project, $projectId, $videoId);
         }
     }
@@ -1073,8 +1094,11 @@ class Videos extends Action
      * Per-job output directory under `{videoId}/jobs/{jobId}/out/`.
      *
      * Encode passes the rendition id so CleanStaleVideosResources can release
-     * that workspace alone. Timeline / subtitle extract omit `$jobId` and get a
-     * uniqid — those runs are not aborted via the rendition sweeper.
+     * that workspace alone. Call only after this run has claimed the rendition
+     * (waiting→started): cleanup is keyed by the same id, and a no-op redelivery
+     * must not mkdir+rm the tree an in-flight encode is writing. Timeline /
+     * subtitle extract omit `$jobId` and get a uniqid — those runs are not
+     * aborted via the rendition sweeper.
      *
      * @return array{basePath: string, outDir: string}
      */

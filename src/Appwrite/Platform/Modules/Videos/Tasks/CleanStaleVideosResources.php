@@ -20,6 +20,10 @@ use Utopia\Validator\WhiteList;
  * Covers downloading (including chunks-complete hangs), and encode phases
  * `started` / `ended` / `uploading`. After abort, clients may POST
  * /videos/:id/source or delete+recreate /videos/:id/renditions to re-queue.
+ *
+ * Encode abort also drops `jobs/{renditionId}/`. That is safe under the real
+ * encode grace (default 30 minutes without progress): a healthy pack refreshes
+ * `$updatedAt`, so a row that still looks stale is not mid-segment.
  */
 class CleanStaleVideosResources extends Action
 {
