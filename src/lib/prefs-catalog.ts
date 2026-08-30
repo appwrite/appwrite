@@ -310,7 +310,7 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     key: USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED,
     description:
-      'PostgreSQL and MySQL sidebar admin links collapsed (Credentials, Monitor, Connections, Roles, Backups). Settings stays visible.',
+      'PostgreSQL, MySQL, TablesDB, DocumentsDB, and VectorsDB sidebar admin links collapsed, including Settings.',
     category: 'Databases',
   },
   {

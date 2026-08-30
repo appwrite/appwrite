@@ -115,7 +115,6 @@ export function PostgresDatabaseNav({
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Backups')}</span>
         </DatabaseSidebarNavItem>
       ) : null}
-      </DatabaseAdminNavSection>
       {showSettings ? (
         <DatabaseSidebarNavItem
           disabled={provisioning}
@@ -127,6 +126,7 @@ export function PostgresDatabaseNav({
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Settings')}</span>
         </DatabaseSidebarNavItem>
       ) : null}
+      </DatabaseAdminNavSection>
       <DatabaseSidebarComputeSpec
         projectId={projectId}
         databaseId={databaseId}
