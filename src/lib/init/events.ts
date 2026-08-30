@@ -15,6 +15,7 @@ import { INIT_JULY_2026_PRIZES } from './prizes'
 import { parseDateOnly } from './dates'
 import { resolveInitCurrentDay } from './event-visibility'
 import {
+  getInitMockCurrentDayDefault,
   getInitMockDayAfter,
   INIT_MOCK_DAY_BEFORE,
 } from './mock-current-day'
@@ -296,19 +297,18 @@ function dayHeaderNavCtaToHeaderNav(
   }
 }
 
-/** Match debug “mock current day” to header CTA phase (calendar may still be before the event). */
+/** Match controlled current day to header CTA phase. */
 function resolveInitHeaderNavPhase(
   event: LaunchEvent | undefined,
-  calendarStatus: LaunchEventStatus,
-  mockCurrentDay: number | null,
+  currentDay: number,
 ): LaunchEventStatus {
-  if (mockCurrentDay === null || !event) return calendarStatus
+  if (!event) return 'upcoming'
 
   const maxDay = event.days.reduce((max, day) => Math.max(max, day.day), 0)
   const mockAfterDay = getInitMockDayAfter(maxDay)
 
-  if (mockCurrentDay <= INIT_MOCK_DAY_BEFORE) return 'upcoming'
-  if (mockCurrentDay >= mockAfterDay) return 'past'
+  if (currentDay <= INIT_MOCK_DAY_BEFORE) return 'upcoming'
+  if (currentDay >= mockAfterDay) return 'past'
   return 'active'
 }
 
@@ -316,22 +316,21 @@ function resolveInitHeaderNavPhase(
 export function resolveInitHeaderNavCta(options?: {
   event?: LaunchEvent
   now?: Date
-  mockCurrentDay?: number | null
+  currentDay?: number
 }): LaunchEventHeaderNavCta {
   const now = options?.now ?? new Date()
   const activeEvent = options?.event ?? getActiveLaunchEvent(now)
   const overrides = activeEvent?.headerNavCta
-  const mockCurrentDay = options?.mockCurrentDay ?? null
-  const calendarStatus = activeEvent?.status ?? 'upcoming'
-  const phase = resolveInitHeaderNavPhase(activeEvent, calendarStatus, mockCurrentDay)
+  const currentDay = options?.currentDay ?? getInitMockCurrentDayDefault()
+  const phase = resolveInitHeaderNavPhase(activeEvent, currentDay)
 
   if (phase === 'upcoming') {
     return { ...DEFAULT_INIT_HEADER_NAV_BEFORE, ...overrides?.beforeEvent }
   }
 
   if (phase === 'active' && activeEvent) {
-    const currentDay = resolveInitCurrentDay(activeEvent, now, mockCurrentDay)
-    const day = activeEvent.days.find((entry) => entry.day === currentDay)
+    const resolvedDay = resolveInitCurrentDay(activeEvent, currentDay)
+    const day = activeEvent.days.find((entry) => entry.day === resolvedDay)
     if (day?.headerNavCta) {
       return dayHeaderNavCtaToHeaderNav(day.headerNavCta)
     }

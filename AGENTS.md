@@ -1117,6 +1117,11 @@ Profiles control which features are available based on deployment type (cloud vs
 
 - `VITE_CONSOLE_PRE_LAUNCH` – locks the site so only `/init` is public (`/` redirects there). Sign-in/sign-up stay open and return to `/init` instead of the console. `false` / `0` / `disabled` turns it off. Debug menu → Settings → Flags → **Pre-launch** overrides this (stored in localStorage).
 
+**Init day unlocks** (always controlled; never calendar-driven):
+
+- Default is **before event** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → day `0`, all days locked).
+- Advance the day from debug menu → Init → **Day** (slider: Before → Day 1–5 → After → Banner off).
+- When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
 **Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`, `features.agent`, `features.notifications`, `features.cookieBanner`).

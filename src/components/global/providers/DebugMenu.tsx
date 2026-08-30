@@ -763,10 +763,9 @@ function resolveActiveSubmenu(
 }
 
 function getInitSubmenuDescription(overrides: DebugOverrides): string {
-  const parts: string[] = []
-  if (overrides.mockInitCurrentDay !== null) {
-    parts.push(formatInitMockCurrentDay(overrides.mockInitCurrentDay))
-  }
+  const parts: string[] = [
+    formatInitMockCurrentDay(overrides.mockInitCurrentDay),
+  ]
   if (overrides.mockInitTicketType !== null) {
     parts.push(formatInitMockTicketType(overrides.mockInitTicketType))
   }
@@ -776,7 +775,7 @@ function getInitSubmenuDescription(overrides: DebugOverrides): string {
   if (overrides.initLowPowerAnimations !== 'auto') {
     parts.push(`Low power ${overrides.initLowPowerAnimations}`)
   }
-  return parts.length > 0 ? parts.join(' · ') : 'Launch week mocks and previews'
+  return parts.join(' · ')
 }
 
 function formatLowPowerSignalValue(value: number | string | boolean | null) {

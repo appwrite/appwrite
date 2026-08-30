@@ -5,7 +5,7 @@ import { LAUNCH_EVENTS } from '@/lib/init/events'
 const event = LAUNCH_EVENTS[0]!
 
 function scheduleItem(currentDay: number, id: string) {
-  return applyInitEventVisibility(event, { mockCurrentDay: currentDay }).schedule.find(
+  return applyInitEventVisibility(event, { currentDay }).schedule.find(
     (item) => item.id === id,
   )
 }

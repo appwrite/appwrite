@@ -444,7 +444,7 @@ export function ConsoleHeader({
   const isInitScope =
     (features.init || preLaunch) && location.pathname === '/init'
   const initHeaderNavCta = isInitScope
-    ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
+    ? resolveInitHeaderNavCta({ currentDay: overrides.mockInitCurrentDay })
     : null
   const resolvedInitHeaderNavCta = initHeaderNavCta
     ? (() => {

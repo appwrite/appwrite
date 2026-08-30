@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import {
+  getInitMockCurrentDayDefault,
   isValidInitMockCurrentDay,
 } from '@/lib/init/mock-current-day'
 import {
@@ -91,11 +92,11 @@ export type DebugOverrides = {
    */
   showConstruction: boolean
   /**
-   * Mock which Init launch day is "today" (0 = before, 1–5 = during, 6 = after,
-   * 7 = 7+ days after event, org promo banner hidden).
-   * Null uses the real calendar date.
+   * Which Init launch day is "today" (0 = before, 1–5 = during, 6 = after,
+   * 7 = 7+ days after event, org promo banner hidden). Always controlled;
+   * never follows the calendar. Defaults to before-event.
    */
-  mockInitCurrentDay: number | null
+  mockInitCurrentDay: number
   /** Mock Init ticket tier on /init. Null uses account rules (gold, silver, standard). */
   mockInitTicketType: InitTicketTypeId | null
   /** When true, Init reaction confetti triggers with a single online user. */
@@ -164,13 +165,16 @@ function readStringFromStorage<T extends string>(
   return allowedValues.includes(raw as T) ? (raw as T) : defaultValue
 }
 
-function readNullableInitDayFromStorage(key: string): number | null {
+function readInitDayFromStorage(key: string): number {
+  const fallback = getInitMockCurrentDayDefault()
   const storage = getStorage()
-  if (!storage) return null
+  if (!storage) return fallback
   const raw = storage.getItem(key)
-  if (raw === null || raw === 'auto') return null
+  if (raw === null) return fallback
+  // Legacy "auto"/calendar values collapse to the controlled default.
+  if (raw === 'auto') return fallback
   const parsed = Number.parseInt(raw, 10)
-  if (!isValidInitMockCurrentDay(parsed)) return null
+  if (!isValidInitMockCurrentDay(parsed)) return fallback
   return parsed
 }
 
@@ -240,7 +244,7 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showConstruction,
       getShowConstructionDefault(),
     ),
-    mockInitCurrentDay: readNullableInitDayFromStorage(
+    mockInitCurrentDay: readInitDayFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitCurrentDay,
     ),
     mockInitTicketType: readNullableInitTicketTypeFromStorage(
@@ -420,7 +424,7 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
     showFunctionsLocalEditor: false,
     showConstruction: getShowConstructionDefault(),
-    mockInitCurrentDay: null,
+    mockInitCurrentDay: getInitMockCurrentDayDefault(),
     mockInitTicketType: null,
     previewInitReactionConfetti: false,
     initLowPowerAnimations: 'auto',

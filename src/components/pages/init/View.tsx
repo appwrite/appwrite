@@ -252,7 +252,7 @@ export function View() {
   const baseEvent = useMemo(() => {
     const active = getActiveLaunchEvent()
     if (!active) return undefined
-    return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
+    return applyInitEventVisibility(active, { currentDay: mockInitCurrentDay })
   }, [mockInitCurrentDay])
 
   const {
