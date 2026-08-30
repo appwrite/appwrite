@@ -95,6 +95,14 @@ class Get extends Action
         $redirectFailure = $state['failure'] ?? '';
         $projectId = $state['projectId'] ?? '';
 
+        // This endpoint is public -- without verifying the signature the
+        // Authorize action put in state, anyone could pass an arbitrary
+        // projectId here and attach an installation to another project.
+        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
+        if (!\hash_equals($signature, $state['signature'] ?? '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
+
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
