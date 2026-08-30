@@ -635,6 +635,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Join a lean, AI-native team': 'הצטרפו לצוות רזה ו-AI-native',
   'Join a vibrant community': 'הצטרפו לקהילה תוססת',
   'Join Discord': 'הצטרפו ל-Discord',
+  'Join on Discord': 'הצטרפו ל-Discord',
   'Join Init': 'הצטרפו ל-Init',
   'Join our Discord': 'הצטרפו ל-Discord שלנו',
   'Join the Appwrite Education program in collaboration with the GitHub Student Developer Pack. Students access Appwrite Cloud for free throughout their studies.': // pragma: allowlist secret
@@ -735,6 +736,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'on GitHub': 'ב-GitHub',
   'On this page': 'בעמוד זה',
   'Online now': 'אונליין עכשיו',
+  invisible: 'מוסתרים',
   'on X': 'ב-X',
   'On-set monitor during the first Init filming in Prague': 'מוניטור בסט במהלך צילומי ה-Init הראשונים בפראג',
   'Once your Appwrite account is created, go to our Docs and get started with Appwrite Cloud.': 'לאחר יצירת חשבון ה-Appwrite, עברו לדוקומנטציה שלנו והתחילו לעבוד עם Appwrite Cloud.', // pragma: allowlist secret

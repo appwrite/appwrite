@@ -27,6 +27,7 @@ import {
   parseInt64Value,
 } from '@/lib/utils/database-columns'
 import { useT } from '@/lib/i18n/translate'
+import { ColumnArrayCheckbox } from '@/components/pages/projects/$projectId/databases/_components/ColumnArrayCheckbox'
 import { toByteCount } from '@/lib/utils/byte-display-unit'
 
 export type ColumnType =
@@ -1364,26 +1365,18 @@ export function ColumnDrawer({
                   </Label>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="column-array"
-                    checked={formData.array || false}
-                    onCheckedChange={(checked) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        array: checked as boolean,
-                        xdefault: checked ? null : prev.xdefault,
-                      }))
-                    }}
-                    disabled={isLoading}
-                  />
-                  <Label
-                    htmlFor="column-array"
-                    className="text-[12px] font-normal cursor-pointer"
-                  >
-                    {t('Array')}
-                  </Label>
-                </div>
+                <ColumnArrayCheckbox
+                  id="column-array"
+                  checked={formData.array || false}
+                  onCheckedChange={(checked) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      array: checked,
+                      xdefault: checked ? null : prev.xdefault,
+                    }))
+                  }}
+                  disabled={isLoading}
+                />
               </>
             )}
 

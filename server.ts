@@ -19,19 +19,21 @@
  * ASSET_PRELOAD_MAX_SIZE (number)
  *   - Maximum file size in bytes to preload into memory
  *   - Files larger than this will be served on-demand from disk
- *   - Default: 5242880 (5MB)
- *   - Example: ASSET_PRELOAD_MAX_SIZE=5242880 (5MB)
+ *   - Default: 1048576 (1MB)
+ *   - Example: ASSET_PRELOAD_MAX_SIZE=1048576 (1MB)
  *
  * ASSET_PRELOAD_INCLUDE_PATTERNS (string)
  *   - Comma-separated list of glob patterns for files to include
- *   - If specified, only matching files are eligible for preloading
+ *   - Only matching files are eligible for preloading
  *   - Patterns are matched against filenames only, not full paths
+ *   - Default: *.js,*.mjs,*.css,*.woff2,*.woff,*.wasm
  *   - Example: ASSET_PRELOAD_INCLUDE_PATTERNS="*.js,*.css,*.woff2"
  *
  * ASSET_PRELOAD_EXCLUDE_PATTERNS (string)
  *   - Comma-separated list of glob patterns for files to exclude
  *   - Applied after include patterns
  *   - Patterns are matched against filenames only, not full paths
+ *   - Default: *.map
  *   - Example: ASSET_PRELOAD_EXCLUDE_PATTERNS="*.map,*.txt"
  *
  * ASSET_PRELOAD_VERBOSE_LOGGING (boolean)
@@ -75,6 +77,7 @@ import {
   getAllMarketingPrerenderPaths,
   getMarketingPrerenderHtmlFile,
 } from './src/lib/marketing/marketing-build-paths.ts'
+import { getInitPrerenderHtmlFile } from './src/lib/init/init-prerender-paths.ts'
 import { isThreadsRoutePath } from './src/lib/threads/prerender-paths.ts'
 import {
   isLegacyConsolePath,
@@ -210,20 +213,28 @@ if (
 
 // Preloading configuration from environment variables
 const MAX_PRELOAD_BYTES = Number(
-  process.env.ASSET_PRELOAD_MAX_SIZE ?? 5 * 1024 * 1024, // 5MB default
+  process.env.ASSET_PRELOAD_MAX_SIZE ?? 1024 * 1024, // 1MB default
 )
 
-// Parse comma-separated include patterns (no defaults)
-const INCLUDE_PATTERNS = (process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? '')
+// Default to hashed JS/CSS/fonts only. Without include patterns every file under
+// 5MB was preloaded (~120MB+ of images/fonts/maps) and OOMed small containers.
+const DEFAULT_PRELOAD_INCLUDE_PATTERNS =
+  '*.js,*.mjs,*.css,*.woff2,*.woff,*.wasm'
+const DEFAULT_PRELOAD_EXCLUDE_PATTERNS = '*.map'
+
+// Parse comma-separated include patterns
+const INCLUDE_PATTERNS = (
+  process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? DEFAULT_PRELOAD_INCLUDE_PATTERNS
+)
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean)
   .map((pattern: string) => convertGlobToRegExp(pattern))
 
-// Parse comma-separated exclude patterns (no defaults)
+// Parse comma-separated exclude patterns
 const EXCLUDE_PATTERNS = [
   convertGlobToRegExp('*.html'),
-  ...(process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? '')
+  ...(process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? DEFAULT_PRELOAD_EXCLUDE_PATTERNS)
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
@@ -433,14 +444,12 @@ function createResponseHandler(
 /**
  * Create composite glob pattern from include patterns
  */
+/**
+ * Always scan recursively; include/exclude patterns filter by filename in
+ * isFileEligibleForPreloading (e.g. assets/index-abc123.js matches *.js).
+ */
 function createCompositeGlobPattern(): Bun.Glob {
-  const raw = (process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-  if (raw.length === 0) return new Bun.Glob('**/*')
-  if (raw.length === 1) return new Bun.Glob(raw[0])
-  return new Bun.Glob(`{${raw.join(',')}}`)
+  return new Bun.Glob('**/*')
 }
 
 /**
@@ -592,6 +601,27 @@ async function initializeStaticRoutes(
         size: file.size,
         type: 'text/html; charset=utf-8',
       })
+    }
+
+    // Init is client-only but prerendered so production serves static HTML
+    // (avoids root SSR memory growth under pre-launch traffic).
+    const initHtmlFile = getInitPrerenderHtmlFile('/init')
+    if (initHtmlFile) {
+      const initFilepath = path.join(clientDirectory, initHtmlFile)
+      const initFile = Bun.file(initFilepath)
+      if (await initFile.exists()) {
+        routes['/init'] = async (req: Request) =>
+          htmlResponse(req, await initFile.text(), {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-store',
+          })
+
+        skipped.push({
+          route: '/init',
+          size: initFile.size,
+          type: 'text/html; charset=utf-8',
+        })
+      }
     }
 
     // Show detailed file overview only when verbose mode is enabled

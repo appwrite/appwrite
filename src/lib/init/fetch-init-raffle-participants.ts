@@ -2,7 +2,7 @@ import { buildInitPresenceActivityAllowlist } from '@/lib/init/init-presence-act
 import { listInitPresences, mapPresencesToOnlineUsers } from '@/lib/init/presence'
 import type { LaunchEvent, LaunchEventOnlineUser } from '@/lib/init/types'
 
-const RAFFLE_PARTICIPANT_LIMIT = 200
+const RAFFLE_PARTICIPANT_LIMIT = 1000
 
 export async function fetchInitRaffleParticipants(
   event: LaunchEvent,

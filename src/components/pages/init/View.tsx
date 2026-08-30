@@ -71,6 +71,8 @@ function InitPageContent({
       onlineUsers: presence.onlineUsers,
       recentlyOnlineUsers: presence.recentlyOnlineUsers,
       onlineCount: presence.onlineCount,
+      hiddenOnlineCount: presence.hiddenOnlineCount,
+      onlineCountCapped: presence.onlineCountCapped,
       othersOnlineCount: presence.othersOnlineCount,
     }
   }, [baseEvent, presence])
@@ -208,6 +210,7 @@ function InitPageContent({
             <InitGlobalCommunitySection
               countries={communityGlobe.countries}
               developerCount={communityGlobe.developerCount}
+              developerCountCapped={communityGlobe.developerCountCapped}
               isLive={communityGlobe.isLive}
               isAuthenticated={Boolean(account)}
             />

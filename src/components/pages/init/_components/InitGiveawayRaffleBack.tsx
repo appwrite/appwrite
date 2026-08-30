@@ -1,3 +1,4 @@
+import { formatInitPresenceDisplayName } from '@/lib/init/format-init-presence-display-name'
 import type { LaunchEventDailyPrize, LaunchEventOnlineUser } from '@/lib/init/types'
 import { buildInitSpinningGiveawayRaffleActivity } from '@/lib/init/init-presence-activity'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
@@ -180,7 +181,9 @@ export function InitGiveawayRaffleBack({
                     <Trophy className="size-3.5" aria-hidden />
                     Winner
                   </div>
-                  <p className="truncate text-[15px] font-semibold text-foreground">{winner.name}</p>
+                  <p className="truncate text-[15px] font-semibold text-foreground">
+                    {formatInitPresenceDisplayName(winner.name)}
+                  </p>
                 </div>
               </div>
             ) : (

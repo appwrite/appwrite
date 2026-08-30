@@ -30,6 +30,7 @@ import {
 import type { ResolvedInitTicketAppearance } from '@/lib/init/ticket-types'
 import {
   prefersInitTicketDeviceTilt,
+  requiresInitTicketDeviceOrientationPermission,
   useInitTicketDeviceTilt,
 } from '@/lib/init/use-init-ticket-device-tilt'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
@@ -633,12 +634,7 @@ export const InitTicketCard = forwardRef<
 
   useEffect(() => {
     if (!deviceTiltEnabled) return
-
-    const Orientation =
-      DeviceOrientationEvent as typeof DeviceOrientationEvent & {
-        requestPermission?: () => Promise<PermissionState>
-      }
-    if (typeof Orientation.requestPermission !== 'function') {
+    if (!requiresInitTicketDeviceOrientationPermission()) {
       void startDeviceTilt()
     }
   }, [deviceTiltEnabled, startDeviceTilt])

@@ -3,6 +3,7 @@ import { PostView } from '@/components/pages/blog/PostView'
 import {
   getBlogMarkdownExport,
   getBlogPost,
+  getBlogPostMeta,
   getPostCategoryLabel,
   getPrimaryPostCategorySlug,
   resolveBlogAuthors,
@@ -31,20 +32,21 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
         }
 
         const postSlug = slug.slice(0, -3)
-        const markdown = getBlogMarkdownExport(postSlug)
+        const markdown = await getBlogMarkdownExport(postSlug)
         if (!markdown) {
           return new Response('Not found', { status: 404 })
         }
 
         trackServerPageview(request)
 
+        const postMeta = getBlogPostMeta(postSlug)
         return new Response(markdown, {
           headers: {
             'Content-Type': 'text/markdown; charset=utf-8',
             'Cache-Control': 'public, max-age=3600',
             // Drafts are only reachable with the blogDrafts flag on; keep them
             // out of search indexes even then.
-            ...(getBlogPost(postSlug)?.draft
+            ...(postMeta?.draft
               ? { 'X-Robots-Tag': NOINDEX_ROBOTS_HEADER }
               : {}),
           },
@@ -58,7 +60,7 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
       throw notFound()
     }
 
-    const post = getBlogPost(params.slug)
+    const post = await getBlogPost(params.slug)
     if (!post) {
       throw notFound()
     }

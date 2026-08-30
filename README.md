@@ -43,7 +43,7 @@ The Appwrite Console provides a comprehensive interface for managing all aspects
 
 ## Prerequisites
 
-- [Bun](https://bun.sh/) (v1.0 or later)
+- [Bun](https://bun.sh/) (v1.4 or later)
 - Node.js 18+ (if not using Bun)
 - An Appwrite instance or Appwrite Cloud account
 

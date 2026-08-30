@@ -9,6 +9,7 @@ import {
 import { z } from 'zod'
 import { Reset } from '@/components/global/auth/Reset'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
@@ -180,19 +181,13 @@ function ResetPage() {
         ) : null}
         <p className="mt-6 text-center text-xs text-muted-foreground">
           {t('By clicking continue, you agree to our')}{' '}
-          <a
-            href="#"
-            className="link-neutral"
-          >
+          <MarketingSiteLink className="link-neutral" href="/terms">
             {t('Terms of Service')}
-          </a>{' '}
+          </MarketingSiteLink>{' '}
           {t('and')}{' '}
-          <a
-            href="#"
-            className="link-neutral"
-          >
+          <MarketingSiteLink className="link-neutral" href="/privacy">
             {t('Privacy Policy')}
-          </a>
+          </MarketingSiteLink>
           .
         </p>
         <div className="mt-6 flex justify-center">

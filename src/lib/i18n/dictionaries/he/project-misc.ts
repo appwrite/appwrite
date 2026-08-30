@@ -1495,6 +1495,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Bandwidth over time': 'רוחב פס לאורך זמן',
   Buckets: 'באקטים',
   'Chart interval': 'מרווח תרשים',
+  '1m': '1 דק׳',
   '15m': '15 דק׳',
   '1h': '1 שע׳',
   '1d': '1 יום',

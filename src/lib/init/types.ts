@@ -95,6 +95,8 @@ export interface LaunchEventActivity {
 
 export interface LaunchEventOnlineUser {
   id: string
+  /** Console account ID (`presence.$id`); use for self-matching when `id` is anonymized. */
+  ownerId?: string
   name: string
   activity: string
   isLive?: boolean
@@ -103,6 +105,10 @@ export interface LaunchEventOnlineUser {
   countryCode?: string
   /** SHA-256 hex of lowercase trimmed email for `avatars.getPhoto`. */
   emailHash?: string
+  /** When this user became online for the current Init session (ISO 8601). */
+  onlineAt?: string
+  /** Presence row uses an anonymous ID; name, photo, and country are withheld. */
+  identityHidden?: boolean
 }
 
 export interface InitCommunityCountry {
@@ -160,6 +166,8 @@ export interface LaunchEventGiveaway {
   imageSrcDark: string
   ctaLabel?: string
   ctaHref?: string
+  secondaryCtaLabel?: string
+  secondaryCtaHref?: string
 }
 
 export interface LaunchEventPrizeVisual {
@@ -284,6 +292,8 @@ export interface LaunchEvent {
   onlineUsers: LaunchEventOnlineUser[]
   recentlyOnlineUsers: LaunchEventOnlineUser[]
   onlineCount: number
+  hiddenOnlineCount: number
+  onlineCountCapped: boolean
   othersOnlineCount: number
   liveBanner?: LaunchEventLiveBanner
   primaryCta: LaunchEventCta

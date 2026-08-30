@@ -455,9 +455,15 @@ export function PostgresTableColumnDrawer({
               </h4>
               <PostgresColumnTypeSelector
                 value={typeState}
-                onChange={setTypeState}
+                onChange={(next) => {
+                  setTypeState(next)
+                  if (next.isArray && defaultValue.trim()) {
+                    setDefaultValue('')
+                  }
+                }}
                 allowSerialTypes={!isEditing}
               />
+              {!typeState.isArray ? (
               <div className="space-y-2">
                 <Label htmlFor="column-default" className="text-[12px] font-medium">
                   {t('Default value')}
@@ -467,9 +473,7 @@ export function PostgresTableColumnDrawer({
                   value={defaultValue}
                   onChange={(event) => setDefaultValue(event.target.value)}
                   className="font-mono"
-                  placeholder={t(
-                    getPostgresColumnDefaultPlaceholder(typeState.typeId),
-                  )}
+                  placeholder={t(getPostgresColumnDefaultPlaceholder(typeState))}
                 />
                 <p className="text-[11px] text-muted-foreground">
                   {t(
@@ -477,6 +481,7 @@ export function PostgresTableColumnDrawer({
                   )}
                 </p>
               </div>
+              ) : null}
             </section>
 
             <section className="space-y-3">
