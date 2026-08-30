@@ -48,10 +48,6 @@ class StatsResources extends Action
         $interval = max(1, (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', 3600));
 
         Console::loop(function () use ($dbForPlatform, $publisherForStatsResources, $usageConnection): void {
-            // A healthy cycle used to print nothing at all, so "is the scheduler
-            // still seeing this region's projects?" had no answer -- the only way
-            // to tell a stalled scheduler from a stalled worker was to guess. One
-            // span per cycle carrying the enqueue count makes that queryable.
             Span::init('stats_resources_task');
             $projectsQueued = 0;
             $projectsFailed = 0;
@@ -86,12 +82,8 @@ class StatsResources extends Action
                     Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                     Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
                 ], function ($project) use ($publisherForStatsResources, &$projectsQueued, &$projectsFailed): void {
-                    // enqueue() returns false when usage stats are disabled and
-                    // when publishing threw -- it swallows that to keep the loop
-                    // alive, reporting it only to Console. Counting those as
-                    // queued would be worse than not counting at all: this number
-                    // is meant to be a trustworthy denominator for the worker's
-                    // completion count.
+                    // enqueue() swallows a publish failure, reporting it only to
+                    // Console and returning false — as it does when stats are off.
                     if ($publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $project)) === false) {
                         $projectsFailed++;
                         return;
@@ -104,9 +96,7 @@ class StatsResources extends Action
                 Span::add('stats_resources_task.error', $th->getMessage());
                 Console::error('stats resources: cycle failed, retrying next interval: ' . $th->getMessage());
             } finally {
-                // Every exit path finishes the span, the early return above
-                // included: an unfinished span exports nothing, and a cycle that
-                // reports nothing is exactly the blind spot this closes.
+                // An unfinished span exports nothing, including the early return.
                 Span::add('stats_resources_task.projects_queued', $projectsQueued);
                 Span::add('stats_resources_task.projects_failed', $projectsFailed);
                 Span::current()?->finish();
