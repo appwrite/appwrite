@@ -158,6 +158,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Daily at midnight': 'יומי בחצות',
   'Daily at noon': 'יומי בצהריים',
   'Data sovereignty, compliance': 'ריבונות נתונים, תאימות רגולטורית',
+  'Default': 'ברירת מחדל',
   'DDoS Mitigation': 'מיגון DDoS',
   'DDoS protection': 'הגנת DDoS',
   Delete: 'מחיקה',
@@ -644,6 +645,8 @@ export const heFunctionsDictionary: Record<string, string> = {
     'עדכנתם את הגדרות הפונקציה, אך הן לא ייכנסו לתוקף עד שתפרסו מחדש. הפריסה הנוכחית עדיין רצה עם ההגדרות הקודמות.',
   'Your function is currently being redeployed.':
     'הפונקציה שלכם נפרסת מחדש כעת.',
+  'Your function will be accessible at this URL':
+    'הפונקציה שלכם תהיה נגישה בכתובת הזו',
   'Downloaded function.tar.gz': 'הקובץ function.tar.gz הורד',
   occurrence: 'מופע',
   Request: 'בקשה',

@@ -54,7 +54,8 @@ export function DeployingView({
   const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
-  const { formData, resetFormData } = useFunctionWizard()
+  const { formData, resetFormData, generateDomain, baseDomain } =
+    useFunctionWizard()
 
   const actualFunctionId = functionId || formData.createdFunctionId
   const actualDeploymentId = deploymentId || formData.createdDeploymentId
@@ -169,10 +170,12 @@ export function DeployingView({
   }, [deployment, elapsedSeconds])
 
   const primaryDomain = domains?.[0]?.domain
+  const generatedFallback =
+    func?.name && baseDomain ? generateDomain(func.name) : ''
   const functionUrl = primaryDomain
     ? domainUrl(primaryDomain)
-    : func?.name
-      ? `https://${func.name.toLowerCase().replace(/[^a-z0-9-]/g, '-')}.appwrite.network`
+    : generatedFallback
+      ? domainUrl(generatedFallback)
       : null
 
   const sidebarContent =

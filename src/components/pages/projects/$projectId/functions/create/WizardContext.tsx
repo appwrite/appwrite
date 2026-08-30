@@ -14,6 +14,7 @@ import {
   ReactNode,
 } from 'react'
 import type { Models } from '@appwrite.io/console'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 export interface FunctionWizardFormData {
   installationId: string | undefined
@@ -82,10 +83,12 @@ export function useFunctionWizard() {
 }
 
 export function FunctionWizardProvider({ children }: { children: ReactNode }) {
+  const { features } = useConsoleProfile()
+  const edgeNetworkEnabled = features.edgeNetwork
   const [formData, setFormData] =
     useState<FunctionWizardFormData>(defaultFormData)
   const [installations, setInstallations] = useState<Models.Installation[]>([])
-  const [baseDomain, setBaseDomain] = useState<string>('appwrite.network')
+  const [configuredBaseDomain, setBaseDomain] = useState<string>('')
   const [endpointType, setEndpointType] =
     useState<FunctionEndpointType>('region')
   const [region, setRegion] = useState<string | undefined>(undefined)
@@ -101,8 +104,12 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
     setFormData(defaultFormData)
   }, [])
 
-  const effectiveBaseDomain =
-    endpointType === 'region' && region
+  // Cloud: region (.<region>.appwrite.run) or edge (.appwrite.network).
+  // Self-hosted: `_APP_DOMAIN_FUNCTIONS` from console variables, never the
+  // Appwrite Network hosts.
+  const effectiveBaseDomain = !edgeNetworkEnabled
+    ? configuredBaseDomain
+    : endpointType === 'region' && region
       ? `${region}.appwrite.run`
       : 'appwrite.network'
 
@@ -114,7 +121,8 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
         .substring(0, 63)
-      return subdomain ? `${subdomain}.${effectiveBaseDomain}` : ''
+      if (!subdomain || !effectiveBaseDomain) return ''
+      return `${subdomain}.${effectiveBaseDomain}`
     },
     [effectiveBaseDomain],
   )
