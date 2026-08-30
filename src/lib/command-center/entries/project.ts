@@ -27,6 +27,7 @@ import {
   canShowConnectSection,
   canShowProjectSettings,
   canSeeUsageNav,
+  canSeeActivityNav,
 } from '@/lib/console-access-checks'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
@@ -174,7 +175,9 @@ const PROJECT_NAV: CommandEntry[] = [
     icon: Activity,
     shortcut: 'G L',
     keywords: ['logs', 'events', 'history', 'audit'],
-    available: (ctx) => Boolean(ctx.features.activity),
+    available: (ctx) =>
+      Boolean(ctx.features.activity) &&
+      canSeeActivityNav(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/activity`,
   },
   {

@@ -57,8 +57,6 @@ import {
   AlertTriangle,
   Radio,
   ListTree,
-  Braces,
-  Layers,
   type LucideIcon,
 } from 'lucide-react'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
@@ -72,58 +70,7 @@ import { OnboardingCard } from './OnboardingCard'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
-import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
-import {
-  MySQLDolphinIcon,
-  PostgresElephantIcon,
-} from '@/components/pages/projects/$projectId/databases/_components/database-mascot-icons'
-import { isProjectFeatureNew } from '@/lib/layout/project-sidebar-new-badge'
 import { useI18n } from '@/lib/i18n'
-import { useT } from '@/lib/i18n/translate'
-
-type DatabaseEnginePromoBadge = {
-  id: string
-  enabled: boolean
-  label: string
-  className: string
-  icon: LucideIcon | typeof PostgresElephantIcon | typeof MySQLDolphinIcon
-}
-
-function DatabaseEngineBadgeStack({
-  badges,
-  translate,
-}: {
-  badges: DatabaseEnginePromoBadge[]
-  translate: (text: string) => string
-}) {
-  // Compact overlapping stack; tooltips only (no expand/portal).
-  return (
-    <span className="flex shrink-0 -space-x-1">
-      {badges.map((badge) => {
-        const Icon = badge.icon
-        const tooltip = translate(badge.label)
-        return (
-          <Tooltip key={badge.id} delayDuration={0}>
-            <TooltipTrigger asChild>
-              <span
-                className={cn(
-                  'relative inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-border/40',
-                  badge.className,
-                )}
-                aria-label={tooltip}
-              >
-                <Icon className="h-2.5 w-2.5" aria-hidden="true" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" sideOffset={6}>
-              <p>{tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
-        )
-      })}
-    </span>
-  )
-}
 
 interface NavItem {
   id: string
@@ -358,7 +305,6 @@ export function ConsoleSidebar({
 }: ConsoleSidebarProps) {
   const { account } = useAuth()
   const { catalog } = useI18n()
-  const t = useT()
   const sidebarCopy = catalog.app.sidebar
   const accountWithPrefs = account as
     | { prefs?: Record<string, unknown> }
@@ -454,48 +400,6 @@ export function ConsoleSidebar({
     const isActive = activeSection === item.id
     const isImagineIcon = item.icon === 'imagine'
     const navAnalytics = getSidebarNavAnalyticsAction(item.id)
-    const showNewBadge =
-      !item.comingSoon && isProjectFeatureNew(item.id)
-    const databaseEngineBadges: DatabaseEnginePromoBadge[] =
-      item.id === 'databases' && !item.comingSoon
-        ? (
-            [
-              {
-                id: 'postgres',
-                enabled: features.nativeDbsPostgres,
-                label: 'PostgreSQL is here!',
-                className:
-                  'bg-blue-500/15 text-blue-600/90 dark:bg-blue-400/15 dark:text-blue-400/90',
-                icon: PostgresElephantIcon,
-              },
-              {
-                id: 'mysql',
-                enabled: features.nativeDbsMySQL,
-                label: 'MySQL is here!',
-                className:
-                  'bg-orange-500/15 text-orange-600/90 dark:bg-orange-400/15 dark:text-orange-400/90',
-                icon: MySQLDolphinIcon,
-              },
-              {
-                id: 'documentsdb',
-                enabled: features.dedicatedDbsDocumentsDB,
-                label: 'DocumentsDB is here!',
-                className:
-                  'bg-violet-500/15 text-violet-600/90 dark:bg-violet-400/15 dark:text-violet-400/90',
-                icon: Braces,
-              },
-              {
-                id: 'vectorsdb',
-                enabled: features.dedicatedDbsVectorsDB,
-                label: 'VectorsDB is here!',
-                className:
-                  'bg-emerald-500/15 text-emerald-600/90 dark:bg-emerald-400/15 dark:text-emerald-400/90',
-                icon: Layers,
-              },
-            ] satisfies DatabaseEnginePromoBadge[]
-          ).filter((badge) => badge.enabled)
-        : []
-    const hasTrailingBadge = showNewBadge || databaseEngineBadges.length > 0
     const showLabel = !collapsed || isMobile
 
     // Render the appropriate icon
@@ -578,9 +482,7 @@ export function ConsoleSidebar({
           secondarySidebarNavLinkClassName(isActive, 'transition-colors duration-150'),
           collapsed && !isMobile
             ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
-            : hasTrailingBadge
-              ? SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS
-              : SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+            : SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
           isMobile && 'gap-x-3 px-3 py-2.5 text-[14px]',
         )}
       >
@@ -590,15 +492,6 @@ export function ConsoleSidebar({
             {item.label}
           </span>
         )}
-        {showLabel && databaseEngineBadges.length > 0 ? (
-          <DatabaseEngineBadgeStack
-            badges={databaseEngineBadges}
-            translate={t}
-          />
-        ) : null}
-        {showLabel && showNewBadge ? (
-          <ProductNewBadge label={sidebarCopy.badges.new} />
-        ) : null}
       </Link>
     )
 

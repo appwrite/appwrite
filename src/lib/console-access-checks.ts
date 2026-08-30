@@ -254,10 +254,12 @@ export function canSeeProjectNavItem(
     case 'sites':
       return access.canWriteSites
     case 'usage':
-    case 'activity':
     case 'realtime':
     case 'analytics':
       return access.canSeeProjects
+    case 'activity':
+      // Activity API requires `events.read` (not just `projects.read`).
+      return access.canSeeEvents
     case 'firewall':
       return access.canSeeProjects
     default:
@@ -272,11 +274,12 @@ export function canSeeUsageNav(
   return !features.orgRoles || access.canSeeProjects
 }
 
+/** Project Activity tab: requires `events.read` (activities.listEvents). */
 export function canSeeActivityNav(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !features.orgRoles || access.canSeeProjects
+  return !features.orgRoles || access.canSeeEvents
 }
 
 export function canSeeProjects(
