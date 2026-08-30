@@ -110,7 +110,7 @@ class Create extends Base
         $videoBitRate = (int) $profile->getAttribute('videoBitRate', 0);
         $audioBitRate = (int) $profile->getAttribute('audioBitRate', 0);
 
-        // Created up front with status `waiting` rather than returning a bare 204,
+        // Created up front with status `pending` rather than returning a bare 204,
         // so the caller has an id to poll and the worker always has a document to
         // report failure on.
         try {
@@ -126,7 +126,7 @@ class Create extends Base
                 'videoBitRate' => $videoBitRate,
                 'audioBitRate' => $audioBitRate,
                 'output' => $output,
-                'status' => self::STATUS_WAITING,
+                'status' => self::STATUS_PENDING,
                 'progress' => '0',
             ])));
         } catch (DuplicateException) {
@@ -136,7 +136,7 @@ class Create extends Base
             throw new Exception(Exception::VIDEO_RENDITION_ALREADY_EXISTS);
         }
 
-        // The waiting row is the claim tryRelease looks for. Re-validate after
+        // The pending row is the claim tryRelease looks for. Re-validate after
         // insert so a concurrent timeline release that already dropped the
         // working copy cannot leave us returning 202 for a doomed encode.
         try {

@@ -373,7 +373,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('English', $response['body']['name']);
         $this->assertEquals('eng', $response['body']['code']);
         $this->assertTrue($response['body']['default']);
-        $this->assertEquals('waiting', $response['body']['status']);
+        $this->assertEquals('pending', $response['body']['status']);
 
         return ['videoId' => $videoId, 'subtitleId' => $response['body']['$id']];
     }
@@ -523,7 +523,7 @@ final class VideosCustomServerTest extends Scope
 
         $this->assertEquals(202, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('waiting', $response['body']['status']);
+        $this->assertEquals('pending', $response['body']['status']);
         $this->assertEquals('hls', $response['body']['output']);
         $this->assertEquals($profile['$id'], $response['body']['profileId']);
         $this->assertEquals(
@@ -536,7 +536,7 @@ final class VideosCustomServerTest extends Scope
 
     /**
      * Renditions may only be created against a fully processed source: while the
-     * download is still `waiting`/`started` the endpoint rejects with 400
+     * download is still `pending`/`downloading` the endpoint rejects with 400
      * `video_not_ready`, and once the video reaches `ready` the same request is
      * accepted and encodes to completion.
      */
@@ -571,7 +571,7 @@ final class VideosCustomServerTest extends Scope
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $rendition['headers']['status-code']);
-        $this->assertEquals('waiting', $rendition['body']['status']);
+        $this->assertEquals('pending', $rendition['body']['status']);
 
         $body = $this->waitForRenditionTerminalState($videoId, $rendition['body']['$id']);
         $this->assertEquals('ready', $body['status'], 'Rendition queued after the video became ready did not finish');
@@ -616,7 +616,7 @@ final class VideosCustomServerTest extends Scope
             'output' => 'dash',
         ]);
         $this->assertEquals(202, $retry['headers']['status-code']);
-        $this->assertEquals('waiting', $retry['body']['status']);
+        $this->assertEquals('pending', $retry['body']['status']);
 
         $body = $this->waitForRenditionTerminalState($videoId, $retry['body']['$id']);
         $this->assertEquals('ready', $body['status'], 'Rendition queued after createSource did not finish');
@@ -683,7 +683,7 @@ final class VideosCustomServerTest extends Scope
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $retry['headers']['status-code']);
-        $this->assertEquals('waiting', $retry['body']['status']);
+        $this->assertEquals('pending', $retry['body']['status']);
         $this->assertNotSame($firstId, $retry['body']['$id']);
     }
 
@@ -1498,7 +1498,7 @@ final class VideosCustomServerTest extends Scope
 
     /**
      * Post-insert disk check: ready status with a missing working copy must not
-     * return 202 (doomed encode) or leave a waiting rendition row behind.
+     * return 202 (doomed encode) or leave a pending rendition row behind.
      */
     public function testCreateRenditionRejectsMissingWorkingCopy(): void
     {

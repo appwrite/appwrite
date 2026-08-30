@@ -94,6 +94,22 @@ final class VideosStaleResourcesServerTest extends Scope
         return $path;
     }
 
+    /**
+     * Plant a marker under jobs/{renditionId}/ so the sweeper's releaseTmpJob
+     * can be asserted without racing a live ffmpeg pack.
+     */
+    private function touchTmpJob(string $videoId, string $renditionId): string
+    {
+        $dir = $this->tmpJobPath($videoId, $renditionId) . '/out';
+        if (!\is_dir($dir)) {
+            $this->assertTrue(\mkdir($dir, 0755, true) || \is_dir($dir));
+        }
+        $marker = $dir . '/stale-job-marker';
+        $this->assertNotFalse(\file_put_contents($marker, 'stale-job'));
+
+        return $marker;
+    }
+
     private function getVideo(string $videoId): array
     {
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
@@ -131,7 +147,7 @@ final class VideosStaleResourcesServerTest extends Scope
         $this->seedResource('video', $videoId, $fields);
     }
 
-    private function createWaitingRendition(string $videoId): array
+    private function createPendingRendition(string $videoId): array
     {
         $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
         $this->assertEquals(200, $profiles['headers']['status-code']);
@@ -188,15 +204,20 @@ final class VideosStaleResourcesServerTest extends Scope
         $this->assertEquals('downloading', $body['status']);
     }
 
-    private function seedStuckEncode(string $videoId, string $renditionId, string $progress): void
-    {
-        // Race the encode worker: park as `error` so an in-flight pack halts
-        // (worker sets a local halted flag and stops writing), then stamp the
-        // stale `started` snapshot the sweeper looks for. Retry until the GET
-        // view matches — a late claim/progress write can otherwise freshen
-        // `$updatedAt` or overwrite progress before the sweep runs.
+    /**
+     * Move a pending rendition into a stale encode status without racing a live
+     * ffmpeg. createRendition enqueues Encode — park `error` first so an
+     * in-flight pack stops DB writes, wait until its job workspace is gone
+     * (worker `finally`), then apply the stale snapshot the sweeper matches.
+     */
+    private function seedStaleEncodeStatus(
+        string $videoId,
+        string $renditionId,
+        string $status,
+        string $progress
+    ): void {
         $staleBefore = (new \DateTime())->modify('-20 minutes');
-        $deadline = \time() + 45;
+        $deadline = \time() + 90;
 
         while (\time() < $deadline) {
             $this->seedResource('videos_rendition', $renditionId, [
@@ -211,20 +232,31 @@ final class VideosStaleResourcesServerTest extends Scope
                 \usleep(100000);
             }
 
-            // Give the worker's ~500ms status poll a chance to observe `error`
-            // and set its halted flag before we re-enter `started`.
+            // Let the worker's ~500ms status poll observe `error` and halt.
             \usleep(600000);
+
+            // Wait for the encode coroutine to finish and clean its workspace
+            // (or never create one if it never claimed).
+            $jobDir = $this->tmpJobPath($videoId, $renditionId);
+            $jobDeadline = \time() + 60;
+            while (\time() < $jobDeadline) {
+                \clearstatcache(true, $jobDir);
+                if (!\is_dir($jobDir)) {
+                    break;
+                }
+                \usleep(200000);
+            }
 
             $updatedAt = $this->hourAgo();
             $this->seedResource('videos_rendition', $renditionId, [
-                'status' => 'started',
+                'status' => $status,
                 'progress' => $progress,
                 'updatedAt' => $updatedAt,
             ]);
             // Stamp again so a write that raced the previous update cannot leave
             // a fresh `$updatedAt` for the sweeper cutoff.
             $this->seedResource('videos_rendition', $renditionId, [
-                'status' => 'started',
+                'status' => $status,
                 'progress' => $progress,
                 'updatedAt' => $updatedAt,
             ]);
@@ -232,7 +264,7 @@ final class VideosStaleResourcesServerTest extends Scope
             \usleep(150000);
             $body = $this->getRendition($videoId, $renditionId);
             if (
-                ($body['status'] ?? '') === 'started'
+                ($body['status'] ?? '') === $status
                 && (string) ($body['progress'] ?? '') === $progress
                 && !empty($body['$updatedAt'])
                 && new \DateTime($body['$updatedAt']) < $staleBefore
@@ -243,99 +275,98 @@ final class VideosStaleResourcesServerTest extends Scope
 
         $body = $this->getRendition($videoId, $renditionId);
         $this->fail(
-            'Could not seed stuck encode snapshot; last status='
+            'Could not seed stale encode snapshot; last status='
             . ($body['status'] ?? '')
             . ' progress=' . ($body['progress'] ?? '')
             . ' updatedAt=' . ($body['$updatedAt'] ?? '')
         );
     }
 
+    private function seedStuckEncode(string $videoId, string $renditionId, string $progress): void
+    {
+        $this->seedStaleEncodeStatus($videoId, $renditionId, 'started', $progress);
+    }
+
+    private function assertRenditionAbortedAndJobGone(
+        string $videoId,
+        string $renditionId,
+        string $jobMarker
+    ): void {
+        $body = $this->getRendition($videoId, $renditionId);
+        $this->assertEquals('aborted', $body['status']);
+        $this->assertNotEmpty($body['endedAt']);
+        \clearstatcache(true, $jobMarker);
+        $this->assertFileDoesNotExist($jobMarker);
+        \clearstatcache(true, $this->tmpJobPath($videoId, $renditionId));
+        $this->assertDirectoryDoesNotExist($this->tmpJobPath($videoId, $renditionId));
+    }
+
     public function testCleanStaleAbortsStuckEncode(): void
     {
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
-        $rendition = $this->createWaitingRendition($videoId);
+        $rendition = $this->createPendingRendition($videoId);
         $renditionId = $rendition['$id'];
 
         $this->seedStuckEncode($videoId, $renditionId, '50');
+        $marker = $this->touchTmpJob($videoId, $renditionId);
         $this->triggerCleanStale();
 
-        $body = $this->getRendition($videoId, $renditionId);
-        $this->assertEquals('aborted', $body['status']);
-        $this->assertNotEmpty($body['endedAt']);
+        $this->assertRenditionAbortedAndJobGone($videoId, $renditionId, $marker);
     }
 
     public function testCleanStaleAbortsEncodeAt100(): void
     {
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
-        $rendition = $this->createWaitingRendition($videoId);
+        $rendition = $this->createPendingRendition($videoId);
         $renditionId = $rendition['$id'];
 
         $this->seedStuckEncode($videoId, $renditionId, '100');
+        $marker = $this->touchTmpJob($videoId, $renditionId);
         $this->triggerCleanStale();
 
-        $body = $this->getRendition($videoId, $renditionId);
-        $this->assertEquals('aborted', $body['status']);
-        $this->assertNotEmpty($body['endedAt']);
+        $this->assertRenditionAbortedAndJobGone($videoId, $renditionId, $marker);
     }
 
     public function testCleanStaleAbortsUploading(): void
     {
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
-        $rendition = $this->createWaitingRendition($videoId);
+        $rendition = $this->createPendingRendition($videoId);
         $renditionId = $rendition['$id'];
 
-        $this->seedResource('videos_rendition', $renditionId, [
-            'status' => 'uploading',
-            'progress' => '100',
-            'updatedAt' => $this->hourAgo(),
-        ]);
-        $this->seedResource('videos_rendition', $renditionId, [
-            'updatedAt' => $this->hourAgo(),
-        ]);
-
+        $this->seedStaleEncodeStatus($videoId, $renditionId, 'uploading', '100');
+        $marker = $this->touchTmpJob($videoId, $renditionId);
         $this->triggerCleanStale();
 
-        $body = $this->getRendition($videoId, $renditionId);
-        $this->assertEquals('aborted', $body['status']);
-        $this->assertNotEmpty($body['endedAt']);
+        $this->assertRenditionAbortedAndJobGone($videoId, $renditionId, $marker);
     }
 
     public function testCleanStaleAbortsEnded(): void
     {
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
-        $rendition = $this->createWaitingRendition($videoId);
+        $rendition = $this->createPendingRendition($videoId);
         $renditionId = $rendition['$id'];
 
-        $this->seedResource('videos_rendition', $renditionId, [
-            'status' => 'ended',
-            'progress' => '99',
-            'updatedAt' => $this->hourAgo(),
-        ]);
-        $this->seedResource('videos_rendition', $renditionId, [
-            'updatedAt' => $this->hourAgo(),
-        ]);
-
+        $this->seedStaleEncodeStatus($videoId, $renditionId, 'ended', '99');
+        $marker = $this->touchTmpJob($videoId, $renditionId);
         $this->triggerCleanStale();
 
-        $body = $this->getRendition($videoId, $renditionId);
-        $this->assertEquals('aborted', $body['status']);
-        $this->assertNotEmpty($body['endedAt']);
+        $this->assertRenditionAbortedAndJobGone($videoId, $renditionId, $marker);
     }
 
-    public function testCleanStaleIgnoresWaiting(): void
+    public function testCleanStaleIgnoresPending(): void
     {
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
-        $rendition = $this->createWaitingRendition($videoId);
+        $rendition = $this->createPendingRendition($videoId);
         $renditionId = $rendition['$id'];
 
-        // Force waiting + old updatedAt so a misconfigured status array would abort it.
+        // Force pending + old updatedAt so a misconfigured status array would abort it.
         $this->seedResource('videos_rendition', $renditionId, [
-            'status' => 'waiting',
+            'status' => 'pending',
             'progress' => '0',
             'updatedAt' => $this->hourAgo(),
         ]);
@@ -346,7 +377,7 @@ final class VideosStaleResourcesServerTest extends Scope
         $this->triggerCleanStale();
 
         $body = $this->getRendition($videoId, $renditionId);
-        $this->assertEquals('waiting', $body['status']);
+        $this->assertEquals('pending', $body['status']);
     }
 
     public function testReDownloadAfterAborted(): void
@@ -369,7 +400,7 @@ final class VideosStaleResourcesServerTest extends Scope
     {
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
-        $rendition = $this->createWaitingRendition($videoId);
+        $rendition = $this->createPendingRendition($videoId);
         $renditionId = $rendition['$id'];
 
         $this->seedStuckEncode($videoId, $renditionId, '40');
@@ -383,6 +414,14 @@ final class VideosStaleResourcesServerTest extends Scope
         );
         $this->assertEquals(204, $delete['headers']['status-code']);
 
+        // Halting an in-flight encode lets the worker finish and tryRelease may
+        // drop the tmp source — recreate it before queuing another rendition.
+        if (($this->getVideo($videoId)['status'] ?? '') !== 'ready') {
+            $source = $this->createSource($videoId, $this->headers());
+            $this->assertEquals(202, $source['headers']['status-code']);
+            $this->waitForVideoStatus($videoId, 'ready');
+        }
+
         $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
         $profileId = $profiles['body']['profiles'][0]['$id'];
 
@@ -391,7 +430,7 @@ final class VideosStaleResourcesServerTest extends Scope
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $retry['headers']['status-code']);
-        $this->assertEquals('waiting', $retry['body']['status']);
+        $this->assertEquals('pending', $retry['body']['status']);
         $this->assertNotSame($renditionId, $retry['body']['$id']);
     }
 }

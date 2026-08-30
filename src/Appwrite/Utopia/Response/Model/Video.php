@@ -63,6 +63,7 @@ class Video extends Model
                 'description' => 'Source status: one of `pending`, `downloading`, `ready`, `removed`, `error` or `aborted`.',
                 'default' => '',
                 'example' => 'ready',
+                'enum' => ['pending', 'downloading', 'ready', 'removed', 'error', 'aborted'],
             ])
             ->addRule('chunksTotal', [
                 'type' => self::TYPE_INTEGER,

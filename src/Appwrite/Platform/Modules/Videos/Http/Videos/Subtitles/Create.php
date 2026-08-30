@@ -116,7 +116,7 @@ class Create extends Base
             'name' => $name,
             'code' => $code,
             'default' => $default,
-            'status' => self::STATUS_WAITING,
+            'status' => self::STATUS_PENDING,
         ])));
 
         if (!$default) {

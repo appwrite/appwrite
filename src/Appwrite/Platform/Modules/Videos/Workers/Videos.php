@@ -445,7 +445,7 @@ class Videos extends Action
     /**
      * Transcode and package a rendition into HLS or DASH.
      *
-     * The rendition row is created by the HTTP endpoint with status `waiting`.
+     * The rendition row is created by the HTTP endpoint with status `pending`.
      */
     private function encode(
         Database $dbForProject,
@@ -470,7 +470,7 @@ class Videos extends Action
 
         $projectId = $videoMessage->project->getId();
         $videoId = $videoMessage->video->getId();
-        // Created only after this run wins the waiting→started claim. Workspace
+        // Created only after this run wins the pending→started claim. Workspace
         // paths are keyed by rendition id, so a stale redelivery that mkdir+rm's
         // the same tree would delete segments out from under a live ffmpeg.
         $workspace = null;
@@ -484,9 +484,9 @@ class Videos extends Action
 
         try {
             // Every rendition owns exactly one Encode message, so a message whose
-            // row already left `waiting` is a stale redelivery and is dropped here.
+            // row already left `pending` is a stale redelivery and is dropped here.
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
-            if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_WAITING) {
+            if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_PENDING) {
                 return;
             }
 
@@ -500,7 +500,7 @@ class Videos extends Action
                 throw new \Exception('Not a valid media file: ' . $inPath);
             }
 
-            // Compare-and-swap: concurrent coroutines can both see `waiting`;
+            // Compare-and-swap: concurrent coroutines can both see `pending`;
             // only one updateDocuments may transition the row.
             $updated = $dbForProject->updateDocuments(
                 'videos_renditions',
@@ -511,7 +511,7 @@ class Videos extends Action
                 ]),
                 [
                     Query::equal('$id', [$rendition->getId()]),
-                    Query::equal('status', [Base::STATUS_WAITING]),
+                    Query::equal('status', [Base::STATUS_PENDING]),
                 ]
             );
             if ($updated === 0) {
@@ -713,12 +713,12 @@ class Videos extends Action
         } catch (\Throwable $th) {
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             // Do not overwrite aborted/error parks from maintenance or e2e seeding.
-            // Pre-claim failures may only park while the row is still `waiting` —
+            // Pre-claim failures may only park while the row is still `pending` —
             // never clobber a sibling coroutine that already won the claim.
             $status = $current->isEmpty() ? '' : (string) $current->getAttribute('status', '');
             $mayPark = $claimed
                 ? !\in_array($status, [Base::STATUS_ABORTED, Base::STATUS_ERROR], true)
-                : $status === Base::STATUS_WAITING;
+                : $status === Base::STATUS_PENDING;
 
             if (!$current->isEmpty() && $mayPark) {
                 $rendition = $dbForProject->updateDocument(
@@ -746,7 +746,7 @@ class Videos extends Action
 
             throw $th;
         } finally {
-            // Only a run that actually claimed the rendition (waiting -> started)
+            // Only a run that actually claimed the rendition (pending -> started)
             // is billable; duplicate messages and re-queued downloads are no-ops.
             if ($claimed) {
                 try {
@@ -1095,7 +1095,7 @@ class Videos extends Action
      *
      * Encode passes the rendition id so CleanStaleVideosResources can release
      * that workspace alone. Call only after this run has claimed the rendition
-     * (waiting→started): cleanup is keyed by the same id, and a no-op redelivery
+     * (pending→started): cleanup is keyed by the same id, and a no-op redelivery
      * must not mkdir+rm the tree an in-flight encode is writing. Timeline /
      * subtitle extract omit `$jobId` and get a uniqid — those runs are not
      * aborted via the rendition sweeper.
@@ -1293,7 +1293,7 @@ class Videos extends Action
         $inFlight = $dbForProject->find('videos_renditions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('status', [
-                Base::STATUS_WAITING,
+                Base::STATUS_PENDING,
                 Base::STATUS_STARTED,
                 Base::STATUS_ENDED,
                 Base::STATUS_UPLOADING,
@@ -1313,13 +1313,13 @@ class Videos extends Action
             return;
         }
 
-        // Rendition create may have inserted `waiting` after the first find —
+        // Rendition create may have inserted `pending` after the first find —
         // re-check immediately before unlinking so we do not drop the source
         // under a new claim.
         $inFlight = $dbForProject->find('videos_renditions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('status', [
-                Base::STATUS_WAITING,
+                Base::STATUS_PENDING,
                 Base::STATUS_STARTED,
                 Base::STATUS_ENDED,
                 Base::STATUS_UPLOADING,

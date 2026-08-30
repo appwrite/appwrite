@@ -565,6 +565,16 @@ trait VideoCustom
         return \rtrim($root, '/') . '/app-' . $this->getProject()['$id'] . '/' . $videoId . '/source';
     }
 
+    public function tmpJobPath(string $videoId, string $renditionId): string
+    {
+        $root = \defined('APP_STORAGE_VIDEOS_TMP') ? APP_STORAGE_VIDEOS_TMP : '/storage/videos-tmp';
+
+        return \rtrim($root, '/')
+            . '/app-' . $this->getProject()['$id']
+            . '/' . $videoId
+            . '/jobs/' . $renditionId;
+    }
+
     public function waitUntilTmpSourceExists(string $videoId, int $timeout = 60): string
     {
         $path = $this->tmpSourcePath($videoId);
@@ -695,7 +705,7 @@ trait VideoCustom
     }
 
     /**
-     * Polls a rendition until it leaves the queue-side states (`waiting`,
+     * Polls a rendition until it leaves the queue-side states (`pending`,
      * `started`, `ended`, `uploading`) and settles on `ready` or `error`.
      *
      * Encoding a multi-megabyte source can take minutes, so the default timeout
@@ -703,7 +713,7 @@ trait VideoCustom
      */
     public function waitForRenditionTerminalState(string $videoId, string $renditionId, int $timeout = 300): array
     {
-        $pending = ['waiting', 'started', 'ended', 'uploading'];
+        $pending = ['pending', 'started', 'ended', 'uploading'];
         $deadline = \time() + $timeout;
         $body = [];
 
@@ -750,11 +760,11 @@ trait VideoCustom
     }
 
     /**
-     * Polls a subtitle until it leaves `waiting`/`started` and settles.
+     * Polls a subtitle until it leaves `pending`/`started` and settles.
      */
     public function waitForSubtitleTerminalState(string $videoId, string $subtitleId, int $timeout = 120): array
     {
-        $pending = ['waiting', 'started'];
+        $pending = ['pending', 'started'];
         $deadline = \time() + $timeout;
         $body = [];
 

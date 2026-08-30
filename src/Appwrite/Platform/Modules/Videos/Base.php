@@ -32,10 +32,10 @@ abstract class Base extends UtopiaAction
     /**
      * Lifecycle of a rendition or subtitle, shared with the videos worker.
      *
-     * Endpoints create rows as `waiting`; the worker advances them and settles on
+     * Endpoints create rows as `pending`; the worker advances them and settles on
      * `ready` or `error`.
      */
-    public const STATUS_WAITING = 'waiting';
+    public const STATUS_PENDING = 'pending';
     public const STATUS_STARTED = 'started';
     public const STATUS_ENDED = 'ended';
     public const STATUS_UPLOADING = 'uploading';

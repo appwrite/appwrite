@@ -147,7 +147,7 @@ class Update extends Base
         // Only a new source needs re-packaging; renaming or re-flagging the default
         // track leaves the already-segmented WebVTT valid.
         if ($sourceChanged) {
-            $updates['status'] = self::STATUS_WAITING;
+            $updates['status'] = self::STATUS_PENDING;
             $updates['targetDuration'] = null;
             $updates['path'] = null;
         }

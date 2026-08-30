@@ -181,8 +181,8 @@ final class BaseTest extends TestCase
                 'progress' => '99',
                 '$updatedAt' => '2026-01-01T11:00:00.000+00:00',
             ], true],
-            'waiting excluded' => [[
-                'status' => Base::STATUS_WAITING,
+            'pending excluded' => [[
+                'status' => Base::STATUS_PENDING,
                 'progress' => '0',
                 '$updatedAt' => '2026-01-01T11:00:00.000+00:00',
             ], false],
