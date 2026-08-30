@@ -30,11 +30,11 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $projectId = $this->getProject()['$id'];
         $redirect = $this->getRedirect();
 
-        return (string) \json_encode([
+        return (string) json_encode([
             'projectId' => $projectId,
             'success' => $redirect,
             'failure' => $redirect,
-            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $redirect, $redirect]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+            'signature' => hash_hmac('sha256', json_encode([$projectId, $redirect, $redirect]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
         ]);
     }
 
@@ -43,7 +43,7 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
      */
     private function getCallbackHeaders(): array
     {
-        return \array_merge(['x-appwrite-project' => $this->getProject()['$id']], $this->getHeaders());
+        return array_merge(['x-appwrite-project' => $this->getProject()['$id']], $this->getHeaders());
     }
 
     /**
@@ -51,7 +51,7 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
      * member can only request the installation. The console has to receive that
      * as a query string, not glued onto the path.
      */
-    public function testCallbackRequest(): void
+    public function testGetCallbackInstallationRequest(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
             'setup_action' => 'request',
@@ -62,12 +62,11 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $this->assertStringStartsWith($this->getRedirect() . '?error=', (string) $response['headers']['location']);
     }
 
-
     /**
      * Without state there is no project to redirect to, so the error has to at
      * least say what went wrong.
      */
-    public function testCallbackMissingState(): void
+    public function testGetCallbackMissingState(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
             'setup_action' => 'install',
@@ -82,14 +81,14 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
      * The endpoint is public, so an unsigned state must not be able to name the
      * project an installation gets attached to.
      */
-    public function testCallbackUnsignedState(): void
+    public function testGetCallbackUnsignedState(): void
     {
         $redirect = $this->getRedirect();
 
         $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
             'setup_action' => 'install',
             'installation_id' => '1234567',
-            'state' => (string) \json_encode([
+            'state' => (string) json_encode([
                 'projectId' => $this->getProject()['$id'],
                 'success' => $redirect,
                 'failure' => $redirect,
@@ -99,5 +98,4 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString('Invalid state parameter', (string) $response['body']);
     }
-
 }
