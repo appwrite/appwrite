@@ -9,6 +9,7 @@ import {
   refreshConsoleAccountAfterAuth,
   shouldRevalidateConsoleAccount,
 } from '@/lib/react-query/hooks/auth'
+import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 
 export const Route = createFileRoute('/_public')({
   ssr: false,
@@ -28,7 +29,14 @@ export const Route = createFileRoute('/_public')({
 
       // Load account (and prefs) before child loaders so e.g. Tables DB rows can
       // match `tableRowsQueryOptions` keys to saved column prefs without a layout shift.
-      const account = await ensureConsoleAccountQueryData(queryClient)
+      // Console variables gate self-hosted usage stats; resolve them here so the
+      // org projects list can reserve chart space on first paint.
+      const [account] = await Promise.all([
+        ensureConsoleAccountQueryData(queryClient),
+        queryClient
+          .ensureQueryData(consoleVariablesQueryOptions())
+          .catch(() => {}),
+      ])
 
       // `/` still has to resolve + redirect, but the overview fetches can start
       // as soon as we know the preferred org from prefs.

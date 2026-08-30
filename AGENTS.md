@@ -1102,7 +1102,7 @@ Profiles control which features are available based on deployment type (cloud vs
 **Profiles:**
 
 - **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup), **cookie banner** (locale-gated GDPR consent). **Notifications** center is off by default in both profiles.
-- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off; notifications off)
+- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off; notifications off). Usage stats follow `_APP_USAGE_STATS` (on by default)
 
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 

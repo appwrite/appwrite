@@ -203,7 +203,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       billing: false,
       domains: false,
       marketplace: false,
-      usageStats: false,
+      usageStats: true,
       activity: false,
       init: false,
       marketing: false,
@@ -456,6 +456,18 @@ export function setBackendUsageStatsAvailability(
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
   }
+}
+
+/**
+ * Self-hosted usage follows `_APP_USAGE_STATS` after console variables load.
+ * Cloud and explicit env overrides are known immediately.
+ */
+export function isUsageStatsCapabilityResolved(): boolean {
+  const profileId = getActiveProfileId()
+  if (profileId !== 'self-hosted') return true
+  const override = parseEnvFeatureOverride(getRuntimeConfig().usageStats)
+  if (override !== null) return true
+  return backendUsageStatsAvailability !== null
 }
 
 function applyCloudOnlyFeatureGates(

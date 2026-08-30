@@ -2291,6 +2291,26 @@ export function useProjectListRequestsUsage(
   }, [uniqueIds, queries])
 }
 
+/** Prefetch org project-list request sparklines without blocking first paint. */
+export function prefetchProjectListRequestsUsage(
+  queryClient: QueryClient,
+  projectIds: string[],
+): void {
+  const dateRange = getProjectListRequestsChartDateRange()
+  const uniqueIds = [...new Set(projectIds.filter(Boolean))]
+  for (const projectId of uniqueIds) {
+    void queryClient
+      .prefetchQuery(
+        requestsChartOverviewQueryOptions(
+          projectId,
+          dateRange,
+          DEFAULT_USAGE_CHART_INTERVAL,
+        ),
+      )
+      .catch(() => {})
+  }
+}
+
 function databaseReadsChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,

@@ -192,6 +192,7 @@ import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isUsageStatsCapabilityResolved } from '@/lib/console-profiles'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import {
   SettingsCardsList,
@@ -375,7 +376,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     null,
   )
   const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
-  const { features, isCloud } = useConsoleProfile()
+  const { features, isCloud, isSelfHosted } = useConsoleProfile()
   const supportsMultiTenancy = features.multiTenancy
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
   const { viewMode: projectsViewMode, setViewMode: setProjectsViewMode } =
@@ -1813,7 +1814,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ? projectsByTeam
       : filteredProjectsByTeam
 
-  const showProjectUsageCharts = features.usageStats
+  const showProjectUsageCharts =
+    features.usageStats ||
+    (isSelfHosted && !isUsageStatsCapabilityResolved())
   // Budget-locked projects cannot load platform/usage APIs (402). Skip those
   // fetches and show N/A on the cards instead.
   const skipProjectCardExtras = showProjectsLockedAlert
@@ -1837,7 +1840,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const fetchedProjectRequestsUsageById = useProjectListRequestsUsage(
     visibleProjectIds,
-    showProjectUsageCharts && !skipProjectCardExtras,
+    features.usageStats && !skipProjectCardExtras,
   )
 
   const projectListPlatformIds = useMemo(() => {

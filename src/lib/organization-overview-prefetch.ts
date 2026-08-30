@@ -18,6 +18,8 @@ import {
   organizationMembershipsQueryOptions,
 } from '@/lib/react-query/hooks/teams'
 import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
+import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
+import { prefetchProjectListRequestsUsage } from '@/lib/react-query/hooks/usage-events'
 
 export type PrefetchOrganizationOverviewOptions = {
   projectsPage?: number
@@ -127,6 +129,9 @@ export async function prefetchOrganizationOverviewData(
   })()
 
   const parallel: Promise<unknown>[] = [
+    queryClient
+      .ensureQueryData(consoleVariablesQueryOptions())
+      .catch(() => {}),
     queryClient.ensureQueryData(organizationsQueryOptions()),
     queryClient.ensureQueryData(organizationQueryOptions(orgId)),
     queryClient.ensureQueryData(
@@ -161,6 +166,44 @@ export async function prefetchOrganizationOverviewData(
     // rejection is not an unhandled rejection.
     await projectsPromise.catch(() => {})
     throw error
+  }
+
+  if (!getActiveProfileFeatures().usageStats) return
+
+  const team = queryClient.getQueryData(consoleTeamQueryOptions(orgId).queryKey) as
+    | { prefs?: Record<string, unknown> }
+    | undefined
+  const pinnedIds = parsePinnedProjectIds(team?.prefs)
+  const projectScope = features.orgRoles
+    ? ((queryClient.getQueryData(
+        organizationProjectScopeQueryOptions(orgId).queryKey,
+      ) as string[] | null | undefined) ?? null)
+    : null
+  const active = queryClient.getQueryData(
+    activeProjectsQueryOptions(
+      orgId,
+      projectsPage,
+      projectsLimit,
+      search,
+      pinnedIds,
+      projectScope,
+    ).queryKey,
+  ) as { projects?: Array<{ $id: string }> } | undefined
+  const pinned =
+    pinnedIds.length > 0
+      ? (queryClient.getQueryData(
+          pinnedProjectsQueryOptions(orgId, pinnedIds).queryKey,
+        ) as { projects?: Array<{ $id: string }> } | undefined)
+      : undefined
+  const projectIds = [
+    ...new Set(
+      [...(pinned?.projects ?? []), ...(active?.projects ?? [])]
+        .map((project) => project.$id)
+        .filter(Boolean),
+    ),
+  ]
+  if (projectIds.length > 0) {
+    prefetchProjectListRequestsUsage(queryClient, projectIds)
   }
 }
 
