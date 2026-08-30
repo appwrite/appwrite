@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\General;
 
 use CURLFile;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -26,6 +27,78 @@ final class AbuseTest extends Scope
         if (System::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
             $this->markTestSkipped('Abuse is not enabled.');
         }
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseIncreasedLimitProject(): void
+    {
+        $increasedLimitProjects = \array_values(\array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', '')))));
+        if (empty($increasedLimitProjects)) {
+            $this->markTestSkipped('No projects with increased rate limits configured.');
+        }
+
+        $projectId = $increasedLimitProjects[0];
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Increased Limit Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'projectId' => $projectId,
+            'region' => System::getEnv('_APP_REGION', 'default'),
+            'name' => 'Increased Limit Project',
+            'teamId' => $team['body']['$id'],
+        ]);
+
+        // 409 means the project is left over from a previous run against the same stack
+        $this->assertContains($project['headers']['status-code'], [201, 409]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-forwarded-for' => '198.51.100.' . random_int(1, 254),
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'increased.limit.' . bin2hex(random_bytes(8)) . '@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(1000, $response['headers']['x-ratelimit-limit']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . random_int(1, 254),
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'default.limit.' . bin2hex(random_bytes(8)) . '@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(10, $response['headers']['x-ratelimit-limit']);
     }
 
     public function testAbuseCreateDocumentCollectionsAPI()

@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
+use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
@@ -352,7 +353,7 @@ class Install extends Action
             $enabledDatabases[] = $lockedDatabase;
         }
 
-        $this->setInstallerConfig([
+        $config = [
             'defaultHttpPort' => $defaultHttpPort,
             'defaultHttpsPort' => $defaultHttpsPort,
             'organization' => $organization,
@@ -365,7 +366,16 @@ class Install extends Action
             'enabledDatabases' => $enabledDatabases,
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
-        ]);
+        ];
+
+        // Restarting the installer rewrites this config, which would drop the version an
+        // interrupted upgrade started from -- the one record left once the compose file and
+        // .env read as the version being installed.
+        if (isset($installerConfig['upgradeFrom'])) {
+            $config['upgradeFrom'] = $installerConfig['upgradeFrom'];
+        }
+
+        $this->setInstallerConfig($config);
 
         // Start Swoole-based installer server in background
         // Redirect stdout/stderr to a log file so exec() returns immediately
@@ -502,6 +512,7 @@ class Install extends Action
             return;
         }
 
+        $this->installerConfig = $config;
         putenv('APPWRITE_INSTALLER_CONFIG=' . $json);
         $path = InstallerServer::INSTALLER_CONFIG_FILE;
         if (@file_put_contents($path, $json) === false) {
@@ -553,6 +564,42 @@ class Install extends Action
         $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
         if ($isLocalInstall) {
             $version = 'local';
+        }
+
+        // Read before the compose file and .env are rewritten below, which would replace
+        // the version being upgraded from with the one being upgraded to. The compose file
+        // is authoritative -- it is what the running containers were started from -- and
+        // .env covers installations whose compose file is missing or unreadable.
+        $installedVersion = '';
+        if ($isUpgrade) {
+            $existingCompose = $this->readExistingCompose();
+
+            if ($existingCompose !== '') {
+                try {
+                    $installedVersion = (new Compose($existingCompose))->getService('appwrite')->getImageVersion();
+                } catch (\Throwable) {
+                    // No appwrite service to read a tag from; .env below covers it.
+                }
+            }
+
+            if ($installedVersion === '') {
+                $existingEnv = @\file_get_contents($this->path . '/' . $this->getEnvFileName());
+                $installedVersion = $existingEnv === false
+                    ? ''
+                    : (string) ((new Env($existingEnv))->list()['_APP_VERSION'] ?? '');
+            }
+
+            // An attempt that was interrupted after rewriting those files leaves both
+            // reading as the version being installed, which would look like an upgrade with
+            // nothing to cross. Remember the version first, so a resumed attempt still knows
+            // where it started; the infrastructure changes below forget it once applied.
+            $installerConfig = $this->readInstallerConfig();
+
+            if ($installedVersion === '' || $installedVersion === $version) {
+                $installedVersion = (string) ($installerConfig['upgradeFrom'] ?? '');
+            } elseif (($installerConfig['upgradeFrom'] ?? null) !== $installedVersion) {
+                $this->setInstallerConfig(\array_merge($installerConfig, ['upgradeFrom' => $installedVersion]));
+            }
         }
 
         if (!$isLocalInstall && $this->hostPath === '') {
@@ -647,11 +694,45 @@ class Install extends Action
                 $this->copyMongoFilesIfNeeded();
             }
 
+            // Changes to what the containers run on, rather than to what is inside the
+            // database. The new compose file and .env are written by now, and a volume or a
+            // mount can only be moved while nothing is attached to it -- so this has to
+            // happen before anything starts, including a start the operator does by hand
+            // after --no-start. Not bounded by the step being resumed from: a version is
+            // only still here because the changes for it have not all landed yet, whichever
+            // step the attempt that left it got to.
+            if ($isUpgrade && $installedVersion !== '') {
+                $applied = true;
+
+                foreach (InfrastructureMigration::between($installedVersion, $version) as $migration) {
+                    Console::info('Applying infrastructure changes from ' . $migration->getName() . '...');
+
+                    try {
+                        $applied = $migration->setContext($input, $this->path)->execute() && $applied;
+                    } catch (\Throwable $error) {
+                        // The containers still start: what could not be changed is reported
+                        // rather than taking the upgrade down with it.
+                        $applied = false;
+                        Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
+                    }
+                }
+
+                // Forgotten only once everything landed, so anything that failed is tried
+                // again next time; from here a later upgrade reads its starting version off
+                // the compose file rather than replaying this one.
+                if ($applied) {
+                    $installerConfig = $this->readInstallerConfig();
+                    unset($installerConfig['upgradeFrom']);
+                    $this->setInstallerConfig($installerConfig);
+                }
+            }
+
             if (!$noStart) {
                 $shouldStartContainers = $startIndex <= 2;
                 if ($shouldStartContainers) {
                     $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                     $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
+
                     $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
 
                     if (!$isUpgrade) {
