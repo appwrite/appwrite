@@ -155,6 +155,28 @@ async function generateAnnouncingAppwrite2Cover(
   await writeAvifFromPng(outputDir, png)
 }
 
+async function generateAnnouncingConsoleIvCover(
+  outputDir: string,
+): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'version-title',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    version: 'IV',
+    title: 'The website and Console as one app',
+    eyebrow: 'Announcing Console',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
 async function generateHyperloopBCover(outputDir: string): Promise<void> {
   mkdirSync(outputDir, { recursive: true })
 
@@ -182,6 +204,7 @@ const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
   'turn-your-app-into-an-mcp-server': generateMcpServerOauth2Images,
   'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
+  'announcing-console-iv': generateAnnouncingConsoleIvCover,
   'hyperloop-b': generateHyperloopBCover,
 }
 

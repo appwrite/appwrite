@@ -48,7 +48,7 @@ Appwrite 2.0 rejects that as a necessary cost. Three principles drive the releas
 
 # Console IV
 
-Console IV is the next-generation Appwrite Console, rebuilt with TanStack. It is the surface where the rest of this release becomes usable rather than merely available.
+[Console IV](/blog/post/announcing-console-iv) is the next-generation Appwrite Console, rebuilt with TanStack. It also merges appwrite.io into the same application, so the docs, blog, changelog, and your projects are one product rather than two. It is where the rest of this release becomes usable rather than merely available.
 
 Two developer tools we shipped ahead of 2.0 now count as part of the default workflow:
 

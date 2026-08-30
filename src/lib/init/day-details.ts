@@ -46,7 +46,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day1-console-iv',
         typeLabel: 'Blog',
         title: 'Console IV - Next-gen Appwrite console, rebuilt with TanStack',
-        href: '/blog',
+        href: '/blog/post/announcing-console-iv',
         actionLabel: 'Read article',
       },
       {
