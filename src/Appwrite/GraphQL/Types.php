@@ -15,10 +15,13 @@ class Types
      *
      * @return Json
      */
-    public static function json(): Type
+    public static function json(): Json
     {
         if (Registry::has(Json::class)) {
-            return Registry::get(Json::class);
+            $type = Registry::get(Json::class);
+            if ($type instanceof Json) {
+                return $type;
+            }
         }
         $type = new Json();
         Registry::set(Json::class, $type);
@@ -28,12 +31,15 @@ class Types
     /**
      * Get the JSON type.
      *
-     * @return Json
+     * @return Assoc
      */
-    public static function assoc(): Type
+    public static function assoc(): Assoc
     {
         if (Registry::has(Assoc::class)) {
-            return Registry::get(Assoc::class);
+            $type = Registry::get(Assoc::class);
+            if ($type instanceof Assoc) {
+                return $type;
+            }
         }
         $type = new Assoc();
         Registry::set(Assoc::class, $type);
@@ -45,10 +51,13 @@ class Types
      *
      * @return InputFile
      */
-    public static function inputFile(): Type
+    public static function inputFile(): InputFile
     {
         if (Registry::has(InputFile::class)) {
-            return Registry::get(InputFile::class);
+            $type = Registry::get(InputFile::class);
+            if ($type instanceof InputFile) {
+                return $type;
+            }
         }
         $type = new InputFile();
         Registry::set(InputFile::class, $type);

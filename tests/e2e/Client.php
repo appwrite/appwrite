@@ -14,8 +14,6 @@ class Client
     public const METHOD_DELETE = 'DELETE';
     public const METHOD_HEAD = 'HEAD';
     public const METHOD_OPTIONS = 'OPTIONS';
-    public const METHOD_CONNECT = 'CONNECT';
-    public const METHOD_TRACE = 'TRACE';
 
     /**
      * Is Self Signed Certificates Allowed?
@@ -49,66 +47,6 @@ class Client
     }
 
     /**
-     * Set Project
-     *
-     * Your Appwrite project ID. You can find your project ID in your Appwrite console project settings.
-     *
-     * @param string $value
-     *
-     * @return self $this
-     */
-    public function setProject(string $value): self
-    {
-        $this->addHeader('X-Appwrite-Project', $value);
-
-        return $this;
-    }
-
-    /**
-     * Set Key
-     *
-     * Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.
-     *
-     * @param string $value
-     *
-     * @return self $this
-     */
-    public function setKey(string $value): self
-    {
-        $this->addHeader('X-Appwrite-Key', $value);
-
-        return $this;
-    }
-
-    /**
-     * Set Locale
-     *
-     * @param string $value
-     *
-     * @return self $this
-     */
-    public function setLocale(string $value): self
-    {
-        $this->addHeader('X-Appwrite-Locale', $value);
-
-        return $this;
-    }
-
-    /**
-     * Set Mode
-     *
-     * @param string $value
-     *
-     * @return self $this
-     */
-    public function setMode(string $value): self
-    {
-        $this->addHeader('X-Appwrite-Mode', $value);
-
-        return $this;
-    }
-
-    /**
      * Set Response Format
      *
      * @param string $value
@@ -118,17 +56,6 @@ class Client
     public function setResponseFormat(string $value): self
     {
         $this->addHeader('X-Appwrite-Response-Format', $value);
-
-        return $this;
-    }
-
-    /**
-     * @param bool $status true
-     * @return self $this
-     */
-    public function setSelfSigned(bool $status = true): self
-    {
-        $this->selfSigned = $status;
 
         return $this;
     }
@@ -172,18 +99,28 @@ class Client
      *
      * @param string $method
      * @param string $path
-     * @param array $params
      * @param array $headers
+     * @param mixed $params
      * @param bool $decode
+     * @param bool $followRedirects
+     * @param int $timeout
      * @return array
      * @throws Exception
      */
-    public function call(string $method, string $path = '', array $headers = [], mixed $params = [], bool $decode = true, bool $followRedirects = true): array
+    public function call(string $method, string $path = '', array $headers = [], mixed $params = [], bool $decode = true, bool $followRedirects = true, int $timeout = 120): array
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
         $responseHeaders    = [];
         $cookies = [];
+
+        if (isset($params['queries'])) {
+            foreach ($params['queries'] as $value) {
+                if (!is_string($value)) {
+                    throw new Exception('Queries must be converted to strings');
+                }
+            }
+        }
 
         $query = match ($headers['content-type']) {
             'application/json' => json_encode($params),
@@ -210,19 +147,14 @@ class Client
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36');
         curl_setopt($ch, CURLOPT_HTTPHEADER, $formattedHeaders);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders, &$cookies) {
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, ''); // enable in-memory RFC 6265 cookie engine
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
             $header = explode(':', $header, 2);
 
             if (count($header) < 2) { // ignore invalid headers
                 return $len;
-            }
-
-            if (strtolower(trim($header[0])) == 'set-cookie') {
-                $parsed = $this->parseCookie((string)trim($header[1]));
-                $name = array_key_first($parsed);
-                $cookies[$name] = $parsed[$name];
             }
 
             $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
@@ -251,12 +183,17 @@ class Client
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
+        foreach (curl_getinfo($ch, CURLINFO_COOKIELIST) as $line) {
+            $parts = explode("\t", $line);
+            $cookies[$parts[5]] = $parts[6] ?? '';
+        }
+
         if ($decode && $method !== self::METHOD_HEAD) {
             $strpos = strpos($responseType, ';');
             $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
             switch (substr($responseType, 0, $strpos)) {
                 case 'multipart/form-data':
-                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'])[1] ?? '';
                     $multipartResponse = new BodyMultipart($boundary);
                     $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
 
@@ -286,8 +223,6 @@ class Client
             throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
         }
 
-        curl_close($ch);
-
         $responseHeaders['status-code'] = $responseStatus;
 
         if ($responseStatus === 500) {
@@ -299,21 +234,6 @@ class Client
             'cookies' => $cookies,
             'body' => $responseBody
         ];
-    }
-
-    /**
-     * Parse Cookie String
-     *
-     * @param string $cookie
-     * @return array
-     */
-    public function parseCookie(string $cookie): array
-    {
-        $cookies = [];
-
-        parse_str(strtr($cookie, ['&' => '%26', '+' => '%2B', ';' => '&']), $cookies);
-
-        return $cookies;
     }
 
     /**

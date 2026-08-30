@@ -4,8 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
 use Redis;
-use Utopia\App;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
@@ -31,7 +30,8 @@ class Migrate extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('register')
-            ->inject('authorisation')
+            ->inject('authorization')
+            ->inject('console')
             ->callback($this->action(...));
     }
 
@@ -48,7 +48,8 @@ class Migrate extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         Registry $register,
-        Authorization $authorization
+        Authorization $authorization,
+        Document $console
     ): void {
 
         if (!\array_key_exists($version, Migration::$versions)) {
@@ -64,8 +65,43 @@ class Migrate extends Action
         /** @var Migration $migration */
         $migration = new $class();
 
+        // Disable subquery filters that reference new schema columns not yet migrated
+        $subQueries = [
+            'subQueryAccountKeys',
+            'subQueryAttributes',
+            'subQueryAuthenticators',
+            'subQueryChallenges',
+            'subQueryDevKeys',
+            'subQueryIndexes',
+            'subQueryKeys',
+            'subQueryMemberships',
+            'subQueryOrganizationKeys',
+            'subQueryPlatforms',
+            'subQueryProjectVariables',
+            'subQuerySessions',
+            'subQueryTargets',
+            'subQueryTokens',
+            'subQueryTopicTargets',
+            'subQueryVariables',
+            'subQueryWebhooks',
+        ];
+        foreach ($subQueries as $name) {
+            Database::addFilter(
+                $name,
+                fn () => null,
+                fn () => []
+            );
+        }
+
+        $dbForPlatform->disableValidation();
+        $dbForPlatform->purgeCachedCollection('projects');
+
         $count = 0;
-        $total = $dbForPlatform->count('projects') + 1;
+        try {
+            $total = $dbForPlatform->count('projects') + 1;
+        } catch (\Throwable) {
+            $total = 0;
+        }
 
         $dbForPlatform->foreach('projects', function (Document $project) use ($dbForPlatform, $getProjectDB, $register, $migration, &$count, $total, $authorization) {
             /** @var Database $dbForProject */
@@ -74,9 +110,14 @@ class Migrate extends Action
 
             try {
                 $migration
-                    ->setProject($project, $dbForProject, $dbForPlatform, $authorization, $getProjectDB)
-                    ->setPDO($register->get('db', true))
-                    ->execute();
+                    ->setProject($project, $dbForProject, $dbForPlatform, $authorization, $getProjectDB);
+
+                $db = $register->get('db', true);
+                if ($db instanceof \Utopia\Database\PDO) {
+                    $migration->setPDO($db);
+                }
+
+                $migration->execute();
             } catch (\Throwable $th) {
                 Console::error('Failed to migrate project "' . $project->getId() . '" with error: ' . $th->getMessage());
                 throw $th;
@@ -85,13 +126,16 @@ class Migrate extends Action
             Console::log('Migrated ' . ++$count . '/' . $total . ' projects...');
         });
 
-        $console = (new App('UTC'))->getResource('console');
-
         try {
             $migration
-                ->setProject($console, $getProjectDB($console), $dbForPlatform, $authorization, $getProjectDB)
-                ->setPDO($register->get('db', true))
-                ->execute();
+                ->setProject($console, $getProjectDB($console), $dbForPlatform, $authorization, $getProjectDB);
+
+            $db = $register->get('db', true);
+            if ($db instanceof \Utopia\Database\PDO) {
+                $migration->setPDO($db);
+            }
+
+            $migration->execute();
         } catch (\Throwable $th) {
             Console::error('Failed to migrate project "console" with error: ' . $th->getMessage());
             throw $th;

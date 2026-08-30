@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 
-class AccountTest extends Scope
+final class AccountTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
@@ -116,13 +118,27 @@ class AccountTest extends Scope
     }
 
     /**
-     * @depends testUpdateAccountPhone
      * @return array
      * @throws \Exception
      */
     public function testCreatePhoneVerification(): array
     {
         $projectId = $this->getProject()['$id'];
+
+        // Ensure phone is set up for this test to be self-contained
+        $phoneQuery = $this->getQuery(self::UPDATE_ACCOUNT_PHONE);
+        $phonePayload = [
+            'query' => $phoneQuery,
+            'variables' => [
+                'phone' => '+123456789',
+                'password' => 'password',
+            ]
+        ];
+
+        $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $phonePayload);
 
         $query = $this->getQuery(self::CREATE_PHONE_VERIFICATION);
         $graphQLPayload = [
@@ -202,6 +218,86 @@ class AccountTest extends Scope
         $this->assertNotEmpty($jwt['body']['data']['accountCreateJWT']['jwt']);
 
         return $jwt;
+    }
+
+    public function testRejectMutationsOverGet(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        unset($headers['origin']);
+
+        $accountDocument = '
+            query getAccount {
+                accountGet {
+                    name
+                }
+            }
+            mutation updateAccountName($name: String!) {
+                accountUpdateName(name: $name) {
+                    name
+                }
+            }
+        ';
+
+        $accountBefore = $this->client->call(Client::METHOD_GET, '/graphql', $headers, [
+            'query' => $accountDocument,
+            'operationName' => 'getAccount',
+        ]);
+        $this->assertEquals(200, $accountBefore['headers']['status-code']);
+        $this->assertArrayNotHasKey('errors', $accountBefore['body']);
+
+        $accountMutation = $this->client->call(Client::METHOD_GET, '/graphql', $headers, [
+            'query' => $accountDocument,
+            'operationName' => 'updateAccountName',
+            'variables' => \json_encode(['name' => 'Changed over GET']),
+        ]);
+        $this->assertGetMutationRejected($accountMutation);
+
+        $ambiguousOperation = $this->client->call(Client::METHOD_GET, '/graphql', $headers, [
+            'query' => $accountDocument,
+            'variables' => \json_encode(['name' => 'Changed over GET']),
+        ]);
+        $this->assertEquals(200, $ambiguousOperation['headers']['status-code']);
+        $this->assertArrayHasKey('errors', $ambiguousOperation['body']);
+
+        $accountAfter = $this->client->call(Client::METHOD_GET, '/graphql', $headers, [
+            'query' => $accountDocument,
+            'operationName' => 'getAccount',
+        ]);
+        $this->assertEquals(
+            $accountBefore['body']['data']['accountGet']['name'],
+            $accountAfter['body']['data']['accountGet']['name']
+        );
+
+        $sessionMutation = $this->client->call(Client::METHOD_GET, '/graphql', $headers, [
+            'query' => $this->getQuery(self::DELETE_ACCOUNT_SESSION),
+            'variables' => \json_encode(['sessionId' => 'current']),
+        ]);
+        $this->assertGetMutationRejected($sessionMutation);
+
+        $session = $this->client->call(Client::METHOD_GET, '/graphql', $headers, [
+            'query' => $this->getQuery(self::GET_ACCOUNT_SESSION),
+            'variables' => \json_encode(['sessionId' => 'current']),
+        ]);
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertEquals(
+            $this->getUser()['sessionId'],
+            $session['body']['data']['accountGetSession']['_id']
+        );
+
+        $jwtMutation = $this->client->call(Client::METHOD_GET, '/graphql', $headers, [
+            'query' => $this->getQuery(self::CREATE_ACCOUNT_JWT),
+        ]);
+        $this->assertGetMutationRejected($jwtMutation);
+
+        $syntaxError = $this->client->call(Client::METHOD_GET, '/graphql', $headers, [
+            'query' => 'mutation {',
+        ]);
+        $this->assertEquals(200, $syntaxError['headers']['status-code']);
+        $this->assertArrayHasKey('errors', $syntaxError['body']);
     }
 
     public function testGetAccount(): array
@@ -289,26 +385,6 @@ class AccountTest extends Scope
         $this->assertEquals($this->getUser()['sessionId'], $session['body']['data']['accountGetSession']['_id']);
 
         return $session;
-    }
-
-    public function testGetAccountLogs(): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::GET_ACCOUNT_LOGS);
-        $graphQLPayload = [
-            'query' => $query,
-        ];
-
-        $logs = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertArrayNotHasKey('errors', $logs['body']);
-        $this->assertIsArray($logs['body']['data']);
-        $this->assertIsArray($logs['body']['data']['accountListLogs']);
-
-        return $logs;
     }
 
     public function testUpdateAccountName(): array
@@ -504,5 +580,13 @@ class AccountTest extends Scope
         $this->getUser();
 
         return $account;
+    }
+
+    private function assertGetMutationRejected(array $response): void
+    {
+        $this->assertEquals(405, $response['headers']['status-code']);
+        $this->assertEquals('POST', $response['headers']['allow']);
+        $this->assertEquals('graphql_method_unsupported', $response['body']['type']);
+        $this->assertEquals('GET requests only support GraphQL query operations.', $response['body']['message']);
     }
 }

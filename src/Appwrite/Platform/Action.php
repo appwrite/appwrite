@@ -2,10 +2,8 @@
 
 namespace Appwrite\Platform;
 
-use Appwrite\Utopia\Request;
-use Appwrite\Utopia\Response;
 use Swoole\Coroutine as Co;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -22,9 +20,11 @@ class Action extends UtopiaAction
     protected mixed $logError;
 
     protected array $filters = [
-        'subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryProjectVariables', 'subQueryBlocks', 'subQueryDevKeys', // Project
-        'subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets', 'subQueryTopicTargets',// Users
-        'subQueryVariables', // Sites
+        ...APP_PROJECTS_SUBQUERIES, // Project
+        ...APP_USERS_SUBQUERIES, // Users
+        ...APP_TEAMS_SUBQUERIES, // Teams
+        ...APP_TOPICS_SUBQUERIES, // Topics
+        ...APP_FUNCTIONS_SUBQUERIES, // Sites / Functions
     ];
 
     /**
@@ -39,14 +39,14 @@ class Action extends UtopiaAction
      * Foreach Document
      * Call provided callback for each document in the collection
      *
-     * @param string $projectId
+     * @param Database $database
      * @param string $collection
      * @param array $queries
      * @param callable $callback
      *
      * @return void
      */
-    protected function foreachDocument(Database $database, string $collection, array $queries = [], callable $callback = null, int $limit = 1000, bool $concurrent = false): void
+    protected function foreachDocument(Database $database, string $collection, array $queries = [], ?callable $callback = null, int $limit = 1000, bool $concurrent = false): void
     {
         $results = [];
         $sum = $limit;
@@ -107,9 +107,11 @@ class Action extends UtopiaAction
         }
     }
 
-    public function disableSubqueries()
+    public function disableSubqueries(array $filters = []): void
     {
-        $filters = $this->filters;
+        if (empty($filters)) {
+            $filters = $this->filters;
+        }
 
         foreach ($filters as $filter) {
             Database::addFilter(
@@ -157,47 +159,6 @@ class Action extends UtopiaAction
                 break;
             default:
                 Console::info("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
-        }
-    }
-
-
-    /**
-     * Helper to apply (request) select queries to response model.
-     *
-     * This prevents default values of rules to be presnet for not-selected attributes
-     *
-     * @param Request $request
-     * @param Document $document
-     * @return void
-     */
-    public function applySelectQueries(Request $request, Response $response, string $model): void
-    {
-        $queries = $request->getParam('queries', []);
-
-        $queries = Query::parseQueries($queries);
-        $selectQueries = Query::groupByType($queries)['selections'] ?? [];
-
-        // No select queries means no filtering out
-        if (empty($selectQueries)) {
-            return;
-        }
-
-        $attributes = [];
-        foreach ($selectQueries as $query) {
-            foreach ($query->getValues() as $attribute) {
-                $attributes[] = $attribute;
-            }
-        }
-
-        $responseModel = $response->getModel($model);
-        foreach ($responseModel->getRules() as $ruleName => $rule) {
-            if (\str_starts_with($ruleName, '$')) {
-                continue;
-            }
-
-            if (!\in_array($ruleName, $attributes)) {
-                $responseModel->removeRule($ruleName);
-            }
         }
     }
 }

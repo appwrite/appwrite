@@ -8,8 +8,9 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class Get extends DatabaseGet
 {
@@ -26,6 +27,7 @@ class Get extends DatabaseGet
             ->desc('Get database')
             ->groups(['api', 'database'])
             ->label('scope', 'databases.read')
+            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'tablesDB',
@@ -41,7 +43,7 @@ class Get extends DatabaseGet
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

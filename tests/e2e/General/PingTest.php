@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\General;
 
 use Tests\E2E\Client;
@@ -7,7 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class PingTest extends Scope
+final class PingTest extends Scope
 {
     use ProjectCustom;
     use SideClient;

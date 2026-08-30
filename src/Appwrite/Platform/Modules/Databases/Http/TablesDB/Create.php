@@ -9,7 +9,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Database\Database;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -32,6 +33,7 @@ class Create extends DatabaseCreate
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'database.create')
             ->label('audits.resource', 'database/{response.$id}')
+            ->label('usage.resource', 'database/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'tablesDB',
                 group: 'tablesdb',
@@ -46,11 +48,13 @@ class Create extends DatabaseCreate
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('databaseId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Database name. Max length: 128 chars.')
             ->param('enabled', true, new Boolean(), 'Is the database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }

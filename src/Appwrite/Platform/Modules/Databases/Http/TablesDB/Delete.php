@@ -8,8 +8,9 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class Delete extends DatabaseDelete
 {
@@ -30,6 +31,7 @@ class Delete extends DatabaseDelete
             ->label('event', 'databases.[databaseId].delete')
             ->label('audits.event', 'database.delete')
             ->label('audits.resource', 'database/{request.databaseId}')
+            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('sdk', new Method(
                 namespace: 'tablesDB',
                 group: 'tablesdb',
@@ -44,12 +46,11 @@ class Delete extends DatabaseDelete
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 }

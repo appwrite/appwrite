@@ -2,119 +2,105 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Func;
-use Cron\CronExpression;
-use Utopia\CLI\Console;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
+use Utopia\Platform\Action;
+use Utopia\Schedule\Occurrence;
+use Utopia\Schedule\Scheduler;
+use Utopia\Span\Span;
+use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 
-/**
- * ScheduleFunctions
- *
- * Handles cron job related executions by processing cron expressions
- * and scheduling function executions based on recurring schedules.
- */
-class ScheduleFunctions extends ScheduleBase
+class ScheduleFunctions extends Action
 {
-    public const UPDATE_TIMER = 10; // seconds
-    public const ENQUEUE_TIMER = 60; // seconds
-
-    private ?float $lastEnqueueUpdate = null;
+    public function __construct()
+    {
+        $this
+            ->desc('Execute functions scheduled in Appwrite')
+            ->inject('publisherForFunctions')
+            ->inject('getIsResourceBlocked')
+            ->inject('dbForPlatform')
+            ->inject('getProjectDB')
+            ->inject('telemetry')
+            ->callback($this->action(...));
+    }
 
     public static function getName(): string
     {
         return 'schedule-functions';
     }
 
-    public static function getSupportedResource(): string
+    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
-        return SCHEDULE_RESOURCE_TYPE_FUNCTION;
+        $source = new Source\Functions(
+            $dbForPlatform,
+            $getProjectDB,
+            $getIsResourceBlocked,
+            fn (array $schedule): int => $this->spreadWindow($schedule, $dbForPlatform),
+        );
+
+        $scheduler = new Scheduler(
+            source: $source,
+            telemetry: $telemetry,
+            onError: function (\Throwable $error): void {
+                Span::init('schedule.functions.reconcile');
+                Span::current()?->finish(error: $error);
+            },
+        );
+
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions));
+
+        Span::init('schedule.functions.stopped');
+        Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
     }
 
-    public static function getCollectionId(): string
+    /**
+     * @param array<string, mixed> $schedule
+     */
+    protected function spreadWindow(array $schedule, Database $dbForPlatform): int
     {
-        return RESOURCE_TYPE_FUNCTIONS;
+        return (int) System::getEnv('_APP_FUNCTIONS_SCHEDULE_SPREAD', '0');
     }
 
-    protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
+    /**
+     * @param list<Occurrence> $occurrences
+     */
+    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions): null
     {
-        $timerStart = \microtime(true);
-        $time = DateTime::now();
+        $batch = \count($occurrences);
 
-        $enqueueDiff = $this->lastEnqueueUpdate === null ? 0 : $timerStart - $this->lastEnqueueUpdate;
-        $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER - $enqueueDiff);
+        foreach (\array_values($occurrences) as $index => $occurrence) {
+            $schedule = $occurrence->payload;
 
-        Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff)");
+            Span::init('schedule.functions.enqueue');
+            $error = null;
 
-        $total = 0;
-
-        $delayedExecutions = []; // Group executions with same delay to share one coroutine
-
-        foreach ($this->schedules as $key => $schedule) {
             try {
-                $cron = new CronExpression($schedule['schedule']);
-            } catch (\InvalidArgumentException) {
-                // ignore invalid cron expressions
-                continue;
+                Span::add('project.id', $schedule['project']->getId());
+                Span::add('function.id', $schedule['resource']->getId());
+                Span::add('schedule.id', $schedule['$id'] ?? '');
+                Span::add('schedule.cron', (string) ($schedule['schedule'] ?? ''));
+                Span::add('occurrence.due', $occurrence->due->format('c'));
+                Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
+                Span::add('occurrence.batch', $batch);
+                Span::add('occurrence.index', $index);
+
+                $publisherForFunctions->enqueue(new FunctionMessage(
+                    project: $schedule['project'],
+                    function: $schedule['resource'],
+                    type: 'schedule',
+                    method: 'POST',
+                    path: '/',
+                ));
+            } catch (\Throwable $th) {
+                $error = $th;
+            } finally {
+                Span::current()?->finish(error: $error);
             }
-
-            $nextDate = $cron->getNextRunDate();
-            $next = DateTime::format($nextDate);
-
-            $currentTick = $next < $timeFrame;
-
-            if (!$currentTick) {
-                continue;
-            }
-
-            $total++;
-
-            $promiseStart = \time(); // in seconds
-            $executionStart = $nextDate->getTimestamp(); // in seconds
-            $delay = $executionStart - $promiseStart; // Time to wait from now until execution needs to be queued
-
-            if (!isset($delayedExecutions[$delay])) {
-                $delayedExecutions[$delay] = [];
-            }
-
-            $delayedExecutions[$delay][] = ['key' => $key, 'nextDate' => $nextDate];
         }
 
-        foreach ($delayedExecutions as $delay => $schedules) {
-            \go(function () use ($delay, $schedules, $dbForPlatform) {
-                \sleep($delay); // in seconds
-
-                foreach ($schedules as $delayConfig) {
-                    $scheduleKey = $delayConfig['key'];
-                    // Ensure schedule was not deleted
-                    if (!\array_key_exists($scheduleKey, $this->schedules)) {
-                        return;
-                    }
-
-                    $schedule = $this->schedules[$scheduleKey];
-
-                    $this->updateProjectAccess($schedule['project'], $dbForPlatform);
-
-                    $queueForFunctions = new Func($this->publisherFunctions);
-
-                    $queueForFunctions
-                        ->setType('schedule')
-                        ->setFunction($schedule['resource'])
-                        ->setMethod('POST')
-                        ->setPath('/')
-                        ->setProject($schedule['project'])
-                        ->trigger();
-
-                    $this->recordEnqueueDelay($delayConfig['nextDate']);
-                }
-            });
-        }
-
-        $timerEnd = \microtime(true);
-
-        // TODO: This was a bug before because it wasn't passed by reference, enabling it breaks scheduling
-        //$this->lastEnqueueUpdate = $timerStart;
-
-        Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
+        return null;
     }
 }

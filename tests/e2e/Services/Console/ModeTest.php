@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Console;
 
 use Appwrite\Extend\Exception;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class ModeTest extends Scope
+final class ModeTest extends Scope
 {
     use ProjectConsole;
     use SideClient;

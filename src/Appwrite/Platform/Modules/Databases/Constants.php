@@ -22,3 +22,13 @@ const INDEX = 'index';
 const DOCUMENTS = 'document';
 const ATTRIBUTES = 'attribute';
 const COLLECTIONS = 'collection';
+
+const LEGACY = 'legacy';
+const TABLESDB = 'tablesdb';
+const DOCUMENTSDB = 'documentsdb';
+const VECTORSDB = 'vectorsdb';
+
+const MIN_VECTOR_DIMENSION = 1;
+const MAX_VECTOR_DIMENSION = 16000;
+
+const MAX_VECTOR_QUERY_LENGTH = 524288;

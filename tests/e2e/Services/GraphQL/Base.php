@@ -3,7 +3,8 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
-use Utopia\CLI\Console;
+use Utopia\Console;
+use Utopia\Image\Image;
 
 trait Base
 {
@@ -45,9 +46,6 @@ trait Base
     public const string CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
     public const string CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
     public const string CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
-    public const string CREATE_POINT_ATTRIBUTE = 'create_point_attribute';
-    public const string CREATE_LINE_ATTRIBUTE = 'create_line_attribute';
-    public const string CREATE_POLYGON_ATTRIBUTE = 'create_polygon_attribute';
 
     public const string CREATE_RELATIONSHIP_ATTRIBUTE = 'create_relationship_attribute';
     public const string UPDATE_STRING_ATTRIBUTE = 'update_string_attribute';
@@ -59,9 +57,6 @@ trait Base
     public const string UPDATE_IP_ATTRIBUTE = 'update_ip_attribute';
     public const string UPDATE_ENUM_ATTRIBUTE = 'update_enum_attribute';
     public const string UPDATE_DATETIME_ATTRIBUTE = 'update_datetime_attribute';
-    public const string UPDATE_POINT_ATTRIBUTE = 'update_point_attribute';
-    public const string UPDATE_LINE_ATTRIBUTE = 'update_line_attribute';
-    public const string UPDATE_POLYGON_ATTRIBUTE = 'update_polygon_attribute';
 
     public const string UPDATE_RELATIONSHIP_ATTRIBUTE = 'update_relationship_attribute';
     public const string GET_ATTRIBUTES = 'get_attributes';
@@ -161,7 +156,6 @@ trait Base
     public const string GET_ACCOUNT_SESSION = 'get_account_session';
     public const string GET_ACCOUNT_SESSIONS = 'get_account_sessions';
     public const string GET_ACCOUNT_PREFS = 'get_account_preferences';
-    public const string GET_ACCOUNT_LOGS = 'get_account_logs';
     public const string UPDATE_ACCOUNT_NAME = 'update_account_name';
     public const string UPDATE_ACCOUNT_EMAIL = 'update_account_email';
     public const string UPDATE_ACCOUNT_PASSWORD = 'update_account_password';
@@ -182,7 +176,6 @@ trait Base
     public const string GET_USER_PREFERENCES = 'get_user_preferences';
     public const string GET_USER_SESSIONS = 'get_user_sessions';
     public const string GET_USER_MEMBERSHIPS = 'get_user_memberships';
-    public const string GET_USER_LOGS = 'get_user_logs';
     public const string UPDATE_USER_STATUS = 'update_user_status';
     public const string UPDATE_USER_NAME = 'update_user_name';
     public const string UPDATE_USER_EMAIL = 'update_user_email';
@@ -258,18 +251,6 @@ trait Base
     public const string GET_FILE_VIEW = 'get_file_view';
     public const string UPDATE_FILE = 'update_file';
     public const string DELETE_FILE = 'delete_file';
-
-    // Health
-    public const string GET_HTTP_HEALTH = 'get_http_health';
-    public const string GET_DB_HEALTH = 'get_db_health';
-    public const string GET_CACHE_HEALTH = 'get_cache_health';
-    public const string GET_TIME_HEALTH = 'get_time_health';
-    public const string GET_WEBHOOKS_QUEUE_HEALTH = 'get_webhooks_queue_health';
-    public const string GET_LOGS_QUEUE_HEALTH = 'get_logs_queue_health';
-    public const string GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
-    public const string GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
-    public const string GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
-    public const string GET_ANITVIRUS_HEALTH = 'get_antivirus_health';
 
     // Localization
     public const string GET_LOCALE = 'get_locale';
@@ -515,6 +496,21 @@ trait Base
             }
         }
     ';
+
+    protected function assertFilePreviewResponse(array $file): void
+    {
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertEquals('image/png', $file['headers']['content-type']);
+        $this->assertNotEmpty($file['body']);
+
+        $image = new Image($file['body']);
+        $dimensions = \getimagesizefromstring($file['body']);
+
+        $this->assertNotEmpty($image->output('png'));
+        $this->assertIsArray($dimensions);
+        $this->assertSame(100, $dimensions[0]);
+        $this->assertSame(100, $dimensions[1]);
+    }
 
     public function getQuery(string $name): string
     {
@@ -1498,16 +1494,6 @@ trait Base
                         }
                     }
                 }';
-            case self::GET_USER_LOGS:
-                return 'query listUserLogs($userId : String!) {
-                    usersListLogs(userId : $userId) {
-                        total
-                        logs {
-                            event
-                            userId
-                        }
-                    }
-                }';
             case self::GET_USERS:
                 return 'query listUsers($queries: [String!], $search: String) {
                     usersList(queries: $queries, search: $search) {
@@ -1944,18 +1930,6 @@ trait Base
                         }
                     }
                 }';
-            case self::GET_ACCOUNT_LOGS:
-                return 'query getAccountLogs {
-                    accountListLogs {
-                        total
-                        logs {
-                            event
-                            userId
-                            ip
-                            countryName
-                        }
-                    }
-                }';
             case self::CREATE_PASSWORD_RECOVERY:
                 return 'mutation createPasswordRecovery($email: String!, $url: String!){
                     accountCreateRecovery(email: $email, url: $url) {
@@ -2274,7 +2248,8 @@ trait Base
                 return 'query getExecution($functionId: String!$executionId: String!) {
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
                         _id
-                        functionId
+                        resourceId
+                        resourceType
                         status
                         logs
                         errors
@@ -2286,7 +2261,8 @@ trait Base
                         total
                         executions {
                             _id
-                            functionId
+                            resourceId
+                            resourceType
                             status
                             logs
                             errors
@@ -2297,7 +2273,8 @@ trait Base
                 return 'mutation createExecution($functionId: String!, $body: String, $async: Boolean) {
                     functionsCreateExecution(functionId: $functionId, body: $body, async: $async) {
                         _id
-                        functionId
+                        resourceId
+                        resourceType
                         status
                         logs
                         errors
@@ -2334,7 +2311,8 @@ trait Base
                         buckets {
                             _id
                             name
-                            enabled
+                            enabled,
+                            totalSize
                         }
                     }
                 }';
@@ -2344,6 +2322,7 @@ trait Base
                         _id
                         name
                         enabled
+                        totalSize
                     }
                 }';
             case self::UPDATE_BUCKET:
@@ -2386,8 +2365,8 @@ trait Base
                     }
                 }';
             case self::GET_FILE_PREVIEW:
-                return 'query getFilePreview($bucketId: String!, $fileId: String!) {
-                    storageGetFilePreview(bucketId: $bucketId, fileId: $fileId) {
+                return 'query getFilePreview($bucketId: String!, $fileId: String!, $width: Int, $height: Int) {
+                    storageGetFilePreview(bucketId: $bucketId, fileId: $fileId, width: $width, height: $height) {
                         status
                     }
                 }';
@@ -2413,73 +2392,6 @@ trait Base
             case self::DELETE_FILE:
                 return 'mutation deleteFile($bucketId: String!, $fileId: String!) {
                     storageDeleteFile(bucketId: $bucketId, fileId: $fileId) {
-                        status
-                    }
-                }';
-            case self::GET_HTTP_HEALTH:
-                return 'query getHttpHealth {
-                    healthGet {
-                        ping
-                        status
-                    }
-                }';
-            case self::GET_DB_HEALTH:
-                return 'query getDbHealth {
-                    healthGetDB {
-                        ping
-                        status
-                    }
-                }';
-            case self::GET_CACHE_HEALTH:
-                return 'query getCacheHealth {
-                    healthGetCache {
-                        ping
-                        status
-                    }
-                }';
-            case self::GET_TIME_HEALTH:
-                return 'query getTimeHealth {
-                    healthGetTime {
-                        remoteTime
-                        localTime
-                        diff
-                    }
-                }';
-            case self::GET_WEBHOOKS_QUEUE_HEALTH:
-                return 'query getWebhooksQueueHealth {
-                    healthGetQueueWebhooks {
-                        size
-                    }
-                }';
-            case self::GET_LOGS_QUEUE_HEALTH:
-                return 'query getLogsQueueHealth {
-                    healthGetQueueLogs {
-                        size
-                    }
-                }';
-            case self::GET_CERTIFICATES_QUEUE_HEALTH:
-                return 'query getCertificatesQueueHealth {
-                    healthGetQueueCertificates {
-                        size
-                    }
-                }';
-            case self::GET_FUNCTION_QUEUE_HEALTH:
-                return 'query getFunctionQueueHealth {
-                    healthGetQueueFunctions {
-                        size
-                    }
-                }';
-            case self::GET_LOCAL_STORAGE_HEALTH:
-                return 'query getLocalStorageHealth {
-                    healthGetStorageLocal {
-                        ping
-                        status
-                    }
-                }';
-            case self::GET_ANITVIRUS_HEALTH:
-                return 'query getAntivirusHealth {
-                    healthGetAntivirus {
-                        version
                         status
                     }
                 }';
@@ -3456,7 +3368,7 @@ trait Base
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');

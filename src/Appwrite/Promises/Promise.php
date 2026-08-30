@@ -2,6 +2,7 @@
 
 namespace Appwrite\Promises;
 
+/** @phpstan-consistent-constructor */
 abstract class Promise
 {
     protected const STATE_PENDING = 1;
@@ -18,8 +19,7 @@ abstract class Promise
             return;
         }
         $resolve = function ($value) {
-            $this->setResult($value);
-            $this->setState(self::STATE_FULFILLED);
+            $this->setState($this->setResult($value));
         };
         $reject = function ($value) {
             $this->setResult($value);
@@ -46,43 +46,6 @@ abstract class Promise
     }
 
     /**
-     * Resolve promise with given value.
-     *
-     * @param mixed $value
-     * @return self
-     */
-    public static function resolve(mixed $value): self
-    {
-        return new static(function (callable $resolve) use ($value) {
-            $resolve($value);
-        });
-    }
-
-    /**
-     * Rejects the promise with the given reason.
-     *
-     * @param mixed $value
-     * @return self
-     */
-    public static function reject(mixed $value): self
-    {
-        return new static(function (callable $resolve, callable $reject) use ($value) {
-            $reject($value);
-        });
-    }
-
-    /**
-     * Catch any exception thrown by the executor.
-     *
-     * @param callable $onRejected
-     * @return self
-     */
-    public function catch(callable $onRejected): self
-    {
-        return $this->then(null, $onRejected);
-    }
-
-    /**
      * Execute the promise.
      *
      * @param callable|null $onFulfilled
@@ -105,6 +68,11 @@ abstract class Promise
             }
             $callable = $this->isFulfilled() ? $onFulfilled : $onRejected;
             if (!\is_callable($callable)) {
+                if ($this->isRejected()) {
+                    $reject($this->result);
+                    return;
+                }
+
                 $resolve($this->result);
                 return;
             }
@@ -125,30 +93,36 @@ abstract class Promise
     abstract public static function all(iterable $promises): self;
 
     /**
-     * Set resolved result
+     * Set the resolved result, adopting nested promises while preserving
+     * whether the adopted promise fulfilled or rejected.
      *
      * @param mixed $value
-     * @return void
+     * @return int
      */
-    protected function setResult(mixed $value): void
+    protected function setResult(mixed $value): int
     {
         if (!\is_callable([$value, 'then'])) {
             $this->result = $value;
-            return;
+            return self::STATE_FULFILLED;
         }
 
-        $resolved = false;
+        $state = self::STATE_PENDING;
 
-        $callable = function ($value) use (&$resolved) {
-            $this->setResult($value);
-            $resolved = true;
-        };
+        $value->then(
+            function ($value) use (&$state) {
+                $state = $this->setResult($value);
+            },
+            function ($value) use (&$state) {
+                $this->result = $value;
+                $state = self::STATE_REJECTED;
+            }
+        );
 
-        $value->then($callable, $callable);
-
-        while (!$resolved) {
+        while ($state === self::STATE_PENDING) {
             usleep(25000);
         }
+
+        return $state;
     }
 
     /**

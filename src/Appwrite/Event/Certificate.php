@@ -4,10 +4,14 @@ namespace Appwrite\Event;
 
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Certificate extends Event
 {
+    public const string ACTION_DOMAIN_VERIFICATION = 'verification';
+    public const string ACTION_GENERATION = 'generation';
     protected bool $skipRenewCheck = false;
+    protected string $action = self::ACTION_GENERATION;
     protected ?Document $domain = null;
     protected ?string $validationDomain = null;
 
@@ -16,21 +20,8 @@ class Certificate extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::CERTIFICATES_QUEUE_NAME)
-            ->setClass(Event::CERTIFICATES_CLASS_NAME);
-    }
-
-    /**
-     * Set domain for this certificates event.
-     *
-     * @param Document $domain
-     * @return self
-     */
-    public function setDomain(Document $domain): self
-    {
-        $this->domain = $domain;
-
-        return $this;
+            ->setQueue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_CERTIFICATES_CLASS_NAME', Event::CERTIFICATES_CLASS_NAME));
     }
 
     /**
@@ -44,50 +35,25 @@ class Certificate extends Event
     }
 
     /**
-     * Set if the certificate needs to be validated.
+     * Set action for this certificate event.
      *
-     * @param bool $skipRenewCheck
+     * @param string $action
      * @return self
      */
-    public function setSkipRenewCheck(bool $skipRenewCheck): self
+    public function setAction(string $action): self
     {
-        $this->skipRenewCheck = $skipRenewCheck;
-
-        return $this;
-    }
-
-
-    /**
-     * Set override for main domain used for validation
-     *
-     * @param string|null $validationDomain
-     * @return self
-     */
-    public function setValidationDomain(?string $validationDomain): self
-    {
-        $this->validationDomain = $validationDomain;
-
+        $this->action = $action;
         return $this;
     }
 
     /**
-     * Get validation domain
+     * Get action for this certificate event.
      *
-     * @return string|null
+     * @return string
      */
-    public function getValidationDomain(): ?string
+    public function getAction(): string
     {
-        return $this->validationDomain;
-    }
-
-    /**
-     * Return if the certificate needs be validated.
-     *
-     * @return bool
-     */
-    public function getSkipRenewCheck(): bool
-    {
-        return $this->skipRenewCheck;
+        return $this->action;
     }
 
 
@@ -102,7 +68,8 @@ class Certificate extends Event
             'project' => $this->project,
             'domain' => $this->domain,
             'skipRenewCheck' => $this->skipRenewCheck,
-            'validationDomain' => $this->validationDomain
+            'validationDomain' => $this->validationDomain,
+            'action' => $this->action
         ];
     }
 }

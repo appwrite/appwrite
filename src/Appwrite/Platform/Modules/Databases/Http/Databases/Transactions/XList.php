@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Transactions;
@@ -13,18 +14,13 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class XList extends Action
 {
     public static function getName(): string
     {
         return 'listDatabasesTransactions';
-    }
-
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION_LIST;
     }
 
     public function __construct()
@@ -48,7 +44,11 @@ class XList extends Action
                         model: UtopiaResponse::MODEL_TRANSACTION_LIST,
                     )
                 ],
-                contentType: ContentType::JSON
+                contentType: ContentType::JSON,
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tablesDB.listTransactions',
+                )
             ))
             ->param('queries', [], new Transactions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries).', true)
             ->inject('response')

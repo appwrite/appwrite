@@ -2,11 +2,12 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
+use Appwrite\Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
+use Utopia\Emails\Validator\Email;
 use Utopia\Validator;
-use Utopia\Validator\Email;
 use Utopia\Validator\IP;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -16,20 +17,6 @@ class Attributes extends Validator
 {
     protected int $maxAttributes;
     protected string $message = 'Invalid attributes';
-
-    /**
-     * @var array<string> Supported attribute types
-     */
-    protected array $supportedTypes = [
-        Database::VAR_STRING,
-        Database::VAR_INTEGER,
-        Database::VAR_FLOAT,
-        Database::VAR_BOOLEAN,
-        Database::VAR_DATETIME,
-        Database::VAR_POINT,
-        Database::VAR_LINESTRING,
-        Database::VAR_POLYGON,
-    ];
 
     /**
      * @var array<string> Supported formats for string attributes
@@ -45,10 +32,12 @@ class Attributes extends Validator
     /**
      * @param int $maxAttributes Maximum number of attributes allowed
      * @param bool $supportForSpatialAttributes Whether DB supports spatial attributes
+     * @param bool $supportForAttributes Whether DB supports attributes or not
      */
     public function __construct(
         int $maxAttributes = APP_LIMIT_ARRAY_PARAMS_SIZE,
         protected bool $supportForSpatialAttributes = true,
+        protected bool $supportForAttributes = true
     ) {
         $this->maxAttributes = $maxAttributes;
     }
@@ -78,12 +67,18 @@ class Attributes extends Validator
             return false;
         }
 
+        if (\count($value) && !$this->supportForAttributes) {
+            $this->message = 'Attributes are not supported by the current database';
+            return false;
+        }
+
         if (\count($value) > $this->maxAttributes) {
             $this->message = 'Maximum of ' . $this->maxAttributes . ' attributes allowed';
             return false;
         }
 
         $keyValidator = new Key();
+        $supportedTypes = Attribute::types();
         $keys = [];
 
         foreach ($value as $index => $attribute) {
@@ -124,34 +119,44 @@ class Attributes extends Validator
             }
 
             // Validate type
-            if (!\in_array($attribute['type'], $this->supportedTypes)) {
+            if (!\in_array($attribute['type'], $supportedTypes)) {
                 $this->message = "Invalid type for attribute '" . $attribute['key'] . "': " . $attribute['type'];
                 return false;
             }
 
+            // Resolve format shorthands and implicit sizes the same way the
+            // attribute document is built, so both agree on what was asked for.
+            ['type' => $type, 'format' => $format, 'size' => $size] = Attribute::resolve($attribute);
+
             // Validate spatial type support
-            if (\in_array($attribute['type'], Database::SPATIAL_TYPES) && !$this->supportForSpatialAttributes) {
+            if (\in_array($type, Database::SPATIAL_TYPES) && !$this->supportForSpatialAttributes) {
                 $this->message = "Spatial attributes are not supported by the current database";
                 return false;
             }
 
-            // Validate size for string types
-            if ($attribute['type'] === Database::VAR_STRING) {
-                if (!isset($attribute['size']) || !is_int($attribute['size']) || $attribute['size'] < 1 || $attribute['size'] > APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH) {
+            if (isset($attribute['size']) && !\is_int($attribute['size'])) {
+                $this->message = "Invalid size for attribute '" . $attribute['key'] . "': must be an integer";
+                return false;
+            }
+
+            // Validate size for the types that take one. The remaining string
+            // types (text, mediumtext, longtext) are fixed width.
+            if (\in_array($type, [Database::VAR_STRING, Database::VAR_VARCHAR])) {
+                if ($size < 1 || $size > APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH) {
                     $this->message = "Invalid or missing size for string attribute '" . $attribute['key'] . "'. Size must be between 1 and " . APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH;
                     return false;
                 }
             }
 
             // Validate format if provided
-            if (isset($attribute['format']) && $attribute['format'] !== '') {
-                // Format is only allowed for string type
-                if ($attribute['type'] !== Database::VAR_STRING) {
+            if ($format !== '') {
+                // Format is only allowed for sized string types
+                if (!\in_array($type, [Database::VAR_STRING, Database::VAR_VARCHAR])) {
                     $this->message = "Format is only allowed for string type for attribute '" . $attribute['key'] . "'";
                     return false;
                 }
-                if (!in_array($attribute['format'], $this->supportedFormats)) {
-                    $this->message = "Invalid format for attribute '" . $attribute['key'] . "': " . $attribute['format'];
+                if (!in_array($format, $this->supportedFormats)) {
+                    $this->message = "Invalid format for attribute '" . $attribute['key'] . "': " . $format;
                     return false;
                 }
             }
@@ -174,28 +179,28 @@ class Attributes extends Validator
                 return false;
             }
 
-            // Validate signed only for integer/float types
-            if (isset($attribute['signed']) && !in_array($attribute['type'], [Database::VAR_INTEGER, Database::VAR_FLOAT])) {
-                $this->message = "Attribute '" . $attribute['key'] . "': 'signed' can only be used with integer or float types";
+            // Validate signed only for integer/bigint/float types
+            if (isset($attribute['signed']) && !in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
+                $this->message = "Attribute '" . $attribute['key'] . "': 'signed' can only be used with integer, bigint or float types";
                 return false;
             }
 
             // Validate required and default conflict
-            if (isset($attribute['required']) && $attribute['required'] === true && isset($attribute['default']) && $attribute['default'] !== null) {
+            if (isset($attribute['required']) && $attribute['required'] === true && isset($attribute['default'])) {
                 $this->message = "Attribute '" . $attribute['key'] . "' cannot have a default value when required is true";
                 return false;
             }
 
             // Validate array and default conflict
-            if (isset($attribute['array']) && $attribute['array'] === true && isset($attribute['default']) && $attribute['default'] !== null) {
+            if (isset($attribute['array']) && $attribute['array'] === true && isset($attribute['default'])) {
                 $this->message = "Attribute '" . $attribute['key'] . "' cannot have a default value when array is true";
                 return false;
             }
 
-            // Validate min/max range for integer/float
+            // Validate min/max range for integer/bigint/float
             if (isset($attribute['min']) || isset($attribute['max'])) {
-                if (!in_array($attribute['type'], [Database::VAR_INTEGER, Database::VAR_FLOAT])) {
-                    $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer or float types";
+                if (!in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
+                    $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer, bigint or float types";
                     return false;
                 }
 
@@ -208,15 +213,18 @@ class Attributes extends Validator
 
             // Validate default value matches attribute type
             if (isset($attribute['default'])) {
-                switch ($attribute['type']) {
+                switch ($type) {
                     case Database::VAR_STRING:
+                    case Database::VAR_VARCHAR:
+                    case Database::VAR_TEXT:
+                    case Database::VAR_MEDIUMTEXT:
+                    case Database::VAR_LONGTEXT:
                         if (!is_string($attribute['default'])) {
                             $this->message = "Default value for string attribute '" . $attribute['key'] . "' must be a string";
                             return false;
                         }
 
                         // Validate string size
-                        $size = $attribute['size'] ?? 0;
                         if ($size > 0) {
                             $textValidator = new Text($size, 0);
                             if (!$textValidator->isValid($attribute['default'])) {
@@ -226,7 +234,6 @@ class Attributes extends Validator
                         }
 
                         // Validate format-specific defaults
-                        $format = $attribute['format'] ?? '';
                         if ($format === APP_DATABASE_ATTRIBUTE_EMAIL) {
                             $emailValidator = new Email();
                             if (!$emailValidator->isValid($attribute['default'])) {
@@ -257,9 +264,26 @@ class Attributes extends Validator
                         if (isset($attribute['min']) || isset($attribute['max'])) {
                             $min = $attribute['min'] ?? \PHP_INT_MIN;
                             $max = $attribute['max'] ?? \PHP_INT_MAX;
-                            $rangeValidator = new Range($min, $max, Database::VAR_INTEGER);
+                            $rangeValidator = new Range($min, $max, Range::TYPE_INTEGER);
                             if (!$rangeValidator->isValid($attribute['default'])) {
                                 $this->message = "Default value for integer attribute '" . $attribute['key'] . "' must be between $min and $max";
+                                return false;
+                            }
+                        }
+                        break;
+
+                    case Database::VAR_BIGINT:
+                        if (!is_int($attribute['default'])) {
+                            $this->message = "Default value for bigint attribute '" . $attribute['key'] . "' must be an integer";
+                            return false;
+                        }
+                        // Validate within range if min/max specified
+                        if (isset($attribute['min']) || isset($attribute['max'])) {
+                            $min = $attribute['min'] ?? \PHP_INT_MIN;
+                            $max = $attribute['max'] ?? \PHP_INT_MAX;
+                            $rangeValidator = new Range($min, $max, Range::TYPE_INTEGER);
+                            if (!$rangeValidator->isValid($attribute['default'])) {
+                                $this->message = "Default value for bigint attribute '" . $attribute['key'] . "' must be between $min and $max";
                                 return false;
                             }
                         }
@@ -274,7 +298,7 @@ class Attributes extends Validator
                         if (isset($attribute['min']) || isset($attribute['max'])) {
                             $min = $attribute['min'] ?? -\PHP_FLOAT_MAX;
                             $max = $attribute['max'] ?? \PHP_FLOAT_MAX;
-                            $rangeValidator = new Range($min, $max, Database::VAR_FLOAT);
+                            $rangeValidator = new Range($min, $max, Range::TYPE_FLOAT);
                             if (!$rangeValidator->isValid((float)$attribute['default'])) {
                                 $this->message = "Default value for float attribute '" . $attribute['key'] . "' must be between $min and $max";
                                 return false;
@@ -305,7 +329,7 @@ class Attributes extends Validator
             }
 
             // Validate enum elements if format is enum
-            if (isset($attribute['format']) && $attribute['format'] === APP_DATABASE_ATTRIBUTE_ENUM) {
+            if ($format === APP_DATABASE_ATTRIBUTE_ENUM) {
                 if (!isset($attribute['elements']) || !is_array($attribute['elements']) || empty($attribute['elements'])) {
                     $this->message = "Attribute '" . $attribute['key'] . "' with enum format must have 'elements' array";
                     return false;
@@ -324,7 +348,7 @@ class Attributes extends Validator
                 }
 
                 // Validate default exists in elements
-                if (isset($attribute['default']) && $attribute['default'] !== null) {
+                if (isset($attribute['default'])) {
                     if (!in_array($attribute['default'], $attribute['elements'], true)) {
                         $this->message = "Default value for enum attribute '" . $attribute['key'] . "' must be one of the provided elements";
                         return false;

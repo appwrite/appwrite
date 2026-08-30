@@ -1,1 +1,0 @@
-Create a new JWT token. This token can be used to authenticate users with custom scopes and expiration time. 

@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Appwrite\Utopia\Request\Filters\V17;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class V17Test extends TestCase
+final class V17Test extends TestCase
 {
     /**
      * @var Filter
@@ -22,28 +25,24 @@ class V17Test extends TestCase
     {
     }
 
-    public function createUpdateRecoveryProvider()
+    public static function createUpdateRecoveryProvider(): \Iterator
     {
-        return [
-            'remove passwordAgain' => [
-                [
-                    'userId' => 'test',
-                    'secret' => 'test',
-                    'password' => '123456',
-                    'passwordAgain' => '123456'
-                ],
-                [
-                    'userId' => 'test',
-                    'secret' => 'test',
-                    'password' => '123456',
-                ]
+        yield 'remove passwordAgain' => [
+            [
+                'userId' => 'test',
+                'secret' => 'test',
+                'password' => '123456',
+                'passwordAgain' => '123456'
+            ],
+            [
+                'userId' => 'test',
+                'secret' => 'test',
+                'password' => '123456',
             ]
         ];
     }
 
-    /**
-     * @dataProvider createUpdateRecoveryProvider
-     */
+    #[DataProvider('createUpdateRecoveryProvider')]
     public function testUpdateRecovery(array $content, array $expected): void
     {
         $model = 'account.updateRecovery';
@@ -53,31 +52,27 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function createQueryProvider()
+    public static function createQueryProvider(): \Iterator
     {
-        return [
-            'convert queries' => [
-                [
-                    'queries' => [
-                        'cursorAfter("exampleId")',
-                        'search("name", ["example"])',
-                        'isNotNull("name")'
-                    ]
-                ],
-                [
-                    'queries' => [
-                        '{"method":"cursorAfter","values":["exampleId"]}',
-                        '{"method":"search","attribute":"name","values":["example"]}',
-                        '{"method":"isNotNull","attribute":"name"}'
-                    ]
-                ],
-            ]
+        yield 'convert queries' => [
+            [
+                'queries' => [
+                    'cursorAfter("exampleId")',
+                    'search("name", ["example"])',
+                    'isNotNull("name")'
+                ]
+            ],
+            [
+                'queries' => [
+                    '{"method":"cursorAfter","values":["exampleId"]}',
+                    '{"method":"search","attribute":"name","values":["example"]}',
+                    '{"method":"isNotNull","attribute":"name"}'
+                ]
+            ],
         ];
     }
 
-    /**
-     * @dataProvider createQueryProvider
-     */
+    #[DataProvider('createQueryProvider')]
     public function testQuery(array $content, array $expected): void
     {
         $model = 'databases.getDocument';

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Variables;
 
+use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -10,8 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -34,8 +34,10 @@ class Delete extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
+            ->label('event', 'variables.[variableId].delete')
             ->label('audits.event', 'variable.delete')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'variables',
@@ -52,12 +54,11 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('functionId', '', new UID(), 'Function unique ID.', false)
-            ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('queueForEvents')
             ->inject('dbForProject')
-            ->inject('dbForPlatform')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -65,9 +66,8 @@ class Delete extends Base
         string $functionId,
         string $variableId,
         Response $response,
-        Database $dbForProject,
-        Database $dbForPlatform,
-        Authorization $authorization
+        QueueEvent $queueForEvents,
+        Database $dbForProject
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -76,25 +76,16 @@ class Delete extends Base
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getSequence() || $variable->getAttribute('resourceType') !== 'function') {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
-        if ($variable === false || $variable->isEmpty()) {
+        if ($variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getSequence() || $variable->getAttribute('resourceType') !== 'function') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
         $dbForProject->deleteDocument('variables', $variable->getId());
 
-        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+        $function->setAttribute('live', false);
+        $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false]));
 
-        // Inform scheduler to pull the latest changes
-        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
-        $schedule
-            ->setAttribute('resourceUpdatedAt', DateTime::now())
-            ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $queueForEvents->setParam('variableId', $variable->getId());
 
         $response->noContent();
     }

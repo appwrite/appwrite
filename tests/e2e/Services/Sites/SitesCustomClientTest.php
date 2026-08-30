@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Sites;
 
 use Tests\E2E\Client;
@@ -7,7 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class SitesCustomClientTest extends Scope
+final class SitesCustomClientTest extends Scope
 {
     use SitesBase;
     use ProjectCustom;
@@ -115,6 +117,28 @@ class SitesCustomClientTest extends Scope
         $this->assertEquals(400, $templates['headers']['status-code']);
     }
 
+    public function testListTemplatesHidesInternalFields()
+    {
+        $templates = $this->client->call(Client::METHOD_GET, '/sites/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 5000,
+        ]);
+
+        $this->assertEquals(200, $templates['headers']['status-code']);
+        $this->assertGreaterThan(0, $templates['body']['total']);
+
+        $this->assertStringNotContainsString('startCommand', (string) json_encode($templates['body']));
+        $this->assertStringNotContainsString('score', (string) json_encode($templates['body']));
+
+        $template = $this->getTemplate('starter-for-nextjs');
+
+        $this->assertEquals(200, $template['headers']['status-code']);
+
+        $this->assertStringNotContainsString('startCommand', (string) json_encode($template['body']));
+    }
+
     public function testGetTemplate()
     {
         /**
@@ -129,8 +153,8 @@ class SitesCustomClientTest extends Scope
         $this->assertEquals('github', $template['body']['vcsProvider']);
         $this->assertEquals('Simple React application integrated with Appwrite SDK.', $template['body']['tagline']);
         $this->assertIsArray($template['body']['frameworks']);
-        $this->assertStringContainsString('/images/sites/templates/starter-for-react-dark.png', $template['body']['screenshotDark']);
-        $this->assertStringContainsString('/images/sites/templates/starter-for-react-light.png', $template['body']['screenshotLight']);
+        $this->assertStringContainsString('/images/sites/templates/starter-for-react-dark.png', (string) $template['body']['screenshotDark']);
+        $this->assertStringContainsString('/images/sites/templates/starter-for-react-light.png', (string) $template['body']['screenshotLight']);
 
         /**
          * Test for FAILURE

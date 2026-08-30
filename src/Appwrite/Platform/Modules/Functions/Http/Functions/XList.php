@@ -78,16 +78,10 @@ class XList extends Base
             $queries[] = Query::search('search', $search);
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
@@ -110,6 +104,8 @@ class XList extends Base
             $total = $includeTotal ? $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         $response->dynamic(new Document([

@@ -3,14 +3,16 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -18,11 +20,12 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 
 class Upsert extends Action
@@ -48,6 +51,7 @@ class Upsert extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -71,25 +75,27 @@ class Upsert extends Action
                     ),
                 )
             ])
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
-            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForStatsUsage')
+            ->inject('getDatabasesDB')
+            ->inject('usage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
+            ->inject('eventProcessor')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
+    public function action(string $databaseId, string $collectionId, array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, Event $queueForEvents, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -104,10 +110,11 @@ class Upsert extends Action
         );
 
         if ($hasRelationships) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk upsert is not supported for ' . $this->getSDKNamespace() .  ' with relationship attributes');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk upsert is not supported for ' . $this->getSDKNamespace() . ' with relationship attributes');
         }
 
         foreach ($documents as $key => $document) {
+            $document = $this->normalizeData($document);
             if ($transactionId === null) {
                 $document = $this->parseOperators($document, $collection);
             }
@@ -163,12 +170,14 @@ class Upsert extends Action
             return;
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $upserted = [];
 
         try {
-            $modified = $dbForProject->withPreserveDates(function () use ($dbForProject, $database, $collection, $documents, $plan, &$upserted) {
-                return $dbForProject->upsertDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+            $modified = $dbForDatabases->withPreserveDates(function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
+                return $dbForDatabases->upsertDocuments(
+                    $collectionTableId,
                     $documents,
                     onNext: function (Document $document) use ($plan, &$upserted) {
                         if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
@@ -179,8 +188,10 @@ class Upsert extends Action
             });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
-        } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException(), params: ['multiple']);
+        } catch (UniqueException $e) {
+            throw new Exception($this->getUniqueConstraintException(), previous: $e);
+        } catch (DuplicateException $e) {
+            throw new Exception($this->getDuplicateException(), previous: $e, params: ['multiple']);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
@@ -189,12 +200,13 @@ class Upsert extends Action
 
         foreach ($upserted as $document) {
             $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
+            $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collection->getId());
         }
 
-        $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $modified))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $modified));
+        $usage
+            ->setResource('database')
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $modified));
 
         $response->dynamic(new Document([
             'total' => $modified,
@@ -208,8 +220,10 @@ class Upsert extends Action
             $upserted,
             $queueForEvents,
             $queueForRealtime,
-            $queueForFunctions,
-            $queueForWebhooks
+            $publisherForFunctions,
+            $queueForWebhooks,
+            $dbForProject,
+            $eventProcessor
         );
     }
 }

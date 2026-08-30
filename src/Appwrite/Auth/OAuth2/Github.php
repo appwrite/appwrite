@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Fetch\Client as FetchClient;
 
 class Github extends OAuth2
 {
@@ -55,7 +56,7 @@ class Github extends OAuth2
             $response = $this->request(
                 'POST',
                 'https://github.com/login/oauth/access_token',
-                [],
+                ['Accept: application/json'],
                 \http_build_query([
                     'client_id' => $this->appID,
                     'redirect_uri' => $this->callback,
@@ -64,9 +65,7 @@ class Github extends OAuth2
                 ])
             );
 
-            $output = [];
-            \parse_str($response, $output);
-            $this->tokens = $output;
+            $this->tokens = $this->parseTokens($response);
         }
 
         return $this->tokens;
@@ -82,7 +81,7 @@ class Github extends OAuth2
         $response = $this->request(
             'POST',
             'https://github.com/login/oauth/access_token',
-            [],
+            ['Accept: application/json'],
             \http_build_query([
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
@@ -91,15 +90,42 @@ class Github extends OAuth2
             ])
         );
 
-        $output = [];
-        \parse_str($response, $output);
-        $this->tokens = $output;
+        $this->tokens = $this->parseTokens($response);
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
         return $this->tokens;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function parseTokens(string $response): array
+    {
+        $tokens = \json_decode($response, true);
+
+        if (!\is_array($tokens)) {
+            $tokens = [];
+            \parse_str($response, $tokens);
+        }
+
+        if (isset($tokens['error'])) {
+            throw new Exception(\json_encode(
+                $tokens,
+                JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR,
+            ), 400);
+        }
+
+        if (empty($tokens['access_token'])) {
+            throw new Exception(\json_encode([
+                'error' => 'access_token_missing',
+                'error_description' => 'GitHub did not return an access token.',
+            ]), 400);
+        }
+
+        return $tokens;
     }
 
     /**
@@ -159,6 +185,24 @@ class Github extends OAuth2
     }
 
     /**
+     * Return the user's GitHub avatar URL.
+     *
+     * GitHub includes `avatar_url` directly in the `GET /user` response that
+     * is already fetched and cached by getUser(), so this method costs no
+     * extra network round-trip.
+     *
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['avatar_url'] ?? '';
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return string
@@ -209,7 +253,7 @@ class Github extends OAuth2
         return $this->user;
     }
 
-    public function createRepository(string $accessToken, string $repositoryName, bool $private): array
+    public function createRepository(string $accessToken, string $repositoryName, bool $private, string $namespaceId = ''): array
     {
         $repository = $this->request('POST', 'https://api.github.com/user/repos', ['Authorization: token ' . \urlencode($accessToken)], \json_encode([
             'name' => $repositoryName,
@@ -218,5 +262,35 @@ class Github extends OAuth2
 
         $repository = \json_decode($repository, true);
         return $repository;
+    }
+
+    public function verifyCredentials(): void
+    {
+        $client = new FetchClient();
+        $client->addHeader('Accept', 'application/json');
+
+        $response = $client->fetch(
+            url: 'https://github.com/login/oauth/access_token',
+            method: FetchClient::METHOD_POST,
+            query: [
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'code' => 'intentionally-invalid-code',
+                'redirect_uri' => 'intentionally-invalid-redirect',
+            ]
+        );
+
+        $json = \json_decode($response->getBody(), true);
+
+        if (isset($json['error']) && $json['error'] === "Not Found") {
+            throw new \Exception('GitHub application with provided Client ID is does not exist.');
+        }
+
+        if (isset($json['error']) && $json['error'] === "incorrect_client_credentials") {
+            throw new \Exception('GitHub application with provided Client ID is valid, but the provided Client Secret is incorrect.');
+        }
+
+        // We still expect error, like redirect_uri_mismatch or bad_verification_code,
+        // but that indicates valid credentials
     }
 }

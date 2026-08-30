@@ -17,6 +17,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EDITION',
+                'description' => 'Identifies the edition of the server. Defaults to \'self-hosted\'. Self-hosted deployments do not consume the audit, usage and stats-resources queues, so their producers are disabled for this edition.',
+                'introduction' => '',
+                'default' => 'self-hosted',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOCALE',
                 'description' => 'Set your Appwrite\'s locale. By default, the locale is set to \'en\'.',
                 'introduction' => '',
@@ -35,8 +44,26 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS',
+                'description' => 'Comma-separated list of project IDs that get increased API rate limits. Every endpoint rate limit is multiplied by 100 for the listed projects. By default, empty, so all projects use the standard rate limits.',
+                'introduction' => '1.9.7',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LOCKING_ENABLED',
+                'description' => 'Enable distributed locking for platform writes. Locks coordinate concurrent updates across API pods so read-modify-write operations on shared documents do not lose updates. By default, set to \'enabled\'. Set to \'disabled\' as an emergency kill switch; locks become no-ops and concurrent writes will race.',
+                'introduction' => '1.9.3',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
-                'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443, and you have set up wildcard certificates with DNS challenge.',
+                'description' => 'Controls whether Appwrite generates HTTPS API URLs and enforces HTTPS for incoming API requests. Set to \'enabled\' whenever the public API is served over HTTPS, including when TLS is terminated by a reverse proxy. When enabled, HTTP GET requests are redirected to HTTPS and other HTTP requests are rejected. The default value is \'disabled\' to support local and plain HTTP installations.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
@@ -71,12 +98,30 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_ROUTER_AUTO_CERTIFICATES',
+                'description' => 'Allows Appwrite to automatically issue TLS certificates for function and site domains. By default, set to \'enabled\'. Set to \'disabled\' when a wildcard TLS certificate already covers those domains, for example one issued through Traefik\'s DNS challenge.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_OPENSSL_KEY_V1',
                 'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to **keep it a secret and have a backup for it**.',
                 'introduction' => '',
                 'default' => 'your-secret-key',
                 'required' => true,
                 'question' => 'Choose a secret API key, make sure to make a backup of your key in a secure location',
+                'filter' => 'token'
+            ],
+            [
+                'name' => '_APP_NOTIFICATIONS_TRACKING_SECRET',
+                'description' => 'Secret key used to sign notification logo tracking tokens. This must be the same value for API containers and notification workers. Change it from the default value before running in production.',
+                'introduction' => '1.9.0',
+                'default' => 'your-secret-key',
+                'required' => true,
+                'question' => '',
                 'filter' => 'token'
             ],
             [
@@ -180,7 +225,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
-                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.',
+                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses or wildcard domains, such as *@appwrite.io, separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -192,6 +237,15 @@ return [
                 'description' => "This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.",
                 'introduction' => '',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_URL_SCHEME',
+                'description' => 'Console URL scheme used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments). Set to \'root\' for the new console served at the root path (appwrite/new), or \'legacy\' for the older console served under the /console path prefix. The default value is \'legacy\'.',
+                'introduction' => '2.0.0',
+                'default' => 'legacy',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -269,15 +323,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_USAGE_STATS',
-                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage container to reduce resource usage.',
-                'introduction' => '0.7.0',
-                'default' => 'enabled',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_LOGGING_PROVIDER',
                 'description' => 'Deprecated since 1.6.0, use `_APP_LOGGING_CONFIG` with DSN value instead. This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\' to enable the logger.',
                 'introduction' => '0.12.0',
@@ -296,28 +341,10 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Database from TimeSeries data. The default value is 30 seconds. Reintroduced in 1.1.0.',
-                'introduction' => '1.1.0',
-                'default' => '30',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_USAGE_TIMESERIES_INTERVAL',
-                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
-                'introduction' => '1.0.0',
-                'default' => '30',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_USAGE_DATABASE_INTERVAL',
-                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
-                'introduction' => '1.0.0',
-                'default' => '900',
+                'name' => '_APP_LOGGING_FORMAT',
+                'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
+                'introduction' => '1.9.6',
+                'default' => 'pretty',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -366,7 +393,247 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_GEO_ENDPOINT',
+                'description' => 'Internal endpoint of the geo service used to resolve IP geolocation for locale and session enrichment. Leave empty to disable geolocation lookups. Defaults to the bundled `appwrite-geo` container.',
+                'introduction' => 'TBD',
+                'default' => 'http://appwrite-geo/v1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_GEO_SECRET',
+                'description' => 'Bearer token used to authenticate requests from the Appwrite server to the geo service. Must match the `GEO_SECRET` configured on the `appwrite-geo` container. Change it from the default value before running in production.',
+                'introduction' => 'TBD',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => 'token'
             ]
+        ],
+    ],
+    [
+        'category' => 'Database',
+        'description' => 'Appwrite uses a database for storing user and meta data. You can choose between PostgreSQL, MariaDB or MongoDB.',
+        'variables' => [
+            [
+                'name' => '_APP_DB_ADAPTER',
+                'description' => 'Which database to use. Must be one of: PostgreSQL, MariaDB, or MongoDB',
+                'introduction' => '1.9.0',
+                'default' => 'postgresql',
+                'required' => true,
+                'question' => 'Choose your database (postgresql|mariadb|mongodb)',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_HOST',
+                'description' => 'Database server host name address. Default value is: \'postgresql\'.',
+                'introduction' => '',
+                'default' => 'postgresql',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PORT',
+                'description' => 'Database server TCP port. Default value is: \'5432\'.',
+                'introduction' => '',
+                'default' => '5432',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEMA',
+                'description' => 'Database server database schema. Default value is: \'appwrite\'.',
+                'introduction' => '',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_USER',
+                'description' => 'Database server user name. Default value is: \'user\'.',
+                'introduction' => '',
+                'default' => 'user',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PASS',
+                'description' => 'Database server user password. Default value is: \'password\'.',
+                'introduction' => '',
+                'default' => 'password',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_ROOT_PASS',
+                'description' => 'Database server root password. Default value is: \'rootsecretpassword\'.',
+                'introduction' => '',
+                'default' => 'rootsecretpassword',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_ADAPTER_DOCUMENTSDB',
+                'description' => 'Engine backing DocumentsDB. Only MongoDB is supported. Default value is: mongodb.',
+                'introduction' => '2.0.0',
+                'default' => 'mongodb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_HOST_DOCUMENTSDB',
+                'description' => 'DocumentsDB server host name address. Requires a reachable MongoDB. Default value is: mongodb.',
+                'introduction' => '2.0.0',
+                'default' => 'mongodb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PORT_DOCUMENTSDB',
+                'description' => 'DocumentsDB server TCP port. Default value is: 27017.',
+                'introduction' => '2.0.0',
+                'default' => '27017',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEMA_DOCUMENTSDB',
+                'description' => 'DocumentsDB schema name. Falls back to _APP_DB_SCHEMA when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_USER_DOCUMENTSDB',
+                'description' => 'DocumentsDB server user name. Falls back to _APP_DB_USER when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PASS_DOCUMENTSDB',
+                'description' => 'DocumentsDB server user password. Falls back to _APP_DB_PASS when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_ADAPTER_VECTORSDB',
+                'description' => 'Engine backing VectorsDB. Only PostgreSQL is supported. Default value is: postgresql.',
+                'introduction' => '2.0.0',
+                'default' => 'postgresql',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_HOST_VECTORSDB',
+                'description' => 'VectorsDB server host name address. Requires a reachable PostgreSQL. Default value is: postgresql.',
+                'introduction' => '2.0.0',
+                'default' => 'postgresql',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PORT_VECTORSDB',
+                'description' => 'VectorsDB server TCP port. Default value is: 5432.',
+                'introduction' => '2.0.0',
+                'default' => '5432',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEMA_VECTORSDB',
+                'description' => 'VectorsDB schema name. Falls back to _APP_DB_SCHEMA when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_USER_VECTORSDB',
+                'description' => 'VectorsDB server user name. Falls back to _APP_DB_USER when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PASS_VECTORSDB',
+                'description' => 'VectorsDB server user password. Falls back to _APP_DB_PASS when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DATABASE_DOCUMENTSDB',
+                'description' => 'Full DocumentsDB connection string, overriding the _APP_DB_*_DOCUMENTSDB values. Format: db_main=mongodb://user:pass@host:port/schema.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DATABASE_VECTORSDB',
+                'description' => 'Full VectorsDB connection string, overriding the _APP_DB_*_VECTORSDB values. Format: db_main=postgresql://user:pass@host:port/schema.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_DATABASE_BATCH',
+                'description' => 'Maximum number of rows or documents accepted by a single bulk database operation (createRows, upsertRows, updateRows, deleteRows and their document equivalents). Raising it increases memory use and query size per request, so tune it to what your database can handle. Default value is: 100.',
+                'introduction' => '2.0.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOCUMENTSDB',
+                'description' => 'Enables the DocumentsDB API, which runs on MongoDB. The installer does not deploy MongoDB, so provision one and point the _APP_DB_*_DOCUMENTSDB variables at it before enabling this; until then the /v1/documentsdb routes return a service disabled error. Default value is: disabled.',
+                'introduction' => '2.0.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VECTORSDB',
+                'description' => 'Enables the VectorsDB API, which runs on PostgreSQL. The installer does not deploy a PostgreSQL for it, so provision one and point the _APP_DB_*_VECTORSDB variables at it before enabling this; until then the /v1/vectorsdb routes return a service disabled error. Default value is: disabled.',
+                'introduction' => '2.0.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
@@ -408,66 +675,6 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ],
-        ],
-    ],
-    [
-        'category' => 'MariaDB',
-        'description' => 'Appwrite is using a MariaDB server for managing persistent database data. The MariaDB env vars are used to allow Appwrite server to connect to the MariaDB container.',
-        'variables' => [
-            [
-                'name' => '_APP_DB_HOST',
-                'description' => 'MariaDB server host name address. Default value is: \'mariadb\'.',
-                'introduction' => '',
-                'default' => 'mariadb',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_PORT',
-                'description' => 'MariaDB server TCP port. Default value is: \'3306\'.',
-                'introduction' => '',
-                'default' => '3306',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_SCHEMA',
-                'description' => 'MariaDB server database schema. Default value is: \'appwrite\'.',
-                'introduction' => '',
-                'default' => 'appwrite',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_USER',
-                'description' => 'MariaDB server user name. Default value is: \'user\'.',
-                'introduction' => '',
-                'default' => 'user',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_PASS',
-                'description' => 'MariaDB server user password. Default value is: \'password\'.',
-                'introduction' => '',
-                'default' => 'password',
-                'required' => false,
-                'question' => '',
-                'filter' => 'password'
-            ],
-            [
-                'name' => '_APP_DB_ROOT_PASS',
-                'description' => 'MariaDB server root password. Default value is: \'rootsecretpassword\'.',
-                'introduction' => '',
-                'default' => 'rootsecretpassword',
-                'required' => false,
-                'question' => '',
-                'filter' => 'password'
             ],
         ],
     ],
@@ -863,18 +1070,18 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
-                'description' => 'Deprecated since 1.7.0. The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
+                'description' => 'Deprecated since 1.7.0. The maximum number of seconds allowed as a timeout value when building a new function. The default value is 2700 seconds.',
                 'introduction' => '0.13.0',
-                'default' => '900',
+                'default' => '2700',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_COMPUTE_BUILD_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function or site. The default value is 900 seconds.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function or site. The default value is 2700 seconds.',
                 'introduction' => '1.7.0',
-                'default' => '900',
+                'default' => '2700',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -956,6 +1163,53 @@ return [
                 'description' => 'The host used by Appwrite to communicate with the function executor.',
                 'introduction' => '0.13.0',
                 'default' => 'http://exc1/v1',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTOR_CONNECTION_STORAGE',
+                'description' => "DSN for Open Runtimes executor storage. When `_APP_STORAGE_DEVICE` is not local, point this at the same backend so the executor can read deployment artifacts. Defaults to `local://localhost`.\n\nExamples:\n- Local: `local://localhost`\n- AWS S3: `s3://ACCESS_KEY:SECRET@BUCKET.s3.REGION.amazonaws.com?region=REGION`\n- S3-compatible: `s3://ACCESS_KEY:SECRET@localhost/BUCKET?region=REGION&url=http%3A%2F%2Fminio%3A9000`",
+                'introduction' => '1.9.5',
+                'default' => 'local://localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_BUILDS_VOLUME',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
+                'introduction' => '1.9.0',
+                'default' => 'appwrite-builds',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_JOBS_HOST',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes orchestrator that builds manual-upload function deployments.',
+                'introduction' => '1.9.0',
+                'default' => 'http://orchestrator:8080',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_JOBS_SECRET',
+                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. Make sure to change this.',
+                'introduction' => '1.9.0',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_JOBS_ENDPOINT',
+                'description' => 'Internal Appwrite endpoint the jobs-service (and the containers it spawns) use to reach the API over the Docker network for presigned artifact + callback URLs.',
+                'introduction' => '1.9.0',
+                'default' => 'http://appwrite',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
@@ -1062,6 +1316,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_OPEN_RUNTIMES_NFT',
+                'description' => 'Enables dependency tracing for Open Runtimes build artifacts. When enabled, supported SSR site builds prune unused node_modules files before packaging the build output.',
+                'introduction' => '1.9.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOCKER_HUB_USERNAME',
                 'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
                 'introduction' => '1.2.0',
@@ -1096,6 +1359,15 @@ return [
                 'default' => '3600',
                 'required' => false,
                 'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_SCHEDULE_SPREAD',
+                'description' => 'Number of seconds over which scheduled executions sharing the same cron slot are spread, using a stable per-function offset, so they don\'t all start in the same second. Each function keeps a consistent slot within the window, preserving exact run intervals. The default value is 0 (disabled): every execution is enqueued at the exact cron time.',
+                'introduction' => '2.0.0',
+                'default' => '0',
+                'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
@@ -1178,6 +1450,132 @@ return [
                 'name' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
                 'description' => 'GitHub webhook secret. You can configure it in your GitHub application settings under webhook section.',
                 'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_ENDPOINT',
+                'description' => 'URL of your self-hosted Gitea instance, reachable from the Appwrite server (e.g. for API calls and webhook token exchange).',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_BROWSER_ENDPOINT',
+                'description' => 'URL of your Gitea instance reachable from the browser, if different from _APP_VCS_GITEA_ENDPOINT (e.g. when Appwrite and Gitea are on the same Docker network but Gitea is exposed to the browser on a different host). Falls back to _APP_VCS_GITEA_ENDPOINT when unset.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_CLIENT_ID',
+                'description' => 'Gitea OAuth2 application client ID. You can generate one in your Gitea instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_CLIENT_SECRET',
+                'description' => 'Gitea OAuth2 application client secret. You can generate one in your Gitea instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming Gitea webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_CLIENT_ID',
+                'description' => 'GitLab OAuth2 application client ID. You can generate one in your GitLab instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_CLIENT_SECRET',
+                'description' => 'GitLab OAuth2 application client secret. You can generate one in your GitLab instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming GitLab webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_CLIENT_ID',
+                'description' => 'Bitbucket OAuth2 consumer key. You can generate one in your Bitbucket workspace under Settings > OAuth consumers.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_CLIENT_SECRET',
+                'description' => 'Bitbucket OAuth2 consumer secret. You can generate one in your Bitbucket workspace under Settings > OAuth consumers.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming Bitbucket webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ORIGIN_CLIENT_ID',
+                'description' => 'Origin app client ID. You can find it in your Origin app details on Cursor.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ORIGIN_PRIVATE_KEY',
+                'description' => 'Origin app private key. You can generate private keys from your Origin app settings on Cursor.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_WEBHOOK_URL',
+                'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
+                'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1282,9 +1680,96 @@ return [
         ],
     ],
     [
+        'category' => 'Usage',
+        'description' => 'Usage events and resource gauges stored in ClickHouse.',
+        'variables' => [
+            [
+                'name' => '_APP_USAGE_STATS',
+                'description' => 'Enable or disable usage statistics collection and APIs.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DB_USAGE',
+                'description' => 'ClickHouse HTTP DSN used for usage storage. Set this to an external private ClickHouse DSN to replace the bundled service.',
+                'introduction' => '',
+                'default' => 'http://appwrite:appwrite@clickhouse:8123/appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_USAGE_PASS',
+                'description' => 'Password used only when creating the bundled ClickHouse appwrite user. On an existing volume, rotate the ClickHouse user with ALTER USER before updating this value and _APP_CONNECTIONS_DB_USAGE.',
+                'introduction' => '',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_POOL_SIZE_USAGE',
+                'description' => 'Maximum number of pooled ClickHouse HTTP clients per process.',
+                'introduction' => '',
+                'default' => '2',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_USAGE_TTL',
+                'description' => 'Retention in days for raw and daily usage events. Gauges have no TTL. Set to 0 to disable event TTLs.',
+                'introduction' => '',
+                'default' => '180',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATS_USAGE_QUEUE_NAME',
+                'description' => 'Queue name for usage event ingestion.',
+                'introduction' => '',
+                'default' => 'v1-stats-usage',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATS_RESOURCES_QUEUE_NAME',
+                'description' => 'Queue name for usage resource gauge ingestion.',
+                'introduction' => '',
+                'default' => 'v1-stats-resources',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATS_RESOURCES_INTERVAL',
+                'description' => 'Interval in seconds between full resource-count snapshots.',
+                'introduction' => '',
+                'default' => '3600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
+        ],
+    ],
+    [
         'category' => 'GraphQL',
         'description' => '',
         'variables' => [
+            [
+                'name' => '_APP_GRAPHQL_INTROSPECTION',
+                'description' => 'Enable or disable GraphQL introspection. Set to \'enabled\' to allow schema introspection, or \'disabled\' to block it. The default value is \'enabled\'.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
             [
                 'name' => '_APP_GRAPHQL_MAX_BATCH_SIZE',
                 'description' => 'Maximum number of batched queries per request. The default value is 10.',
@@ -1318,6 +1803,15 @@ return [
         'category' => 'Migrations',
         'description' => '',
         'variables' => [
+            [
+                'name' => '_APP_MIGRATION_HOST',
+                'description' => 'Internal hostname the migrations worker uses to reach this instance\'s API (for migrations and CSV/JSON imports & exports). Defaults to \'appwrite\', the API service name in the standard Docker Compose setup. Only change this for non-standard deployments.',
+                'introduction' => '1.9.0',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
             [
                 'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_ID',
                 'description' => 'Google OAuth client ID. You can find it in your GCP application settings.',

@@ -14,9 +14,9 @@ abstract class Model
     public const TYPE_DATETIME = 'datetime';
     public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000+00:00';
     public const TYPE_RELATIONSHIP = 'relationship';
-    public const TYPE_PAYLOAD = 'payload';
     public const TYPE_ARRAY = 'array';
     public const TYPE_ENUM = 'enum';
+    public const TYPE_ID = 'id';
 
     /**
      * @var bool
@@ -102,22 +102,6 @@ abstract class Model
     }
 
     /**
-     * Delete an existing Rule
-     * If rule exists, it will be removed
-     *
-     * @param string $key
-     * @return Model
-     */
-    public function removeRule(string $key): self
-    {
-        if (isset($this->rules[$key])) {
-            unset($this->rules[$key]);
-        }
-
-        return $this;
-    }
-
-    /**
      * @return array
      */
     public function getRequired(): array
@@ -126,27 +110,6 @@ abstract class Model
 
         foreach ($this->rules as $key => $rule) {
             if ($rule['required'] ?? false) {
-                $list[] = $key;
-            }
-        }
-
-        return $list;
-    }
-
-    /**
-     * Get Readonly Fields
-     *
-     * Returns list of field names that are marked as readOnly
-     * and should not be allowed in create/update payloads
-     *
-     * @return array
-     */
-    public function getReadonlyFields(): array
-    {
-        $list = [];
-
-        foreach ($this->rules as $key => $rule) {
-            if ($rule['readOnly'] ?? false) {
                 $list[] = $key;
             }
         }

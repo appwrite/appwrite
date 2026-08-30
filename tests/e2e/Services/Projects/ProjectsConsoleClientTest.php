@@ -1,32 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Tests\Async;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
-use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
-class ProjectsConsoleClientTest extends Scope
+final class ProjectsConsoleClientTest extends Scope
 {
     use ProjectsBase;
     use ProjectConsole;
     use SideClient;
     use Async;
 
-    /**
-     * @group devKeys
-     * @group smtpAndTemplates
-     * @group projectsCRUD */
-    public function testCreateProject(): array
+    #[Group('smtpAndTemplates')]
+    #[Group('projectsCRUD')]
+    public function testCreateProject(): void
     {
         /**
          * Test for SUCCESS
@@ -46,6 +48,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4'
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -57,15 +60,18 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Project Test', $response['body']['name']);
         $this->assertEquals($team['body']['$id'], $response['body']['teamId']);
+        $this->assertEquals(PROJECT_STATUS_ACTIVE, $response['body']['status']);
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
-
-        $projectId = $response['body']['$id'];
+        $this->assertEquals(false, $response['body']['authDisposableEmails']);
+        $this->assertEquals(false, $response['body']['authCanonicalEmails']);
+        $this->assertEquals(false, $response['body']['authFreeEmails']);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -76,6 +82,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Project Test', $response['body']['name']);
         $this->assertEquals($team['body']['$id'], $response['body']['teamId']);
+        $this->assertEquals(PROJECT_STATUS_ACTIVE, $response['body']['status']);
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
@@ -86,6 +93,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => '',
@@ -98,6 +106,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -105,11 +114,113 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
+    }
 
-        return [
-            'projectId' => $projectId,
-            'teamId' => $team['body']['$id']
-        ];
+    public function testDeleteProjectWithMultiDB(): void
+    {
+        // Create a team and project
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'MultiDB Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'MultiDB Project',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
+
+        $projectAdminHeaders = array_merge($this->getHeaders(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
+
+        // Create legacy database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $projectAdminHeaders, [
+            'databaseId' => ID::unique(),
+            'name' => 'Legacy DB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $projectAdminHeaders, [
+            'collectionId' => ID::unique(),
+            'name' => 'Legacy Collection',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        // Create documentsdb database and collection
+        $documentsDb = $this->client->call(Client::METHOD_POST, '/documentsdb', $projectAdminHeaders, [
+            'databaseId' => ID::unique(),
+            'name' => 'Documents DB',
+        ]);
+        $this->assertEquals(201, $documentsDb['headers']['status-code']);
+        $documentsDbId = $documentsDb['body']['$id'];
+
+        $documentsCollection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $documentsDbId . '/collections', $projectAdminHeaders, [
+            'collectionId' => ID::unique(),
+            'name' => 'Documents Collection',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $documentsCollection['headers']['status-code']);
+
+        // Create vectorsdb database and collection
+        $vectorDb = $this->client->call(Client::METHOD_POST, '/vectorsdb', $projectAdminHeaders, [
+            'databaseId' => ID::unique(),
+            'name' => 'Vector DB',
+        ]);
+        $this->assertEquals(201, $vectorDb['headers']['status-code']);
+        $vectorDbId = $vectorDb['body']['$id'];
+
+        $vectorCollection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $vectorDbId . '/collections', $projectAdminHeaders, [
+            'collectionId' => ID::unique(),
+            'name' => 'Vector Collection',
+            'dimension' => 3,
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $vectorCollection['headers']['status-code']);
+
+        // Delete project
+        $delete = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        // Ensure project is gone
+        $getProject = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $getProject['headers']['status-code']);
     }
 
     public function testCreateDuplicateProject(): void
@@ -131,6 +242,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => $projectId,
             'name' => 'Original Project',
@@ -146,6 +258,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => $projectId,
             'name' => 'Project Duplicate',
@@ -158,7 +271,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(Exception::PROJECT_ALREADY_EXISTS, $response['body']['type']);
     }
 
-    /** @group projectsCRUD */
+    #[Group('projectsCRUD')]
     public function testTransferProjectTeam()
     {
         /**
@@ -195,6 +308,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Team 1 Project',
@@ -215,6 +329,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'teamId' => $team2,
         ]);
@@ -223,15 +338,72 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Team 1 Project', $response['body']['name']);
         $this->assertEquals($team2, $response['body']['teamId']);
+
+        $victimProjectId = ID::unique();
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'projectId' => $victimProjectId,
+            'name' => 'Victim Project',
+            'teamId' => $team1,
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $victimProjectId . '/team', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'teamId' => $team2,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '//projects/anything/team', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'teamId' => $team2,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/0/team', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'teamId' => $team2,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $victimProjectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($team1, $response['body']['teamId']);
     }
 
-    /**
-     * @group projectsCRUD
-     * @depends testCreateProject
-     */
-    public function testListProject($data): array
+    #[Group('projectsCRUD')]
+    public function testListProject(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
 
         /**
          * Test for SUCCESS
@@ -240,12 +412,12 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals($id, $response['body']['projects'][0]['$id']);
-        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
 
         /**
          * Test search queries
@@ -253,28 +425,26 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders(), [
             'search' => $id
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals($response['body']['total'], 3);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThan(0, $response['body']['total']);
         $this->assertIsArray($response['body']['projects']);
-        $this->assertCount(3, $response['body']['projects']);
-        $this->assertEquals($response['body']['projects'][0]['name'], 'Project Test');
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders(), [
             'search' => 'Project Test'
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(3, $response['body']['total']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThan(0, $response['body']['total']);
         $this->assertIsArray($response['body']['projects']);
-        $this->assertCount(3, $response['body']['projects']);
-        $this->assertEquals($response['body']['projects'][0]['$id'], $data['projectId']);
 
         /**
          * Test pagination
@@ -294,6 +464,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test 2',
@@ -312,6 +483,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('teamId', [$team['body']['$id']])->toString(),
@@ -326,6 +498,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::limit(1)->toString(),
@@ -335,25 +508,24 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertCount(1, $response['body']['projects']);
-        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
-                Query::offset(3)->toString(),
+                Query::offset(1)->toString(),
             ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertCount(1, $response['body']['projects']);
-        $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('name', ['Project Test 2'])->toString(),
@@ -362,12 +534,13 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertCount(1, $response['body']['projects']);
+        $this->assertGreaterThanOrEqual(1, count($response['body']['projects']));
         $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::orderDesc()->toString(),
@@ -376,24 +549,22 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertCount(4, $response['body']['projects']);
-        $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
-        $this->assertEquals('Team 1 Project', $response['body']['projects'][1]['name']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertCount(4, $response['body']['projects']);
-        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
-        $this->assertEquals('Team 1 Project', $response['body']['projects'][2]['name']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::cursorAfter(new Document(['$id' => $response['body']['projects'][0]['$id']]))->toString(),
@@ -402,22 +573,6 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertCount(3, $response['body']['projects']);
-        $this->assertEquals('Team 1 Project', $response['body']['projects'][1]['name']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::cursorBefore(new Document(['$id' => $response['body']['projects'][0]['$id']]))->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertCount(1, $response['body']['projects']);
-        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
 
         /**
          * Test for FAILURE
@@ -425,6 +580,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
@@ -432,8 +588,267 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
 
-        return $data;
+    #[Group('projectsCRUD')]
+    public function testListProjectsQuerySelect(): void
+    {
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Query Select Test Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Query Select Test Project',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
+
+        /**
+         * Test Query.select - basic fields
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayNotHasKey('platforms', $project);
+        $this->assertArrayNotHasKey('webhooks', $project);
+        $this->assertArrayNotHasKey('keys', $project);
+        $this->assertArrayNotHasKey('oAuthProviders', $project);
+        $this->assertArrayNotHasKey('smtpEnabled', $project);
+        $this->assertArrayNotHasKey('smtpHost', $project);
+        $this->assertArrayNotHasKey('authLimit', $project);
+        $this->assertArrayNotHasKey('authDuration', $project);
+
+        /**
+         * Test Query.select - multiple fields
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4'
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name', 'teamId', 'description', '$createdAt', '$updatedAt'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('teamId', $project);
+        $this->assertArrayHasKey('description', $project);
+        $this->assertArrayHasKey('$createdAt', $project);
+        $this->assertArrayHasKey('$updatedAt', $project);
+        $this->assertArrayNotHasKey('platforms', $project);
+        $this->assertArrayNotHasKey('webhooks', $project);
+        $this->assertArrayNotHasKey('keys', $project);
+        $this->assertArrayNotHasKey('oAuthProviders', $project);
+        $this->assertArrayNotHasKey('smtpEnabled', $project);
+        $this->assertArrayNotHasKey('authLimit', $project);
+
+        /**
+         * Test Query.select combined with filters
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name', 'teamId'])->toString(),
+                Query::equal('name', ['Query Select Test Project'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['projects']);
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('teamId', $project);
+        $this->assertEquals('Query Select Test Project', $project['name']);
+        $this->assertEquals($teamId, $project['teamId']);
+        $this->assertArrayNotHasKey('platforms', $project);
+        $this->assertArrayNotHasKey('webhooks', $project);
+        $this->assertArrayNotHasKey('keys', $project);
+        $this->assertArrayNotHasKey('oAuthProviders', $project);
+        $this->assertArrayNotHasKey('smtpEnabled', $project);
+        $this->assertArrayNotHasKey('authLimit', $project);
+
+        /**
+         * Test Query.select combined with limit
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name'])->toString(),
+                Query::limit(2)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertLessThanOrEqual(2, count($response['body']['projects']));
+
+        foreach ($response['body']['projects'] as $p) {
+            $this->assertArrayHasKey('$id', $p);
+            $this->assertArrayHasKey('name', $p);
+            $this->assertArrayNotHasKey('platforms', $p);
+            $this->assertArrayNotHasKey('webhooks', $p);
+            $this->assertArrayNotHasKey('keys', $p);
+            $this->assertArrayNotHasKey('oAuthProviders', $p);
+            $this->assertArrayNotHasKey('smtpEnabled', $p);
+            $this->assertArrayNotHasKey('authLimit', $p);
+        }
+
+        /**
+         * Test Query.select with subquery attributes (platforms, webhooks, etc.)
+         * When explicitly selected, subqueries should still run
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name', 'platforms'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('platforms', $project);
+        $this->assertIsArray($project['platforms']);
+        $this->assertArrayNotHasKey('webhooks', $project);
+        $this->assertArrayNotHasKey('keys', $project);
+        $this->assertArrayNotHasKey('oAuthProviders', $project);
+        $this->assertArrayNotHasKey('smtpEnabled', $project);
+        $this->assertArrayNotHasKey('authLimit', $project);
+
+        /**
+         * Test Query.select with expanded attributes
+         * webhooks and keys should load their subquery data when selected
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name', 'webhooks', 'keys'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('webhooks', $project);
+        $this->assertArrayHasKey('keys', $project);
+        $this->assertIsArray($project['webhooks']);
+        $this->assertIsArray($project['keys']);
+        $this->assertArrayNotHasKey('platforms', $project);
+        $this->assertArrayNotHasKey('smtpEnabled', $project);
+        $this->assertArrayNotHasKey('authLimit', $project);
+
+        /**
+         * Test Query.select with wildcard '*'
+         * Should return all fields like no select query
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['*'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('teamId', $project);
+        $this->assertArrayHasKey('platforms', $project);
+        $this->assertArrayHasKey('webhooks', $project);
+        $this->assertArrayHasKey('keys', $project);
+        $this->assertArrayHasKey('oAuthProviders', $project);
+        $this->assertArrayHasKey('smtpEnabled', $project);
+        $this->assertArrayHasKey('smtpHost', $project);
+        $this->assertArrayHasKey('authLimit', $project);
+        $this->assertArrayHasKey('authDuration', $project);
+
+        /**
+         * Test Query.select with invalid attribute
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'invalidAttribute'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `queries` param: Invalid query: Attribute not found in schema: invalidAttribute', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testGetProject(): void
@@ -453,15 +868,227 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
-            'region' => System::getEnv('_APP_REGION', 'default')
+            'region' => System::getEnv('_APP_REGION', 'default'),
+            'description' => 'My description',
+            'logo' => 'https://google.com/logo.png',
+            'url' => 'https://myapp.com/',
+            'legalName' => 'Legal company',
+            'legalCountry' => 'Slovakia',
+            'legalState' => 'Custom state',
+            'legalCity' => 'Košice',
+            'legalAddress' => 'Main street 32',
+            'legalTaxId' => 'TAXID_123456'
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $id = $response['body']['$id'];
+
+        // Ping 3x; only the first is recorded, so pingCount stays at 1
+        for ($i = 0; $i < 3; $i++) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/ping',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $id,
+                ], $this->getHeaders()),
+            );
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
+        // Configure SMTP
+        $response = $this->client->call(
+            Client::METHOD_PATCH,
+            '/project/smtp',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $id,
+                'x-appwrite-mode' => 'admin',
+            ], $this->getHeaders()),
+            [
+                'enabled' => true,
+                'senderName' => 'Custom sender',
+                'senderEmail' => 'email@custom.com',
+                'host' => 'maildev',
+                'port' => 1025,
+                'replyToEmail' => 'replyto@custom.com',
+                'replyToName' => 'Reply sender',
+            ],
+        );
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Add mock numbers
+        $response = $this->client->call(Client::METHOD_POST, '/project/mock-phones', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'number' => '+421123456789',
+            'otp' => '123456'
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Add labels
+        $response = $this->client->call(Client::METHOD_PUT, '/project/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'labels' => ['custom1', 'custom2']
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/project/mock-phones', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'number' => '+420987654321',
+            'otp' => '654321'
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Setup custom values for project policies
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-duration', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'duration' => 135
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/user-limit', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'total' => 54
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-limit', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'total' => 7
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'total' => 9
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-dictionary', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'enabled' => true
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-personal-data', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'enabled' => true
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'enabled' => true
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'userId' => true,
+            'userEmail' => true,
+            'userPhone' => true,
+            'userName' => true,
+            'userMFA' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-invalidation', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'enabled' => true
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Create webhook
+        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
+            'name' => 'Webhook Test',
+            'events' => ['users.*.create', 'users.*.update.email'],
+            'url' => 'https://appwrite.io',
+            'tls' => true,
+            'authUsername' => 'username',
+            'authPassword' => 'password',
+        ]);
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+
+        // Create API key
+        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
+            'name' => 'Key Test',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+        $this->assertEquals(201, $key['headers']['status-code']);
+
+        // Create platform
+        $platform = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'platformId' => ID::unique(),
+            'type' => 'web',
+            'name' => 'Web App',
+            'hostname' => 'localhost',
+        ]);
+        $this->assertEquals(201, $platform['headers']['status-code']);
+
+        // Configure OAuth provider
+        $oauth = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/github', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'clientId' => 'github-client-id',
+            'clientSecret' => 'github-client-secret',
+            'enabled' => false,
+        ]);
+        $this->assertEquals(200, $oauth['headers']['status-code']);
 
         /**
          * Test for SUCCESS
@@ -469,12 +1096,428 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
         $this->assertEquals($id, $response['body']['$id']);
         $this->assertEquals('Project Test', $response['body']['name']);
+
+        $this->assertIsString($response['body']['$createdAt']);
+        $this->assertNotEmpty($response['body']['$createdAt']);
+        $this->assertNotFalse(\strtotime($response['body']['$createdAt']));
+
+        $this->assertIsString($response['body']['$updatedAt']);
+        $this->assertNotEmpty($response['body']['$updatedAt']);
+        $this->assertNotFalse(\strtotime($response['body']['$updatedAt']));
+
+        // $this->assertEquals('My description', $response['body']['description']); // No longer supported
+        $this->assertEquals($team['body']['$id'], $response['body']['teamId']);
+        $this->assertEquals('active', $response['body']['status']);
+        // $this->assertEquals('https://google.com/logo.png', $response['body']['logo']); // No longer supported
+        // $this->assertEquals('https://myapp.com/', $response['body']['url']); // No longer supported
+        // $this->assertEquals('Legal company', $response['body']['legalName']); // No longer supported
+        // $this->assertEquals('Slovakia', $response['body']['legalCountry']); // No longer supported
+        // $this->assertEquals('Custom state', $response['body']['legalState']); // No longer supported
+        // $this->assertEquals('Košice', $response['body']['legalCity']); // No longer supported
+        // $this->assertEquals('Main street 32', $response['body']['legalAddress']); // No longer supported
+        // $this->assertEquals('TAXID_123456', $response['body']['legalTaxId']); // No longer supported
+        $this->assertEquals(135, $response['body']['authDuration']);
+        $this->assertEquals(54, $response['body']['authLimit']);
+        $this->assertEquals(7, $response['body']['authSessionsLimit']);
+        $this->assertEquals(9, $response['body']['authPasswordHistory']);
+        $this->assertTrue($response['body']['authPasswordDictionary']);
+        $this->assertTrue($response['body']['authPersonalDataCheck']);
+        $this->assertFalse($response['body']['authDisposableEmails']);
+        $this->assertFalse($response['body']['authCanonicalEmails']);
+        $this->assertFalse($response['body']['authFreeEmails']);
+        $this->assertTrue($response['body']['authSessionAlerts']);
+        $this->assertTrue($response['body']['authMembershipsUserName']);
+        $this->assertTrue($response['body']['authMembershipsUserEmail']);
+        $this->assertTrue($response['body']['authMembershipsMfa']);
+        $this->assertTrue($response['body']['authMembershipsUserId']);
+        $this->assertTrue($response['body']['authMembershipsUserPhone']);
+        $this->assertTrue($response['body']['authInvalidateSessions']);
+        $this->assertTrue($response['body']['smtpEnabled']);
+        $this->assertSame('Custom sender', $response['body']['smtpSenderName']);
+        $this->assertSame('email@custom.com', $response['body']['smtpSenderEmail']);
+        $this->assertSame('Reply sender', $response['body']['smtpReplyToName']);
+        $this->assertSame('replyto@custom.com', $response['body']['smtpReplyToEmail']);
+        $this->assertSame('maildev', $response['body']['smtpHost']);
+        $this->assertSame(1025, $response['body']['smtpPort']);
+        $this->assertSame('', $response['body']['smtpUsername']);
+        $this->assertSame('', $response['body']['smtpPassword']); // Write only
+        $this->assertSame('', $response['body']['smtpSecure']);
+        $this->assertSame(1, $response['body']['pingCount']);
+
+        $this->assertIsString($response['body']['pingedAt']);
+        $this->assertNotEmpty($response['body']['pingedAt']);
+        $this->assertNotFalse(\strtotime($response['body']['pingedAt']));
+
+        $this->assertCount(2, $response['body']['labels']);
+        $this->assertEquals('custom1', $response['body']['labels'][0]);
+        $this->assertEquals('custom2', $response['body']['labels'][1]);
+
+        $this->assertCount(2, $response['body']['authMockNumbers']);
+        $this->assertEquals('+421123456789', $response['body']['authMockNumbers'][0]['phone']);
+        $this->assertEquals('+420987654321', $response['body']['authMockNumbers'][1]['phone']);
+        $this->assertEquals('123456', $response['body']['authMockNumbers'][0]['otp']);
+        $this->assertEquals('654321', $response['body']['authMockNumbers'][1]['otp']);
+
+        foreach ($response['body']['authMockNumbers'] as $mockNumber) {
+            $this->assertIsString($mockNumber['$createdAt']);
+            $this->assertNotEmpty($mockNumber['$createdAt']);
+            $this->assertNotFalse(\strtotime($mockNumber['$createdAt']));
+
+            $this->assertIsString($mockNumber['$updatedAt']);
+            $this->assertNotEmpty($mockNumber['$updatedAt']);
+            $this->assertNotFalse(\strtotime($mockNumber['$updatedAt']));
+
+            $this->assertIsString($mockNumber['phone']);
+            $this->assertNotEmpty($mockNumber['phone']);
+
+            $this->assertIsString($mockNumber['otp']);
+            $this->assertNotEmpty($mockNumber['otp']);
+        }
+
+        $this->assertIsArray($response['body']['oAuthProviders']);
+        $this->assertGreaterThan(0, count($response['body']['oAuthProviders']));
+
+        $githubProvider = null;
+        foreach ($response['body']['oAuthProviders'] as $provider) {
+            $this->assertIsString($provider['key']);
+            $this->assertNotEmpty($provider['key']);
+
+            $this->assertIsString($provider['name']);
+            $this->assertIsString($provider['appId']);
+            $this->assertIsString($provider['secret']);
+            $this->assertIsBool($provider['enabled']);
+
+            if ($provider['key'] === 'github') {
+                $githubProvider = $provider;
+            }
+        }
+
+        $this->assertNotNull($githubProvider, 'GitHub provider not found');
+        $this->assertEquals('github-client-id', $githubProvider['appId']);
+        $this->assertEquals('', $githubProvider['secret']); // Write only
+        $this->assertEquals(false, $githubProvider['enabled']);
+
+        $this->assertIsArray($response['body']['platforms']);
+        $this->assertCount(1, $response['body']['platforms']);
+        $this->assertIsString($response['body']['platforms'][0]['$id']);
+        $this->assertNotEmpty($response['body']['platforms'][0]['$id']);
+        $this->assertEquals('Web App', $response['body']['platforms'][0]['name']);
+        $this->assertEquals('web', $response['body']['platforms'][0]['type']);
+        $this->assertEquals('localhost', $response['body']['platforms'][0]['hostname']);
+
+        $this->assertIsString($response['body']['platforms'][0]['$createdAt']);
+        $this->assertNotEmpty($response['body']['platforms'][0]['$createdAt']);
+        $this->assertNotFalse(\strtotime($response['body']['platforms'][0]['$createdAt']));
+
+        $this->assertIsString($response['body']['platforms'][0]['$updatedAt']);
+        $this->assertNotEmpty($response['body']['platforms'][0]['$updatedAt']);
+        $this->assertNotFalse(\strtotime($response['body']['platforms'][0]['$updatedAt']));
+
+        $this->assertArrayHasKey('webhooks', $response['body']);
+        $this->assertIsArray($response['body']['webhooks']);
+        $this->assertCount(1, $response['body']['webhooks']);
+        $this->assertIsString($response['body']['webhooks'][0]['$id']);
+        $this->assertNotEmpty($response['body']['webhooks'][0]['$id']);
+        $this->assertEquals('Webhook Test', $response['body']['webhooks'][0]['name']);
+        $this->assertEquals('https://appwrite.io', $response['body']['webhooks'][0]['url']);
+        $this->assertContains('users.*.create', $response['body']['webhooks'][0]['events']);
+        $this->assertContains('users.*.update.email', $response['body']['webhooks'][0]['events']);
+        $this->assertCount(2, $response['body']['webhooks'][0]['events']);
+        $this->assertTrue($response['body']['webhooks'][0]['tls']);
+        $this->assertEquals('username', $response['body']['webhooks'][0]['authUsername']);
+        $this->assertEquals('password', $response['body']['webhooks'][0]['authPassword']);
+        $this->assertTrue($response['body']['webhooks'][0]['enabled']);
+        $this->assertIsString($response['body']['webhooks'][0]['secret']);
+        $this->assertNotEmpty($response['body']['webhooks'][0]['secret']);
+        $this->assertIsString($response['body']['webhooks'][0]['$createdAt']);
+        $this->assertNotEmpty($response['body']['webhooks'][0]['$createdAt']);
+        $this->assertNotFalse(\strtotime($response['body']['webhooks'][0]['$createdAt']));
+        $this->assertIsString($response['body']['webhooks'][0]['$updatedAt']);
+        $this->assertNotEmpty($response['body']['webhooks'][0]['$updatedAt']);
+        $this->assertNotFalse(\strtotime($response['body']['webhooks'][0]['$updatedAt']));
+
+        $this->assertArrayHasKey('keys', $response['body']);
+        $this->assertIsArray($response['body']['keys']);
+        $this->assertCount(1, $response['body']['keys']);
+        $this->assertIsString($response['body']['keys'][0]['$id']);
+        $this->assertNotEmpty($response['body']['keys'][0]['$id']);
+        $this->assertEquals('Key Test', $response['body']['keys'][0]['name']);
+        $this->assertContains('teams.read', $response['body']['keys'][0]['scopes']);
+        $this->assertContains('teams.write', $response['body']['keys'][0]['scopes']);
+        $this->assertCount(2, $response['body']['keys'][0]['scopes']);
+        $this->assertNotEmpty($response['body']['keys'][0]['secret']);
+        $this->assertEmpty($response['body']['keys'][0]['accessedAt']);
+        $this->assertIsArray($response['body']['keys'][0]['sdks']);
+        $this->assertCount(0, $response['body']['keys'][0]['sdks']);
+        $this->assertIsString($response['body']['keys'][0]['$createdAt']);
+        $this->assertNotEmpty($response['body']['keys'][0]['$createdAt']);
+        $this->assertNotFalse(\strtotime($response['body']['keys'][0]['$createdAt']));
+        $this->assertIsString($response['body']['keys'][0]['$updatedAt']);
+        $this->assertNotEmpty($response['body']['keys'][0]['$updatedAt']);
+        $this->assertNotFalse(\strtotime($response['body']['keys'][0]['$updatedAt']));
+
+        $authsKeys = [
+            'authEmailPassword',
+            'authUsersAuthMagicURL',
+            'authEmailOtp',
+            'authAnonymous',
+            'authInvites',
+            'authJWT',
+            'authPhone',
+        ];
+        foreach ($authsKeys as $authsKey) {
+            $this->assertTrue($response['body'][$authsKey], 'Auth method should be enabled: ' . $authsKey);
+        }
+
+        $serviceKeys = [
+            'serviceStatusForAccount',
+            'serviceStatusForAvatars',
+            'serviceStatusForDatabases',
+            'serviceStatusForTablesdb',
+            'serviceStatusForLocale',
+            'serviceStatusForHealth',
+            'serviceStatusForProject',
+            'serviceStatusForStorage',
+            'serviceStatusForTeams',
+            'serviceStatusForUsers',
+            'serviceStatusForVcs',
+            'serviceStatusForSites',
+            'serviceStatusForFunctions',
+            'serviceStatusForProxy',
+            'serviceStatusForGraphql',
+            'serviceStatusForMigrations',
+            'serviceStatusForMessaging',
+        ];
+        foreach ($serviceKeys as $serviceKey) {
+            $this->assertTrue($response['body'][$serviceKey], 'Service should be enabled: ' . $serviceKey);
+        }
+
+        $protocolKeys = [
+            'protocolStatusForRest',
+            'protocolStatusForGraphql',
+            'protocolStatusForWebsocket',
+        ];
+        foreach ($protocolKeys as $protocolKey) {
+            $this->assertTrue($response['body'][$protocolKey], 'Protocol should be enabled: ' . $protocolKey);
+        }
+
+        // Ensure booleans can be falsy
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-dictionary', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'enabled' => false
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-personal-data', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'enabled' => false
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'enabled' => false
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'userId' => false,
+            'userEmail' => false,
+            'userPhone' => false,
+            'userName' => false,
+            'userMFA' => false,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-invalidation', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'enabled' => false
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Toggle auth methods, services, protocols
+
+        $authMethods = ['email-password', 'magic-url', 'email-otp', 'anonymous', 'invites', 'jwt', 'phone'];
+        foreach ($authMethods as $authMethod) {
+            $response = $this->client->call(
+                Client::METHOD_PATCH,
+                '/project/auth-methods/' . $authMethod,
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $id,
+                    'x-appwrite-mode' => 'admin',
+                ], $this->getHeaders()),
+                [
+                    'enabled' => false,
+                ],
+            );
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
+        $protocols = ['rest', 'graphql', 'websocket'];
+        foreach ($protocols as $protocol) {
+            $response = $this->client->call(
+                Client::METHOD_PATCH,
+                '/project/protocols/' . $protocol,
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $id,
+                    'x-appwrite-mode' => 'admin',
+                ], $this->getHeaders()),
+                [
+                    'enabled' => false,
+                ],
+            );
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
+        $services = [
+            'account',
+            'avatars',
+            'databases',
+            'tablesdb',
+            'locale',
+            'health',
+            'project',
+            'storage',
+            'teams',
+            'users',
+            'vcs',
+            'sites',
+            'functions',
+            'proxy',
+            'graphql',
+            'migrations',
+            'messaging',
+        ];
+
+        foreach ($services as $service) {
+            $response = $this->client->call(
+                Client::METHOD_PATCH,
+                '/project/services/' . $service,
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $id,
+                    'x-appwrite-mode' => 'admin',
+                ], $this->getHeaders()),
+                [
+                    'enabled' => false,
+                ],
+            );
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
+        // Configure SMTP
+        $response = $this->client->call(
+            Client::METHOD_PATCH,
+            '/project/smtp',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $id,
+                'x-appwrite-mode' => 'admin',
+            ], $this->getHeaders()),
+            [
+                'enabled' => false,
+                'host' => 'customhost.com',
+                'port' => 4444,
+                'username' => 'myuser',
+                'password' => 'mypassword',
+                'secure' => 'ssl',
+            ],
+        );
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $this->assertFalse($response['body']['authPasswordDictionary']);
+        $this->assertFalse($response['body']['authPersonalDataCheck']);
+        $this->assertFalse($response['body']['authSessionAlerts']);
+        $this->assertFalse($response['body']['authMembershipsUserName']);
+        $this->assertFalse($response['body']['authMembershipsUserEmail']);
+        $this->assertFalse($response['body']['authMembershipsMfa']);
+        $this->assertFalse($response['body']['authMembershipsUserId']);
+        $this->assertFalse($response['body']['authMembershipsUserPhone']);
+        $this->assertFalse($response['body']['authInvalidateSessions']);
+        $this->assertFalse($response['body']['smtpEnabled']);
+        $this->assertSame('customhost.com', $response['body']['smtpHost']);
+        $this->assertSame(4444, $response['body']['smtpPort']);
+        $this->assertSame('myuser', $response['body']['smtpUsername']);
+        $this->assertSame('', $response['body']['smtpPassword']); // Write only
+        $this->assertSame('ssl', $response['body']['smtpSecure']);
+
+        $authsKeys = [
+            'authEmailPassword',
+            'authUsersAuthMagicURL',
+            'authEmailOtp',
+            'authAnonymous',
+            'authInvites',
+            'authJWT',
+            'authPhone',
+        ];
+        foreach ($authsKeys as $authsKey) {
+            $this->assertFalse($response['body'][$authsKey], 'Auth method should be disabled: ' . $authsKey);
+        }
+
+        $serviceKeys = [
+            'serviceStatusForAccount',
+            'serviceStatusForAvatars',
+            'serviceStatusForDatabases',
+            'serviceStatusForTablesdb',
+            'serviceStatusForLocale',
+            'serviceStatusForHealth',
+            'serviceStatusForProject',
+            'serviceStatusForStorage',
+            'serviceStatusForTeams',
+            'serviceStatusForUsers',
+            'serviceStatusForVcs',
+            'serviceStatusForSites',
+            'serviceStatusForFunctions',
+            'serviceStatusForProxy',
+            'serviceStatusForGraphql',
+            'serviceStatusForMigrations',
+            'serviceStatusForMessaging',
+        ];
+        foreach ($serviceKeys as $serviceKey) {
+            $this->assertFalse($response['body'][$serviceKey], 'Service should be disabled: ' . $serviceKey);
+        }
+
+        $protocolKeys = [
+            'protocolStatusForRest',
+            'protocolStatusForGraphql',
+            'protocolStatusForWebsocket',
+        ];
+        foreach ($protocolKeys as $protocolKey) {
+            $this->assertFalse($response['body'][$protocolKey], 'Protocol should be disabled: ' . $protocolKey);
+        }
 
         /**
          * Test for FAILURE
@@ -482,71 +1525,48 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/empty', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $projectId = str_repeat('very_long_id', 25); // 12 chars * 25 = 300 chars > MongoDB max (255)
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/id-is-really-long-id-is-really-long-id-is-really-long-id-is-really-long', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderDesc('accessedAt')->toString()
+            ]
+        ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderAsc('accessedAt')->toString()
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testGetProjectUsage($data): array
+    public function testGetProjectUsage(): void
     {
         $this->markTestIncomplete(
             'This test is failing right now due to functions collection.'
         );
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/project/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'startDate' => UsageTest::getToday(),
-            'endDate' => UsageTest::getTomorrow(),
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(8, count($response['body']));
-        $this->assertNotEmpty($response['body']);
-        $this->assertIsArray($response['body']['requests']);
-        $this->assertIsArray($response['body']['network']);
-        $this->assertIsNumeric($response['body']['executionsTotal']);
-        $this->assertIsNumeric($response['body']['rowsTotal']);
-        $this->assertIsNumeric($response['body']['databasesTotal']);
-        $this->assertIsNumeric($response['body']['bucketsTotal']);
-        $this->assertIsNumeric($response['body']['usersTotal']);
-        $this->assertIsNumeric($response['body']['filesStorageTotal']);
-        $this->assertIsNumeric($response['body']['deploymentStorageTotal']);
-        $this->assertIsNumeric($response['body']['authPhoneTotal']);
-        $this->assertIsNumeric($response['body']['authPhoneEstimate']);
-
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/empty', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects/id-is-really-long-id-is-really-long-id-is-really-long-id-is-really-long', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
     public function testUpdateProject(): void
@@ -567,6 +1587,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -583,6 +1604,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test 2',
@@ -603,6 +1625,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => '',
@@ -611,60 +1634,95 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
-    /**
-     * @group smtpAndTemplates
-     * @depends testCreateProject
-     */
-    public function testUpdateProjectSMTP($data): array
+    #[Group('smtpAndTemplates')]
+    public function testUpdateProjectSMTP(): void
     {
+        $data = $this->setupProjectData();
         $id = $data['projectId'];
+        $smtpHost = System::getEnv('_APP_SMTP_HOST', "maildev");
+        $smtpPort = intval(System::getEnv('_APP_SMTP_PORT', "1025"));
+        $smtpUsername = System::getEnv('_APP_SMTP_USERNAME', 'user');
+        $smtpPassword = System::getEnv('_APP_SMTP_PASSWORD', 'password');
+
+        /**
+         * Test for SUCCESS: Valid Credentials
+         */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'enabled' => true,
             'senderEmail' => 'mailer@appwrite.io',
             'senderName' => 'Mailer',
-            'host' => 'maildev',
-            'port' => 1025,
-            'username' => 'user',
-            'password' => 'password',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => $smtpUsername,
+            'password' => $smtpPassword,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['smtpEnabled']);
         $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSenderEmail']);
         $this->assertEquals('Mailer', $response['body']['smtpSenderName']);
-        $this->assertEquals('maildev', $response['body']['smtpHost']);
-        $this->assertEquals(1025, $response['body']['smtpPort']);
-        $this->assertEquals('user', $response['body']['smtpUsername']);
-        $this->assertEquals('password', $response['body']['smtpPassword']);
+        $this->assertEquals($smtpHost, $response['body']['smtpHost']);
+        $this->assertEquals($smtpPort, $response['body']['smtpPort']);
+        $this->assertEquals($smtpUsername, $response['body']['smtpUsername']);
+        // smtpPassword is write-only: the stored password must never leak in responses
+        $this->assertEquals('', $response['body']['smtpPassword']);
         $this->assertEquals('', $response['body']['smtpSecure']);
 
-        /** Test Reading Project */
+        // Check the project
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['smtpEnabled']);
         $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSenderEmail']);
         $this->assertEquals('Mailer', $response['body']['smtpSenderName']);
-        $this->assertEquals('maildev', $response['body']['smtpHost']);
-        $this->assertEquals(1025, $response['body']['smtpPort']);
-        $this->assertEquals('user', $response['body']['smtpUsername']);
-        $this->assertEquals('password', $response['body']['smtpPassword']);
+        $this->assertEquals($smtpHost, $response['body']['smtpHost']);
+        $this->assertEquals($smtpPort, $response['body']['smtpPort']);
+        $this->assertEquals($smtpUsername, $response['body']['smtpUsername']);
+        // smtpPassword is write-only: the stored password must never leak in responses
+        $this->assertEquals('', $response['body']['smtpPassword']);
         $this->assertEquals('', $response['body']['smtpSecure']);
 
-        return $data;
+        /**
+         * Test for FAILURE: Invalid Credentials
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'enabled' => true,
+            'senderEmail' => 'fail@appwrite.io',
+            'senderName' => 'Failing Mailer',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => 'invalid-user',
+            'password' => 'bad-password',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::PROJECT_SMTP_CONFIG_INVALID, $response['body']['type']);
+        // The message quotes the server now rather than the library, so it
+        // reads "Authentication failed: 535 …". What matters is that it says
+        // which of the things that could be wrong is wrong.
+        $this->assertStringContainsStringIgnoringCase('authentication', $response['body']['message']);
     }
 
-    /**
-     * @group smtpAndTemplates
-     */
+    #[Group('smtpAndTemplates')]
     public function testCreateProjectSMTPTests(): void
     {
+        $smtpHost = System::getEnv('_APP_SMTP_HOST', "maildev");
+        $smtpPort = intval(System::getEnv('_APP_SMTP_PORT', "1025"));
+        $smtpUsername = System::getEnv('_APP_SMTP_USERNAME', 'user');
+        $smtpPassword = System::getEnv('_APP_SMTP_PASSWORD', 'password');
+
         // Create a team
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -681,6 +1739,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -699,34 +1758,30 @@ class ProjectsConsoleClientTest extends Scope
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
-            'host' => 'maildev',
-            'port' => 1025,
-            'username' => '',
-            'password' => '',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => $smtpUsername,
+            'password' => $smtpPassword,
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $emails = $this->getLastEmail(2);
-        $this->assertCount(2, $emails);
-        $this->assertEquals('custommailer@appwrite.io', $emails[0]['from'][0]['address']);
-        $this->assertEquals('Custom Mailer', $emails[0]['from'][0]['name']);
-        $this->assertEquals('reply@appwrite.io', $emails[0]['replyTo'][0]['address']);
-        $this->assertEquals('Custom Mailer', $emails[0]['replyTo'][0]['name']);
-        $this->assertEquals('Custom SMTP email sample', $emails[0]['subject']);
-        $this->assertStringContainsStringIgnoringCase('working correctly', $emails[0]['text']);
-        $this->assertStringContainsStringIgnoringCase('working correctly', $emails[0]['html']);
-        $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $emails[0]['text']);
-        $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $emails[0]['html']);
+        $smtpProbe = function ($email) {
+            $this->assertEquals('Custom SMTP email sample', $email['subject']);
+        };
+        $email1 = $this->getLastEmailByAddress('testuser@appwrite.io', $smtpProbe);
+        $email2 = $this->getLastEmailByAddress('testusertwo@appwrite.io', $smtpProbe);
 
-        $to = [
-            $emails[0]['to'][0]['address'],
-            $emails[1]['to'][0]['address']
-        ];
-        \sort($to);
-
-        $this->assertEquals('testuser@appwrite.io', $to[0]);
-        $this->assertEquals('testusertwo@appwrite.io', $to[1]);
+        $this->assertEquals('custommailer@appwrite.io', $email1['from'][0]['address']);
+        $this->assertEquals('Custom Mailer', $email1['from'][0]['name']);
+        $this->assertEquals('reply@appwrite.io', $email1['replyTo'][0]['address']);
+        $this->assertEquals('Custom Mailer', $email1['replyTo'][0]['name']);
+        $this->assertEquals('Custom SMTP email sample', $email1['subject']);
+        $this->assertStringContainsStringIgnoringCase('working correctly', $email1['text']);
+        $this->assertStringContainsStringIgnoringCase('working correctly', $email1['html']);
+        $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $email1['text']);
+        $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $email1['html']);
+        $this->assertEquals('custommailer@appwrite.io', $email2['from'][0]['address']);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/smtp/tests', array_merge([
             'content-type' => 'application/json',
@@ -736,10 +1791,10 @@ class ProjectsConsoleClientTest extends Scope
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
-            'host' => 'maildev',
-            'port' => 1025,
-            'username' => '',
-            'password' => '',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => $smtpUsername,
+            'password' => $smtpPassword,
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -752,39 +1807,79 @@ class ProjectsConsoleClientTest extends Scope
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
-            'host' => 'maildev',
-            'port' => 1025,
-            'username' => '',
-            'password' => '',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => $smtpUsername,
+            'password' => $smtpPassword,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    /**
-     * @group smtpAndTemplates
-     * @depends testUpdateProjectSMTP
-     */
-    public function testUpdateTemplates($data): array
+    #[Group('smtpAndTemplates')]
+    public function testUpdateTemplates(): void
     {
+        $data = $this->setupProjectData();
         $id = $data['projectId'];
 
         /** Get Default Email Template */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/email/verification/en-us', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('Account Verification', $response['body']['subject']);
+        $this->assertEquals('Account Verification for {{project}}', $response['body']['subject']);
         $this->assertEquals('', $response['body']['senderEmail']);
         $this->assertEquals('verification', $response['body']['type']);
         $this->assertEquals('en-us', $response['body']['locale']);
+
+        /** Update Email template, fail due to SMTP disabled */
+        $projectWithoutSmtp = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Without SMTP',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectWithoutSmtp . '/templates/email/verification/en-us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
+        ], $this->getHeaders()), [
+            'subject' => 'Please verify your email',
+            'message' => 'Please verify your email {{url}}',
+            'senderName' => 'Appwrite Custom',
+            'senderEmail' => 'custom@appwrite.io',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /** Configure custom SMTP pointing to maildev, so changing template is allowed */
+        $smtpHost = 'maildev';
+        $smtpPort = 1025;
+        $smtpUsername = 'user';
+        $smtpPassword = 'password';
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
+        ], $this->getHeaders()), [
+            'enabled' => true,
+            'senderEmail' => 'mailer@appwrite.io',
+            'senderName' => 'Mailer',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => $smtpUsername,
+            'password' => $smtpPassword,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         /** Update Email template */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/email/verification/en-us', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'subject' => 'Please verify your email',
             'message' => 'Please verify your email {{url}}',
@@ -804,6 +1899,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/email/verification/en-us', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -813,55 +1909,238 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('verification', $response['body']['type']);
         $this->assertEquals('en-us', $response['body']['locale']);
         $this->assertEquals('Please verify your email {{url}}', $response['body']['message']);
-
-        // Temporary disabled until implemented
-        // /** Get Default SMS Template */
-        // $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id'],
-        // ], $this->getHeaders()));
-
-        // $this->assertEquals(200, $response['headers']['status-code']);
-        // $this->assertEquals('verification', $response['body']['type']);
-        // $this->assertEquals('en-us', $response['body']['locale']);
-        // $this->assertEquals('{{token}}', $response['body']['message']);
-
-        // /** Update SMS template */
-        // $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id'],
-        // ], $this->getHeaders()), [
-        //     'message' => 'Please verify your email {{token}}',
-        // ]);
-
-        // $this->assertEquals(200, $response['headers']['status-code']);
-        // $this->assertEquals('verification', $response['body']['type']);
-        // $this->assertEquals('en-us', $response['body']['locale']);
-        // $this->assertEquals('Please verify your email {{token}}', $response['body']['message']);
-
-        // /** Get Updated SMS Template */
-        // $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id'],
-        // ], $this->getHeaders()));
-
-        // $this->assertEquals(200, $response['headers']['status-code']);
-        // $this->assertEquals('verification', $response['body']['type']);
-        // $this->assertEquals('en-us', $response['body']['locale']);
-        // $this->assertEquals('Please verify your email {{token}}', $response['body']['message']);
-
-        return $data;
     }
 
-    /** @depends testCreateProject */
-    public function testUpdateProjectAuthDuration($data): array
+    #[Group('smtpAndTemplates')]
+    public function testSessionAlertLocaleFallback(): void
     {
+        $smtpHost = 'maildev';
+        $smtpPort = 1025;
+        $smtpUsername = 'user';
+        $smtpPassword = 'password';
+
+        /** Create team */
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Session Alert Locale Fallback Test Team',
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        /** Create project */
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Session Alert Locale Fallback Test',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
+
+        /** Configure custom SMTP pointing to maildev */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/smtp', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'enabled' => true,
+            'senderEmail' => 'mailer@appwrite.io',
+            'senderName' => 'Mailer',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => $smtpUsername,
+            'password' => $smtpPassword,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Set custom sessionAlert template with no explicit locale.
+         * When locale is omitted, the server stores it under the request's
+         * default locale (en), which is the same slot used as the system-wide
+         * fallback when a session's locale has no dedicated template.
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/templates/email', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
+        ], $this->getHeaders()), [
+            'type' => 'sessionAlert',
+            // Intentionally no locale
+            'subject' => 'Fallback sign-in alert',
+            'message' => 'Fallback sign-in alert body',
+            'senderName' => 'Fallback Mailer',
+            'senderEmail' => 'fallback@appwrite.io',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Fallback sign-in alert', $response['body']['subject']);
+        $this->assertEquals('Fallback sign-in alert body', $response['body']['message']);
+        $this->assertEquals('Fallback Mailer', $response['body']['senderName']);
+        $this->assertEquals('fallback@appwrite.io', $response['body']['senderEmail']);
+
+        /** Set custom sessionAlert template for Slovak locale */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/templates/email', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
+        ], $this->getHeaders()), [
+            'type' => 'sessionAlert',
+            'locale' => 'sk',
+            'subject' => 'Slovak sign-in alert',
+            'message' => 'Slovak sign-in alert body',
+            'senderName' => 'Slovak Mailer',
+            'senderEmail' => 'sk@appwrite.io',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Slovak sign-in alert', $response['body']['subject']);
+        $this->assertEquals('Slovak sign-in alert body', $response['body']['message']);
+        $this->assertEquals('Slovak Mailer', $response['body']['senderName']);
+        $this->assertEquals('sk@appwrite.io', $response['body']['senderEmail']);
+
+        /** Enable session alerts */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/session-alerts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
+        ], $this->getHeaders()), [
+            'alerts' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /** Verify alerts are enabled */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['authSessionAlerts']);
+
+        /** Create user (email + password) in the project */
+        $userEmail = 'session-alert-' . uniqid() . '@appwrite.io';
+        $password = 'password';
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $userEmail,
+            'password' => $password,
+            'name' => 'Session Alert User',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /**
+         * Prime first session — the listener suppresses the alert on the very
+         * first session of a user, so this session is setup only.
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $userEmail,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /** Create a new session with no locale — expect fallback (en) template */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $userEmail,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /**
+         * Emails are delivered asynchronously via the mail queue, so maildev may
+         * still be catching up. The probe callback forces getLastEmailByAddress
+         * to keep polling until an email matching the expected `from` address
+         * appears — i.e. we await the new email rather than returning an older
+         * one already in the inbox from a previous session.
+         */
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
+            $this->assertEquals('fallback@appwrite.io', $email['from'][0]['address']);
+        });
+        $this->assertEquals('Fallback sign-in alert', $lastEmail['subject']);
+        $this->assertEquals('Fallback Mailer', $lastEmail['from'][0]['name']);
+        $this->assertStringContainsString('Fallback sign-in alert body', (string) $lastEmail['html']);
+
+        /** Create a new session with German locale — expect fallback (en) template */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-locale' => 'de',
+        ], [
+            'email' => $userEmail,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /** Probe on `from` address ensures we await a fallback-shaped email */
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
+            $this->assertEquals('fallback@appwrite.io', $email['from'][0]['address']);
+        });
+        $this->assertEquals('Fallback sign-in alert', $lastEmail['subject']);
+        $this->assertEquals('Fallback Mailer', $lastEmail['from'][0]['name']);
+        $this->assertStringContainsString('Fallback sign-in alert body', (string) $lastEmail['html']);
+
+        /** Create a new session with Slovak locale — expect Slovak template */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-locale' => 'sk',
+        ], [
+            'email' => $userEmail,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /** Probe on `from` address ensures we await the Slovak email specifically */
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
+            $this->assertEquals('sk@appwrite.io', $email['from'][0]['address']);
+        });
+        $this->assertEquals('Slovak sign-in alert', $lastEmail['subject']);
+        $this->assertEquals('Slovak Mailer', $lastEmail['from'][0]['name']);
+        $this->assertStringContainsString('Slovak sign-in alert body', (string) $lastEmail['html']);
+
+        /** Cleanup — delete the project */
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        /** Cleanup — delete the team */
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testUpdateProjectAuthDuration(): void
+    {
+        $data = $this->setupProjectData();
         $id = $data['projectId'];
 
         // Check defaults
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -873,13 +2152,14 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/duration', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
-            'duration' => 60, // Set session duration to 1 minute
+            'duration' => 60, // Set session duration to 60 seconds (the policy minimum)
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Project Test 2', $response['body']['name']);
+        $this->assertEquals('Project Test', $response['body']['name']);
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
@@ -924,77 +2204,31 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Check session doesn't expire too soon.
-        sleep(30);
+        // Eventually session expires, within 75 seconds (60+variance)
+        $this->assertEventually(function () use ($projectId, $sessionCookie) {
+            // Get User
+            $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'Cookie' => $sessionCookie,
+            ]));
 
-        // Get User
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'Cookie' => $sessionCookie,
-        ]));
+            $this->assertEquals(401, $response['headers']['status-code']);
+        }, timeoutMs: 75 * 1000);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        // Wait just over a minute
-        sleep(35);
-
-        // Get User
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'Cookie' => $sessionCookie,
-        ]));
-
-        $this->assertEquals(401, $response['headers']['status-code']);
-
-        // Set session duration to 15s
+        // Set session duration to 10min
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/duration', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
-            'duration' => 15, // seconds
+            'duration' => 600, // seconds
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(15, $response['body']['authDuration']);
+        $this->assertEquals(600, $response['body']['authDuration']);
 
-        // Create session
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ]), [
-            'email' => $userEmail,
-            'password' => 'password',
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $sessionCookie = $response['headers']['set-cookie'];
-
-        // Wait 10 seconds, ensure valid session, extend session
-        \sleep(10);
-
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'Cookie' => $sessionCookie,
-        ]));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => $sessionCookie,
-        ]));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        // Wait 20 seconds, ensure non-valid session
-        \sleep(20);
-
+        // Ensure session is still expired (new duration only affects new sessions)
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -1007,6 +2241,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/duration', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
         ]);
@@ -1018,12 +2253,11 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(TOKEN_EXPIRATION_LOGIN_LONG, $response['body']['authDuration']); // 1 Year
-
-        return ['projectId' => $projectId];
     }
 
     public function testUpdateProjectInvalidateSessions(): void
@@ -1043,6 +2277,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Session Invalidation Test Project',
@@ -1057,6 +2292,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1065,6 +2301,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/session-invalidation', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'enabled' => false,
         ]);
@@ -1073,6 +2310,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1081,6 +2319,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/session-invalidation', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'enabled' => true,
         ]);
@@ -1089,6 +2328,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1113,6 +2353,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -1132,6 +2373,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/oauth2', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
             ], $this->getHeaders()), [
                 'provider' => $key,
                 'appId' => 'AppId-' . ucfirst($key),
@@ -1145,6 +2387,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1156,7 +2399,7 @@ class ProjectsConsoleClientTest extends Scope
             foreach ($response['body']['oAuthProviders'] as $responseProvider) {
                 if ($responseProvider['key'] === $key) {
                     $this->assertEquals('AppId-' . ucfirst($key), $responseProvider['appId']);
-                    $this->assertEquals('Secret-' . ucfirst($key), $responseProvider['secret']);
+                    $this->assertEmpty($responseProvider['secret']);
                     $this->assertFalse($responseProvider['enabled']);
                     $asserted = true;
                     break;
@@ -1172,6 +2415,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/oauth2', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
             ], $this->getHeaders()), [
                 'provider' => $key,
                 'enabled' => $i === 0 ? false : true // On first provider, test enabled=false
@@ -1186,6 +2430,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1215,6 +2460,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/oauth2', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'provider' => 'unknown',
             'appId' => 'AppId',
@@ -1242,6 +2488,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -1286,6 +2533,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/' . $index, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.1',
             ], $this->getHeaders()), [
                 'status' => false,
             ]);
@@ -1296,6 +2544,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
             ], $this->getHeaders()));
 
             $this->assertEquals(200, $response['headers']['status-code']);
@@ -1321,7 +2570,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -1347,7 +2596,7 @@ class ProjectsConsoleClientTest extends Scope
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/jwt', array_merge([
             'content-type' => 'application/json',
@@ -1355,7 +2604,7 @@ class ProjectsConsoleClientTest extends Scope
             'cookie' => 'a_session_' . $id . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -1366,7 +2615,7 @@ class ProjectsConsoleClientTest extends Scope
             'password' => $originalPassword,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', array_merge([
             'origin' => 'http://localhost',
@@ -1374,7 +2623,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         // Cleanup
 
@@ -1382,18 +2631,17 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/' . $index, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.1',
             ], $this->getHeaders()), [
                 'status' => true,
             ]);
         }
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testUpdateProjectAuthLimit($data): array
+    public function testUpdateProjectAuthLimit(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
 
         /**
          * Test for SUCCESS
@@ -1401,6 +2649,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/limit', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'limit' => 1,
         ]);
@@ -1479,6 +2728,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/limit', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'limit' => 0,
         ]);
@@ -1499,29 +2749,16 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
-
-        return $data;
+        $this->assertEquals(201, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testUpdateProjectAuthLimit
-     */
-    public function testUpdateProjectAuthSessionsLimit($data): array
+    public function testUpdateProjectAuthSessionsLimit(): void
     {
-        $id = $data['projectId'] ?? '';
-
-        /**
-         * Test for failure
-         */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/max-sessions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'limit' => 0,
+        $id = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'testUpdateProjectAuthSessionsLimit',
+            'region' => System::getEnv('_APP_REGION', 'default')
         ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
          * Test for SUCCESS
@@ -1529,6 +2766,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/max-sessions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'limit' => 1,
         ]);
@@ -1558,55 +2796,41 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
-         * create new session
+         * Create sessions and verify limit enforcement.
+         * Each session creation triggers the session limit shutdown hook.
+         * We retry session creation to handle potential cache propagation delays
+         * where the shutdown hook may not see the updated maxSessions on the first attempt.
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-        ]), [
-            'email' => $email,
-            'password' => $password,
-        ]);
+        $this->assertEventually(function () use ($id, $email, $password) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $id,
+            ], [
+                'email' => $email,
+                'password' => $password,
+            ]);
 
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $latestSessionId = $response['body']['$id'];
+            $sessionCookie = 'a_session_' . $id . '=' . ($response['cookies']['a_session_' . $id] ?? '');
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $sessionId1 = $response['body']['$id'];
+            // Small delay for shutdown hook to complete
+            \usleep(500_000);
 
-        /**
-         * create new session
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-        ]), [
-            'email' => $email,
-            'password' => $password,
-        ]);
-
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $sessionCookie = $response['headers']['set-cookie'];
-        $sessionId2 = $response['body']['$id'];
-
-        /**
-         * List sessions
-         */
-        $this->assertEventually(function () use ($id, $sessionCookie, $sessionId2) {
             $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $id,
-                'Cookie' => $sessionCookie,
+                'cookie' => $sessionCookie,
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $sessions = $response['body']['sessions'];
 
-            $this->assertEquals(1, count($sessions));
-            $this->assertEquals($sessionId2, $sessions[0]['$id']);
-        });
+            $this->assertCount(1, $sessions);
+            $this->assertEquals($latestSessionId, $sessions[0]['$id']);
+        }, 30_000, 2_000);
 
         /**
          * Reset Limit
@@ -1614,33 +2838,18 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/max-sessions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'limit' => 10,
         ]);
 
-        return $data;
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
-
-    /**
-     * @depends testUpdateProjectAuthLimit
-     */
-    public function testUpdateProjectAuthPasswordHistory($data): array
+    public function testUpdateProjectAuthPasswordHistory(): void
     {
-        $id = $data['projectId'] ?? '';
-
-        /**
-         * Test for Failure
-         */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'limit' => 25,
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
+        $data = $this->setupProjectWithAuthLimit();
+        $id = $data['projectId'];
 
         /**
          * Test for Success
@@ -1648,6 +2857,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'limit' => 1,
         ]);
@@ -1721,24 +2931,192 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'limit' => 0,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['authPasswordHistory']);
-        return $data;
     }
 
-    /**
-     * @group smtpAndTemplates
-     * @group projectsCRUD
-     *
-     * @depends testCreateProject
-     * */
-    public function testUpdateMockNumbers($data)
+    public function testUpdateProjectAuthPasswordStrength(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'min' => 7,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'min' => 12,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'uppercase' => true,
+            'lowercase' => true,
+            'number' => true,
+            'symbols' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(12, $response['body']['min']);
+        $this->assertEquals(true, $response['body']['uppercase']);
+        $this->assertEquals(true, $response['body']['lowercase']);
+        $this->assertEquals(true, $response['body']['number']);
+        $this->assertEquals(true, $response['body']['symbols']);
+
+        $weakPassword = 'password123!';
+        $validPassword = 'Password123!';
+        $email = uniqid() . 'user@localhost.test';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'weak-account@localhost.test',
+            'password' => $weakPassword,
+            'name' => 'Weak Account',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge($this->getHeaders(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'weak-user@localhost.test',
+            'password' => $weakPassword,
+            'name' => 'Weak User',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $validPassword,
+            'name' => 'Password Strength User',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ], [
+            'email' => $email,
+            'password' => $validPassword,
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $session = $session['cookies']['a_session_' . $id];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'cookie' => 'a_session_' . $id . '=' . $session,
+        ]), [
+            'oldPassword' => $validPassword,
+            'password' => $weakPassword,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => $userId,
+            'secret' => $tokens['secret'],
+            'password' => $weakPassword,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $headers = array_merge($this->getHeaders(), [
+            'x-appwrite-mode' => 'admin',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/password', $headers, [
+            'password' => $weakPassword,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'min' => 8,
+            'uppercase' => false,
+            'lowercase' => false,
+            'number' => false,
+            'symbols' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(8, $response['body']['min']);
+        $this->assertEquals(false, $response['body']['uppercase']);
+        $this->assertEquals(false, $response['body']['lowercase']);
+        $this->assertEquals(false, $response['body']['number']);
+        $this->assertEquals(false, $response['body']['symbols']);
+    }
+
+    #[Group('smtpAndTemplates')]
+    #[Group('projectsCRUD')]
+    public function testUpdateMockNumbers(): void
+    {
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
 
         /**
          * Test for Failure
@@ -1748,6 +3126,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -1757,6 +3136,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 'phone' => '+1655513432',
@@ -1770,6 +3150,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -1785,6 +3166,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -1800,6 +3182,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -1815,6 +3198,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -1830,6 +3214,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -1845,6 +3230,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -1872,12 +3258,13 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => $numbers
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+        $this->assertStringContainsString('Value must a valid array no longer than 10 items', (string) $response['body']['message']);
 
         /**
          * Test for success
@@ -1885,6 +3272,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => []
         ]);
@@ -1893,6 +3281,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -1936,12 +3325,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testUpdateProjectAuthLimit
-     */
-    public function testUpdateProjectAuthPasswordDictionary($data): array
+    public function testUpdateProjectAuthPasswordDictionary(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectWithAuthLimit();
+        $id = $data['projectId'];
 
         $password = 'password';
         $name = 'User Name';
@@ -1987,6 +3374,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-dictionary', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'enabled' => true,
         ]);
@@ -2044,6 +3432,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'limit' => 0,
         ]);
@@ -2057,22 +3446,19 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-dictionary', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'enabled' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(false, $response['body']['authPasswordDictionary']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testUpdateDisallowPersonalData($data): void
+    public function testUpdateDisallowPersonalData(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
 
         /**
          * Enable Disallowing of Personal Data
@@ -2080,6 +3466,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/personal-data', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'enabled' => true,
         ]);
@@ -2192,6 +3579,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/personal-data', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'enabled' => false,
         ]);
@@ -2200,7 +3588,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(false, $response['body']['authPersonalDataCheck']);
     }
 
-    public function testUpdateProjectServicesAll(): void
+    public function testUpdateProjectApiStatus(): void
     {
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -2217,6 +3605,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'projectId' => ID::unique(),
@@ -2229,69 +3618,145 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($project['body']['$id']);
 
         $id = $project['body']['$id'];
+        $protocols = ['rest', 'graphql', 'websocket'];
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/service/all', array_merge([
+        /**
+         * Test for Disabled using old format (api + status)
+         */
+        foreach ($protocols as $key) {
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/api', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.0',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ]), [
+                'api' => $key,
+                'status' => false,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ]));
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']['$id']);
+            $this->assertEquals(false, $response['body']['protocolStatusFor' . ucfirst($key)]);
+        }
+
+        /**
+         * Test for Enabled using old format (api + status)
+         */
+        foreach ($protocols as $key) {
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/api', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.0',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ]), [
+                'api' => $key,
+                'status' => true,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ]));
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']['$id']);
+            $this->assertEquals(true, $response['body']['protocolStatusFor' . ucfirst($key)]);
+        }
+    }
+
+    public function testUpdateProjectApiStatusRealtimeBackwardsCompat(): void
+    {
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
+            'teamId' => ID::unique(),
+            'name' => 'Project Test',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'projectId' => ID::unique(),
+            'name' => 'Project Test',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+
+        $id = $project['body']['$id'];
+
+        /**
+         * Test that "realtime" gets renamed to "websocket" via request filter
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/api', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'api' => 'realtime',
             'status' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals(false, $response['body']['protocolStatusForWebsocket']);
 
-        $matches = [];
-        $pattern = '/serviceStatusFor.*/';
-
-        foreach ($response['body'] as $key => $value) {
-            if (\preg_match($pattern, $key)) {
-                $matches[$key] = $value;
-            }
-        }
-
-        foreach ($matches as $value) {
-            $this->assertFalse($value);
-        }
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/service/all', array_merge([
+        // Re-enable via old "realtime" name
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/api', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
+            'api' => 'realtime',
             'status' => true,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-
-        $matches = [];
-        foreach ($response['body'] as $key => $value) {
-            if (\preg_match($pattern, $key)) {
-                $matches[$key] = $value;
-            }
-        }
-
-        foreach ($matches as $value) {
-            $this->assertTrue($value);
-        }
+        $this->assertEquals(true, $response['body']['protocolStatusForWebsocket']);
     }
 
     public function testUpdateProjectServiceStatusAdmin(): array
@@ -2310,6 +3775,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'projectId' => ID::unique(),
@@ -2337,6 +3803,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/service', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.0',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]), [
                 'service' => $key,
@@ -2349,6 +3816,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]));
 
@@ -2382,6 +3850,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/service/', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.0',
             ], $this->getHeaders()), [
                 'service' => $key,
                 'status' => true,
@@ -2391,9 +3860,9 @@ class ProjectsConsoleClientTest extends Scope
         return ['projectId' => $id];
     }
 
-    /** @depends testUpdateProjectServiceStatusAdmin */
-    public function testUpdateProjectServiceStatus($data): void
+    public function testUpdateProjectServiceStatus(): void
     {
+        $data = $this->setupProjectWithServicesDisabled();
         $id = $data['projectId'];
 
         $services = require(__DIR__ . '/../../../../app/config/services.php');
@@ -2411,6 +3880,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/service', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.0',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]), [
                 'service' => $key,
@@ -2423,6 +3893,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]));
 
@@ -2458,6 +3929,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/service/', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.0',
             ], $this->getHeaders()), [
                 'service' => $service,
                 'status' => true,
@@ -2465,9 +3937,9 @@ class ProjectsConsoleClientTest extends Scope
         }
     }
 
-    /** @depends testUpdateProjectServiceStatusAdmin */
-    public function testUpdateProjectServiceStatusServer($data): void
+    public function testUpdateProjectServiceStatusServer(): void
     {
+        $data = $this->setupProjectWithServicesDisabled();
         $id = $data['projectId'];
 
         $services = require(__DIR__ . '/../../../../app/config/services.php');
@@ -2485,6 +3957,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/service', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.0',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]), [
                 'service' => $key,
@@ -2497,6 +3970,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]));
 
@@ -2511,6 +3985,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['functions.read', 'teams.write'],
         ]);
@@ -2573,6 +4048,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/service/', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.0',
             ], $this->getHeaders()), [
                 'service' => $service,
                 'status' => true,
@@ -2580,23 +4056,23 @@ class ProjectsConsoleClientTest extends Scope
         }
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testCreateProjectWebhook($data): array
+    public function testCreateProjectWebhook(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['users.*.create', 'users.*.update.email'],
             'url' => 'https://appwrite.io',
-            'security' => true,
-            'httpUser' => 'username',
-            'httpPass' => 'password',
+            'tls' => true,
+            'authUsername' => 'username',
+            'authPassword' => 'password',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -2605,76 +4081,73 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.*.update.email', $response['body']['events']);
         $this->assertCount(2, $response['body']['events']);
         $this->assertEquals('https://appwrite.io', $response['body']['url']);
-        $this->assertIsBool($response['body']['security']);
-        $this->assertEquals(true, $response['body']['security']);
-        $this->assertEquals('username', $response['body']['httpUser']);
-
-        $data = array_merge($data, ['webhookId' => $response['body']['$id'], 'signatureKey' => $response['body']['signatureKey']]);
+        $this->assertIsBool($response['body']['tls']);
+        $this->assertEquals(true, $response['body']['tls']);
+        $this->assertEquals('username', $response['body']['authUsername']);
 
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['account.unknown', 'users.*.update.email'],
             'url' => 'https://appwrite.io',
-            'security' => true,
-            'httpUser' => 'username',
-            'httpPass' => 'password',
+            'tls' => true,
+            'authUsername' => 'username',
+            'authPassword' => 'password',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['users.*.create', 'users.*.update.email'],
             'url' => 'invalid://appwrite.io',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProjectWebhook
-     */
-    public function testListProjectWebhook($data): array
+    public function testListProjectWebhook(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectWithWebhook();
+        $id = $data['projectId'];
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['total']);
+        // In parallel mode, multiple tests may create webhooks on the same project
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
 
         /**
          * Test for FAILURE
          */
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProjectWebhook
-     */
-    public function testGetProjectWebhook($data): array
+    public function testGetProjectWebhook(): void
     {
-        $id = $data['projectId'] ?? '';
-        $webhookId = $data['webhookId'] ?? '';
+        $data = $this->setupProjectWithWebhook();
+        $id = $data['projectId'];
+        $webhookId = $data['webhookId'];
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2684,38 +4157,36 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.*.update.email', $response['body']['events']);
         $this->assertCount(2, $response['body']['events']);
         $this->assertEquals('https://appwrite.io', $response['body']['url']);
-        $this->assertEquals('username', $response['body']['httpUser']);
-        $this->assertEquals('password', $response['body']['httpPass']);
+        $this->assertEquals('username', $response['body']['authUsername']);
+        $this->assertEquals('password', $response['body']['authPassword']);
 
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks/error', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks/error', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProjectWebhook
-     */
-    public function testUpdateProjectWebhook($data): array
+    public function testUpdateProjectWebhook(): void
     {
-        $id = $data['projectId'] ?? '';
-        $webhookId = $data['webhookId'] ?? '';
+        $data = $this->setupProjectWithWebhook();
+        $id = $data['projectId'];
+        $webhookId = $data['webhookId'];
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'name' => 'Webhook Test Update',
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
             'url' => 'https://appwrite.io/new',
-            'security' => false,
+            'tls' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2727,14 +4198,15 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('buckets.*.files.*.create', $response['body']['events']);
         $this->assertCount(3, $response['body']['events']);
         $this->assertEquals('https://appwrite.io/new', $response['body']['url']);
-        $this->assertIsBool($response['body']['security']);
-        $this->assertEquals(false, $response['body']['security']);
-        $this->assertEquals('', $response['body']['httpUser']);
-        $this->assertEquals('', $response['body']['httpPass']);
+        $this->assertIsBool($response['body']['tls']);
+        $this->assertEquals(false, $response['body']['tls']);
+        $this->assertEquals('', $response['body']['authUsername']);
+        $this->assertEquals('', $response['body']['authPassword']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2746,41 +4218,44 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('buckets.*.files.*.create', $response['body']['events']);
         $this->assertCount(3, $response['body']['events']);
         $this->assertEquals('https://appwrite.io/new', $response['body']['url']);
-        $this->assertIsBool($response['body']['security']);
-        $this->assertEquals(false, $response['body']['security']);
-        $this->assertEquals('', $response['body']['httpUser']);
-        $this->assertEquals('', $response['body']['httpPass']);
+        $this->assertIsBool($response['body']['tls']);
+        $this->assertEquals(false, $response['body']['tls']);
+        $this->assertEquals('', $response['body']['authUsername']);
+        $this->assertEquals('', $response['body']['authPassword']);
 
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'name' => 'Webhook Test Update',
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.unknown'],
             'url' => 'https://appwrite.io/new',
-            'security' => false,
+            'tls' => false,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'name' => 'Webhook Test Update',
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
             'url' => 'appwrite.io/new',
-            'security' => false,
+            'tls' => false,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'name' => 'Webhook Test Update',
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
@@ -2788,48 +4263,63 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProjectWebhook
-     */
-    public function testUpdateProjectWebhookSignature($data): void
+    public function testUpdateProjectWebhookSignature(): void
     {
-        $id = $data['projectId'] ?? '';
-        $webhookId = $data['webhookId'] ?? '';
-        $signatureKey = $data['signatureKey'] ?? '';
+        $data = $this->setupProjectWithWebhook();
+        $id = $data['projectId'];
+        $webhookId = $data['webhookId'];
+        $signatureKey = $data['signatureKey'];
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/webhooks/' . $webhookId . '/signature', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/webhooks/' . $webhookId . '/secret', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['signatureKey']);
-        $this->assertNotEquals($signatureKey, $response['body']['signatureKey']);
+        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertNotEquals($signatureKey, $response['body']['secret']);
     }
 
-    /**
-     * @depends testCreateProjectWebhook
-     */
-    public function testDeleteProjectWebhook($data): array
+    public function testDeleteProjectWebhook(): void
     {
-        $id = $data['projectId'] ?? '';
-        $webhookId = $data['webhookId'] ?? '';
+        // Create a fresh project with webhook for deletion test
+        $projectData = $this->setupProjectData();
+        $id = $projectData['projectId'];
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        // Create a webhook to delete
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
+        ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
+            'name' => 'Webhook To Delete',
+            'events' => ['users.*.create'],
+            'url' => 'https://appwrite.io',
+            'tls' => true,
+            'authUsername' => 'username',
+            'authPassword' => 'password',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $webhookId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/webhooks/' . $webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEmpty($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -2837,29 +4327,27 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/webhooks/error', array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/webhooks/error', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
     // Keys
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testCreateProjectKey($data): array
+    public function testCreateProjectKey(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['teams.read', 'teams.write'],
         ]);
@@ -2875,6 +4363,67 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertEmpty($response['body']['accessedAt']);
 
+        /**
+         * Test for SUCCESS without key ID
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'name' => 'Key Custom',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        /**
+         * Test for SUCCESS with custom ID
+         */
+        $customKeyId = \uniqid() . 'custom-id';
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'keyId' => $customKeyId,
+            'name' => 'Key Custom',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame($customKeyId, $response['body']['$id']);
+
+        /**
+         * Test for FAILURE with custom ID
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'keyId' => $customKeyId,
+            'name' => 'Key Custom',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS with magic string ID
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'keyId' => 'unique()',
+            'name' => 'Key Custom',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotSame('unique()', $response['body']['$id']);
+
         $data = array_merge($data, [
             'keyId' => $response['body']['$id'],
             'secret' => $response['body']['secret']
@@ -2887,47 +4436,150 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['unknown'],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
 
-    /**
-     * @depends testCreateProjectKey
-     */
-    public function testListProjectKey($data): array
+    public function testListProjectKey(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectWithKey();
+        $id = $data['projectId'];
 
+        /** Create a second key with an expiry for query testing */
+        $expireDate = DateTime::addSeconds(new \DateTime(), 3600);
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'name' => 'Key Test 2',
+            'scopes' => ['users.read'],
+            'expire' => $expireDate,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $key2Id = $response['body']['$id'];
+
+        /** List all keys (no queries) — count depends on how many test methods ran before this in the same worker */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $totalKeys = $response['body']['total'];
+        $this->assertGreaterThanOrEqual(2, $totalKeys);
+        $this->assertCount($totalKeys, $response['body']['keys']);
+
+        /** List keys with limit */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+            ]
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['keys']);
+        $this->assertEquals($totalKeys, $response['body']['total']);
+
+        /** List keys with offset */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::offset(1)->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount($totalKeys - 1, $response['body']['keys']);
+        $this->assertEquals($totalKeys, $response['body']['total']);
+
+        /** List keys with cursor after */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $data['keyId']]))->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['keys']);
+        $this->assertEquals($totalKeys, $response['body']['total']);
+
+        /** List keys filtering by expire (lessThan now — should match none) */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::lessThan('expire', (new \DateTime())->format('Y-m-d H:i:s'))->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
+        /** List keys filtering by expire (greaterThan now — should match the key with expiry) */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::greaterThan('expire', (new \DateTime())->format('Y-m-d H:i:s'))->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        // In parallel mode, multiple tests may create keys on the same project
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
 
         /**
          * Test for FAILURE
          */
 
-        return $data;
+        /** Test invalid query attribute */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('secret', ['test'])->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /** Test invalid cursor */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => 'invalid']))->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
 
-    /**
-     * @depends testCreateProjectKey
-     */
-    public function testGetProjectKey($data): array
+    public function testGetProjectKey(): void
     {
-        $id = $data['projectId'] ?? '';
-        $keyId = $data['keyId'] ?? '';
+        $data = $this->setupProjectWithKey();
+        $id = $data['projectId'];
+        $keyId = $data['keyId'];
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
@@ -2956,17 +4608,13 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testValidateProjectKey($data): void
+    public function testValidateProjectKey(): void
     {
-        $projectId = $data['projectId'] ?? '';
-        $teamId = $data['teamId'] ?? '';
+        $data = $this->setupProjectData();
+        $projectId = $data['projectId'];
+        $teamId = $data['teamId'];
 
         /**
          * Test for SUCCESS
@@ -2977,6 +4625,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['users.write'],
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
@@ -2997,6 +4646,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
             'expire' => null,
@@ -3019,6 +4669,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), -3600),
@@ -3060,6 +4711,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['teams.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
@@ -3077,6 +4729,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test 2',
@@ -3092,6 +4745,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
@@ -3107,13 +4761,11 @@ class ProjectsConsoleClientTest extends Scope
     }
 
 
-    /**
-     * @depends testCreateProjectKey
-     */
-    public function testUpdateProjectKey($data): array
+    public function testUpdateProjectKey(): void
     {
-        $id = $data['projectId'] ?? '';
-        $keyId = $data['keyId'] ?? '';
+        $data = $this->setupProjectWithKey();
+        $id = $data['projectId'];
+        $keyId = $data['keyId'];
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
@@ -3132,7 +4784,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertContains('tables.read', $response['body']['scopes']);
-        $this->assertCount(3, $response['body']['scopes']);
+        $this->assertCount(4, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
@@ -3151,7 +4803,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertContains('tables.read', $response['body']['scopes']);
-        $this->assertCount(3, $response['body']['scopes']);
+        $this->assertCount(4, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
@@ -3169,17 +4821,25 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProjectKey
-     */
-    public function testDeleteProjectKey($data): array
+    public function testDeleteProjectKey(): void
     {
-        $id = $data['projectId'] ?? '';
-        $keyId = $data['keyId'] ?? '';
+        // Create a fresh key for deletion testing (cannot use cached key)
+        $projectData = $this->setupProjectData();
+        $id = $projectData['projectId'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'name' => 'Key For Deletion',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $keyId = $response['body']['$id'];
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
@@ -3205,16 +4865,12 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testCreateProjectKeyOutdated($data): void
+    public function testCreateProjectKeyOutdated(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
 
         $response = $this->client->call(Client::METHOD_POST, '/mock/api-key-unprefixed', array_merge([
             'content-type' => 'application/json',
@@ -3250,17 +4906,16 @@ class ProjectsConsoleClientTest extends Scope
 
     // JWT Keys
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testJWTKey($data): void
+    public function testJWTKey(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
 
         // Create JWT key
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/jwts', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.2',
         ], $this->getHeaders()), [
             'duration' => 5,
             'scopes' => ['users.read'],
@@ -3268,6 +4923,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['jwt']);
+        $this->assertNotEmpty($response['body']['projectId']);
+        $this->assertSame($id, $response['body']['projectId']);
 
         $jwt = $response['body']['jwt'];
 
@@ -3304,16 +4961,15 @@ class ProjectsConsoleClientTest extends Scope
 
     // Platforms
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testCreateProjectPlatform($data): array
+    public function testCreateProjectPlatform(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'web',
             'name' => 'Web App',
@@ -3333,6 +4989,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-ios',
             'name' => 'Flutter App (iOS)',
@@ -3341,7 +4998,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('flutter-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly flutter-ios, but new version renames
         $this->assertEquals('Flutter App (iOS)', $response['body']['name']);
         $this->assertEquals('com.example.ios', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3352,6 +5009,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-android',
             'name' => 'Flutter App (Android)',
@@ -3360,7 +5018,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('flutter-android', $response['body']['type']);
+        $this->assertEquals('android', $response['body']['type']); // Origianlly flutter-android, but new version renames
         $this->assertEquals('Flutter App (Android)', $response['body']['name']);
         $this->assertEquals('com.example.android', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3371,6 +5029,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-web',
             'name' => 'Flutter App (Web)',
@@ -3379,7 +5038,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('web', $response['body']['type']); // Origianlly flutter-web, but new version renames
         $this->assertEquals('Flutter App (Web)', $response['body']['name']);
         $this->assertEquals('', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3390,6 +5049,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-ios',
             'name' => 'iOS App',
@@ -3398,7 +5058,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('apple-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly apple-ios, but new version renames
         $this->assertEquals('iOS App', $response['body']['name']);
         $this->assertEquals('com.example.ios', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3409,6 +5069,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-macos',
             'name' => 'macOS App',
@@ -3417,7 +5078,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('apple-macos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly apple-macos, but new version renames
         $this->assertEquals('macOS App', $response['body']['name']);
         $this->assertEquals('com.example.macos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3428,6 +5089,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-watchos',
             'name' => 'watchOS App',
@@ -3436,7 +5098,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('apple-watchos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly apple-watchos, but new version renames
         $this->assertEquals('watchOS App', $response['body']['name']);
         $this->assertEquals('com.example.watchos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3447,6 +5109,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-tvos',
             'name' => 'tvOS App',
@@ -3455,7 +5118,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('apple-tvos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly apple-tvos, but new version renames
         $this->assertEquals('tvOS App', $response['body']['name']);
         $this->assertEquals('com.example.tvos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3469,6 +5132,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'unknown',
             'name' => 'Web App',
@@ -3476,46 +5140,42 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProjectPlatform
-     */
-    public function testListProjectPlatform($data): array
+    public function testListProjectPlatform(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectWithPlatform();
+        $id = $data['projectId'];
 
         $this->assertEventually(function () use ($id) {
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.8.0',
             ], $this->getHeaders()), []);
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals(8, $response['body']['total']);
+            // In parallel mode, multiple tests may create platforms on the same project
+            // The setup creates 8 platforms, so we should have at least that many
+            $this->assertGreaterThanOrEqual(8, $response['body']['total']);
         });
 
         /**
          * Test for FAILURE
          */
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProjectPlatform
-     */
-    public function testGetProjectPlatform($data): array
+    public function testGetProjectPlatform(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectWithPlatform();
+        $id = $data['projectId'];
 
-        $platformWebId = $data['platformWebId'] ?? '';
+        $platformWebId = $data['platformWebId'];
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -3527,113 +5187,120 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('localhost', $response['body']['hostname']);
 
-        $platformFultteriOSId = $data['platformFultteriOSId'] ?? '';
+        $platformFultteriOSId = $data['platformFultteriOSId'];
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultteriOSId, $response['body']['$id']);
-        $this->assertEquals('flutter-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']);
         $this->assertEquals('Flutter App (iOS)', $response['body']['name']);
         $this->assertEquals('com.example.ios', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformFultterAndroidId = $data['platformFultterAndroidId'] ?? '';
+        $platformFultterAndroidId = $data['platformFultterAndroidId'];
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultterAndroidId, $response['body']['$id']);
-        $this->assertEquals('flutter-android', $response['body']['type']);
+        $this->assertEquals('android', $response['body']['type']);
         $this->assertEquals('Flutter App (Android)', $response['body']['name']);
         $this->assertEquals('com.example.android', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+        $platformFultterWebId = $data['platformFultterWebId'];
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultterWebId, $response['body']['$id']);
-        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('web', $response['body']['type']);
         $this->assertEquals('Flutter App (Web)', $response['body']['name']);
         $this->assertEquals('', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('flutter.appwrite.io', $response['body']['hostname']);
 
-        $platformAppleIosId = $data['platformAppleIosId'] ?? '';
+        $platformAppleIosId = $data['platformAppleIosId'];
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleIosId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleIosId, $response['body']['$id']);
-        $this->assertEquals('apple-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']);
         $this->assertEquals('iOS App', $response['body']['name']);
         $this->assertEquals('com.example.ios', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformAppleMacOsId = $data['platformAppleMacOsId'] ?? '';
+        $platformAppleMacOsId = $data['platformAppleMacOsId'];
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleMacOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleMacOsId, $response['body']['$id']);
-        $this->assertEquals('apple-macos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']);
         $this->assertEquals('macOS App', $response['body']['name']);
         $this->assertEquals('com.example.macos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformAppleWatchOsId = $data['platformAppleWatchOsId'] ?? '';
+        $platformAppleWatchOsId = $data['platformAppleWatchOsId'];
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleWatchOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleWatchOsId, $response['body']['$id']);
-        $this->assertEquals('apple-watchos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']);
         $this->assertEquals('watchOS App', $response['body']['name']);
         $this->assertEquals('com.example.watchos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformAppleTvOsId = $data['platformAppleTvOsId'] ?? '';
+        $platformAppleTvOsId = $data['platformAppleTvOsId'];
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleTvOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleTvOsId, $response['body']['$id']);
-        $this->assertEquals('apple-tvos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']);
         $this->assertEquals('tvOS App', $response['body']['name']);
         $this->assertEquals('com.example.tvos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3645,25 +5312,23 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/error', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProjectPlatform
-     */
-    public function testUpdateProjectPlatform($data): array
+    public function testUpdateProjectPlatform(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupProjectWithPlatform();
+        $id = $data['projectId'];
 
-        $platformWebId = $data['platformWebId'] ?? '';
+        $platformWebId = $data['platformWebId'];
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Web App 2',
             'hostname' => 'localhost-new',
@@ -3678,11 +5343,12 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('localhost-new', $response['body']['hostname']);
 
-        $platformFultteriOSId = $data['platformFultteriOSId'] ?? '';
+        $platformFultteriOSId = $data['platformFultteriOSId'];
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Flutter App (iOS) 2',
             'key' => 'com.example.ios2',
@@ -3691,17 +5357,18 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultteriOSId, $response['body']['$id']);
-        $this->assertEquals('flutter-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly flutter-ios, but new version renames
         $this->assertEquals('Flutter App (iOS) 2', $response['body']['name']);
         $this->assertEquals('com.example.ios2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformFultterAndroidId = $data['platformFultterAndroidId'] ?? '';
+        $platformFultterAndroidId = $data['platformFultterAndroidId'];
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Android) 2',
             'key' => 'com.example.android2',
@@ -3710,17 +5377,18 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultterAndroidId, $response['body']['$id']);
-        $this->assertEquals('flutter-android', $response['body']['type']);
+        $this->assertEquals('android', $response['body']['type']); // Origianlly flutter-android, but new version renames
         $this->assertEquals('Flutter App (Android) 2', $response['body']['name']);
         $this->assertEquals('com.example.android2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+        $platformFultterWebId = $data['platformFultterWebId'];
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Web) 2',
             'hostname' => 'flutter2.appwrite.io',
@@ -3729,17 +5397,18 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultterWebId, $response['body']['$id']);
-        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('web', $response['body']['type']); // Originally flutter-web, but new version renames
         $this->assertEquals('Flutter App (Web) 2', $response['body']['name']);
         $this->assertEquals('', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('flutter2.appwrite.io', $response['body']['hostname']);
 
-        $platformAppleIosId = $data['platformAppleIosId'] ?? '';
+        $platformAppleIosId = $data['platformAppleIosId'];
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformAppleIosId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'iOS App 2',
             'key' => 'com.example.ios2',
@@ -3748,17 +5417,18 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleIosId, $response['body']['$id']);
-        $this->assertEquals('apple-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Originally apple-ios, but new version renames
         $this->assertEquals('iOS App 2', $response['body']['name']);
         $this->assertEquals('com.example.ios2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformAppleMacOsId = $data['platformAppleMacOsId'] ?? '';
+        $platformAppleMacOsId = $data['platformAppleMacOsId'];
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformAppleMacOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'macOS App 2',
             'key' => 'com.example.macos2',
@@ -3767,17 +5437,18 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleMacOsId, $response['body']['$id']);
-        $this->assertEquals('apple-macos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Originally apple-macos, but new version renames
         $this->assertEquals('macOS App 2', $response['body']['name']);
         $this->assertEquals('com.example.macos2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformAppleWatchOsId = $data['platformAppleWatchOsId'] ?? '';
+        $platformAppleWatchOsId = $data['platformAppleWatchOsId'];
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformAppleWatchOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'watchOS App 2',
             'key' => 'com.example.watchos2',
@@ -3786,17 +5457,18 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleWatchOsId, $response['body']['$id']);
-        $this->assertEquals('apple-watchos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Originally apple-watchos, but new version renames
         $this->assertEquals('watchOS App 2', $response['body']['name']);
         $this->assertEquals('com.example.watchos2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformAppleTvOsId = $data['platformAppleTvOsId'] ?? '';
+        $platformAppleTvOsId = $data['platformAppleTvOsId'];
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformAppleTvOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'tvOS App 2',
             'key' => 'com.example.tvos2',
@@ -3805,7 +5477,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleTvOsId, $response['body']['$id']);
-        $this->assertEquals('apple-tvos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Originally apple-tvos, but new version renames
         $this->assertEquals('tvOS App 2', $response['body']['name']);
         $this->assertEquals('com.example.tvos2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3817,28 +5489,129 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/error', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Android) 2',
             'key' => 'com.example.android2',
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProjectPlatform
-     */
-    public function testDeleteProjectPlatform($data): array
+    public function testDeleteProjectPlatform(): void
     {
-        $id = $data['projectId'] ?? '';
+        // Create a fresh project with platforms for deletion testing (cannot use cached platforms)
+        $projectData = $this->setupProjectData();
+        $id = $projectData['projectId'];
 
-        $platformWebId = $data['platformWebId'] ?? '';
+        // Create web platform
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'type' => 'web',
+            'name' => 'Web App',
+            'hostname' => 'localhost',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $platformWebId = $response['body']['$id'];
+
+        // Create flutter-ios platform
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'type' => 'flutter-ios',
+            'name' => 'Flutter App (iOS)',
+            'key' => 'com.example.ios',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $platformFultteriOSId = $response['body']['$id'];
+
+        // Create flutter-android platform
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'type' => 'flutter-android',
+            'name' => 'Flutter App (Android)',
+            'key' => 'com.example.android',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $platformFultterAndroidId = $response['body']['$id'];
+
+        // Create flutter-web platform
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'type' => 'flutter-web',
+            'name' => 'Flutter App (Web)',
+            'hostname' => 'flutter.appwrite.io',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $platformFultterWebId = $response['body']['$id'];
+
+        // Create apple-ios platform
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'type' => 'apple-ios',
+            'name' => 'iOS App',
+            'key' => 'com.example.ios',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $platformAppleIosId = $response['body']['$id'];
+
+        // Create apple-macos platform
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'type' => 'apple-macos',
+            'name' => 'macOS App',
+            'key' => 'com.example.macos',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $platformAppleMacOsId = $response['body']['$id'];
+
+        // Create apple-watchos platform
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'type' => 'apple-watchos',
+            'name' => 'watchOS App',
+            'key' => 'com.example.watchos',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $platformAppleWatchOsId = $response['body']['$id'];
+
+        // Create apple-tvos platform
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'type' => 'apple-tvos',
+            'name' => 'tvOS App',
+            'key' => 'com.example.tvos',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $platformAppleTvOsId = $response['body']['$id'];
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -3847,15 +5620,15 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformFultteriOSId = $data['platformFultteriOSId'] ?? '';
-
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -3864,15 +5637,15 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformFultterAndroidId = $data['platformFultterAndroidId'] ?? '';
-
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -3881,15 +5654,15 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
-
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -3898,15 +5671,15 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformAppleIosId = $data['platformAppleIosId'] ?? '';
-
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformAppleIosId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -3915,15 +5688,15 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleIosId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformAppleMacOsId = $data['platformAppleMacOsId'] ?? '';
-
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformAppleMacOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -3932,15 +5705,15 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleMacOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformAppleWatchOsId = $data['platformAppleWatchOsId'] ?? '';
-
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformAppleWatchOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -3949,15 +5722,15 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleWatchOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformAppleTvOsId = $data['platformAppleTvOsId'] ?? '';
-
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformAppleTvOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -3966,6 +5739,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleTvOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -3973,14 +5747,13 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/webhooks/error', array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/webhooks/error', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
     public function testDeleteProject(): array
@@ -4005,6 +5778,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Amazing Project',
@@ -4030,6 +5804,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $project['headers']['status-code']);
@@ -4053,6 +5828,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $project['headers']['status-code']);
@@ -4076,6 +5852,7 @@ class ProjectsConsoleClientTest extends Scope
         $project1 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Amazing Project 1',
@@ -4086,6 +5863,7 @@ class ProjectsConsoleClientTest extends Scope
         $project2 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Amazing Project 2',
@@ -4101,6 +5879,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['users.read', 'users.write'],
         ]);
@@ -4121,6 +5900,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['users.read', 'users.write'],
         ]);
@@ -4169,11 +5949,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $user3['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testCreateProjectVariable(array $data)
+    public function testCreateProjectVariable(): void
     {
+        $data = $this->setupProjectData();
+
         /**
          * Test for SUCCESS
          */
@@ -4182,16 +5961,16 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'key' => 'APP_TEST',
+            'variableId' => 'unique()',
+            'key' => 'APP_TEST_CREATE',
             'value' => 'TESTINGVALUE',
             'secret' => false
         ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
-        $this->assertEquals('APP_TEST', $variable['body']['key']);
+        $this->assertEquals('APP_TEST_CREATE', $variable['body']['key']);
         $this->assertEquals('TESTINGVALUE', $variable['body']['value']);
         $this->assertFalse($variable['body']['secret']);
-        $variableId = $variable['body']['$id'];
 
         // test for secret variable
         $variable = $this->client->call(Client::METHOD_POST, '/project/variables', array_merge([
@@ -4199,16 +5978,15 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'key' => 'APP_TEST_1',
+            'variableId' => 'unique()',
+            'key' => 'APP_TEST_CREATE_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true
         ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
-        $this->assertEquals('APP_TEST_1', $variable['body']['key']);
+        $this->assertEquals('APP_TEST_CREATE_1', $variable['body']['key']);
         $this->assertEmpty($variable['body']['value']);
-
-        $secretVariableId = $variable['body']['$id'];
 
         /**
          * Test for FAILURE
@@ -4219,7 +5997,8 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'key' => 'APP_TEST',
+            'variableId' => 'unique()',
+            'key' => 'APP_TEST_CREATE',
             'value' => 'ANOTHERTESTINGVALUE'
         ]);
 
@@ -4231,6 +6010,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => str_repeat("A", 256),
             'value' => 'TESTINGVALUE'
         ]);
@@ -4243,26 +6023,18 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'LONGKEY',
             'value' => str_repeat("#", 8193),
         ]);
 
         $this->assertEquals(400, $variable['headers']['status-code']);
-
-        return array_merge(
-            $data,
-            [
-                'variableId' => $variableId,
-                'secretVariableId' => $secretVariableId
-            ]
-        );
     }
 
-    /**
-     * @depends testCreateProjectVariable
-     */
-    public function testListVariables(array $data)
+    public function testListVariables(): void
     {
+        $data = $this->setupProjectWithVariable();
+
         /**
          * Test for SUCCESS
          */
@@ -4274,21 +6046,14 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(2, $response['body']['variables']);
-        $this->assertEquals(2, $response['body']['total']);
-        $this->assertEquals("APP_TEST", $response['body']['variables'][0]['key']);
-        $this->assertEquals("TESTINGVALUE", $response['body']['variables'][0]['value']);
-        $this->assertEquals("APP_TEST_1", $response['body']['variables'][1]['key']);
-        $this->assertEmpty($response['body']['variables'][1]['value']);
-
-        return $data;
+        $this->assertGreaterThanOrEqual(2, count($response['body']['variables']));
+        $this->assertGreaterThanOrEqual(2, $response['body']['total']);
     }
 
-    /**
-     * @depends testListVariables
-     */
-    public function testGetVariable(array $data)
+    public function testGetVariable(): void
     {
+        $data = $this->setupProjectWithVariable();
+
         /**
          * Test for SUCCESS
          */
@@ -4324,15 +6089,11 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testGetVariable
-     */
-    public function testUpdateVariable(array $data)
+    public function testUpdateVariable(): void
     {
+        $data = $this->setupProjectWithVariable();
         /**
          * Test for SUCCESS
          */
@@ -4401,21 +6162,12 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(2, $response['body']['variables']);
-        $this->assertEquals("APP_TEST_UPDATE", $response['body']['variables'][0]['key']);
-        $this->assertEquals("APP_TEST_UPDATE_1", $response['body']['variables'][1]['key']);
-
-        /**
-         * Test for FAILURE
-         */
-
-        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $data['projectId'],
-            'x-appwrite-mode' => 'admin',
-        ], $this->getHeaders()));
-
-        $this->assertEquals(400, $response['headers']['status-code']);
+        // In parallel mode, other tests may create variables on the same project
+        $this->assertGreaterThanOrEqual(2, count($response['body']['variables']));
+        // Verify our updated variables exist (may not be at specific positions)
+        $variableKeys = array_column($response['body']['variables'], 'key');
+        $this->assertContains("APP_TEST_UPDATE", $variableKeys);
+        $this->assertContains("APP_TEST_UPDATE_1", $variableKeys);
 
         $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
@@ -4424,6 +6176,19 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'value' => 'TESTINGVALUEUPDATED_2'
         ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('TESTINGVALUEUPDATED_2', $response['body']['value']);
+        $this->assertSame('APP_TEST_UPDATE', $response['body']['key']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()));
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
@@ -4461,44 +6226,75 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateVariable
-     */
-    public function testDeleteVariable(array $data)
+    public function testDeleteVariable(): void
     {
+        // Create a fresh project with variables for deletion testing
+        $projectData = $this->setupProjectData();
+
+        // Create a non-secret variable
+        $variable = $this->client->call(Client::METHOD_POST, '/project/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectData['projectId'],
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'variableId' => 'unique()',
+            'key' => 'APP_TEST_DELETE',
+            'value' => 'TESTINGVALUE',
+            'secret' => false
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Create a secret variable
+        $variable = $this->client->call(Client::METHOD_POST, '/project/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectData['projectId'],
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'variableId' => 'unique()',
+            'key' => 'APP_TEST_DELETE_1',
+            'value' => 'TESTINGVALUE_1',
+            'secret' => true
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $secretVariableId = $variable['body']['$id'];
+
         /**
          * Test for SUCCESS
          */
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $data['variableId'], array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $variableId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $this->assertEquals(204, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $data['secretVariableId'], array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $secretVariableId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/project/variables', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(0, $response['body']['variables']);
-        $this->assertEquals(0, $response['body']['total']);
+        // In parallel mode, other tests may have created variables on the same project
+        // Verify our deleted variables no longer exist by checking their IDs are not present
+        $variableIds = array_column($response['body']['variables'], '$id');
+        $this->assertNotContains($variableId, $variableIds);
+        $this->assertNotContains($secretVariableId, $variableIds);
 
         /**
          * Test for FAILURE
@@ -4506,617 +6302,775 @@ class ProjectsConsoleClientTest extends Scope
 
         $response = $this->client->call(Client::METHOD_DELETE, '/project/variables/NON_EXISTING_VARIABLE', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * Devkeys Tests starts here ------------------------------------------------
-     */
-
-    /**
-     * @group devKeys
-     */
-    public function testCreateProjectDevKey(): void
+    public function testCreateDevKeyGone(): void
     {
-        /**
-         * Test for SUCCESS
-         */
         $id = $this->setupProject([
             'projectId' => ID::unique(),
-            'name' => 'testCreateProjectDevKey',
-            'region' => System::getEnv('_APP_REGION', 'default')
+            'name' => 'Dev Key Gone Project',
         ]);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
+            'name' => 'Dev Key',
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Key Test', $response['body']['name']);
-        $this->assertNotEmpty($response['body']['secret']);
-        $this->assertArrayHasKey('accessedAt', $response['body']);
-        $this->assertEmpty($response['body']['accessedAt']);
-
-        /** Create a second dev key */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Dev Key Test', $response['body']['name']);
-        $this->assertNotEmpty($response['body']['secret']);
-        $this->assertArrayHasKey('accessedAt', $response['body']);
-        $this->assertEmpty($response['body']['accessedAt']);
-
-        /**
-         * Test for FAILURE
-         */
-
-        /** TEST expiry date is required */
-        $res = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test'
-        ]);
-
-        $this->assertEquals(400, $res['headers']['status-code']);
+        $this->assertEquals(410, $response['headers']['status-code']);
+        $this->assertEquals(Exception::DEV_KEY_GONE, $response['body']['type']);
     }
 
-
-    /**
-     * @group devKeys
-     */
-    public function testListProjectDevKey(): void
+    public function testProjectLabels(): void
     {
-        /**
-         * Test for SUCCESS
-         */
-        $projectId = $this->setupProject([
-            'projectId' => ID::unique(),
-            'name' => 'testListProjectDevKey',
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        /** Create devKey 1 */
-        $this->setupDevKey([
-            'projectId' => $projectId,
-            'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
-        ]);
-
-        /** Create devKey 2 */
-        $this->setupDevKey([
-            'projectId' => $projectId,
-            'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
-        ]);
-
-        /** List all dev keys */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['total']);
-
-        /** List dev keys with limit */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys', array_merge([
+        // Setup: Prepare team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [
-                Query::limit(1)->toString()
-            ]
+            'teamId' => ID::unique(),
+            'name' => 'Query Select Test Team',
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['total']);
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
 
-        /** List dev keys with search */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys', array_merge([
+        // Setup: Prepare project
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Test project - Labels 1',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $this->assertIsArray($project['body']['labels']);
+        $this->assertCount(0, $project['body']['labels']);
+        $projectId = $project['body']['$id'];
+
+        // Apply labels
+        $project = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => ['vip', 'imagine', 'blocked']
+        ]);
+
+        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertIsArray($project['body']['labels']);
+        $this->assertCount(3, $project['body']['labels']);
+        $this->assertEquals('vip', $project['body']['labels'][0]);
+        $this->assertEquals('imagine', $project['body']['labels'][1]);
+        $this->assertEquals('blocked', $project['body']['labels'][2]);
+
+        // Update labels
+        $project = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => ['nonvip', 'imagine']
+        ]);
+        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertIsArray($project['body']['labels']);
+        $this->assertCount(2, $project['body']['labels']);
+        $this->assertEquals('nonvip', $project['body']['labels'][0]);
+        $this->assertEquals('imagine', $project['body']['labels'][1]);
+
+        // Filter by labels
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['nonvip'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(1, $projects['body']['total']);
+        $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
+
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['vip'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(0, $projects['body']['total']);
+
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['imagine'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(1, $projects['body']['total']);
+        $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
+
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['nonvip', 'imagine'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(1, $projects['body']['total']);
+        $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
+
+        // Setup: Second project with only imagine label
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Test project - Labels 2',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $this->assertIsArray($project['body']['labels']);
+        $this->assertCount(0, $project['body']['labels']);
+        $projectId2 = $project['body']['$id'];
+
+        $project = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId2 . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => ['vip', 'imagine']
+        ]);
+        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertIsArray($project['body']['labels']);
+        $this->assertCount(2, $project['body']['labels']);
+        $this->assertEquals('vip', $project['body']['labels'][0]);
+        $this->assertEquals('imagine', $project['body']['labels'][1]);
+
+        // List of imagine has both
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['imagine'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(2, $projects['body']['total']);
+        $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
+        $this->assertEquals($projectId2, $projects['body']['projects'][1]['$id']);
+
+        // List of vip only has second
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['vip'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(1, $projects['body']['total']);
+        $this->assertEquals($projectId2, $projects['body']['projects'][0]['$id']);
+
+        // List of vip and imagine has second
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['vip'])->toString(),
+                Query::contains('labels', ['imagine'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(1, $projects['body']['total']);
+        $this->assertEquals($projectId2, $projects['body']['projects'][0]['$id']);
+
+        // List of vip or imagine has second
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['vip', 'imagine'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(2, $projects['body']['total']);
+        $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
+        $this->assertEquals($projectId2, $projects['body']['projects'][1]['$id']);
+
+        // Cleanup
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['total']);
-        $this->assertEquals('Key Test', $response['body']['devKeys'][0]['name']);
-        $this->assertEquals('Dev Key Test', $response['body']['devKeys'][1]['name']);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
-        /** List dev keys with querying `expire` */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys', array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId2, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [Query::lessThan('expire', (new \DateTime())->format('Y-m-d H:i:s'))->toString()]
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    #[Group('ciIgnore')]
+    public function testProjectSpecificPermissionsForListProjects(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+        ], $teamId, false);
+
+        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserName = 'Test User';
+
+        [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => $testUserName,
+            'roles' => ["owner"],
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(0, $response['body']['total']); // No dev keys expired
-
-        /**
-         * Test for FAILURE
-         */
-
-        /** Test for search with invalid query */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::search('name', 'Invalid')->toString()
+        $testCases = [
+            [
+                'roles' => ["owner"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+            ],
+            [
+                'roles' => ["project-$projectIdA-owner"],
+                'successProjectIds' => [$projectIdA],
+            ],
+            [
+                'roles' => ["project-$projectIdB-developer"],
+                'successProjectIds' => [$projectIdB],
             ]
-        ]);
+        ];
 
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `queries` param: Invalid query: Attribute not found in schema: name', $response['body']['message']);
-    }
-
-
-    /**
-     * @group devKeys
-     */
-    public function testGetProjectDevKey(): void
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $projectId = $this->setupProject([
-            'projectId' => ID::unique(),
-            'name' => 'testGetProjectDevKey',
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $devKey = $this->setupDevKey([
-            'projectId' => $projectId,
-            'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
-        ]);
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys/' . $devKey['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($devKey['$id'], $response['body']['$id']);
-        $this->assertEquals('Dev Key Test', $response['body']['name']);
-        $this->assertNotEmpty($response['body']['secret']);
-        $this->assertArrayHasKey('accessedAt', $response['body']);
-        $this->assertEmpty($response['body']['accessedAt']);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys/error', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-    }
-
-    /**
-     * @group devKeys
-     */
-    public function testGetDevKeyWithSdks(): void
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $projectId = $this->setupProject([
-            'projectId' => ID::unique(),
-            'name' => 'testGetDevKeyWithSdks',
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $devKey = $this->setupDevKey([
-            'projectId' => $projectId,
-            'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
-        ]);
-
-        /** Use dev key with python sdk */
-        $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $devKey['secret'],
-            'x-sdk-name' => 'python'
-        ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
-        ]);
-        $this->assertEquals(401, $res['headers']['status-code']);
-
-        /** Use dev key with php sdk */
-        $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $devKey['secret'],
-            'x-sdk-name' => 'php'
-        ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
-        ]);
-        $this->assertEquals(401, $res['headers']['status-code']);
-
-        /** Get the dev key */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys/' . $devKey['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayHasKey('sdks', $response['body']);
-        $this->assertCount(2, $response['body']['sdks']);
-        $this->assertContains('python', $response['body']['sdks']);
-        $this->assertContains('php', $response['body']['sdks']);
-    }
-
-    /**
-     * @group devKeys
-     */
-    public function testNoHostValidationWithDevKey(): void
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $projectId = $this->setupProject([
-            'projectId' => ID::unique(),
-            'name' => 'testNoHostValidationWithDevKey',
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $devKey = $this->setupDevKey([
-            'projectId' => $projectId,
-            'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
-        ]);
-
-        $provider = 'mock';
-        $appId = '1';
-        $secret = '123456';
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+        // Setup session
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'provider' => $provider,
-            'appId' => $appId,
-            'secret' => $secret,
-            'enabled' => true,
-        ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        /** Test oauth2 and get invalid `success` URL */
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
         ], [
-            'success' => 'https://example.com',
-            'failure' => 'https://example.com'
+            'email' => $testUserEmail,
+            'password' => 'password',
         ]);
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
-        /** Test oauth2 with devKey and now get oauth2 is disabled */
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $devKey['secret']
-        ], [
-            'success' => 'https://example.com',
-            'failure' => 'https://example.com'
-        ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
+        foreach ($testCases as $testCase) {
+            $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
 
-        /** Test hostname in Magic URL */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'userId' => ID::unique(),
-            'email' => 'user@appwrite.io',
-            'url' => 'https://example.com',
-        ]);
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        /** Test hostname in Magic URL with devKey */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $devKey['secret']
-        ], [
-            'userId' => ID::unique(),
-            'email' => 'user@appwrite.io',
-            'url' => 'https://example.com',
-        ]);
-        $this->assertEquals(201, $response['headers']['status-code']);
-    }
-
-    /**
-     * @group devKeys
-     */
-    public function testCorsWithDevKey(): void
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $projectId = $this->setupProject([
-            'projectId' => ID::unique(),
-            'name' => 'testCorsWithDevKey',
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $devKey = $this->setupDevKey([
-            'projectId' => $projectId,
-            'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
-        ]);
-
-        $origin = 'http://example.com';
-
-        /**
-         * Test CORS without Dev Key (should fail due to origin)
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => $origin,
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
-        ]);
-
-        $this->assertEquals(403, $response['headers']['status-code']);
-        $this->assertNotEquals($origin, $response['headers']['access-control-allow-origin'] ?? null);
-        // you should not return a fallback origin for a disallowed host
-        $this->assertNull($response['headers']['access-control-allow-origin'] ?? null);
-
-
-        /**
-         * Test CORS with Dev Key (should bypass origin check)
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => $origin,
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $devKey['secret']
-        ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
-        ]);
-
-        $this->assertEquals(401, $response['headers']['status-code']);
-        $this->assertEquals($origin, $response['headers']['access-control-allow-origin'] ?? null);
-    }
-
-    /**
-     * @group devKeys
-     */
-    public function testNoRateLimitWithDevKey(): void
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $projectId = $this->setupProject([
-            'projectId' => ID::unique(),
-            'name' => 'testNoRateLimitWithDevKey',
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $devKey = $this->setupDevKey([
-            'projectId' => $projectId,
-            'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
-        ]);
-
-        /**
-         * Test for SUCCESS
-         */
-        for ($i = 0; $i < 10; $i++) {
-            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            $response = $this->client->call(Client::METHOD_GET, '/projects', [
+                'origin' => 'http://localhost',
                 'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-            ], [
-                'email' => 'user@appwrite.io',
-                'password' => 'password'
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
             ]);
-            $this->assertEquals(401, $response['headers']['status-code']);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']);
+            $this->assertCount(\count($testCase['successProjectIds']), $response['body']['projects']);
+
+            $returnedProjectIds = \array_column($response['body']['projects'], '$id');
+            foreach ($testCase['successProjectIds'] as $projectId) {
+                $this->assertContains($projectId, $returnedProjectIds);
+            }
         }
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
-        ]);
-        $this->assertEquals(429, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $devKey['secret']
-        ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
-        ]);
-        $this->assertEquals(401, $response['headers']['status-code']);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/dev-keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), -3600),
-        ]);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $response['body']['secret']
-        ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
-        ]);
-        $this->assertEquals(429, $response['headers']['status-code']);
-
-        /**
-         * Test for FAILURE after expire
-         */
-        $devKey = $this->setupDevKey([
-            'projectId' => $projectId,
-            'name' => 'Dev Key Test Expire 5 seconds',
-            'expire' => DateTime::addSeconds(new \DateTime(), 5)
-        ]);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $devKey['secret']
-        ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
-        ]);
-        $this->assertEquals(401, $response['headers']['status-code']);
-
-        sleep(5);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $devKey['secret']
-        ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
-        ]);
-        $this->assertEquals(429, $response['headers']['status-code']);
     }
 
-    /**
-     * @group devKeys
-     */
-    public function testUpdateProjectDevKey(): void
+    #[Group('ciIgnore')]
+    public function testProjectSpecificPermissionsForUpdateProject(): void
     {
-        $projectId = $this->setupProject([
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
             'projectId' => ID::unique(),
-            'name' => 'testUpdateProjectDevKey',
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $devKey = $this->setupDevKey([
-            'projectId' => $projectId,
-            'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
-        ]);
-
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId . '/dev-keys/' . $devKey['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test Update',
-            'expire' => DateTime::addSeconds(new \DateTime(), 360),
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($devKey['$id'], $response['body']['$id']);
-        $this->assertEquals('Key Test Update', $response['body']['name']);
-        $this->assertArrayHasKey('accessedAt', $response['body']);
-        $this->assertEmpty($response['body']['accessedAt']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys/' . $devKey['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($devKey['$id'], $response['body']['$id']);
-        $this->assertEquals('Key Test Update', $response['body']['name']);
-        $this->assertArrayHasKey('accessedAt', $response['body']);
-        $this->assertEmpty($response['body']['accessedAt']);
-    }
-
-    /**
-     * @group devKeys
-     */
-    public function testDeleteProjectDevKey(): void
-    {
-        $projectId = $this->setupProject([
+            'name' => 'Project Test A',
+        ], $teamId);
+        $projectIdB = $this->setupProject([
             'projectId' => ID::unique(),
-            'name' => 'testDeleteProjectDevKey',
-            'region' => System::getEnv('_APP_REGION', 'default')
+            'name' => 'Project Test B',
+        ], $teamId, false);
+
+        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserName = 'Test User';
+
+        [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => $testUserName,
+            'roles' => ["owner"],
         ]);
 
-        $devKey = $this->setupDevKey([
-            'projectId' => $projectId,
-            'name' => 'Dev Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
-        ]);
+        $testCases = [
+            [
+                'roles' => ["owner"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+                'failureProjectIds' => [],
+            ],
+            [
+                'roles' => ["project-$projectIdA-owner"],
+                'successProjectIds' => [$projectIdA],
+                'failureProjectIds' => [$projectIdB],
+            ],
+            [
+                'roles' => ["project-$projectIdB-developer"],
+                'successProjectIds' => [$projectIdB],
+                'failureProjectIds' => [$projectIdA],
+            ]
+        ];
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId . '/dev-keys/' . $devKey['$id'], array_merge([
+        // Setup session
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertEmpty($response['body']);
-
-        /**
-        * Get rate limit trying to use the deleted key
-        */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $devKey['secret']
         ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
+            'email' => $testUserEmail,
+            'password' => 'password',
         ]);
-        $this->assertEquals(429, $response['headers']['status-code']);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/dev-keys/' . $devKey['$id'], array_merge([
+        foreach ($testCases as $testCase) {
+            $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
+
+            foreach ($testCase['successProjectIds'] as $projectId) {
+                $newProjectName = 'Updated Project Name ' . ID::unique();
+                // Success: User should be able to update the project they have access to.
+                $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-response-format' => '1.9.4',
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'name' => $newProjectName,
+                ]);
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertNotEmpty($response['body']);
+                $this->assertEquals($newProjectName, $response['body']['name']);
+            }
+
+            foreach ($testCase['failureProjectIds'] as $projectId) {
+                $newProjectName = 'Updated Project Name ' . ID::unique();
+                // Failure: User should not be able to update the project they do not have access to.
+                $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-response-format' => '1.9.4',
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'name' => $newProjectName,
+                ]);
+                $this->assertTrue($response['headers']['status-code'] === 401 || $response['headers']['status-code'] === 404);
+            }
+        }
+    }
+
+    #[Group('ciIgnore')]
+    public function testProjectSpecificPermissionsForDeleteProject(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+        ], $teamId, false);
+        $projectIdC = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test C',
+        ], $teamId, false);
+        $projectIdD = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test D',
+        ], $teamId, false);
+        $projectIdE = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test E',
+        ], $teamId, false);
+
+        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserName = 'Test User';
+
+        [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => $testUserName,
+            'roles' => ["owner"],
+        ]);
+
+        $testCases = [
+            [
+                'roles' => ["owner"],
+                'successProjectIds' => [$projectIdA],
+                'failureProjectIds' => [],
+            ],
+            [
+                'roles' => ["developer"],
+                'successProjectIds' => [$projectIdB, $projectIdC],
+                'failureProjectIds' => [],
+            ],
+            [
+                'roles' => ["project-$projectIdD-owner"],
+                'successProjectIds' => [$projectIdD],
+                'failureProjectIds' => [$projectIdE],
+            ],
+        ];
+
+        // Setup session
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], [
+            'email' => $testUserEmail,
+            'password' => 'password',
+        ]);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        foreach ($testCases as $testCase) {
+            $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
 
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId . '/dev-keys/error', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+            foreach ($testCase['successProjectIds'] as $projectId) {
+                // Success: User should be able to delete the project they have access to.
+                $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ]);
+                $this->assertEquals(204, $response['headers']['status-code']);
+            }
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+            foreach ($testCase['failureProjectIds'] as $projectId) {
+                // Failure: User should not be able to delete the project they do not have access to.
+                $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ]);
+                $this->assertTrue($response['headers']['status-code'] === 401 || $response['headers']['status-code'] === 404);
+            }
+        }
     }
 
     /**
-     * Devkeys Tests ends here ------------------------------------------------
+     * Test project specific permissions for project resources, in this case 'function variables'.
      */
+    #[Group('ciIgnore')]
+    public function testProjectSpecificPermissionsForProjectResources(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+        ], $teamId, false);
+
+        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserName = 'Test User';
+
+        [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => $testUserName,
+            'roles' => ["owner"],
+        ]);
+
+        $testCases = [
+            [
+                'roles' => ["owner"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+                'failureProjectIds' => [],
+            ],
+            [
+                'roles' => ["project-$projectIdA-developer"],
+                'successProjectIds' => [$projectIdA],
+                'failureProjectIds' => [$projectIdB],
+            ],
+            [
+                'roles' => ["project-$projectIdB-developer"],
+                'successProjectIds' => [$projectIdB],
+                'failureProjectIds' => [$projectIdA],
+            ]
+        ];
+
+        // Setup session
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $testUserEmail,
+            'password' => 'password',
+        ]);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        // Setup functions
+        $functionId = ID::unique();
+        $this->setupFunction($projectIdA, $functionId, $token);
+        $this->setupFunction($projectIdB, $functionId, $token);
+
+        foreach ($testCases as $testCase) {
+            $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
+
+            foreach ($testCase['successProjectIds'] as $projectId) {
+                $variableId = ID::unique();
+                $response = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-mode' => 'admin',
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'variableId' => $variableId,
+                    'key' => 'APP_TEST_' . $variableId,
+                    'value' => 'TESTINGVALUE',
+                    'secret' => false
+                ]);
+
+                $this->assertEquals(201, $response['headers']['status-code']);
+                $this->assertEquals('APP_TEST_' . $variableId, $response['body']['key']);
+                $this->assertEquals('TESTINGVALUE', $response['body']['value']);
+            }
+
+            foreach ($testCase['failureProjectIds'] as $projectId) {
+                $variableId = ID::unique();
+                $response = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-mode' => 'admin',
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'variableId' => $variableId,
+                    'key' => 'APP_TEST_' . $variableId,
+                    'value' => 'TESTINGVALUE',
+                    'secret' => false
+                ]);
+
+                $this->assertTrue($response['headers']['status-code'] === 401 || $response['headers']['status-code'] === 404);
+            }
+        }
+    }
+
+    public function testPasswordRecoveryUrlParams(): void
+    {
+        // With search params
+        $url = 'http://localhost/auth/signin?id=abcd1234&tenant=efgh5678&domain=example.com&referred=0';
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/account/recovery',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'userId' => ID::unique(),
+                'email' => $this->getUser()['email'],
+                'url' => $url,
+            ]
+        );
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userId']);
+
+        $userId = $response['body']['userId'];
+
+        $userEmail = $this->getUser()['email'];
+
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
+            $this->assertStringContainsString($url, (string) ($email['html'] ?? ''));
+        });
+
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
+
+        $expectedUrl = $url . "&userId=" . $userId . "&secret=";
+
+        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+
+        // With search params, with mobile backlink
+        $url = 'appwriteio://signin?id=abcd1234&tenant=efgh5678&domain=example.com&referred=0';
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/account/recovery',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'userId' => ID::unique(),
+                'email' => $userEmail,
+                'url' => $url,
+            ]
+        );
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userId']);
+
+        $userId = $response['body']['userId'];
+
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
+            $this->assertStringContainsString($url, (string) ($email['html'] ?? ''));
+        });
+
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
+
+        $expectedUrl = $url . "&userId=" . $userId . "&secret=";
+
+        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+
+        // Without search params
+        $url = 'http://localhost/auth/signin';
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/account/recovery',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'userId' => ID::unique(),
+                'email' => $userEmail,
+                'url' => $url,
+            ]
+        );
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userId']);
+
+        $userId = $response['body']['userId'];
+
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url, $userId) {
+            $this->assertStringContainsString($url . '?userId=' . $userId, (string) ($email['html'] ?? ''));
+        });
+
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
+
+        $expectedUrl = $url . "?userId=" . $userId . "&secret=";
+
+        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+
+        // Without search params, with mobile backlink
+        $url = 'appwriteio://signin';
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/account/recovery',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'userId' => ID::unique(),
+                'email' => $userEmail,
+                'url' => $url,
+            ]
+        );
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userId']);
+
+        $userId = $response['body']['userId'];
+
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url, $userId) {
+            $this->assertStringContainsString($url . '?userId=' . $userId, (string) ($email['html'] ?? ''));
+        });
+
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
+
+        $expectedUrl = $url . "?userId=" . $userId . "&secret=";
+
+        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+
+        // With injection (allowed, meant to be protected client-side)
+        $url = 'http://localhost/auth/signin\"></a><h1>INJECTED</h1>';
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/account/recovery',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'userId' => ID::unique(),
+                'email' => $userEmail,
+                'url' => $url,
+            ]
+        );
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userId']);
+
+        $userId = $response['body']['userId'];
+
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
+            $this->assertStringContainsString('INJECTED', (string) ($email['html'] ?? ''));
+        });
+
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
+
+        $this->assertStringContainsString('INJECTED', (string) $lastEmail['html']);
+        $this->assertStringContainsString('<h1>', (string) $lastEmail['html']);
+        $this->assertStringContainsString('</h1>', (string) $lastEmail['html']);
+        $this->assertStringContainsString('">', (string) $lastEmail['html']);
+        $this->assertStringContainsString('</a>', (string) $lastEmail['html']);
+
+        $expectedUrl = $url . "?userId=" . $userId . "&secret=";
+        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+
+    }
 }

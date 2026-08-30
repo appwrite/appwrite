@@ -105,7 +105,25 @@ class Update extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
+        if ($challenge->getAttribute('expire') < DateTime::formatTz(DateTime::now())) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
         $type = $challenge->getAttribute('type');
+
+        // Consult the current policy so disabling a factor also invalidates outstanding challenges
+        $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
+        $factorEnabled = match ($type) {
+            Type::TOTP => $mfaFactors['totp'] ?? true,
+            Type::EMAIL => $mfaFactors['email'] ?? true,
+            Type::PHONE => $mfaFactors['phone'] ?? true,
+            Type::CUSTOM => $mfaFactors['custom'] ?? false,
+            default => true, // Recovery codes always remain available as a fallback
+        };
+
+        if (!$factorEnabled) {
+            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
+        }
 
         $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
             if (
@@ -117,7 +135,7 @@ class Update extends Action
                     $mfaRecoveryCodes = \array_diff($mfaRecoveryCodes, [$otp]);
                     $mfaRecoveryCodes = \array_values($mfaRecoveryCodes);
                     $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-                    $dbForProject->updateDocument('users', $user->getId(), $user);
+                    $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
 
                     return true;
                 }
@@ -133,6 +151,7 @@ class Update extends Action
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
             Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
+            Type::CUSTOM => Challenge\Custom::challenge($challenge, $user, $otp),
             default => false
         });
 
@@ -147,11 +166,13 @@ class Update extends Action
         $factors[] = $type;
         $factors = \array_values(\array_unique($factors));
 
+        $mfaUpdatedAt = DateTime::now();
+
         $session
             ->setAttribute('factors', $factors)
-            ->setAttribute('mfaUpdatedAt', DateTime::now());
+            ->setAttribute('mfaUpdatedAt', $mfaUpdatedAt);
 
-        $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        $dbForProject->updateDocument('sessions', $session->getId(), new Document(['factors' => $factors, 'mfaUpdatedAt' => $mfaUpdatedAt]));
 
         $queueForEvents
             ->setParam('userId', $user->getId())

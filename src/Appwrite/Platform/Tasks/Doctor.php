@@ -4,21 +4,22 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
-use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\App;
+use Appwrite\Storage\Bytes;
 use Utopia\Cache\Adapter\Pool as CachePool;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
 use Utopia\System\System;
 use Utopia\Validator\IP;
 
@@ -34,10 +35,11 @@ class Doctor extends Action
         $this
             ->desc('Validate server health')
             ->inject('register')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(Registry $register): void
+    public function action(Registry $register, Authorization $authorization): void
     {
         Console::log("  __   ____  ____  _  _  ____  __  ____  ____     __  __  
  / _\ (  _ \(  _ \/ )( \(  _ \(  )(_  _)(  __)   (  )/  \ 
@@ -63,10 +65,11 @@ class Doctor extends Action
         }
 
         $ipv4 = new IP(IP::V4);
-        if (!$ipv4->isValid(System::getEnv('_APP_DOMAIN_TARGET_A'))) {
-            Console::log('🔴 A record target is not valid (' . System::getEnv('_APP_DOMAIN_TARGET_A') . ')');
+        $targetA = \explode(',', System::getEnv('_APP_DOMAIN_TARGET_A', ''))[0];
+        if (!$ipv4->isValid($targetA)) {
+            Console::log('🔴 A record target is not valid (' . $targetA . ')');
         } else {
-            Console::log('🟢 A record target is valid (' . System::getEnv('_APP_DOMAIN_TARGET_A') . ')');
+            Console::log('🟢 A record target is valid (' . $targetA . ')');
         }
 
         $ipv6 = new IP(IP::V6);
@@ -123,7 +126,7 @@ class Doctor extends Action
         $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
         try {
-            $loggingProvider = new DSN($providerConfig ?? '');
+            $loggingProvider = new DSN($providerConfig);
 
             $providerName = $loggingProvider->getScheme();
 
@@ -152,6 +155,7 @@ class Doctor extends Action
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
+                    $adapter->setAuthorization($authorization);
 
                     if ($adapter->ping()) {
                         Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
@@ -159,7 +163,7 @@ class Doctor extends Action
                         Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
                     }
                 } catch (\Throwable) {
-                    Console::error('🔴 ' . str_pad("{$key}.({$database})", 47, '.') . 'disconnected');
+                    Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
                 }
             }
         }
@@ -169,20 +173,26 @@ class Doctor extends Action
 
         $configs = [
             'Cache' => Config::getParam('pools-cache'),
-            'Queue' => Config::getParam('pools-queue'),
+            'Queue' => Config::getParam('pools-publisher'),
             'PubSub' => Config::getParam('pools-pubsub'),
         ];
 
         foreach ($configs as $key => $config) {
+            if (!\is_array($config) || $config === []) {
+                Console::error('🔴 ' . str_pad($key, 47, '.') . 'disconnected');
+                continue;
+            }
+
             foreach ($config as $pool) {
                 try {
-                    $adapter = match($key) {
-                        'Cache' => new CachePool($pools->get($pool)),
-                        'Queue' => new BrokerPool($pools->get($pool)),
-                        'PubSub' => new PubSubPool($pools->get($pool)),
+                    $connected = match ($key) {
+                        'Cache' => (new CachePool($pools->get($pool)))->ping(),
+                        'Queue' => (new BrokerPool(publisher: $pools->get($pool)))
+                            ->getQueueSize(new Queue('_doctor')) >= 0,
+                        'PubSub' => (new PubSubPool($pools->get($pool)))->ping(),
                     };
 
-                    if ($adapter->ping()) {
+                    if ($connected) {
                         Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
                     } else {
                         Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
@@ -210,17 +220,23 @@ class Doctor extends Action
             }
         }
 
+        // Probe SMTP reachability only; do not send a live message.
         try {
-            /* @var PHPMailer $mail */
-            $mail = $register->get('smtp');
+            $smtpHost = System::getEnv('_APP_SMTP_HOST', '');
+            $smtpPort = (int) System::getEnv('_APP_SMTP_PORT', '25');
 
-            $mail->addAddress('demo@example.com', 'Example.com');
-            $mail->Subject = 'Test SMTP Connection';
-            $mail->Body = 'Hello World';
-            $mail->AltBody = 'Hello World';
+            if ($smtpHost === '') {
+                Console::log('⚪ ' . str_pad("SMTP", 50, '.') . 'not configured');
+            } else {
+                $connection = @\fsockopen($smtpHost, $smtpPort > 0 ? $smtpPort : 25, $errno, $errstr, 3);
 
-            $mail->send();
-            Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
+                if ($connection !== false) {
+                    \fclose($connection);
+                    Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
+                } else {
+                    Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
+                }
+            }
         } catch (\Throwable) {
             Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
         }
@@ -271,7 +287,7 @@ class Doctor extends Action
             $percentage = (($device->getPartitionTotalSpace() - $device->getPartitionFreeSpace())
             / $device->getPartitionTotalSpace()) * 100;
 
-            $message = $key . ' Volume has ' . Storage::human($device->getPartitionFreeSpace()) . ' free space (' . \round($percentage, 2) . '% used)';
+            $message = $key . ' Volume has ' . Bytes::human($device->getPartitionFreeSpace()) . ' free space (' . \round($percentage, 2) . '% used)';
 
             if ($percentage < 80) {
                 Console::success('🟢 ' . $message);
@@ -281,7 +297,7 @@ class Doctor extends Action
         }
 
         try {
-            if (App::isProduction()) {
+            if (Http::isProduction()) {
                 Console::log('');
                 $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
 

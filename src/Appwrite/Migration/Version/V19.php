@@ -3,8 +3,8 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -736,6 +736,7 @@ class V19 extends Migration
                         'resourceInternalId' => $document->getSequence(),
                         'resourceUpdatedAt' => DateTime::now(),
                         'projectId' => $this->project->getId(),
+                        'projectInternalId' => $this->project->getSequence(),
                         'schedule'  => $document->getAttribute('schedule'),
                         'active' => !empty($document->getAttribute('schedule')) && !empty($document->getAttribute('deployment')),
                     ]));

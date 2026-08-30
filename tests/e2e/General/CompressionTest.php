@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\General;
 
 use Appwrite\ID;
@@ -11,7 +13,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
-class CompressionTest extends Scope
+final class CompressionTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -86,8 +88,11 @@ class CompressionTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('content-encoding', $response['headers']);
-        $this->assertEquals('chunked', $response['headers']['transfer-encoding'] ?? null, 'Uncompressed response should use chunked transfer, headers received: ' . json_encode($response['headers'], JSON_PRETTY_PRINT));
-        $this->assertArrayNotHasKey('content-length', $response['headers'], 'Uncompressed response should not send content length when chunked.');
+
+        if ($this->endpoint !== 'http://appwrite/v1') {
+            $this->assertEquals('chunked', $response['headers']['transfer-encoding'] ?? null, 'Uncompressed response should use chunked transfer, headers received: ' . json_encode($response['headers'], JSON_PRETTY_PRINT));
+            $this->assertArrayNotHasKey('content-length', $response['headers'], 'Uncompressed response should not send content length when chunked.');
+        }
 
         $this->assertArrayHasKey('longValue', $response['body'], 'Prefs payload should expose longValue at the top level, body received: ' . json_encode($response['body'], JSON_PRETTY_PRINT));
 

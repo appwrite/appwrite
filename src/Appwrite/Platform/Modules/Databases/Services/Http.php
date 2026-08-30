@@ -3,8 +3,11 @@
 namespace Appwrite\Platform\Modules\Databases\Services;
 
 use Appwrite\Platform\Modules\Databases\Http\Init\Timeout;
+use Appwrite\Platform\Modules\Databases\Services\Registry\DocumentsDB as DocumentsDBRegistry;
+use Appwrite\Platform\Modules\Databases\Services\Registry\Embeddings as EmbeddingsRegistry;
 use Appwrite\Platform\Modules\Databases\Services\Registry\Legacy as LegacyRegistry;
-use Appwrite\Platform\Modules\Databases\Services\Registry\TablesDB as TablesDBRegistry;
+use Appwrite\Platform\Modules\Databases\Services\Registry\TablesDB as TablesDBDBRegistry;
+use Appwrite\Platform\Modules\Databases\Services\Registry\VectorsDB as VectorsDBRegistry;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -17,7 +20,10 @@ class Http extends Service
 
         foreach ([
             LegacyRegistry::class,
-            TablesDBRegistry::class,
+            TablesDBDBRegistry::class,
+            DocumentsDBRegistry::class,
+            VectorsDBRegistry::class,
+            EmbeddingsRegistry::class
         ] as $registrar) {
             new $registrar($this);
         }

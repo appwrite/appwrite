@@ -106,6 +106,23 @@ abstract class OAuth2
     abstract public function getUserName(string $accessToken): string;
 
     /**
+     * Return the URL of the user's profile photo from the provider.
+     *
+     * Returns an empty string when the provider does not expose a photo or
+     * the user has not set one. Concrete adapters override this only when
+     * their API reliably provides a photo URL; the base implementation is a
+     * safe no-op so all existing adapters remain valid without changes.
+     *
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        return '';
+    }
+
+    /**
      * @param $scope
      *
      * @return $this
@@ -155,7 +172,7 @@ abstract class OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return int
      */
     public function getAccessTokenExpiry(string $code): int
     {
@@ -205,8 +222,6 @@ abstract class OAuth2
         $response = \curl_exec($ch);
 
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        \curl_close($ch);
 
         if ($code >= 400) {
             throw new Exception($response, $code);

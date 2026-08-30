@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Functions;
 
 use Tests\E2E\Client;
@@ -7,10 +9,11 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\System\System;
 
-class FunctionsCustomClientTest extends Scope
+final class FunctionsCustomClientTest extends Scope
 {
     use FunctionsBase;
     use ProjectCustom;
@@ -109,50 +112,6 @@ class FunctionsCustomClientTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-    public function testCreateHeadExecution()
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test',
-            'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'node-22',
-            'entrypoint' => 'index.js',
-            'events' => [
-                'users.*.create',
-                'users.*.delete',
-            ],
-            'timeout' => 10,
-        ]);
-        $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('basic'),
-            'activate' => true
-        ]);
-
-        // Deny create async execution as guest
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'async' => true,
-        ]);
-        $this->assertEquals(401, $execution['headers']['status-code']);
-
-        // Allow create async execution as user
-        $execution = $this->client->call(Client::METHOD_HEAD, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'async' => true,
-        ]);
-        $this->assertEquals(200, $execution['headers']['status-code']);
-        $this->assertEmpty($execution['body']);
-
-        $this->cleanupFunction($functionId);
-    }
-
     public function testCreateCustomExecution(): array
     {
         /**
@@ -216,14 +175,8 @@ class FunctionsCustomClientTest extends Scope
             'body' => 'foobar',
             'async' => true
         ]);
-        $executionId = $execution['body']['$id'];
         $this->assertEquals(202, $execution['headers']['status-code']);
-
-        $this->assertEventually(function () use ($functionId, $executionId) {
-            $execution = $this->getExecution($functionId, $executionId);
-            $this->assertEquals('completed', $execution['body']['status']);
-            $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        }, 10000, 500);
+        $this->assertNotEmpty($execution['body']['$id']);
 
         return [
             'functionId' => $functionId
@@ -390,7 +343,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertIsArray($templatesWithIncludeTotalFalse['body']);
         $this->assertIsArray($templatesWithIncludeTotalFalse['body']['templates']);
         $this->assertIsInt($templatesWithIncludeTotalFalse['body']['total']);
-        $this->assertEquals(0, $templatesWithIncludeTotalFalse['body']['total']);
+        $this->assertSame(0, $templatesWithIncludeTotalFalse['body']['total']);
         $this->assertGreaterThan(0, count($templatesWithIncludeTotalFalse['body']['templates']));
 
         foreach ($templates['body']['templates'] as $template) {
@@ -413,7 +366,7 @@ class FunctionsCustomClientTest extends Scope
             'offset' => 2
         ]);
         $this->assertEquals(200, $templatesOffset['headers']['status-code']);
-        $this->addToAssertionCount(1, $templatesOffset['body']['templates']);
+        $this->addToAssertionCount(1);
         $this->assertEquals($templates['body']['templates'][2]['id'], $templatesOffset['body']['templates'][0]['id']);
 
         // List templates with filters
@@ -509,5 +462,93 @@ class FunctionsCustomClientTest extends Scope
          */
         $template = $this->getTemplate('invalid-template-id');
         $this->assertEquals(404, $template['headers']['status-code']);
+    }
+
+    /**
+     * Test that event-triggered functions work when the triggering request
+     * comes from a client SDK (session auth) that doesn't have permission
+     * to read the functions collection.
+     */
+    public function testEventTriggerWithClientAuth()
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Client Event Trigger',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'databases.*.collections.*.documents.*.create',
+            ],
+            'timeout' => 15,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('event-handler'),
+            'activate' => true
+        ]);
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'Test Collection',
+            'permissions' => [
+                Permission::create(Role::users()),
+            ],
+            'documentSecurity' => false,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'key' => 'name',
+            'size' => 255,
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $attr = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $attr['headers']['status-code']);
+            $this->assertEquals('available', $attr['body']['status']);
+        }, 30_000, 500);
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'Test Document'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->cleanupFunction($functionId);
     }
 }

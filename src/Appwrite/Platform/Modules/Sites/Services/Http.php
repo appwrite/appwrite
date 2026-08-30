@@ -24,8 +24,6 @@ use Appwrite\Platform\Modules\Sites\Http\Sites\XList as ListSites;
 use Appwrite\Platform\Modules\Sites\Http\Specifications\XList as ListSpecifications;
 use Appwrite\Platform\Modules\Sites\Http\Templates\Get as GetTemplate;
 use Appwrite\Platform\Modules\Sites\Http\Templates\XList as ListTemplates;
-use Appwrite\Platform\Modules\Sites\Http\Usage\Get as GetUsage;
-use Appwrite\Platform\Modules\Sites\Http\Usage\XList as ListUsage;
 use Appwrite\Platform\Modules\Sites\Http\Variables\Create as CreateVariable;
 use Appwrite\Platform\Modules\Sites\Http\Variables\Delete as DeleteVariable;
 use Appwrite\Platform\Modules\Sites\Http\Variables\Get as GetVariable;
@@ -76,10 +74,6 @@ class Http extends Service
         // Templates
         $this->addAction(ListTemplates::getName(), new ListTemplates());
         $this->addAction(GetTemplate::getName(), new GetTemplate());
-
-        // Usage
-        $this->addAction(ListUsage::getName(), new ListUsage());
-        $this->addAction(GetUsage::getName(), new GetUsage());
 
         $this->addAction(ListSpecifications::getName(), new ListSpecifications());
     }

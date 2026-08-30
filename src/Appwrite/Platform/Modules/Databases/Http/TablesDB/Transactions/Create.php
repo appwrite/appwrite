@@ -8,7 +8,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
 
 class Create extends TransactionsCreate
@@ -16,11 +16,6 @@ class Create extends TransactionsCreate
     public static function getName(): string
     {
         return 'createTransaction';
-    }
-
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION;
     }
 
     public function __construct()

@@ -5,7 +5,7 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -13,13 +13,14 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
-App::get('/v1/mock/tests/general/oauth2')
+Http::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -31,11 +32,10 @@ App::get('/v1/mock/tests/general/oauth2')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
     ->action(function (string $client_id, string $redirectURI, string $scope, string $state, Response $response) {
-
         $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 
-App::get('/v1/mock/tests/locale')
+Http::get('/v1/mock/tests/locale')
     ->desc('Mock locale translation key')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -46,7 +46,7 @@ App::get('/v1/mock/tests/locale')
     ->inject('request')
     ->inject('response')
     ->action(function (Locale $locale, array $localeCodes, Request $request, Response $response) {
-        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
@@ -54,7 +54,7 @@ App::get('/v1/mock/tests/locale')
         $response->send($locale->getText('mock'));
     });
 
-App::get('/v1/mock/tests/general/oauth2/token')
+Http::get('/v1/mock/tests/general/oauth2/token')
     ->desc('OAuth2 Token')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -69,7 +69,9 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->inject('response')
     ->action(function (string $client_id, string $client_secret, string $grantType, string $redirectURI, string $code, string $refreshToken, Response $response) {
 
-        if ($client_id != '1') {
+        $canonicalEmail = \str_starts_with($client_id, 'canonical-');
+
+        if ($client_id != '1' && !$canonicalEmail) {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid client ID');
         }
 
@@ -78,7 +80,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
         }
 
         $responseJson = [
-            'access_token' => '123456',
+            'access_token' => $canonicalEmail ? $client_id : '123456',
             'refresh_token' => 'tuvwxyz',
             'expires_in' => 14400
         ];
@@ -100,7 +102,27 @@ App::get('/v1/mock/tests/general/oauth2/token')
         }
     });
 
-App::get('/v1/mock/tests/general/oauth2/user')
+/**
+ * Static profile picture for the mock OAuth2 user, served from the Appwrite
+ * container itself so the avatars OAuth2 provider can actually fetch it.
+ */
+Http::get('/v1/mock/tests/general/oauth2/photo')
+    ->desc('OAuth2 User Photo')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        // Solid #00FF00 PNG, 64x64
+        $photo = 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAATUlEQVR42u3PQQ0AAAgEoNP+nbWBfzdoQGXyWicCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArcFUYYBf4Fjt4EAAAAASUVORK5CYII=';
+
+        $response
+            ->setContentType('image/png')
+            ->file(\base64_decode($photo));
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/user')
     ->desc('OAuth2 User')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -109,19 +131,31 @@ App::get('/v1/mock/tests/general/oauth2/user')
     ->inject('response')
     ->action(function (string $token, Response $response) {
 
-        if ($token != '123456') {
+        if ($token === '123456') {
+            $user = [
+                'id' => 1,
+                'name' => 'User Name',
+                'email' => 'useroauth@localhost.test',
+                'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            ];
+        } elseif (\str_starts_with($token, 'canonical-')) {
+            $id = \substr($token, \strlen('canonical-'));
+            $user = [
+                'id' => $id,
+                'name' => 'Canonical Email User',
+                'email' => 'oauth.' . $id . '@gmail.com',
+                'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            ];
+        } else {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
         }
 
-        $response->json([
-            'id' => 1,
-            'name' => 'User Name',
-            'email' => 'useroauth@localhost.test',
-            'verified' => true,
-        ]);
+        $response->json($user);
     });
 
-App::get('/v1/mock/tests/general/oauth2/user-unverified')
+Http::get('/v1/mock/tests/general/oauth2/user-unverified')
     ->desc('OAuth2 User Unverified')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -142,7 +176,26 @@ App::get('/v1/mock/tests/general/oauth2/user-unverified')
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/success')
+Http::get('/v1/mock/tests/general/oauth2/user-no-email')
+    ->desc('OAuth2 User Without Email')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('token', '', new Text(100), 'OAuth2 Access Token.')
+    ->inject('response')
+    ->action(function (string $token, Response $response) {
+
+        if ($token != '123456') {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
+        }
+
+        $response->json([
+            'id' => 3,
+            'name' => 'User Name NoEmail',
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/success')
     ->desc('OAuth2 Success')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -155,7 +208,7 @@ App::get('/v1/mock/tests/general/oauth2/success')
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/failure')
+Http::get('/v1/mock/tests/general/oauth2/failure')
     ->desc('OAuth2 Failure')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -170,7 +223,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::post('/v1/mock/api-key-unprefixed')
+Http::post('/v1/mock/api-key-unprefixed')
     ->desc('Create API Key (without standard prefix)')
     ->groups(['mock', 'api', 'projects'])
     ->label('scope', 'public')
@@ -191,7 +244,7 @@ App::post('/v1/mock/api-key-unprefixed')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $scopes = array_keys(Config::getParam('scopes'));
+        $scopes = array_keys(Config::getParam('projectScopes'));
 
         $key = new Document([
             '$id' => ID::unique(),
@@ -200,8 +253,9 @@ App::post('/v1/mock/api-key-unprefixed')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
+            'resourceInternalId' => $project->getSequence(),
+            'resourceId' => $project->getId(),
+            'resourceType' => 'projects',
             'name' => 'Outdated key',
             'scopes' => $scopes,
             'expire' => null,
@@ -219,18 +273,18 @@ App::post('/v1/mock/api-key-unprefixed')
             ->dynamic($key, Response::MODEL_KEY);
     });
 
-App::get('/v1/mock/github/callback')
+Http::get('/v1/mock/github/callback')
     ->desc('Create installation document using GitHub installation id')
     ->groups(['mock', 'api', 'vcs'])
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('providerInstallationId', '', new UID(), 'GitHub installation ID')
     ->param('projectId', '', new UID(), 'Project ID of the project where app is to be installed')
-    ->inject('gitHub')
+    ->inject('vcsFactory')
     ->inject('project')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $providerInstallationId, string $projectId, GitHub $github, Document $project, Response $response, Database $dbForPlatform) {
+    ->action(function (string $providerInstallationId, string $projectId, VcsFactory $vcsFactory, Document $project, Response $response, Database $dbForPlatform) {
         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
@@ -244,58 +298,62 @@ App::get('/v1/mock/github/callback')
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
-        if (!empty($providerInstallationId)) {
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-            $owner = $github->getOwnerName($providerInstallationId) ?? '';
-
-            $projectInternalId = $project->getSequence();
-
-            $teamId = $project->getAttribute('teamId', '');
-
-            $installation = new Document([
-                '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
-                'providerInstallationId' => $providerInstallationId,
-                'projectId' => $projectId,
-                'projectInternalId' => $projectInternalId,
-                'provider' => 'github',
-                'organization' => $owner,
-                'personal' => false
-            ]);
-
-            $installation = $dbForPlatform->createDocument('installations', $installation);
+        if (empty($providerInstallationId)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing provider installation ID');
         }
+
+        $vcs = $vcsFactory->fromInstallation(new Document([
+            'provider' => 'github',
+            'providerInstallationId' => $providerInstallationId,
+        ]));
+        $owner = $vcs->getOwnerName($providerInstallationId);
+
+        $projectInternalId = $project->getSequence();
+
+        $teamId = $project->getAttribute('teamId', '');
+
+        $installation = new Document([
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ],
+            'providerInstallationId' => $providerInstallationId,
+            'projectId' => $projectId,
+            'projectInternalId' => $projectInternalId,
+            'provider' => 'github',
+            'organization' => $owner,
+            'personal' => false
+        ]);
+
+        $installation = $dbForPlatform->createDocument('installations', $installation);
 
         $response->json([
             'installationId' => $installation->getId(),
         ]);
     });
 
-App::shutdown()
+Http::shutdown()
     ->groups(['mock'])
-    ->inject('utopia')
     ->inject('response')
-    ->inject('request')
-    ->action(function (App $utopia, Response $response, Request $request) {
+    ->inject('route')
+    ->action(function (Response $response, Route $route) {
 
         $result = [];
-        $route  = $utopia->getRoute();
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
+        $methods = $route->getMethods();
 
         if (!\is_array($tests)) {
             throw new Exception(Exception::GENERAL_MOCK, 'Failed to read results', 500);
         }
 
-        $result[$route->getMethod() . ':' . $route->getPath()] = true;
+        foreach ($methods as $method) {
+            $result[$method . ':' . $route->getPath()] = true;
+        }
 
         $tests = \array_merge($tests, $result);
 
@@ -303,5 +361,5 @@ App::shutdown()
             throw new Exception(Exception::GENERAL_MOCK, 'Failed to save results', 500);
         }
 
-        $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
+        $response->dynamic(new Document(['result' => \implode(',', $methods) . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
     });

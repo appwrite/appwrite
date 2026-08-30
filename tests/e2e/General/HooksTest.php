@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\General;
 
 use Appwrite\Extend\Exception;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class HooksTest extends Scope
+final class HooksTest extends Scope
 {
     use ProjectConsole;
     use SideClient;
@@ -128,7 +130,7 @@ class HooksTest extends Scope
             'cookie' => $cookie,
         ]);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
 
         /**
         * Test for api controllers
@@ -140,7 +142,7 @@ class HooksTest extends Scope
             'cookie' => $cookie,
         ]);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
         $this->assertEquals(Exception::USER_BLOCKED, $response['body']['type']);
 
         /**

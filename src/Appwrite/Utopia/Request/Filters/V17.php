@@ -14,8 +14,6 @@ class V17 extends Filter
     protected const CHAR_SPACE = ' ';
     protected const CHAR_BRACKET_START = '[';
     protected const CHAR_BRACKET_END = ']';
-    protected const CHAR_PARENTHESES_START = '(';
-    protected const CHAR_PARENTHESES_END = ')';
     protected const CHAR_BACKSLASH = '\\';
 
     // Convert 1.4 params to 1.5
@@ -120,11 +118,11 @@ class V17 extends Filter
             $isArrayStack = !$isStringStack && $stackCount > 0;
 
             if ($char === static::CHAR_BACKSLASH) {
-                if (!(static::isSpecialChar($filter[$i + 1]))) {
-                    static::appendSymbol($isStringStack, $filter[$i], $i, $filter, $currentParam);
+                if (!(self::isSpecialChar($filter[$i + 1]))) {
+                    self::appendSymbol($isStringStack, $filter[$i], $i, $filter, $currentParam);
                 }
 
-                static::appendSymbol($isStringStack, $filter[$i + 1], $i, $filter, $currentParam);
+                self::appendSymbol($isStringStack, $filter[$i + 1], $i, $filter, $currentParam);
                 $i++;
 
                 continue;
@@ -147,7 +145,7 @@ class V17 extends Filter
                 }
 
                 // Either way, add symbol to builder
-                static::appendSymbol(
+                self::appendSymbol(
                     $isStringStack,
                     $char,
                     $i,
@@ -199,7 +197,7 @@ class V17 extends Filter
             }
 
             // Value, not relevant to syntax
-            static::appendSymbol(
+            self::appendSymbol(
                 $isStringStack,
                 $char,
                 $i,

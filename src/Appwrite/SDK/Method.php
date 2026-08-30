@@ -32,6 +32,7 @@ class Method
      * @param array $additionalParameters
      * @param string $desc
      * @param bool $public Whether this method should be rendered on the website/documentation
+     * @param array<string> $locationAuth Security scheme keys injected for location-type methods (includes project auth)
      */
     public function __construct(
         protected string $namespace,
@@ -49,7 +50,8 @@ class Method
         protected array $parameters = [],
         protected array $additionalParameters = [],
         protected string $desc = '',
-        protected bool $public = true
+        protected bool $public = true,
+        protected array $locationAuth = []
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
@@ -197,7 +199,7 @@ class Method
 
     public function isHidden(): bool|array
     {
-        return $this->hide ?? false;
+        return $this->hide;
     }
 
     public function isPackaging(): bool
@@ -223,53 +225,14 @@ class Method
         return $this->additionalParameters;
     }
 
+    public function getLocationAuth(): array
+    {
+        return $this->locationAuth;
+    }
+
     public function setNamespace(string $namespace): self
     {
         $this->namespace = $namespace;
-        return $this;
-    }
-
-    public function setMethodName(string $name): self
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    public function setDesc(string $desc): self
-    {
-        $this->desc = $desc;
-        return $this;
-    }
-
-    public function setDescription(string $description): self
-    {
-        $this->description = $description;
-        return $this;
-    }
-
-    public function setAuth(array $auth): self
-    {
-        $this->validateAuthTypes($auth);
-        $this->auth = $auth;
-        return $this;
-    }
-
-    /**
-     * @param array<SDKResponse> $responses
-     */
-    public function setResponses(array $responses): self
-    {
-        foreach ($responses as $response) {
-            $this->validateResponseModel($response->getModel());
-            $this->validateNoContent($response);
-        }
-        $this->responses = $responses;
-        return $this;
-    }
-
-    public function setContentType(ContentType $contentType): self
-    {
-        $this->contentType = $contentType;
         return $this;
     }
 
@@ -279,45 +242,9 @@ class Method
         return $this;
     }
 
-    public function setDeprecated(bool|Deprecated $deprecated): self
-    {
-        $this->deprecated = $deprecated;
-        return $this;
-    }
-
-    public function setHide(bool|Deprecated $hide): self
-    {
-        $this->hide = $hide;
-        return $this;
-    }
-
-    public function setPackaging(bool $packaging): self
-    {
-        $this->packaging = $packaging;
-        return $this;
-    }
-
-    public function setRequestType(ContentType $requestType): self
-    {
-        $this->requestType = $requestType;
-        return $this;
-    }
-
-    public function setParameters(array $parameters): self
-    {
-        $this->parameters = $parameters;
-        return $this;
-    }
-
     public function isPublic(): bool
     {
         return $this->public;
-    }
-
-    public function setPublic(bool $public): self
-    {
-        $this->public = $public;
-        return $this;
     }
 
     public static function getErrors(): array

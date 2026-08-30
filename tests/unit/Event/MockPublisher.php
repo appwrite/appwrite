@@ -9,7 +9,7 @@ class MockPublisher implements Publisher
 {
     private array $events = [];
 
-    public function enqueue(Queue $queue, array $payload): bool
+    public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
     {
         if (!isset($this->events[$queue->name])) {
             $this->events[$queue->name] = [];
@@ -18,18 +18,27 @@ class MockPublisher implements Publisher
         return true;
     }
 
+    public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+    {
+        foreach ($payloads as $payload) {
+            $this->enqueue($queue, $payload, $priority);
+        }
+
+        return true;
+    }
+
     public function getEvents(string $queue)
     {
         return $this->events[$queue] ?? null;
     }
 
-    public function retry(Queue $queue, int $limit = null): void
+    public function retry(Queue $queue, ?int $limit = null): void
     {
         // TODO: Implement retry() method.
     }
 
     public function getQueueSize(Queue $queue, bool $failedJobs = false): int
     {
-        return count($this->events[$queue->name]);
+        return count($this->events[$queue->name] ?? []);
     }
 }

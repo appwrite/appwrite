@@ -3,6 +3,7 @@
 import { URL } from 'https://jslib.k6.io/url/1.0.0/index.js';
 import ws from 'k6/ws';
 import { check } from 'k6';
+import { REALTIME_URL } from './config.js';
 
 export let options = {
     stages: [
@@ -20,7 +21,7 @@ export let options = {
 export default function () {
     // const url = new URL('wss://appwrite-realtime.monitor-api.com/v1/realtime');
     // url.searchParams.append('project', '604249e6b1a9f');
-    const url = new URL('ws://localhost/v1/realtime');
+    const url = new URL(REALTIME_URL);
     url.searchParams.append('project', 'console');
     url.searchParams.append('channels[]', 'files');
 

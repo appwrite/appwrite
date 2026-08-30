@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
+use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -10,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -32,8 +34,10 @@ class Delete extends Base
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
+            ->label('event', 'variables.[variableId].delete')
             ->label('audits.event', 'variable.delete')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'variables',
@@ -50,14 +54,15 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('siteId', '', new UID(), 'Site unique ID.', false)
-            ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('queueForEvents')
             ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, string $variableId, Response $response, Database $dbForProject)
+    public function action(string $siteId, string $variableId, Response $response, QueueEvent $queueForEvents, Database $dbForProject)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -66,17 +71,17 @@ class Delete extends Base
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $site->getSequence() || $variable->getAttribute('resourceType') !== 'site') {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
-        if ($variable === false || $variable->isEmpty()) {
+        if ($variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $site->getSequence() || $variable->getAttribute('resourceType') !== 'site') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
         $dbForProject->deleteDocument('variables', $variable->getId());
 
-        $dbForProject->updateDocument('sites', $site->getId(), $site->setAttribute('live', false));
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'live' => false,
+        ]));
+
+        $queueForEvents->setParam('variableId', $variable->getId());
 
         $response->noContent();
     }

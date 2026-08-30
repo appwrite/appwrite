@@ -4,11 +4,14 @@ namespace Appwrite\Event;
 
 use Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
+use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 
 class Realtime extends Event
 {
+    public const CONSOLE_ALLOWLIST = ['presences'];
+
     protected array $subscribers = [];
 
     private Adapter $realtime;
@@ -61,6 +64,26 @@ class Realtime extends Event
     }
 
     /**
+     * Reset the event state for long-lived worker processes.
+     *
+     * `Event::reset()` clears params/sensitive/event/payload only. Realtime routing also
+     * depends on `context`, `subscribers`, and `project`/`user` fields, so we clear them too
+     * to prevent stale state from affecting subsequent triggers.
+     */
+    public function reset(): self
+    {
+        parent::reset();
+
+        $this->subscribers = [];
+        $this->context = [];
+        $this->project = null;
+        $this->user = null;
+        $this->userId = null;
+
+        return $this;
+    }
+
+    /**
      * Execute Event.
      *
      * @return string|bool
@@ -72,7 +95,7 @@ class Realtime extends Event
             return false;
         }
 
-        $allEvents = Event::generateEvents($this->getEvent(), $this->getParams());
+        $allEvents = Event::generateEvents($this->getEvent(), $this->getParams(), $this->getContext('database'));
 
         $payload = new Document($this->getPayload());
 
@@ -96,17 +119,21 @@ class Realtime extends Event
             : [$target['projectId'] ?? $this->getProject()->getId()];
 
         foreach ($projectIds as $projectId) {
-            $this->realtime->send(
-                projectId: $projectId,
-                payload: $this->getRealtimePayload(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles'],
-                options: [
-                    'permissionsChanged' => $target['permissionsChanged'],
-                    'userId' => $this->getParam('userId')
-                ]
-            );
+            try {
+                $this->realtime->send(
+                    projectId: $projectId,
+                    payload: $this->getRealtimePayload(),
+                    events: $allEvents,
+                    channels: $target['channels'],
+                    roles: $target['roles'],
+                    options: [
+                        'permissionsChanged' => $target['permissionsChanged'],
+                        'userId' => $this->getParam('userId')
+                    ]
+                );
+            } catch (\Exception $e) {
+                Console::error('Realtime send failed: '.$e->getMessage());
+            }
         }
 
         return true;

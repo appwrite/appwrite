@@ -9,18 +9,13 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Transactions;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class XList extends TransactionsList
 {
     public static function getName(): string
     {
         return 'listTransactions';
-    }
-
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION_LIST;
     }
 
     public function __construct()

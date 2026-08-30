@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
@@ -11,7 +13,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class ContentTypeTest extends Scope
+final class ContentTypeTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -47,6 +49,26 @@ class ContentTypeTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body']);
         $response = $response['body']['data']['localeListCountries'];
         $this->assertEquals(197, $response['total']);
+    }
+
+    public function testJSONObjectVariables()
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = '{ localeGet { ip country continent currency } }';
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => new \stdClass(),
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['data']);
+        $this->assertArrayNotHasKey('errors', $response['body']);
+        $this->assertArrayHasKey('localeGet', $response['body']['data']);
+        $this->assertIsArray($response['body']['data']['localeGet']);
     }
 
     public function testArrayBatchedJSONContentType()

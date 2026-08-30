@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\General;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideNone;
+use Utopia\Config\Config;
 
-class HTTPTest extends Scope
+final class HTTPTest extends Scope
 {
     use ProjectNone;
     use SideNone;
@@ -23,16 +26,22 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $this->client->setEndpoint('http://localhost');
         $response = $this->client->call(Client::METHOD_OPTIONS, '/', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ]), []);
 
+        $corsConfig = Config::getParam('cors');
+        $allowedMethods = \implode(', ', $corsConfig['allowedMethods']);
+        $allowedHeaders = \implode(', ', $corsConfig['allowedHeaders']);
+        $exposedHeaders = \implode(', ', $corsConfig['exposedHeaders']);
+
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEquals('Appwrite', $response['headers']['server']);
-        $this->assertEquals('GET, POST, PUT, PATCH, DELETE', $response['headers']['access-control-allow-methods']);
-        $this->assertEquals('Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent', $response['headers']['access-control-allow-headers']);
-        $this->assertEquals('X-Appwrite-Session, X-Fallback-Cookies', $response['headers']['access-control-expose-headers']);
+        $this->assertEquals($allowedMethods, $response['headers']['access-control-allow-methods']);
+        $this->assertEquals($allowedHeaders, $response['headers']['access-control-allow-headers']);
+        $this->assertEquals($exposedHeaders, $response['headers']['access-control-expose-headers']);
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
         $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
         $this->assertEmpty($response['body']);
@@ -43,12 +52,13 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $this->client->setEndpoint('http://localhost');
         $response = $this->client->call(Client::METHOD_GET, '/humans.txt', \array_merge([
             'origin' => 'http://localhost',
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('# humanstxt.org/', $response['body']);
+        $this->assertStringContainsString('# humanstxt.org/', (string) $response['body']);
     }
 
     public function testRobots()
@@ -56,12 +66,13 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $this->client->setEndpoint('http://localhost');
         $response = $this->client->call(Client::METHOD_GET, '/robots.txt', \array_merge([
             'origin' => 'http://localhost',
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code'], "Simple GET /robots.txt HTTP request failed: " . \json_encode($response));
-        $this->assertStringContainsString('# robotstxt.org/', $response['body']);
+        $this->assertStringContainsString('# robotstxt.org/', (string) $response['body']);
     }
 
     public function testAcmeChallenge()
@@ -69,6 +80,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $this->client->setEndpoint('http://localhost');
         $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/8DdIKX257k6Dih5s_saeVMpTnjPJdKO5Ase0OCiJrIg');
 
         // 'Unknown path', but validation passed
@@ -79,51 +91,8 @@ class HTTPTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/../../../../../../../etc/passwd');
 
-        // 'Unknown path', but validation passed
-        $this->assertEquals(404, $response['headers']['status-code']);
-    }
-
-    public function testSpecs()
-    {
-        $directory = __DIR__ . '/../../../app/config/specs/';
-
-        $files = scandir($directory);
-        $client = new Client();
-        $client->setEndpoint('https://validator.swagger.io');
-
-        $versions = [
-            'latest',
-            '0.15.x',
-            '0.14.x',
-        ];
-
-        foreach ($files as $file) {
-            if (in_array($file, ['.', '..'])) {
-                continue;
-            }
-
-            $allowed = false;
-            foreach ($versions as $version) {
-                if (\str_contains($file, $version)) {
-                    $allowed = true;
-                    break;
-                }
-            }
-            if (!$allowed) {
-                continue;
-            }
-
-            /**
-             * Test for SUCCESS
-             */
-            $response = $client->call(Client::METHOD_POST, '/validator/debug', [
-                'content-type' => 'application/json',
-            ], json_decode(file_get_contents($directory . $file), true));
-
-            $this->assertEquals(200, $response['headers']['status-code']);
-            // looks like recent change in the validator
-            $this->assertEmpty($response['body']['schemaValidationMessages'], 'Schema validation failed for ' . $file . ': ' . json_encode($response['body']['schemaValidationMessages'], JSON_PRETTY_PRINT));
-        }
+        // 'Invalid challenge token', traversal rejected by validation
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     public function testVersions()
@@ -131,6 +100,7 @@ class HTTPTest extends Scope
         /**
          * Test without header
          */
+        $this->client->setEndpoint('http://localhost');
         $response = $this->client->call(Client::METHOD_GET, '/versions', \array_merge([
             'content-type' => 'application/json',
         ], $this->getHeaders()));
@@ -186,6 +156,64 @@ class HTTPTest extends Scope
         $this->assertNull($response['headers']['access-control-allow-origin'] ?? null);
     }
 
+    public function testCorsLoopback()
+    {
+        $endpoint = '/v1/projects'; // Can be any non-404 route
+
+        /**
+         * Test for SUCCESS
+         *
+         * Loopback origins are allowed without a registered platform.
+         */
+        $origins = [
+            'http://localhost',
+            'http://localhost:3000',
+            'http://127.0.0.1',
+            'https://127.0.0.1:5173',
+            'http://[::1]',
+            'http://[::1]:3000',
+        ];
+
+        foreach ($origins as $origin) {
+            $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+                'origin' => $origin,
+            ]);
+            $this->assertEquals($origin, $response['headers']['access-control-allow-origin'] ?? null, 'Origin ' . $origin . ' was not allowed');
+
+            // Trusting loopback with credentials relies on the origin being
+            // echoed verbatim, so the browser's literal match still applies
+            $this->assertNotEquals('*', $response['headers']['access-control-allow-origin']);
+            $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
+        }
+
+        /**
+         * Test for FAILURE
+         *
+         * Hostnames that only look like loopback must not be allowed.
+         */
+        $origins = [
+            'http://127.0.0.1.example.com',
+            'http://localhost.example.com',
+            'http://128.0.0.1',
+            'http://[2001:db8::1]',
+            // A prefix or substring match would wrongly accept these
+            'http://xlocalhost',
+            'http://127.0.0.1x.example.com',
+            'http://[::1].evil.com',
+            // Only the exact loopback spellings are hardcoded
+            'http://127.0.0.2',
+            'http://[0:0:0:0:0:0:0:1]',
+            'http://localhost.',
+        ];
+
+        foreach ($origins as $origin) {
+            $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+                'origin' => $origin,
+            ]);
+            $this->assertNull($response['headers']['access-control-allow-origin'] ?? null, 'Origin ' . $origin . ' was unexpectedly allowed');
+        }
+    }
+
     public function testPreflight()
     {
 
@@ -207,11 +235,23 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $this->client->setEndpoint('http://localhost');
 
         $endpoint = '/invite?membershipId=123&userId=asdf';
 
-        $response = $this->client->call(Client::METHOD_GET, $endpoint);
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [], [], true, false);
 
         $this->assertEquals('/console' . $endpoint, $response['headers']['location']);
+    }
+
+    public function testConsoleServed()
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('text/html', (string) $response['headers']['content-type']);
     }
 }

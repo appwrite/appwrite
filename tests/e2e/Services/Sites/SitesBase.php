@@ -6,7 +6,7 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\System\System;
@@ -35,14 +35,32 @@ trait SitesBase
 
     protected function setupDeployment(string $siteId, mixed $params): string
     {
+        $deploymentId = $this->createDeploymentAccepted($siteId, $params);
+
+        $this->waitDeploymentReady($siteId, $deploymentId);
+
+        // Not === so multipart/form-data works fine too
+        if (($params['activate'] ?? false) == true) {
+            $this->waitDeploymentActivated($siteId, $deploymentId);
+        }
+
+        return $deploymentId;
+    }
+
+    protected function createDeploymentAccepted(string $siteId, mixed $params): string
+    {
         $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), $params);
         $this->assertEquals($deployment['headers']['status-code'], 202, 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        $deploymentId = $deployment['body']['$id'] ?? '';
 
+        return $deployment['body']['$id'] ?? '';
+    }
+
+    protected function waitDeploymentReady(string $siteId, string $deploymentId): void
+    {
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, array_merge([
                 'content-type' => 'application/json',
@@ -54,32 +72,30 @@ trait SitesBase
                 throw new Critical('Deployment failed: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             }
 
-            Console::execute("docker inspect openruntimes-executor --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
-            if (\trim($this->stdout) !== '0') {
+            $code = Console::execute("docker inspect exc1 --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
+            if ($code === 0 && \trim($this->stdout) !== '' && \trim($this->stdout) !== '0') {
                 $msg = 'Executor has a problem: ' . $this->stderr . ' (' . $this->stdout . '), current status: ';
 
-                Console::execute("docker compose logs openruntimes-executor", '', $this->stdout, $this->stderr);
+                Console::execute("docker logs exc1", '', $this->stdout, $this->stderr);
                 $msg .= $this->stdout . ' (' . $this->stderr . ')';
 
                 throw new Critical($msg . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             }
 
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 300000, 500);
+        }, 120000, 500);
+    }
 
-        // Not === so multipart/form-data works fine too
-        if (($params['activate'] ?? false) == true) {
-            $this->assertEventually(function () use ($siteId, $deploymentId) {
-                $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey'],
-                ]));
-                $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-            }, 100000, 500);
-        }
-
-        return $deploymentId;
+    protected function waitDeploymentActivated(string $siteId, string $deploymentId): void
+    {
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+        }, 120000, 500);
     }
 
     protected function cleanupSite(string $siteId): void
@@ -194,14 +210,16 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function getLog(string $siteId, $logId): mixed
+    protected function listLogs(string $siteId, array $queries = []): mixed
     {
-        $log = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs/' . $logId, array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => $queries
+        ]);
 
-        return $log;
+        return $logs;
     }
 
     protected function listSites(mixed $params = []): mixed
@@ -224,30 +242,33 @@ trait SitesBase
         return $deployments;
     }
 
-    protected function listLogs(string $siteId, array $queries = []): mixed
-    {
-        $logs = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => $queries
-        ]);
-
-        return $logs;
-    }
-
     protected function packageSite(string $site): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
-        $tarPath = "$folderPath/code.tar.gz";
+        // Unique archive per process: paratest --functional packs the same
+        // fixture from many methods at once. Sharing $folderPath/code.tar.gz
+        // lets one tar truncate the file another CURLFile is still reading
+        // (libcurl: "client mime read EOF fail, only N/M of needed bytes").
+        $tarPath = \sys_get_temp_dir() . '/appwrite-site-' . $site . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        Console::execute(
+            'tar --exclude code.tar.gz --exclude node_modules -czf ' . \escapeshellarg($tarPath) . ' -C ' . \escapeshellarg($folderPath) . ' .',
+            '',
+            $this->stdout,
+            $this->stderr
+        );
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
+
+        return new CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
     }
 
     protected function createDeployment(string $siteId, mixed $params = []): mixed
@@ -268,27 +289,6 @@ trait SitesBase
         ], $this->getHeaders()), []);
 
         return $deployment;
-    }
-
-    protected function setupDuplicateDeployment(string $siteId, string $deploymentId): string
-    {
-        $deployment = $this->createDuplicateDeployment($siteId, $deploymentId);
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-
-        $deploymentId = $deployment['body']['$id'];
-        $this->assertNotEmpty($deploymentId);
-
-        $this->assertEventually(function () use ($siteId, $deploymentId) {
-            $deployment = $this->getDeployment($siteId, $deploymentId);
-            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 150000, 500);
-
-        $this->assertEventually(function () use ($siteId, $deploymentId) {
-            $site = $this->getSite($siteId);
-            $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
-
-        return $deploymentId;
     }
 
     protected function createDuplicateDeployment(string $siteId, string $deploymentId): mixed
@@ -313,16 +313,6 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function getUsage(string $siteId, mixed $params): mixed
-    {
-        $usage = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $usage;
-    }
-
     protected function getTemplate(string $templateId)
     {
         $template = $this->client->call(Client::METHOD_GET, '/sites/templates/' . $templateId, [
@@ -331,29 +321,6 @@ trait SitesBase
         ]);
 
         return $template;
-    }
-
-    protected function helperGetLatestCommit(string $owner, string $repository): ?string
-    {
-        $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'User-Agent: Appwrite',
-            'Accept: application/vnd.github.v3+json'
-        ]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode === 200) {
-            $commitData = json_decode($response, true);
-            if (isset($commitData['sha'])) {
-                return $commitData['sha'];
-            }
-        }
-
-        return null;
     }
 
     protected function deleteSite(string $siteId): mixed
@@ -368,12 +335,13 @@ trait SitesBase
 
     protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
     {
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
         $subdomain = $subdomain ? $subdomain : ID::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'domain' => $subdomain . '.' . $sitesDomain,
             'siteId' => $siteId,
         ]);
 
@@ -466,12 +434,21 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function listSpecifications(): mixed
+    protected function listSpecifications(array $params = []): mixed
     {
         $specifications = $this->client->call(Client::METHOD_GET, '/sites/specifications', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), $params);
 
         return $specifications;
+    }
+
+    protected function getEnabledSpecification(array $specifications): string
+    {
+        $specification = array_find($specifications, fn (array $specification) => $specification['enabled']);
+
+        $this->assertNotNull($specification, 'Expected at least one enabled specification.');
+
+        return $specification['slug'];
     }
 }

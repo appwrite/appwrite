@@ -1,1 +1,0 @@
-Enable or disable checking user passwords against common passwords dictionary. This helps ensure users don't use common and insecure passwords. 

@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Sites;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 
-class SitesConsoleClientTest extends Scope
+final class SitesConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
     use SitesBase;
 
-    /**
-     * @group screenshots
-    */
+    #[Group('screenshots')]
     public function testSiteScreenshot(): void
     {
         $siteId = $this->setupSite([
@@ -51,18 +53,25 @@ class SitesConsoleClientTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Themed website", $response['body']);
-        $this->assertStringContainsString("@media (prefers-color-scheme: dark)", $response['body']);
+        $this->assertStringContainsString("Themed website", (string) $response['body']);
+        $this->assertStringContainsString("@media (prefers-color-scheme: dark)", (string) $response['body']);
 
-        $deployment = $this->getDeployment($siteId, $deploymentId);
-        $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertNotEmpty($deployment['body']['screenshotLight']);
-        $this->assertNotEmpty($deployment['body']['screenshotDark']);
+        $deployment = null;
+        $site = null;
+        $this->assertEventually(function () use ($siteId, $deploymentId, &$deployment, &$site) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertNotEmpty($deployment['body']['screenshotLight']);
+            $this->assertNotEmpty($deployment['body']['screenshotDark']);
 
-        $site = $this->getSite($siteId);
-        $this->assertEquals(200, $site['headers']['status-code']);
-        $this->assertEquals($deployment['body']['screenshotLight'], $site['body']['deploymentScreenshotLight']);
-        $this->assertEquals($deployment['body']['screenshotDark'], $site['body']['deploymentScreenshotDark']);
+            $site = $this->getSite($siteId);
+            $this->assertEquals(200, $site['headers']['status-code']);
+            $this->assertEquals($deployment['body']['screenshotLight'], $site['body']['deploymentScreenshotLight']);
+            $this->assertEquals($deployment['body']['screenshotDark'], $site['body']['deploymentScreenshotDark']);
+        });
+
+        $this->assertNotNull($site);
+        $this->assertNotNull($deployment);
 
         $screenshotId = $deployment['body']['screenshotLight'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console", array_merge($this->getHeaders(), [
@@ -129,7 +138,7 @@ class SitesConsoleClientTest extends Scope
         $screenshotDarkHash = \md5($file['body']);
         $this->assertNotEmpty($screenshotDarkHash);
 
-        $this->assertNotEquals($screenshotDarkHash, $screenshotHash);
+        $this->assertNotSame($screenshotDarkHash, $screenshotHash);
 
         $screenshotId = $deployment['body']['screenshotLight'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
@@ -138,6 +147,54 @@ class SitesConsoleClientTest extends Scope
         $screenshotId = $deployment['body']['screenshotDark'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteDeploymentRetentionWithMaintenance(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'deploymentRetention' => 180,
+            'buildRuntime' => 'node-22',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $deploymentIdInactive = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdInactive);
+
+        $deploymentIdInactiveOld = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdInactiveOld);
+
+        $deploymentIdActive = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdActive);
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute("docker exec appwrite task-time-travel --projectId={$this->getProject()['$id']} --resourceType=deployment --resourceId={$deploymentIdInactiveOld} --createdAt=2020-01-01T00:00:00Z", '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute("docker exec appwrite maintenance --type=trigger", '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+        $this->assertEventually(function () use ($siteId) {
+            $response = $this->listDeployments($siteId);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame(2, $response['body']['total']);
+        });
 
         $this->cleanupSite($siteId);
     }

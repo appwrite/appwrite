@@ -72,7 +72,7 @@ class Update extends Action
     ): void {
         $user->setAttribute('mfa', $mfa);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['mfa' => $mfa]));
 
         if ($mfa) {
             $factors = $session->getAttribute('factors', []);
@@ -89,7 +89,7 @@ class Update extends Action
             $factors = \array_values(\array_unique($factors));
 
             $session->setAttribute('factors', $factors);
-            $dbForProject->updateDocument('sessions', $session->getId(), $session);
+            $dbForProject->updateDocument('sessions', $session->getId(), new Document(['factors' => $factors]));
         }
 
         $queueForEvents->setParam('userId', $user->getId());

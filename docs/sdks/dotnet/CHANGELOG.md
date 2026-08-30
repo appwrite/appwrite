@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.26.0
+
+* Add `dart-3.10` and `flutter-3.38` to `BuildRuntime` and `Runtime` enums
+* Add `bytesMax` and `bytesUsed` properties to `Collection` and `Table` models
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `IReadOnlyList<string>`
+
+## 0.25.0
+
+* Add array-based enum parameters (e.g., `permissions: IReadOnlyList<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `getQueueAudits` support to `Health` service.
+* Add longtext/mediumtext/text/varchar attribute and column helpers to `Databases` and `TablesDB` services.
+
 ## 0.24.0
 
 * Added ability to create columns and indexes synchronously while creating a table

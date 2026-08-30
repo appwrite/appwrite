@@ -5,6 +5,7 @@ namespace Appwrite\Event;
 use Utopia\Database\Document;
 use Utopia\DSN\DSN;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Database extends Event
 {
@@ -24,7 +25,7 @@ class Database extends Event
     {
         parent::__construct($publisher);
 
-        $this->setClass(Event::DATABASE_CLASS_NAME);
+        $this->setClass(System::getEnv('_APP_DATABASE_CLASS_NAME', Event::DATABASE_CLASS_NAME));
     }
 
     /**
@@ -85,51 +86,6 @@ class Database extends Event
     }
 
     /**
-     * Returns set table for this event.
-     *
-     * @return null|Document
-     */
-    public function getTable(): ?Document
-    {
-        return $this->table;
-    }
-
-    /**
-     * Set the row for this database event.
-     *
-     * @param Document $row
-     * @return self
-     */
-    public function setRow(Document $row): self
-    {
-        $this->row = $row;
-
-        return $this;
-    }
-
-    /**
-     * Returns set row for this database event.
-     * @return null|Document
-     */
-    public function getRow(): ?Document
-    {
-        return $this->row;
-    }
-
-    /**
-     * Set the collection for this database event.
-     *
-     * @param Document $collection
-     * @return self
-     */
-    public function setCollection(Document $collection): self
-    {
-        $this->collection = $collection;
-
-        return $this;
-    }
-
-    /**
      * Returns set collection for this event.
      *
      * @return null|Document
@@ -137,19 +93,6 @@ class Database extends Event
     public function getCollection(): ?Document
     {
         return $this->collection;
-    }
-
-    /**
-     * Set the document for this database event.
-     *
-     * @param Document $document
-     * @return self
-     */
-    public function setDocument(Document $document): self
-    {
-        $this->document = $document;
-
-        return $this;
     }
 
     /**

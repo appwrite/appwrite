@@ -1,17 +1,18 @@
 <?php
 
 use Appwrite\Extend\Exception;
+use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
-use MaxMind\Db\Reader;
-use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\System\System;
 
-App::init()
+Http::init()
     ->groups(['mfaProtected'])
     ->inject('session')
     ->action(function (Document $session) {
@@ -30,28 +31,28 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['auth'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('project')
-    ->inject('geodb')
+    ->inject('geo')
+    ->inject('user')
     ->inject('authorization')
-    ->action(function (App $utopia, Request $request, Document $project, Reader $geodb, Authorization $authorization) {
+    ->action(function (Route $route, Request $request, Document $project, Geo $geo, User $user, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
-        if (!empty($denylist && $project->getId() === 'console')) {
-            $countries = explode(',', $denylist);
-            $record = $geodb->get($request->getIP()) ?? [];
-            $country = $record['country']['iso_code'] ?? '';
-            if (in_array($country, $countries)) {
+        if (!empty($denylist) && $project->getId() === 'console') {
+            // A missing or unknown geo lookup ("--") is treated as allowed and falls
+            // through to the membership check below, matching the pre-geo-service behavior.
+            $countries = \array_map('strtoupper', \array_map('trim', explode(',', $denylist)));
+            $country = \strtoupper($geo->get($request->getIP())->getCountryCode());
+            if (in_array($country, $countries, true)) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }
         }
 
-        $route = $utopia->match($request);
-
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
-        $isAppUser = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isKey($authorization->getRoles());
 
         if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
             return;

@@ -2,16 +2,20 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules;
 
-use Appwrite\Event\Delete as DeleteEvent;
+use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -38,12 +42,12 @@ class Delete extends Action
             ->label('audits.resource', 'rule/{request.ruleId}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
-                group: null,
+                group: 'rules',
                 name: 'deleteRule',
                 description: <<<EOT
                 Delete a proxy rule by its unique ID.
                 EOT,
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -52,12 +56,14 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('ruleId', '', new UID(), 'Rule ID.')
+            ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
+            ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -66,20 +72,26 @@ class Delete extends Action
         Response $response,
         Document $project,
         Database $dbForPlatform,
-        DeleteEvent $queueForDeletes,
-        Event $queueForEvents
+        DeletePublisher $publisherForDeletes,
+        Event $queueForEvents,
+        Authorization $authorization,
+        Bus $bus,
     ) {
-        $rule = $dbForPlatform->getDocument('rules', $ruleId);
+        $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $dbForPlatform->deleteDocument('rules', $rule->getId());
+        $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $rule->getId()));
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($rule);
+        $bus->dispatch(new RuleDeleted($rule->getArrayCopy()));
+
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $rule,
+        ));
 
         $queueForEvents->setParam('ruleId', $rule->getId());
 

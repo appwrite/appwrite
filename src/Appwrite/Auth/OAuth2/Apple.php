@@ -165,9 +165,9 @@ class Apple extends OAuth2
 
     protected function getAppSecret(): string
     {
-        try {
-            $secret = \json_decode($this->appSecret, true);
-        } catch (\Throwable $th) {
+        $secret = \json_decode($this->appSecret, true);
+
+        if (!\is_array($secret)) {
             throw new Exception('Invalid secret');
         }
 
