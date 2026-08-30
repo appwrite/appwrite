@@ -54,6 +54,7 @@ class StatsResources extends Action
             // span per cycle carrying the enqueue count makes that queryable.
             Span::init('stats_resources_task');
             $projectsQueued = 0;
+            $projectsFailed = 0;
 
             // Nothing here may end the loop. An exception escaping this closure
             // ends Console::loop, and the process then stays alive and idle: it
@@ -84,8 +85,18 @@ class StatsResources extends Action
                     Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours)),
                     Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                     Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
-                ], function ($project) use ($publisherForStatsResources, &$projectsQueued): void {
-                    $publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $project));
+                ], function ($project) use ($publisherForStatsResources, &$projectsQueued, &$projectsFailed): void {
+                    // enqueue() returns false when usage stats are disabled and
+                    // when publishing threw -- it swallows that to keep the loop
+                    // alive, reporting it only to Console. Counting those as
+                    // queued would be worse than not counting at all: this number
+                    // is meant to be a trustworthy denominator for the worker's
+                    // completion count.
+                    if ($publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $project)) === false) {
+                        $projectsFailed++;
+                        return;
+                    }
+
                     $projectsQueued++;
                 });
             } catch (\Throwable $th) {
@@ -97,6 +108,7 @@ class StatsResources extends Action
                 // included: an unfinished span exports nothing, and a cycle that
                 // reports nothing is exactly the blind spot this closes.
                 Span::add('stats_resources_task.projects_queued', $projectsQueued);
+                Span::add('stats_resources_task.projects_failed', $projectsFailed);
                 Span::current()?->finish();
             }
         }, $interval, 0, function (\Throwable $th) {
