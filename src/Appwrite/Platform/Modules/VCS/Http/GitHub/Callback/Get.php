@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
@@ -43,7 +42,6 @@ class Get extends Action
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
             ->inject('vcsFactory')
             ->inject('project')
-            ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
@@ -57,41 +55,10 @@ class Get extends Action
         string $code,
         VcsFactory $vcsFactory,
         Document $project,
-        Request $request,
         Response $response,
         Database $dbForPlatform,
         array $platform
     ) {
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-
-        // GitHub only echoes state back when it finishes through the redirect URI.
-        // Flows that end on the app's setup URL instead -- an organisation member
-        // requesting owner approval -- arrive here with no state, so fall back to
-        // the cookie Authorize left behind. The signature covers the project and
-        // redirect URLs but not the installation, so the cookie is only good for
-        // reporting the outcome, never for deciding which project an installation
-        // attaches to.
-        $cookie = $request->getCookie(COOKIE_NAME_VCS_STATE, '');
-
-        if (!empty($cookie)) {
-            if (empty($state) && empty($providerInstallationId)) {
-                $state = $cookie;
-            }
-
-            // One shot: a leftover cookie must never attach a later installation
-            // to the project this browser happened to start from.
-            $response->addCookie(
-                COOKIE_NAME_VCS_STATE,
-                '',
-                \time() - 3600,
-                COOKIE_PATH_VCS_STATE,
-                null,
-                $protocol === 'https',
-                true,
-                Response::COOKIE_SAMESITE_LAX
-            );
-        }
-
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
         }
@@ -126,6 +93,7 @@ class Get extends Action
         }
 
         $region = $project->getAttribute('region', 'default');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $platform['consoleHostname'] ?? '';
 
         $defaultState = [

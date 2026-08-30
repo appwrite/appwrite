@@ -39,18 +39,11 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
     }
 
     /**
-     * @param array<string, string> $cookies
      * @return array<string, string>
      */
-    private function getCallbackHeaders(array $cookies = []): array
+    private function getCallbackHeaders(): array
     {
-        $headers = \array_merge(['x-appwrite-project' => $this->getProject()['$id']], $this->getHeaders());
-
-        foreach ($cookies as $name => $value) {
-            $headers['cookie'] .= '; ' . $name . '=' . \urlencode($value);
-        }
-
-        return $headers;
+        return \array_merge(['x-appwrite-project' => $this->getProject()['$id']], $this->getHeaders());
     }
 
     /**
@@ -69,29 +62,12 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $this->assertStringStartsWith($this->getRedirect() . '?error=', (string) $response['headers']['location']);
     }
 
+
     /**
-     * GitHub drops the state parameter whenever it finishes the flow through the
-     * app's setup URL, which is what an organisation member's request does. The
-     * cookie the authorize endpoint left behind has to take over, so the user
-     * lands back in the console instead of on a bare 400 page.
+     * Without state there is no project to redirect to, so the error has to at
+     * least say what went wrong.
      */
     public function testCallbackMissingState(): void
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders([
-            'a_vcs_state' => $this->getState(),
-        ]), [
-            'setup_action' => 'request',
-        ], followRedirects: false);
-
-        $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith($this->getRedirect() . '?error=', (string) $response['headers']['location']);
-    }
-
-    /**
-     * Without state and without the cookie there is no project to redirect to, so
-     * the error has to at least say what went wrong.
-     */
-    public function testCallbackMissingStateAndCookie(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
             'setup_action' => 'install',
@@ -124,20 +100,4 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $this->assertStringContainsString('Invalid state parameter', (string) $response['body']);
     }
 
-    /**
-     * The cookie is not bound to the installation the callback was handed, so it
-     * must never stand in for state on a request that would persist one.
-     */
-    public function testCallbackCookieDoesNotBindInstallation(): void
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders([
-            'a_vcs_state' => $this->getState(),
-        ]), [
-            'setup_action' => 'install',
-            'installation_id' => '1234567',
-        ], followRedirects: false);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Missing state parameter', (string) $response['body']);
-    }
 }
