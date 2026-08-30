@@ -66,12 +66,17 @@ class Get extends Action
 
         // GitHub only echoes state back when it finishes through the redirect URI.
         // Flows that end on the app's setup URL instead -- an organisation member
-        // requesting owner approval, or an owner approving that request -- arrive
-        // here with no state, so fall back to the cookie Authorize left behind.
+        // requesting owner approval -- arrive here with no state, so fall back to
+        // the cookie Authorize left behind. The signature covers the project and
+        // redirect URLs but not the installation, so the cookie is only good for
+        // reporting the outcome, never for deciding which project an installation
+        // attaches to.
         $cookie = $request->getCookie(COOKIE_NAME_VCS_STATE, '');
 
         if (!empty($cookie)) {
-            $state = empty($state) ? $cookie : $state;
+            if (empty($state) && empty($providerInstallationId)) {
+                $state = $cookie;
+            }
 
             // One shot: a leftover cookie must never attach a later installation
             // to the project this browser happened to start from.

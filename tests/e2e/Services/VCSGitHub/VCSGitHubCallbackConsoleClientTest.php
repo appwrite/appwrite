@@ -123,4 +123,21 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString('Invalid state parameter', (string) $response['body']);
     }
+
+    /**
+     * The cookie is not bound to the installation the callback was handed, so it
+     * must never stand in for state on a request that would persist one.
+     */
+    public function testCallbackCookieDoesNotBindInstallation(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders([
+            'a_vcs_state' => $this->getState(),
+        ]), [
+            'setup_action' => 'install',
+            'installation_id' => '1234567',
+        ], followRedirects: false);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('Missing state parameter', (string) $response['body']);
+    }
 }
