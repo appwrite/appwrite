@@ -15,6 +15,7 @@ export const ANALYTICS_ACTIONS = {
   'user-menu': 'User Menu Clicked',
   'theme-toggle': 'Theme Toggle Clicked',
   'sidebar-collapse': 'Sidebar Collapse Clicked',
+  'database-admin-nav-collapse': 'Database Admin Nav Collapse Clicked',
   'connect-project': 'Connect Project Clicked',
   'copy-connect-sdk-prompt': 'Connect SDK Prompt Copied',
   'header-create-menu': 'Header Create Menu Clicked',

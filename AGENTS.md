@@ -1339,7 +1339,7 @@ Console uses **team** (organization) and **user** (account) preferences to store
 ### Key format
 
 - **Pattern**: `console.<feature>.<optionalSubKey>`
-- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `organization` (preferred org on account prefs).
+- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `console.databases.adminNavCollapsed`, `organization` (preferred org on account prefs).
 - **Scope**: Team prefs are per organization (`sdk.forConsole.teams.get/updatePrefs` with `teamId`). User/account prefs are per user (`sdk.forConsole.account.updatePrefs`).
 
 ### Value format

@@ -39,6 +39,7 @@ import {
   USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT,
   USER_PREFS_KEY_COVER_GENERATOR_COLUMNS_LAYOUT,
   USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS,
+  USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED,
   USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH,
   USER_PREFS_KEY_DIAGRAM_GENERATOR_PROPERTIES_SPLIT_LAYOUT,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
@@ -302,6 +303,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     key: USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH,
     description: 'Databases sidebar width in pixels.',
+    category: 'Databases',
+  },
+  {
+    id: 'databaseAdminNavCollapsed',
+    scope: 'account',
+    key: USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED,
+    description:
+      'PostgreSQL and MySQL sidebar admin links collapsed (Credentials, Monitor, Connections, Roles, Backups). Settings stays visible.',
     category: 'Databases',
   },
   {
