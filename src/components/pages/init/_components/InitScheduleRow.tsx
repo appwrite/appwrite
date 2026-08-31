@@ -56,7 +56,7 @@ export function InitScheduleRow({
     <span
       className={cn(
         'flex shrink-0',
-        inlineWhenWide ? 'w-[92px]' : 'w-6',
+        inlineWhenWide ? 'order-2 sm:order-none sm:w-[92px]' : 'w-6',
       )}
     >
       <Badge
@@ -79,13 +79,19 @@ export function InitScheduleRow({
   const details = (
     <div
       className={cn(
-        'min-w-0 flex-1 space-y-1',
-        inlineWhenWide &&
-          'sm:flex sm:items-center sm:gap-3 sm:space-y-0',
+        'min-w-0 space-y-1',
+        inlineWhenWide
+          ? 'order-1 w-full flex-none sm:order-none sm:flex sm:w-auto sm:flex-1 sm:items-center sm:gap-3 sm:space-y-0'
+          : 'flex-1',
       )}
     >
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
+        <p
+          className={cn(
+            'min-w-0 text-[13px] font-medium text-foreground',
+            inlineWhenWide ? 'sm:truncate' : 'truncate',
+          )}
+        >
           {item.title}
         </p>
         {showLive ? (
@@ -131,8 +137,12 @@ export function InitScheduleRow({
   return (
     <li
       className={cn(
-        'group flex items-start gap-4 px-6 py-3.5',
-        inlineWhenWide && 'sm:items-center',
+        // Phones stack the row (title, then badge + action) so the title keeps
+        // the full width instead of being squeezed into a ~50px column.
+        'group px-6 py-3.5',
+        inlineWhenWide
+          ? 'flex flex-wrap items-center gap-x-4 gap-y-2 sm:flex-nowrap sm:gap-4'
+          : 'flex items-start gap-4',
         showLive &&
           'bg-[color-mix(in_srgb,var(--brand-cta)_5%,transparent)]',
         showStartingSoon &&
@@ -145,7 +155,12 @@ export function InitScheduleRow({
       onBlur={() => setTransientActivity(null)}
     >
       {mainContent}
-      <div className="flex shrink-0 items-center gap-3">
+      <div
+        className={cn(
+          'flex shrink-0 items-center gap-3',
+          inlineWhenWide && 'order-3 ms-auto sm:order-none sm:ms-0',
+        )}
+      >
         {!isRecapMode ? (
           <InitScheduleCalendarButton event={event} item={item} />
         ) : null}

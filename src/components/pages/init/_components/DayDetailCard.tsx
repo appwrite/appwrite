@@ -173,11 +173,13 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
   const isBlogLink = Boolean(parseBlogPagePath(resource.href))
   const isDocsLink = Boolean(parseDocsPagePath(resource.href))
   const resolved = useInitHref(resource.href)
+  // Phones give the title its own full-width line and drop the badge + action
+  // below it; three inline columns left the title ~80px and shredded it.
   const rowClassName =
-    'group flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-accent/30'
+    'group flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap'
   const rowContent = (
     <>
-      <span className="flex w-[92px] shrink-0">
+      <span className="order-2 flex shrink-0 sm:order-none sm:w-[92px]">
         <Badge
           variant="secondary"
           className="gap-1.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
@@ -186,10 +188,10 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
           {resource.typeLabel}
         </Badge>
       </span>
-      <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
+      <span className="order-1 w-full min-w-0 flex-none text-[13px] font-medium text-foreground sm:order-none sm:w-auto sm:flex-1">
         {resource.title}
       </span>
-      <span className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground">
+      <span className="order-3 ms-auto flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground sm:order-none sm:ms-0">
         {resource.actionLabel}
         <ArrowUpRight className="size-3.5" aria-hidden />
       </span>

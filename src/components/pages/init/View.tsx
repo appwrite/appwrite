@@ -170,7 +170,7 @@ function InitPageContent({
           <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
             <InitRecapIntro event={event} />
 
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
               <div className="space-y-6">
                 {event.days.map((day) =>
                   isLaunchEventDayLocked(day) ? (

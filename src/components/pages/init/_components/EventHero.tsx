@@ -118,13 +118,15 @@ function CollapsedHeroBar({
 
             <div
               className={cn(
-                'pointer-events-none absolute inset-0 flex items-center justify-center px-4',
-                liveBanner
-                  ? 'pe-[5.75rem] sm:px-28 sm:pe-36 md:px-36'
-                  : 'sm:px-28 md:px-36',
+                // Keep the nav in flow until the bar is wide enough to center it
+                // over the row: the fixed insets that reserved space for the
+                // wordmark/date and the live badge + Watch button were smaller
+                // than those columns, so the day buttons rendered underneath.
+                'flex min-w-0 flex-1 items-center justify-center',
+                'lg:pointer-events-none lg:absolute lg:inset-0 lg:flex-none lg:px-36',
               )}
             >
-              <div className="pointer-events-auto w-full max-w-full sm:max-w-none">
+              <div className="pointer-events-auto w-full min-w-0 max-w-full sm:max-w-none">
                 <InitCollapsedDayNav
                   days={days}
                   activeDay={activeDay}

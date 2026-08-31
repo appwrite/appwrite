@@ -18,7 +18,7 @@ export function InitCollapsedDayNav({ days, activeDay, currentDay }: InitCollaps
 
   return (
     <nav
-      className="flex min-w-0 justify-center gap-0.5 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex min-w-0 justify-center-safe gap-0.5 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       aria-label="Init days"
     >
       {days.map((day) => {
