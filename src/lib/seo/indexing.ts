@@ -1,4 +1,15 @@
-export const SEO_INDEXABLE_HOSTS = ['appwrite.io', 'www.appwrite.io'] as const
+export const SEO_INDEXABLE_HOSTS = ['appwrite.io'] as const
+
+/** Apex host used for permanent subdomain redirects (www / new → apex). */
+export const CANONICAL_HOST = 'appwrite.io'
+
+/**
+ * Production hosts that must 301 to {@link CANONICAL_HOST}, keeping path and query.
+ */
+export const HOSTS_REDIRECT_TO_CANONICAL = [
+  'www.appwrite.io',
+  'new.appwrite.io',
+] as const
 
 /** Set to false to allow indexing on all hosts (no noindex headers or blocking robots.txt). */
 export const BLOCK_NON_PRODUCTION_SEO = false
@@ -21,9 +32,27 @@ export const INDEXABLE_ROBOTS_META = {
 export const NOINDEX_ROBOTS_HEADER = 'noindex, nofollow'
 
 const SEO_INDEXABLE_HOST_SET = new Set<string>(SEO_INDEXABLE_HOSTS)
+const HOSTS_REDIRECT_TO_CANONICAL_SET = new Set<string>(
+  HOSTS_REDIRECT_TO_CANONICAL,
+)
 
 export function normalizeRequestHost(host: string): string {
   return host.trim().toLowerCase().split(':')[0] ?? ''
+}
+
+export function shouldRedirectToCanonicalHost(host: string): boolean {
+  return HOSTS_REDIRECT_TO_CANONICAL_SET.has(normalizeRequestHost(host))
+}
+
+/**
+ * Build a permanent redirect URL to the apex host with the same path and query.
+ */
+export function getCanonicalHostRedirectUrl(requestUrl: string): string {
+  const incoming = new URL(requestUrl)
+  return new URL(
+    `${incoming.pathname}${incoming.search}`,
+    `https://${CANONICAL_HOST}`,
+  ).toString()
 }
 
 export function isSeoIndexableHost(host: string): boolean {

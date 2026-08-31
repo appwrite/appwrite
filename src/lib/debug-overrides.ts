@@ -384,6 +384,26 @@ export function resetFeatureFlagsMenuDebugOverrides() {
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 
+/** Keys toggled from Debug → Settings → Init (not other debug sections). */
+export const INIT_MENU_DEBUG_KEYS = [
+  'mockInitCurrentDay',
+  'mockInitTicketType',
+  'previewInitReactionConfetti',
+  'initLowPowerAnimations',
+] as const satisfies readonly (keyof DebugOverrides)[]
+
+export type InitMenuDebugKey = (typeof INIT_MENU_DEBUG_KEYS)[number]
+
+/** Clear persisted debug overrides used by the Init submenu only. */
+export function resetInitMenuDebugOverrides() {
+  const storage = getStorage()
+  if (!storage) return
+  INIT_MENU_DEBUG_KEYS.forEach((key) => {
+    storage.removeItem(DEBUG_OVERRIDE_KEYS[key])
+  })
+  window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
+}
+
 /** Reset a single debug override from the Feature flags submenu to its default. */
 export function resetFeatureFlagsMenuDebugOverride(key: FeatureFlagsMenuDebugKey) {
   const storage = getStorage()

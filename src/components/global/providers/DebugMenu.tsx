@@ -63,6 +63,7 @@ import {
   loadDebugOverrides,
   resetFeatureFlagsMenuDebugOverrides,
   resetFeatureFlagsMenuDebugOverride,
+  resetInitMenuDebugOverrides,
   FEATURE_FLAGS_MENU_DEBUG_DEFAULTS,
   setDebugOverride,
   subscribeToDebugOverrides,
@@ -1406,6 +1407,19 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         description: getLowPowerDecisionDescription(initLowPowerDecision),
         icon: <Sparkles className="h-3 w-3" />,
         submenu: lowPowerAnimationSubmenu,
+      },
+      {
+        label: 'Reset settings',
+        description:
+          'Restore day, ticket mock, confetti preview, and low power to defaults.',
+        onClick: () => {
+          resetInitMenuDebugOverrides()
+          setOverrides(loadDebugOverrides())
+          setIsOpen(false)
+        },
+        icon: <RotateCcw className="h-3 w-3" />,
+        rowClassName:
+          'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] pt-2',
       },
     ]
 
