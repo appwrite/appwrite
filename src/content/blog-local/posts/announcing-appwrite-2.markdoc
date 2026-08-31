@@ -16,15 +16,15 @@ faqs:
   - question: "Do I have to migrate anything to use Appwrite 2.0?"
     answer: "No. Existing projects keep working. TablesDB, DocumentsDB, and VectorsDB use the same SDK patterns you already know, and the S3 API is a second door into the buckets and files you already have. New capabilities like native PostgreSQL and MySQL are additive: you create them when you need them."
   - question: "Which databases does Appwrite 2.0 support?"
-    answer: "Five types. [TablesDB](/docs/products/databases/tablesdb) for structured relational data, [DocumentsDB](/docs/products/databases/documentsdb) for schemaless JSON, [VectorsDB](/docs/products/databases/vectorsdb) for embeddings and similarity search, and native [PostgreSQL](/docs/products/databases/postgresql) and [MySQL](/docs/products/databases/mysql) engines you connect to directly with your own driver, ORM, and migrations."
+    answer: "Five types. [TablesDB](/docs/products/databases/tablesdb) for structured relational data, DocumentsDB for schemaless JSON, VectorsDB for embeddings and similarity search, and native PostgreSQL and MySQL engines you connect to directly with your own driver, ORM, and migrations."
   - question: "How is a native PostgreSQL database different from TablesDB?"
     answer: "TablesDB is an Appwrite database with an Appwrite API on top, including permissions, queries, and realtime. A native PostgreSQL database is the raw engine provisioned for your project, with its own hostname, credentials, and TLS, and no Appwrite abstraction layer. You connect with `psql` or any PostgreSQL driver and use the full feature set of the engine, including extensions like PostGIS and pgvector."
   - question: "What is the difference between the OAuth2 server and Appwrite's OAuth providers?"
-    answer: "OAuth providers let your users sign in to your app with Google, GitHub, and others. The [OAuth2 server](/docs/products/auth/oauth-server) is the opposite direction: your project becomes the identity provider, so third-party apps can offer Sign in with your product and request scoped access to your APIs using standard OAuth 2.1 and OpenID Connect flows."
+    answer: "OAuth providers let your users sign in to your app with Google, GitHub, and others. The OAuth2 server is the opposite direction: your project becomes the identity provider, so third-party apps can offer Sign in with your product and request scoped access to your APIs using standard OAuth 2.1 and OpenID Connect flows."
   - question: "Is Appwrite 2.0 available for self-hosting?"
     answer: "Yes. Every Appwrite 2.0 feature ships on Appwrite Cloud during Init week, and Community Edition ships the complete Appwrite 2.0 release for [self-hosting](/docs/advanced/self-hosting) when the week wraps up. Cloud-specific products tied to Appwrite's registrar and network, such as Domains and Firewall, remain Cloud-only."
   - question: "What is the Appwrite Firewall?"
-    answer: "[Firewall](/docs/products/firewall) is project-level traffic control on Appwrite Cloud. You write rules that match requests by IP, hostname, path, method, headers, query parameters, user agent, or location, then deny, challenge, rate limit, redirect, or bypass them before the traffic reaches your API, Functions, or Sites."
+    answer: "Firewall is project-level traffic control on Appwrite Cloud. You write rules that match requests by IP, hostname, path, method, headers, query parameters, user agent, or location, then deny, challenge, rate limit, redirect, or bypass them before the traffic reaches your API, Functions, or Sites."
 ---
 
 Every backend platform eventually asks its users to make a trade. You adopt the platform's abstractions and get speed, or you keep your own tools and build the plumbing yourself. For most of Appwrite's history, we were on one side of that trade: our APIs, our SDKs, our data model, our way.
@@ -58,43 +58,43 @@ Two developer tools we shipped ahead of 2.0 now count as part of the default wor
 
 # Native PostgreSQL
 
-[Native PostgreSQL](/docs/products/databases/postgresql) is the point where the abstraction tax argument stops being theoretical. Appwrite provisions a real engine in your project's region with its own storage, networking, and credentials, exposed on a per-database hostname secured with TLS. There is no Appwrite layer in between. You get PostgreSQL 18 by default, 17 if you need it, on port 5432, reachable from `psql` or any driver.
+Native PostgreSQL is the point where the abstraction tax argument stops being theoretical. Appwrite provisions a real engine in your project's region with its own storage, networking, and credentials, exposed on a per-database hostname secured with TLS. There is no Appwrite layer in between. You get PostgreSQL 18 by default, 17 if you need it, on port 5432, reachable from `psql` or any driver.
 
-The operational work comes with it: [backups and point-in-time recovery](/docs/products/databases/postgresql/backups), [branches](/docs/products/databases/postgresql/branches) that clone from a snapshot in seconds, [high availability](/docs/products/databases/postgresql/high-availability) with automatic failover, a [connection pooler](/docs/products/databases/postgresql/connection-pooling) with read/write split, and online version upgrades with no read or write outage. [Extensions](/docs/products/databases/postgresql/extensions) including PostGIS, pgvector, and pg_trgm are supported, so a workload that needs pgvector rather than VectorsDB has a home too. Compute starts at $10 per month and [resizes between tiers](/docs/products/databases/postgresql/scaling) with zero downtime.
+The operational work comes with it: backups and point-in-time recovery, branches that clone from a snapshot in seconds, high availability with automatic failover, a connection pooler with read/write split, and online version upgrades with no read or write outage. Extensions including PostGIS, pgvector, and pg_trgm are supported, so a workload that needs pgvector rather than VectorsDB has a home too. Compute starts at $10 per month and resizes between tiers with zero downtime.
 
 # VectorsDB
 
-[VectorsDB](/docs/products/databases/vectorsdb) handles embeddings. A collection is created with a fixed `dimension`, every document stores an `embeddings` vector of that length plus optional `metadata`, and an [HNSW index](/docs/products/databases/vectorsdb/vector-search) keeps similarity search fast as the collection grows. You choose cosine, dot product, or Euclidean distance, and [built-in embedding models](/docs/products/databases/vectorsdb/embeddings) turn text into vectors without a separate embedding service in your stack.
+VectorsDB handles embeddings. A collection is created with a fixed `dimension`, every document stores an `embeddings` vector of that length plus optional `metadata`, and an HNSW index keeps similarity search fast as the collection grows. You choose cosine, dot product, or Euclidean distance, and built-in embedding models turn text into vectors without a separate embedding service in your stack.
 
 # DocumentsDB
 
-[DocumentsDB](/docs/products/databases/documentsdb) handles schemaless documents. A collection holds JSON, two documents in the same collection can have different fields, and adding a field is a write rather than a migration. You still get document-level permissions, queries, ordering, and pagination through the same SDK patterns.
+DocumentsDB handles schemaless documents. A collection holds JSON, two documents in the same collection can have different fields, and adding a field is a write rather than a migration. You still get document-level permissions, queries, ordering, and pagination through the same SDK patterns.
 
 # Native MySQL
 
-[Native MySQL](/docs/products/databases/mysql) does the same for the other half of the SQL world, on the same terms as PostgreSQL: a real engine, your own credentials, your own driver and ORM and migrations, and no Appwrite API in the path. MySQL 8.4 is the default with 8.0 also supported, on port 3306, reachable from the `mysql` client or anything that speaks the protocol.
+Native MySQL does the same for the other half of the SQL world, on the same terms as PostgreSQL: a real engine, your own credentials, your own driver and ORM and migrations, and no Appwrite API in the path. MySQL 8.4 is the default with 8.0 also supported, on port 3306, reachable from the `mysql` client or anything that speaks the protocol.
 
 # The S3 API
 
-[Appwrite Storage now exposes an S3-compatible API](/docs/products/storage/s3). It authenticates with AWS Signature Version 4 and maps standard S3 operations onto your existing buckets and files, so most S3 code works after you change three settings: the endpoint, the credentials, and path-style addressing.
+Appwrite Storage now exposes an S3-compatible API. It authenticates with AWS Signature Version 4 and maps standard S3 operations onto your existing buckets and files, so most S3 code works after you change three settings: the endpoint, the credentials, and path-style addressing.
 
 The same bucket stays addressable over the native Storage API at the same time. Files uploaded over S3 appear in the Console, and files uploaded through the Console are listable over S3. The announcement has the endpoint table, the AWS CLI and boto3 examples, and the full list of supported operations.
 
 # The OAuth2 server
 
-[The OAuth2 server](/docs/products/auth/oauth-server) turns an Appwrite project into an **OAuth 2.1 and OpenID Connect provider**. Third-party apps register as clients, your users approve what those apps can access, and your project issues the tokens. Integrators offer Sign in with your product the same way you offer Sign in with Google.
+The OAuth2 server turns an Appwrite project into an **OAuth 2.1 and OpenID Connect provider**. Third-party apps register as clients, your users approve what those apps can access, and your project issues the tokens. Integrators offer Sign in with your product the same way you offer Sign in with Google.
 
 Two decisions define it. You host the consent screen, so users approving access never leave your product's design language. And client registration is an API available in the Client SDKs, not a Console form, which is what makes a self-serve developer portal possible. Underneath, it implements the specs integrators expect: PKCE, token introspection and revocation, JWT access tokens with a published JWK Set, the device authorization grant, pushed authorization requests, and dynamic client registration, all described by a discovery document at a predictable URL.
 
 # Partner marketplaces
 
-The [Partners documentation](/docs/partners) covers the other half of the OAuth story: building a platform on top of Appwrite rather than an app inside it. The [Apps API](/docs/partners/apps) registers OAuth apps and manages secrets, redirect URIs, and branding, while [OAuth connect](/docs/partners/oauth-connect) sends users through consent and calls Console APIs with delegated tokens. A [marketplace](/docs/partners/guides/marketplaces) uses both: each listing maps to an OAuth app, an organization admin clicks install, and your backend exchanges the authorization code for tokens scoped to their organization.
+The Partners documentation covers the other half of the OAuth story: building a platform on top of Appwrite rather than an app inside it. The Apps API registers OAuth apps and manages secrets, redirect URIs, and branding, while OAuth connect sends users through consent and calls Console APIs with delegated tokens. A marketplace uses both: each listing maps to an OAuth app, an organization admin clicks install, and your backend exchanges the authorization code for tokens scoped to their organization.
 
 This is the path for vibe coding platforms, AI agents that manage a user's Appwrite resources, and multi-tenant control planes that provision a project per customer.
 
 # Firewall
 
-[Appwrite Firewall](/docs/products/firewall) is project-level traffic control in front of your API, Functions, and Sites. Each rule combines four things:
+Appwrite Firewall is project-level traffic control in front of your API, Functions, and Sites. Each rule combines four things:
 
 - **Resource scope**: the project API, a specific function, or a specific site.
 - **Conditions**: filters on IP, hostname, path, method, headers, query parameters, user agent, or location, combined with AND.
@@ -105,7 +105,7 @@ Before you save a rule, Firewall previews how many recent requests would have ma
 
 # Domains
 
-[Appwrite Domains](/docs/products/domains) makes Appwrite your registrar. Register new names, transfer existing registrations in with an authorization code, or delegate DNS for a domain you own elsewhere by pointing nameservers at `ns1.appwrite.zone` and `ns2.appwrite.zone`. Setup has two layers: the organization domain proves you control the apex zone, and product hostnames attach to [Sites](/docs/products/sites), [Functions](/docs/products/functions), or a custom API endpoint, with DNS verified and TLS issued automatically. [DNS presets](/docs/products/domains/presets) add MX and SPF record sets for Google Workspace, Outlook, and Mailgun in one click.
+Appwrite Domains makes Appwrite your registrar. Register new names, transfer existing registrations in with an authorization code, or delegate DNS for a domain you own elsewhere by pointing nameservers at `ns1.appwrite.zone` and `ns2.appwrite.zone`. Setup has two layers: the organization domain proves you control the apex zone, and product hostnames attach to [Sites](/docs/products/sites), [Functions](/docs/products/functions), or a custom API endpoint, with DNS verified and TLS issued automatically. DNS presets add MX and SPF record sets for Google Workspace, Outlook, and Mailgun in one click.
 
 # Hyperloop B
 
@@ -118,9 +118,3 @@ You never call it directly, which is rather the point. The [Hyperloop B deep div
 Every Appwrite 2.0 feature goes live on Appwrite Cloud during [Init](/init) week. Community Edition ships the complete Appwrite 2.0 release for [self-hosting](/docs/advanced/self-hosting) when the week wraps up, with Domains and Firewall remaining Cloud-only since both are tied to Appwrite's registrar and [network](/docs/products/network).
 
 The best way to judge whether the abstraction tax is really gone is to pick the piece that used to force you out of Appwrite. Point the AWS CLI at a bucket you already have. Create a native PostgreSQL database and connect to it with your existing ORM. Enable the OAuth2 server and register a client from a Client SDK. None of it asks you to move what you have already built.
-
-- [Appwrite Databases documentation](/docs/products/databases)
-- [S3 API documentation](/docs/products/storage/s3)
-- [OAuth2 server documentation](/docs/products/auth/oauth-server)
-- [Firewall documentation](/docs/products/firewall)
-- [Domains documentation](/docs/products/domains)
