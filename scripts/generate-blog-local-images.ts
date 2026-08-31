@@ -181,6 +181,7 @@ async function generateHyperloopBCover(outputDir: string): Promise<void> {
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
+  'announcing-appwrite-domains': convertCoverSourceToAvif,
   'turn-your-app-into-an-mcp-server': generateMcpServerOauth2Images,
   'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
   'announcing-console-iv': convertCoverSourceToAvif,

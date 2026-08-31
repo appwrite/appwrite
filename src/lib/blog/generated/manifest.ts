@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-appwrite-domains",
+    "href": "/blog/post/announcing-appwrite-domains",
+    "title": "Announcing Appwrite Domains: your registrar and DNS host",
+    "description": "Appwrite Domains brings registration, DNS, and TLS into your organization. Buy names across 160+ TLDs, host the zone, and connect Sites and Functions.",
+    "date": "2026-09-04",
+    "lastUpdated": "2026-09-04",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "product, announcement",
+    "featured": false,
+    "cover": "/images/blog-local/announcing-appwrite-domains/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-2-0-postgres-by-default",
     "href": "/blog/post/appwrite-2-0-postgres-by-default",
     "title": "Introducing Postgres to self-hosted Appwrite",
