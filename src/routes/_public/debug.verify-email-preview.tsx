@@ -16,7 +16,7 @@ function VerifyEmailPreviewPage() {
   const [isResendLoading, setIsResendLoading] = useState(false)
 
   return (
-    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
+    <div className="bg-background relative h-full overflow-y-auto">
       <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-center gap-2 border-b border-border bg-background/95 px-4 py-2 backdrop-blur">
         <p className="mr-2 text-[12px] text-muted-foreground">
           Debug preview. Toggle verify-email states.
@@ -41,29 +41,31 @@ function VerifyEmailPreviewPage() {
         </Button>
       </div>
 
-      <div className="w-full max-w-sm md:max-w-4xl pt-12">
-        <VerifyEmail
-          preview
-          status={status}
-          isResendLoading={isResendLoading}
-          onResend={() => {
-            setIsResendLoading(true)
-            window.setTimeout(() => setIsResendLoading(false), 1200)
-          }}
-        />
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          By continuing, you agree to our{' '}
-          <MarketingSiteLink className="link-neutral" href="/terms">
-            Terms of Service
-          </MarketingSiteLink>{' '}
-          and{' '}
-          <MarketingSiteLink className="link-neutral" href="/privacy">
-            Privacy Policy
-          </MarketingSiteLink>
-          .
-        </p>
-        <div className="mt-10 md:mt-16 flex justify-center">
-          <AppwriteLogo className="h-6 w-auto" />
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+        <div className="my-auto w-full max-w-sm md:max-w-4xl pt-12">
+          <VerifyEmail
+            preview
+            status={status}
+            isResendLoading={isResendLoading}
+            onResend={() => {
+              setIsResendLoading(true)
+              window.setTimeout(() => setIsResendLoading(false), 1200)
+            }}
+          />
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            By continuing, you agree to our{' '}
+            <MarketingSiteLink className="link-neutral" href="/terms">
+              Terms of Service
+            </MarketingSiteLink>{' '}
+            and{' '}
+            <MarketingSiteLink className="link-neutral" href="/privacy">
+              Privacy Policy
+            </MarketingSiteLink>
+            .
+          </p>
+          <div className="mt-10 md:mt-16 flex justify-center">
+            <AppwriteLogo className="h-6 w-auto" />
+          </div>
         </div>
       </div>
     </div>
