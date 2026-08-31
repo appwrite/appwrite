@@ -1,10 +1,7 @@
 import type { DedicatedDatabaseCredentials } from '@/lib/databases/dedicated-engine'
 import type { Models } from '@appwrite.io/console' // pragma: allowlist secret
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
-import {
-  buildMysqlDirectConnectionString,
-  maskMysqlConnectionStringPassword,
-} from '@/lib/mysql-connection-string'
+import { maskMysqlConnectionStringPassword } from '@/lib/mysql-connection-string'
 
 export type MysqlConnectSnippetTab = 'env' | 'prisma' | 'drizzle' | 'mysql'
 
@@ -16,9 +13,6 @@ export type MysqlConnectionEndpointInfo = {
   poolerMode?: string
   pooledHost: string
   pooledPort: number
-  directHost: string
-  directPort: number
-  showDirectEndpoint: boolean
 }
 
 export type MysqlConnectSnippetContext = {
@@ -55,11 +49,29 @@ function escapeForShell(value: string) {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
-function getDirectConnectionString(
+/** Connection string pointed at the single pooler (or primary) endpoint. */
+export function getMysqlPooledConnectionString(
   context: MysqlConnectSnippetContext,
-): string | null {
-  if (!context.endpointInfo.showDirectEndpoint) return null
-  return buildMysqlDirectConnectionString(context.credentials)
+): string {
+  const { credentials, endpointInfo } = context
+  const { connectionString } = credentials
+  if (!connectionString) return ''
+
+  if (
+    endpointInfo.pooledHost === credentials.host &&
+    endpointInfo.pooledPort === credentials.port
+  ) {
+    return connectionString
+  }
+
+  try {
+    const parsed = new URL(connectionString)
+    parsed.hostname = endpointInfo.pooledHost
+    parsed.port = String(endpointInfo.pooledPort)
+    return parsed.toString()
+  } catch {
+    return connectionString
+  }
 }
 
 function buildEnvVariableLine(
@@ -80,60 +92,24 @@ function buildEnvFileSnippet(
   options?: { maskPassword?: boolean },
 ) {
   const { credentials } = context
-  const directConnectionString = getDirectConnectionString(context)
-  const lines = [
-    buildEnvVariableLine(
-      'DATABASE_URL',
-      credentials.connectionString,
-      credentials.password,
-      options,
-    ),
-  ]
+  const connectionString = getMysqlPooledConnectionString(context)
 
-  if (directConnectionString) {
-    lines.push(
-      buildEnvVariableLine(
-        'DIRECT_URL',
-        directConnectionString,
-        credentials.password,
-        options,
-      ),
-    )
-  }
-
-  return lines.join('\n')
+  return buildEnvVariableLine(
+    'DATABASE_URL',
+    connectionString,
+    credentials.password,
+    options,
+  )
 }
 
-function buildEnvSectionComment(endpointInfo: MysqlConnectionEndpointInfo) {
-  if (endpointInfo.showDirectEndpoint) {
-    return '# Use DATABASE_URL for the app (pooled). Use DIRECT_URL for migrations.'
-  }
-
-  if (endpointInfo.poolerEnabled) {
-    return '# Add to your .env file.'
-  }
-
+function buildEnvSectionComment() {
   return '# Add to your .env file.'
 }
 
 function buildMysqlPrismaSnippet(context: MysqlConnectSnippetContext) {
-  const { endpointInfo } = context
-  const directConnectionString = getDirectConnectionString(context)
-  const datasourceLines = [
-    'datasource db {',
-    '  provider  = "mysql"',
-    '  url       = env("DATABASE_URL")',
-  ]
-
-  if (directConnectionString) {
-    datasourceLines.push('  directUrl = env("DIRECT_URL")')
-  }
-
-  datasourceLines.push('}')
-
   return [
     '# .env',
-    buildEnvSectionComment(endpointInfo),
+    buildEnvSectionComment(),
     '',
     buildEnvFileSnippet(context),
     '',
@@ -143,7 +119,10 @@ function buildMysqlPrismaSnippet(context: MysqlConnectSnippetContext) {
     '  provider = "prisma-client-js"',
     '}',
     '',
-    ...datasourceLines,
+    'datasource db {',
+    '  provider = "mysql"',
+    '  url      = env("DATABASE_URL")',
+    '}',
   ].join('\n')
 }
 
@@ -158,13 +137,7 @@ function buildMysqlDrizzleDbSnippet() {
   ].join('\n')
 }
 
-function buildMysqlDrizzleConfigSnippet(
-  directConnectionString: string | null,
-) {
-  const migrationUrl = directConnectionString
-    ? '    url: process.env.DIRECT_URL ?? process.env.DATABASE_URL!,'
-    : '    url: process.env.DATABASE_URL!,'
-
+function buildMysqlDrizzleConfigSnippet() {
   return [
     'import { defineConfig } from "drizzle-kit"',
     '',
@@ -173,7 +146,7 @@ function buildMysqlDrizzleConfigSnippet(
     '  out: "./drizzle",',
     '  dialect: "mysql",',
     '  dbCredentials: {',
-    migrationUrl,
+    '    url: process.env.DATABASE_URL!,',
     '  },',
     '})',
   ].join('\n')
@@ -184,16 +157,12 @@ export type MysqlDrizzleSnippetPart = 'env' | 'db' | 'config'
 export function buildMysqlDrizzleSnippetParts(
   context: MysqlConnectSnippetContext,
 ) {
-  const directConnectionString = getDirectConnectionString(context)
-
   return {
-    env: [
-      buildEnvSectionComment(context.endpointInfo),
-      '',
-      buildEnvFileSnippet(context),
-    ].join('\n'),
+    env: [buildEnvSectionComment(), '', buildEnvFileSnippet(context)].join(
+      '\n',
+    ),
     db: buildMysqlDrizzleDbSnippet(),
-    config: buildMysqlDrizzleConfigSnippet(directConnectionString),
+    config: buildMysqlDrizzleConfigSnippet(),
   }
 }
 
@@ -205,7 +174,7 @@ export function buildMysqlDrizzleSnippetPartDisplayCode(
 
   if (part === 'env') {
     return [
-      buildEnvSectionComment(context.endpointInfo),
+      buildEnvSectionComment(),
       '',
       buildEnvFileSnippet(context, { maskPassword: true }),
     ].join('\n')
@@ -241,7 +210,7 @@ function buildMysqlCliUriSnippet(context: MysqlConnectSnippetContext) {
   }
 
   lines.push(
-    `mysql -h ${credentials.host} -P ${String(credentials.port)} -u ${credentials.username} -p -D ${databaseName}`,
+    `mysql -h ${endpointInfo.pooledHost} -P ${String(endpointInfo.pooledPort)} -u ${credentials.username} -p -D ${databaseName}`,
   )
 
   return lines.join('\n')
@@ -259,17 +228,8 @@ function buildMysqlCliFlagsSnippet(context: MysqlConnectSnippetContext) {
   }
 
   lines.push(
-    `mysql -h ${credentials.host} -P ${String(credentials.port)} -u ${credentials.username} -p -D ${databaseName}`,
+    `mysql -h ${endpointInfo.pooledHost} -P ${String(endpointInfo.pooledPort)} -u ${credentials.username} -p -D ${databaseName}`,
   )
-
-  if (endpointInfo.showDirectEndpoint) {
-    const directDatabase = credentials.tcpDatabase || credentials.database
-    lines.push('')
-    lines.push('# Direct TCP connection (bypass pooler)')
-    lines.push(
-      `mysql -h ${credentials.tcpHost || credentials.host} -P ${String(credentials.tcpPort || credentials.port)} -u ${credentials.username} -p -D ${directDatabase}`,
-    )
-  }
 
   return lines.join('\n')
 }
@@ -351,7 +311,8 @@ function maskSnippetConnectionStrings(
   context: MysqlConnectSnippetContext,
 ) {
   const { credentials } = context
-  const { connectionString, password } = credentials
+  const connectionString = getMysqlPooledConnectionString(context)
+  const { password } = credentials
   let result = snippet
 
   const maskValue = (value: string) => {
@@ -375,9 +336,11 @@ function maskSnippetConnectionStrings(
     maskValue(connectionString)
   }
 
-  const directConnectionString = getDirectConnectionString(context)
-  if (directConnectionString && directConnectionString !== connectionString) {
-    maskValue(directConnectionString)
+  if (
+    credentials.connectionString &&
+    credentials.connectionString !== connectionString
+  ) {
+    maskValue(credentials.connectionString)
   }
 
   return result
@@ -404,15 +367,10 @@ export function buildMysqlConnectionEndpointInfo(
   credentials: DedicatedDatabaseCredentials,
   pooler: Models.DedicatedDatabasePooler | null | undefined,
 ): MysqlConnectionEndpointInfo {
+  const poolerEnabled = pooler?.enabled === true
   const pooledHost = credentials.host
   const pooledPort =
-    pooler?.enabled === true && pooler.port ? pooler.port : credentials.port
-  const directHost = credentials.tcpHost || credentials.host
-  const directPort = credentials.tcpPort || credentials.port
-  const poolerEnabled = pooler?.enabled === true
-  const showDirectEndpoint =
-    poolerEnabled &&
-    (directHost !== pooledHost || directPort !== pooledPort)
+    poolerEnabled && pooler.port ? pooler.port : credentials.port
 
   return {
     sslLabel: credentials.ssl ? 'Required' : 'Not required',
@@ -420,9 +378,6 @@ export function buildMysqlConnectionEndpointInfo(
     poolerMode: pooler?.mode || undefined,
     pooledHost,
     pooledPort,
-    directHost,
-    directPort,
-    showDirectEndpoint,
   }
 }
 
@@ -431,32 +386,25 @@ export function buildMysqlCopyAllText(
   endpointInfo: MysqlConnectionEndpointInfo,
 ): string {
   const databaseName = credentials.database || credentials.tcpDatabase
+  const connectionString = getMysqlPooledConnectionString({
+    credentials,
+    endpointInfo,
+  })
   const lines = [
-    `Host: ${credentials.host}`,
-    `Port: ${String(credentials.port)}`,
+    `Host: ${endpointInfo.pooledHost}`,
+    `Port: ${String(endpointInfo.pooledPort)}`,
     `Username: ${credentials.username}`,
     `Password: ${credentials.password}`,
     ...(databaseName ? [`Database: ${databaseName}`] : []),
     `SSL: ${endpointInfo.sslLabel}`,
   ]
 
-  if (endpointInfo.poolerEnabled) {
-    lines.push(
-      `Pooler: ${endpointInfo.pooledHost}:${String(endpointInfo.pooledPort)}`,
-    )
-    if (endpointInfo.poolerMode) {
-      lines.push(`Pool mode: ${endpointInfo.poolerMode}`)
-    }
+  if (endpointInfo.poolerEnabled && endpointInfo.poolerMode) {
+    lines.push(`Pool mode: ${endpointInfo.poolerMode}`)
   }
 
-  if (endpointInfo.showDirectEndpoint) {
-    lines.push(
-      `Direct TCP: ${endpointInfo.directHost}:${String(endpointInfo.directPort)}`,
-    )
-  }
-
-  if (credentials.connectionString) {
-    lines.push(`DSN: ${credentials.connectionString}`)
+  if (connectionString) {
+    lines.push(`DSN: ${connectionString}`)
   }
 
   return lines.join('\n')
