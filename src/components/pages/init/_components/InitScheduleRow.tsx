@@ -100,14 +100,17 @@ export function InitScheduleRow({
           </Badge>
         ) : null}
       </div>
-      <p
-        className={cn(
-          'text-[11px] text-muted-foreground',
-          inlineWhenWide && 'sm:shrink-0',
-        )}
-      >
-        {showLive ? t('Live now') : formatScheduleTime(item.startsAt)}
-      </p>
+      {/* Day-card row: badge sits inline with the title, so skip the muted status. */}
+      {inlineWhenWide && (showLive || showStartingSoon) ? null : (
+        <p
+          className={cn(
+            'text-[11px] text-muted-foreground',
+            inlineWhenWide && 'sm:shrink-0',
+          )}
+        >
+          {showLive ? t('Live now') : formatScheduleTime(item.startsAt)}
+        </p>
+      )}
     </div>
   )
   const mainContent =
