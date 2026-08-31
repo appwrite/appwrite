@@ -8,7 +8,7 @@ timeToRead: 14
 author: atharva
 category: tutorial
 featured: false
-draft: false
+draft: true
 faqs:
   - question: "What is a remote MCP server?"
     answer: "A remote MCP server is a web service that AI tools such as Claude Code, Claude.ai, and Cursor call over HTTP to use your product: listing data, creating records, or running actions on a user's behalf. It follows the Model Context Protocol, an open standard for connecting AI tools to applications."
