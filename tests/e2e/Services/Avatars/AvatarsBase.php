@@ -599,7 +599,11 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
-        $this->assertGreaterThan(100000, strlen($response['body']));
+
+        $image = new \Imagick();
+        $image->readImageBlob($response['body']);
+        $this->assertSame(800, $image->getImageWidth());
+        $this->assertSame(600, $image->getImageHeight());
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
