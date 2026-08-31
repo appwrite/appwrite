@@ -423,7 +423,7 @@ return [
             ],
             [
                 'name' => '_APP_WORKER_PER_CORE',
-                'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
+                'description' => 'Internal Worker per core for the API and Executor containers. Can be configured to optimize performance. Realtime ignores this and runs a single worker per container; use _APP_WORKERS_NUM to override.',
                 'introduction' => '0.13.0',
                 'default' => 6,
                 'required' => false,
