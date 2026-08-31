@@ -10,13 +10,42 @@ import { getClientIpFromRequest } from './client-ip'
 
 export { getClientIpFromRequest }
 
-/** First-party script URL served by the app (proxies upstream Plausible JS). */
+/** First-party script path served by the app (proxies upstream Plausible JS). */
 export const PLAUSIBLE_PROXY_SCRIPT_PATH = '/r/v.js'
 
 /** First-party event endpoint (proxies to Plausible /api/event). */
 export const PLAUSIBLE_PROXY_EVENT_PATH = '/r/e'
 
+/**
+ * Bump when Plausible mutates the same upstream script URL in place (e.g. site
+ * domain rename). Combined with the upstream URL into the browser `?v=` param so
+ * CDN/browser caches do not keep serving a stale embedded domain.
+ */
+export const PLAUSIBLE_SCRIPT_CACHE_VERSION = '2'
+
 const PLAUSIBLE_ORIGIN_FALLBACK = 'https://plausible.io'
+
+/** djb2 → base36; stable across server and browser, no crypto dependency. */
+function hashCacheKey(input: string): string {
+  let hash = 5381
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash * 33) ^ input.charCodeAt(i)
+  }
+  return (hash >>> 0).toString(36)
+}
+
+/**
+ * Browser-facing first-party script URL with a cache-busting query param.
+ * Cloudflare caches by full URL, so bumping the version (or changing the
+ * upstream script src) forces a fresh fetch through the proxy.
+ */
+export function buildPlausibleProxyScriptSrc(upstreamScriptSrc: string): string {
+  if (!upstreamScriptSrc) return ''
+  const v = hashCacheKey(
+    `${upstreamScriptSrc}|${PLAUSIBLE_SCRIPT_CACHE_VERSION}`,
+  )
+  return `${PLAUSIBLE_PROXY_SCRIPT_PATH}?v=${v}`
+}
 
 export function resolvePlausibleEventUrl(scriptSrc: string): string {
   try {
@@ -46,13 +75,17 @@ export async function proxyPlausibleScript(
     }
 
     const body = await upstream.arrayBuffer()
+    // Keep CDN cache short: Plausible mutates the same script URL when the site
+    // domain changes (e.g. new.appwrite.io → appwrite.io). A long
+    // stale-while-revalidate window previously left browsers sending events
+    // with the old embedded domain for days after the cutover.
     return new Response(body, {
       status: 200,
       headers: {
         'Content-Type':
           upstream.headers.get('content-type') ||
           'application/javascript; charset=utf-8',
-        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+        'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
       },
     })
   } catch {
