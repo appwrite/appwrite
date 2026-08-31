@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Announcing Console IV: the website and Console as one app"
-description: Console IV rebuilds the Appwrite Console on TanStack Start and merges it with appwrite.io, so the docs, the blog, and your projects run in one application.
+description: Console IV puts the docs, CLI, Explorer, and your projects in one app so you stop bouncing between the IDE, docs, SDKs, terminals, and the agent.
 date: 2026-08-31
 cover: /images/blog-local/announcing-console-iv/cover.avif
 timeToRead: 7
@@ -19,23 +19,19 @@ faqs:
     answer: "Two reasons. React has deeper library coverage for the components a console needs, including data tables, virtualized lists, code editors, and charts. And coding agents write React far more reliably than Svelte, which matters when much of the code behind a 600-page documentation site and a large console is now written with agent assistance."
   - question: "Can I read the Appwrite docs without leaving the Console?"
     answer: "Yes. Docs links inside the Console open a resizable pane on the right of the page you are already on, with its own breadcrumb and back navigation. You can also press `⌘` + `K` (or `Ctrl` + `K`) and choose **Search documentation** from any scope."
-  - question: "Does Console IV work for self-hosted Appwrite?"
-    answer: "Yes. The same codebase builds both. A console profile turns off the features tied to Appwrite Cloud, including billing, Domains, Firewall, usage statistics, and the marketing and documentation routes, so self-hosted instances link out to the documentation on appwrite.io."
 ---
 
-For most of Appwrite's life, appwrite.io and the Console were two products that happened to share a logo. The website lived in [appwrite/website](https://github.com/appwrite/website). The Console lived in [appwrite/console](https://github.com/appwrite/console). Two Svelte apps, two build pipelines, two design systems drifting apart at their own pace, and a hard border down the middle: docs on one side of it, your project on the other.
+Building on Appwrite has always meant bouncing between the IDE, the docs, the SDKs, the CLI, a terminal, and the agent. Write a few lines in the editor. Flip to the docs for a method signature. Open the Console to create a bucket. Copy an ID into `.env`. Drop into a shell for the CLI. Ask the agent to fill a gap. Come back and rebuild the mental model you just abandoned. Each hop is cheap. The stack of them is constant tax. We have wanted to cut that context switching for years.
 
-The cost of that border was small each time and constant. For example, you are setting permissions on a storage bucket, and you want to check whether `Role.users()` covers anonymous sessions or only signed-in ones. The answer is one line in the [permissions reference](/docs/advanced/security/permissions), and reaching it means leaving the form you are in the middle of filling out.
+Today we are announcing **Console IV**, the fourth generation of the Appwrite Console, and our dig at that problem. It puts the docs next to the form you are filling out, runs the CLI in the browser with your session already configured, and keeps Explorer, Terminal, and the Command Center in the same app as your project. Fewer of the hops that used to leave the page have to leave the page.
 
-That hop is a miniature of a larger pattern. Building on Appwrite has always meant bouncing between the IDE, the docs, the SDKs, the CLI, and a terminal, and we have wanted to shrink that context switching for years. Console IV is our dig at it.
-
-Today we are announcing **Console IV**, the fourth generation of the Appwrite Console. It is rebuilt on TanStack Start, and it absorbs appwrite.io. The marketing pages, more than 600 documentation pages, the blog, the changelog, and every Console route now run in one application.
+It is rebuilt on TanStack Start, and it absorbs appwrite.io. The marketing pages, more than 600 documentation pages, the blog, the changelog, and every Console route now run in one application. Collapsing [appwrite/website](https://github.com/appwrite/website) and [appwrite/console](https://github.com/appwrite/console) into one codebase was how we got there. Two Svelte apps, two build pipelines, and two design systems drifting apart was a real cost, and we are glad to stop paying it. That is a side effect. We did not rebuild the Console to save ourselves a repository.
 
 Nothing about your projects changes. Console IV is a new interface over the same APIs, and your bookmarks, API keys, and SDK code keep working.
 
 # The docs are in the Console now
 
-This is arguably the biggest benefit of the merge.
+This is the most visible part of that bet.
 
 Click a docs link while you are inside a project and the page opens in a pane on the right of the screen you are already on. The form you were filling in stays where it was. The pane carries its own breadcrumb and back navigation, so you can follow a link from the auth reference into the SDK reference and still find your way back.
 
@@ -81,12 +77,6 @@ There is now one component library, one set of tokens, and one theme implementat
 # Agent-readable by default
 
 Because the docs and the Console are one application, the machine-readable exports come out of the same content pipeline the pages render from. `llms.txt` and `llms-full.txt` describe the product for models, and any documentation page is available as raw Markdown by appending `.md` to its path. Point an agent at `appwrite.io/docs.md` and it gets the index without parsing a page of navigation chrome.
-
-# What self-hosting looks like
-
-The same codebase builds the Cloud Console and the self-hosted one. A console profile decides which features exist, and the self-hosted profile turns off everything tied to Appwrite Cloud: billing, Domains, Firewall, usage statistics, the marketplace, multi-region, and the marketing and documentation routes. Docs links on a self-hosted instance open [appwrite.io/docs](https://appwrite.io/docs) in a new tab instead.
-
-One build, two products, and no separate self-hosted fork drifting a release behind.
 
 # Getting started with Console IV
 
