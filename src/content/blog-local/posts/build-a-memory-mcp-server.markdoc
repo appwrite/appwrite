@@ -94,7 +94,7 @@ The index shows up on the collection's **Indexes** tab and switches to **Availab
 
 ![The create API key drawer with the required scopes selected](/images/blog-local/build-a-memory-mcp-server/create-api-key.avif)
 
-The web app's server needs an API key for the operations a user session cannot perform: creating sessions during sign-in, generating embeddings, and reading the collection. Open **API Keys**, select **Create API key**, and grant it the scopes `sessions.write`, `users.read`, `apps.read`, `vectorsdb.read`, `vectorsdb.collections.read`, `vectorsdb.collections.write`, `vectorsdb.documents.read`, `vectorsdb.documents.write`, and `embeddings.write`.
+The web app's server needs an API key for the operations a user session cannot perform: creating sessions during sign-in, generating embeddings, and reading the collection. Open **API Keys**, select **Create API key**, and grant it the scopes `sessions.write`, `users.read`, `apps.read`, `vectorsdb.read`, `vectorsdb.collections.read`, `vectorsdb.collections.write`, `vectorsdb.indexes.write`, `vectorsdb.documents.read`, `vectorsdb.documents.write`, and `embeddings.write`.
 
 Copy the secret into the repository's `.env` file along with the endpoint and project ID:
 
