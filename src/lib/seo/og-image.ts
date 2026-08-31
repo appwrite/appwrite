@@ -1,7 +1,3 @@
-import {
-  COVER_HEIGHT,
-  COVER_WIDTH,
-} from '@/lib/cover-generator/constants'
 import { parseCoverRenderData } from '@/lib/cover-generator/parse-params'
 import { DEFAULT_COVER_THEME_ID, type CoverThemeId } from '@/lib/cover-generator/themes'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
@@ -9,8 +5,9 @@ import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 
 export const OG_IMAGE_PATH = '/og/image.png'
 
-export const OG_IMAGE_WIDTH = COVER_WIDTH
-export const OG_IMAGE_HEIGHT = COVER_HEIGHT
+/** Classic Open Graph canvas (≈1.91:1). Distinct from the 16:9 blog cover artboard. */
+export const OG_IMAGE_WIDTH = 1200
+export const OG_IMAGE_HEIGHT = 630
 
 export type OgImageParams = {
   title: string

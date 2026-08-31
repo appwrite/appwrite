@@ -8,6 +8,7 @@ timeToRead: 7
 author: aditya-oberai
 category: product, announcement
 featured: false
+draft: true
 faqs:
   - question: "What is Appwrite Domains?"
     answer: "Appwrite Domains is organization-level domain management on Appwrite Cloud. You can register a new domain, transfer an existing registration in, or delegate DNS for a domain you keep registered elsewhere. Appwrite then hosts the authoritative DNS zone and connects hostnames to [Sites](/docs/products/sites), [Functions](/docs/products/functions), and [custom API endpoints](/docs/products/network/custom-domains)."

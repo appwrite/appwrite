@@ -17,7 +17,7 @@ export type CoverContentLayoutTransform = {
 export type CoverContentLayoutAnchor = 'center' | 'bottom' | 'right'
 
 /**
- * Uniform fit scale for content laid out on the OG artboard (1200×630).
+ * Uniform fit scale for content laid out on the 16:9 artboard (1200×675).
  * Never stretches: same scale on both axes. Horizontally centered; vertically
  * centered by default, or bottom-aligned for templates that sit flush on the edge.
  */
@@ -53,7 +53,7 @@ export type CoverArtboardRect = {
   height: number
 }
 
-/** Map a rectangle from the 1200×630 artboard into export canvas space. */
+/** Map a rectangle from the 1200×675 artboard into export canvas space. */
 export function transformCoverArtboardRect(
   rect: CoverArtboardRect,
   transform: CoverContentLayoutTransform,

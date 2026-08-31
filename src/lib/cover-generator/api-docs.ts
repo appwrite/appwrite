@@ -1,8 +1,6 @@
 import {
-  COVER_HEIGHT,
   COVER_IMAGE_FORMATS,
   COVER_TEMPLATE_IDS,
-  COVER_WIDTH,
   type CoverTemplateId,
 } from '@/lib/cover-generator/constants'
 import {
@@ -163,16 +161,16 @@ function buildSharedParameterDocs(): CoverApiParameterDoc[] {
     {
       name: 'width',
       type: 'number',
-      description: 'Canvas width in pixels.',
-      defaultValue: String(COVER_WIDTH),
-      example: '1200',
+      description: 'Canvas width in pixels. Default is the blog cover size (1920×1080, 16:9).',
+      defaultValue: String(DEFAULT_COVER_VALUES.width),
+      example: '1920',
     },
     {
       name: 'height',
       type: 'number',
-      description: 'Canvas height in pixels.',
-      defaultValue: String(COVER_HEIGHT),
-      example: '630',
+      description: 'Canvas height in pixels. Default is the blog cover size (1920×1080, 16:9).',
+      defaultValue: String(DEFAULT_COVER_VALUES.height),
+      example: '1080',
     },
   ]
 }
