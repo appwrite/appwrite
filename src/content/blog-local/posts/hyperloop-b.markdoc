@@ -8,6 +8,7 @@ timeToRead: 7
 author: luke-silver
 category: architecture, announcement
 callToAction: true
+draft: true
 faqs:
   - question: "What is Hyperloop B?"
     answer: "Hyperloop B is the engine that [Appwrite 2.0](/blog/post/announcing-appwrite-2) runs on. It is the Swoole coroutine scheduler mode of `utopia-php/http`, where a single process serves many concurrent requests by yielding whenever it waits on I/O, rather than dedicating one worker process to each request for the duration."

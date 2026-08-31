@@ -8,6 +8,7 @@ timeToRead: 8
 author: aditya-oberai
 category: product, announcement
 featured: true
+draft: true
 faqs:
   - question: "What is Console IV?"
     answer: "Console IV is the fourth generation of the Appwrite Console, rebuilt on TanStack Start with React, Tailwind CSS, and ShadCN UI. It also absorbs appwrite.io, so the marketing pages, documentation, blog, changelog, and every Console route are served by one application from one repository."
