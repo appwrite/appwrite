@@ -42,6 +42,12 @@ export const jaDatabasesDictionary: Record<string, string> = {
     '値が指定されない場合に列を NULL にできます。',
   'A literal or SQL expression, for example now() or gen_random_uuid().':
     'リテラルまたは SQL 式。例: now() や gen_random_uuid()。',
+  'A value or SQL expression, for example CURRENT_TIMESTAMP.':
+    '値または SQL 式。例: CURRENT_TIMESTAMP。',
+  'Enter a value as-is, or a SQL expression such as CURRENT_TIMESTAMP.':
+    '値をそのまま入力するか、CURRENT_TIMESTAMP のような SQL 式を入力してください。',
+  'Enter a value as-is, or a SQL expression such as now() or gen_random_uuid().':
+    '値をそのまま入力するか、now() や gen_random_uuid() のような SQL 式を入力してください。',
   'Allowed characters: a-z, A-Z, 0-9, -, ., _': '使用可能な文字: a-z、A-Z、0-9、-、.、_',
   'Allowed characters: a-z, A-Z, 0-9, -, ., _. Once created, column key cannot be adjusted to maintain data integrity.': '使用可能な文字: a-z、A-Z、0-9、-、.、_。作成後はデータ整合性を保つため、列キーは変更できません。',
   'always require collection-level permissions, regardless of document security settings.': 'ドキュメントセキュリティ設定に関係なく、常にコレクションレベルの権限が必要です。',
@@ -895,8 +901,18 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Price': '価格',
   'Primary key': 'プライマリキー',
   'Optional SQL expression, for example': '任意の SQL 式。例:',
+  'Must be valid SQL for this column type, for example':
+    'この列型に対して有効な SQL である必要があります。例:',
   'Require values in this column to be unique across rows.':
     'この列の値を行間で一意にします。',
+  'MySQL indexes on TEXT and BLOB use the first 255 characters.':
+    'TEXT および BLOB のインデックスは先頭 255 文字を使います。',
+  'JSON columns cannot be uniquely indexed. Use VARCHAR, or store a unique key in a separate column.':
+    'JSON 列には一意インデックスを作成できません。VARCHAR を使うか、別の列に一意キーを保存してください。',
+  'MySQL cannot uniquely index TEXT or BLOB columns without a key length. Use VARCHAR with a defined length, or create a prefix index.':
+    'MySQL はキー長なしでは TEXT または BLOB 列を一意インデックスにできません。長さを指定した VARCHAR を使うか、プレフィックス インデックスを作成してください。',
+  'Existing rows were filled with an empty value, which is not unique. Allow NULL, or add the column first and fill distinct values.':
+    '既存の行が空の値で埋められ、一意になりませんでした。NULL を許可するか、先に列を追加してから異なる値を入れてください。',
   'Store multiple values of this type in a single column.':
     'この型の値を 1 つの列に複数格納します。',
   'Use lowercase letters and underscores, for example column_name.':
@@ -1065,6 +1081,14 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Specifications': '仕様',
   'Rename query tab': 'クエリタブの名前を変更',
   'SQL editor': 'SQL エディター',
+  'Expression': '式',
+  'Expression': '式',
+  'Stored as data. Quotes and escaping are applied for you.':
+    'データとして保存されます。引用符とエスケープは自動で適用されます。',
+  'Passed to the database as SQL, for example CURRENT_TIMESTAMP.':
+    'データベースに SQL として渡されます。例: CURRENT_TIMESTAMP。',
+  'Passed to the database as SQL, for example now() or gen_random_uuid().':
+    'データベースに SQL として渡されます。例: now() や gen_random_uuid()。',
   'Started': '開始',
   'Connection state': '接続状態',
   'State change': '状態変更',
@@ -1130,6 +1154,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'The table will be permanently deleted, including all the rows within it. This action is irreversible.': 'テーブル内のすべての行を含め、テーブルは完全に削除されます。この操作は元に戻せません。',
   'This action cannot be undone.': 'この操作は元に戻せません。',
   'This column has multiple check constraints. Saving replaces them with a single check.': 'この列には複数の CHECK 制約があります。保存すると単一の CHECK に置き換えられます。',
+  'This check compares text to a number.': 'このチェックはテキストと数値を比較しています。',
   'This column has multiple foreign keys. Saving replaces them with a single foreign key.': 'この列には複数の外部キーがあります。保存すると単一の外部キーに置き換えられます。',
   'This console does not create collection attributes from the grid. Use the Appwrite Documents API or your preferred SDK.': 'このコンソールはグリッドからコレクション属性を作成しません。Appwrite Documents API またはお好みの SDK を使用してください。',
   'This console does not create collection attributes from the grid. Use the Appwrite Vectors API or your preferred SDK.': 'このコンソールはグリッドからコレクション属性を作成しません。Appwrite Vectors API またはお好みの SDK を使用してください。',
@@ -1205,6 +1230,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Visual': 'ビジュアル',
   'Visualizer': 'ビジュアライザー',
   'Wait': '待機',
+  'Will be stored as': '次のように保存されます',
   'Wait event': '待機イベント',
   'Wednesday': '水曜日',
   'Weekly': '毎週',

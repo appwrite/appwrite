@@ -24,11 +24,13 @@ import {
   buildPostgresCreateIndexSql,
   buildPostgresIndexCommentSql,
   buildPostgresTableCommentSql,
+  formatPostgresColumnDefaultSql,
 } from '@/lib/postgres-table-ddl'
 import {
   buildPostgresColumnTypeSql,
   createDefaultPostgresColumnTypeState,
   getPostgresColumnDefaultPlaceholder,
+  getPostgresColumnTypeDefinition,
   validatePostgresColumnTypeState,
   type PostgresColumnTypeState,
 } from '@/lib/postgres-column-types'
@@ -38,9 +40,16 @@ import {
   type PostgresIndexFormState,
 } from '@/lib/postgres-index-metadata'
 import { postgresTableId, quotePostgresIdentifier } from '@/lib/postgres-database-routes'
+import { runPostgresDdlStatements } from '@/lib/postgres-sql'
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
 import { usePostgresSidebarSchemas } from '@/lib/react-query/hooks/postgres-databases'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  getPreferredSqlColumnDefaultKind,
+  resolveSqlColumnDefaultEmission,
+  type SqlColumnDefaultKind,
+} from '@/lib/sql-column-default'
+import { ColumnDefaultValueField } from '@/components/pages/projects/$projectId/databases/_components/ColumnDefaultValueField'
 import { cn } from '@/lib/utils'
 import { PostgresColumnTypeSelector } from './PostgresColumnTypeSelector'
 import { PostgresIndexAlgorithmSelector } from './PostgresIndexAlgorithmSelector'
@@ -62,6 +71,8 @@ type DraftColumn = {
   typeState: PostgresColumnTypeState
   nullable: boolean
   defaultValue: string
+  defaultKind: SqlColumnDefaultKind
+  defaultIsNull: boolean
   comment: string
   primaryKey: boolean
 }
@@ -132,8 +143,18 @@ function isNoOpColumnDrop(
   return dragIndex === insertIndex
 }
 
+function preferredPostgresDraftDefaultKind(
+  typeState: PostgresColumnTypeState,
+): SqlColumnDefaultKind {
+  const definition = getPostgresColumnTypeDefinition(typeState.typeId)
+  return getPreferredSqlColumnDefaultKind({
+    typeGroup: definition.group,
+    typeId: typeState.typeId,
+  })
+}
+
 function createDraftColumn(overrides?: Partial<DraftColumn>): DraftColumn {
-  return {
+  const merged = {
     id: crypto.randomUUID(),
     name: '',
     typeState: createDefaultPostgresColumnTypeState(),
@@ -142,6 +163,15 @@ function createDraftColumn(overrides?: Partial<DraftColumn>): DraftColumn {
     comment: '',
     primaryKey: false,
     ...overrides,
+  }
+  return {
+    ...merged,
+    defaultKind:
+      overrides?.defaultKind ??
+      preferredPostgresDraftDefaultKind(merged.typeState),
+    defaultIsNull:
+      overrides?.defaultIsNull ??
+      !(merged.primaryKey || Boolean(merged.defaultValue)),
   }
 }
 
@@ -233,7 +263,12 @@ function CreateTableColumnSettings({
           <Label className="text-[12px] font-medium">{t('Nullable')}</Label>
           <Switch
             checked={column.nullable}
-            onCheckedChange={(nullable) => onChange({ nullable })}
+            onCheckedChange={(nullable) =>
+              onChange({
+                nullable,
+                ...(nullable ? {} : { defaultIsNull: false }),
+              })
+            }
             disabled={column.primaryKey}
           />
         </div>
@@ -527,8 +562,27 @@ export function CreateTable({
         if (!column.nullable) {
           pieces.push('NOT NULL')
         }
-        if (column.defaultValue) {
-          pieces.push(`DEFAULT ${column.defaultValue}`)
+        const defaultEmission = resolveSqlColumnDefaultEmission({
+          isNull: column.defaultIsNull,
+          value: column.defaultValue,
+          kind: column.defaultKind,
+        })
+        if (defaultEmission === 'null' && !column.primaryKey) {
+          pieces.push('DEFAULT NULL')
+        } else if (
+          typeof defaultEmission === 'object' &&
+          !(
+            column.primaryKey &&
+            defaultEmission.kind === 'value' &&
+            !defaultEmission.value.trim()
+          )
+        ) {
+          pieces.push(
+            `DEFAULT ${formatPostgresColumnDefaultSql(
+              defaultEmission.value,
+              defaultEmission.kind,
+            )}`,
+          )
         }
         return pieces.join(' ')
       })
@@ -580,9 +634,7 @@ export function CreateTable({
         }
       }
 
-      for (const statement of followUpStatements) {
-        await executeSql.mutateAsync(statement)
-      }
+      await runPostgresDdlStatements(executeSql.mutateAsync, followUpStatements)
 
       toast.success(t('Table created'))
       onOpenChange(false)
@@ -665,8 +717,8 @@ export function CreateTable({
                 {t('Columns')}
               </h4>
               <div className="overflow-x-auto rounded-lg border border-border">
-                <div className="min-w-[668px]">
-                  <div className="grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(140px,1fr)_80px_72px] items-center gap-2 border-b border-border bg-muted/30 px-3 py-2">
+                <div className="min-w-[760px]">
+                  <div className="grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(200px,1.2fr)_80px_72px] items-center gap-2 border-b border-border bg-muted/30 px-3 py-2">
                     <span aria-hidden="true" />
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       {t('Name')}
@@ -718,7 +770,7 @@ export function CreateTable({
                           <div
                             data-column-row
                             className={cn(
-                              'grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(140px,1fr)_80px_72px] items-center gap-2 border-b border-border px-3 py-2 transition-[opacity,background-color,box-shadow]',
+                              'grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(200px,1.2fr)_80px_72px] items-center gap-2 border-b border-border px-3 py-2 transition-[opacity,background-color,box-shadow]',
                               isDragging && 'opacity-35',
                               isDropTarget && 'bg-primary/5 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.25)]',
                             )}
@@ -756,22 +808,51 @@ export function CreateTable({
                         <PostgresColumnTypeSelector
                           value={column.typeState}
                           onChange={(typeState) =>
-                            updateColumn(column.id, { typeState })
+                            updateColumn(column.id, {
+                              typeState,
+                              ...(!column.defaultValue.trim()
+                                ? {
+                                    defaultKind:
+                                      preferredPostgresDraftDefaultKind(typeState),
+                                  }
+                                : {}),
+                            })
                           }
                           compact
                         />
-                        <Input
+                        <ColumnDefaultValueField
+                          id={`column-default-${column.id}`}
+                          kind={column.defaultKind}
                           value={column.defaultValue}
-                          onChange={(event) =>
+                          isNull={column.defaultIsNull}
+                          onKindChange={(defaultKind) =>
+                            updateColumn(column.id, { defaultKind })
+                          }
+                          onValueChange={(defaultValue) =>
                             updateColumn(column.id, {
-                              defaultValue: event.target.value,
+                              defaultValue,
+                              ...(defaultValue ? { defaultIsNull: false } : {}),
                             })
                           }
-                          className="h-8 font-mono text-[12px]"
-                          placeholder={t(
-                            getPostgresColumnDefaultPlaceholder(column.typeState),
+                          onNullChange={(defaultIsNull) =>
+                            updateColumn(
+                              column.id,
+                              defaultIsNull
+                                ? {
+                                    defaultIsNull: true,
+                                    defaultValue: '',
+                                    nullable: true,
+                                    primaryKey: false,
+                                  }
+                                : { defaultIsNull: false },
+                            )
+                          }
+                          expressionPlaceholder={getPostgresColumnDefaultPlaceholder(
+                            column.typeState,
                           )}
-                          aria-label={t('Default value')}
+                          expressionHint="Passed to the database as SQL, for example now() or gen_random_uuid()."
+                          compact
+                          nullDisabled={column.primaryKey}
                         />
                         <div className="flex justify-center">
                           <Checkbox
@@ -779,7 +860,11 @@ export function CreateTable({
                             onCheckedChange={(primaryKey) =>
                               updateColumn(column.id, {
                                 primaryKey: primaryKey === true,
-                                nullable: primaryKey === true ? false : column.nullable,
+                                nullable:
+                                  primaryKey === true ? false : column.nullable,
+                                ...(primaryKey === true
+                                  ? { defaultIsNull: false }
+                                  : {}),
                               })
                             }
                             aria-label={t('Primary key')}

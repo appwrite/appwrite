@@ -38,7 +38,7 @@ import {
   usePostgresTablePolicies,
   usePostgresTableRls,
 } from '@/lib/react-query/hooks'
-import { buildPostgresSingleRequestDdlSql } from '@/lib/postgres-sql'
+import { runPostgresDdlStatements } from '@/lib/postgres-sql'
 import {
   buildPostgresDisableRlsSql,
   buildPostgresDropPolicySql,
@@ -154,9 +154,7 @@ export function PostgresTableSecurityPanel({
       }
       if (statements.length === 0) return
 
-      await executeSql.mutateAsync(
-        buildPostgresSingleRequestDdlSql(statements, 'Update table RLS'),
-      )
+      await runPostgresDdlStatements(executeSql.mutateAsync, statements)
       toast.success(t('Security has been updated'))
       await refreshSecurity()
     } catch (error) {
