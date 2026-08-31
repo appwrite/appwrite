@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
@@ -42,6 +42,20 @@ const searchSchema = z.object({
   secret: z.string().optional(),
   expire: z.string().optional(),
 })
+
+function isInvalidTokenError(error: unknown): boolean {
+  return (
+    error instanceof AppwriteException && error.type === 'user_invalid_token'
+  )
+}
+
+/**
+ * Secrets already submitted in this page session. A per-component ref does not
+ * survive the remount that follows `router.invalidate()`, so the spent secret
+ * was submitted a second time and the server answered `user_invalid_token` -
+ * reporting failure for a verification that had in fact just succeeded.
+ */
+const attemptedSecrets = new Set<string>()
 
 /** Parse userId and secret from the current URL (used when following email link) so long tokens are not altered by router. */
 function getVerificationParamsFromUrl(): {
@@ -128,7 +142,25 @@ function VerifyEmailPage() {
         navigate({ to: '/' })
       }
     },
-    onError: (error: unknown) => {
+    onError: async (error: unknown) => {
+      // A rejected token does not prove the address is unverified: whatever
+      // consumes the secret first (a duplicate submit, a link scanner, an
+      // earlier click) leaves the account verified and the token spent. Trust
+      // the account over the token before reporting a failure.
+      if (isInvalidTokenError(error)) {
+        try {
+          const account = await refreshConsoleAccountAfterAuth(queryClient)
+          if (account?.emailVerification) {
+            toast.success(t('Email verified successfully'))
+            await router.invalidate()
+            navigate({ to: '/' })
+            return
+          }
+        } catch {
+          // Fall through and report the original failure.
+        }
+      }
+
       const message =
         error instanceof AppwriteException
           ? error.message
@@ -160,14 +192,12 @@ function VerifyEmailPage() {
     },
   })
 
-  const hasTriggeredConfirm = useRef(false)
-
   // When landing with userId + secret (from email link), confirm and redirect.
   // Read from URL directly so the long secret is not altered by router/search parsing.
   useEffect(() => {
     const params = getVerificationParamsFromUrl()
-    if (params && !hasTriggeredConfirm.current) {
-      hasTriggeredConfirm.current = true
+    if (params && !attemptedSecrets.has(params.secret)) {
+      attemptedSecrets.add(params.secret)
       confirmMutation.mutate(params)
     }
   }, [])
