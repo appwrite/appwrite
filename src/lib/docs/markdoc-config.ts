@@ -85,6 +85,10 @@ export const docsMarkdocConfig: Config = {
         allOf: { type: String },
       },
     },
+    hyperloop_race_animation: {
+      selfClosing: true,
+      render: 'HyperloopRaceAnimation',
+    },
     compose_generator: { render: 'ComposeGenerator' },
     table: { render: 'MarkdocTableTag' },
   },
