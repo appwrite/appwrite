@@ -36,12 +36,12 @@ const REQUESTS_DAY_KEYS = ['Fri', 'Sat', 'Sun', 'Mon'] as const
 const REQUESTS_STROKE = 'var(--chart-brand)'
 
 const STEP_DELAYS_MS = [
-  350, 880, 960, 350, 1400, 350, 610, 480, 830, 700, 1750, 350, 610, 480, 790,
-  1050, 350, 570, 480, 790, 1580, 350, 610, 480, 880, 440, 1220, 350, 700, 480,
+  280, 700, 770, 280, 1120, 280, 490, 380, 660, 560, 1400, 280, 490, 380, 630,
+  840, 280, 460, 380, 630, 1260, 280, 490, 380, 700, 350, 980, 280, 560, 380,
 ]
 const HOLD_MS = 30000
-const ARTIFACT_REVEAL_MS = 580
-const LAYOUT_COLLAPSE_MS = 220
+const ARTIFACT_REVEAL_MS = 460
+const LAYOUT_COLLAPSE_MS = 180
 
 type ArtifactId = 'users' | 'chart' | 'executions' | 'campaign' | 'files'
 
@@ -1000,10 +1000,10 @@ export function AiAgentWorkspace() {
       setTypedDraft(typingPrompt.slice(0, index))
       if (index < typingPrompt.length) {
         const character = typingPrompt[index - 1]
-        timeoutId = window.setTimeout(tick, character === ' ' ? 26 : 16)
+        timeoutId = window.setTimeout(tick, character === ' ' ? 20 : 12)
       }
     }
-    timeoutId = window.setTimeout(tick, 50)
+    timeoutId = window.setTimeout(tick, 40)
     return () => window.clearTimeout(timeoutId)
   }, [typingPrompt])
 
