@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Tests\Cdn\Certificates\Provider;
 
 use PHPUnit\Framework\TestCase;
@@ -8,7 +10,7 @@ use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use Utopia\Tests\Cdn\TestClient;
 
-class FastlyTest extends TestCase
+final class FastlyTest extends TestCase
 {
     public function testIssueCreatesDomainAndTlsSubscription(): void
     {
@@ -38,7 +40,7 @@ class FastlyTest extends TestCase
             $this->json('{"id":"domain_1","fqdn":"example.com","service_id":"new_service"}'),
         ]);
 
-        (new Fastly('token', 'new_service', client: $client))->issueCertificate('cert', 'example.com', null);
+        new Fastly('token', 'new_service', client: $client)->issueCertificate('cert', 'example.com', null);
 
         $this->assertCount(4, $client->calls);
         $this->assertStringStartsWith('https://api.fastly.com/tls/subscriptions?', $client->calls[1]['url']);
@@ -56,7 +58,7 @@ class FastlyTest extends TestCase
             $this->json('{"data":[{"id":"sub_1","attributes":{"state":"pending"}}]}'),
         ]);
 
-        $this->assertNull((new Fastly('token', 'new_service', client: $client))->issueCertificate('cert', 'example.com', null));
+        $this->assertNull(new Fastly('token', 'new_service', client: $client)->issueCertificate('cert', 'example.com', null));
 
         $this->assertCount(3, $client->calls);
         $this->assertSame('GET', $client->calls[2]['method']);
@@ -73,7 +75,7 @@ class FastlyTest extends TestCase
         ]);
 
         try {
-            (new Fastly('token', 'new_service', client: $client))->issueCertificate('cert', 'example.com', null);
+            new Fastly('token', 'new_service', client: $client)->issueCertificate('cert', 'example.com', null);
             $this->fail('Expected domain reassignment to fail.');
         } catch (\RuntimeException $error) {
             $this->assertStringContainsString('reassign Fastly domain', $error->getMessage());
@@ -93,7 +95,7 @@ class FastlyTest extends TestCase
         ]);
 
         try {
-            (new Fastly('token', 'new_service', client: $client))->issueCertificate('cert', 'example.com', null);
+            new Fastly('token', 'new_service', client: $client)->issueCertificate('cert', 'example.com', null);
             $this->fail('Expected TLS issuance to fail.');
         } catch (\RuntimeException $error) {
             $this->assertStringContainsString('fetch Fastly TLS subscriptions', $error->getMessage());
@@ -109,7 +111,7 @@ class FastlyTest extends TestCase
             $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":"old_service"}]}'),
         ]);
 
-        $renewRequired = (new Fastly('token', 'new_service', client: $client))
+        $renewRequired = new Fastly('token', 'new_service', client: $client)
             ->isRenewRequired('example.com', null);
 
         $this->assertTrue($renewRequired);
@@ -122,7 +124,7 @@ class FastlyTest extends TestCase
             $this->json('{"data":[{"id":"domain_1","fqdn":"example.com"}]}'),
         ]);
 
-        $renewRequired = (new Fastly('token', 'service_1', client: $client))
+        $renewRequired = new Fastly('token', 'service_1', client: $client)
             ->isRenewRequired('example.com', null);
 
         $this->assertFalse($renewRequired);
@@ -136,7 +138,7 @@ class FastlyTest extends TestCase
             $this->json('{"data":[{"id":"sub_1","attributes":{"state":"issued"}}]}'),
         ]);
 
-        $renewRequired = (new Fastly('token', 'service_1', client: $client))
+        $renewRequired = new Fastly('token', 'service_1', client: $client)
             ->isRenewRequired('example.com', null);
 
         $this->assertFalse($renewRequired);
@@ -152,7 +154,7 @@ class FastlyTest extends TestCase
             new Response(204),
         ]);
 
-        (new Fastly('token', 'service_1', client: $client))->deleteCertificate('example.com');
+        new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');
 
         $this->assertSame('DELETE', $client->calls[1]['method']);
         $this->assertSame('https://api.fastly.com/domain-management/v1/domains/domain_1', $client->calls[1]['url']);
@@ -168,7 +170,7 @@ class FastlyTest extends TestCase
         ]);
 
         try {
-            (new Fastly('token', 'service_1', client: $client))->deleteCertificate('example.com');
+            new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');
             $this->fail('Expected domain deletion to fail.');
         } catch (\RuntimeException $error) {
             $this->assertStringContainsString('delete Fastly domain', $error->getMessage());
@@ -184,7 +186,7 @@ class FastlyTest extends TestCase
             $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":"other_service"}]}'),
         ]);
 
-        (new Fastly('token', 'service_1', client: $client))->deleteCertificate('example.com');
+        new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');
 
         $this->assertCount(1, $client->calls);
         $this->assertStringContainsString('/domain-management/v1/domains?', $client->calls[0]['url']);
@@ -230,7 +232,7 @@ class FastlyTest extends TestCase
         ]);
 
         try {
-            (new Fastly('token', 'service_1', client: $client))->deleteCertificate('example.com');
+            new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');
             $this->fail('Expected classic domain deletion to fail.');
         } catch (\RuntimeException $error) {
             $this->assertStringContainsString('remove classic Fastly domain', $error->getMessage());
@@ -248,7 +250,7 @@ class FastlyTest extends TestCase
             $this->json('{"active_version":{"number":3,"domains":[{"name":"other.example.com"}]}}'),
         ]);
 
-        (new Fastly('token', 'service_1', client: $client))->deleteCertificate('example.com');
+        new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');
 
         $this->assertCount(2, $client->calls);
         $this->assertSame('https://api.fastly.com/service/service_1/details', $client->calls[1]['url']);
@@ -262,7 +264,7 @@ class FastlyTest extends TestCase
             new Response(204),
         ]);
 
-        (new Fastly('token', 'service_1', client: $client))->deleteCertificate('example.com');
+        new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');
 
         $this->assertCount(3, $client->calls);
         $this->assertSame('https://api.fastly.com/tls/subscriptions/sub_1?force=true', $client->calls[2]['url']);

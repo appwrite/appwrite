@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Tests\Cdn\Certificates\Provider;
 
 use PHPUnit\Framework\TestCase;
@@ -9,7 +11,7 @@ use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use Utopia\Tests\Cdn\TestClient;
 
-class FastlyTlsTest extends TestCase
+final class FastlyTlsTest extends TestCase
 {
     public function testIssueCertificateCreatesSubscriptionWhenMissing(): void
     {
@@ -36,7 +38,7 @@ class FastlyTlsTest extends TestCase
             new Response(201, body: new Stream('{"data":{"id":"sub_123","attributes":{"state":"pending"}}}')),
         ]);
 
-        (new FastlyTls('token', '', 'certainly', $client))->issueCertificate('cert', 'example.com', null);
+        new FastlyTls('token', '', 'certainly', $client)->issueCertificate('cert', 'example.com', null);
 
         $relationships = $client->calls[1]['body']['data']['relationships'];
         $this->assertSame('example.com', $relationships['tls_domains']['data'][0]['id']);
@@ -74,7 +76,7 @@ class FastlyTlsTest extends TestCase
 
     public function testIssueCertificateReturnsRenewDateFromIncludedCertificate(): void
     {
-        $client = new TestClient([new Response(200, body: new Stream(\json_encode([
+        $client = new TestClient([new Response(200, body: new Stream(json_encode([
             'data' => [[
                 'id' => 'sub_123',
                 'attributes' => ['state' => 'issued'],

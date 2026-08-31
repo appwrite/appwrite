@@ -4,10 +4,10 @@ namespace Utopia\Cdn\Cache\Adapter;
 
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
-use Utopia\Client;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Cdn\Cache\Adapter;
 use Utopia\Cdn\Domain;
+use Utopia\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
@@ -28,13 +28,13 @@ class Cloudflare implements Adapter
      */
     public const int KEYS_PER_PURGE = 30;
 
-    private ClientInterface $client;
+    private readonly ClientInterface $client;
 
     public function __construct(
-        private string $zoneId,
-        private string $apiToken,
+        private readonly string $zoneId,
+        private readonly string $apiToken,
         ?ClientInterface $client = null,
-        private string $apiBase = 'https://api.cloudflare.com/client/v4',
+        private readonly string $apiBase = 'https://api.cloudflare.com/client/v4',
     ) {
         $this->client = $client ?? new Client(new CurlAdapter());
     }
@@ -48,8 +48,8 @@ class Cloudflare implements Adapter
             return;
         }
 
-        foreach (\array_chunk($paths, self::PATHS_PER_PURGE) as $chunk) {
-            $urls = \array_map(static fn (string $path): string => 'https://' . $domain . $path, $chunk);
+        foreach (array_chunk($paths, self::PATHS_PER_PURGE) as $chunk) {
+            $urls = array_map(static fn(string $path): string => 'https://' . $domain . $path, $chunk);
             $this->send(['files' => $urls]);
         }
     }
@@ -69,7 +69,7 @@ class Cloudflare implements Adapter
         }
 
         // Cache tags only match responses the origin tagged with a Cache-Tag header.
-        foreach (\array_chunk($keys, self::KEYS_PER_PURGE) as $chunk) {
+        foreach (array_chunk($keys, self::KEYS_PER_PURGE) as $chunk) {
             $this->send(['tags' => $chunk]);
         }
     }
@@ -138,7 +138,7 @@ class Cloudflare implements Adapter
      */
     private function request(string $method, string $url, ?array $body = null): array
     {
-        $request = (new RequestFactory())->json($method, $this->apiBase . $url, $body);
+        $request = new RequestFactory()->json($method, $this->apiBase . $url, $body);
         $request = $request
             ->withHeader(Header::USER_AGENT, 'Utopia CDN Cloudflare Adapter')
             ->withHeader(Header::AUTHORIZATION, 'Bearer ' . $this->apiToken)
@@ -153,7 +153,7 @@ class Cloudflare implements Adapter
         $contents = (string) $response->getBody();
 
         try {
-            $decoded = \json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+            $decoded = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
             $decoded = $contents;
         }

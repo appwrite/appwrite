@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Cdn\Extend;
 
 use Utopia\Balancer\Option;

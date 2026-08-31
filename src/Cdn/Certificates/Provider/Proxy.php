@@ -12,9 +12,9 @@ class Proxy implements Provider
     /** @param array<int, Provider> $customDomainProviders */
     public function __construct(
         private string $appDomain,
-        private Provider $appDomainProvider,
-        private Provider $networkProvider,
-        private array $customDomainProviders,
+        private readonly Provider $appDomainProvider,
+        private readonly Provider $networkProvider,
+        private readonly array $customDomainProviders,
     ) {
         $this->appDomain = Domain::validate($this->appDomain);
     }
@@ -35,14 +35,7 @@ class Proxy implements Provider
     public function isInstantGeneration(string $domain, ?string $domainType): bool
     {
         $domain = Domain::validate($domain);
-
-        foreach ($this->select($domain, $domainType) as $provider) {
-            if (!$provider->isInstantGeneration($domain, $domainType)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_all($this->select($domain, $domainType), fn(\Utopia\Cdn\Certificates\Provider $provider): bool => $provider->isInstantGeneration($domain, $domainType));
     }
 
     public function getCertificateStatus(string $domain, ?string $domainType): string
@@ -66,14 +59,7 @@ class Proxy implements Provider
     public function isRenewRequired(string $domain, ?string $domainType): bool
     {
         $domain = Domain::validate($domain);
-
-        foreach ($this->select($domain, $domainType) as $provider) {
-            if ($provider->isRenewRequired($domain, $domainType)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($this->select($domain, $domainType), fn(\Utopia\Cdn\Certificates\Provider $provider): bool => $provider->isRenewRequired($domain, $domainType));
     }
 
     public function deleteCertificate(string $domain, ?string $domainType = null): void

@@ -2,7 +2,15 @@
     "name": "utopia-php/cdn",
     "description": "CDN cache purge and certificate provider abstractions for Utopia PHP",
     "type": "library",
-    "keywords": ["php", "cdn", "cache", "tls", "utopia", "utopia-php", "library"],
+    "keywords": [
+        "php",
+        "cdn",
+        "cache",
+        "tls",
+        "utopia",
+        "utopia-php",
+        "library"
+    ],
     "license": "MIT",
     "authors": [
         {
@@ -12,10 +20,7 @@
     ],
     "minimum-stability": "stable",
     "scripts": {
-        "test": "./vendor/bin/phpunit",
-        "lint": "./vendor/bin/pint --test",
-        "format": "./vendor/bin/pint",
-        "analyse": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=2G"
+        "test": "phpunit"
     },
     "autoload": {
         "psr-4": {
@@ -33,11 +38,6 @@
         "ext-json": "*",
         "utopia-php/client": "^0.3",
         "utopia-php/balancer": "^0.4.1"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^10.5",
-        "laravel/pint": "1.*",
-        "phpstan/phpstan": "2.*"
     },
     "config": {
         "platform": {

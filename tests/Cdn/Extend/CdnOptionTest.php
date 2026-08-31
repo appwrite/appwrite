@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Tests\Cdn\Extend;
 
 use PHPUnit\Framework\TestCase;
@@ -9,7 +11,7 @@ use Utopia\Cdn\Cache\Adapter;
 use Utopia\Cdn\Exception\Configuration;
 use Utopia\Cdn\Extend\CdnOption;
 
-class CdnOptionTest extends TestCase
+final class CdnOptionTest extends TestCase
 {
     public function testExposesItsStateTyped(): void
     {
@@ -19,7 +21,7 @@ class CdnOptionTest extends TestCase
         $this->assertSame($adapter, $option->getAdapter());
         $this->assertSame('fastly', $option->getProvider());
         $this->assertTrue($option->isEdge());
-        $this->assertFalse((new CdnOption($adapter, CdnOption::PROVIDER_CLOUDFLARE))->isEdge());
+        $this->assertFalse(new CdnOption($adapter, CdnOption::PROVIDER_CLOUDFLARE)->isEdge());
     }
 
     public function testRejectsStateOverwrittenWithTheWrongType(): void
@@ -37,16 +39,16 @@ class CdnOptionTest extends TestCase
         $run = new CdnOption($this->adapter(), CdnOption::PROVIDER_FASTLY);
         $cloudflare = new CdnOption($this->adapter(), CdnOption::PROVIDER_CLOUDFLARE);
 
-        $balancer = (new Balancer(new First()))
+        $balancer = new Balancer(new First())
             ->addOption($edge)
             ->addOption($run)
             ->addOption($cloudflare);
 
-        $balancer->addFilter(fn (CdnOption $option): bool => !$option->isEdge());
+        $balancer->addFilter(fn(CdnOption $option): bool => !$option->isEdge());
 
         $this->assertSame([$run, $cloudflare], $balancer->getFilteredOptions());
 
-        $balancer->addFilter(fn (CdnOption $option): bool => $option->getProvider() === CdnOption::PROVIDER_CLOUDFLARE);
+        $balancer->addFilter(fn(CdnOption $option): bool => $option->getProvider() === CdnOption::PROVIDER_CLOUDFLARE);
 
         $this->assertSame([$cloudflare], $balancer->getFilteredOptions());
 
@@ -56,22 +58,14 @@ class CdnOptionTest extends TestCase
 
     private function adapter(): Adapter
     {
-        return new class () implements Adapter {
-            public function purgePaths(string $domain, array $paths): void
-            {
-            }
+        return new class implements Adapter {
+            public function purgePaths(string $domain, array $paths): void {}
 
-            public function purgeDomain(string $domain): void
-            {
-            }
+            public function purgeDomain(string $domain): void {}
 
-            public function purgeKeys(array $keys): void
-            {
-            }
+            public function purgeKeys(array $keys): void {}
 
-            public function purgeZone(): void
-            {
-            }
+            public function purgeZone(): void {}
         };
     }
 }

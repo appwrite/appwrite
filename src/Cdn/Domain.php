@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Cdn;
 
 final class Domain
@@ -13,9 +15,9 @@ final class Domain
      */
     public static function validate(string $domain): string
     {
-        $domain = \strtolower($domain);
+        $domain = strtolower($domain);
 
-        if ($domain === '' || \filter_var($domain, \FILTER_VALIDATE_DOMAIN, \FILTER_FLAG_HOSTNAME) === false) {
+        if ($domain === '' || filter_var($domain, \FILTER_VALIDATE_DOMAIN, \FILTER_FLAG_HOSTNAME) === false) {
             throw new \InvalidArgumentException('Domain must be a hostname without a scheme, port, path, or trailing slash.');
         }
 
@@ -29,7 +31,7 @@ final class Domain
     public static function validatePaths(array $paths): array
     {
         foreach ($paths as $path) {
-            if (!\is_string($path) || !\str_starts_with($path, '/')) {
+            if (!\is_string($path) || !str_starts_with($path, '/')) {
                 throw new \InvalidArgumentException('Every cache path must be a string beginning with "/".');
             }
         }

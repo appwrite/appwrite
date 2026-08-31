@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Tests\Cdn;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Cdn\Cache;
 use Utopia\Cdn\Cache\Adapter;
 
-class CacheTest extends TestCase
+final class CacheTest extends TestCase
 {
     public function testDelegatesCacheOperations(): void
     {
@@ -37,11 +39,9 @@ class CacheTest extends TestCase
     /** @param \ArrayObject<int, mixed> $calls */
     private function adapter(\ArrayObject $calls): Adapter
     {
-        return new class ($calls) implements Adapter {
+        return new readonly class ($calls) implements Adapter {
             /** @param \ArrayObject<int, mixed> $calls */
-            public function __construct(private \ArrayObject $calls)
-            {
-            }
+            public function __construct(private \ArrayObject $calls) {}
             public function purgePaths(string $domain, array $paths): void
             {
                 $this->calls->append(['paths' => [$domain, $paths]]);

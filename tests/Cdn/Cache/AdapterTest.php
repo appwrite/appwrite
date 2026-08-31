@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Tests\Cdn\Cache;
 
 use PHPUnit\Framework\TestCase;
@@ -14,21 +16,21 @@ use Utopia\Cdn\Cache\Adapter\Fastly;
  * that grew a purge the others lacked, or that spelled one differently, would show up here rather
  * than in a caller that assumed both behaved alike.
  */
-class AdapterTest extends TestCase
+final class AdapterTest extends TestCase
 {
     private const array OPERATIONS = ['purgePaths', 'purgeDomain', 'purgeKeys', 'purgeZone'];
 
     public function testEveryAdapterOffersTheSameOperations(): void
     {
-        $this->assertSame(self::OPERATIONS, \get_class_methods(Adapter::class));
+        $this->assertSame(self::OPERATIONS, get_class_methods(Adapter::class));
 
         // Balancer included: a composite adapter that lagged the interface would
         // silently stop forwarding whichever operation it had not caught up with.
         foreach ([Fastly::class, Cloudflare::class, Balancer::class] as $adapter) {
-            $this->assertContains(Adapter::class, \class_implements($adapter), $adapter . ' must implement the adapter interface');
+            $this->assertContains(Adapter::class, class_implements($adapter), $adapter . ' must implement the adapter interface');
 
             foreach (self::OPERATIONS as $operation) {
-                $this->assertTrue(\method_exists($adapter, $operation), $adapter . ' is missing ' . $operation . '()');
+                $this->assertTrue(method_exists($adapter, $operation), $adapter . ' is missing ' . $operation . '()');
             }
         }
     }
@@ -38,7 +40,7 @@ class AdapterTest extends TestCase
         // A purge reachable on an adapter but not through Cache would push callers
         // back to holding concrete adapters, which is what the interface avoids.
         foreach (self::OPERATIONS as $operation) {
-            $this->assertTrue(\method_exists(Cache::class, $operation), 'Cache is missing ' . $operation . '()');
+            $this->assertTrue(method_exists(Cache::class, $operation), 'Cache is missing ' . $operation . '()');
         }
     }
 

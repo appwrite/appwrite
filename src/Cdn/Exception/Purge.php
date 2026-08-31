@@ -12,7 +12,7 @@ class Purge extends \RuntimeException
     /**
      * @param array<int, \Throwable> $errors
      */
-    public function __construct(string $message, private array $errors = [])
+    public function __construct(string $message, private readonly array $errors = [])
     {
         parent::__construct($message, 0, $errors[0] ?? null);
     }

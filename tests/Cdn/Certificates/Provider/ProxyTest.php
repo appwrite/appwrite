@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Tests\Cdn\Certificates\Provider;
 
 use PHPUnit\Framework\TestCase;
@@ -8,7 +10,7 @@ use Utopia\Cdn\Certificates\Provider\Proxy;
 use Utopia\Cdn\Certificates\Status;
 use Utopia\Cdn\Exception\Configuration;
 
-class ProxyTest extends TestCase
+final class ProxyTest extends TestCase
 {
     public function testRoutesAndAggregatesProviders(): void
     {
@@ -58,11 +60,9 @@ class ProxyTest extends TestCase
     /** @param \ArrayObject<int, mixed> $seen */
     private function recorder(string $name, \ArrayObject $seen): Provider
     {
-        return new class ($name, $seen) implements Provider {
+        return new readonly class ($name, $seen) implements Provider {
             /** @param \ArrayObject<int, mixed> $seen */
-            public function __construct(private string $name, private \ArrayObject $seen)
-            {
-            }
+            public function __construct(private string $name, private \ArrayObject $seen) {}
             public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
             {
                 $this->seen->append($this->name . ':issue:' . $domain);
@@ -98,11 +98,9 @@ class ProxyTest extends TestCase
     /** @param \ArrayObject<int, mixed> $calls */
     private function provider(string $name, string $status, bool $instant, ?string $date, bool $renew, \ArrayObject $calls): Provider
     {
-        return new class ($name, $status, $instant, $date, $renew, $calls) implements Provider {
+        return new readonly class ($name, $status, $instant, $date, $renew, $calls) implements Provider {
             /** @param \ArrayObject<int, mixed> $calls */
-            public function __construct(private string $name, private string $status, private bool $instant, private ?string $date, private bool $renew, private \ArrayObject $calls)
-            {
-            }
+            public function __construct(private string $name, private string $status, private bool $instant, private ?string $date, private bool $renew, private \ArrayObject $calls) {}
             public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
             {
                 $this->calls->append($this->name . ':issue');

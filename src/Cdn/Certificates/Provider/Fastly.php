@@ -4,11 +4,11 @@ namespace Utopia\Cdn\Certificates\Provider;
 
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
-use Utopia\Client;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;
 use Utopia\Cdn\Domain;
+use Utopia\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 
@@ -21,18 +21,18 @@ use Utopia\Psr7\Request\Factory as RequestFactory;
  */
 class Fastly implements Provider
 {
-    private ClientInterface $client;
+    private readonly ClientInterface $client;
 
-    private FastlyTls $tls;
+    private readonly FastlyTls $tls;
 
     public function __construct(
-        private string $apiToken,
-        private string $serviceId,
+        private readonly string $apiToken,
+        private readonly string $serviceId,
         string $certificateAuthority = 'certainly',
         ?ClientInterface $client = null,
-        private string $apiBase = 'https://api.fastly.com',
-        private int $deploymentPollAttempts = 10,
-        private int $deploymentPollIntervalMilliseconds = 5000,
+        private readonly string $apiBase = 'https://api.fastly.com',
+        private readonly int $deploymentPollAttempts = 10,
+        private readonly int $deploymentPollIntervalMilliseconds = 5000,
     ) {
         if ($this->deploymentPollAttempts < 1) {
             throw new \InvalidArgumentException('Deployment poll attempts must be at least one.');
@@ -83,7 +83,7 @@ class Fastly implements Provider
 
                 $result = $this->request(
                     'PATCH',
-                    '/domain-management/v1/domains/' . \rawurlencode($domainId),
+                    '/domain-management/v1/domains/' . rawurlencode($domainId),
                     ['service_id' => $this->serviceId],
                 );
                 $this->assertSuccess('reassign Fastly domain', $result);
@@ -160,7 +160,7 @@ class Fastly implements Provider
     /** @return array<string, mixed>|null */
     private function findDomain(string $domain): ?array
     {
-        $query = \http_build_query(['fqdn' => $domain, 'limit' => 100]);
+        $query = http_build_query(['fqdn' => $domain, 'limit' => 100]);
         $result = $this->request('GET', '/domain-management/v1/domains?' . $query);
         $this->assertSuccess('fetch Fastly domains', $result);
 
@@ -192,7 +192,7 @@ class Fastly implements Provider
             throw new \RuntimeException('Fastly domain response was missing its ID or FQDN.');
         }
 
-        $result = $this->request('DELETE', '/domain-management/v1/domains/' . \rawurlencode($domainId));
+        $result = $this->request('DELETE', '/domain-management/v1/domains/' . rawurlencode($domainId));
         $this->assertSuccess('delete Fastly domain', $result, [204]);
 
         $this->tls->deleteCertificate($domain, $domainType);
@@ -200,7 +200,7 @@ class Fastly implements Provider
 
     private function deleteClassicDomain(string $domain, ?string $domainType): void
     {
-        $result = $this->request('GET', '/service/' . \rawurlencode($this->serviceId) . '/details');
+        $result = $this->request('GET', '/service/' . rawurlencode($this->serviceId) . '/details');
         $this->assertSuccess('fetch Fastly service details', $result);
 
         if (!\is_array($result['response'])) {
@@ -213,9 +213,9 @@ class Fastly implements Provider
         }
 
         $domains = $activeVersion['domains'] ?? [];
-        $containsDomain = \is_array($domains) && \array_any(
+        $containsDomain = \is_array($domains) && array_any(
             $domains,
-            static fn (mixed $candidate): bool => \is_array($candidate) && ($candidate['name'] ?? null) === $domain,
+            static fn(mixed $candidate): bool => \is_array($candidate) && ($candidate['name'] ?? null) === $domain,
         );
 
         if (!$containsDomain) {
@@ -230,7 +230,7 @@ class Fastly implements Provider
             throw new \RuntimeException('Fastly active service version was missing its number.');
         }
 
-        $servicePath = '/service/' . \rawurlencode($this->serviceId) . '/version/';
+        $servicePath = '/service/' . rawurlencode($this->serviceId) . '/version/';
         $result = $this->request('PUT', $servicePath . $currentVersion . '/clone');
         $this->assertSuccess('clone Fastly service version', $result);
 
@@ -239,7 +239,7 @@ class Fastly implements Provider
         }
         $newVersion = $result['response']['number'];
 
-        $result = $this->request('DELETE', $servicePath . $newVersion . '/domain/' . \rawurlencode($domain));
+        $result = $this->request('DELETE', $servicePath . $newVersion . '/domain/' . rawurlencode($domain));
         $this->assertSuccess('remove classic Fastly domain', $result, [200]);
 
         $result = $this->request('PUT', $servicePath . $newVersion . '/activate');
@@ -251,7 +251,7 @@ class Fastly implements Provider
 
     private function waitForDeployment(int $version): void
     {
-        $path = '/service/' . \rawurlencode($this->serviceId) . '/version/' . $version;
+        $path = '/service/' . rawurlencode($this->serviceId) . '/version/' . $version;
 
         for ($attempt = 1; $attempt <= $this->deploymentPollAttempts; $attempt++) {
             $result = $this->request('GET', $path);
@@ -262,7 +262,7 @@ class Fastly implements Provider
             }
 
             if ($attempt < $this->deploymentPollAttempts && $this->deploymentPollIntervalMilliseconds > 0) {
-                \usleep($this->deploymentPollIntervalMilliseconds * 1000);
+                usleep($this->deploymentPollIntervalMilliseconds * 1000);
             }
         }
 
@@ -293,7 +293,7 @@ class Fastly implements Provider
         $contents = (string) $response->getBody();
 
         try {
-            $decoded = \json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+            $decoded = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
             $decoded = $contents;
         }

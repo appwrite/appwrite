@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Tests\Cdn\Certificates\Provider;
 
 use PHPUnit\Framework\TestCase;
@@ -9,7 +11,7 @@ use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use Utopia\Tests\Cdn\TestClient;
 
-class CloudflareTest extends TestCase
+final class CloudflareTest extends TestCase
 {
     public function testCreatesCustomHostname(): void
     {

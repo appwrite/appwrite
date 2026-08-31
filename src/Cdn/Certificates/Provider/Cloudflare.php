@@ -4,11 +4,11 @@ namespace Utopia\Cdn\Certificates\Provider;
 
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
-use Utopia\Client;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Domain;
 use Utopia\Cdn\Exception\UnsupportedOperation;
+use Utopia\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
@@ -16,13 +16,13 @@ use Utopia\Psr7\Request\Factory as RequestFactory;
 
 class Cloudflare implements Provider
 {
-    private ClientInterface $client;
+    private readonly ClientInterface $client;
 
     public function __construct(
-        private string $zoneId,
-        private string $apiToken,
+        private readonly string $zoneId,
+        private readonly string $apiToken,
         ?ClientInterface $client = null,
-        private string $apiBase = 'https://api.cloudflare.com/client/v4',
+        private readonly string $apiBase = 'https://api.cloudflare.com/client/v4',
     ) {
         $this->client = $client ?? new Client(new CurlAdapter());
     }
@@ -77,14 +77,14 @@ class Cloudflare implements Provider
             throw new \RuntimeException('Cloudflare custom hostname response was missing an ID.');
         }
 
-        $result = $this->request(Method::DELETE, $this->hostnamesPath() . '/' . \rawurlencode($id));
+        $result = $this->request(Method::DELETE, $this->hostnamesPath() . '/' . rawurlencode($id));
         $this->assertSuccess('delete Cloudflare custom hostname', $result);
     }
 
     /** @return array<string, mixed>|null */
     private function findHostname(string $domain): ?array
     {
-        $result = $this->request(Method::GET, $this->hostnamesPath() . '?' . \http_build_query(['hostname' => $domain]));
+        $result = $this->request(Method::GET, $this->hostnamesPath() . '?' . http_build_query(['hostname' => $domain]));
         $this->assertSuccess('fetch Cloudflare custom hostnames', $result);
 
         if (!\is_array($result['response'])) {
@@ -161,7 +161,7 @@ class Cloudflare implements Provider
         $contents = (string) $response->getBody();
 
         try {
-            $decoded = \json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+            $decoded = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
             $decoded = $contents;
         }

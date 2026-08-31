@@ -4,23 +4,23 @@ namespace Utopia\Cdn\Certificates\Provider;
 
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
-use Utopia\Client;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;
+use Utopia\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 
 class FastlyTls implements Provider
 {
-    private ClientInterface $client;
+    private readonly ClientInterface $client;
 
     public function __construct(
-        private string $apiToken,
-        private string $tlsConfigurationId,
-        private string $certificateAuthority = 'certainly',
+        private readonly string $apiToken,
+        private readonly string $tlsConfigurationId,
+        private readonly string $certificateAuthority = 'certainly',
         ?ClientInterface $client = null,
-        private string $apiBase = 'https://api.fastly.com'
+        private readonly string $apiBase = 'https://api.fastly.com',
     ) {
         $this->client = $client ?? new Client(new CurlAdapter());
     }
@@ -75,7 +75,7 @@ class FastlyTls implements Provider
 
         $result = $this->request(
             'DELETE',
-            '/tls/subscriptions/' . $subscription['resource']['id'] . '?force=true'
+            '/tls/subscriptions/' . $subscription['resource']['id'] . '?force=true',
         );
 
         if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
@@ -88,7 +88,7 @@ class FastlyTls implements Provider
      */
     private function findSubscription(string $domain): ?array
     {
-        $query = \http_build_query([
+        $query = http_build_query([
             'filter[tls_domains.id]' => $domain,
             'include' => 'tls_certificates',
             'page[size]' => 1,
@@ -123,7 +123,7 @@ class FastlyTls implements Provider
             throw new \RuntimeException('Fastly TLS subscriptions response contained malformed included resources.');
         }
 
-        return ['resource' => $resource, 'included' => \array_values(\array_filter($included, 'is_array'))];
+        return ['resource' => $resource, 'included' => array_values(array_filter($included, is_array(...)))];
     }
 
     /**
@@ -181,7 +181,7 @@ class FastlyTls implements Provider
 
         $included = $result['response']['included'] ?? [];
 
-        return ['resource' => $data, 'included' => \is_array($included) ? \array_values(\array_filter($included, 'is_array')) : []];
+        return ['resource' => $data, 'included' => \is_array($included) ? array_values(array_filter($included, is_array(...))) : []];
     }
 
     /**
@@ -215,7 +215,7 @@ class FastlyTls implements Provider
 
         $included = $result['response']['included'] ?? [];
 
-        return ['resource' => $data, 'included' => \is_array($included) ? \array_values(\array_filter($included, 'is_array')) : []];
+        return ['resource' => $data, 'included' => \is_array($included) ? array_values(array_filter($included, is_array(...))) : []];
     }
 
     /**
@@ -242,10 +242,12 @@ class FastlyTls implements Provider
 
         $dates = [];
         foreach ($subscription['included'] as $included) {
-            if (($included['type'] ?? null) !== 'tls_certificate' || !\in_array($included['id'] ?? null, $certificateIds, true)) {
+            if (($included['type'] ?? null) !== 'tls_certificate') {
                 continue;
             }
-
+            if (!\in_array($included['id'] ?? null, $certificateIds, true)) {
+                continue;
+            }
             $notAfter = $included['attributes']['not_after'] ?? null;
             if (\is_string($notAfter) && $notAfter !== '') {
                 $dates[] = $notAfter;
@@ -256,7 +258,7 @@ class FastlyTls implements Provider
             return null;
         }
 
-        \usort($dates, static fn (string $left, string $right): int => \strtotime($right) <=> \strtotime($left));
+        usort($dates, static fn(string $left, string $right): int => strtotime($right) <=> strtotime($left));
         $date = new \DateTimeImmutable($dates[0]);
 
         return $date->modify('-30 days')->format('Y-m-d H:i:s.v');
@@ -287,7 +289,7 @@ class FastlyTls implements Provider
         $contents = (string) $response->getBody();
 
         try {
-            $decoded = \json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+            $decoded = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
             $decoded = $contents;
         }
@@ -316,7 +318,7 @@ class FastlyTls implements Provider
 
     private function mapStatus(string $state): string
     {
-        return match (\strtolower($state)) {
+        return match (strtolower($state)) {
             'pending' => Status::PENDING,
             'processing' => Status::PROCESSING,
             'issued' => Status::ISSUED,

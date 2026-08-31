@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Tests\Cdn;
 
 use PHPUnit\Framework\TestCase;
@@ -7,11 +9,11 @@ use Utopia\Cdn\Certificates;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;
 
-class CertificatesTest extends TestCase
+final class CertificatesTest extends TestCase
 {
     public function testIssueCertificateDelegatesToProvider(): void
     {
-        $certificates = new Certificates(new class () implements Provider {
+        $certificates = new Certificates(new class implements Provider {
             public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
             {
                 if ($domainType === 'pending') {
@@ -36,14 +38,12 @@ class CertificatesTest extends TestCase
                 return false;
             }
 
-            public function deleteCertificate(string $domain, ?string $domainType = null): void
-            {
-            }
+            public function deleteCertificate(string $domain, ?string $domainType = null): void {}
         });
 
         $this->assertSame(
             '2027-01-01 00:00:00.000',
-            $certificates->issueCertificate('cert-name', 'cdn.example.com', null)
+            $certificates->issueCertificate('cert-name', 'cdn.example.com', null),
         );
     }
 }

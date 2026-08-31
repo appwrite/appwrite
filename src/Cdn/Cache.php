@@ -1,14 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Cdn;
 
 use Utopia\Cdn\Cache\Adapter;
 
 class Cache
 {
-    public function __construct(private Adapter $adapter)
-    {
-    }
+    public function __construct(private readonly Adapter $adapter) {}
 
     /**
      * @param array<int, string> $paths

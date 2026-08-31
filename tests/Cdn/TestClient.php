@@ -20,25 +20,23 @@ class TestClient implements ClientInterface
     /**
      * @param array<int, ResponseInterface> $responses
      */
-    public function __construct(private array $responses)
-    {
-    }
+    public function __construct(private array $responses) {}
 
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         foreach ($request->getHeaders() as $name => $values) {
-            $this->headers[\strtolower($name)] = \implode(', ', $values);
+            $this->headers[strtolower((string) $name)] = implode(', ', $values);
         }
 
         $body = (string) $request->getBody();
-        $decoded = \json_decode($body, true);
+        $decoded = json_decode($body, true);
 
         $this->calls[] = [
             'url' => (string) $request->getUri(),
             'method' => $request->getMethod(),
-            'body' => \json_last_error() === JSON_ERROR_NONE ? $decoded : $body,
+            'body' => json_last_error() === JSON_ERROR_NONE ? $decoded : $body,
         ];
 
-        return \array_shift($this->responses) ?? new Response(500);
+        return array_shift($this->responses) ?? new Response(500);
     }
 }

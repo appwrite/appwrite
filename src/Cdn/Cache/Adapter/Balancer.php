@@ -25,9 +25,7 @@ use Utopia\Cdn\Extend\CdnOption;
  */
 class Balancer implements Adapter
 {
-    public function __construct(private OptionBalancer $balancer)
-    {
-    }
+    public function __construct(private readonly OptionBalancer $balancer) {}
 
     public function purgePaths(string $domain, array $paths): void
     {
@@ -111,7 +109,7 @@ class Balancer implements Adapter
         }
 
         if ($errors !== []) {
-            throw new Purge('Cache ' . $operation . ' failed for ' . \implode(', ', \array_unique($failed)) . '.', $errors);
+            throw new Purge('Cache ' . $operation . ' failed for ' . implode(', ', array_unique($failed)) . '.', $errors);
         }
 
         if (!$purged) {

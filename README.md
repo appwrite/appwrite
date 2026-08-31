@@ -1,5 +1,8 @@
 # Utopia CDN
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Development happens in [`packages/cdn`](https://github.com/utopia-php/monorepo/tree/main/packages/cdn) — please open issues and pull requests there.
+
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/cdn.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 
@@ -7,15 +10,15 @@ Utopia CDN is a lightweight PHP library for interacting with CDN providers. It c
 
 Although this library is part of the [Utopia Framework](https://github.com/utopia-php/framework) project, it can be used as a standalone package with any PHP project or framework.
 
-## Getting Started
+## Getting started
 
-Install using composer:
+Install using Composer:
 
 ```bash
 composer require utopia-php/cdn
 ```
 
-## Cache Purging
+## Cache purging
 
 The cache API supports four purge modes:
 
@@ -131,7 +134,7 @@ $balancer
     ->addFilter(fn (CdnOption $option): bool => $option->isEdge());
 ```
 
-Failures are aggregated rather than short-circuiting: every matching option is attempted, then the collected errors are raised together as `Exception\Purge`, whose `getErrors()` returns one throwable per failed provider. A provider outage therefore cannot stop the purge from reaching the others. When no option matches the filters, the purge raises `Exception\Configuration` instead of passing silently.
+Failures are aggregated rather than short-circuiting: every matching option is attempted, then the collected errors are raised together as `Exception\Purge`, whose `getErrors()` returns one error per failed provider. A provider outage therefore cannot stop the purge from reaching the others. When no option matches the filters, the purge raises `Exception\Configuration` instead of passing silently.
 
 `purgeZone()` fans out like the rest, so one call drops every matching provider's whole cache — every domain it holds, not only the ones these options front. Filters still apply, which is the only thing keeping it from reaching the options they exclude.
 
@@ -170,7 +173,7 @@ $renewRequired = $certificates->isRenewRequired('cdn.example.com', null);
 
 `issueCertificate()` returns a renew date when Fastly already has an issued or renewing certificate. For asynchronous states like `pending` or `processing`, it returns `null`.
 
-When Fastly domain management owns the domain lifecycle, use the managed provider instead. It creates versionless domains on the configured service and removes both the domain and TLS subscription on deletion. Classic domains are removed by cloning and activating their service version first.
+When Fastly domain management owns the domain lifecycle, use the managed provider instead. It creates domains without a service version on the configured service and removes both the domain and TLS subscription on deletion. Classic domains are removed by cloning and activating their service version first.
 
 ```php
 use Utopia\Cdn\Certificates\Provider\Fastly;
@@ -211,7 +214,7 @@ $certificates = new Certificates(new Proxy(
 ));
 ```
 
-## Supported Providers
+## Supported providers
 
 ### Cache
 
@@ -223,7 +226,7 @@ $certificates = new Certificates(new Proxy(
 - [x] [Fastly TLS subscriptions](https://www.fastly.com/documentation/guides/getting-started/domains/securing-domains-with-tls/)
 - [x] [Cloudflare for SaaS custom hostnames](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/domain-support/create-custom-hostnames/)
 
-## System Requirements
+## System requirements
 
 Utopia CDN requires PHP 8.1 or later. We recommend using the latest PHP version whenever possible.
 

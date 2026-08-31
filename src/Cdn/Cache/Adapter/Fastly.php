@@ -4,11 +4,11 @@ namespace Utopia\Cdn\Cache\Adapter;
 
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
-use Utopia\Client;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Cdn\Cache\Adapter;
 use Utopia\Cdn\Domain;
 use Utopia\Cdn\Exception\UnsupportedOperation;
+use Utopia\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
@@ -20,7 +20,7 @@ class Fastly implements Adapter
      */
     public const int KEYS_PER_PURGE = 256;
 
-    private ClientInterface $client;
+    private readonly ClientInterface $client;
 
     /**
      * Fastly cannot purge by host: its purge API offers URL, surrogate key and whole-service purges
@@ -31,12 +31,12 @@ class Fastly implements Adapter
      * @param string $domainKeyPrefix Prefix of the per-domain surrogate key. Pass '' when the key is the bare hostname.
      */
     public function __construct(
-        private string $apiToken,
-        private string $domainKeyPrefix,
-        private ?string $serviceId = null,
-        private bool $softPurge = false,
+        private readonly string $apiToken,
+        private readonly string $domainKeyPrefix,
+        private readonly ?string $serviceId = null,
+        private readonly bool $softPurge = false,
         ?ClientInterface $client = null,
-        private string $apiBase = 'https://api.fastly.com',
+        private readonly string $apiBase = 'https://api.fastly.com',
     ) {
         $this->client = $client ?? new Client(new CurlAdapter());
     }
@@ -74,7 +74,7 @@ class Fastly implements Adapter
 
         // Keys travel in the request body rather than the URL, so they are sent as
         // given: percent-encoding one would purge a key the origin never attached.
-        foreach (\array_chunk($keys, self::KEYS_PER_PURGE) as $chunk) {
+        foreach (array_chunk($keys, self::KEYS_PER_PURGE) as $chunk) {
             $this->send(Method::POST, '/service/' . $this->serviceId . '/purge', ['surrogate_keys' => $chunk]);
         }
     }
@@ -106,9 +106,9 @@ class Fastly implements Adapter
 
     private function encodePath(string $path): string
     {
-        return (string) \preg_replace_callback(
+        return (string) preg_replace_callback(
             '/[^A-Za-z0-9\-._~\/%?=&:+]/u',
-            static fn (array $match): string => \rawurlencode($match[0]),
+            static fn(array $match): string => rawurlencode($match[0]),
             $path,
         );
     }
@@ -170,7 +170,7 @@ class Fastly implements Adapter
         $contents = (string) $response->getBody();
 
         try {
-            $decoded = \json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+            $decoded = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
             $decoded = $contents;
         }
