@@ -49,7 +49,10 @@ final class VariablesCustomServerTest extends Scope
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
             'execute' => ['any'],
-            'timeout' => 15,
+            // Timeout is a single budget covering container prepare, launch,
+            // cold start and the handler, so a loaded runner can spend it all
+            // before the function runs.
+            'timeout' => 60,
             'commands' => 'echo $GLOBAL_VARIABLE',
         ]);
 
