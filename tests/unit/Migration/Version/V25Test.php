@@ -144,5 +144,6 @@ final class V25Test extends TestCase
             '$createdAt' => '2026-01-03T00:00:00.000+00:00',
         ]), $document));
         $this->assertFalse($migration->isCandidate(new Document(), $document));
+        $this->assertFalse($migration->isCandidate($document, new Document()));
     }
 }

@@ -521,6 +521,7 @@ jobs:
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
           _APP_DOCUMENTSDB: enabled
+          _APP_MIGRATIONS_CLAIM_ENABLED: ${{ matrix.service.name == 'Migrations' && 'enabled' || 'disabled' }}
           _APP_VECTORSDB: enabled
         run: docker compose up -d --quiet-pull --wait
 

@@ -145,7 +145,7 @@ class Mails extends Action
 
         /** @var EmailAdapter $adapter */
         $adapter = empty($smtp)
-            ? $register->get('smtp')
+            ? $register->get('smtp', true)
             : new SMTP(
                 host: $smtp['host'],
                 port: (int) $smtp['port'],

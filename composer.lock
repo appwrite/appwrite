@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8421ff4db771a69dea3af12a11983553",
+    "content-hash": "35bc3b28c6bef444688c8a9dff58bb2c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3005,12 +3005,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "5ba6e921c1f484619a35f11c60e17a472815021c"
+                "reference": "3841d25ec461b0e973c89a92361f80e4870806c6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/5ba6e921c1f484619a35f11c60e17a472815021c",
-                "reference": "5ba6e921c1f484619a35f11c60e17a472815021c",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/3841d25ec461b0e973c89a92361f80e4870806c6",
+                "reference": "3841d25ec461b0e973c89a92361f80e4870806c6",
                 "shasum": ""
             },
             "require": {
@@ -3069,7 +3069,7 @@
                 "source": "https://github.com/utopia-php/abuse/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/abuse/issues"
             },
-            "time": "2026-08-29T10:42:54+00:00"
+            "time": "2026-08-31T22:52:40+00:00"
         },
         {
             "name": "utopia-php/agents",
@@ -3192,12 +3192,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "daf0bd1a14c68b978d782e0f67e15f4080eeee69"
+                "reference": "8b41397d141bde9adde86e6fae9c136f48677639"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/daf0bd1a14c68b978d782e0f67e15f4080eeee69",
-                "reference": "daf0bd1a14c68b978d782e0f67e15f4080eeee69",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/8b41397d141bde9adde86e6fae9c136f48677639",
+                "reference": "8b41397d141bde9adde86e6fae9c136f48677639",
                 "shasum": ""
             },
             "require": {
@@ -3241,7 +3241,7 @@
                 "source": "https://github.com/utopia-php/audit/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/audit/issues"
             },
-            "time": "2026-08-28T03:48:10+00:00"
+            "time": "2026-08-31T22:52:40+00:00"
         },
         {
             "name": "utopia-php/auth",
@@ -3798,12 +3798,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "6d71e52ff72e0d908e9d45a3fe318bd43edf9d6f"
+                "reference": "5c7226f01f58ff3ea45071441c66123b64d3fa2c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/6d71e52ff72e0d908e9d45a3fe318bd43edf9d6f",
-                "reference": "6d71e52ff72e0d908e9d45a3fe318bd43edf9d6f",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/5c7226f01f58ff3ea45071441c66123b64d3fa2c",
+                "reference": "5c7226f01f58ff3ea45071441c66123b64d3fa2c",
                 "shasum": ""
             },
             "require": {
@@ -3889,7 +3889,7 @@
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-08-28T02:21:00+00:00"
+            "time": "2026-08-31T22:50:42+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4561,12 +4561,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "a40d6a3d36586203ded2b198503ebbc9cd1f0879"
+                "reference": "60b7a5231596dc6bc2af6760c19002f94fe943b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/a40d6a3d36586203ded2b198503ebbc9cd1f0879",
-                "reference": "a40d6a3d36586203ded2b198503ebbc9cd1f0879",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/60b7a5231596dc6bc2af6760c19002f94fe943b1",
+                "reference": "60b7a5231596dc6bc2af6760c19002f94fe943b1",
                 "shasum": ""
             },
             "require": {
@@ -4608,7 +4608,7 @@
                     "./vendor/bin/pint"
                 ],
                 "check": [
-                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
+                    "./vendor/bin/phpstan analyse --level 3 src tests bin --memory-limit 2G"
                 ]
             },
             "license": [
@@ -4626,7 +4626,7 @@
                 "source": "https://github.com/utopia-php/migration/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-08-29T10:42:39+00:00"
+            "time": "2026-08-31T23:06:49+00:00"
         },
         {
             "name": "utopia-php/mongo",

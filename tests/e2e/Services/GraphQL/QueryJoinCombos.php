@@ -1331,7 +1331,7 @@ trait QueryJoinCombos
 
         $contains = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
             $join,
-            Query::contains('ord.label', ['visible'])->toString(),
+            Query::containsString('ord.label', ['visible'])->toString(),
             $select,
         ]);
         $this->assertSame(200, $contains['headers']['status-code']);

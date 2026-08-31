@@ -45,7 +45,7 @@ final class DatabasesTest extends TestCase
         $dbForProject->method('updateDocument')->willReturnArgument(2);
         $dbForProject->expects($this->never())->method('createAttribute');
 
-        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform = $this->createStub(Database::class);
         $dbForPlatform->method('getDocument')->willReturn(new Document(['$id' => 'proj1']));
 
         // The resolved (dedicated) backing must receive the physical DDL.

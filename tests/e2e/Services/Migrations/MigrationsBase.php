@@ -227,6 +227,44 @@ trait MigrationsBase
         return $response['body'];
     }
 
+    public function testRetryMigrationClaimsFailedRun(): void
+    {
+        $project = $this->getDestinationProject();
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', $headers, [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => ID::unique(),
+            'apiKey' => 'invalid',
+        ]);
+
+        $this->assertSame(202, $migration['headers']['status-code']);
+        $migrationId = $migration['body']['$id'];
+
+        $terminal = [];
+        $this->assertEventually(function () use ($headers, $migrationId, &$terminal): void {
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertSame(200, $migration['headers']['status-code']);
+            $this->assertSame('failed', $migration['body']['status']);
+            $this->assertSame('finished', $migration['body']['stage']);
+            $terminal = $migration['body'];
+        }, 60_000, 500);
+
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, $headers);
+
+        $this->assertSame(202, $retry['headers']['status-code']);
+        $this->assertSame($migrationId, $retry['body']['$id']);
+        $this->assertSame('pending', $retry['body']['status']);
+        $this->assertSame('finished', $retry['body']['stage']);
+        $this->assertNotSame($terminal['$updatedAt'], $retry['body']['$updatedAt']);
+    }
+
     /**
      * Appwrite E2E Migration Tests
      */
@@ -564,6 +602,12 @@ trait MigrationsBase
         $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE]['success']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['warning']);
+        $this->assertSame([[
+            'resource' => Resource::TYPE_DATABASE,
+            'id' => $databaseId,
+            'status' => Resource::STATUS_SUCCESS,
+            'message' => '',
+        ]], $result['resourceData']);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
@@ -4678,7 +4722,8 @@ trait MigrationsBase
         $this->assertNotEmpty($migration['body']['$id']);
         $migrationId = $migration['body']['$id'];
 
-        $this->assertEventually(function () use ($migrationId) {
+        $expectedDownloadUrl = '';
+        $this->assertEventually(function () use ($migrationId, &$expectedDownloadUrl) {
             $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -4690,13 +4735,16 @@ trait MigrationsBase
             $this->assertEquals('completed', $response['body']['status']);
             $this->assertEquals('Appwrite', $response['body']['source']);
             $this->assertEquals('CSV', $response['body']['destination']);
+            $expectedDownloadUrl = $response['body']['options']['downloadUrl'] ?? '';
+            $this->assertNotEmpty($expectedDownloadUrl);
 
             return true;
         }, 30_000, 500);
 
         // Check that email was sent with download link
-        $lastEmail = $this->getLastEmail(probe: function ($email) {
+        $lastEmail = $this->getLastEmail(probe: function ($email) use ($expectedDownloadUrl) {
             $this->assertEquals('Your CSV export is ready', $email['subject']);
+            $this->assertStringContainsString($expectedDownloadUrl, html_entity_decode($email['html']));
         });
         $this->assertStringContainsStringIgnoringCase('Your data export has been completed successfully', $lastEmail['text']);
 
@@ -4704,6 +4752,7 @@ trait MigrationsBase
         \preg_match('/href="([^"]*\/storage\/buckets\/[^"]*\/push[^"]*)"/', $lastEmail['html'], $matches);
         $this->assertNotEmpty($matches[1], 'Download URL not found in email');
         $downloadUrl = html_entity_decode($matches[1]);
+        $this->assertSame($expectedDownloadUrl, $downloadUrl);
 
         // Parse the URL to extract components
         $components = \parse_url($downloadUrl);

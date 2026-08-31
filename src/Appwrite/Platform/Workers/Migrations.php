@@ -9,6 +9,8 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Migrations\Claim;
+use Appwrite\Platform\Modules\Migrations\Superseded;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Utopia\Compression\Compression;
@@ -28,6 +30,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
+use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Destinations\JSON as DestinationJSON;
 use Utopia\Migration\Destinations\OnDuplicate;
@@ -55,18 +58,16 @@ class Migrations extends Action
     protected ?Device $deviceForMigrations;
     protected ?Device $deviceForFiles;
     protected ?Document $project;
+    protected ?Claim $claims = null;
+    protected ?Document $terminal = null;
 
     protected ?Document $sourceProject = null;
 
-    /**
-     * @var callable
-     */
-    protected mixed $getDatabasesDB;
+    /** @var (\Closure(Document, ?Document=): Database)|null */
+    protected ?\Closure $getDatabasesDB = null;
 
-    /**
-     * @var callable(Document $databaseDSN): Database
-     */
-    protected mixed $getProjectDB;
+    /** @var (\Closure(Document): Database)|null */
+    protected ?\Closure $getProjectDB = null;
     protected array $plan = [];
 
     /**
@@ -74,10 +75,7 @@ class Migrations extends Action
      */
     protected array $sourceReport = [];
 
-    /**
-     * @var callable|null
-     */
-    protected $logError = null;
+    protected ?\Closure $logError = null;
 
     public static function getName(): string
     {
@@ -106,6 +104,7 @@ class Migrations extends Action
             ->inject('publisherForUsage')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -128,15 +127,11 @@ class Migrations extends Action
         UsagePublisher $publisherForUsage,
         array $plan,
         Authorization $authorization,
+        callable $locks,
     ): void {
+        $this->reset();
+
         $migrationMessage = Migration::fromArray($message->getPayload());
-        $this->getDatabasesDB = $getDatabasesDB;
-        $this->getProjectDB = $getProjectDB;
-
-        $this->deviceForMigrations = $deviceForMigrations;
-        $this->deviceForFiles = $deviceForFiles;
-        $this->plan = $plan;
-
         $migration = $migrationMessage->migration;
 
         if ($migration->isEmpty()) {
@@ -151,10 +146,24 @@ class Migrations extends Action
             throw new \Exception('Project not found');
         }
 
+        $claims = new Claim($dbForProject, $locks);
+        $delivery = $claims->consume($project->getId(), $migrationMessage);
+        if ($delivery === null) {
+            return;
+        }
+
+        $migration = $delivery->migration;
+        $this->claims = $claims;
+        $this->terminal = $delivery->terminal;
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
-        $this->logError = $logError;
+        $this->getDatabasesDB = \Closure::fromCallable($getDatabasesDB);
+        $this->getProjectDB = \Closure::fromCallable($getProjectDB);
+        $this->logError = \Closure::fromCallable($logError);
+        $this->deviceForMigrations = $deviceForMigrations;
+        $this->deviceForFiles = $deviceForFiles;
+        $this->plan = $plan;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
 
@@ -169,17 +178,27 @@ class Migrations extends Action
                 $authorization
             );
         } finally {
-            $this->dbForProject = null;
-            $this->dbForPlatform = null;
-            $this->project = null;
-            $this->logError = null;
-            $this->deviceForMigrations = null;
-            $this->deviceForFiles = null;
-            $this->plan = [];
-            $this->sourceReport = [];
+            $this->reset();
 
             \gc_collect_cycles();
         }
+    }
+
+    private function reset(): void
+    {
+        $this->dbForProject = null;
+        $this->dbForPlatform = null;
+        $this->deviceForMigrations = null;
+        $this->deviceForFiles = null;
+        $this->project = null;
+        $this->claims = null;
+        $this->terminal = null;
+        $this->sourceProject = null;
+        $this->getDatabasesDB = null;
+        $this->getProjectDB = null;
+        $this->plan = [];
+        $this->sourceReport = [];
+        $this->logError = null;
     }
 
     /**
@@ -242,7 +261,8 @@ class Migrations extends Action
                 && (!$isAppwriteToAppwrite || $sourceRegion === $destinationRegion);
 
             if ($isLocalSource) {
-                $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+                $getProjectDB = $this->getProjectDB ?? throw new \LogicException('Project database resolver is missing');
+                $projectDB = $getProjectDB($this->sourceProject);
             } elseif ($isAppwriteToAppwrite) {
                 $useAppwriteApiSource = true;
             } else {
@@ -323,16 +343,18 @@ class Migrations extends Action
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
-                $this->project->getId(),
-                $credentials['destinationEndpoint'],
-                $credentials['destinationApiKey'],
-                $this->dbForProject,
-                $this->getDatabasesDB,
-                Config::getParam('collections', [])['databases']['collections'],
-                $this->dbForPlatform,
-                $this->project->getSequence(),
-                OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
-                $this->resolveDestinationDatabaseDsn(...),
+                project: $this->project->getId(),
+                endpoint: $credentials['destinationEndpoint'],
+                key: $credentials['destinationApiKey'],
+                dbForProject: $this->dbForProject,
+                getDatabasesDB: $this->getDatabasesDB ?? throw new \LogicException('Database resolver is missing'),
+                collectionStructure: Config::getParam('collections', [])['databases']['collections'],
+                dbForPlatform: $this->dbForPlatform,
+                projectInternalId: $this->project->getSequence(),
+                owner: $this->provisioningOwner($migration),
+                getRecoverableOwner: fn (Document $database): ?ProvisioningOwner => $this->claims?->recoverable($database, $this->terminal),
+                onDuplicate: OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
+                getDatabaseDSN: $this->resolveDestinationDatabaseDsn(...),
             ),
             DestinationCSV::getName() => DestinationCSV::fromResourceIds(
                 deviceForFiles: $this->deviceForFiles,
@@ -358,6 +380,16 @@ class Migrations extends Action
         };
     }
 
+    private function provisioningOwner(Document $migration): ProvisioningOwner
+    {
+        $attemptId = $migration->getAttribute('attemptId');
+        if (!\is_string($attemptId) || $attemptId === '') {
+            throw new \LogicException('Migration attempt identifier is missing');
+        }
+
+        return new ProvisioningOwner($migration->getId(), $attemptId);
+    }
+
     /**
      * Legacy / tablesdb databases route to the destination project's DSN (same as a fresh
      * Databases create), while documentsdb / vectorsdb keep the source DSN — the dedicated-DB
@@ -377,22 +409,29 @@ class Migrations extends Action
      * @throws Conflict
      * @throws \Utopia\Database\Exception
      * @throws Exception
+     * @throws Superseded
      */
     protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
     {
-        $queueForRealtime
-            ->setProject($project)
-            ->setSubscribers(['console', $project->getId()])
-            ->setEvent('migrations.[migrationId].update')
-            ->setParam('migrationId', $migration->getId())
-            ->setPayload($migration->getArrayCopy(), sensitive: ['credentials'])
-            ->trigger();
+        $claims = $this->claims ?? throw new \LogicException('Migration claim is missing');
+        $stored = $claims->persist($migration);
+        if ($stored === null) {
+            throw new Superseded('Migration attempt was superseded');
+        }
 
-        return $this->dbForProject->updateDocument(
-            'migrations',
-            $migration->getId(),
-            $migration
-        );
+        try {
+            $queueForRealtime
+                ->setProject($project)
+                ->setSubscribers(['console', $project->getId()])
+                ->setEvent('migrations.[migrationId].update')
+                ->setParam('migrationId', $stored->getId())
+                ->setPayload($stored->getArrayCopy(), sensitive: ['credentials'])
+                ->trigger();
+        } catch (\Throwable $error) {
+            Console::warning('Failed to publish migration update: ' . $error->getMessage());
+        }
+
+        return $stored;
     }
 
     /**
@@ -490,13 +529,13 @@ class Migrations extends Action
         Authorization $authorization,
     ): void {
         $project = $this->project;
-
-        $tempAPIKey = $this->generateAPIKey($project);
-
         $transfer = $source = $destination = null;
         $caughtError = null;
+        $superseded = false;
 
         try {
+            $tempAPIKey = $this->generateAPIKey($project);
+
             $host = System::getEnv('_APP_MIGRATION_HOST');
             if (empty($host)) {
                 throw new \Exception('_APP_MIGRATION_HOST is not set');
@@ -519,9 +558,14 @@ class Migrations extends Action
 
             $migration->setAttribute('credentials', $credentials);
 
-            $migration->setAttribute('stage', 'processing');
-            $migration->setAttribute('status', 'processing');
-            $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+            if (
+                $migration->getAttribute('stage') !== 'processing'
+                || $migration->getAttribute('status') !== 'processing'
+            ) {
+                $migration->setAttribute('stage', 'processing');
+                $migration->setAttribute('status', 'processing');
+                $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+            }
 
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration);
@@ -534,15 +578,15 @@ class Migrations extends Action
             /** Start Transfer */
             if (empty($source->getErrors())) {
                 $migration->setAttribute('stage', 'migrating');
-                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+                $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
                 $context = $this->resolveResourceContext($migration);
                 $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
-                    function ($resources) use ($migration, $transfer, $project, $queueForRealtime) {
-                        $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
+                    function ($resources) use (&$migration, $transfer, $project, $queueForRealtime) {
+                        $migration->setAttribute('resourceData', json_encode($transfer->getReport()));
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-                        $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+                        $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
                     resourceId: $context['resourceId'],
                     resourceInternalId: $context['resourceInternalId'],
@@ -565,16 +609,33 @@ class Migrations extends Action
                 return;
             }
 
+            // Persist a non-expirable terminal-side-effect claim before success hooks.
+            // A superseded worker stops here and cannot mark databases ready or clean orphans.
+            $migration->setAttribute('status', 'processing');
+            $migration->setAttribute('stage', 'finalizing');
+            $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+
             $destination->success();
             $source->success();
 
+            $sourceErrors = $source->getErrors();
+            $destinationErrors = $destination->getErrors();
+            if (!empty($sourceErrors) || ! empty($destinationErrors)) {
+                $migration->setAttribute('status', 'failed');
+                $migration->setAttribute('stage', 'finished');
+                return;
+            }
+
             $destinationType = $migration->getAttribute('destination');
             if ($destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName()) {
-                $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
+                $migration = $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
             }
 
             $migration->setAttribute('status', 'completed');
             $migration->setAttribute('stage', 'finished');
+        } catch (Superseded $th) {
+            $superseded = true;
+            Console::warning($th->getMessage());
         } catch (\Throwable $th) {
             Console::error('Message: ' . $th->getMessage());
             Console::error('File: ' . $th->getFile());
@@ -616,6 +677,10 @@ class Migrations extends Action
             }
         } finally {
             try {
+                if ($superseded) {
+                    return;
+                }
+
                 $sourceErrors = $source?->getErrors() ?? [];
                 $destinationErrors = $destination?->getErrors() ?? [];
 
@@ -652,7 +717,12 @@ class Migrations extends Action
                     $destinationErrors,
                 ));
 
-                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+                try {
+                    $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+                } catch (Superseded $error) {
+                    Console::warning($error->getMessage());
+                    return;
+                }
 
                 if ($migration->getAttribute('status', '') === 'failed') {
                     Console::error('Migration(' . $migration->getSequence() . ':' . $migration->getId() . ') failed, Project(' . $this->project->getSequence() . ':' . $this->project->getId() . ')');
@@ -672,13 +742,15 @@ class Migrations extends Action
         }
     }
 
-    protected function getDatabasesDBForProject(Document $database)
+    protected function getDatabasesDBForProject(Document $database): Database
     {
+        $getDatabasesDB = $this->getDatabasesDB ?? throw new \LogicException('Database resolver is missing');
+
         if (isset($this->sourceProject) && ! $this->sourceProject->isEmpty()) {
-            return ($this->getDatabasesDB)($database, $this->sourceProject);
+            return $getDatabasesDB($database, $this->sourceProject);
         }
 
-        return ($this->getDatabasesDB)($database);
+        return $getDatabasesDB($database);
     }
 
     /** @return array{0: string, 1: string} */
@@ -729,7 +801,7 @@ class Migrations extends Action
      * @param Realtime $queueForRealtime
      * @param array $platform
      * @param Authorization $authorization
-     * @return void
+     * @return Document
      */
     protected function handleDataExportComplete(
         Document $project,
@@ -738,7 +810,7 @@ class Migrations extends Action
         Realtime $queueForRealtime,
         array $platform,
         Authorization $authorization,
-    ): void {
+    ): Document {
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
         $filename = $options['filename'] ?? 'export_' . \time();
@@ -772,7 +844,6 @@ class Migrations extends Action
                 $errors = $migration->getAttribute('errors', []);
                 $errors[] = json_encode(['code' => 0, 'message' => $message]);
                 $migration->setAttribute('errors', $errors);
-                $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
                 $this->notifyExport(
                     migration: $migration,
@@ -839,7 +910,7 @@ class Migrations extends Action
 
         $options['downloadUrl'] = $downloadUrl;
         $migration->setAttribute('options', $options);
-        $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+        $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
         $this->notifyExport(
             migration: $migration,
@@ -852,6 +923,8 @@ class Migrations extends Action
             exportType: $migration->getAttribute('destination') === DestinationJSON::getName() ? 'JSON' : 'CSV',
             downloadUrl: $downloadUrl
         );
+
+        return $migration;
     }
 
     protected function resolveExportUser(Document $migration): Document
@@ -922,7 +995,7 @@ class Migrations extends Action
      */
     protected function reportError(\Throwable $error, Document $migration, array $extras = []): void
     {
-        if (!\is_callable($this->logError)) {
+        if ($this->logError === null) {
             return;
         }
 
