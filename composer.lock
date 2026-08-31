@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8421ff4db771a69dea3af12a11983553",
+    "content-hash": "e2fcd85ad79d752e71c240bac863a6e1",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5391,7 +5391,7 @@
             "version": "0.0.1",
             "source": {
                 "type": "git",
-                "url": "git@github.com:utopia-php/video.git",
+                "url": "https://github.com/utopia-php/video.git",
                 "reference": "b65c0395c95a5541741b11da121fb682b9e24d81"
             },
             "dist": {
@@ -5421,37 +5421,7 @@
                     "Utopia\\Video\\": "src/Video"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Video"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "test:unit": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml --testsuite unit"
-                ],
-                "test:e2e": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml --testsuite e2e"
-                ],
-                "samples": [
-                    "@php -r \"require 'vendor/autoload.php'; Utopia\\\\Tests\\\\Samples::build();\""
-                ],
-                "samples:rebuild": [
-                    "@php -r \"require 'vendor/autoload.php'; Utopia\\\\Tests\\\\Samples::build(true);\""
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --memory-limit=512M"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -5474,6 +5444,10 @@
                 "utopia",
                 "video"
             ],
+            "support": {
+                "issues": "https://github.com/utopia-php/video/issues",
+                "source": "https://github.com/utopia-php/video/tree/0.0.1"
+            },
             "time": "2026-08-25T15:00:54+00:00"
         },
         {

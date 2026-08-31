@@ -45,10 +45,6 @@
         },
         {
             "type": "vcs",
-            "url": "https://github.com/utopia-php/video"
-        },
-        {
-            "type": "vcs",
             "url": "https://github.com/utopia-php/cdn"
         },
         {
