@@ -101,6 +101,7 @@ import {
   mergeCliShellSessionsIntoPrefs,
   mergeCliShellSessionsSidebarWidthPxIntoPrefs,
   mergeConnectProjectTabIntoPrefs,
+  mergeDatabaseAdminNavCollapsedIntoPrefs,
   mergeSidebarCollapsedIntoPrefs,
   getCliShellSessionsKey,
   parseCliShellHistory,
@@ -127,6 +128,7 @@ import {
   parseCliShellOpen,
   parseCliShellSessionsSidebarWidthPx,
   parseConnectProjectTab,
+  parseDatabaseAdminNavCollapsed,
   parseSidebarCollapsed,
   parseStorageFilesTablePaneWidthPx,
   readLegacyAIChatPanelOpenFromLocalStorage,
@@ -1485,6 +1487,66 @@ export function useSidebarCollapsed(
             ? {
                 ...current,
                 prefs: mergeSidebarCollapsedIntoPrefs(
+                  { ...(current.prefs ?? {}) },
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setCollapsed = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const nextValue = typeof value === 'function' ? value(collapsed) : value
+      updateMutation.mutate(nextValue)
+    },
+    [collapsed, updateMutation],
+  )
+
+  return { collapsed, setCollapsed }
+}
+
+/**
+ * Hook for PostgreSQL / MySQL sidebar admin links collapsed state.
+ * Uses `console.databases.adminNavCollapsed` in account prefs.
+ *
+ * Must be used within RequireAuth (or where account is available).
+ */
+export function useDatabaseAdminNavCollapsed(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const accountPrefs = account?.prefs as UserPrefs | undefined
+  const collapsed = parseDatabaseAdminNavCollapsed(accountPrefs)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeDatabaseAdminNavCollapsedIntoPrefs(
+          { ...(account.prefs ?? {}) },
+          value,
+        ),
+        'database-admin-nav-collapsed',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeDatabaseAdminNavCollapsedIntoPrefs(
                   { ...(current.prefs ?? {}) },
                   value,
                 ),

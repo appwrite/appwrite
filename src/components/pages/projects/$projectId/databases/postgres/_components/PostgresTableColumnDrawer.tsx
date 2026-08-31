@@ -38,15 +38,30 @@ import {
   buildPostgresColumnTypeSql,
   createDefaultPostgresColumnTypeState,
   getPostgresColumnDefaultPlaceholder,
+  getPostgresColumnTypeDefinition,
   parsePostgresColumnTypeFromRow,
   postgresColumnTypeStatesEqual,
   validatePostgresColumnTypeState,
   type PostgresColumnTypeState,
 } from '@/lib/postgres-column-types'
 import {
-  buildPostgresSingleRequestDdlSql,
+  getSqlColumnCheckExample,
+  isTextColumnComparedToNumber,
+} from '@/lib/sql-column-form-hints'
+import {
+  getPreferredSqlColumnDefaultKind,
+  parsePostgresStoredColumnDefault,
+  resolveSqlColumnDefaultEmission,
+  sqlColumnDefaultIsNull,
+  sqlColumnDefaultsEqual,
+  storedColumnDefaultForForm,
+  type SqlColumnDefaultKind,
+} from '@/lib/sql-column-default'
+import { ColumnDefaultValueField } from '@/components/pages/projects/$projectId/databases/_components/ColumnDefaultValueField'
+import {
   isPostgresPrimaryKeyColumn,
   isPostgresUniqueColumn,
+  runPostgresDdlStatements,
   type PostgresTableColumnRow,
 } from '@/lib/postgres-sql'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -101,6 +116,16 @@ function ConstraintToggle({
   )
 }
 
+function preferredPostgresColumnDefaultKind(
+  typeState: PostgresColumnTypeState,
+): SqlColumnDefaultKind {
+  const definition = getPostgresColumnTypeDefinition(typeState.typeId)
+  return getPreferredSqlColumnDefaultKind({
+    typeGroup: definition.group,
+    typeId: typeState.typeId,
+  })
+}
+
 export function PostgresTableColumnDrawer({
   open,
   onOpenChange,
@@ -123,6 +148,8 @@ export function PostgresTableColumnDrawer({
   const [primaryKey, setPrimaryKey] = useState(false)
   const [unique, setUnique] = useState(false)
   const [defaultValue, setDefaultValue] = useState('')
+  const [defaultKind, setDefaultKind] = useState<SqlColumnDefaultKind>('value')
+  const [defaultIsNull, setDefaultIsNull] = useState(true)
   const [comment, setComment] = useState('')
   const [checkExpression, setCheckExpression] = useState('')
   const [foreignKeyState, setForeignKeyState] = useState<PostgresForeignKeyState>(
@@ -142,12 +169,19 @@ export function PostgresTableColumnDrawer({
     if (!open) return
     if (column) {
       const isPrimary = isPostgresPrimaryKeyColumn(column)
+      const nextTypeState = parsePostgresColumnTypeFromRow(column)
       setName(column.column_name)
-      setTypeState(parsePostgresColumnTypeFromRow(column))
+      setTypeState(nextTypeState)
       setNullable(column.is_nullable === 'YES')
       setPrimaryKey(isPrimary)
       setUnique(isPrimary || isPostgresUniqueColumn(column))
-      setDefaultValue(column.column_default ?? '')
+      const parsedDefault = storedColumnDefaultForForm(
+        parsePostgresStoredColumnDefault(column.column_default),
+        preferredPostgresColumnDefaultKind(nextTypeState),
+      )
+      setDefaultValue(parsedDefault.value)
+      setDefaultKind(parsedDefault.kind)
+      setDefaultIsNull(sqlColumnDefaultIsNull(parsedDefault))
       setComment(column.column_comment ?? '')
       setCheckExpression(getPostgresColumnCheckExpressionForEdit(column.check_constraints))
       setForeignKeyState(
@@ -160,6 +194,10 @@ export function PostgresTableColumnDrawer({
       setPrimaryKey(false)
       setUnique(false)
       setDefaultValue('')
+      setDefaultKind(
+        preferredPostgresColumnDefaultKind(createDefaultPostgresColumnTypeState()),
+      )
+      setDefaultIsNull(true)
       setComment('')
       setCheckExpression('')
       setForeignKeyState(createEmptyPostgresForeignKeyState(tableSchema))
@@ -171,6 +209,21 @@ export function PostgresTableColumnDrawer({
     if (checked) {
       setNullable(false)
       setUnique(true)
+      setDefaultIsNull(false)
+    }
+  }
+
+  const handleNullableChange = (checked: boolean) => {
+    setNullable(checked)
+    if (!checked) setDefaultIsNull(false)
+  }
+
+  const handleDefaultNullChange = (isNull: boolean) => {
+    setDefaultIsNull(isNull)
+    if (isNull) {
+      setDefaultValue('')
+      setNullable(true)
+      setPrimaryKey(false)
     }
   }
 
@@ -189,7 +242,11 @@ export function PostgresTableColumnDrawer({
 
     const nextComment = normalizeOptionalText(comment)
     const nextCheckExpression = normalizeOptionalText(checkExpression)
-    const nextDefault = defaultValue.trim()
+    const defaultEmission = resolveSqlColumnDefaultEmission({
+      isNull: defaultIsNull,
+      value: defaultValue,
+      kind: defaultKind,
+    })
 
     const foreignKeyError = validatePostgresForeignKeyState(foreignKeyState)
     if (foreignKeyError) {
@@ -209,7 +266,15 @@ export function PostgresTableColumnDrawer({
         statements.push(
           buildPostgresAddColumnSql(tableId, trimmedName, dataType, {
             nullable: primaryKey ? false : nullable,
-            defaultValue: nextDefault || undefined,
+            defaultIsNull: defaultEmission === 'null',
+            defaultValue:
+              typeof defaultEmission === 'object'
+                ? defaultEmission.value
+                : undefined,
+            defaultKind:
+              typeof defaultEmission === 'object'
+                ? defaultEmission.kind
+                : defaultKind,
             primaryKey,
             unique: unique && !primaryKey,
           }),
@@ -242,13 +307,23 @@ export function PostgresTableColumnDrawer({
           )
         }
 
-        const previousDefault = (column.column_default ?? '').trim()
-        if (nextDefault !== previousDefault) {
+        const previousDefault = storedColumnDefaultForForm(
+          parsePostgresStoredColumnDefault(column.column_default),
+          preferredPostgresColumnDefaultKind(currentTypeState),
+        )
+        const nextParsedDefault = {
+          kind: defaultKind,
+          value: typeof defaultEmission === 'object' ? defaultEmission.value : '',
+          isNull: defaultEmission === 'null',
+        }
+        if (!sqlColumnDefaultsEqual(previousDefault, nextParsedDefault)) {
           statements.push(
             buildPostgresAlterColumnDefaultSql(
               tableId,
               trimmedName,
-              nextDefault || null,
+              typeof defaultEmission === 'object' ? defaultEmission.value : null,
+              defaultKind,
+              defaultEmission === 'null',
             ),
           )
         }
@@ -363,12 +438,7 @@ export function PostgresTableColumnDrawer({
         return
       }
 
-      await executeSql.mutateAsync(
-        buildPostgresSingleRequestDdlSql(
-          statements,
-          isEditing ? 'Update table column' : 'Add table column',
-        ),
-      )
+      await runPostgresDdlStatements(executeSql.mutateAsync, statements)
       toast.success(isEditing ? t('Column updated') : t('Column created'))
       onOpenChange(false)
       await onSuccess()
@@ -388,6 +458,10 @@ export function PostgresTableColumnDrawer({
     isEditing && parsePostgresColumnForeignKeys(column?.foreign_keys).length > 1
   const isExistingPrimaryKey =
     isEditing && column != null && isPostgresPrimaryKeyColumn(column)
+  const typeGroup = getPostgresColumnTypeDefinition(typeState.typeId).group
+  const checkExample = getSqlColumnCheckExample(name, typeGroup)
+  const showTextNumberCheckHint =
+    typeGroup === 'Text' && isTextColumnComparedToNumber(checkExpression)
 
   return (
     <BaseDrawer
@@ -460,27 +534,30 @@ export function PostgresTableColumnDrawer({
                   if (next.isArray && defaultValue.trim()) {
                     setDefaultValue('')
                   }
+                  if (defaultIsNull || !defaultValue.trim() || next.isArray) {
+                    setDefaultKind(preferredPostgresColumnDefaultKind(next))
+                  }
                 }}
                 allowSerialTypes={!isEditing}
               />
               {!typeState.isArray ? (
-              <div className="space-y-2">
-                <Label htmlFor="column-default" className="text-[12px] font-medium">
-                  {t('Default value')}
-                </Label>
-                <Input
-                  id="column-default"
-                  value={defaultValue}
-                  onChange={(event) => setDefaultValue(event.target.value)}
-                  className="font-mono"
-                  placeholder={t(getPostgresColumnDefaultPlaceholder(typeState))}
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  {t(
-                    'A literal or SQL expression, for example now() or gen_random_uuid().',
-                  )}
-                </p>
-              </div>
+              <ColumnDefaultValueField
+                id="column-default"
+                kind={defaultKind}
+                value={defaultValue}
+                isNull={defaultIsNull}
+                onKindChange={setDefaultKind}
+                onValueChange={(next) => {
+                  if (next) setDefaultIsNull(false)
+                  setDefaultValue(next)
+                }}
+                onNullChange={handleDefaultNullChange}
+                expressionPlaceholder={getPostgresColumnDefaultPlaceholder(
+                  typeState,
+                )}
+                expressionHint="Passed to the database as SQL, for example now() or gen_random_uuid()."
+                nullDisabled={primaryKey}
+              />
               ) : null}
             </section>
 
@@ -520,7 +597,7 @@ export function PostgresTableColumnDrawer({
                     'Allow the column to be NULL when no value is provided.',
                   )}
                   checked={primaryKey ? false : nullable}
-                  onCheckedChange={setNullable}
+                  onCheckedChange={handleNullableChange}
                   disabled={primaryKey}
                 />
                 <ConstraintToggle
@@ -539,12 +616,15 @@ export function PostgresTableColumnDrawer({
                   {t('Check constraint')}
                 </Label>
                 <p className="text-[11px] text-muted-foreground">
-                  {t('Optional SQL expression, for example')}{' '}
-                  <code className="font-mono text-[11px]">
-                    length(column_name) &lt; 500
-                  </code>
+                  {t('Must be valid SQL for this column type, for example')}{' '}
+                  <code className="font-mono text-[11px]">{checkExample}</code>
                   .
                 </p>
+                {showTextNumberCheckHint ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    {t('This check compares text to a number.')}
+                  </p>
+                ) : null}
                 {hasMultipleChecks ? (
                   <p className="text-[11px] text-muted-foreground">
                     {t(
@@ -558,7 +638,7 @@ export function PostgresTableColumnDrawer({
                   onChange={(event) => setCheckExpression(event.target.value)}
                   rows={2}
                   className="min-h-[72px] resize-y font-mono"
-                  placeholder="length(column_name) < 500"
+                  placeholder={checkExample}
                 />
               </div>
             </section>

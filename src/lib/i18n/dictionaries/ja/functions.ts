@@ -46,6 +46,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Connect Git repository': 'Git リポジトリを接続',
   'Connect GitHub': 'GitHub を接続',
   'Connect GitLab': 'GitLab を接続',
+  'Connect Bitbucket': 'Bitbucket を接続',
+  'Connect Origin': 'Origin を接続',
   'Connect later': '後で接続',
   'Connect repository': 'リポジトリを接続',
   'Connect repository first': '先にリポジトリを接続してください',
@@ -69,6 +71,7 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Daily at midnight': '毎日 0 時',
   'Daily at noon': '毎日 12 時',
   'Data sovereignty, compliance': 'データ主権、コンプライアンス',
+  'Default': 'デフォルト',
   'DDoS Mitigation': 'DDoS 対策',
   'DDoS protection': 'DDoS 保護',
   'Delete deployment': 'デプロイを削除',
@@ -535,6 +538,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
     '関数の設定を更新しましたが、再デプロイするまで反映されません。現在のデプロイは、以前の設定のまま実行され続けています。',
   'Your function is currently being redeployed.':
     '関数は現在再デプロイ中です。',
+  'Your function will be accessible at this URL':
+    '関数はこの URL でアクセスできます',
   'to see the supported data and how to log it.':
     'サポートされているデータとその記録方法を確認できます。',
   'Logging is disabled for this function. Enable logging in settings to view execution logs.':

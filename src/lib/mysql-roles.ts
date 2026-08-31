@@ -1,6 +1,6 @@
 import { isMysqlTruthyFlag } from '@/lib/mysql-rls'
 import {
-  buildMysqlSingleRequestDdlSql,
+  normalizeMysqlDdlStatements,
   prefixMysqlSqlComment,
   quoteMysqlStringLiteral,
 } from '@/lib/mysql-sql'
@@ -342,7 +342,7 @@ ORDER BY role_name ASC
 
 export function buildMysqlCreateRoleSql(
   formState: MysqlRoleFormState,
-): string {
+): string[] {
   const roleName = formState.roleName.trim()
   const password = formState.password.trim()
   const account = quoteMysqlUserAccount(roleName)
@@ -360,16 +360,15 @@ export function buildMysqlCreateRoleSql(
     ),
   ]
 
-  return buildMysqlSingleRequestDdlSql(
-    statements,
-    `Create MySQL user ${roleName}`,
+  return normalizeMysqlDdlStatements(statements).map((statement) =>
+    prefixMysqlSqlComment(statement, `Create MySQL user ${roleName}`),
   )
 }
 
 export function buildMysqlUpdateRoleSql(
   formState: MysqlRoleFormState,
   previousMembers: string[],
-): string {
+): string[] {
   const roleName = formState.roleName.trim()
   const password = formState.password.trim()
   const account = quoteMysqlUserAccount(roleName)
@@ -393,9 +392,8 @@ export function buildMysqlUpdateRoleSql(
     ),
   )
 
-  return buildMysqlSingleRequestDdlSql(
-    statements,
-    `Update MySQL user ${roleName}`,
+  return normalizeMysqlDdlStatements(statements).map((statement) =>
+    prefixMysqlSqlComment(statement, `Update MySQL user ${roleName}`),
   )
 }
 

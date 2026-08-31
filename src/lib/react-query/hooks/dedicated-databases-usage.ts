@@ -49,7 +49,6 @@ import {
 } from '@/lib/usage/database-operations-breakdowns'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
-import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 
 function normalizeDateRangeKey(dateRange: DateRange | undefined): {
   rangeKeyPart: string
@@ -671,7 +670,7 @@ export function useDatabaseReadsForDatabaseBreakdowns(
   dateRange: DateRange | undefined,
   enabled = true,
 ) {
-  const showBreakdown = enabled && areUsageBreakdownQueriesEnabled()
+  const showBreakdown = enabled
   const { rangeKeyPart, getBounds } = normalizeDateRangeKey(dateRange)
 
   const queries = useQueries({
@@ -721,7 +720,7 @@ export function useDatabaseWritesForDatabaseBreakdowns(
   dateRange: DateRange | undefined,
   enabled = true,
 ) {
-  const showBreakdown = enabled && areUsageBreakdownQueriesEnabled()
+  const showBreakdown = enabled
   const { rangeKeyPart, getBounds } = normalizeDateRangeKey(dateRange)
 
   const queries = useQueries({

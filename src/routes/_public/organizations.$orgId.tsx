@@ -76,9 +76,13 @@ function OrganizationLayout() {
 
   // Buy / transfer-in wizards: must bypass OrgOverview - it only mounts <Outlet> on the domains
   // index, so nested routes like .../domains/buy would never render (blank page).
-  const isOrgDomainsWizardRoute =
-    pathname.includes('/domains/buy') ||
-    pathname.includes('/domains/transfer-in')
+  // Match-based (not pathname): pathname updates before the buy/transfer-in loader finishes,
+  // which previously tore down OrgOverview and flashed a blank shell until the wizard mounted.
+  const isOrgDomainsWizardRoute = matches.some(
+    (match) =>
+      match.routeId === '/_public/organizations/$orgId/domains/buy' ||
+      match.routeId === '/_public/organizations/$orgId/domains/transfer-in',
+  )
 
   // Match-based (same as domain detail): pathname updates before the loader, which caused
   // OrgOverview to unmount while the marketplace list was still visible.

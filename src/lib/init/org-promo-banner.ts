@@ -1,11 +1,10 @@
 import { getEnvProfileFeatures } from '@/lib/console-profiles'
 import { loadDebugOverrides } from '@/lib/debug-overrides'
-import { parseDateOnly } from './dates'
 import { resolveInitCurrentDay, resolveInitRecapMode } from './event-visibility'
 import { getActiveLaunchEvent } from './events'
 import {
+  getInitMockCurrentDayDefault,
   getInitMockDayBannerExpired,
-  INIT_ORG_PROMO_BANNER_DAYS_AFTER_EVENT,
 } from './mock-current-day'
 import type { LaunchEvent, LaunchEventCta } from './types'
 
@@ -22,51 +21,33 @@ export type InitOrgPromoBannerContent = {
 
 function resolveInitOrgPromoPhase(
   event: LaunchEvent,
-  now: Date,
-  mockCurrentDay: number | null,
+  currentDay: number,
 ): InitOrgPromoPhase {
-  if (resolveInitRecapMode(event, now, mockCurrentDay)) return 'after'
-  const currentDay = resolveInitCurrentDay(event, now, mockCurrentDay)
-  if (currentDay <= 0) return 'before'
+  if (resolveInitRecapMode(event, currentDay)) return 'after'
+  if (resolveInitCurrentDay(event, currentDay) <= 0) return 'before'
   return 'during'
 }
 
-export function isInitOrgPromoBannerExpired(
-  event: LaunchEvent,
-  options?: { now?: Date; mockCurrentDay?: number | null },
-): boolean {
-  const now = options?.now ?? new Date()
-  const mockCurrentDay = options?.mockCurrentDay ?? null
-
-  if (mockCurrentDay !== null) {
-    return mockCurrentDay >= getInitMockDayBannerExpired()
-  }
-
-  const end = parseDateOnly(event.endDate)
-  end.setHours(23, 59, 59, 999)
-
-  const hideAfter = new Date(end)
-  hideAfter.setDate(
-    hideAfter.getDate() + INIT_ORG_PROMO_BANNER_DAYS_AFTER_EVENT,
-  )
-
-  return now > hideAfter
+export function isInitOrgPromoBannerExpired(options?: {
+  currentDay?: number
+}): boolean {
+  const currentDay = options?.currentDay ?? getInitMockCurrentDayDefault()
+  return currentDay >= getInitMockDayBannerExpired()
 }
 
 export function resolveInitOrgPromoBanner(
   event: LaunchEvent | undefined,
-  options?: { now?: Date; mockCurrentDay?: number | null },
+  options?: { currentDay?: number },
 ): InitOrgPromoBannerContent | null {
   if (!event?.featured) return null
 
-  const now = options?.now ?? new Date()
-  const mockCurrentDay = options?.mockCurrentDay ?? null
+  const currentDay = options?.currentDay ?? getInitMockCurrentDayDefault()
 
-  if (isInitOrgPromoBannerExpired(event, { now, mockCurrentDay })) {
+  if (isInitOrgPromoBannerExpired({ currentDay })) {
     return null
   }
 
-  const phase = resolveInitOrgPromoPhase(event, now, mockCurrentDay)
+  const phase = resolveInitOrgPromoPhase(event, currentDay)
 
   switch (phase) {
     case 'before':
@@ -104,15 +85,17 @@ export function resolveInitOrgPromoBanner(
 
 export function getInitOrgPromoBannerContent(options?: {
   now?: Date
-  mockCurrentDay?: number | null
+  currentDay?: number
 }): InitOrgPromoBannerContent | null {
-  return resolveInitOrgPromoBanner(getActiveLaunchEvent(options?.now), options)
+  return resolveInitOrgPromoBanner(getActiveLaunchEvent(options?.now), {
+    currentDay: options?.currentDay,
+  })
 }
 
 /** True while launch week is in progress (not before or recap/after). */
 export function isInitEventDuring(options?: {
   now?: Date
-  mockCurrentDay?: number | null
+  currentDay?: number
 }): boolean {
   if (!getEnvProfileFeatures().init) return false
 
@@ -121,16 +104,15 @@ export function isInitEventDuring(options?: {
 
   const phase = resolveInitOrgPromoPhase(
     event,
-    options?.now ?? new Date(),
-    options?.mockCurrentDay ?? null,
+    options?.currentDay ?? getInitMockCurrentDayDefault(),
   )
 
   return phase === 'during'
 }
 
-/** Promo banner content from env profile, calendar, and persisted debug overrides. */
+/** Promo banner content from env profile and persisted debug day override. */
 export function getStaticInitOrgPromoBannerContent(): InitOrgPromoBannerContent | null {
   if (!getEnvProfileFeatures().init) return null
   const { mockInitCurrentDay } = loadDebugOverrides()
-  return getInitOrgPromoBannerContent({ mockCurrentDay: mockInitCurrentDay })
+  return getInitOrgPromoBannerContent({ currentDay: mockInitCurrentDay })
 }

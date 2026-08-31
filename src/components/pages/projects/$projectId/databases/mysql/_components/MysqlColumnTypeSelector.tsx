@@ -17,6 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { useModalAwarePopover } from '@/lib/layout/modal-portal-host'
 import {
   createDefaultMysqlColumnTypeState,
   formatMysqlColumnTypeLabel,
@@ -140,6 +141,8 @@ export function MysqlColumnTypeSelector({
 }: MysqlColumnTypeSelectorProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
+  const { rootRef, portalContainer, modal, handleOpenChange } =
+    useModalAwarePopover()
   const definition = getMysqlColumnTypeDefinition(value.typeId)
   const resolvedShowTypeOptions =
     showTypeOptions ?? (!compact || value.typeId === 'enum')
@@ -171,13 +174,20 @@ export function MysqlColumnTypeSelector({
   return (
     <div className={compact ? '' : 'space-y-3'}>
       {showTypePicker ? (
-        <div className={compact ? '' : 'space-y-2'}>
+        <div ref={rootRef} className={compact ? '' : 'space-y-2'}>
           {!compact ? (
             <Label htmlFor="mysql-column-type" className="text-[12px] font-medium">
               {t('Type')} <span className="text-destructive">*</span>
             </Label>
           ) : null}
-          <Popover open={open} onOpenChange={setOpen}>
+          <Popover
+            open={open}
+            modal={modal}
+            onOpenChange={(nextOpen) => {
+              handleOpenChange(nextOpen)
+              setOpen(nextOpen)
+            }}
+          >
             <PopoverTrigger asChild>
               <Button
                 id={compact ? undefined : 'mysql-column-type'}
@@ -197,16 +207,21 @@ export function MysqlColumnTypeSelector({
               </Button>
             </PopoverTrigger>
             <PopoverContent
+              container={portalContainer}
               className="max-h-[min(360px,var(--radix-popover-content-available-height))] w-[max(var(--radix-popover-trigger-width),20rem)] overflow-hidden p-0"
               align="start"
               onWheelCapture={(event) => {
                 event.stopPropagation()
+              }}
+              onCloseAutoFocus={(event) => {
+                if (portalContainer) event.preventDefault()
               }}
             >
               <Command>
                 <CommandInput
                   placeholder={t('Search types...')}
                   className="h-9 text-[13px]"
+                  onKeyDown={(event) => event.stopPropagation()}
                 />
                 <CommandList className="max-h-[280px] overflow-y-auto overscroll-contain">
                   <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">

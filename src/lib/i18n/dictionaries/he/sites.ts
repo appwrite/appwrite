@@ -421,6 +421,8 @@ export const heSitesDictionary: Record<string, string> = {
     'ייבאו repos לפריסות אוטומטיות',
   'Connect GitHub': 'חיבור GitHub',
   'Connect GitLab': 'חיבור GitLab',
+  'Connect Bitbucket': 'חיבור Bitbucket',
+  'Connect Origin': 'חיבור Origin',
   'Select organization': 'בחירת ארגון',
   'Add account': 'הוספת חשבון',
   'Search...': 'חיפוש...',

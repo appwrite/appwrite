@@ -16,7 +16,7 @@ import {
   buildMysqlCreateIndexSql,
   buildMysqlIndexCommentSql,
 } from '@/lib/mysql-table-ddl'
-import { buildMysqlSingleRequestDdlSql } from '@/lib/mysql-sql'
+import { runMysqlDdlStatements } from '@/lib/mysql-sql'
 import {
   useExecuteMysqlSql,
   useMysqlTableColumns,
@@ -103,6 +103,12 @@ export function MysqlTableIndexDrawer({
           algorithm: formState.algorithm,
           condition: formState.condition.trim() || undefined,
           includeColumns: formState.includeColumns,
+          columnTypes: formState.columns.map((columnName) => {
+            const column = columns.find(
+              (entry) => entry.column_name === columnName,
+            )
+            return column?.data_type
+          }),
         }),
       ]
 
@@ -112,9 +118,7 @@ export function MysqlTableIndexDrawer({
         )
       }
 
-      await executeSql.mutateAsync(
-        buildMysqlSingleRequestDdlSql(statements, 'Create table index'),
-      )
+      await runMysqlDdlStatements(executeSql.mutateAsync, statements)
       toast.success(t('Index created'))
       onOpenChange(false)
       onSuccess()

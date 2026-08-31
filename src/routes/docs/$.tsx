@@ -2,15 +2,7 @@ import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
-import {
-  isAgentDocsEnabled,
-  isAgentDocsSlug,
-} from '@/lib/docs/agent-docs-feature'
-import {
-  isFirewallDocsEnabled,
-  isFirewallDocsSlug,
-} from '@/lib/docs/firewall-docs-feature'
-import { isPartnersDocsEnabled, isPartnersDocsSlug, shouldBlockPartnersDocs } from '@/lib/docs/partners-docs-feature'
+import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
 import { generateDocsLlmsTxt } from '@/lib/seo/llms-content'
@@ -22,19 +14,6 @@ import {
 } from '@/lib/docs/seo'
 
 const DOCS_LLMS_TXT_SPLAT = 'llms.txt'
-
-function isFeatureGatedDocsSlugHidden(
-  slug: string,
-  options?: { deferPartnersOnServer?: boolean },
-): boolean {
-  if (isPartnersDocsSlug(slug)) {
-    if (options?.deferPartnersOnServer) return shouldBlockPartnersDocs()
-    return !isPartnersDocsEnabled()
-  }
-  if (isFirewallDocsSlug(slug) && !isFirewallDocsEnabled()) return true
-  if (isAgentDocsSlug(slug) && !isAgentDocsEnabled()) return true
-  return false
-}
 
 export const Route = createFileRoute('/docs/$')({
   ssr: true,

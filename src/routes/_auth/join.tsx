@@ -201,179 +201,183 @@ function AcceptInviteContent() {
   }
 
   return (
-    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
-        <Card className="overflow-hidden py-0">
-          <div className="grid md:grid-cols-2">
-            <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
-              {accepted ? (
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
-                    <CheckCircle className="h-8 w-8 text-green-500" />
+    <div className="bg-background relative h-full overflow-y-auto">
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+        <div className="my-auto w-full max-w-sm md:max-w-4xl">
+          <Card className="overflow-hidden py-0">
+            <div className="grid md:grid-cols-2">
+              <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
+                {accepted ? (
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+                      <CheckCircle className="h-8 w-8 text-green-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {t('Welcome to the organization!')}
+                      </h1>
+                      <p className="text-sm text-muted-foreground">
+                        {t(
+                          "You've successfully joined. Redirecting you now...",
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Welcome to the organization!')}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      {t("You've successfully joined. Redirecting you now...")}
-                    </p>
-                  </div>
-                </div>
-              ) : isWrongAccount ? (
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
-                    <UserRoundX className="h-8 w-8 text-amber-500" />
-                  </div>
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t("You're signed in with a different account")}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      {t('This invitation was sent to a different account.')}{' '}
-                      {t("You're currently signed in as")}{' '}
-                      <span className="font-medium text-foreground">
-                        {account?.email}
-                      </span>
-                      {'. '}
-                      {t(
-                        'Switch to the account the invitation was sent to in order to accept it.',
-                      )}
-                    </p>
-                  </div>
-                  <div className="mt-4 w-full space-y-3">
-                    <Button
-                      onClick={handleSwitchAccount}
-                      disabled={isSwitchingAccount}
-                      className="w-full"
-                    >
-                      {t('Switch account')}
-                    </Button>
-                    <Button
-                      onClick={() => navigate({ to: '/' })}
-                      disabled={isSwitchingAccount}
-                      variant="ghost"
-                      className="w-full"
-                    >
-                      {t('Go to dashboard')}
-                    </Button>
-                  </div>
-                </div>
-              ) : error ? (
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
-                    <XCircle className="h-8 w-8 text-red-500" />
-                  </div>
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Unable to accept invitation')}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">{error}</p>
-                  </div>
-                  <div className="mt-4 w-full space-y-3">
-                    {errorIsAccountMismatch && (
+                ) : isWrongAccount ? (
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
+                      <UserRoundX className="h-8 w-8 text-amber-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {t("You're signed in with a different account")}
+                      </h1>
+                      <p className="text-sm text-muted-foreground">
+                        {t('This invitation was sent to a different account.')}{' '}
+                        {t("You're currently signed in as")}{' '}
+                        <span className="font-medium text-foreground">
+                          {account?.email}
+                        </span>
+                        {'. '}
+                        {t(
+                          'Switch to the account the invitation was sent to in order to accept it.',
+                        )}
+                      </p>
+                    </div>
+                    <div className="mt-4 w-full space-y-3">
                       <Button
                         onClick={handleSwitchAccount}
                         disabled={isSwitchingAccount}
-                        variant="outline"
                         className="w-full"
                       >
                         {t('Switch account')}
                       </Button>
-                    )}
+                      <Button
+                        onClick={() => navigate({ to: '/' })}
+                        disabled={isSwitchingAccount}
+                        variant="ghost"
+                        className="w-full"
+                      >
+                        {t('Go to dashboard')}
+                      </Button>
+                    </div>
+                  </div>
+                ) : error ? (
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
+                      <XCircle className="h-8 w-8 text-red-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {t('Unable to accept invitation')}
+                      </h1>
+                      <p className="text-sm text-muted-foreground">{error}</p>
+                    </div>
+                    <div className="mt-4 w-full space-y-3">
+                      {errorIsAccountMismatch && (
+                        <Button
+                          onClick={handleSwitchAccount}
+                          disabled={isSwitchingAccount}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          {t('Switch account')}
+                        </Button>
+                      )}
+                      <Button
+                        onClick={() => navigate({ to: '/' })}
+                        disabled={isSwitchingAccount}
+                        variant={errorIsAccountMismatch ? 'ghost' : 'outline'}
+                        className="w-full"
+                      >
+                        {t('Go to dashboard')}
+                      </Button>
+                    </div>
+                  </div>
+                ) : !hasAllParams ? (
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
+                      <XCircle className="h-8 w-8 text-amber-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {t('Invalid invitation link')}
+                      </h1>
+                      <p className="text-sm text-muted-foreground">
+                        {t(
+                          'This invitation link is missing required parameters. Please use the link from your invitation email.',
+                        )}
+                      </p>
+                    </div>
                     <Button
                       onClick={() => navigate({ to: '/' })}
-                      disabled={isSwitchingAccount}
-                      variant={errorIsAccountMismatch ? 'ghost' : 'outline'}
-                      className="w-full"
+                      variant="outline"
+                      className="mt-4"
                     >
                       {t('Go to dashboard')}
                     </Button>
                   </div>
-                </div>
-              ) : !hasAllParams ? (
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
-                    <XCircle className="h-8 w-8 text-amber-500" />
-                  </div>
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Invalid invitation link')}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      {t(
-                        'This invitation link is missing required parameters. Please use the link from your invitation email.',
+                ) : (
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {t('Accept invitation')}
+                      </h1>
+                      {teamName ? (
+                        <p className="text-sm text-muted-foreground">
+                          {t("You've been invited to join")}{' '}
+                          <span className="font-medium text-foreground">
+                            {teamName}
+                          </span>
+                          {'. '}
+                          {t('Accept the invitation to get started.')}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          {t(
+                            "You've been invited to join an organization. Accept the invitation to get started.",
+                          )}
+                        </p>
                       )}
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() => navigate({ to: '/' })}
-                    variant="outline"
-                    className="mt-4"
-                  >
-                    {t('Go to dashboard')}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Accept invitation')}
-                    </h1>
-                    {teamName ? (
-                      <p className="text-sm text-muted-foreground">
-                        {t("You've been invited to join")}{' '}
-                        <span className="font-medium text-foreground">
-                          {teamName}
-                        </span>
-                        {'. '}
-                        {t('Accept the invitation to get started.')}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        {t(
-                          "You've been invited to join an organization. Accept the invitation to get started.",
-                        )}
-                      </p>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="space-y-4">
-                    <Button
-                      onClick={handleAccept}
-                      disabled={acceptMutation.isPending || !hasAllParams}
-                      className="w-full"
-                    >
-                      {t('Accept invitation')}
-                    </Button>
+                    <div className="space-y-4">
+                      <Button
+                        onClick={handleAccept}
+                        disabled={acceptMutation.isPending || !hasAllParams}
+                        className="w-full"
+                      >
+                        {t('Accept invitation')}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+              <div className="hidden bg-background md:block min-h-[600px]">
+                <img
+                  alt="Image"
+                  className="h-full w-full object-cover"
+                  height="600"
+                  src="/cover.avif"
+                  width="600"
+                />
+              </div>
             </div>
-            <div className="hidden bg-background md:block min-h-[600px]">
-              <img
-                alt="Image"
-                className="h-full w-full object-cover"
-                height="600"
-                src="/cover.avif"
-                width="600"
-              />
-            </div>
+          </Card>
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            {t('By accepting this invitation, you agree to our')}{' '}
+            <MarketingSiteLink className="link-neutral" href="/terms">
+              {t('Terms of Service')}
+            </MarketingSiteLink>{' '}
+            {t('and')}{' '}
+            <MarketingSiteLink className="link-neutral" href="/privacy">
+              {t('Privacy Policy')}
+            </MarketingSiteLink>
+            .
+          </p>
+          <div className="mt-10 md:mt-16 flex justify-center">
+            <AppwriteLogo className="h-6 w-auto" />
           </div>
-        </Card>
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          {t('By accepting this invitation, you agree to our')}{' '}
-          <MarketingSiteLink className="link-neutral" href="/terms">
-            {t('Terms of Service')}
-          </MarketingSiteLink>{' '}
-          {t('and')}{' '}
-          <MarketingSiteLink className="link-neutral" href="/privacy">
-            {t('Privacy Policy')}
-          </MarketingSiteLink>
-          .
-        </p>
-        <div className="mt-10 md:mt-16 flex justify-center">
-          <AppwriteLogo className="h-6 w-auto" />
         </div>
       </div>
     </div>

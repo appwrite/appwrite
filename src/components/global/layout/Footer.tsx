@@ -120,7 +120,7 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
-  features: { agent: boolean },
+  features: { agent: boolean; domains: boolean; firewall: boolean },
 ): readonly ExpandedFooterGroup[] {
   return [
   {
@@ -174,14 +174,27 @@ function getExpandedFooterGroups(
           ]
         : []),
       productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
-      marketingProductFooterLink(
-        footerCopy.expanded.products.domains,
-        '/domains',
-        marketing,
-        'domains',
-      ),
+      ...(features.domains
+        ? [
+            marketingProductFooterLink(
+              footerCopy.expanded.products.domains,
+              '/domains',
+              marketing,
+              'domains',
+            ),
+          ]
+        : []),
       docsFooterLink(footerCopy.expanded.products.network, '/docs/products/network', marketing),
-      productFooterLink(footerCopy.expanded.products.firewall, '/products/firewall', marketing, 'firewall'),
+      ...(features.firewall
+        ? [
+            productFooterLink(
+              footerCopy.expanded.products.firewall,
+              '/products/firewall',
+              marketing,
+              'firewall',
+            ),
+          ]
+        : []),
     ],
   },
   {

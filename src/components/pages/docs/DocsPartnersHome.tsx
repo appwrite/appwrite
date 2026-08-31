@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { DocsHomeSectionHeading } from './_components/DocsHomeSectionHeading'
 import { DocsPartnersHubBento } from './_components/DocsPartnersHubBento'
@@ -14,6 +15,8 @@ import {
   DOCS_PARTNERS_HOME_GUIDES,
   DOCS_PARTNERS_HOME_INTEGRATIONS,
 } from '@/lib/docs/partners-home-content'
+import { isDomainsDocsHref } from '@/lib/docs/domains-docs-feature'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { cn } from '@/lib/utils'
 import { DocsPartnersHeroSection } from './DocsPartnersHeroSection'
 import { DocsPartnersPreviewHeroSection } from './DocsPartnersPreviewHeroSection'
@@ -59,6 +62,15 @@ type DocsPartnersHomeProps = {
 }
 
 export function DocsPartnersHome({ variant = 'page' }: DocsPartnersHomeProps) {
+  const { features } = useConsoleProfile()
+  const partnerApis = useMemo(
+    () =>
+      DOCS_PARTNERS_HOME_APIS.filter(
+        (item) => features.domains || !isDomainsDocsHref(item.href),
+      ),
+    [features.domains],
+  )
+
   return (
     <>
       {variant === 'preview' ? (
@@ -118,7 +130,7 @@ export function DocsPartnersHome({ variant = 'page' }: DocsPartnersHomeProps) {
         title="Partners APIs"
         description="Use the Console SDK to manage infrastructure-level resources across organizations and projects."
       >
-        <DocsPartnersHubBento items={DOCS_PARTNERS_HOME_APIS} />
+        <DocsPartnersHubBento items={partnerApis} />
       </DocsPartnersHomeSection>
 
       <DocsPartnersHomeSection

@@ -15,7 +15,11 @@ export type ConsoleProfileId = 'cloud' | 'self-hosted'
 export type ConsoleProfileFeatures = {
   /** Billing and subscription management */
   billing: boolean
-  /** Organization-level custom domains (DNS, verification, buy domain, transfer in) */
+  /**
+   * Domain registrar commerce (buy domain, transfer in) plus marketing/docs Domains
+   * product surfaces. Org Domains tab (add domain, DNS, verification) stays available
+   * when this is false.
+   */
   domains: boolean
   /** Organization marketplace (browse and publish apps) */
   marketplace: boolean
@@ -82,6 +86,8 @@ export type ConsoleProfileFeatures = {
   userVerification: boolean
   /** Project Firewall (rules, analytics, logs) under Protect */
   firewall: boolean
+  /** Storage S3-compatible API (Connect S3 tab, storage sidebar card, and S3 docs) */
+  storageS3: boolean
   /** Account affiliates program (referral codes, rewards, credit claims) */
   affiliates: boolean
   /**
@@ -103,7 +109,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   string
 > = {
   billing: 'Billing',
-  domains: 'Domains',
+  domains: 'Domain buy/transfer',
   marketplace: 'Marketplace',
   usageStats: 'Usage stats',
   activity: 'Activity',
@@ -133,6 +139,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
   firewall: 'Firewall',
+  storageS3: 'Storage S3',
   affiliates: 'Affiliates',
   cookieBanner: 'Cookie banner',
   blogDrafts: 'Blog drafts',
@@ -156,7 +163,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     description: 'Appwrite Cloud - full feature set',
     features: {
       billing: true,
-      domains: true,
+      domains: false,
       marketplace: false,
       usageStats: true,
       activity: true,
@@ -173,19 +180,20 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauthApps: false,
       oauth2Server: true,
       orgApiKeys: false,
-      agent: true,
+      agent: false,
       notifications: false,
       databaseBackups: true,
-      dedicatedDbsSupport: true,
+      dedicatedDbsSupport: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
-      nativeDbsPostgres: true,
-      nativeDbsMySQL: true,
+      nativeDbsPostgres: false,
+      nativeDbsMySQL: false,
       nativeDbsMongo: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
-      firewall: true,
+      firewall: false,
+      storageS3: false,
       affiliates: true,
       cookieBanner: true,
       blogDrafts: false,
@@ -199,7 +207,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       billing: false,
       domains: false,
       marketplace: false,
-      usageStats: false,
+      usageStats: true,
       activity: false,
       init: false,
       marketing: false,
@@ -227,6 +235,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       edgeNetwork: false,
       userVerification: false,
       firewall: false,
+      storageS3: false,
       affiliates: false,
       cookieBanner: false,
       blogDrafts: false,
@@ -451,6 +460,18 @@ export function setBackendUsageStatsAvailability(
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
   }
+}
+
+/**
+ * Self-hosted usage follows `_APP_USAGE_STATS` after console variables load.
+ * Cloud and explicit env overrides are known immediately.
+ */
+export function isUsageStatsCapabilityResolved(): boolean {
+  const profileId = getActiveProfileId()
+  if (profileId !== 'self-hosted') return true
+  const override = parseEnvFeatureOverride(getRuntimeConfig().usageStats)
+  if (override !== null) return true
+  return backendUsageStatsAvailability !== null
 }
 
 function applyCloudOnlyFeatureGates(

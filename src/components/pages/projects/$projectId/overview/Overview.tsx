@@ -17,12 +17,10 @@ import { useT } from '@/lib/i18n/translate'
 import { HorizontalScrollFade } from '@/components/global/shared/HorizontalScrollFade'
 import { useNavigate } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   OVERVIEW_CHART_TAB_ORDER,
   OVERVIEW_CHART_TAB_LABELS,
   type OverviewChartTabId,
-  isOverviewChartTabEnabled,
 } from '@/lib/overview-chart-tabs'
 import {
   COMPUTE_EXECUTIONS_BREAKDOWN_TITLE,
@@ -91,7 +89,6 @@ import {
 } from '@/lib/utils/platform'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiKeysList, type ApiKey } from '../shared/ApiKeysList'
-import { UsageHistoricDataNote } from '../shared/UsageHistoricDataNote'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
 import { PlatformDrawer } from '../apps/_components/PlatformDrawer'
 import { PlatformContextMenu } from '../apps/_components/PlatformContextMenu'
@@ -118,6 +115,10 @@ import {
 } from '@/lib/usage/usage-chart-loading'
 import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
 import { getUsageChartIntervalsForPlan } from '@/lib/usage/chart-interval'
+import {
+  canShowBandwidthUsageBreakdown,
+  canShowRequestsUsageBreakdown,
+} from '@/lib/usage/aggregate-only-metrics'
 import {
   resolveUsageChartErrorCopy,
   shouldSuppressUsageChartRetry,
@@ -245,26 +246,21 @@ export function View({ projectId, initialData }: ViewProps) {
   }
 
   const usageStatsEnabled = features.usageStats
-  const debugOverrides = useDebugOverrides()
-  const { disableUsageBreakdownQueries } = debugOverrides
-  const showUsageBreakdownPanels = !disableUsageBreakdownQueries
-  const isOverviewChartTabVisible = (tabId: OverviewChartTabId) =>
-    usageStatsEnabled && isOverviewChartTabEnabled(tabId, debugOverrides)
   const visibleOverviewChartTabs = useMemo(
-    () =>
-      OVERVIEW_CHART_TAB_ORDER.filter((tabId) =>
-        isOverviewChartTabVisible(tabId),
-      ),
-    [usageStatsEnabled, debugOverrides],
+    () => (usageStatsEnabled ? [...OVERVIEW_CHART_TAB_ORDER] : []),
+    [usageStatsEnabled],
   )
-  const overviewMainChartColumnClass = cn(
-    overviewChartColumnClass,
-    !showUsageBreakdownPanels && '@[700px]:border-e-0',
+  const showRequestsUsageBreakdown =
+    canShowRequestsUsageBreakdown(organizationPlan)
+  const showBandwidthUsageBreakdown =
+    canShowBandwidthUsageBreakdown(organizationPlan)
+  const requestsOverviewChartRowClassName = overviewChartContentRowClassName(
+    showRequestsUsageBreakdown,
   )
-  const overviewChartRowClassName = useMemo(
-    () => overviewChartContentRowClassName(showUsageBreakdownPanels),
-    [showUsageBreakdownPanels],
+  const bandwidthOverviewChartRowClassName = overviewChartContentRowClassName(
+    showBandwidthUsageBreakdown,
   )
+  const overviewChartRowClassName = overviewChartContentRowClassName()
 
   useEffect(() => {
     if (
@@ -286,9 +282,9 @@ export function View({ projectId, initialData }: ViewProps) {
   } = useProjectBandwidthOverview(
     projectId,
     dashboardChartDateRange,
-    isOverviewChartTabVisible('bandwidth'),
+    usageStatsEnabled,
     chartInterval,
-    activeTab === 'bandwidth',
+    activeTab === 'bandwidth' && showBandwidthUsageBreakdown,
     usageLogRetentionHours,
   )
 
@@ -303,9 +299,9 @@ export function View({ projectId, initialData }: ViewProps) {
   } = useProjectRequestsOverview(
     projectId,
     dashboardChartDateRange,
-    isOverviewChartTabVisible('requests'),
+    usageStatsEnabled,
     chartInterval,
-    activeTab === 'requests',
+    activeTab === 'requests' && showRequestsUsageBreakdown,
     usageLogRetentionHours,
   )
 
@@ -320,7 +316,7 @@ export function View({ projectId, initialData }: ViewProps) {
   } = useProjectExecutionsOverview(
     projectId,
     dashboardChartDateRange,
-    isOverviewChartTabVisible('executions'),
+    usageStatsEnabled,
     chartInterval,
     activeTab === 'executions',
     usageLogRetentionHours,
@@ -337,7 +333,7 @@ export function View({ projectId, initialData }: ViewProps) {
   } = useProjectGbHoursOverview(
     projectId,
     dashboardChartDateRange,
-    isOverviewChartTabVisible('gbhours'),
+    usageStatsEnabled,
     chartInterval,
     activeTab === 'gbhours',
     usageLogRetentionHours,
@@ -354,7 +350,7 @@ export function View({ projectId, initialData }: ViewProps) {
   } = useProjectOverviewStorageOverview(
     projectId,
     dashboardChartDateRange,
-    isOverviewChartTabVisible('storage'),
+    usageStatsEnabled,
     chartInterval,
     activeTab === 'storage',
     usageLogRetentionHours,
@@ -519,16 +515,13 @@ export function View({ projectId, initialData }: ViewProps) {
   const { data: executionBreakdownResources } = useComputeBreakdownResources(
     projectId,
     executionBreakdownIds,
-    isOverviewChartTabVisible('executions') &&
-      showUsageBreakdownPanels &&
-      executionBreakdownIds.length > 0,
+    usageStatsEnabled && executionBreakdownIds.length > 0,
   )
 
   const { data: storageBreakdownResources } = useStorageBreakdownResources(
     projectId,
     storageBreakdownIds,
-    isOverviewChartTabVisible('storage') &&
-      showUsageBreakdownPanels &&
+    usageStatsEnabled &&
       activeTab === 'storage' &&
       storageBreakdownIds.length > 0,
   )
@@ -537,8 +530,7 @@ export function View({ projectId, initialData }: ViewProps) {
     useComputeBreakdownResources(
       projectId,
       storageComputeBreakdownIds,
-      isOverviewChartTabVisible('storage') &&
-        showUsageBreakdownPanels &&
+      usageStatsEnabled &&
         activeTab === 'storage' &&
         storageComputeBreakdownIds.length > 0,
     )
@@ -547,8 +539,7 @@ export function View({ projectId, initialData }: ViewProps) {
     useDatabaseBreakdownResources(
       projectId,
       storageDatabaseBreakdownIds,
-      isOverviewChartTabVisible('storage') &&
-        showUsageBreakdownPanels &&
+      usageStatsEnabled &&
         activeTab === 'storage' &&
         storageDatabaseBreakdownIds.length > 0,
     )
@@ -556,9 +547,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const { data: gbHoursBreakdownResources } = useComputeBreakdownResources(
     projectId,
     gbHoursBreakdownIds,
-    isOverviewChartTabVisible('gbhours') &&
-      showUsageBreakdownPanels &&
-      gbHoursBreakdownIds.length > 0,
+    usageStatsEnabled && gbHoursBreakdownIds.length > 0,
   )
 
   const overviewTabs = useMemo(() => {
@@ -1073,15 +1062,15 @@ export function View({ projectId, initialData }: ViewProps) {
 
             {/* Chart content - stacked in one grid cell for stable height across tabs */}
             <div className={overviewChartTabPanelsContainerClass}>
-            {isOverviewChartTabVisible('bandwidth') ? (
+            {usageStatsEnabled ? (
             <div
               className={cn(
-                overviewChartRowClassName,
+                bandwidthOverviewChartRowClassName,
                 overviewChartTabPanelVisibilityClass(activeTab === 'bandwidth'),
               )}
               aria-hidden={activeTab !== 'bandwidth'}
             >
-                <div className={overviewMainChartColumnClass}>
+                <div className={overviewChartColumnClass}>
                   <RequestsChart
                     className="h-full min-h-0 flex-1"
                     isPanelVisible={activeTab === 'bandwidth'}
@@ -1105,7 +1094,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
                   />
                 </div>
-                {showUsageBreakdownPanels ? (
+                  {showBandwidthUsageBreakdown ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
                       className="h-full min-h-0 flex-1"
@@ -1128,19 +1117,19 @@ export function View({ projectId, initialData }: ViewProps) {
                       errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
                     />
                   </div>
-                ) : null}
+                  ) : null}
               </div>
             ) : null}
 
-            {isOverviewChartTabVisible('requests') ? (
+            {usageStatsEnabled ? (
             <div
               className={cn(
-                overviewChartRowClassName,
+                requestsOverviewChartRowClassName,
                 overviewChartTabPanelVisibilityClass(activeTab === 'requests'),
               )}
               aria-hidden={activeTab !== 'requests'}
             >
-                <div className={overviewMainChartColumnClass}>
+                <div className={overviewChartColumnClass}>
                   <RequestsChart
                     className="h-full min-h-0 flex-1"
                     isPanelVisible={activeTab === 'requests'}
@@ -1164,7 +1153,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
                   />
                 </div>
-                {showUsageBreakdownPanels ? (
+                  {showRequestsUsageBreakdown ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
                       className="h-full min-h-0 flex-1"
@@ -1187,11 +1176,11 @@ export function View({ projectId, initialData }: ViewProps) {
                       errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
                     />
                   </div>
-                ) : null}
+                  ) : null}
               </div>
             ) : null}
 
-            {isOverviewChartTabVisible('storage') ? (
+            {usageStatsEnabled ? (
             <div
               className={cn(
                 overviewChartRowClassName,
@@ -1199,7 +1188,7 @@ export function View({ projectId, initialData }: ViewProps) {
               )}
               aria-hidden={activeTab !== 'storage'}
             >
-                <div className={overviewMainChartColumnClass}>
+                <div className={overviewChartColumnClass}>
                   <OverviewStorageChart
                     className="h-full min-h-0 flex-1"
                     isPanelVisible={activeTab === 'storage'}
@@ -1218,7 +1207,6 @@ export function View({ projectId, initialData }: ViewProps) {
                     errorMessage={<UsageChartErrorMessage copy={storageErrorCopy} />}
                   />
                 </div>
-                {showUsageBreakdownPanels ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
                       className="h-full min-h-0 flex-1"
@@ -1250,11 +1238,10 @@ export function View({ projectId, initialData }: ViewProps) {
                       errorMessage={<UsageChartErrorMessage copy={storageErrorCopy} />}
                     />
                   </div>
-                ) : null}
               </div>
             ) : null}
 
-            {isOverviewChartTabVisible('executions') ? (
+            {usageStatsEnabled ? (
             <div
               className={cn(
                 overviewChartRowClassName,
@@ -1262,7 +1249,7 @@ export function View({ projectId, initialData }: ViewProps) {
               )}
               aria-hidden={activeTab !== 'executions'}
             >
-                <div className={overviewMainChartColumnClass}>
+                <div className={overviewChartColumnClass}>
                   <RequestsChart
                     className="h-full min-h-0 flex-1"
                     isPanelVisible={activeTab === 'executions'}
@@ -1286,7 +1273,6 @@ export function View({ projectId, initialData }: ViewProps) {
                     errorMessage={<UsageChartErrorMessage copy={executionsErrorCopy} />}
                   />
                 </div>
-                {showUsageBreakdownPanels ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
                       className="h-full min-h-0 flex-1"
@@ -1312,11 +1298,10 @@ export function View({ projectId, initialData }: ViewProps) {
                       errorMessage={<UsageChartErrorMessage copy={executionsErrorCopy} />}
                     />
                   </div>
-                ) : null}
               </div>
             ) : null}
 
-            {isOverviewChartTabVisible('gbhours') ? (
+            {usageStatsEnabled ? (
             <div
               className={cn(
                 overviewChartRowClassName,
@@ -1324,7 +1309,7 @@ export function View({ projectId, initialData }: ViewProps) {
               )}
               aria-hidden={activeTab !== 'gbhours'}
             >
-                <div className={overviewMainChartColumnClass}>
+                <div className={overviewChartColumnClass}>
                   <RequestsChart
                     className="h-full min-h-0 flex-1"
                     isPanelVisible={activeTab === 'gbhours'}
@@ -1348,7 +1333,6 @@ export function View({ projectId, initialData }: ViewProps) {
                     errorMessage={<UsageChartErrorMessage copy={gbHoursErrorCopy} />}
                   />
                 </div>
-                {showUsageBreakdownPanels ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
                       className="h-full min-h-0 flex-1"
@@ -1375,11 +1359,9 @@ export function View({ projectId, initialData }: ViewProps) {
                       errorMessage={<UsageChartErrorMessage copy={gbHoursErrorCopy} />}
                     />
                   </div>
-                ) : null}
               </div>
             ) : null}
             </div>
-            <UsageHistoricDataNote variant="footer" />
           </div>
         )}
 

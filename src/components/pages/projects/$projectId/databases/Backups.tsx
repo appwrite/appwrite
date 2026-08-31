@@ -69,6 +69,7 @@ import {
   SelectTrigger,
   SelectValue} from '@/components/ui/select'
 import type { Models } from '@appwrite.io/console'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import { cn } from '@/lib/utils'
 import { useProject, useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
@@ -114,9 +115,10 @@ function getBackupStatus(status: string) {
 
 interface BackupsViewProps {
   databaseId: string
+  dbKind?: DatabaseRouteKind
 }
 
-export function BackupsView({ databaseId }: BackupsViewProps) {
+export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
@@ -157,19 +159,19 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const { data: policiesData, isLoading: policiesLoading } = useBackupPolicies(
     projectId,
     databaseId,
-    { enabled: backupsEnabled },
+    { enabled: backupsEnabled, dbKind },
   )
   const { data: archivesData, isLoading: archivesLoading } = useBackupArchives(
     projectId,
     databaseId,
     backupsPage - 1,
     backupsPageSize,
-    { enabled: backupsEnabled },
+    { enabled: backupsEnabled, dbKind },
   )
   const { data: restoreMigrations } = useDatabaseRestoreMigrations(
     projectId,
     databaseId,
-    { enabled: backupsEnabled },
+    { enabled: backupsEnabled, dbKind },
   )
 
   const visibleRestorations = (() => {
