@@ -67,8 +67,8 @@ The dropdown offers four models:
 | Model | Components | Notes |
 | --- | --- | --- |
 | `nomic-embed-text` | 768 | General-purpose English embeddings with an 8K context window |
-| `embedding-gemma` (coming soon) | 768 | Multilingual embeddings for more than 100 languages |
 | `all-minilm` | 384 | Lightweight English embeddings for constrained workloads |
+| `embedding-gemma` (coming soon) | 768 | Multilingual embeddings for more than 100 languages |
 | `bge-small` (coming soon) | 384 | Compact English embeddings with strong retrieval quality |
 
 Choose **nomic-embed-text**. A help center article runs to several hundred words, and this model reads 8,192 tokens, so a whole article embeds in one call. `all-minilm` stops at 256 tokens, around 190 English words, and drops the rest, which would reduce most articles to their opening paragraph.

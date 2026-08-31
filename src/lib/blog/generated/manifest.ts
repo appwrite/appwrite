@@ -169,7 +169,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "comparing-embedding-models-in-vectorsdb",
     "href": "/blog/post/comparing-embedding-models-in-vectorsdb",
     "title": "Comparing the embedding models available in VectorsDB",
-    "description": "Compare the text embedding models built into Appwrite VectorsDB on language coverage, input limit, training task, and vector dimension, and pick one before you create a collection.",
+    "description": "Compare the four text embedding models built into Appwrite VectorsDB on language coverage, input limit, training task, and vector dimension, and pick one before you create a collection.",
     "date": "2026-09-02",
     "lastUpdated": "2026-09-02",
     "timeToRead": 9,
