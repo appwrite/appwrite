@@ -188,6 +188,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 14,
     "author": "atharva",
     "category": "tutorial",
+    "draft": true,
     "cover": "/images/blog-local/build-a-memory-mcp-server/cover.avif",
     "hasCover": true
   },
@@ -202,7 +203,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "tutorial",
     "featured": false,
-    "draft": false,
+    "draft": true,
     "cover": "/images/blog-local/turn-your-app-into-an-mcp-server/cover.avif",
     "hasCover": true
   },
@@ -245,6 +246,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "tutorial",
     "featured": false,
+    "draft": true,
     "cover": "/images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif",
     "hasCover": true
   },
